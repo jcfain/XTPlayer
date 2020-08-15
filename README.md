@@ -1,2 +1,2 @@
 # XTPlayer
-Cross plat form Tcode player
+Cross platform Tcode player
