@@ -34,6 +34,8 @@ HEADERS += \
     lib/handler/settingshandler.h \
     lib/handler/tcodehandler.h \
     lib/handler/udphandler.h \
+    lib/struct/FunscriptStruct.h \
+    lib/struct/LibraryListItem.h \
     mainwindow.h
 
 FORMS += \

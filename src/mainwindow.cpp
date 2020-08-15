@@ -112,8 +112,21 @@ void MainWindow::on_load_library(QString path)
             QStringList videos = directory.entryList(QStringList() << "*.mp4" << "*.MP4", QDir::Files);
             foreach(QString filename, videos)
             {
-                MainWindow::videos.push_front(filename);
-                ui->LibraryList->addItem(filename);
+                QString video = SettingsHandler::selectedLibrary + QDir::separator() +filename;
+                QString scriptFile = filename.remove(video.lastIndexOf('.'), video.length() -  1) + ".funscript";
+                QString scriptPath;
+                if (SettingsHandler::selectedFunscriptLibrary.isNull()) {
+                    scriptPath = video.remove(video.lastIndexOf('.'), video.length() -  1) + ".funscript";
+                } else {
+                    QString video = SettingsHandler::selectedFunscriptLibrary + QDir::separator() +scriptFile;
+                }
+                if (funscriptHandler->exists(scriptPath))
+                {
+                    //LibraryListItem item() {video, filename, scriptPath};
+                    //MainWindow::videos.push_front(filename);
+                    //ui->LibraryList->addItem(new QListWidgetItem(filename, ui->LibraryList, LibraryListItem {video, filename, scriptPath}));
+                    ui->LibraryList->addItem(filename);
+                }
             }
         }
     }

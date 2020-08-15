@@ -6,6 +6,7 @@ class SettingsHandler
 {
 public:
     static QString selectedLibrary;
+    static QString selectedFunscriptLibrary;
     static QString selectedFile;
     static int playerVolume;
 

@@ -13,6 +13,8 @@
 //#include "CustomControls/xmediaplayer.h"
 #include "CustomControls/RangeSlider.h"
 #include "lib/handler/settingshandler.h"
+#include "lib/handler/funscripthandler.h"
+#include "lib/struct/LibraryListItem.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -61,6 +63,7 @@ private:
     RangeSlider* xRollRangeSlider;
     RangeSlider* SpeedSlider;
     QWindow* fullscreenWindow;
+    FunscriptHandler* funscriptHandler;
 
     QVector<QString> videos;
     void on_load_library(QString path);
