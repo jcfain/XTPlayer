@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1051</width>
+    <height>694</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout_5">
+    <item row="0" column="0">
+     <widget class="QFrame" name="frame">
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_3" rowstretch="0,0,0,0" columnstretch="0,0">
+       <item row="3" column="1">
+        <widget class="QGroupBox" name="TCodeQuickSettingsGroup">
+         <property name="minimumSize">
+          <size>
+           <width>750</width>
+           <height>150</height>
+          </size>
+         </property>
+         <property name="title">
+          <string>TCode settings</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,0" columnstretch="0,1,1">
+          <item row="1" column="0">
+           <layout class="QGridLayout" name="OutputSettings" columnstretch="0,0,0,0">
+            <item row="1" column="0" colspan="2">
+             <widget class="QRadioButton" name="radioButton_2">
+              <property name="text">
+               <string>Network</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QLineEdit" name="lineEdit"/>
+            </item>
+            <item row="1" column="3">
+             <widget class="QLineEdit" name="lineEdit_2">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>100</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QComboBox" name="SerialOutputCmb"/>
+            </item>
+            <item row="0" column="0" colspan="2">
+             <widget class="QRadioButton" name="SerialOutputRdo">
+              <property name="text">
+               <string>Serial</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="0" column="0" colspan="2">
+           <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0" columnstretch="0,0,0,0,0,0" rowminimumheight="0,0,0" columnminimumwidth="0,0,0,0,0,0">
+            <property name="sizeConstraint">
+             <enum>QLayout::SetMaximumSize</enum>
+            </property>
+            <item row="2" column="1">
+             <widget class="QPushButton" name="PauseBtn">
+              <property name="text">
+               <string>Pause</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="4">
+             <widget class="QPushButton" name="MuteBtn">
+              <property name="text">
+               <string>Mute</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="5">
+             <widget class="QPushButton" name="fullScreenBtn">
+              <property name="text">
+               <string>Full</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QPushButton" name="StopBtn">
+              <property name="text">
+               <string>Stop</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QPushButton" name="PlayBtn">
+              <property name="text">
+               <string>Play</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <widget class="QSlider" name="VolumeSlider">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0" colspan="5">
+             <widget class="QSlider" name="SeekSlider">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="5">
+             <widget class="QLabel" name="lblCurrentDuration">
+              <property name="text">
+               <string>0:00</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="1">
+           <layout class="QGridLayout" name="gridLayout_2"/>
+          </item>
+          <item row="0" column="2" rowspan="2">
+           <layout class="QGridLayout" name="RangeSettingsGrid">
+            <property name="horizontalSpacing">
+             <number>2</number>
+            </property>
+            <property name="verticalSpacing">
+             <number>0</number>
+            </property>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="0" rowspan="4">
+        <widget class="QListWidget" name="LibraryList">
+         <property name="maximumSize">
+          <size>
+           <width>500</width>
+           <height>16777215</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1" rowspan="3">
+        <layout class="QGridLayout" name="MediaGrid" columnstretch="0">
+         <property name="sizeConstraint">
+          <enum>QLayout::SetMaximumSize</enum>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1051</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionSelect_library"/>
+    <addaction name="actionSettings"/>
+   </widget>
+   <addaction name="menuFile"/>
+  </widget>
+  <action name="actionSelect_library">
+   <property name="text">
+    <string>Select library</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>Settings</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
