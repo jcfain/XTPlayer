@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 
 #include <QDirIterator>
+#include <qfloat16.h>
 
 LibraryListItem selectedFileListItem;
 int selectedFileListIndex;
@@ -18,16 +19,28 @@ MainWindow::MainWindow(QWidget *parent)
 
     //keyPress = new KeyPress();
     //keyPress->show();
-
-    on_load_library(SettingsHandler::selectedLibrary);
+    serialHandler = new SerialHandler();
+    loadSerialPorts();
     player = new QMediaPlayer(this);
     vw = new XVideoWidget(this);
     player->setVideoOutput(vw);
     vw->show();
-
     ui->MediaGrid->addWidget(vw);
+
+    on_load_library(SettingsHandler::selectedLibrary);
     ui->VolumeSlider->setValue(SettingsHandler::playerVolume);
     player->setVolume(SettingsHandler::playerVolume);
+    ui->SerialOutputCmb->setCurrentText(SettingsHandler::serialPort);
+    ui->networkAddressTxt->setText(SettingsHandler::serverAddress);
+    ui->networkPortTxt->setText(SettingsHandler::serverPort);
+    if(SettingsHandler::selectedDevice == DeviceType::Serial)
+    {
+        ui->serialOutputRdo->setChecked(true);
+    }
+    else if (SettingsHandler::selectedDevice == DeviceType::Network)
+    {
+        ui->networkOutputRdo->setChecked(true);
+    }
 
     QFont font( "Sans Serif", 7);
 
@@ -60,7 +73,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->RangeSettingsGrid->addWidget(SpeedSlider, 7,0);
 
 
-    connect(player, &QMediaPlayer::durationChanged, ui->SeekSlider, &QSlider::setMaximum);
     connect(player, &QMediaPlayer::positionChanged, this, &MainWindow::on_media_positionChanged);
     connect(player, &QMediaPlayer::mediaStatusChanged, this, &MainWindow::on_media_statusChanged);
     connect(ui->SeekSlider, &QSlider::sliderMoved, this, &MainWindow::on_seekSlider_sliderMoved);
@@ -68,7 +80,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(vw, &XVideoWidget::doubleClicked, this, &MainWindow::media_double_click_event);
     //connect(vw, &XVideoWidget::singleClicked, this, &MainWindow::media_single_click_event);
-    connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
+    //connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
+    connect(vw, &XVideoWidget::keyPressed, this, &MainWindow::on_key_press);
+    connect(serialHandler, &SerialHandler::connectionChange, this, &MainWindow::on_device_connectionChanged);
+    connect(serialHandler, &SerialHandler::errorOccurred, this, &MainWindow::on_device_error);
 }
 
 MainWindow::~MainWindow()
@@ -241,6 +256,19 @@ void MainWindow::playFile(LibraryListItem selectedFileListItem)
     }
 }
 
+void MainWindow::loadSerialPorts()
+{
+    ui->SerialOutputCmb->clear();
+    serialPorts.clear();
+    serialPorts = serialHandler->getPorts();
+    foreach(SerialComboboxItem item , serialPorts)
+    {
+        QVariant itemVarient;
+        itemVarient.setValue(item);
+        ui->SerialOutputCmb->addItem(item.friendlyName, itemVarient);
+    }
+}
+
 void MainWindow::togglePause()
 {
     if(player->state() == QMediaPlayer::PlayingState) {
@@ -303,14 +331,26 @@ void MainWindow::on_fullScreenBtn_clicked()
      MainWindow::toggleFullScreen();
 }
 
+void MainWindow::on_serialRefreshBtn_clicked()
+{
+    MainWindow::loadSerialPorts();
+}
+
 void MainWindow::on_seekSlider_sliderMoved(int position)
 {
-    player->setPosition(position);
+    qint64 playerPosition = XMath::mapRange(static_cast<qint64>(position), 0, 100, 0, player->duration());
+    player->setPosition(playerPosition);
 }
 
 void MainWindow::on_media_positionChanged(qint64 position)
 {
     ui->lblCurrentDuration->setText( second_to_minutes(position / 1000).append("/").append( second_to_minutes( (player->duration())/1000 ) ) );
+    qint64 duration = player->duration();
+    if (duration > 0)
+    {
+        qint64 sliderPosition = XMath::mapRange(position, 0, duration, 0, 100);
+        ui->SeekSlider->setValue(static_cast<int>(sliderPosition));
+    }
 }
 
 void MainWindow::on_media_statusChanged(QMediaPlayer::MediaStatus status)
@@ -318,10 +358,11 @@ void MainWindow::on_media_statusChanged(QMediaPlayer::MediaStatus status)
     switch(status)
     {
         case QMediaPlayer::MediaStatus::EndOfMedia:
-            selectedFileListIndex++;
+            ++selectedFileListIndex;
             if(selectedFileListIndex < videos.length())
             {
                 ui->LibraryList->setCurrentRow(selectedFileListIndex);
+                selectedFileListItem = ui->LibraryList->selectedItems()[0]->data(Qt::UserRole).value<LibraryListItem>();
                 on_PlayBtn_clicked();
             }
         break;
@@ -344,12 +385,56 @@ void MainWindow::media_single_click_event(QMouseEvent * event)
     }
 }
 
+void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
+{
+    if(event.deviceType == DeviceType::Serial)
+    {
+        ui->serialStatuslbl->setText(event.message);
+    }
+    else if (event.deviceType == DeviceType::Network)
+    {
+        ui->networkStatuslbl->setText(event.message);
+    }
+}
+
+void MainWindow::on_device_error(QString error)
+{
+    LogHandler::Dialog(error, LogLevel::Critical);
+}
+
 QString MainWindow::second_to_minutes(int seconds)
 {
     int sec = seconds;
     QString mn = QString::number( (sec ) / 60);
     int _tmp_mn  = mn.toInt() * 60;
-    QString sc= QString::number( (seconds- _tmp_mn  ) % 60 );
+    QString sc= QString::number( (seconds - _tmp_mn  ) % 60 );
 
     return (mn.length() == 1 ? "0" + mn : mn ) + ":" + (sc.length() == 1 ? "0" + sc : sc);
+}
+
+void MainWindow::on_SerialOutputCmb_currentIndexChanged(int index)
+{
+    SerialComboboxItem serialInfo = ui->SerialOutputCmb->currentData(Qt::UserRole).value<SerialComboboxItem>();
+    SettingsHandler::serialPort = serialInfo.friendlyName;
+    serialHandler->init(serialInfo);
+}
+
+void MainWindow::on_serialOutputRdo_clicked()
+{
+    SettingsHandler::selectedDevice = DeviceType::Serial;
+}
+
+void MainWindow::on_networkOutputRdo_clicked()
+{
+    SettingsHandler::selectedDevice = DeviceType::Network;
+}
+
+void MainWindow::on_networkAddressTxt_editingFinished()
+{
+    SettingsHandler::serverAddress = ui->networkAddressTxt->text();
+}
+
+void MainWindow::on_networkPortTxt_editingFinished()
+{
+    SettingsHandler::serverPort = ui->networkPortTxt->text();
 }

@@ -39,34 +39,40 @@
           <item row="1" column="0">
            <layout class="QGridLayout" name="OutputSettings" columnstretch="0,0,0,0">
             <item row="1" column="0" colspan="2">
-             <widget class="QRadioButton" name="radioButton_2">
+             <widget class="QRadioButton" name="networkOutputRdo">
               <property name="text">
                <string>Network</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
             <item row="1" column="2">
-             <widget class="QLineEdit" name="lineEdit"/>
+             <widget class="QLineEdit" name="networkAddressTxt"/>
             </item>
             <item row="1" column="3">
-             <widget class="QLineEdit" name="lineEdit_2">
+             <widget class="QLineEdit" name="networkPortTxt">
               <property name="maximumSize">
                <size>
                 <width>100</width>
                 <height>100</height>
                </size>
               </property>
+              <property name="maxLength">
+               <number>5</number>
+              </property>
              </widget>
             </item>
-            <item row="0" column="2">
-             <widget class="QComboBox" name="SerialOutputCmb"/>
-            </item>
             <item row="0" column="0" colspan="2">
-             <widget class="QRadioButton" name="SerialOutputRdo">
+             <widget class="QRadioButton" name="serialOutputRdo">
               <property name="text">
                <string>Serial</string>
               </property>
              </widget>
+            </item>
+            <item row="0" column="2" colspan="2">
+             <widget class="QComboBox" name="SerialOutputCmb"/>
             </item>
            </layout>
           </item>
@@ -122,6 +128,9 @@
             </item>
             <item row="0" column="0" colspan="5">
              <widget class="QSlider" name="SeekSlider">
+              <property name="maximum">
+               <number>100</number>
+              </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
@@ -140,7 +149,29 @@
            </layout>
           </item>
           <item row="1" column="1">
-           <layout class="QGridLayout" name="gridLayout_2"/>
+           <layout class="QGridLayout" name="gridLayout_2">
+            <item row="0" column="1">
+             <widget class="QLabel" name="serialStatuslbl">
+              <property name="text">
+               <string>Disconnected</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QPushButton" name="serialRefreshBtn">
+              <property name="text">
+               <string>Refresh</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="networkStatuslbl">
+              <property name="text">
+               <string>Disconnected</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item row="0" column="2" rowspan="2">
            <layout class="QGridLayout" name="RangeSettingsGrid">

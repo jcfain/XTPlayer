@@ -18,6 +18,7 @@ public:
 signals:
     void doubleClicked(QMouseEvent * event);
     void singleClicked(QMouseEvent * event);
+    void keyPressed(QKeyEvent * event);
 protected:
     void mouseDoubleClickEvent(QMouseEvent * event) override
     {
@@ -26,6 +27,10 @@ protected:
     void mousePressEvent(QMouseEvent * event) override
     {
         emit singleClicked(event);
+    }
+    void keyPressEvent(QKeyEvent *event) override
+    {
+        emit keyPressed(event);
     }
     void paintEvent(QPaintEvent *) override
     {

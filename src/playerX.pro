@@ -1,4 +1,4 @@
-QT       += core gui multimedia multimediawidgets
+QT       += core gui multimedia multimediawidgets serialport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -23,6 +23,7 @@ SOURCES += \
     lib/handler/settingshandler.cpp \
     lib/handler/tcodehandler.cpp \
     lib/handler/udphandler.cpp \
+    lib/tool/xmath.cpp \
     main.cpp \
     mainwindow.cpp
 
@@ -30,6 +31,7 @@ HEADERS += \
     CustomControls/RangeSlider.h \
     CustomControls/xmediaplayer.h \
     CustomControls/xvideowidget.h \
+    lib/enum/enum.h \
     lib/handler/funscripthandler.h \
     lib/handler/loghandler.h \
     lib/handler/loghandler.h \
@@ -37,8 +39,12 @@ HEADERS += \
     lib/handler/settingshandler.h \
     lib/handler/tcodehandler.h \
     lib/handler/udphandler.h \
+    lib/lookup/enum.h \
+    lib/struct/ConnectionChangedSignal.h \
     lib/struct/FunscriptStruct.h \
     lib/struct/LibraryListItem.h \
+    lib/struct/SerialComboboxItem.h \
+    lib/tool/xmath.h \
     mainwindow.h
 
 FORMS += \

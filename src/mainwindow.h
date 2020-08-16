@@ -9,15 +9,23 @@
 #include <QMessageBox>
 #include <iostream>
 #include <QMediaPlayer>
+#include <QtGlobal>
 #include "CustomControls/xvideowidget.h"
 //#include "CustomControls/xmediaplayer.h"
 #include "CustomControls/RangeSlider.h"
 #include "lib/handler/settingshandler.h"
-#include "lib/handler/Loghandler.h"
+#include "lib/handler/loghandler.h"
 #include "lib/handler/funscripthandler.h"
+#include "lib/handler/tcodehandler.h"
+#include "lib/handler/serialhandler.h"
 #include "lib/struct/LibraryListItem.h"
+#include "lib/struct/SerialComboboxItem.h"
+#include "lib/struct/ConnectionChangedSignal.h"
+#include "lib/tool/xmath.h"
+#include "lib/lookup/enum.h"
 
 Q_DECLARE_METATYPE(LibraryListItem);
+Q_DECLARE_METATYPE(SerialComboboxItem);
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -51,6 +59,19 @@ private slots:
     void on_fullScreenBtn_clicked();
 
 
+    void on_SerialOutputCmb_currentIndexChanged(int index);
+
+    void on_serialRefreshBtn_clicked();
+
+    void on_serialOutputRdo_clicked();
+
+
+    void on_networkOutputRdo_clicked();
+
+    void on_networkAddressTxt_editingFinished();
+
+    void on_networkPortTxt_editingFinished();
+
 signals:
     void keyPressed(QKeyEvent * event);
 protected:
@@ -74,6 +95,9 @@ private:
     RangeSlider* SpeedSlider;
     QWindow* fullscreenWindow;
     FunscriptHandler* funscriptHandler;
+    TCodeHandler* tcodeHandler;
+    SerialHandler* serialHandler;
+    QVector<SerialComboboxItem> serialPorts;
 
     QVector<QString> videos;
     void on_load_library(QString path);
@@ -83,6 +107,7 @@ private:
     bool isPlayingFile(QString file);
     void togglePause();
     void toggleFullScreen();
+    void loadSerialPorts();
     void playFile(LibraryListItem selectedFileListItem);
 
     void on_seekSlider_sliderMoved(int position);
@@ -91,5 +116,8 @@ private:
     void on_media_positionChanged(qint64 position);
     void media_single_click_event(QMouseEvent * event);
     void on_media_statusChanged(QMediaPlayer::MediaStatus status);
+    void on_device_connectionChanged(ConnectionChangedSignal event);
+    void on_device_error(QString error);
+    //void on_output_radioChanged(QRadio event);
 };
 #endif // MAINWINDOW_H
