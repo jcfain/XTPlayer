@@ -1,7 +1,13 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+
+#include <QDirIterator>
+
+LibraryListItem selectedFileListItem;
+int selectedFileListIndex;
 int preFullScreenWidth;
 int preFullScreenHeight;
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -10,6 +16,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     SettingsHandler::Load();
 
+    //keyPress = new KeyPress();
+    //keyPress->show();
 
     on_load_library(SettingsHandler::selectedLibrary);
     player = new QMediaPlayer(this);
@@ -54,11 +62,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(player, &QMediaPlayer::durationChanged, ui->SeekSlider, &QSlider::setMaximum);
     connect(player, &QMediaPlayer::positionChanged, this, &MainWindow::on_media_positionChanged);
-    //connect(player, static_cast<void(QMediaPlayer::*)(QMediaPlayer::Error )>(&QMediaPlayer::error), this, &MainWindow::on_media_error);
-    //connect(player, &QMediaPlayer::error, this, &MainWindow::on_media_error);
+    connect(player, &QMediaPlayer::mediaStatusChanged, this, &MainWindow::on_media_statusChanged);
+    connect(ui->SeekSlider, &QSlider::sliderMoved, this, &MainWindow::on_seekSlider_sliderMoved);
+    connect(player, static_cast<void(QMediaPlayer::*)(QMediaPlayer::Error )>(&QMediaPlayer::error), this, &MainWindow::on_media_error);
 
-    //connect(vw,SIGNAL(mouseDoubleClickEvent(QMouseEvent * event)), this, SLOT(mouse_double_click_event(QMouseEvent * event)));
     connect(vw, &XVideoWidget::doubleClicked, this, &MainWindow::media_double_click_event);
+    //connect(vw, &XVideoWidget::singleClicked, this, &MainWindow::media_single_click_event);
+    connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
 }
 
 MainWindow::~MainWindow()
@@ -67,9 +77,23 @@ MainWindow::~MainWindow()
     delete ui;
     delete player;
     delete vw;
+    //delete keyPress;
 }
 
-void on_media_error(QMediaPlayer::Error error)
+void  MainWindow::on_key_press(QKeyEvent * event)
+{
+    switch(event->key())
+    {
+        case Qt::Key_Space:
+            MainWindow::togglePause();
+            break;
+        case Qt::Key_F11:
+            MainWindow::toggleFullScreen();
+            break;
+    }
+}
+
+void MainWindow::on_media_error(QMediaPlayer::Error error)
 {
     QString message;
     switch(error)
@@ -95,11 +119,9 @@ void on_media_error(QMediaPlayer::Error error)
         case QMediaPlayer::Error::NoError:
             break;
     }
-    if (!message.isNull())
+    if (message != Q_NULLPTR)
     {
-        QMessageBox messageBox;
-        messageBox.critical(0,"Error","An error has occured !");
-        messageBox.setFixedSize(500,200);
+        LogHandler::Dialog(message, LogLevel::Critical);
     }
 }
 
@@ -109,26 +131,69 @@ void MainWindow::on_load_library(QString path)
         QDir directory(path);
         if (directory.exists()) {
             ui->LibraryList->clear();
-            QStringList videos = directory.entryList(QStringList() << "*.mp4" << "*.MP4", QDir::Files);
-            foreach(QString filename, videos)
-            {
-                QString video = SettingsHandler::selectedLibrary + QDir::separator() +filename;
-                QString scriptFile = filename.remove(video.lastIndexOf('.'), video.length() -  1) + ".funscript";
+            videos.clear();
+            QDirIterator library(path, QStringList()
+                        << "*.mp4"
+                        << "*.avi"
+                        << "*.mpg"
+                        << "*.wmv"
+                        << "*.mkv"
+                        << "*.webm"
+                        << "*.mp2"
+                        << "*.mpeg"
+                        << "*.mpv"
+                        << "*.ogg"
+                        << "*.m4p"
+                        << "*.m4v"
+                        << "*.mov"
+                        << "*.qt"
+                        << "*.flv"
+                        << "*.swf"
+                        << "*.avchd", QDir::Files, QDirIterator::Subdirectories);
+            while (library.hasNext()) {
+                QFileInfo fileinfo(library.next());
+                QString videoPath = fileinfo.filePath();
+                QString videoPathTemp = fileinfo.filePath();
+                QString fileName = fileinfo.fileName();
+                QString fileNameTemp = fileinfo.fileName();
+                QString scriptFile = fileNameTemp.remove(fileNameTemp.lastIndexOf('.'), fileNameTemp.length() -  1) + ".funscript";
                 QString scriptPath;
-                if (SettingsHandler::selectedFunscriptLibrary.isNull()) {
-                    scriptPath = video.remove(video.lastIndexOf('.'), video.length() -  1) + ".funscript";
+                if (SettingsHandler::selectedFunscriptLibrary == Q_NULLPTR) {
+                    scriptPath = videoPathTemp.remove(videoPathTemp.lastIndexOf('.'), videoPathTemp.length() -  1) + ".funscript";
                 } else {
-                    QString video = SettingsHandler::selectedFunscriptLibrary + QDir::separator() +scriptFile;
+                    scriptPath = SettingsHandler::selectedFunscriptLibrary + QDir::separator() + scriptFile;
                 }
                 if (funscriptHandler->exists(scriptPath))
                 {
-                    //LibraryListItem item() {video, filename, scriptPath};
-                    //MainWindow::videos.push_front(filename);
-                    //ui->LibraryList->addItem(new QListWidgetItem(filename, ui->LibraryList, LibraryListItem {video, filename, scriptPath}));
-                    ui->LibraryList->addItem(filename);
+                    LibraryListItem item
+                    {
+                        videoPath, // path
+                        fileName, // name
+                        scriptPath // script
+                    };
+                    QVariant listItem;
+                    listItem.setValue(item);
+                    QListWidgetItem* qListWidgetItem = new QListWidgetItem;
+                    qListWidgetItem->setText(fileinfo.fileName());
+                    qListWidgetItem->setToolTip(videoPath);
+                    qListWidgetItem->setData(Qt::UserRole, listItem);
+                    ui->LibraryList->addItem(qListWidgetItem);
+                    videos.push_back(videoPath);
+                }
+                else
+                {
+                    LogHandler::Debug("Script does not exist for video: " + videoPath);
                 }
             }
         }
+        else
+        {
+           LogHandler::Dialog("Lobrary path '" + path + "' does not exist", LogLevel::Critical);
+        }
+    }
+    else
+    {
+       LogHandler::Dialog("Please select a library from the menu!", LogLevel::Critical);
     }
 }
 
@@ -140,7 +205,7 @@ void MainWindow::on_libray_path_select(QString path)
 void MainWindow::on_actionSelect_library_triggered()
 {
     QString selectedLibrary = QFileDialog::getExistingDirectory(this, tr("Choose library"), ".", QFileDialog::ReadOnly);
-    if (!selectedLibrary.isNull()) {
+    if (selectedLibrary != Q_NULLPTR) {
         on_libray_path_select(selectedLibrary);
 
         SettingsHandler::selectedLibrary = selectedLibrary;
@@ -149,30 +214,59 @@ void MainWindow::on_actionSelect_library_triggered()
 
 void MainWindow::on_LibraryList_itemClicked(QListWidgetItem *item)
 {
-
+    selectedFileListItem = item->data(Qt::UserRole).value<LibraryListItem>();
 }
 
 void MainWindow::on_LibraryList_itemDoubleClicked(QListWidgetItem *item)
 {
-    auto selectedFileTemp = SettingsHandler::selectedLibrary + QDir::separator() + item->text();
+    selectedFileListItem = item->data(Qt::UserRole).value<LibraryListItem>();
+    MainWindow::playFile(selectedFileListItem);
+}
+
+
+void MainWindow::playFile(LibraryListItem selectedFileListItem)
+{
     player->stop();
-    SettingsHandler::selectedFile = selectedFileTemp;
-    QFile file(SettingsHandler::selectedFile);
+    QFile file(selectedFileListItem.path);
     if (file.exists())
     {
-
-        QUrl url = QUrl::fromLocalFile(SettingsHandler::selectedFile);
+        SettingsHandler::selectedFile = selectedFileListItem.path;
+        QUrl url = QUrl::fromLocalFile(selectedFileListItem.path);
         player->setMedia(url);
+        player->play();
+        selectedFileListIndex = ui->LibraryList->currentRow();
+    }
+    else {
+        LogHandler::Dialog("File '" + selectedFileListItem.path + "' does not exist!", LogLevel::Critical);
+    }
+}
+
+void MainWindow::togglePause()
+{
+    if(player->state() == QMediaPlayer::PlayingState) {
+        player->pause();
+    } else {
         player->play();
     }
 }
 
-
-bool MainWindow::isPlayingFile(QString file)
+void MainWindow::toggleFullScreen()
 {
-    return player->PlayingState == QMediaPlayer::State::PlayingState && SettingsHandler::selectedFile.compare(file) > -1;
+    if(player->state() == QMediaPlayer::PlayingState) {
+        if(!vw->isFullScreen()) {
+            preFullScreenWidth = vw->width();
+            preFullScreenHeight = vw->height();
+            vw->setParent(this, Qt::Tool);
+            vw->showFullScreen();
+        }
+        else {
+            vw->setParent(this, Qt::Widget);
+            ui->MediaGrid->addWidget(vw);
+            vw->resize(preFullScreenWidth, preFullScreenHeight);
+            vw->showNormal();
+        }
+    }
 }
-
 
 void MainWindow::on_VolumeSlider_valueChanged(int value)
 {
@@ -182,18 +276,14 @@ void MainWindow::on_VolumeSlider_valueChanged(int value)
 
 void MainWindow::on_PlayBtn_clicked()
 {
-    if(player->PlayingState != QMediaPlayer::State::PlayingState) {
-        player->play();
+    if(selectedFileListItem.name != "") {
+        MainWindow::playFile(selectedFileListItem);
     }
 }
 
 void MainWindow::on_PauseBtn_clicked()
 {
-    if(player->PlayingState == QMediaPlayer::State::PlayingState) {
-        player->pause();
-    } else {
-        player->play();
-    }
+    MainWindow::togglePause();
 }
 
 void MainWindow::on_StopBtn_clicked()
@@ -207,29 +297,13 @@ void MainWindow::on_MuteBtn_toggled(bool checked)
 {
     player->setMuted(checked);
 }
-//#include <QScreen>
+
 void MainWindow::on_fullScreenBtn_clicked()
 {
-    if(player->state() == QMediaPlayer::PlayingState) {
-        if(!vw->isFullScreen()) {
-            preFullScreenWidth = vw->width();
-            preFullScreenHeight = vw->height();
-            vw->setParent(this, Qt::Tool);
-            //ui->MediaGrid->removeWidget(vw);
-            //QSize rec = MainWindow::screen()->availableSize();
-            //vw->resize(rec.width(), rec.height());
-            vw->showFullScreen();
-        }
-        else {
-            vw->setParent(this, Qt::Widget);
-            ui->MediaGrid->addWidget(vw);
-            vw->resize(preFullScreenWidth, preFullScreenHeight);
-            vw->showNormal();
-        }
-    }
+     MainWindow::toggleFullScreen();
 }
 
-void MainWindow::on_SeekSlider_sliderMoved(int position)
+void MainWindow::on_seekSlider_sliderMoved(int position)
 {
     player->setPosition(position);
 }
@@ -239,15 +313,36 @@ void MainWindow::on_media_positionChanged(qint64 position)
     ui->lblCurrentDuration->setText( second_to_minutes(position / 1000).append("/").append( second_to_minutes( (player->duration())/1000 ) ) );
 }
 
+void MainWindow::on_media_statusChanged(QMediaPlayer::MediaStatus status)
+{
+    switch(status)
+    {
+        case QMediaPlayer::MediaStatus::EndOfMedia:
+            selectedFileListIndex++;
+            if(selectedFileListIndex < videos.length())
+            {
+                ui->LibraryList->setCurrentRow(selectedFileListIndex);
+                on_PlayBtn_clicked();
+            }
+        break;
+    }
+}
 
 void MainWindow::media_double_click_event(QMouseEvent * event)
 {
     if ( event->button() == Qt::LeftButton )
     {
-        MainWindow::on_fullScreenBtn_clicked();
+        MainWindow::toggleFullScreen();
     }
 }
 
+void MainWindow::media_single_click_event(QMouseEvent * event)
+{
+    if ( event->button() == Qt::LeftButton )
+    {
+        MainWindow::togglePause();
+    }
+}
 
 QString MainWindow::second_to_minutes(int seconds)
 {

@@ -17,10 +17,15 @@ public:
     };
 signals:
     void doubleClicked(QMouseEvent * event);
+    void singleClicked(QMouseEvent * event);
 protected:
     void mouseDoubleClickEvent(QMouseEvent * event) override
     {
         emit doubleClicked(event);
+    }
+    void mousePressEvent(QMouseEvent * event) override
+    {
+        emit singleClicked(event);
     }
     void paintEvent(QPaintEvent *) override
     {

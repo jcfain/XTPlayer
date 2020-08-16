@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1051</width>
+    <width>1094</width>
     <height>694</height>
    </rect>
   </property>
@@ -157,11 +157,20 @@
        </item>
        <item row="0" column="0" rowspan="4">
         <widget class="QListWidget" name="LibraryList">
+         <property name="minimumSize">
+          <size>
+           <width>300</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="maximumSize">
           <size>
            <width>500</width>
            <height>16777215</height>
           </size>
+         </property>
+         <property name="editTriggers">
+          <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
          </property>
         </widget>
        </item>
@@ -186,7 +195,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1051</width>
+     <width>1094</width>
      <height>20</height>
     </rect>
    </property>

@@ -8,5 +8,4 @@ struct LibraryListItem
     QString name;
     QString script;
 };
-
 #endif // LIBRARYLISTITEM_H
