@@ -16,6 +16,13 @@ public:
     static QString serverAddress;
     static QString serverPort;
     static int playerVolume;
+    static int speed;
+    static int xMin;
+    static int yRollMin;
+    static int xRollMin;
+    static int xMax;
+    static int yRollMax;
+    static int xRollMax;
 
     static void Load();
     static void Save();

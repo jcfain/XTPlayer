@@ -7,7 +7,6 @@ struct SerialComboboxItem
 {
     QString friendlyName;
     QString portName;
-    QSerialPortInfo* portInfo;
 };
 
 #endif // SERIALCOMBOBOXIREM_H

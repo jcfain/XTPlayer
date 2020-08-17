@@ -31,7 +31,7 @@ HEADERS += \
     CustomControls/RangeSlider.h \
     CustomControls/xmediaplayer.h \
     CustomControls/xvideowidget.h \
-    lib/enum/enum.h \
+    lib/lookup/enum.h \
     lib/handler/funscripthandler.h \
     lib/handler/loghandler.h \
     lib/handler/loghandler.h \
@@ -41,7 +41,7 @@ HEADERS += \
     lib/handler/udphandler.h \
     lib/lookup/enum.h \
     lib/struct/ConnectionChangedSignal.h \
-    lib/struct/FunscriptStruct.h \
+    lib/struct/Funscript.h \
     lib/struct/LibraryListItem.h \
     lib/struct/SerialComboboxItem.h \
     lib/tool/xmath.h \
@@ -49,6 +49,8 @@ HEADERS += \
 
 FORMS += \
     mainwindow.ui
+
+LIBS       += -lVLCQtCore -lVLCQtWidgets
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

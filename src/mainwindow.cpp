@@ -245,11 +245,18 @@ void MainWindow::playFile(LibraryListItem selectedFileListItem)
     QFile file(selectedFileListItem.path);
     if (file.exists())
     {
-        SettingsHandler::selectedFile = selectedFileListItem.path;
-        QUrl url = QUrl::fromLocalFile(selectedFileListItem.path);
-        player->setMedia(url);
-        player->play();
-        selectedFileListIndex = ui->LibraryList->currentRow();
+        if(funscriptHandler->load(selectedFileListItem.script))
+        {
+            SettingsHandler::selectedFile = selectedFileListItem.path;
+            QUrl url = QUrl::fromLocalFile(selectedFileListItem.path);
+            player->setMedia(url);
+            player->play();
+            selectedFileListIndex = ui->LibraryList->currentRow();
+        }
+        else
+        {
+            LogHandler::Dialog("Error loading '" + selectedFileListItem.script + "'!", LogLevel::Critical);
+        }
     }
     else {
         LogHandler::Dialog("File '" + selectedFileListItem.path + "' does not exist!", LogLevel::Critical);
@@ -348,6 +355,7 @@ void MainWindow::on_media_positionChanged(qint64 position)
     qint64 duration = player->duration();
     if (duration > 0)
     {
+        serialHandler->sendTCode(tcodeHandler->funscriptToTCode(funscriptHandler->getPosition(position)));
         qint64 sliderPosition = XMath::mapRange(position, 0, duration, 0, 100);
         ui->SeekSlider->setValue(static_cast<int>(sliderPosition));
     }
@@ -414,9 +422,12 @@ QString MainWindow::second_to_minutes(int seconds)
 
 void MainWindow::on_SerialOutputCmb_currentIndexChanged(int index)
 {
-    SerialComboboxItem serialInfo = ui->SerialOutputCmb->currentData(Qt::UserRole).value<SerialComboboxItem>();
-    SettingsHandler::serialPort = serialInfo.friendlyName;
-    serialHandler->init(serialInfo);
+    if (SettingsHandler::selectedDevice == DeviceType::Serial)
+    {
+        SerialComboboxItem serialInfo = ui->SerialOutputCmb->currentData(Qt::UserRole).value<SerialComboboxItem>();
+        SettingsHandler::serialPort = serialInfo.friendlyName;
+        serialHandler->init(serialInfo);
+    }
 }
 
 void MainWindow::on_serialOutputRdo_clicked()

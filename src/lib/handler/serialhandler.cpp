@@ -8,11 +8,12 @@ SerialHandler::SerialHandler()
 }
 SerialHandler::~SerialHandler()
 {
+    dispose();
 }
 
 void SerialHandler::init(SerialComboboxItem portInfo)
 {
-    //m_serial->setPort(*portInfo.portInfo);
+    emit connectionChange({DeviceType::Serial, ConnectionStatus::Connecting, "Connecting..."});
     if (m_serial->isOpen())
         m_serial->close();
     m_serial->setPortName(portInfo.portName);
@@ -22,7 +23,6 @@ void SerialHandler::init(SerialComboboxItem portInfo)
     m_serial->setStopBits(QSerialPort::OneStop);
     m_serial->setFlowControl(QSerialPort::NoFlowControl);
     if (m_serial->open(QIODevice::ReadWrite)) {
-        emit connectionChange({DeviceType::Serial, ConnectionStatus::Connecting, "Connecting..."});
         sendTCode("D1");
     } else {
         emit connectionChange({DeviceType::Serial, ConnectionStatus::Error, "Error opening"});
@@ -49,6 +49,8 @@ void SerialHandler::dispose()
 
 void SerialHandler::sendTCode(QString tcode)
 {
+    tcode += '\n';
+    LogHandler::Debug("Sending TCode: " + tcode);
     m_serial->write(tcode.toUtf8());
 }
 
@@ -68,14 +70,13 @@ QVector<SerialComboboxItem> SerialHandler::getPorts()
     for (const QSerialPortInfo &serialPortInfo : serialPortInfos) {
         QString friendlyName = serialPortInfo.portName() + " " + serialPortInfo.description() ;
         QString portName = serialPortInfo.portName();
-        QSerialPortInfo* portInfo = new QSerialPortInfo(serialPortInfo);
         if (!friendlyName.isEmpty() && !portName.isEmpty())
         {
-            availablePorts.push_back({friendlyName, portName, portInfo});
+            availablePorts.push_back({friendlyName, portName});
         }
         else if (!portName.isEmpty())
         {
-            availablePorts.push_back({portName, portName, portInfo});
+            availablePorts.push_back({portName, portName});
         }
     }
     return availablePorts;

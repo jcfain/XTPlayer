@@ -2,18 +2,13 @@
 #define FUNSCRIPTSTRUCT_H
 
 #include <QString>
-#include <QVector>
-
-struct FunscriptAction {
-    int pos;
-    long at;
-};
+#include <QHash>
 
 struct Funscript {
     QString version;
     bool inverted;
     int range;
-    QVector<FunscriptAction> actions;
+    QHash<qint64, int> actions;
 };
 
 

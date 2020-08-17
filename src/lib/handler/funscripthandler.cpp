@@ -1,22 +1,21 @@
 #include "funscripthandler.h"
-#include <QIODevice>
-#include <QFile>
-#include <QIODevice>
-#include <QTextStream>
-#include <QJsonDocument>
-#include <QJsonArray>
-#include <QFile>
 
+
+Funscript* funscript = new Funscript();
+int lastAction;
 
 FunscriptHandler::FunscriptHandler()
 {
 
 }
 
-
-bool FunscriptHandler::load(QString funscript)
+FunscriptHandler::~FunscriptHandler()
 {
-    QFile loadFile(funscript);
+}
+
+bool FunscriptHandler::load(QString funscriptString)
+{
+    QFile loadFile(funscriptString);
 
     if (!loadFile.open(QIODevice::ReadOnly)) {
         qWarning("Couldn't open funscript file.");
@@ -24,16 +23,21 @@ bool FunscriptHandler::load(QString funscript)
     }
 
     QByteArray funData = loadFile.readAll();
-    QJsonDocument loadDoc(QJsonDocument::fromJson(funData));
+    QJsonParseError* error = new QJsonParseError();
+    QJsonDocument doc = QJsonDocument::fromJson(funData, error);
 
-    FunscriptHandler::funscript = FunscriptHandler::JSonToFunscript(loadDoc.object());
+    if(doc.isNull()) {
+        emit errorOccurred("loading funscript failed: " + error->errorString());
+        return false;
+    }
+    delete error;
+    JSonToFunscript(doc.object());
 
     return true;
 }
 
-Funscript* FunscriptHandler::JSonToFunscript(QJsonObject json)
+void FunscriptHandler::JSonToFunscript(QJsonObject json)
 {
-    Funscript* funscript = new Funscript();
     if (json.contains("range"))
         funscript->range = json["range"].toInt();
     if (json.contains("version") && json["version"].isString())
@@ -42,23 +46,32 @@ Funscript* FunscriptHandler::JSonToFunscript(QJsonObject json)
         funscript->inverted = json["inverted"].toBool();
     if (json.contains("actions") && json["actions"].isArray())
     {
+        funscript->actions.clear();
         QJsonArray actionArray = json["actions"].toArray();
         foreach(QJsonValue value, actionArray)
         {
             QJsonObject obj = value.toObject();
-            if (json.contains("at") && json.contains("pos"))
+            if (obj.contains("at") && obj.contains("pos"))
             {
-                funscript->actions.push_back({json["at"].toInt(), json["pos"].toInt()});
+                funscript->actions[(qint64)obj["at"].toDouble()] = obj["pos"].toInt();
             }
 
         }
     }
-
-    return funscript;
 }
 
 bool FunscriptHandler::exists(QString path)
 {
     QFile fpath(path);
     return fpath.exists();
+}
+
+int FunscriptHandler::getPosition(qint64 millis)
+{
+    if (funscript->actions.contains(millis))
+    {
+        lastAction = funscript->actions.value(millis);
+        return lastAction;
+    }
+    return lastAction;
 }
