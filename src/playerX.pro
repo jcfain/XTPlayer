@@ -1,4 +1,4 @@
-QT       += core gui multimedia multimediawidgets serialport
+QT       += core gui avwidgets multimedia multimediawidgets serialport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -50,7 +50,18 @@ HEADERS += \
 FORMS += \
     mainwindow.ui
 
-LIBS       += -lVLCQtCore -lVLCQtWidgets
+# LIBS       += -lVLCQtCore -lVLCQtWidgets
+unix:!mac {
+LIBS += -L$$QT.core.libs -lQtAV
+}
+unix:mac {
+INCLUDEPATH += $$QT.core.libs/QtAV.framework/Versions/1/Headers
+QMAKE_LFLAGS += -F$$QT.core.libs
+LIBS += -framework QtAV
+}
+win32{
+LIBS += -L$$QT.core.libs -lQtAV1
+}
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

@@ -9,6 +9,8 @@
 #include <QMessageBox>
 #include <iostream>
 #include <QMediaPlayer>
+#include <QtAV>
+#include <QtAVWidgets>
 #include <QtGlobal>
 #include "CustomControls/xvideowidget.h"
 //#include "CustomControls/xmediaplayer.h"
@@ -30,6 +32,8 @@ Q_DECLARE_METATYPE(SerialComboboxItem);
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
+
+using namespace QtAV;
 
 class MainWindow : public QMainWindow
 {
@@ -75,15 +79,17 @@ private slots:
 signals:
     void keyPressed(QKeyEvent * event);
 protected:
-    void keyPressEvent(QKeyEvent *event) override
+    virtual void keyPressEvent(QKeyEvent *event) override
     {
         emit keyPressed(event);
     }
 
 private:
     Ui::MainWindow *ui;
-    QMediaPlayer* player;
-    XVideoWidget* vw;
+    //QMediaPlayer* player;
+    AVPlayer* player;
+    //XVideoWidget* vw;
+    VideoOutput* vw;
     QProgressBar* bar;
     QLabel* xRangeLabel;
     QLabel* yRollRangeLabel;
@@ -115,9 +121,10 @@ private:
     void on_media_error(QMediaPlayer::Error error);
     void on_media_positionChanged(qint64 position);
     void media_single_click_event(QMouseEvent * event);
-    void on_media_statusChanged(QMediaPlayer::MediaStatus status);
+    void on_media_statusChanged(MediaStatus status);
     void on_device_connectionChanged(ConnectionChangedSignal event);
     void on_device_error(QString error);
+    void donate();
     //void on_output_radioChanged(QRadio event);
 };
 #endif // MAINWINDOW_H

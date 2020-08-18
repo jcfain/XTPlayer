@@ -2,7 +2,7 @@
 #define LOGHANDLER_H
 #include <QString>
 
-enum LogLevel
+enum XLogLevel
 {
     Information,
     Debuging,
@@ -18,8 +18,8 @@ public:
     static void Info(QString message);
     static void Error(QString message);
     static void Warn(QString message);
-    static void Dialog(QString message, LogLevel level);
-    static QString getLevel(LogLevel level);
+    static void Dialog(QString message, XLogLevel level);
+    static QString getLevel(XLogLevel level);
 
 private:
     LogHandler();

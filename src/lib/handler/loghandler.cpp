@@ -27,23 +27,23 @@ void LogHandler::Error(QString message)
     qCritical() << message;
 }
 
-void LogHandler::Dialog(QString message, LogLevel level)
+void LogHandler::Dialog(QString message, XLogLevel level)
 {
     QMessageBox messageBox;
     messageBox.critical(0, LogHandler::getLevel(level), message);
     messageBox.setFixedSize(500,200);
 }
 
-QString LogHandler::getLevel(LogLevel level)
+QString LogHandler::getLevel(XLogLevel level)
 {
     switch(level) {
-        case LogLevel::Debuging:
+        case XLogLevel::Debuging:
             return "Debug";
-        case LogLevel::Information:
+        case XLogLevel::Information:
             return "Information";
-        case LogLevel::Warning:
+        case XLogLevel::Warning:
             return "Warning";
-        case LogLevel::Critical:
+        case XLogLevel::Critical:
             return "Error";
     }
 

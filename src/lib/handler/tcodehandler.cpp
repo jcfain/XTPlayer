@@ -8,7 +8,7 @@ TCodeHandler::TCodeHandler()
 QString TCodeHandler::funscriptToTCode(qint64 position)
 {
     char buffer[15] = "";
-    int tcodValue = XMath::mapRange(position, 50, 100, 500, 1000);
+    int tcodValue = XMath::mapRange(position, 50, 95, 500, 999);
     char tcodeValueString[4];
     sprintf(tcodeValueString, "%03d", calculateRange("L0", tcodValue));
     strcat (buffer, tcodeValueString);

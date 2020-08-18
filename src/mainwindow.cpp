@@ -13,23 +13,34 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
-
     ui->setupUi(this);
+    //QtAV::Widgets::registerRenderers();
     SettingsHandler::Load();
 
     //keyPress = new KeyPress();
     //keyPress->show();
     serialHandler = new SerialHandler();
     loadSerialPorts();
-    player = new QMediaPlayer(this);
-    vw = new XVideoWidget(this);
-    player->setVideoOutput(vw);
-    vw->show();
-    ui->MediaGrid->addWidget(vw);
+
+
+    player = new AVPlayer(this);
+    vw = new VideoOutput(this);
+    if (!vw->widget()) {
+        QMessageBox::warning(0, QString::fromLatin1("QtAV error"), tr("Can not create video renderer"));
+        return;
+    }
+    player->setRenderer(vw);
+
+    //player = new QMediaPlayer(this);
+    //vw = new XVideoWidget(this);
+    //player->setVideoOutput(vw);
+    //vw->show();
+    player->audio()->setVolume(SettingsHandler::playerVolume);
+
+    ui->MediaGrid->addWidget(vw->widget());
 
     on_load_library(SettingsHandler::selectedLibrary);
     ui->VolumeSlider->setValue(SettingsHandler::playerVolume);
-    player->setVolume(SettingsHandler::playerVolume);
     ui->SerialOutputCmb->setCurrentText(SettingsHandler::serialPort);
     ui->networkAddressTxt->setText(SettingsHandler::serverAddress);
     ui->networkPortTxt->setText(SettingsHandler::serverPort);
@@ -73,15 +84,15 @@ MainWindow::MainWindow(QWidget *parent)
     ui->RangeSettingsGrid->addWidget(SpeedSlider, 7,0);
 
 
-    connect(player, &QMediaPlayer::positionChanged, this, &MainWindow::on_media_positionChanged);
-    connect(player, &QMediaPlayer::mediaStatusChanged, this, &MainWindow::on_media_statusChanged);
+    //connect(player, &AVPlayer::, this, &MainWindow::on_media_positionChanged);
+    connect(player, &AVPlayer::mediaStatusChanged, this, &MainWindow::on_media_statusChanged);
     connect(ui->SeekSlider, &QSlider::sliderMoved, this, &MainWindow::on_seekSlider_sliderMoved);
-    connect(player, static_cast<void(QMediaPlayer::*)(QMediaPlayer::Error )>(&QMediaPlayer::error), this, &MainWindow::on_media_error);
+    //connect(player, static_cast<void(AVPlayer::*)(AVPlayer::Error )>(&AVPlayer::error), this, &MainWindow::on_media_error);
 
-    connect(vw, &XVideoWidget::doubleClicked, this, &MainWindow::media_double_click_event);
+    //connect(vw, &VideoOutput::doubleClicked, this, &MainWindow::media_double_click_event);
     //connect(vw, &XVideoWidget::singleClicked, this, &MainWindow::media_single_click_event);
     //connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
-    connect(vw, &XVideoWidget::keyPressed, this, &MainWindow::on_key_press);
+    //connect(vw, &XVideoWidget::keyPressed, this, &MainWindow::on_key_press);
     connect(serialHandler, &SerialHandler::connectionChange, this, &MainWindow::on_device_connectionChanged);
     connect(serialHandler, &SerialHandler::errorOccurred, this, &MainWindow::on_device_error);
 }
@@ -136,7 +147,7 @@ void MainWindow::on_media_error(QMediaPlayer::Error error)
     }
     if (message != Q_NULLPTR)
     {
-        LogHandler::Dialog(message, LogLevel::Critical);
+        LogHandler::Dialog(message, XLogLevel::Critical);
     }
 }
 
@@ -203,12 +214,12 @@ void MainWindow::on_load_library(QString path)
         }
         else
         {
-           LogHandler::Dialog("Lobrary path '" + path + "' does not exist", LogLevel::Critical);
+           LogHandler::Dialog("Lobrary path '" + path + "' does not exist", XLogLevel::Critical);
         }
     }
     else
     {
-       LogHandler::Dialog("Please select a library from the menu!", LogLevel::Critical);
+       LogHandler::Dialog("Please select a library from the menu!", XLogLevel::Critical);
     }
 }
 
@@ -245,21 +256,22 @@ void MainWindow::playFile(LibraryListItem selectedFileListItem)
     QFile file(selectedFileListItem.path);
     if (file.exists())
     {
+        player->setFile(selectedFileListItem.path);
+        player->load();
         if(funscriptHandler->load(selectedFileListItem.script))
         {
             SettingsHandler::selectedFile = selectedFileListItem.path;
-            QUrl url = QUrl::fromLocalFile(selectedFileListItem.path);
-            player->setMedia(url);
+            //QUrl url = QUrl::fromLocalFile(selectedFileListItem.path);
             player->play();
             selectedFileListIndex = ui->LibraryList->currentRow();
         }
         else
         {
-            LogHandler::Dialog("Error loading '" + selectedFileListItem.script + "'!", LogLevel::Critical);
+            LogHandler::Dialog("Error loading '" + selectedFileListItem.script + "'!", XLogLevel::Critical);
         }
     }
     else {
-        LogHandler::Dialog("File '" + selectedFileListItem.path + "' does not exist!", LogLevel::Critical);
+        LogHandler::Dialog("File '" + selectedFileListItem.path + "' does not exist!", XLogLevel::Critical);
     }
 }
 
@@ -278,34 +290,32 @@ void MainWindow::loadSerialPorts()
 
 void MainWindow::togglePause()
 {
-    if(player->state() == QMediaPlayer::PlayingState) {
-        player->pause();
-    } else {
-        player->play();
-    }
+    player->togglePause();
 }
 
 void MainWindow::toggleFullScreen()
 {
-    if(player->state() == QMediaPlayer::PlayingState) {
-        if(!vw->isFullScreen()) {
-            preFullScreenWidth = vw->width();
-            preFullScreenHeight = vw->height();
-            vw->setParent(this, Qt::Tool);
-            vw->showFullScreen();
+    if(player->state() == AVPlayer::PlayingState) {
+        if(!vw->widget()->isFullScreen()) {
+            preFullScreenWidth = vw->widget()->width();
+            preFullScreenHeight = vw->widget()->height();
+            //vw->widget()->setParent(this, Qt::Tool);
+            //vw->widget()->showFullScreen();
+            QSize s = rect().size();
+            vw->widget()->resize(QSize(s.width()+1, s.height()+1));
         }
         else {
-            vw->setParent(this, Qt::Widget);
-            ui->MediaGrid->addWidget(vw);
-            vw->resize(preFullScreenWidth, preFullScreenHeight);
-            vw->showNormal();
+            vw->widget()->setParent(this, Qt::Widget);
+            ui->MediaGrid->addWidget(vw->widget());
+            vw->widget()->resize(preFullScreenWidth, preFullScreenHeight);
+            vw->widget()->showNormal();
         }
     }
 }
 
 void MainWindow::on_VolumeSlider_valueChanged(int value)
 {
-    player->setVolume(value);
+    player->audio()->setVolume(value);
     SettingsHandler::playerVolume = value;
 }
 
@@ -323,14 +333,14 @@ void MainWindow::on_PauseBtn_clicked()
 
 void MainWindow::on_StopBtn_clicked()
 {
-    if(player->PlayingState == QMediaPlayer::State::PlayingState) {
+    if(player->PlayingState == AVPlayer::State::PlayingState) {
         player->stop();
     }
 }
 
 void MainWindow::on_MuteBtn_toggled(bool checked)
 {
-    player->setMuted(checked);
+    player->audio()->setMute(checked);
 }
 
 void MainWindow::on_fullScreenBtn_clicked()
@@ -351,7 +361,9 @@ void MainWindow::on_seekSlider_sliderMoved(int position)
 
 void MainWindow::on_media_positionChanged(qint64 position)
 {
-    ui->lblCurrentDuration->setText( second_to_minutes(position / 1000).append("/").append( second_to_minutes( (player->duration())/1000 ) ) );
+    //ui->lblCurrentDuration->setText( second_to_minutes(position / 1000).append("/").append( second_to_minutes( (player->duration())/1000 ) ) );
+
+    ui->lblCurrentDuration->setText(QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")));
     qint64 duration = player->duration();
     if (duration > 0)
     {
@@ -361,11 +373,11 @@ void MainWindow::on_media_positionChanged(qint64 position)
     }
 }
 
-void MainWindow::on_media_statusChanged(QMediaPlayer::MediaStatus status)
+void MainWindow::on_media_statusChanged(MediaStatus status)
 {
     switch(status)
     {
-        case QMediaPlayer::MediaStatus::EndOfMedia:
+        case MediaStatus::EndOfMedia:
             ++selectedFileListIndex;
             if(selectedFileListIndex < videos.length())
             {
@@ -375,6 +387,34 @@ void MainWindow::on_media_statusChanged(QMediaPlayer::MediaStatus status)
             }
         break;
     }
+    /*
+    switch (player->mediaStatus()) {
+    case NoMedia:
+        status = tr("No media");
+        break;
+    case InvalidMedia:
+        status = tr("Invalid meida");
+        break;
+    case BufferingMedia:
+        status = tr("Buffering...");
+        break;
+    case BufferedMedia:
+        status = tr("Buffered");
+        break;
+    case LoadingMedia:
+        status = tr("Loading...");
+        break;
+    case LoadedMedia:
+        status = tr("Loaded");
+        break;
+    case StalledMedia:
+        status = tr("Stalled");
+        break;
+    default:
+        status = QString();
+        onStopPlay();
+        break;
+        */
 }
 
 void MainWindow::media_double_click_event(QMouseEvent * event)
@@ -407,7 +447,7 @@ void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
 
 void MainWindow::on_device_error(QString error)
 {
-    LogHandler::Dialog(error, LogLevel::Critical);
+    LogHandler::Dialog(error, XLogLevel::Critical);
 }
 
 QString MainWindow::second_to_minutes(int seconds)
@@ -448,4 +488,10 @@ void MainWindow::on_networkAddressTxt_editingFinished()
 void MainWindow::on_networkPortTxt_editingFinished()
 {
     SettingsHandler::serverPort = ui->networkPortTxt->text();
+}
+
+void MainWindow::donate()
+{
+    //QDesktopServices::openUrl(QUrl("https://sourceforge.net/p/qtav/wiki/Donate%20%E6%8D%90%E8%B5%A0/"));
+    //QDesktopServices::openUrl(QUrl(QString::fromLatin1("http://www.qtav.org/donate.html")));
 }
