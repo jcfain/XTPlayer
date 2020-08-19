@@ -4,7 +4,9 @@ SettingsHandler::SettingsHandler()
 {
 }
 
-void SettingsHandler::Load() {
+void SettingsHandler::Load()
+{
+    QMutexLocker locker(&mutex);
     selectedLibrary = settings.value("selectedLibrary").toString();
     selectedDevice = settings.value("selectedDevice").toInt();
     playerVolume = settings.value("playerVolume").toInt();
@@ -21,17 +23,19 @@ void SettingsHandler::Load() {
     serverPort = settings.value("serverPort").toString();
 }
 
-void SettingsHandler::Save() {
+void SettingsHandler::Save()
+{
+    QMutexLocker locker(&mutex);
     settings.setValue("selectedLibrary", selectedLibrary);
     settings.setValue("selectedDevice", selectedDevice);
     settings.setValue("playerVolume", playerVolume);
-    settings.setValue("speed", speed);
-    settings.setValue("xMin", xMin);
-    settings.setValue("yRollMin", yRollMin);
-    settings.setValue("xRollMin", xRollMin);
-    settings.setValue("xMax", xMax);
-    settings.setValue("yRollMax", yRollMax);
-    settings.setValue("xRollMax", xRollMax);
+    settings.setValue("speed", speed == 0 ? 1000 : speed);
+    settings.setValue("xMin", xMin == 0 ? 0 : xMin);
+    settings.setValue("xMax", xMax == 0 ? 999 : xMax );
+    settings.setValue("yRollMin", yRollMin == 0 ? 0 : yRollMin );
+    settings.setValue("xRollMin", xRollMin == 0 ? 999 : xRollMin );
+    settings.setValue("yRollMax", yRollMax == 0 ? 0 : yRollMax );
+    settings.setValue("xRollMax", xRollMax == 0 ? 999 : xRollMax );
     settings.setValue("selectedFunscriptLibrary", selectedFunscriptLibrary);
     settings.setValue("serialPort", serialPort);
     settings.setValue("serverAddress", serverAddress);
@@ -39,7 +43,9 @@ void SettingsHandler::Save() {
 
 }
 
-void SettingsHandler::Default() {
+void SettingsHandler::Default()
+{
+    QMutexLocker locker(&mutex);
     settings.setValue("selectedLibrary", QVariant::String);
     settings.setValue("playerVolume", 0);
     settings.setValue("speed", 1000);
@@ -56,8 +62,8 @@ void SettingsHandler::Default() {
 }
 
 QString SettingsHandler::TCodeVersion = "TCode v0.2";
-QSettings SettingsHandler::settings{"cUrbSide prOd", "playerX"};
-
+QSettings SettingsHandler::settings{"cUrbSide prOd", "XTPlayer"};
+QMutex SettingsHandler::mutex;
 QString SettingsHandler::selectedLibrary;
 int SettingsHandler::selectedDevice;
 int SettingsHandler::playerVolume;

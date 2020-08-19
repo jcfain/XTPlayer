@@ -4,6 +4,12 @@
 #include <QString>
 #include <QHash>
 
+struct FunscriptAction {
+    qint64 at;
+    int pos;
+    int speed;
+};
+
 struct Funscript {
     QString version;
     bool inverted;

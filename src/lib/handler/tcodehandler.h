@@ -9,7 +9,7 @@ class TCodeHandler
 {
 public:
     TCodeHandler();
-    QString funscriptToTCode(qint64 position);
+    QString funscriptToTCode(qint64 position, int speed = 0);
 
     int calculateRange(const char* channel, int value);
     int getchannelMin(const char* channel);

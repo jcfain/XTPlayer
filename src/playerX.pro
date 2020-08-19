@@ -1,4 +1,4 @@
-QT       += core gui avwidgets multimedia multimediawidgets serialport
+QT       += core gui avwidgets serialport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -29,8 +29,6 @@ SOURCES += \
 
 HEADERS += \
     CustomControls/RangeSlider.h \
-    CustomControls/xmediaplayer.h \
-    CustomControls/xvideowidget.h \
     lib/lookup/enum.h \
     lib/handler/funscripthandler.h \
     lib/handler/loghandler.h \

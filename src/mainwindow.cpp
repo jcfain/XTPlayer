@@ -3,8 +3,11 @@
 
 #include <QDirIterator>
 #include <qfloat16.h>
+#include <QtConcurrent/QtConcurrent>
+#include <QFuture>
 
 LibraryListItem selectedFileListItem;
+SerialComboboxItem selectedSerialPort;
 int selectedFileListIndex;
 int preFullScreenWidth;
 int preFullScreenHeight;
@@ -41,6 +44,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     on_load_library(SettingsHandler::selectedLibrary);
     ui->VolumeSlider->setValue(SettingsHandler::playerVolume);
+
     ui->SerialOutputCmb->setCurrentText(SettingsHandler::serialPort);
     ui->networkAddressTxt->setText(SettingsHandler::serverAddress);
     ui->networkPortTxt->setText(SettingsHandler::serverPort);
@@ -84,8 +88,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->RangeSettingsGrid->addWidget(SpeedSlider, 7,0);
 
 
-    //connect(player, &AVPlayer::, this, &MainWindow::on_media_positionChanged);
+    connect(player, &AVPlayer::positionChanged, this, &MainWindow::on_media_positionChanged);
     connect(player, &AVPlayer::mediaStatusChanged, this, &MainWindow::on_media_statusChanged);
+    connect(player, &AVPlayer::started, this, &MainWindow::on_media_start);
     connect(ui->SeekSlider, &QSlider::sliderMoved, this, &MainWindow::on_seekSlider_sliderMoved);
     //connect(player, static_cast<void(AVPlayer::*)(AVPlayer::Error )>(&AVPlayer::error), this, &MainWindow::on_media_error);
 
@@ -119,41 +124,9 @@ void  MainWindow::on_key_press(QKeyEvent * event)
     }
 }
 
-void MainWindow::on_media_error(QMediaPlayer::Error error)
-{
-    QString message;
-    switch(error)
-    {
-        case QMediaPlayer::Error::FormatError:
-            message = "The format of a media resource isn't (fully) supported. Playback may still be possible, but without an audio or video component.";
-            break;
-        case QMediaPlayer::Error::ResourceError:
-            message = "A media resource couldn't be resolved.";
-            break;
-        case QMediaPlayer::Error::NetworkError:
-            message = "A network error occurred.";
-            break;
-        case QMediaPlayer::Error::AccessDeniedError:
-            message = "There are not the appropriate permissions to play a media resource.";
-            break;
-        case QMediaPlayer::Error::ServiceMissingError:
-            message = "A valid playback service was not found, playback cannot proceed.";
-            break;
-        case QMediaPlayer::Error::MediaIsPlaylist:
-            message = "Media is a playlist";
-            break;
-        case QMediaPlayer::Error::NoError:
-            break;
-    }
-    if (message != Q_NULLPTR)
-    {
-        LogHandler::Dialog(message, XLogLevel::Critical);
-    }
-}
-
 void MainWindow::on_load_library(QString path)
 {
-    if (!path.isNull()) {
+    if (!path.isNull() && !path.isEmpty()) {
         QDir directory(path);
         if (directory.exists()) {
             ui->LibraryList->clear();
@@ -214,12 +187,13 @@ void MainWindow::on_load_library(QString path)
         }
         else
         {
-           LogHandler::Dialog("Lobrary path '" + path + "' does not exist", XLogLevel::Critical);
+           LogHandler::Dialog("Library path '" + path + "' does not exist", XLogLevel::Critical);
+           on_actionSelect_library_triggered();
         }
     }
     else
     {
-       LogHandler::Dialog("Please select a library from the menu!", XLogLevel::Critical);
+        on_actionSelect_library_triggered();
     }
 }
 
@@ -230,7 +204,7 @@ void MainWindow::on_libray_path_select(QString path)
 
 void MainWindow::on_actionSelect_library_triggered()
 {
-    QString selectedLibrary = QFileDialog::getExistingDirectory(this, tr("Choose library"), ".", QFileDialog::ReadOnly);
+    QString selectedLibrary = QFileDialog::getExistingDirectory(this, tr("Choose media library"), ".", QFileDialog::ReadOnly);
     if (selectedLibrary != Q_NULLPTR) {
         on_libray_path_select(selectedLibrary);
 
@@ -367,10 +341,31 @@ void MainWindow::on_media_positionChanged(qint64 position)
     qint64 duration = player->duration();
     if (duration > 0)
     {
-        serialHandler->sendTCode(tcodeHandler->funscriptToTCode(funscriptHandler->getPosition(position)));
+        //serialHandler->sendTCode(tcodeHandler->funscriptToTCode(funscriptHandler->getPosition(position)));
         qint64 sliderPosition = XMath::mapRange(position, 0, duration, 0, 100);
         ui->SeekSlider->setValue(static_cast<int>(sliderPosition));
     }
+}
+
+void MainWindow::on_media_start()
+{   qint64 duration = player->duration();
+    QFuture<void> future = QtConcurrent::run(syncFunscript, player, serialHandler, tcodeHandler, funscriptHandler);
+}
+
+void syncFunscript(AVPlayer* player, SerialHandler* serialHandler, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler)
+{
+    while (player->isPlaying())
+    {
+        qint64 position = player->position();
+        FunscriptAction* actionPosition = funscriptHandler->getPosition(position);
+        serialHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
+        Sleep(1);
+    }
+}
+
+void MainWindow::on_media_stop()
+{
+
 }
 
 void MainWindow::on_media_statusChanged(MediaStatus status)
@@ -438,6 +433,7 @@ void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
     if(event.deviceType == DeviceType::Serial)
     {
         ui->serialStatuslbl->setText(event.message);
+        SettingsHandler::serialPort = ui->SerialOutputCmb->currentText();
     }
     else if (event.deviceType == DeviceType::Network)
     {
@@ -465,7 +461,7 @@ void MainWindow::on_SerialOutputCmb_currentIndexChanged(int index)
     if (SettingsHandler::selectedDevice == DeviceType::Serial)
     {
         SerialComboboxItem serialInfo = ui->SerialOutputCmb->currentData(Qt::UserRole).value<SerialComboboxItem>();
-        SettingsHandler::serialPort = serialInfo.friendlyName;
+        selectedSerialPort = serialInfo;
         serialHandler->init(serialInfo);
     }
 }
@@ -473,11 +469,17 @@ void MainWindow::on_SerialOutputCmb_currentIndexChanged(int index)
 void MainWindow::on_serialOutputRdo_clicked()
 {
     SettingsHandler::selectedDevice = DeviceType::Serial;
+    ui->SerialOutputCmb->setEditable(true);
+    ui->networkAddressTxt->setEnabled(false);
+    ui->networkPortTxt->setEnabled(false);
 }
 
 void MainWindow::on_networkOutputRdo_clicked()
 {
     SettingsHandler::selectedDevice = DeviceType::Network;
+    ui->SerialOutputCmb->setEditable(false);
+    ui->networkAddressTxt->setEnabled(true);
+    ui->networkPortTxt->setEnabled(true);
 }
 
 void MainWindow::on_networkAddressTxt_editingFinished()

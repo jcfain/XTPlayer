@@ -5,16 +5,16 @@ TCodeHandler::TCodeHandler()
 
 }
 
-QString TCodeHandler::funscriptToTCode(qint64 position)
+QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
 {
-    char buffer[15] = "";
-    int tcodValue = XMath::mapRange(position, 50, 95, 500, 999);
+    char buffer[15];
+    int tcodValue = XMath::mapRange(position, 50, 100, 500, 999);
     char tcodeValueString[4];
     sprintf(tcodeValueString, "%03d", calculateRange("L0", tcodValue));
-    strcat (buffer, tcodeValueString);
-    if (SettingsHandler::speed > 0) {
+    strcpy (buffer, tcodeValueString);
+    if (speed != 0) {//|| SettingsHandler::speed > 0
       char speed_string[5];
-      sprintf(speed_string, "%04d", SettingsHandler::speed);
+      sprintf(speed_string, "%04d", speed != 0 ? speed : SettingsHandler::speed);
       strcat (buffer, "S");
       strcat (buffer, speed_string);
     }

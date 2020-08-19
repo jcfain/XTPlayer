@@ -2,7 +2,9 @@
 #define SETTINGSHANDLER_H
 #include <QSettings>
 #include <QSettings>
+#include <QMutex>
 #include "../lookup/enum.h"
+#include "loghandler.h"
 
 class SettingsHandler
 {
@@ -31,6 +33,7 @@ public:
 private:
     SettingsHandler();
     static QSettings settings;
+    static QMutex mutex;
 };
 
 #endif // SETTINGSHANDLER_H

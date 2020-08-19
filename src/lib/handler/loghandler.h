@@ -1,6 +1,9 @@
 #ifndef LOGHANDLER_H
 #define LOGHANDLER_H
 #include <QString>
+#include <QMessageBox>
+#include <QDebug>
+#include <QMutex>
 
 enum XLogLevel
 {
@@ -23,6 +26,7 @@ public:
 
 private:
     LogHandler();
+    static QMutex mutex;
 };
 
 #endif // LOGHANDLER_H

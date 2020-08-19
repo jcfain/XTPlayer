@@ -49,9 +49,17 @@ void SerialHandler::dispose()
 
 void SerialHandler::sendTCode(QString tcode)
 {
-    tcode += '\n';
-    LogHandler::Debug("Sending TCode: " + tcode);
-    m_serial->write(tcode.toUtf8());
+    if (m_serial->isOpen())
+    {
+        tcode += '\n';
+        m_serial->waitForBytesWritten();
+        LogHandler::Debug("Sending TCode: " + tcode);
+        m_serial->write(tcode.toUtf8());
+    }
+else
+    {
+        LogHandler::Debug("Serial disconnected when sending tcode.");
+    }
 }
 
 void SerialHandler::readData()

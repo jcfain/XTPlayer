@@ -8,12 +8,9 @@
 #include <QListWidgetItem>
 #include <QMessageBox>
 #include <iostream>
-#include <QMediaPlayer>
 #include <QtAV>
 #include <QtAVWidgets>
 #include <QtGlobal>
-#include "CustomControls/xvideowidget.h"
-//#include "CustomControls/xmediaplayer.h"
 #include "CustomControls/RangeSlider.h"
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/loghandler.h"
@@ -34,6 +31,8 @@ namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 using namespace QtAV;
+
+extern void syncFunscript(AVPlayer* player, SerialHandler* serialHandler, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler);
 
 class MainWindow : public QMainWindow
 {
@@ -78,6 +77,7 @@ private slots:
 
 signals:
     void keyPressed(QKeyEvent * event);
+    void sendTCode(QString tcode);
 protected:
     virtual void keyPressEvent(QKeyEvent *event) override
     {
@@ -86,9 +86,7 @@ protected:
 
 private:
     Ui::MainWindow *ui;
-    //QMediaPlayer* player;
     AVPlayer* player;
-    //XVideoWidget* vw;
     VideoOutput* vw;
     QProgressBar* bar;
     QLabel* xRangeLabel;
@@ -118,10 +116,11 @@ private:
 
     void on_seekSlider_sliderMoved(int position);
     void on_key_press(QKeyEvent* event);
-    void on_media_error(QMediaPlayer::Error error);
     void on_media_positionChanged(qint64 position);
     void media_single_click_event(QMouseEvent * event);
     void on_media_statusChanged(MediaStatus status);
+    void on_media_start();
+    void on_media_stop();
     void on_device_connectionChanged(ConnectionChangedSignal event);
     void on_device_error(QString error);
     void donate();
