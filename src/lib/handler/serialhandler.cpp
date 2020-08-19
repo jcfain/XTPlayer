@@ -1,5 +1,6 @@
 #include "serialhandler.h"
-
+bool tCodeConnected = false;
+bool isSelected = false;
 SerialHandler::SerialHandler()
 {
     m_serial = new QSerialPort(this);
@@ -13,6 +14,7 @@ SerialHandler::~SerialHandler()
 
 void SerialHandler::init(SerialComboboxItem portInfo)
 {
+    isSelected = true;
     emit connectionChange({DeviceType::Serial, ConnectionStatus::Connecting, "Connecting..."});
     if (m_serial->isOpen())
         m_serial->close();
@@ -23,7 +25,10 @@ void SerialHandler::init(SerialComboboxItem portInfo)
     m_serial->setStopBits(QSerialPort::OneStop);
     m_serial->setFlowControl(QSerialPort::NoFlowControl);
     if (m_serial->open(QIODevice::ReadWrite)) {
-        sendTCode("D1");
+        while(!tCodeConnected && isSelected)
+        {
+            sendTCode("D1");
+        }
     } else {
         emit connectionChange({DeviceType::Serial, ConnectionStatus::Error, "Error opening"});
     }
@@ -41,6 +46,8 @@ void SerialHandler::stop()
 
 void SerialHandler::dispose()
 {
+
+    isSelected = false;
     if (m_serial->isOpen())
         m_serial->close();
     emit connectionChange({DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"});
@@ -66,6 +73,7 @@ void SerialHandler::readData()
 {
     if(QString(m_serial->readAll()).compare(SettingsHandler::TCodeVersion))
     {
+        tCodeConnected = true;
         emit connectionChange({DeviceType::Serial, ConnectionStatus::Connected, "Connected"});
     }
 }

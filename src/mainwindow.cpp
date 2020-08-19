@@ -348,7 +348,7 @@ void MainWindow::on_media_positionChanged(qint64 position)
 }
 
 void MainWindow::on_media_start()
-{   qint64 duration = player->duration();
+{
     QFuture<void> future = QtConcurrent::run(syncFunscript, player, serialHandler, tcodeHandler, funscriptHandler);
 }
 
@@ -358,7 +358,8 @@ void syncFunscript(AVPlayer* player, SerialHandler* serialHandler, TCodeHandler*
     {
         qint64 position = player->position();
         FunscriptAction* actionPosition = funscriptHandler->getPosition(position);
-        serialHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
+        if (actionPosition != nullptr)
+            serialHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
         Sleep(1);
     }
 }
@@ -458,10 +459,10 @@ QString MainWindow::second_to_minutes(int seconds)
 
 void MainWindow::on_SerialOutputCmb_currentIndexChanged(int index)
 {
+    SerialComboboxItem serialInfo = ui->SerialOutputCmb->currentData(Qt::UserRole).value<SerialComboboxItem>();
+    selectedSerialPort = serialInfo;
     if (SettingsHandler::selectedDevice == DeviceType::Serial)
     {
-        SerialComboboxItem serialInfo = ui->SerialOutputCmb->currentData(Qt::UserRole).value<SerialComboboxItem>();
-        selectedSerialPort = serialInfo;
         serialHandler->init(serialInfo);
     }
 }
@@ -469,6 +470,8 @@ void MainWindow::on_SerialOutputCmb_currentIndexChanged(int index)
 void MainWindow::on_serialOutputRdo_clicked()
 {
     SettingsHandler::selectedDevice = DeviceType::Serial;
+    //udpHandler.Dispose();
+    serialHandler->init(selectedSerialPort);
     ui->SerialOutputCmb->setEditable(true);
     ui->networkAddressTxt->setEnabled(false);
     ui->networkPortTxt->setEnabled(false);
@@ -477,6 +480,7 @@ void MainWindow::on_serialOutputRdo_clicked()
 void MainWindow::on_networkOutputRdo_clicked()
 {
     SettingsHandler::selectedDevice = DeviceType::Network;
+    serialHandler->dispose();
     ui->SerialOutputCmb->setEditable(false);
     ui->networkAddressTxt->setEnabled(true);
     ui->networkPortTxt->setEnabled(true);

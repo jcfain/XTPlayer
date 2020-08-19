@@ -25,11 +25,11 @@ public:
     QVector<SerialComboboxItem> getPorts();
     void sendTCode(QString tcode);
     void init(SerialComboboxItem portInfo);
-
-protected:
     void start();
     void stop();
     void dispose();
+
+protected:
     void readData();
     void handleError(QSerialPort::SerialPortError error);
 

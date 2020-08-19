@@ -7,18 +7,17 @@ TCodeHandler::TCodeHandler()
 
 QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
 {
-    char buffer[15];
+    QString buffer = "";
     int tcodValue = XMath::mapRange(position, 50, 100, 500, 999);
     char tcodeValueString[4];
     sprintf(tcodeValueString, "%03d", calculateRange("L0", tcodValue));
-    strcpy (buffer, tcodeValueString);
+    buffer += tcodeValueString;
     if (speed != 0) {//|| SettingsHandler::speed > 0
-      char speed_string[5];
-      sprintf(speed_string, "%04d", speed != 0 ? speed : SettingsHandler::speed);
-      strcat (buffer, "S");
-      strcat (buffer, speed_string);
+      //sprintf(speed_string, "%04d", speed != 0 ? speed : SettingsHandler::speed);
+      buffer += "I";
+      buffer += QString::number(speed);
     }
-    return "L0" + QString(buffer);
+    return "L0" + buffer;
 }
 
 int TCodeHandler::calculateRange(const char* channel, int value)

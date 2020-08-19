@@ -74,19 +74,19 @@ bool FunscriptHandler::exists(QString path)
 FunscriptAction* FunscriptHandler::getPosition(qint64 millis)
 {
     qint64 nearestActionMillis = findClosest(posList, n, millis);
-    LogHandler::Debug("nearestAction: "+ QString::number(nearestActionMillis));
-    qint64 at = lastAction->at;
-    LogHandler::Debug("lastAction->at: "+ QString::number(at));
-    if (at < nearestActionMillis)
+    int pos = funscript->actions.value(nearestActionMillis);
+    if (lastAction->pos != pos)
     {
-        int speed = (nearestActionMillis - at);
-        LogHandler::Debug("speed: "+ QString::number(speed));
-        int pos = funscript->actions.value(nearestActionMillis);
+        LogHandler::Debug("millis: "+ QString::number(millis));
+        LogHandler::Debug("nearestAction: "+ QString::number(nearestActionMillis));
+        LogHandler::Debug("lastAction->at: "+ QString::number(lastAction->at));
+        int speed = -(nearestActionMillis - lastAction->at);
+        LogHandler::Debug("speed: "+ QString::number(-speed));
         delete(lastAction);
-        lastAction = new FunscriptAction { nearestActionMillis, pos, speed };
+        lastAction = new FunscriptAction { nearestActionMillis, pos, -speed };
         return lastAction;
-    };
-    return lastAction;
+    }
+    return nullptr;
 }
 
 // Returns element closest to target in arr[]
