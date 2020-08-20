@@ -7,6 +7,7 @@ TCodeHandler::TCodeHandler()
 
 QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
 {
+    QMutexLocker locker(&mutex);
     QString buffer = "";
     int tcodValue = XMath::mapRange(position, 50, 100, 500, 999);
     char tcodeValueString[4];
@@ -58,3 +59,5 @@ int TCodeHandler::getchannelMax(const char* channel)
     }
     return 1000;
 }
+
+QMutex TCodeHandler::mutex;

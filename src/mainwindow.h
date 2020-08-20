@@ -33,6 +33,7 @@ QT_END_NAMESPACE
 using namespace QtAV;
 
 extern void syncFunscript(AVPlayer* player, SerialHandler* serialHandler, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler);
+extern void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo);
 
 class MainWindow : public QMainWindow
 {

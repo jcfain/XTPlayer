@@ -25,13 +25,13 @@ public:
     ~FunscriptHandler();
     bool load(QString funscript);
     bool exists(QString path);
-    FunscriptAction* getPosition(qint64 at);
+    std::unique_ptr<FunscriptAction> getPosition(qint64 at);
 
 
 private:
+    static QMutex mutex;
     void JSonToFunscript(QJsonObject jsonDoc);
-    qint64 getClosest(qint64 val1, qint64 val2, qint64 target);
-    qint64 findClosest(QList<qint64>, qint64 n, qint64 target);
+    qint64 findClosest(qint64 value, QList<qint64> a);
 };
 
 #endif // FUNSCRIPTHANDLER_H

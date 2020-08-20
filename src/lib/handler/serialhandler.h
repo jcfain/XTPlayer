@@ -4,6 +4,7 @@
 #include <QSerialPort>
 #include <QSerialPortInfo>
 #include <QTime>
+#include <QMutex>
 #include "../struct/SerialComboboxItem.h"
 #include "../struct/ConnectionChangedSignal.h"
 #include "../handler/settingshandler.h"
@@ -36,6 +37,7 @@ protected:
 private:
     QString m_portName;
     QSerialPort* m_serial;
+    static QMutex mutex;
 };
 
 #endif // SERIALHANDLER_H

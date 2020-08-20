@@ -2,7 +2,9 @@
 
 
 Funscript* funscript = new Funscript();
-FunscriptAction* lastAction = new FunscriptAction { 0, 0, 0 };
+qint64 lastActionIndex;
+qint64  nextActionIndex;
+
  QList<qint64> posList;
  int n;
 FunscriptHandler::FunscriptHandler()
@@ -11,13 +13,14 @@ FunscriptHandler::FunscriptHandler()
 FunscriptHandler::~FunscriptHandler()
 {
     delete(funscript);
-    delete(lastAction);
 }
 
 bool FunscriptHandler::load(QString funscriptString)
 {
     QFile loadFile(funscriptString);
 
+    lastActionIndex = -1;
+    nextActionIndex = 0;
     if (!loadFile.open(QIODevice::ReadOnly)) {
         qWarning("Couldn't open funscript file.");
         return false;
@@ -71,78 +74,49 @@ bool FunscriptHandler::exists(QString path)
     return fpath.exists();
 }
 
-FunscriptAction* FunscriptHandler::getPosition(qint64 millis)
+std::unique_ptr<FunscriptAction> FunscriptHandler::getPosition(qint64 millis)
 {
-    qint64 nearestActionMillis = findClosest(posList, n, millis);
-    int pos = funscript->actions.value(nearestActionMillis);
-    if (lastAction->pos != pos)
+    QMutexLocker locker(&mutex);
+    qint64 currentMillis = findClosest(millis, posList);
+    nextActionIndex = posList.indexOf(currentMillis) + 1;
+    qint64 nextMillis = posList[nextActionIndex];
+    if ((lastActionIndex != nextActionIndex) || millis >= currentMillis)
     {
-        LogHandler::Debug("millis: "+ QString::number(millis));
-        LogHandler::Debug("nearestAction: "+ QString::number(nearestActionMillis));
-        LogHandler::Debug("lastAction->at: "+ QString::number(lastAction->at));
-        int speed = -(nearestActionMillis - lastAction->at);
-        LogHandler::Debug("speed: "+ QString::number(-speed));
-        delete(lastAction);
-        lastAction = new FunscriptAction { nearestActionMillis, pos, -speed };
-        return lastAction;
+        nextMillis = lastActionIndex == -1 ? currentMillis : nextMillis;
+        int speed = lastActionIndex == -1 ? currentMillis : (nextMillis - currentMillis);
+        LogHandler::Debug("speed: "+ QString::number(speed));
+        std::unique_ptr<FunscriptAction> nextAction(new FunscriptAction { nextMillis, funscript->actions.value(nextMillis), speed } );
+        lastActionIndex = nextActionIndex;
+        return nextAction;
     }
     return nullptr;
 }
 
-// Returns element closest to target in arr[]
-qint64 FunscriptHandler::findClosest(QList<qint64> arr, qint64 n, qint64 target)
-{
-    // Corner cases
-    if (target <= arr[0])
-        return arr[0];
-    if (target >= arr[n - 1])
-        return arr[n - 1];
+qint64 FunscriptHandler::findClosest(qint64 value, QList<qint64> a) {
 
-    // Doing binary search
-    int i = 0, j = n, mid = 0;
-    while (i < j) {
-        mid = (i + j) / 2;
+      if(value < a[0]) {
+          return a[0];
+      }
+      if(value > a[a.length()-1]) {
+          return a[a.length()-1];
+      }
 
-        if (arr[mid] == target)
-            return arr[mid];
+      int lo = 0;
+      int hi = a.length() - 1;
 
-        /* If target is less than array element,
-            then search in left */
-        if (target < arr[mid]) {
+      while (lo <= hi) {
+          int mid = (hi + lo) / 2;
 
-            // If target is greater than previous
-            // to mid, return closest of two
-            if (mid > 0 && target > arr[mid - 1])
-                return getClosest(arr[mid - 1],
-                                  arr[mid], target);
+          if (value < a[mid]) {
+              hi = mid - 1;
+          } else if (value > a[mid]) {
+              lo = mid + 1;
+          } else {
+              return a[mid];
+          }
+      }
+      // lo == hi + 1
+      return (a[lo] - value) < (value - a[hi]) ? a[lo] : a[hi];
+  }
 
-            /* Repeat for left half */
-            j = mid;
-        }
-
-        // If target is greater than mid
-        else {
-            if (mid < n - 1 && target < arr[mid + 1])
-                return getClosest(arr[mid],
-                                  arr[mid + 1], target);
-            // update i
-            i = mid + 1;
-        }
-    }
-
-    // Only single element left after search
-    return arr[mid];
-}
-
-// Method to compare which one is the more close.
-// We find the closest by taking the difference
-// between the target and both values. It assumes
-// that val2 is greater than val1 and target lies
-// between these two.
-qint64 FunscriptHandler::getClosest(qint64 val1, qint64 val2, qint64 target)
-{
-    if (target - val1 >= val2 - target)
-        return val2;
-    else
-        return val1;
-}
+QMutex FunscriptHandler::mutex;

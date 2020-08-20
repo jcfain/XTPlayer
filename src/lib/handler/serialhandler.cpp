@@ -1,10 +1,11 @@
 #include "serialhandler.h"
+#include <QThread>
 bool tCodeConnected = false;
 bool isSelected = false;
 SerialHandler::SerialHandler()
 {
     m_serial = new QSerialPort(this);
-    connect(m_serial, &QSerialPort::errorOccurred, this, &SerialHandler::handleError);
+    //connect(m_serial, &QSerialPort::errorOccurred, this, &SerialHandler::handleError);
     connect(m_serial, &QSerialPort::readyRead, this, &SerialHandler::readData);
 }
 SerialHandler::~SerialHandler()
@@ -14,6 +15,7 @@ SerialHandler::~SerialHandler()
 
 void SerialHandler::init(SerialComboboxItem portInfo)
 {
+    QMutexLocker locker(&mutex);
     isSelected = true;
     emit connectionChange({DeviceType::Serial, ConnectionStatus::Connecting, "Connecting..."});
     if (m_serial->isOpen())
@@ -24,12 +26,18 @@ void SerialHandler::init(SerialComboboxItem portInfo)
     m_serial->setParity(QSerialPort::NoParity);
     m_serial->setStopBits(QSerialPort::OneStop);
     m_serial->setFlowControl(QSerialPort::NoFlowControl);
-    if (m_serial->open(QIODevice::ReadWrite)) {
+    if (m_serial->open(QIODevice::ReadWrite))
+    {
+        locker.unlock();
         while(!tCodeConnected && isSelected)
         {
             sendTCode("D1");
+            QThread::sleep(1);
+
         }
-    } else {
+    }
+    else
+    {
         emit connectionChange({DeviceType::Serial, ConnectionStatus::Error, "Error opening"});
     }
 }
@@ -47,6 +55,7 @@ void SerialHandler::stop()
 void SerialHandler::dispose()
 {
 
+    QMutexLocker locker(&mutex);
     isSelected = false;
     if (m_serial->isOpen())
         m_serial->close();
@@ -56,6 +65,7 @@ void SerialHandler::dispose()
 
 void SerialHandler::sendTCode(QString tcode)
 {
+    QMutexLocker locker(&mutex);
     if (m_serial->isOpen())
     {
         tcode += '\n';
@@ -63,18 +73,9 @@ void SerialHandler::sendTCode(QString tcode)
         LogHandler::Debug("Sending TCode: " + tcode);
         m_serial->write(tcode.toUtf8());
     }
-else
+    else
     {
-        LogHandler::Debug("Serial disconnected when sending tcode.");
-    }
-}
-
-void SerialHandler::readData()
-{
-    if(QString(m_serial->readAll()).compare(SettingsHandler::TCodeVersion))
-    {
-        tCodeConnected = true;
-        emit connectionChange({DeviceType::Serial, ConnectionStatus::Connected, "Connected"});
+        LogHandler::Debug("TCode not connected.");
     }
 }
 
@@ -98,6 +99,16 @@ QVector<SerialComboboxItem> SerialHandler::getPorts()
     return availablePorts;
 
 }
+
+void SerialHandler::readData()
+{
+    if(QString(m_serial->readAll()).compare(SettingsHandler::TCodeVersion))
+    {
+        tCodeConnected = true;
+        emit connectionChange({DeviceType::Serial, ConnectionStatus::Connected, "Connected"});
+    }
+}
+
 void SerialHandler::handleError(QSerialPort::SerialPortError error)
 {
     if (error != QSerialPort::SerialPortError::NoError)
@@ -105,3 +116,5 @@ void SerialHandler::handleError(QSerialPort::SerialPortError error)
         emit errorOccurred("A serial port error occured! " + m_serial->errorString());
     }
 }
+
+QMutex SerialHandler::mutex;

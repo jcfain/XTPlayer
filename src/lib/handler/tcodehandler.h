@@ -14,6 +14,9 @@ public:
     int calculateRange(const char* channel, int value);
     int getchannelMin(const char* channel);
     int getchannelMax(const char* channel);
+
+private:
+    static QMutex mutex;
 };
 
 #endif // TCODEHANDLER_H

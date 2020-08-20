@@ -354,15 +354,19 @@ void MainWindow::on_media_start()
 
 void syncFunscript(AVPlayer* player, SerialHandler* serialHandler, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler)
 {
+    std::unique_ptr<FunscriptAction> actionPosition;
     while (player->isPlaying())
     {
         qint64 position = player->position();
-        FunscriptAction* actionPosition = funscriptHandler->getPosition(position);
+        actionPosition = funscriptHandler->getPosition(position);
         if (actionPosition != nullptr)
             serialHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
         Sleep(1);
     }
+    //serialHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos));
+    LogHandler::Debug("exit syncFunscript");
 }
+
 
 void MainWindow::on_media_stop()
 {
@@ -371,7 +375,7 @@ void MainWindow::on_media_stop()
 
 void MainWindow::on_media_statusChanged(MediaStatus status)
 {
-    switch(status)
+    switch(player->mediaStatus())
     {
         case MediaStatus::EndOfMedia:
             ++selectedFileListIndex;
@@ -463,15 +467,20 @@ void MainWindow::on_SerialOutputCmb_currentIndexChanged(int index)
     selectedSerialPort = serialInfo;
     if (SettingsHandler::selectedDevice == DeviceType::Serial)
     {
-        serialHandler->init(serialInfo);
+        QtConcurrent::run(initSerial, serialHandler, serialInfo);
     }
+}
+
+void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo)
+{
+    serialHandler->init(serialInfo);
 }
 
 void MainWindow::on_serialOutputRdo_clicked()
 {
     SettingsHandler::selectedDevice = DeviceType::Serial;
     //udpHandler.Dispose();
-    serialHandler->init(selectedSerialPort);
+    //QtConcurrent::run(initSerial, serialHandler, selectedSerialPort);
     ui->SerialOutputCmb->setEditable(true);
     ui->networkAddressTxt->setEnabled(false);
     ui->networkPortTxt->setEnabled(false);
