@@ -39,10 +39,12 @@ void SerialHandler::run()
 
     _mutex.lock();
     QString currentPortName;
+    bool isConnected;
     if (currentPortName != _portName)
     {
         currentPortName = _portName;
         currentPortNameChanged = true;
+        isConnected = false;
     }
 
     int currentWaitTimeout = _waitTimeout;
@@ -77,20 +79,27 @@ void SerialHandler::run()
         {
             // read response
             bool isHandShake = currentRequest.startsWith("D1");
-            if (isHandShake && serial.waitForReadyRead(currentWaitTimeout))
-            {
-                QByteArray responseData = serial.readAll();
-                while (serial.waitForReadyRead(10))
-                    responseData += serial.readAll();
+            while(!isConnected && isHandShake) {
+                if (isHandShake && serial.waitForReadyRead(currentWaitTimeout))
+                {
+                    QByteArray responseData = serial.readAll();
+                    while (serial.waitForReadyRead(10))
+                        responseData += serial.readAll();
 
-                const QString response = QString::fromUtf8(responseData);
-                if (response == SettingsHandler::TCodeVersion)
-                    emit connectionChange({DeviceType::Serial, ConnectionStatus::Connected, "Connected"});
-            }
-            else if (isHandShake)
-            {
-                emit timeout(tr("Read handshake timeout %1")
-                             .arg(QTime::currentTime().toString()));
+                    const QString response = QString::fromUtf8(responseData);
+                    if (response == SettingsHandler::TCodeVersion)
+                    {
+                        isConnected = true;
+                        emit connectionChange({DeviceType::Serial, ConnectionStatus::Connected, "Connected"});
+                    }
+                }
+                else if (isHandShake)
+                {
+                    emit timeout(tr("Read handshake timeout %1")
+                                 .arg(QTime::currentTime().toString()));
+                }
+                if(!isConnected)
+                    serial.write(requestData);
             }
         }
         else
@@ -104,6 +113,7 @@ void SerialHandler::run()
         {
             currentPortName = _portName;
             currentPortNameChanged = true;
+            isConnected = false;
         }
         else
         {

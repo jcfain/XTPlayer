@@ -27,7 +27,7 @@ public:
     ~SerialHandler();
 
     QList<SerialComboboxItem> getPorts();
-    void sendTCode(const QString &tcode, int waitTimeout = 5);
+    void sendTCode(const QString &tcode, int waitTimeout = 5000);
     void init(const QString &portName);
     void dispose();
 
