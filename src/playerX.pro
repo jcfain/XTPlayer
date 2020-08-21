@@ -1,4 +1,4 @@
-QT       += core gui avwidgets serialport
+QT       += core gui avwidgets serialport network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -41,6 +41,7 @@ HEADERS += \
     lib/struct/ConnectionChangedSignal.h \
     lib/struct/Funscript.h \
     lib/struct/LibraryListItem.h \
+    lib/struct/NetworkAddress.h \
     lib/struct/SerialComboboxItem.h \
     lib/tool/xmath.h \
     mainwindow.h

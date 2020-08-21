@@ -17,6 +17,7 @@
 #include "lib/handler/funscripthandler.h"
 #include "lib/handler/tcodehandler.h"
 #include "lib/handler/serialhandler.h"
+#include "lib/handler/udphandler.h"
 #include "lib/struct/LibraryListItem.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/ConnectionChangedSignal.h"
@@ -32,8 +33,9 @@ QT_END_NAMESPACE
 
 using namespace QtAV;
 
-extern void syncFunscript(AVPlayer* player, SerialHandler* serialHandler, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler);
+extern void syncFunscript(AVPlayer* player, SerialHandler* serialHandler, UdpHandler* udphandler, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler);
 extern void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo);
+extern void initNetwork(UdpHandler* serialHandler, NetworkAddress address);
 
 class MainWindow : public QMainWindow
 {
@@ -102,9 +104,15 @@ private:
     FunscriptHandler* funscriptHandler;
     TCodeHandler* tcodeHandler;
     SerialHandler* serialHandler;
-    QVector<SerialComboboxItem> serialPorts;
+    UdpHandler* udpHandler;
+    QList<SerialComboboxItem> serialPorts;
+    LibraryListItem selectedFileListItem;
+    SerialComboboxItem selectedSerialPort;
+    int selectedFileListIndex;
+    int preFullScreenWidth;
+    int preFullScreenHeight;
 
-    QVector<QString> videos;
+    QList<QString> videos;
     void on_load_library(QString path);
     void on_libray_path_select(QString path);
     void media_double_click_event(QMouseEvent * event);
@@ -114,6 +122,8 @@ private:
     void toggleFullScreen();
     void loadSerialPorts();
     void playFile(LibraryListItem selectedFileListItem);
+    void initNetworkEvent();
+    void initSerialEvent();
 
     void on_seekSlider_sliderMoved(int position);
     void on_key_press(QKeyEvent* event);

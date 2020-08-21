@@ -5,39 +5,41 @@
 #include <QSerialPortInfo>
 #include <QTime>
 #include <QMutex>
+#include <QThread>
+#include <QWaitCondition>
 #include "../struct/SerialComboboxItem.h"
 #include "../struct/ConnectionChangedSignal.h"
 #include "../handler/settingshandler.h"
 #include "../handler/loghandler.h"
 #include "../lookup/enum.h"
 
-class SerialHandler : public QObject
+class SerialHandler : public QThread
 {
-
     Q_OBJECT
 
 signals:
     void errorOccurred(QString error);
     void connectionChange(ConnectionChangedSignal status);
+    void timeout(const QString &s);
 
 public:
-    SerialHandler();
+    explicit SerialHandler(QObject *parent = nullptr);
     ~SerialHandler();
-    QVector<SerialComboboxItem> getPorts();
-    void sendTCode(QString tcode);
-    void init(SerialComboboxItem portInfo);
-    void start();
-    void stop();
+
+    QList<SerialComboboxItem> getPorts();
+    void sendTCode(const QString &tcode, int waitTimeout = 5);
+    void init(const QString &portName);
     void dispose();
 
-protected:
-    void readData();
-    void handleError(QSerialPort::SerialPortError error);
 
 private:
-    QString m_portName;
-    QSerialPort* m_serial;
-    static QMutex mutex;
+    void run() override;
+    QString _portName;
+    QString _tcode;
+    QMutex _mutex;
+    QWaitCondition _cond;
+    int _waitTimeout = 0;
+    bool _stop = false;
 };
 
 #endif // SERIALHANDLER_H

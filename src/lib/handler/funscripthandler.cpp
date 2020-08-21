@@ -78,13 +78,19 @@ std::unique_ptr<FunscriptAction> FunscriptHandler::getPosition(qint64 millis)
 {
     QMutexLocker locker(&mutex);
     qint64 currentMillis = findClosest(millis, posList);
+    lastActionIndex = posList.indexOf(currentMillis);
     nextActionIndex = posList.indexOf(currentMillis) + 1;
     qint64 nextMillis = posList[nextActionIndex];
-    if ((lastActionIndex != nextActionIndex) || millis >= currentMillis)
+    if ((lastActionIndex != nextActionIndex) && millis >= currentMillis)
     {
         nextMillis = lastActionIndex == -1 ? currentMillis : nextMillis;
         int speed = lastActionIndex == -1 ? currentMillis : (nextMillis - currentMillis);
+        LogHandler::Debug("millis: "+ QString::number(millis));
+        LogHandler::Debug("currentMillis: "+ QString::number(currentMillis));
         LogHandler::Debug("speed: "+ QString::number(speed));
+        LogHandler::Debug("nextMillis: "+ QString::number(nextMillis));
+        LogHandler::Debug("lastActionIndex: "+ QString::number(lastActionIndex));
+        LogHandler::Debug("nextActionIndex: "+ QString::number(nextActionIndex));
         std::unique_ptr<FunscriptAction> nextAction(new FunscriptAction { nextMillis, funscript->actions.value(nextMillis), speed } );
         lastActionIndex = nextActionIndex;
         return nextAction;

@@ -1,89 +1,132 @@
 #include "serialhandler.h"
-#include <QThread>
-bool tCodeConnected = false;
-bool isSelected = false;
-SerialHandler::SerialHandler()
+
+SerialHandler::SerialHandler(QObject *parent) :
+    QThread(parent)
 {
-    m_serial = new QSerialPort(this);
-    //connect(m_serial, &QSerialPort::errorOccurred, this, &SerialHandler::handleError);
-    connect(m_serial, &QSerialPort::readyRead, this, &SerialHandler::readData);
 }
+
 SerialHandler::~SerialHandler()
 {
-    dispose();
+    _mutex.lock();
+    _stop = true;
+    _cond.wakeOne();
+    _mutex.unlock();
+    wait();
+}
+void SerialHandler::init(const QString &portName)
+{
+    _mutex.lock();
+    _portName = portName;
+    _mutex.unlock();
+    sendTCode("D1");
 }
 
-void SerialHandler::init(SerialComboboxItem portInfo)
+void SerialHandler::sendTCode(const QString &tcode, int waitTimeout)
 {
-    QMutexLocker locker(&mutex);
-    isSelected = true;
-    emit connectionChange({DeviceType::Serial, ConnectionStatus::Connecting, "Connecting..."});
-    if (m_serial->isOpen())
-        m_serial->close();
-    m_serial->setPortName(portInfo.portName);
-    m_serial->setBaudRate(QSerialPort::Baud115200);
-    m_serial->setDataBits(QSerialPort::Data8);
-    m_serial->setParity(QSerialPort::NoParity);
-    m_serial->setStopBits(QSerialPort::OneStop);
-    m_serial->setFlowControl(QSerialPort::NoFlowControl);
-    if (m_serial->open(QIODevice::ReadWrite))
-    {
-        locker.unlock();
-        while(!tCodeConnected && isSelected)
-        {
-            sendTCode("D1");
-            QThread::sleep(1);
-
-        }
-    }
+    const QMutexLocker locker(&_mutex);
+    _waitTimeout = waitTimeout;
+    _tcode = tcode + "\n";
+    LogHandler::Debug("Sending tcode serial: "+ _tcode);
+    if (!isRunning())
+        start();
     else
+        _cond.wakeOne();
+}
+
+void SerialHandler::run()
+{
+    bool currentPortNameChanged = false;
+
+    _mutex.lock();
+    QString currentPortName;
+    if (currentPortName != _portName)
     {
-        emit connectionChange({DeviceType::Serial, ConnectionStatus::Error, "Error opening"});
+        currentPortName = _portName;
+        currentPortNameChanged = true;
+    }
+
+    int currentWaitTimeout = _waitTimeout;
+    QString currentRequest = _tcode;
+    _mutex.unlock();
+    QSerialPort serial;
+
+    if (currentPortName.isEmpty())
+    {
+        emit errorOccurred(tr("No port name specified"));
+        return;
+    }
+
+    while (!_stop)
+    {
+        if (currentPortNameChanged)
+        {
+            serial.close();
+            serial.setPortName(currentPortName);
+
+            if (!serial.open(QIODevice::ReadWrite))
+            {
+                emit errorOccurred(tr("Can't open %1, error code %2")
+                           .arg(_portName).arg(serial.error()));
+                return;
+            }
+        }
+        // write request
+        const QByteArray requestData = currentRequest.toUtf8();
+        serial.write(requestData);
+        if (serial.waitForBytesWritten(_waitTimeout))
+        {
+            // read response
+            bool isHandShake = currentRequest.startsWith("D1");
+            if (isHandShake && serial.waitForReadyRead(currentWaitTimeout))
+            {
+                QByteArray responseData = serial.readAll();
+                while (serial.waitForReadyRead(10))
+                    responseData += serial.readAll();
+
+                const QString response = QString::fromUtf8(responseData);
+                if (response == SettingsHandler::TCodeVersion)
+                    emit connectionChange({DeviceType::Serial, ConnectionStatus::Connected, "Connected"});
+            }
+            else if (isHandShake)
+            {
+                emit timeout(tr("Read handshake timeout %1")
+                             .arg(QTime::currentTime().toString()));
+            }
+        }
+        else
+        {
+            emit timeout(tr("Write tcode timeout %1")
+                         .arg(QTime::currentTime().toString()));
+        }
+        _mutex.lock();
+        _cond.wait(&_mutex);
+        if (currentPortName != _portName)
+        {
+            currentPortName = _portName;
+            currentPortNameChanged = true;
+        }
+        else
+        {
+            currentPortNameChanged = false;
+        }
+        currentWaitTimeout = _waitTimeout;
+        currentRequest = _tcode;
+        _mutex.unlock();
     }
 }
 
-void SerialHandler::start()
-{
-
-}
-
-void SerialHandler::stop()
-{
-
-}
-
+//Public
 void SerialHandler::dispose()
 {
-
-    QMutexLocker locker(&mutex);
-    isSelected = false;
-    if (m_serial->isOpen())
-        m_serial->close();
+    _stop = true;
     emit connectionChange({DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"});
-    delete m_serial;
 }
 
-void SerialHandler::sendTCode(QString tcode)
-{
-    QMutexLocker locker(&mutex);
-    if (m_serial->isOpen())
-    {
-        tcode += '\n';
-        m_serial->waitForBytesWritten();
-        LogHandler::Debug("Sending TCode: " + tcode);
-        m_serial->write(tcode.toUtf8());
-    }
-    else
-    {
-        LogHandler::Debug("TCode not connected.");
-    }
-}
-
-QVector<SerialComboboxItem> SerialHandler::getPorts()
+QList<SerialComboboxItem> SerialHandler::getPorts()
 {
     const auto serialPortInfos = QSerialPortInfo::availablePorts();
 
-    QVector<SerialComboboxItem> availablePorts;
+    QList<SerialComboboxItem> availablePorts;
     for (const QSerialPortInfo &serialPortInfo : serialPortInfos) {
         QString friendlyName = serialPortInfo.portName() + " " + serialPortInfo.description() ;
         QString portName = serialPortInfo.portName();
@@ -99,22 +142,3 @@ QVector<SerialComboboxItem> SerialHandler::getPorts()
     return availablePorts;
 
 }
-
-void SerialHandler::readData()
-{
-    if(QString(m_serial->readAll()).compare(SettingsHandler::TCodeVersion))
-    {
-        tCodeConnected = true;
-        emit connectionChange({DeviceType::Serial, ConnectionStatus::Connected, "Connected"});
-    }
-}
-
-void SerialHandler::handleError(QSerialPort::SerialPortError error)
-{
-    if (error != QSerialPort::SerialPortError::NoError)
-    {
-        emit errorOccurred("A serial port error occured! " + m_serial->errorString());
-    }
-}
-
-QMutex SerialHandler::mutex;

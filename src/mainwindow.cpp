@@ -6,11 +6,6 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QFuture>
 
-LibraryListItem selectedFileListItem;
-SerialComboboxItem selectedSerialPort;
-int selectedFileListIndex;
-int preFullScreenWidth;
-int preFullScreenHeight;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -23,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent)
     //keyPress = new KeyPress();
     //keyPress->show();
     serialHandler = new SerialHandler();
+    udpHandler = new UdpHandler();
     loadSerialPorts();
 
 
@@ -33,11 +29,6 @@ MainWindow::MainWindow(QWidget *parent)
         return;
     }
     player->setRenderer(vw);
-
-    //player = new QMediaPlayer(this);
-    //vw = new XVideoWidget(this);
-    //player->setVideoOutput(vw);
-    //vw->show();
     player->audio()->setVolume(SettingsHandler::playerVolume);
 
     ui->MediaGrid->addWidget(vw->widget());
@@ -100,6 +91,13 @@ MainWindow::MainWindow(QWidget *parent)
     //connect(vw, &XVideoWidget::keyPressed, this, &MainWindow::on_key_press);
     connect(serialHandler, &SerialHandler::connectionChange, this, &MainWindow::on_device_connectionChanged);
     connect(serialHandler, &SerialHandler::errorOccurred, this, &MainWindow::on_device_error);
+    connect(serialHandler, &SerialHandler::timeout, this, &MainWindow::on_device_error);
+    connect(udpHandler, &UdpHandler::connectionChange, this, &MainWindow::on_device_connectionChanged);
+    connect(udpHandler, &UdpHandler::errorOccurred, this, &MainWindow::on_device_error);
+    if(SettingsHandler::selectedDevice == DeviceType::Network)
+    {
+        initNetworkEvent();
+    }
 }
 
 MainWindow::~MainWindow()
@@ -349,10 +347,10 @@ void MainWindow::on_media_positionChanged(qint64 position)
 
 void MainWindow::on_media_start()
 {
-    QFuture<void> future = QtConcurrent::run(syncFunscript, player, serialHandler, tcodeHandler, funscriptHandler);
+    QFuture<void> future = QtConcurrent::run(syncFunscript, player, serialHandler, udpHandler, tcodeHandler, funscriptHandler);
 }
 
-void syncFunscript(AVPlayer* player, SerialHandler* serialHandler, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler)
+void syncFunscript(AVPlayer* player, SerialHandler* serialHandler, UdpHandler* udpHandler, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler)
 {
     std::unique_ptr<FunscriptAction> actionPosition;
     while (player->isPlaying())
@@ -360,7 +358,13 @@ void syncFunscript(AVPlayer* player, SerialHandler* serialHandler, TCodeHandler*
         qint64 position = player->position();
         actionPosition = funscriptHandler->getPosition(position);
         if (actionPosition != nullptr)
-            serialHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
+        {
+            if (SettingsHandler::selectedDevice == DeviceType::Serial)
+                serialHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
+            else if (SettingsHandler::selectedDevice == DeviceType::Network)
+                udpHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
+        }
+        actionPosition.reset();
         Sleep(1);
     }
     //serialHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos));
@@ -448,7 +452,8 @@ void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
 
 void MainWindow::on_device_error(QString error)
 {
-    LogHandler::Dialog(error, XLogLevel::Critical);
+    //LogHandler::Dialog(error, XLogLevel::Critical);
+    LogHandler::Debug(error);
 }
 
 QString MainWindow::second_to_minutes(int seconds)
@@ -461,26 +466,36 @@ QString MainWindow::second_to_minutes(int seconds)
     return (mn.length() == 1 ? "0" + mn : mn ) + ":" + (sc.length() == 1 ? "0" + sc : sc);
 }
 
-void MainWindow::on_SerialOutputCmb_currentIndexChanged(int index)
-{
-    SerialComboboxItem serialInfo = ui->SerialOutputCmb->currentData(Qt::UserRole).value<SerialComboboxItem>();
-    selectedSerialPort = serialInfo;
-    if (SettingsHandler::selectedDevice == DeviceType::Serial)
-    {
-        QtConcurrent::run(initSerial, serialHandler, serialInfo);
-    }
-}
 
 void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo)
 {
-    serialHandler->init(serialInfo);
+    serialHandler->init(serialInfo.portName);
+}
+
+void initNetwork(UdpHandler* udpHandler, NetworkAddress address)
+{
+    udpHandler->init(address);
+}
+
+void MainWindow::initSerialEvent()
+{
+    QtConcurrent::run(initSerial, serialHandler, selectedSerialPort);
+}
+
+void MainWindow::initNetworkEvent()
+{
+    if(SettingsHandler::serverAddress != "" && SettingsHandler::serverPort != "")
+    {
+        NetworkAddress address { ui->networkAddressTxt->text(),  ui->networkPortTxt->text().toInt() };
+        QtConcurrent::run(initNetwork, udpHandler, address);
+    }
 }
 
 void MainWindow::on_serialOutputRdo_clicked()
 {
     SettingsHandler::selectedDevice = DeviceType::Serial;
-    //udpHandler.Dispose();
-    //QtConcurrent::run(initSerial, serialHandler, selectedSerialPort);
+    udpHandler->Dispose();
+    initSerialEvent();
     ui->SerialOutputCmb->setEditable(true);
     ui->networkAddressTxt->setEnabled(false);
     ui->networkPortTxt->setEnabled(false);
@@ -490,6 +505,7 @@ void MainWindow::on_networkOutputRdo_clicked()
 {
     SettingsHandler::selectedDevice = DeviceType::Network;
     serialHandler->dispose();
+    initNetworkEvent();
     ui->SerialOutputCmb->setEditable(false);
     ui->networkAddressTxt->setEnabled(true);
     ui->networkPortTxt->setEnabled(true);
@@ -498,11 +514,23 @@ void MainWindow::on_networkOutputRdo_clicked()
 void MainWindow::on_networkAddressTxt_editingFinished()
 {
     SettingsHandler::serverAddress = ui->networkAddressTxt->text();
+    initNetworkEvent();
 }
 
 void MainWindow::on_networkPortTxt_editingFinished()
 {
     SettingsHandler::serverPort = ui->networkPortTxt->text();
+    initNetworkEvent();
+}
+
+void MainWindow::on_SerialOutputCmb_currentIndexChanged(int index)
+{
+    SerialComboboxItem serialInfo = ui->SerialOutputCmb->currentData(Qt::UserRole).value<SerialComboboxItem>();
+    selectedSerialPort = serialInfo;
+    if (SettingsHandler::selectedDevice == DeviceType::Serial)
+    {
+        initSerialEvent();
+    }
 }
 
 void MainWindow::donate()
