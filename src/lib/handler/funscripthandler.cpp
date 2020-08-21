@@ -78,7 +78,7 @@ std::unique_ptr<FunscriptAction> FunscriptHandler::getPosition(qint64 millis)
 {
     QMutexLocker locker(&mutex);
     qint64 currentMillis = findClosest(millis, posList);
-    lastActionIndex = posList.indexOf(currentMillis);
+    //lastActionIndex = posList.indexOf(currentMillis);
     nextActionIndex = posList.indexOf(currentMillis) + 1;
     qint64 nextMillis = posList[nextActionIndex];
     if ((lastActionIndex != nextActionIndex) && millis >= currentMillis)

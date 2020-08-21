@@ -13,6 +13,8 @@
 #include "../handler/loghandler.h"
 #include "../lookup/enum.h"
 
+Q_DECLARE_METATYPE(ConnectionChangedSignal);
+
 class SerialHandler : public QThread
 {
     Q_OBJECT
@@ -40,6 +42,7 @@ private:
     QWaitCondition _cond;
     int _waitTimeout = 0;
     bool _stop = false;
+    bool _isConnected = false;
 };
 
 #endif // SERIALHANDLER_H

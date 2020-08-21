@@ -103,6 +103,8 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     SettingsHandler::Save();
+    udpHandler->dispose();
+    serialHandler->dispose();
     delete ui;
     delete player;
     delete vw;
@@ -469,7 +471,8 @@ QString MainWindow::second_to_minutes(int seconds)
 
 void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo)
 {
-    serialHandler->init(serialInfo.portName);
+    if(!serialHandler->isRunning())
+        serialHandler->init(serialInfo.portName);
 }
 
 void initNetwork(UdpHandler* udpHandler, NetworkAddress address)
@@ -494,7 +497,7 @@ void MainWindow::initNetworkEvent()
 void MainWindow::on_serialOutputRdo_clicked()
 {
     SettingsHandler::selectedDevice = DeviceType::Serial;
-    udpHandler->Dispose();
+    udpHandler->dispose();
     initSerialEvent();
     ui->SerialOutputCmb->setEditable(true);
     ui->networkAddressTxt->setEnabled(false);

@@ -22,7 +22,7 @@ public:
     UdpHandler();
     ~UdpHandler();
     void init(NetworkAddress address);
-    void Dispose();
+    void dispose();
     void sendTCode(QString tcode);
 
 private:

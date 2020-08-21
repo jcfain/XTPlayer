@@ -55,11 +55,13 @@ void UdpHandler::sendTCode(QString tcode)
     }
 }
 
-void UdpHandler::Dispose()
+void UdpHandler::dispose()
 {
     QMutexLocker locker(&mutex);
-    udpSocketSend->close();
-    udpSocketRecieve->close();
+    if(udpSocketSend != nullptr)
+        udpSocketSend->close();
+    if(udpSocketRecieve != nullptr)
+        udpSocketRecieve->close();
     tCodeConnected = false;
     emit connectionChange({DeviceType::Network, ConnectionStatus::Disconnected, "Disconnected"});
 }

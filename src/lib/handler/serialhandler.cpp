@@ -18,7 +18,11 @@ void SerialHandler::init(const QString &portName)
     _mutex.lock();
     _portName = portName;
     _mutex.unlock();
-    sendTCode("D1");
+    while(!_isConnected && !_stop)
+    {
+        sendTCode("D1");
+        sleep(2);
+    }
 }
 
 void SerialHandler::sendTCode(const QString &tcode, int waitTimeout)
@@ -38,13 +42,13 @@ void SerialHandler::run()
     bool currentPortNameChanged = false;
 
     _mutex.lock();
+    qRegisterMetaType<ConnectionChangedSignal>();
     QString currentPortName;
-    bool isConnected;
     if (currentPortName != _portName)
     {
         currentPortName = _portName;
         currentPortNameChanged = true;
-        isConnected = false;
+        _isConnected = false;
     }
 
     int currentWaitTimeout = _waitTimeout;
@@ -71,36 +75,48 @@ void SerialHandler::run()
                            .arg(_portName).arg(serial.error()));
                 return;
             }
+            else
+            {
+                serial.setBaudRate(QSerialPort::Baud115200);
+                serial.setParity(QSerialPort::NoParity);
+                serial.setStopBits(QSerialPort::OneStop);
+                serial.setFlowControl(QSerialPort::NoFlowControl);
+            }
         }
         // write request
         const QByteArray requestData = currentRequest.toUtf8();
         serial.write(requestData);
+
+        bool isHandShake = currentRequest.startsWith("D1");
         if (serial.waitForBytesWritten(_waitTimeout))
         {
             // read response
-            bool isHandShake = currentRequest.startsWith("D1");
-            while(!isConnected && isHandShake) {
-                if (isHandShake && serial.waitForReadyRead(currentWaitTimeout))
-                {
-                    QByteArray responseData = serial.readAll();
-                    while (serial.waitForReadyRead(10))
-                        responseData += serial.readAll();
+            if (isHandShake && serial.waitForReadyRead(currentWaitTimeout))
+            {
+                QByteArray responseData = serial.readAll();
+                while (serial.waitForReadyRead(10))
+                    responseData += serial.readAll();
 
-                    const QString response = QString::fromUtf8(responseData);
-                    if (response == SettingsHandler::TCodeVersion)
-                    {
-                        isConnected = true;
-                        emit connectionChange({DeviceType::Serial, ConnectionStatus::Connected, "Connected"});
-                    }
-                }
-                else if (isHandShake)
+                const QString response = QString::fromUtf8(responseData);
+                if (response.startsWith(SettingsHandler::TCodeVersion))
                 {
-                    emit timeout(tr("Read handshake timeout %1")
-                                 .arg(QTime::currentTime().toString()));
+                    emit connectionChange({DeviceType::Serial, ConnectionStatus::Connected, "Connected"});
+                    //_mutex.lock();
+                    _isConnected = true;
+                    //_mutex.unlock();
                 }
-                if(!isConnected)
-                    serial.write(requestData);
+                else
+                {
+                    emit connectionChange({DeviceType::Serial, ConnectionStatus::Error, "No TCode"});
+                }
             }
+            else if (isHandShake)
+            {
+                emit timeout(tr("Read handshake timeout %1")
+                             .arg(QTime::currentTime().toString()));
+            }
+            if(!_isConnected)
+                serial.write(requestData);
         }
         else
         {
@@ -113,7 +129,7 @@ void SerialHandler::run()
         {
             currentPortName = _portName;
             currentPortNameChanged = true;
-            isConnected = false;
+            _isConnected = false;
         }
         else
         {
@@ -128,8 +144,9 @@ void SerialHandler::run()
 //Public
 void SerialHandler::dispose()
 {
+    if(!_stop)
+        emit connectionChange({DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"});
     _stop = true;
-    emit connectionChange({DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"});
 }
 
 QList<SerialComboboxItem> SerialHandler::getPorts()

@@ -27,6 +27,7 @@
 Q_DECLARE_METATYPE(LibraryListItem);
 Q_DECLARE_METATYPE(SerialComboboxItem);
 
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
