@@ -9,8 +9,8 @@
 #include <QMessageBox>
 #include <iostream>
 #include <QtAV>
-#include <QtAVWidgets>
 #include <QtGlobal>
+#include "lib/handler/videohandler.h"
 #include "CustomControls/RangeSlider.h"
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/loghandler.h"
@@ -26,13 +26,15 @@
 
 Q_DECLARE_METATYPE(LibraryListItem);
 Q_DECLARE_METATYPE(SerialComboboxItem);
+//Q_DECLARE_METATYPE(ConnectionChangedSignal);
+//Q_DECLARE_METATYPE(DeviceType);
+//Q_DECLARE_METATYPE(ConnectionStatus);
 
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-using namespace QtAV;
 
 extern void syncFunscript(AVPlayer* player, SerialHandler* serialHandler, UdpHandler* udphandler, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler);
 extern void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo);
@@ -65,13 +67,11 @@ private slots:
 
     void on_fullScreenBtn_clicked();
 
-
     void on_SerialOutputCmb_currentIndexChanged(int index);
 
     void on_serialRefreshBtn_clicked();
 
     void on_serialOutputRdo_clicked();
-
 
     void on_networkOutputRdo_clicked();
 
@@ -90,9 +90,8 @@ protected:
 
 private:
     Ui::MainWindow *ui;
-    AVPlayer* player;
-    VideoOutput* vw;
     QProgressBar* bar;
+    VideoHandler* videoHandler;
     QLabel* xRangeLabel;
     QLabel* yRollRangeLabel;
     QLabel* xRollRangeLabel;
@@ -101,17 +100,19 @@ private:
     RangeSlider* yRollRangeSlider;
     RangeSlider* xRollRangeSlider;
     RangeSlider* SpeedSlider;
-    QWindow* fullscreenWindow;
+    QWidget* fullscreenWindow;
     FunscriptHandler* funscriptHandler;
     TCodeHandler* tcodeHandler;
     SerialHandler* serialHandler;
     UdpHandler* udpHandler;
     QList<SerialComboboxItem> serialPorts;
-    LibraryListItem selectedFileListItem;
     SerialComboboxItem selectedSerialPort;
+    QSize videoSize;
+    QSize appSize;
+    QPoint appPos;
+    LibraryListItem selectedFileListItem;
     int selectedFileListIndex;
-    int preFullScreenWidth;
-    int preFullScreenHeight;
+    bool deviceConnected;
 
     QList<QString> videos;
     void on_load_library(QString path);
@@ -130,7 +131,7 @@ private:
     void on_key_press(QKeyEvent* event);
     void on_media_positionChanged(qint64 position);
     void media_single_click_event(QMouseEvent * event);
-    void on_media_statusChanged(MediaStatus status);
+    void on_media_statusChanged(QtAV::MediaStatus status);
     void on_media_start();
     void on_media_stop();
     void on_device_connectionChanged(ConnectionChangedSignal event);

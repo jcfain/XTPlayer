@@ -13,8 +13,6 @@
 #include "../handler/loghandler.h"
 #include "../lookup/enum.h"
 
-Q_DECLARE_METATYPE(ConnectionChangedSignal);
-
 class SerialHandler : public QThread
 {
     Q_OBJECT
@@ -29,9 +27,10 @@ public:
     ~SerialHandler();
 
     QList<SerialComboboxItem> getPorts();
-    void sendTCode(const QString &tcode, int waitTimeout = 5000);
-    void init(const QString &portName);
+    void sendTCode(const QString &tcode);
+    void init(const QString &portName, int waitTimeout = 5000);
     void dispose();
+    bool isConnected();
 
 
 private:

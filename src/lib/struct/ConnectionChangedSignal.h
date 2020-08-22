@@ -3,6 +3,7 @@
 #include <QString>
 #include "../lookup/enum.h"
 
+
 struct ConnectionChangedSignal
 {
     DeviceType deviceType;

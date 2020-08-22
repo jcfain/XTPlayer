@@ -1,5 +1,4 @@
 #include "serialhandler.h"
-
 SerialHandler::SerialHandler(QObject *parent) :
     QThread(parent)
 {
@@ -13,22 +12,30 @@ SerialHandler::~SerialHandler()
     _mutex.unlock();
     wait();
 }
-void SerialHandler::init(const QString &portName)
+void SerialHandler::init(const QString &portName, int waitTimeout)
 {
+    //qRegisterMetaType<ConnectionChangedSignal>();
+    emit connectionChange({DeviceType::Serial, ConnectionStatus::Connecting, "Connecting..."});
     _mutex.lock();
     _portName = portName;
+    _waitTimeout = waitTimeout;
     _mutex.unlock();
-    while(!_isConnected && !_stop)
+    int timeouttracker = 0;
+    while(!_isConnected && !_stop && timeouttracker <= 3)
     {
         sendTCode("D1");
-        sleep(2);
+        sleep(_waitTimeout / 1000 + 1);
+        ++timeouttracker;
+    }
+    if (timeouttracker > 3)
+    {
+        emit connectionChange({DeviceType::Serial, ConnectionStatus::Error, "Timed out"});
     }
 }
 
-void SerialHandler::sendTCode(const QString &tcode, int waitTimeout)
+void SerialHandler::sendTCode(const QString &tcode)
 {
     const QMutexLocker locker(&_mutex);
-    _waitTimeout = waitTimeout;
     _tcode = tcode + "\n";
     LogHandler::Debug("Sending tcode serial: "+ _tcode);
     if (!isRunning())
@@ -42,7 +49,6 @@ void SerialHandler::run()
     bool currentPortNameChanged = false;
 
     _mutex.lock();
-    qRegisterMetaType<ConnectionChangedSignal>();
     QString currentPortName;
     if (currentPortName != _portName)
     {
@@ -53,6 +59,7 @@ void SerialHandler::run()
 
     int currentWaitTimeout = _waitTimeout;
     QString currentRequest = _tcode;
+    _tcode = "";
     _mutex.unlock();
     QSerialPort serial;
 
@@ -93,6 +100,7 @@ void SerialHandler::run()
             // read response
             if (isHandShake && serial.waitForReadyRead(currentWaitTimeout))
             {
+                //qRegisterMetaType<ConnectionChangedSignal>();
                 QByteArray responseData = serial.readAll();
                 while (serial.waitForReadyRead(10))
                     responseData += serial.readAll();
@@ -101,9 +109,9 @@ void SerialHandler::run()
                 if (response.startsWith(SettingsHandler::TCodeVersion))
                 {
                     emit connectionChange({DeviceType::Serial, ConnectionStatus::Connected, "Connected"});
-                    //_mutex.lock();
+                    _mutex.lock();
                     _isConnected = true;
-                    //_mutex.unlock();
+                    _mutex.unlock();
                 }
                 else
                 {
@@ -115,8 +123,6 @@ void SerialHandler::run()
                 emit timeout(tr("Read handshake timeout %1")
                              .arg(QTime::currentTime().toString()));
             }
-            if(!_isConnected)
-                serial.write(requestData);
         }
         else
         {
@@ -137,13 +143,21 @@ void SerialHandler::run()
         }
         currentWaitTimeout = _waitTimeout;
         currentRequest = _tcode;
+        _tcode = "";
         _mutex.unlock();
     }
 }
 
 //Public
+bool SerialHandler::isConnected()
+{
+    const QMutexLocker locker(&_mutex);
+    return _isConnected;
+}
+
 void SerialHandler::dispose()
 {
+    const QMutexLocker locker(&_mutex);
     if(!_stop)
         emit connectionChange({DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"});
     _stop = true;

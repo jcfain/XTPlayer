@@ -12,26 +12,18 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    //QtAV::Widgets::registerRenderers();
     SettingsHandler::Load();
 
     //keyPress = new KeyPress();
     //keyPress->show();
     serialHandler = new SerialHandler();
     udpHandler = new UdpHandler();
+    videoHandler = new VideoHandler(this);
+    ui->MediaGrid->addWidget(videoHandler);
     loadSerialPorts();
 
+    ui->SeekSlider->setDisabled(true);
 
-    player = new AVPlayer(this);
-    vw = new VideoOutput(this);
-    if (!vw->widget()) {
-        QMessageBox::warning(0, QString::fromLatin1("QtAV error"), tr("Can not create video renderer"));
-        return;
-    }
-    player->setRenderer(vw);
-    player->audio()->setVolume(SettingsHandler::playerVolume);
-
-    ui->MediaGrid->addWidget(vw->widget());
 
     on_load_library(SettingsHandler::selectedLibrary);
     ui->VolumeSlider->setValue(SettingsHandler::playerVolume);
@@ -79,13 +71,13 @@ MainWindow::MainWindow(QWidget *parent)
     ui->RangeSettingsGrid->addWidget(SpeedSlider, 7,0);
 
 
-    connect(player, &AVPlayer::positionChanged, this, &MainWindow::on_media_positionChanged);
-    connect(player, &AVPlayer::mediaStatusChanged, this, &MainWindow::on_media_statusChanged);
-    connect(player, &AVPlayer::started, this, &MainWindow::on_media_start);
+    connect(videoHandler->player, &AVPlayer::positionChanged, this, &MainWindow::on_media_positionChanged);
+    connect(videoHandler->player, &AVPlayer::mediaStatusChanged, this, &MainWindow::on_media_statusChanged);
+    connect(videoHandler->player, &AVPlayer::started, this, &MainWindow::on_media_start);
     connect(ui->SeekSlider, &QSlider::sliderMoved, this, &MainWindow::on_seekSlider_sliderMoved);
     //connect(player, static_cast<void(AVPlayer::*)(AVPlayer::Error )>(&AVPlayer::error), this, &MainWindow::on_media_error);
 
-    //connect(vw, &VideoOutput::doubleClicked, this, &MainWindow::media_double_click_event);
+    connect(videoHandler, &VideoHandler::doubleClicked, this, &MainWindow::media_double_click_event);
     //connect(vw, &XVideoWidget::singleClicked, this, &MainWindow::media_single_click_event);
     //connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
     //connect(vw, &XVideoWidget::keyPressed, this, &MainWindow::on_key_press);
@@ -106,8 +98,7 @@ MainWindow::~MainWindow()
     udpHandler->dispose();
     serialHandler->dispose();
     delete ui;
-    delete player;
-    delete vw;
+    delete videoHandler;
     //delete keyPress;
 }
 
@@ -226,17 +217,17 @@ void MainWindow::on_LibraryList_itemDoubleClicked(QListWidgetItem *item)
 
 void MainWindow::playFile(LibraryListItem selectedFileListItem)
 {
-    player->stop();
+    videoHandler->player->stop();
     QFile file(selectedFileListItem.path);
     if (file.exists())
     {
-        player->setFile(selectedFileListItem.path);
-        player->load();
+        videoHandler->player->setFile(selectedFileListItem.path);
+        videoHandler->player->load();
         if(funscriptHandler->load(selectedFileListItem.script))
         {
             SettingsHandler::selectedFile = selectedFileListItem.path;
             //QUrl url = QUrl::fromLocalFile(selectedFileListItem.path);
-            player->play();
+            videoHandler->player->play();
             selectedFileListIndex = ui->LibraryList->currentRow();
         }
         else
@@ -264,32 +255,50 @@ void MainWindow::loadSerialPorts()
 
 void MainWindow::togglePause()
 {
-    player->togglePause();
+    videoHandler->player->togglePause();
 }
 
+#include <QScreen>
 void MainWindow::toggleFullScreen()
 {
-    if(player->state() == AVPlayer::PlayingState) {
-        if(!vw->widget()->isFullScreen()) {
-            preFullScreenWidth = vw->widget()->width();
-            preFullScreenHeight = vw->widget()->height();
-            //vw->widget()->setParent(this, Qt::Tool);
-            //vw->widget()->showFullScreen();
-            QSize s = rect().size();
-            vw->widget()->resize(QSize(s.width()+1, s.height()+1));
+    if(videoHandler->player->state() == AVPlayer::PlayingState) {
+        QScreen *screen = QGuiApplication::primaryScreen();
+        QSize screenSize = screen->size();
+        if(!isFullScreen()) {
+            videoSize = videoHandler->size();
+            appSize = size();
+            appPos = pos();
+            //videoHandler->setParent(this, Qt::Tool);
+            setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+            //videoHandler->move(QPoint(0, 0));
+            ui->LibraryList->hide();
+            ui->TCodeQuickSettingsGroup->hide();
+            ui->menubar->hide();
+            showFullScreen();
+            //videoHandler->resize(QSize(screenSize.width()+1, screenSize.height()+1));
+            videoHandler->resize(screenSize);
         }
         else {
-            vw->widget()->setParent(this, Qt::Widget);
-            ui->MediaGrid->addWidget(vw->widget());
-            vw->widget()->resize(preFullScreenWidth, preFullScreenHeight);
-            vw->widget()->showNormal();
+            //videoHandler->setParent(this, Qt::Widget);
+            ui->LibraryList->show();
+            ui->TCodeQuickSettingsGroup->show();
+            ui->menubar->show();
+            setWindowFlags(Qt::Window);
+            //videoHandler->resize(videoSize);
+            showNormal();
+            resize(appSize);
+            move(appPos);
+            ui->MediaGrid->addWidget(videoHandler);
         }
     }
 }
 
 void MainWindow::on_VolumeSlider_valueChanged(int value)
 {
-    player->audio()->setVolume(value);
+    videoHandler->player->audio()->setVolume(value);
+
+    ui->VolumeSlider->setToolTip(QString::number(value));
+
     SettingsHandler::playerVolume = value;
 }
 
@@ -307,19 +316,19 @@ void MainWindow::on_PauseBtn_clicked()
 
 void MainWindow::on_StopBtn_clicked()
 {
-    if(player->PlayingState == AVPlayer::State::PlayingState) {
-        player->stop();
+    if(videoHandler->player->PlayingState == AVPlayer::State::PlayingState) {
+        videoHandler->player->stop();
     }
 }
 
 void MainWindow::on_MuteBtn_toggled(bool checked)
 {
-    player->audio()->setMute(checked);
+    videoHandler->player->audio()->setMute(checked);
 }
 
 void MainWindow::on_fullScreenBtn_clicked()
 {
-     MainWindow::toggleFullScreen();
+    MainWindow::toggleFullScreen();
 }
 
 void MainWindow::on_serialRefreshBtn_clicked()
@@ -329,19 +338,19 @@ void MainWindow::on_serialRefreshBtn_clicked()
 
 void MainWindow::on_seekSlider_sliderMoved(int position)
 {
-    qint64 playerPosition = XMath::mapRange(static_cast<qint64>(position), 0, 100, 0, player->duration());
-    player->setPosition(playerPosition);
+    qint64 playerPosition = XMath::mapRange(static_cast<qint64>(position), 0, 100, 0, videoHandler->player->duration());
+    ui->SeekSlider->setToolTip(QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")));
+    videoHandler->player->setPosition(playerPosition);
 }
 
 void MainWindow::on_media_positionChanged(qint64 position)
 {
-    //ui->lblCurrentDuration->setText( second_to_minutes(position / 1000).append("/").append( second_to_minutes( (player->duration())/1000 ) ) );
+    ui->lblCurrentDuration->setText( second_to_minutes(position / 1000).append("/").append( second_to_minutes( (videoHandler->player->duration())/1000 ) ) );
 
-    ui->lblCurrentDuration->setText(QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")));
-    qint64 duration = player->duration();
+    //ui->lblCurrentDuration->setText(QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")));
+    qint64 duration = videoHandler->player->duration();
     if (duration > 0)
     {
-        //serialHandler->sendTCode(tcodeHandler->funscriptToTCode(funscriptHandler->getPosition(position)));
         qint64 sliderPosition = XMath::mapRange(position, 0, duration, 0, 100);
         ui->SeekSlider->setValue(static_cast<int>(sliderPosition));
     }
@@ -349,7 +358,8 @@ void MainWindow::on_media_positionChanged(qint64 position)
 
 void MainWindow::on_media_start()
 {
-    QFuture<void> future = QtConcurrent::run(syncFunscript, player, serialHandler, udpHandler, tcodeHandler, funscriptHandler);
+    ui->SeekSlider->setDisabled(false);
+    QFuture<void> future = QtConcurrent::run(syncFunscript, videoHandler->player, serialHandler, udpHandler, tcodeHandler, funscriptHandler);
 }
 
 void syncFunscript(AVPlayer* player, SerialHandler* serialHandler, UdpHandler* udpHandler, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler)
@@ -357,16 +367,18 @@ void syncFunscript(AVPlayer* player, SerialHandler* serialHandler, UdpHandler* u
     std::unique_ptr<FunscriptAction> actionPosition;
     while (player->isPlaying())
     {
-        qint64 position = player->position();
-        actionPosition = funscriptHandler->getPosition(position);
-        if (actionPosition != nullptr)
-        {
-            if (SettingsHandler::selectedDevice == DeviceType::Serial)
-                serialHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
-            else if (SettingsHandler::selectedDevice == DeviceType::Network)
-                udpHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
+        if(serialHandler->isConnected() || udpHandler->isConnected()) {
+            qint64 position = player->position();
+            actionPosition = funscriptHandler->getPosition(position);
+            if (actionPosition != nullptr)
+            {
+                if (SettingsHandler::selectedDevice == DeviceType::Serial)
+                    serialHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
+                else if (SettingsHandler::selectedDevice == DeviceType::Network)
+                    udpHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
+            }
+            actionPosition.reset();
         }
-        actionPosition.reset();
         Sleep(1);
     }
     //serialHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos));
@@ -376,12 +388,16 @@ void syncFunscript(AVPlayer* player, SerialHandler* serialHandler, UdpHandler* u
 
 void MainWindow::on_media_stop()
 {
+    ui->SeekSlider->setValue(0);
+    qDebug(">>>>>>>>>>>>>>disable slider");
+    ui->SeekSlider->setDisabled(true);
+    ui->lblCurrentDuration->setText("00:00:00");
 
 }
 
 void MainWindow::on_media_statusChanged(MediaStatus status)
 {
-    switch(player->mediaStatus())
+    switch(videoHandler->player->mediaStatus())
     {
         case MediaStatus::EndOfMedia:
             ++selectedFileListIndex;
@@ -441,6 +457,7 @@ void MainWindow::media_single_click_event(QMouseEvent * event)
 
 void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
 {
+    deviceConnected = event.status == ConnectionStatus::Connected;
     if(event.deviceType == DeviceType::Serial)
     {
         ui->serialStatuslbl->setText(event.message);
@@ -477,7 +494,8 @@ void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo)
 
 void initNetwork(UdpHandler* udpHandler, NetworkAddress address)
 {
-    udpHandler->init(address);
+    if(!udpHandler->isRunning())
+        udpHandler->init(address);
 }
 
 void MainWindow::initSerialEvent()

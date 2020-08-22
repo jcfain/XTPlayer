@@ -23,12 +23,14 @@ SOURCES += \
     lib/handler/settingshandler.cpp \
     lib/handler/tcodehandler.cpp \
     lib/handler/udphandler.cpp \
+    lib/handler/videohandler.cpp \
     lib/tool/xmath.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
     CustomControls/RangeSlider.h \
+    lib/handler/videohandler.h \
     lib/lookup/enum.h \
     lib/handler/funscripthandler.h \
     lib/handler/loghandler.h \
