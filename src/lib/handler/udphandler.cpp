@@ -18,19 +18,22 @@ void UdpHandler::init(NetworkAddress address, int waitTimeout)
     //qRegisterMetaType<ConnectionChangedSignal>();
     //qRegisterMetaType<QAbstractSocket::SocketState>();
 
-    QMutexLocker locker(&_mutex);
     emit connectionChange({DeviceType::Network, ConnectionStatus::Connecting, "Connecting..."});
+    _mutex.lock();
     _isSelected = true;
     _waitTimeout = waitTimeout;
     _address = address;
-    _addressObj.setAddress(_address.address);
-    locker.unlock();
+    _mutex.unlock();
     int timeouttracker = 0;
     while(!_isConnected && !_stop && timeouttracker <= 3)
     {
         sendTCode("D1");
         sleep(_waitTimeout / 1000 + 1);
         ++timeouttracker;
+    }
+    if (timeouttracker > 3)
+    {
+        emit connectionChange({DeviceType::Serial, ConnectionStatus::Error, "Timed out"});
     }
 }
 
@@ -57,18 +60,17 @@ void UdpHandler::run()
 
     QString currentAddress;
     int currentPort = 0;
-    if (currentAddress != _address.address || currentPort != _address.port)
-    {
-        currentAddress = _address.address;
-        currentPort = _address.port;
-        currentAddressChanged = true;
-        _isConnected = false;
-    }
+    QHostAddress addressObj;
+    addressObj.setAddress(_address.address);
+    currentAddress = _address.address;
+    currentPort = _address.port;
+    _isConnected = false;
+    currentAddressChanged = true;
 
     _mutex.unlock();
 
     QScopedPointer<QUdpSocket> udpSocketSend(new QUdpSocket(this));
-    udpSocketSend->connectToHost(_addressObj, _address.port);
+    udpSocketSend->connectToHost(addressObj, currentPort);
 
     QScopedPointer<QUdpSocket> udpSocketRecieve(new QUdpSocket(this));
     if (!udpSocketRecieve->bind(QHostAddress::Any, 54000))
@@ -79,7 +81,7 @@ void UdpHandler::run()
     {
         if(udpSocketSend->isWritable())
         {
-            udpSocketSend->writeDatagram(data, _addressObj, _address.port);
+            udpSocketSend->writeDatagram(data, addressObj, currentPort);
             if (udpSocketSend->waitForBytesWritten(_waitTimeout))
             {
                 if (currentAddressChanged)

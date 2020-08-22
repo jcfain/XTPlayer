@@ -16,8 +16,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     //keyPress = new KeyPress();
     //keyPress->show();
-    serialHandler = new SerialHandler();
-    udpHandler = new UdpHandler();
+    serialHandler = new SerialHandler(this);
+    udpHandler = new UdpHandler(this);
     videoHandler = new VideoHandler(this);
     ui->MediaGrid->addWidget(videoHandler);
     loadSerialPorts();

@@ -32,7 +32,6 @@ private:
     void onSocketStateChange (QAbstractSocket::SocketState state);
 
     NetworkAddress _address;
-    QHostAddress _addressObj;
     QWaitCondition _cond;
     QMutex _mutex;
     QString _tcode;
