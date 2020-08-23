@@ -26,7 +26,6 @@
 
 Q_DECLARE_METATYPE(LibraryListItem);
 Q_DECLARE_METATYPE(SerialComboboxItem);
-//Q_DECLARE_METATYPE(ConnectionChangedSignal);
 //Q_DECLARE_METATYPE(DeviceType);
 //Q_DECLARE_METATYPE(ConnectionStatus);
 
@@ -79,6 +78,11 @@ private slots:
 
     void on_networkPortTxt_editingFinished();
 
+    void on_x_range_valueChanged();
+    void on_yRoll_range_valueChanged();
+    void on_xRoll_range_valueChanged();
+    void on_offSet_valueChanged();
+
 signals:
     void keyPressed(QKeyEvent * event);
     void sendTCode(QString tcode);
@@ -95,11 +99,11 @@ private:
     QLabel* xRangeLabel;
     QLabel* yRollRangeLabel;
     QLabel* xRollRangeLabel;
-    QLabel* SpeedLabel;
+    QLabel* offSetLabel;
     RangeSlider* xRangeSlider;
     RangeSlider* yRollRangeSlider;
     RangeSlider* xRollRangeSlider;
-    RangeSlider* SpeedSlider;
+    RangeSlider* offSetSlider;
     QWidget* fullscreenWindow;
     FunscriptHandler* funscriptHandler;
     TCodeHandler* tcodeHandler;
@@ -122,6 +126,9 @@ private:
     bool isPlayingFile(QString file);
     void togglePause();
     void toggleFullScreen();
+    void toggleUI();
+    void toggleControls();
+
     void loadSerialPorts();
     void playFile(LibraryListItem selectedFileListItem);
     void initNetworkEvent();
@@ -129,6 +136,7 @@ private:
 
     void on_seekSlider_sliderMoved(int position);
     void on_key_press(QKeyEvent* event);
+    void on_video_mouse_enter(QEvent* event);
     void on_media_positionChanged(qint64 position);
     void media_single_click_event(QMouseEvent * event);
     void on_media_statusChanged(QtAV::MediaStatus status);

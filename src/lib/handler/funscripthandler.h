@@ -10,6 +10,7 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QFile>
+#include "settingshandler.h"
 #include "loghandler.h"
 
 #include "../struct/Funscript.h"

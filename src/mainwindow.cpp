@@ -25,17 +25,17 @@ MainWindow::MainWindow(QWidget *parent)
     ui->SeekSlider->setDisabled(true);
 
 
-    on_load_library(SettingsHandler::selectedLibrary);
-    ui->VolumeSlider->setValue(SettingsHandler::playerVolume);
+    on_load_library(SettingsHandler::getSelectedLibrary());
+    ui->VolumeSlider->setValue(SettingsHandler::getPlayerVolume());
 
-    ui->SerialOutputCmb->setCurrentText(SettingsHandler::serialPort);
-    ui->networkAddressTxt->setText(SettingsHandler::serverAddress);
-    ui->networkPortTxt->setText(SettingsHandler::serverPort);
-    if(SettingsHandler::selectedDevice == DeviceType::Serial)
+    ui->SerialOutputCmb->setCurrentText(SettingsHandler::getSerialPort());
+    ui->networkAddressTxt->setText(SettingsHandler::getServerAddress());
+    ui->networkPortTxt->setText(SettingsHandler::getServerPort());
+    if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
     {
         ui->serialOutputRdo->setChecked(true);
     }
-    else if (SettingsHandler::selectedDevice == DeviceType::Network)
+    else if (SettingsHandler::getSelectedDevice() == DeviceType::Network)
     {
         ui->networkOutputRdo->setChecked(true);
     }
@@ -47,6 +47,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->RangeSettingsGrid->addWidget(xRangeLabel, 0,0);
     xRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
     xRangeSlider->SetRange(1, 999);
+    xRangeSlider->setLowerValue(SettingsHandler::getXMin());
+    xRangeSlider->setUpperValue(SettingsHandler::getXMax());
     ui->RangeSettingsGrid->addWidget(xRangeSlider, 1,0);
 
     yRollRangeLabel = new QLabel("Y Roll Range");
@@ -54,6 +56,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->RangeSettingsGrid->addWidget(yRollRangeLabel, 2,0);
     yRollRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
     yRollRangeSlider->SetRange(1, 999);
+    yRollRangeSlider->setLowerValue(SettingsHandler::getYRollMin());
+    yRollRangeSlider->setUpperValue(SettingsHandler::getYRollMax());
     ui->RangeSettingsGrid->addWidget(yRollRangeSlider, 3,0);
 
     xRollRangeLabel = new QLabel("X Roll Range");
@@ -61,15 +65,26 @@ MainWindow::MainWindow(QWidget *parent)
     ui->RangeSettingsGrid->addWidget(xRollRangeLabel, 4,0);
     xRollRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
     xRollRangeSlider->SetRange(1, 999);
+    xRollRangeSlider->setLowerValue(SettingsHandler::getXRollMin());
+    xRollRangeSlider->setUpperValue(SettingsHandler::getXRollMax());
     ui->RangeSettingsGrid->addWidget(xRollRangeSlider, 5,0);
 
-    SpeedLabel = new QLabel("Speed");
-    SpeedLabel->setFont(font);
-    ui->RangeSettingsGrid->addWidget(SpeedLabel, 6,0);
-    SpeedSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::LeftHandle, nullptr);
-    SpeedSlider->SetRange(1000, 4000);
-    ui->RangeSettingsGrid->addWidget(SpeedSlider, 7,0);
+    offSetLabel = new QLabel("Offset: " + QString::number(SettingsHandler::getoffSet()));
+    offSetLabel->setFont(font);
+    ui->RangeSettingsGrid->addWidget(offSetLabel, 6,0);
+    offSetSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::LeftHandle, nullptr);
+    offSetSlider->SetRange(1, 2000);
+    offSetSlider->setLowerValue(SettingsHandler::getoffSetMap());
+    ui->RangeSettingsGrid->addWidget(offSetSlider, 7,0);
 
+
+    connect(xRangeSlider, &RangeSlider::lowerValueChanged, this, &MainWindow::on_x_range_valueChanged);
+    connect(xRangeSlider, &RangeSlider::upperValueChanged, this, &MainWindow::on_x_range_valueChanged);
+    connect(yRollRangeSlider, &RangeSlider::lowerValueChanged, this, &MainWindow::on_yRoll_range_valueChanged);
+    connect(yRollRangeSlider, &RangeSlider::upperValueChanged, this, &MainWindow::on_yRoll_range_valueChanged);
+    connect(xRollRangeSlider, &RangeSlider::lowerValueChanged, this, &MainWindow::on_xRoll_range_valueChanged);
+    connect(xRollRangeSlider, &RangeSlider::upperValueChanged, this, &MainWindow::on_xRoll_range_valueChanged);
+    connect(offSetSlider, &RangeSlider::lowerValueChanged, this, &MainWindow::on_offSet_valueChanged);
 
     connect(videoHandler->player, &AVPlayer::positionChanged, this, &MainWindow::on_media_positionChanged);
     connect(videoHandler->player, &AVPlayer::mediaStatusChanged, this, &MainWindow::on_media_statusChanged);
@@ -79,14 +94,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(videoHandler, &VideoHandler::doubleClicked, this, &MainWindow::media_double_click_event);
     //connect(vw, &XVideoWidget::singleClicked, this, &MainWindow::media_single_click_event);
-    //connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
-    //connect(vw, &XVideoWidget::keyPressed, this, &MainWindow::on_key_press);
+    connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
+    connect(videoHandler, &VideoHandler::mouseEnter, this, &MainWindow::on_video_mouse_enter);
     connect(serialHandler, &SerialHandler::connectionChange, this, &MainWindow::on_device_connectionChanged);
     connect(serialHandler, &SerialHandler::errorOccurred, this, &MainWindow::on_device_error);
-    connect(serialHandler, &SerialHandler::timeout, this, &MainWindow::on_device_error);
     connect(udpHandler, &UdpHandler::connectionChange, this, &MainWindow::on_device_connectionChanged);
     connect(udpHandler, &UdpHandler::errorOccurred, this, &MainWindow::on_device_error);
-    if(SettingsHandler::selectedDevice == DeviceType::Network)
+    if(SettingsHandler::getSelectedDevice() == DeviceType::Network)
     {
         initNetworkEvent();
     }
@@ -113,6 +127,39 @@ void  MainWindow::on_key_press(QKeyEvent * event)
             MainWindow::toggleFullScreen();
             break;
     }
+}
+
+void  MainWindow::on_video_mouse_enter(QEvent * event)
+{
+    if (isFullScreen())
+    {
+        toggleControls();
+        QTimer::singleShot(2000, this, &MainWindow::toggleControls);
+    }
+}
+
+void MainWindow::on_x_range_valueChanged()
+{
+    SettingsHandler::setXMin(xRangeSlider->GetLowerValue());
+    SettingsHandler::setXMax(xRangeSlider->GetUpperValue());
+}
+
+void MainWindow::on_yRoll_range_valueChanged()
+{
+    SettingsHandler::setYRollMin(yRollRangeSlider->GetLowerValue());
+    SettingsHandler::setYRollMax(yRollRangeSlider->GetUpperValue());
+}
+
+void MainWindow::on_xRoll_range_valueChanged()
+{
+    SettingsHandler::setXRollMin(xRollRangeSlider->GetLowerValue());
+    SettingsHandler::setXRollMax(xRollRangeSlider->GetUpperValue());
+}
+
+void MainWindow::on_offSet_valueChanged()
+{
+    SettingsHandler::setoffSet(offSetSlider->GetLowerValue());
+    offSetLabel->setText("Offset: " + QString::number(SettingsHandler::getoffSet()));
 }
 
 void MainWindow::on_load_library(QString path)
@@ -148,10 +195,10 @@ void MainWindow::on_load_library(QString path)
                 QString fileNameTemp = fileinfo.fileName();
                 QString scriptFile = fileNameTemp.remove(fileNameTemp.lastIndexOf('.'), fileNameTemp.length() -  1) + ".funscript";
                 QString scriptPath;
-                if (SettingsHandler::selectedFunscriptLibrary == Q_NULLPTR) {
+                if (SettingsHandler::getSelectedFunscriptLibrary() == Q_NULLPTR) {
                     scriptPath = videoPathTemp.remove(videoPathTemp.lastIndexOf('.'), videoPathTemp.length() -  1) + ".funscript";
                 } else {
-                    scriptPath = SettingsHandler::selectedFunscriptLibrary + QDir::separator() + scriptFile;
+                    scriptPath = SettingsHandler::getSelectedFunscriptLibrary() + QDir::separator() + scriptFile;
                 }
                 if (funscriptHandler->exists(scriptPath))
                 {
@@ -199,7 +246,7 @@ void MainWindow::on_actionSelect_library_triggered()
     if (selectedLibrary != Q_NULLPTR) {
         on_libray_path_select(selectedLibrary);
 
-        SettingsHandler::selectedLibrary = selectedLibrary;
+        SettingsHandler::setSelectedLibrary(selectedLibrary);
     }
 }
 
@@ -225,7 +272,7 @@ void MainWindow::playFile(LibraryListItem selectedFileListItem)
         videoHandler->player->load();
         if(funscriptHandler->load(selectedFileListItem.script))
         {
-            SettingsHandler::selectedFile = selectedFileListItem.path;
+            SettingsHandler::setSelectedFile(selectedFileListItem.path);
             //QUrl url = QUrl::fromLocalFile(selectedFileListItem.path);
             videoHandler->player->play();
             selectedFileListIndex = ui->LibraryList->currentRow();
@@ -261,6 +308,7 @@ void MainWindow::togglePause()
 #include <QScreen>
 void MainWindow::toggleFullScreen()
 {
+    toggleUI();
     if(videoHandler->player->state() == AVPlayer::PlayingState) {
         QScreen *screen = QGuiApplication::primaryScreen();
         QSize screenSize = screen->size();
@@ -271,18 +319,13 @@ void MainWindow::toggleFullScreen()
             //videoHandler->setParent(this, Qt::Tool);
             setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
             //videoHandler->move(QPoint(0, 0));
-            ui->LibraryList->hide();
-            ui->TCodeQuickSettingsGroup->hide();
-            ui->menubar->hide();
             showFullScreen();
             //videoHandler->resize(QSize(screenSize.width()+1, screenSize.height()+1));
             videoHandler->resize(screenSize);
         }
-        else {
+        else
+        {
             //videoHandler->setParent(this, Qt::Widget);
-            ui->LibraryList->show();
-            ui->TCodeQuickSettingsGroup->show();
-            ui->menubar->show();
             setWindowFlags(Qt::Window);
             //videoHandler->resize(videoSize);
             showNormal();
@@ -293,13 +336,40 @@ void MainWindow::toggleFullScreen()
     }
 }
 
+void MainWindow::toggleUI()
+{
+    if(!ui->LibraryList->isHidden())
+    {
+        ui->LibraryList->hide();
+        ui->menubar->hide();
+    }
+    else
+    {
+        ui->LibraryList->show();
+        ui->menubar->show();
+    }
+    toggleControls();
+}
+
+void MainWindow::toggleControls()
+{
+    if(!ui->TCodeQuickSettingsGroup->isHidden())
+    {
+        ui->TCodeQuickSettingsGroup->hide();
+    }
+    else
+    {
+        ui->TCodeQuickSettingsGroup->show();
+    }
+}
+
 void MainWindow::on_VolumeSlider_valueChanged(int value)
 {
     videoHandler->player->audio()->setVolume(value);
 
     ui->VolumeSlider->setToolTip(QString::number(value));
 
-    SettingsHandler::playerVolume = value;
+    SettingsHandler::setPlayerVolume(value);
 }
 
 void MainWindow::on_PlayBtn_clicked()
@@ -372,9 +442,9 @@ void syncFunscript(AVPlayer* player, SerialHandler* serialHandler, UdpHandler* u
             actionPosition = funscriptHandler->getPosition(position);
             if (actionPosition != nullptr)
             {
-                if (SettingsHandler::selectedDevice == DeviceType::Serial)
+                if (SettingsHandler::getSelectedDevice() == DeviceType::Serial)
                     serialHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
-                else if (SettingsHandler::selectedDevice == DeviceType::Network)
+                else if (SettingsHandler::getSelectedDevice() == DeviceType::Network)
                     udpHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
             }
             actionPosition.reset();
@@ -461,7 +531,7 @@ void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
     if(event.deviceType == DeviceType::Serial)
     {
         ui->serialStatuslbl->setText(event.message);
-        SettingsHandler::serialPort = ui->SerialOutputCmb->currentText();
+        SettingsHandler::setSerialPort(ui->SerialOutputCmb->currentText());
     }
     else if (event.deviceType == DeviceType::Network)
     {
@@ -471,8 +541,7 @@ void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
 
 void MainWindow::on_device_error(QString error)
 {
-    //LogHandler::Dialog(error, XLogLevel::Critical);
-    LogHandler::Debug(error);
+    LogHandler::Dialog(error, XLogLevel::Critical);
 }
 
 QString MainWindow::second_to_minutes(int seconds)
@@ -505,7 +574,7 @@ void MainWindow::initSerialEvent()
 
 void MainWindow::initNetworkEvent()
 {
-    if(SettingsHandler::serverAddress != "" && SettingsHandler::serverPort != "")
+    if(SettingsHandler::getServerAddress() != "" && SettingsHandler::getServerPort() != "")
     {
         NetworkAddress address { ui->networkAddressTxt->text(),  ui->networkPortTxt->text().toInt() };
         QtConcurrent::run(initNetwork, udpHandler, address);
@@ -514,33 +583,33 @@ void MainWindow::initNetworkEvent()
 
 void MainWindow::on_serialOutputRdo_clicked()
 {
-    SettingsHandler::selectedDevice = DeviceType::Serial;
+    SettingsHandler::setSelectedDevice(DeviceType::Serial);
     udpHandler->dispose();
-    initSerialEvent();
-    ui->SerialOutputCmb->setEditable(true);
+    ui->SerialOutputCmb->setEnabled(false);;
     ui->networkAddressTxt->setEnabled(false);
     ui->networkPortTxt->setEnabled(false);
+    initSerialEvent();
 }
 
 void MainWindow::on_networkOutputRdo_clicked()
 {
-    SettingsHandler::selectedDevice = DeviceType::Network;
+    SettingsHandler::setSelectedDevice(DeviceType::Network);
     serialHandler->dispose();
-    initNetworkEvent();
-    ui->SerialOutputCmb->setEditable(false);
+    ui->SerialOutputCmb->setEnabled(true);
     ui->networkAddressTxt->setEnabled(true);
     ui->networkPortTxt->setEnabled(true);
+    initNetworkEvent();
 }
 
 void MainWindow::on_networkAddressTxt_editingFinished()
 {
-    SettingsHandler::serverAddress = ui->networkAddressTxt->text();
+    SettingsHandler::setServerAddress(ui->networkAddressTxt->text());
     initNetworkEvent();
 }
 
 void MainWindow::on_networkPortTxt_editingFinished()
 {
-    SettingsHandler::serverPort = ui->networkPortTxt->text();
+    SettingsHandler::setServerPort(ui->networkPortTxt->text());
     initNetworkEvent();
 }
 
@@ -548,7 +617,7 @@ void MainWindow::on_SerialOutputCmb_currentIndexChanged(int index)
 {
     SerialComboboxItem serialInfo = ui->SerialOutputCmb->currentData(Qt::UserRole).value<SerialComboboxItem>();
     selectedSerialPort = serialInfo;
-    if (SettingsHandler::selectedDevice == DeviceType::Serial)
+    if (SettingsHandler::getSelectedDevice() == DeviceType::Serial)
     {
         initSerialEvent();
     }

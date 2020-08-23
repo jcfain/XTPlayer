@@ -1,7 +1,18 @@
-QT       += core gui avwidgets serialport network
+QT       += core gui serialport network
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-
+greaterThan(QT_MAJOR_VERSION, 4) {
+    QT += widgets av avwidgets
+} else {
+  CONFIG += av avwidgets
+}
+#rpath for apple
+mac {
+  RPATHDIR *= @loader_path/../Frameworks
+  isEmpty(QMAKE_LFLAGS_RPATH): QMAKE_LFLAGS_RPATH=-Wl,-rpath,
+  for(R,RPATHDIR) {
+    QMAKE_LFLAGS *= \'$${QMAKE_LFLAGS_RPATH}$$R\'
+  }
+}
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use
@@ -53,15 +64,15 @@ FORMS += \
 
 # LIBS       += -lVLCQtCore -lVLCQtWidgets
 unix:!mac {
-LIBS += -L$$QT.core.libs -lQtAV
+    LIBS += -L$$QT.core.libs -lQtAV
 }
 unix:mac {
-INCLUDEPATH += $$QT.core.libs/QtAV.framework/Versions/1/Headers
-QMAKE_LFLAGS += -F$$QT.core.libs
-LIBS += -framework QtAV
+    INCLUDEPATH += $$QT.core.libs/QtAV.framework/Versions/1/Headers
+    QMAKE_LFLAGS += -F$$QT.core.libs
+    LIBS += -framework QtAV
 }
 win32{
-LIBS += -L$$QT.core.libs -lQtAV1
+    LIBS += -L$$QT.core.libs -lQtAV1
 }
 
 # Default rules for deployment.

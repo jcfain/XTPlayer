@@ -20,7 +20,6 @@ class SerialHandler : public QThread
 signals:
     void errorOccurred(QString error);
     void connectionChange(ConnectionChangedSignal status);
-    void timeout(const QString &s);
 
 public:
     explicit SerialHandler(QObject *parent = nullptr);

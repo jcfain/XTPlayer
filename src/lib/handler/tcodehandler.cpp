@@ -30,15 +30,15 @@ int TCodeHandler::getchannelMin(const char* channel)
 {
     if (strcmp(channel, "L0") == 0)
     {
-        return SettingsHandler::xMin;
+        return SettingsHandler::getXMin();
     }
     else if (strcmp(channel, "R1") == 0)
     {
-        return SettingsHandler::yRollMin;
+        return SettingsHandler::getYRollMin();
     }
     else if (strcmp(channel, "R2") == 0)
     {
-        return SettingsHandler::xRollMin;
+        return SettingsHandler::getXRollMin();
     }
     return 1;
 }
@@ -47,15 +47,15 @@ int TCodeHandler::getchannelMax(const char* channel)
 {
     if (strcmp(channel, "L0") == 0)
     {
-        return SettingsHandler::xMax;
+        return SettingsHandler::getXMax();
     }
     else if (strcmp(channel, "R1") == 0)
     {
-        return SettingsHandler::yRollMax;
+        return SettingsHandler::getYRollMax();
     }
     else if (strcmp(channel, "R2") == 0)
     {
-        return SettingsHandler::xRollMax;
+        return SettingsHandler::getXRollMax();
     }
     return 1000;
 }

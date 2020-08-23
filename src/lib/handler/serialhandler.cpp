@@ -12,9 +12,10 @@ SerialHandler::~SerialHandler()
     _mutex.unlock();
     wait();
 }
+
 void SerialHandler::init(const QString &portName, int waitTimeout)
 {
-    //qRegisterMetaType<ConnectionChangedSignal>();
+    qRegisterMetaType<ConnectionChangedSignal>();
     emit connectionChange({DeviceType::Serial, ConnectionStatus::Connecting, "Connecting..."});
     _mutex.lock();
     _portName = portName;
@@ -29,6 +30,7 @@ void SerialHandler::init(const QString &portName, int waitTimeout)
     }
     if (timeouttracker > 3)
     {
+        _stop = true;
         emit connectionChange({DeviceType::Serial, ConnectionStatus::Error, "Timed out"});
     }
 }
@@ -46,21 +48,19 @@ void SerialHandler::sendTCode(const QString &tcode)
 
 void SerialHandler::run()
 {
-    bool currentPortNameChanged = false;
+    bool currentPortNameChanged = true;
 
     _mutex.lock();
-    QString currentPortName;
-    if (currentPortName != _portName)
-    {
-        currentPortName = _portName;
-        currentPortNameChanged = true;
-        _isConnected = false;
-    }
 
+    QString currentPortName;
+    currentPortName = _portName;
+    _isConnected = false;
     int currentWaitTimeout = _waitTimeout;
     QString currentRequest = _tcode;
     _tcode = "";
+
     _mutex.unlock();
+
     QSerialPort serial;
 
     if (currentPortName.isEmpty())
@@ -94,11 +94,10 @@ void SerialHandler::run()
         const QByteArray requestData = currentRequest.toUtf8();
         serial.write(requestData);
 
-        bool isHandShake = currentRequest.startsWith("D1");
         if (serial.waitForBytesWritten(_waitTimeout))
         {
             // read response
-            if (isHandShake && serial.waitForReadyRead(currentWaitTimeout))
+            if (currentPortNameChanged && serial.waitForReadyRead(currentWaitTimeout))
             {
                 //qRegisterMetaType<ConnectionChangedSignal>();
                 QByteArray responseData = serial.readAll();
@@ -118,15 +117,16 @@ void SerialHandler::run()
                     emit connectionChange({DeviceType::Serial, ConnectionStatus::Error, "No TCode"});
                 }
             }
-            else if (isHandShake)
+            else if (currentPortNameChanged)
             {
-                emit timeout(tr("Read handshake timeout %1")
+
+                LogHandler::Debug(tr("Read handshake timeout %1")
                              .arg(QTime::currentTime().toString()));
             }
         }
         else
         {
-            emit timeout(tr("Write tcode timeout %1")
+            LogHandler::Debug(tr("Write tcode timeout %1")
                          .arg(QTime::currentTime().toString()));
         }
         _mutex.lock();
@@ -143,7 +143,6 @@ void SerialHandler::run()
         }
         currentWaitTimeout = _waitTimeout;
         currentRequest = _tcode;
-        _tcode = "";
         _mutex.unlock();
     }
 }

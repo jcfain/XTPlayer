@@ -10,7 +10,7 @@ void SettingsHandler::Load()
     selectedLibrary = settings.value("selectedLibrary").toString();
     selectedDevice = settings.value("selectedDevice").toInt();
     playerVolume = settings.value("playerVolume").toInt();
-    speed = settings.value("speed").toInt();
+    offSet = settings.value("offSet").toInt();
     xMin = settings.value("xMin").toInt();
     yRollMin = settings.value("xRollMin").toInt();
     xRollMin = settings.value("yRollMin").toInt();
@@ -29,7 +29,7 @@ void SettingsHandler::Save()
     settings.setValue("selectedLibrary", selectedLibrary);
     settings.setValue("selectedDevice", selectedDevice);
     settings.setValue("playerVolume", playerVolume);
-    settings.setValue("speed", speed == 0 ? 1000 : speed);
+    settings.setValue("offSet", offSet);
     settings.setValue("xMin", xMin == 0 ? 0 : xMin);
     settings.setValue("xMax", xMax == 0 ? 999 : xMax );
     settings.setValue("yRollMin", yRollMin == 0 ? 0 : yRollMin );
@@ -61,13 +61,161 @@ void SettingsHandler::Default()
     settings.setValue("serverPort", 0);
 }
 
-QString SettingsHandler::TCodeVersion = "TCode v0.2";
+
+QString SettingsHandler::getSelectedLibrary()
+{
+    return selectedLibrary;
+}
+ QString SettingsHandler::getSelectedFunscriptLibrary()
+{
+    return selectedFunscriptLibrary;
+}
+QString SettingsHandler::getSelectedFile()
+{
+    return selectedFile;
+}
+int SettingsHandler::getSelectedDevice()
+{
+    return selectedDevice;
+}
+QString SettingsHandler::getSerialPort()
+{
+    return serialPort;
+}
+QString SettingsHandler::getServerAddress()
+{
+    return serverAddress;
+}
+QString SettingsHandler::getServerPort()
+{
+    return serverPort;
+}
+int SettingsHandler::getPlayerVolume()
+{
+    return playerVolume;
+}
+int SettingsHandler::getoffSet()
+{
+    return offSet;
+}
+int SettingsHandler::getoffSetMap()
+{
+    return XMath::mapRange(offSet, minOffSet, maxOffSet, minOffSetMap, maxOffSetMap);
+}
+int SettingsHandler::getXMin()
+{
+    return xMin;
+}
+int SettingsHandler::getYRollMin()
+{
+    return yRollMin;
+}
+int SettingsHandler::getXRollMin()
+{
+    return xRollMin;
+}
+int SettingsHandler::getXMax()
+{
+    return xMax;
+}
+int SettingsHandler::getYRollMax()
+{
+    return yRollMax;
+}
+int SettingsHandler::getXRollMax()
+{
+    return xRollMax;
+}
+
+void SettingsHandler::setSelectedLibrary(QString value)
+{
+    QMutexLocker locker(&mutex);
+    selectedLibrary = value;
+}
+void SettingsHandler::setSelectedFunscriptLibrary(QString value)
+{
+    QMutexLocker locker(&mutex);
+    selectedFunscriptLibrary = value;
+}
+void SettingsHandler::setSelectedFile(QString value)
+{
+    QMutexLocker locker(&mutex);
+    selectedFile = value;
+}
+void SettingsHandler::setSelectedDevice(int value)
+{
+    QMutexLocker locker(&mutex);
+    selectedDevice = value;
+}
+void SettingsHandler::setSerialPort(QString value)
+{
+    QMutexLocker locker(&mutex);
+    serialPort = value;
+}
+void SettingsHandler::setServerAddress(QString value)
+{
+    QMutexLocker locker(&mutex);
+    serverAddress = value;
+}
+void SettingsHandler::setServerPort(QString value)
+{
+    QMutexLocker locker(&mutex);
+    serverPort = value;
+}
+void SettingsHandler::setPlayerVolume(int value)
+{
+    QMutexLocker locker(&mutex);
+    playerVolume = value;
+}
+void SettingsHandler::setoffSet(int value)
+{
+    QMutexLocker locker(&mutex);
+    int rangeValue = XMath::mapRange(value, minOffSetMap, maxOffSetMap, minOffSet, maxOffSet);
+    offSet = rangeValue;
+}
+void SettingsHandler::setXMin(int value)
+{
+    QMutexLocker locker(&mutex);
+    xMin = value;
+}
+void SettingsHandler::setYRollMin(int value)
+{
+    QMutexLocker locker(&mutex);
+    yRollMin = value;
+}
+void SettingsHandler::setXRollMin(int value)
+{
+    QMutexLocker locker(&mutex);
+    xRollMin = value;
+}
+void SettingsHandler::setXMax(int value)
+{
+    QMutexLocker locker(&mutex);
+    xMax = value;
+}
+void SettingsHandler::setYRollMax(int value)
+{
+    QMutexLocker locker(&mutex);
+    yRollMax = value;
+}
+void SettingsHandler::setXRollMax(int value)
+{
+    QMutexLocker locker(&mutex);
+    xRollMax = value;
+}
+
+const QString SettingsHandler::TCodeVersion = "TCode v0.2";
+const int SettingsHandler::minOffSetMap = 1;
+const int SettingsHandler::midOffSetMap = 1000;
+const int SettingsHandler::maxOffSetMap = 2000;
+const int SettingsHandler::minOffSet = -1000;
+const int SettingsHandler::maxOffSet = 1000;
 QSettings SettingsHandler::settings{"cUrbSide prOd", "XTPlayer"};
 QMutex SettingsHandler::mutex;
 QString SettingsHandler::selectedLibrary;
 int SettingsHandler::selectedDevice;
 int SettingsHandler::playerVolume;
-int SettingsHandler::speed;
+int SettingsHandler::offSet;
 int SettingsHandler::xMin;
 int SettingsHandler::yRollMin;
 int SettingsHandler::xRollMin;

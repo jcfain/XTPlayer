@@ -1,20 +1,18 @@
 #include "videohandler.h"
-#include <QOpenGLWidget>
-
 VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent)
 {
     //new QOpenGLWidget(this);
     layout = new QHBoxLayout;
     player = new AVPlayer(this);
+    //QtAV::Widgets::registerRenderers();
     videoRenderer = new VideoOutput(this);
     //videoRenderer = new VideoOutput(QtAV::VideoRendererId_GLWidget2, this);
-    //QtAV::Widgets::registerRenderers();
     if (!videoRenderer || !videoRenderer->isAvailable() || !videoRenderer->widget()) {
-        LogHandler::Dialog("QtAV Video renderer is  not availabe on your platform!", XLogLevel::Critical);
+        LogHandler::Dialog("QtAV Video renderer is not availabe on your platform!", XLogLevel::Critical);
         return;
     }
     player->setRenderer(videoRenderer);
-    player->audio()->setVolume(SettingsHandler::playerVolume);
+    player->audio()->setVolume(SettingsHandler::getPlayerVolume());
     layout->addWidget(videoRenderer->widget());
     setLayout(layout);
 }
@@ -29,3 +27,14 @@ void VideoHandler::mouseDoubleClickEvent(QMouseEvent * e)
 {
     emit doubleClicked(e);
 }
+
+void VideoHandler::keyPressEvent(QKeyEvent * e)
+{
+    emit keyPressed(e);
+}
+
+void VideoHandler::enterEvent(QEvent * e)
+{
+    emit mouseEnter(e);
+}
+
