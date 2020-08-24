@@ -1,9 +1,9 @@
 QT       += core gui serialport network
 
 greaterThan(QT_MAJOR_VERSION, 4) {
-    QT += widgets av avwidgets
+    QT += widgets avwidgets
 } else {
-  CONFIG += av avwidgets
+  CONFIG += avwidgets
 }
 #rpath for apple
 mac {

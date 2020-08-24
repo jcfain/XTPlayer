@@ -1,7 +1,6 @@
 #ifndef VIDEOHANDLER_H
 #define VIDEOHANDLER_H
 #include <QWidget>
-#include <QtAV_Global.h>
 #include <QtAV>
 #include <QtAVWidgets>
 #include <QHBoxLayout>

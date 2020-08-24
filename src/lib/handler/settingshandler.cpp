@@ -30,11 +30,11 @@ void SettingsHandler::Save()
     settings.setValue("selectedDevice", selectedDevice);
     settings.setValue("playerVolume", playerVolume);
     settings.setValue("offSet", offSet);
-    settings.setValue("xMin", xMin == 0 ? 0 : xMin);
+    settings.setValue("xMin", xMin);
     settings.setValue("xMax", xMax == 0 ? 999 : xMax );
-    settings.setValue("yRollMin", yRollMin == 0 ? 0 : yRollMin );
-    settings.setValue("xRollMin", xRollMin == 0 ? 999 : xRollMin );
-    settings.setValue("yRollMax", yRollMax == 0 ? 0 : yRollMax );
+    settings.setValue("yRollMin", yRollMin );
+    settings.setValue("yRollMax", yRollMax == 0 ? 999 : yRollMax );
+    settings.setValue("xRollMin", xRollMin );
     settings.setValue("xRollMax", xRollMax == 0 ? 999 : xRollMax );
     settings.setValue("selectedFunscriptLibrary", selectedFunscriptLibrary);
     settings.setValue("serialPort", serialPort);
