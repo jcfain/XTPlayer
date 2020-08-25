@@ -1,0 +1,7 @@
+background-color: black; 
+color: white; 
+
+QPushbutton {
+    background-color: grey;"
+    color: black;
+}

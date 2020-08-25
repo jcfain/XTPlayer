@@ -205,6 +205,9 @@ void SettingsHandler::setXRollMax(int value)
 }
 
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
+const QString SettingsHandler::XTPVersion = "0.1a";
+const float SettingsHandler::XTPVersionNum = 0.1f;
+
 const int SettingsHandler::minOffSetMap = 1;
 const int SettingsHandler::midOffSetMap = 1000;
 const int SettingsHandler::maxOffSetMap = 2000;

@@ -75,7 +75,24 @@ win32{
     LIBS += -L$$QT.core.libs -lQtAV1
 }
 
+#mkspecs_features.files    = $$PWD/qss/default.qss
+#mkspecs_features.path     = $$OUT_PWD/qss
+#INSTALLS                  += mkspecs_features
+
+#https://stackoverflow.com/questions/19066593/copy-a-file-to-build-directory-after-compiling-project-with-qt
+#copydata.commands = $(COPY_DIR) \"$$shell_path($$PWD\\qss\\)\" \"$$shell_path($$OUT_PWD)\"
+#first.depends = $(first) copydata
+#export(first.depends)
+#export(copydata.commands)
+#QMAKE_EXTRA_TARGETS += first copydata
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+DISTFILES += \
+    qss/default.qss
+
+RESOURCES += \
+    icons.qrc

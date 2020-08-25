@@ -1,0 +1,12 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+<qresource>
+    <file>images/icons/pause.png</file>
+    <file>images/icons/play.png</file>
+    <file>images/icons/stop.png</file>
+    <file>images/icons/settings.png</file>
+    <file>images/icons/fullscreen.png</file>
+    <file>images/icons/speaker.png</file>
+    <file>images/gif/loading.gif</file>
+</qresource>
+</RCC>

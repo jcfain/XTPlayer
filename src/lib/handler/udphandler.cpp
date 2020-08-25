@@ -18,6 +18,7 @@ void UdpHandler::init(NetworkAddress address, int waitTimeout)
     qRegisterMetaType<ConnectionChangedSignal>();
     emit connectionChange({DeviceType::Network, ConnectionStatus::Connecting, "Connecting..."});
     _mutex.lock();
+    _stop = false;
     _isSelected = true;
     _waitTimeout = waitTimeout;
     _address = address;
@@ -32,7 +33,7 @@ void UdpHandler::init(NetworkAddress address, int waitTimeout)
     if (timeouttracker > 3)
     {
         _stop = true;
-        emit connectionChange({DeviceType::Serial, ConnectionStatus::Error, "Timed out"});
+        emit connectionChange({DeviceType::Network, ConnectionStatus::Error, "Timed out"});
     }
 }
 
@@ -137,6 +138,7 @@ void UdpHandler::dispose()
     _isConnected = false;
     _stop = true;
     emit connectionChange({DeviceType::Network, ConnectionStatus::Disconnected, "Disconnected"});
+    _cond.wakeOne();
 }
 
 bool UdpHandler::isConnected()

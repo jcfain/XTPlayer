@@ -18,6 +18,7 @@ void SerialHandler::init(const QString &portName, int waitTimeout)
     qRegisterMetaType<ConnectionChangedSignal>();
     emit connectionChange({DeviceType::Serial, ConnectionStatus::Connecting, "Connecting..."});
     _mutex.lock();
+    _stop = false;
     _portName = portName;
     _waitTimeout = waitTimeout;
     _mutex.unlock();
@@ -156,10 +157,11 @@ bool SerialHandler::isConnected()
 
 void SerialHandler::dispose()
 {
-    const QMutexLocker locker(&_mutex);
-    if(!_stop)
-        emit connectionChange({DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"});
+    _mutex.lock();
     _stop = true;
+    _mutex.unlock();
+    _cond.wakeOne();
+    emit connectionChange({DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"});
 }
 
 QList<SerialComboboxItem> SerialHandler::getPorts()

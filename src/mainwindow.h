@@ -10,6 +10,8 @@
 #include <iostream>
 #include <QtAV>
 #include <QtGlobal>
+#include <QFuture>
+#include <QDesktopServices>
 #include "lib/handler/videohandler.h"
 #include "CustomControls/RangeSlider.h"
 #include "lib/handler/settingshandler.h"
@@ -78,10 +80,14 @@ private slots:
 
     void on_networkPortTxt_editingFinished();
 
-    void on_x_range_valueChanged();
-    void on_yRoll_range_valueChanged();
-    void on_xRoll_range_valueChanged();
-    void on_offSet_valueChanged();
+    void onXRange_valueChanged(int value);
+    void onYRollRange_valueChanged(int value);
+    void onXRollRange_valueChanged(int value);
+    void onOffSet_valueChanged(int value);
+
+    void on_actionAbout_triggered();
+
+    void on_actionDonate_triggered();
 
 signals:
     void keyPressed(QKeyEvent * event);
@@ -94,6 +100,8 @@ protected:
 
 private:
     Ui::MainWindow *ui;
+    QFuture<void> initFuture;
+    QFuture<void> funscriptFuture;
     QProgressBar* bar;
     VideoHandler* videoHandler;
     QLabel* xRangeLabel;
@@ -128,6 +136,7 @@ private:
     void toggleFullScreen();
     void toggleUI();
     void toggleControls();
+    void setDeviceStatusStyle(ConnectionStatus status, DeviceType deviceType, QString message = "");
 
     void loadSerialPorts();
     void playFile(LibraryListItem selectedFileListItem);
@@ -145,6 +154,5 @@ private:
     void on_device_connectionChanged(ConnectionChangedSignal event);
     void on_device_error(QString error);
     void donate();
-    //void on_output_radioChanged(QRadio event);
 };
 #endif // MAINWINDOW_H

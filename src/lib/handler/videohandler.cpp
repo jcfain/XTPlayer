@@ -1,7 +1,7 @@
 #include "videohandler.h"
 VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent)
 {
-    QtAV::setLogLevel(QtAV::LogLevel::LogAll);
+    //QtAV::setLogLevel(QtAV::LogLevel::LogAll);
     //new QOpenGLWidget(this);
     layout = new QHBoxLayout;
     //QtAV::Widgets::registerRenderers();
@@ -21,6 +21,7 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent)
 
 VideoHandler::~VideoHandler()
 {
+    delete layout;
     delete player;
     delete videoRenderer;
 }
