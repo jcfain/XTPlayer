@@ -1,7 +1,7 @@
 #include "udphandler.h"
 
 UdpHandler::UdpHandler(QObject *parent) :
-    QThread(parent)
+    DeviceHandler(parent)
 {
 }
 UdpHandler::~UdpHandler()
@@ -37,7 +37,7 @@ void UdpHandler::init(NetworkAddress address, int waitTimeout)
     }
 }
 
-void UdpHandler::sendTCode(QString tcode)
+void UdpHandler::sendTCode(const QString &tcode)
 {
     const QMutexLocker locker(&_mutex);
     _tcode = tcode + "\n";

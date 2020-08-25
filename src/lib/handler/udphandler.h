@@ -6,25 +6,20 @@
 #include <QMutex>
 #include <QWaitCondition>
 #include "loghandler.h"
+#include "devicehandler.h"
 #include "settingshandler.h"
 #include "../struct/NetworkAddress.h"
-#include "../struct/ConnectionChangedSignal.h"
 
-class UdpHandler : public QThread
+class UdpHandler : public DeviceHandler
 {
-    Q_OBJECT
-
-signals:
-    void errorOccurred(QString error);
-    void connectionChange(ConnectionChangedSignal status);
 
 public:
     explicit UdpHandler(QObject *parent = nullptr);
     ~UdpHandler();
     void init(NetworkAddress _address, int waitTimeout = 5000);
-    void dispose();
-    void sendTCode(QString tcode);
-    bool isConnected();
+    void dispose() override;
+    void sendTCode(const QString &tcode) override;
+    bool isConnected() override;
 
 private:
     void run() override;

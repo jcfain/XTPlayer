@@ -1,35 +1,22 @@
 #ifndef SERIALHANDLER_H
 #define SERIALHANDLER_H
-#include <QVector>
 #include <QSerialPort>
 #include <QSerialPortInfo>
-#include <QTime>
-#include <QMutex>
-#include <QThread>
-#include <QWaitCondition>
 #include "../struct/SerialComboboxItem.h"
-#include "../struct/ConnectionChangedSignal.h"
-#include "../handler/settingshandler.h"
-#include "../handler/loghandler.h"
-#include "../lookup/enum.h"
+#include "devicehandler.h"
 
-class SerialHandler : public QThread
+class SerialHandler : public DeviceHandler
 {
-    Q_OBJECT
-
-signals:
-    void errorOccurred(QString error);
-    void connectionChange(ConnectionChangedSignal status);
 
 public:
     explicit SerialHandler(QObject *parent = nullptr);
     ~SerialHandler();
 
     QList<SerialComboboxItem> getPorts();
-    void sendTCode(const QString &tcode);
+    void sendTCode(const QString &tcode) override;
     void init(const QString &portName, int waitTimeout = 5000);
-    void dispose();
-    bool isConnected();
+    void dispose() override;
+    bool isConnected() override;
 
 
 private:

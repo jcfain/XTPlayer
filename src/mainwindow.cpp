@@ -14,10 +14,16 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    setStyleSheet("background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 2, stop: 0 black, stop: 1 red); "
+    setStyleSheet("QMainWindow {"
+                  "background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1.5, stop: 0 black, stop: 1 darkred); "
                   "color: white; "
+                  "}"
+                  "QLabel {"
+                  "background-color: transparent; "
+                  "color: white; "
+                  "}"
                   "QPushbutton { "
-                    "background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 black, stop: 1 red); "
+                    "background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 black, stop: 1 grey); "
                     "border-style: outset; "
                     "border-width: 2px; "
                     "border-radius: 10px; "
@@ -61,10 +67,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->networkPortTxt->setText(SettingsHandler::getServerPort());
     if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
     {
+        selectedDevice = serialHandler;
         ui->serialOutputRdo->setChecked(true);
     }
     else if (SettingsHandler::getSelectedDevice() == DeviceType::Network)
     {
+        selectedDevice = udpHandler;
         ui->networkOutputRdo->setChecked(true);
     }
     setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceType::Serial);
@@ -183,18 +191,30 @@ void MainWindow::onXRange_valueChanged(int value)
 {
     SettingsHandler::setXMin(xRangeSlider->GetLowerValue());
     SettingsHandler::setXMax(xRangeSlider->GetUpperValue());
+    if (!videoHandler->player->isPlaying() && selectedDevice->isRunning())
+    {
+        selectedDevice->sendTCode("L0" + QString::number(value) + "S1000");
+    }
 }
 
 void MainWindow::onYRollRange_valueChanged(int value)
 {
     SettingsHandler::setYRollMin(yRollRangeSlider->GetLowerValue());
     SettingsHandler::setYRollMax(yRollRangeSlider->GetUpperValue());
+    if ( selectedDevice->isRunning())
+    {
+        selectedDevice->sendTCode("R1" + QString::number(value) + "S1000");
+    }
 }
 
 void MainWindow::onXRollRange_valueChanged(int value)
 {
     SettingsHandler::setXRollMin(xRollRangeSlider->GetLowerValue());
     SettingsHandler::setXRollMax(xRollRangeSlider->GetUpperValue());
+    if (selectedDevice->isRunning())
+    {
+        selectedDevice->sendTCode("R2" + QString::number(value) + "S1000");
+    }
 }
 
 void MainWindow::onOffSet_valueChanged(int value)
@@ -527,13 +547,9 @@ void MainWindow::on_media_stop()
     {
         funscriptFuture.cancel();
     }
-    if (udpHandler->isRunning())
+    if (selectedDevice->isRunning())
     {
-        udpHandler->dispose();
-    }
-    if (serialHandler->isRunning())
-    {
-        serialHandler->dispose();
+        selectedDevice->dispose();
     }
 
 }
@@ -669,37 +685,33 @@ void initNetwork(UdpHandler* udpHandler, NetworkAddress address)
 
 void MainWindow::initSerialEvent()
 {
-    if (udpHandler->isRunning())
+    if (selectedDevice->isRunning())
     {
-        udpHandler->dispose();
-    }
-    if (serialHandler->isRunning())
-    {
-        serialHandler->dispose();
+        selectedDevice->dispose();
     }
     if(initFuture.isRunning())
     {
         initFuture.cancel();
         initFuture.waitForFinished();
     }
+    SettingsHandler::setSelectedDevice(DeviceType::Serial);
+    selectedDevice = serialHandler;
     initFuture = QtConcurrent::run(initSerial, serialHandler, selectedSerialPort);
 }
 
 void MainWindow::initNetworkEvent()
 {
-    if (udpHandler->isRunning())
+    if (selectedDevice->isRunning())
     {
-        udpHandler->dispose();
-    }
-    if (serialHandler->isRunning())
-    {
-        serialHandler->dispose();
+        selectedDevice->dispose();
     }
     if(initFuture.isRunning())
     {
         initFuture.cancel();
         initFuture.waitForFinished();
     }
+    SettingsHandler::setSelectedDevice(DeviceType::Network);
+    selectedDevice = udpHandler;
     if(SettingsHandler::getServerAddress() != "" && SettingsHandler::getServerPort() != "")
     {
         NetworkAddress address { ui->networkAddressTxt->text(),  ui->networkPortTxt->text().toInt() };
@@ -709,7 +721,6 @@ void MainWindow::initNetworkEvent()
 
 void MainWindow::on_serialOutputRdo_clicked()
 {
-    SettingsHandler::setSelectedDevice(DeviceType::Serial);
     ui->SerialOutputCmb->setEnabled(true);;
     ui->networkAddressTxt->setEnabled(false);
     ui->networkPortTxt->setEnabled(false);
@@ -718,7 +729,6 @@ void MainWindow::on_serialOutputRdo_clicked()
 
 void MainWindow::on_networkOutputRdo_clicked()
 {
-    SettingsHandler::setSelectedDevice(DeviceType::Network);
     ui->SerialOutputCmb->setEnabled(false);
     ui->networkAddressTxt->setEnabled(true);
     ui->networkPortTxt->setEnabled(true);

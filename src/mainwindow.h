@@ -20,6 +20,7 @@
 #include "lib/handler/tcodehandler.h"
 #include "lib/handler/serialhandler.h"
 #include "lib/handler/udphandler.h"
+#include "lib/handler/devicehandler.h"
 #include "lib/struct/LibraryListItem.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/ConnectionChangedSignal.h"
@@ -100,6 +101,7 @@ protected:
 
 private:
     Ui::MainWindow *ui;
+    DeviceHandler* selectedDevice;
     QFuture<void> initFuture;
     QFuture<void> funscriptFuture;
     QProgressBar* bar;
