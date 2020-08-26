@@ -22,6 +22,42 @@ MainWindow::MainWindow(QWidget *parent)
                   "background-color: transparent; "
                   "color: white; "
                   "}"
+                  "QListWidget {"
+                  "background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1.5, stop: 0 black, stop: 1 darkred); "
+                  "color: white; "
+                  "}"
+                  "QMenuBar {"
+                  "background-color: black; "
+                  "color: white; "
+                  "}"
+                  "QMenu {"
+                  "background-color: black; "
+                  "color: white; "
+                  "}"
+                  "QMenu:hover:!pressed {"
+                  "background-color: darkred; "
+                  "color: white; "
+                  "}"
+                  "QAction:hover:!pressed {"
+                  "background-color: darkred; "
+                  "color: white; "
+                  "}"
+                  "QRadioButton {"
+                  "background-color: transparent; "
+                  "color: white; "
+                  "}"
+                  "QScrollBar:handle:vertical {"
+                  "background-color: #4f0000; "
+                  "}"
+                  "QScrollBar:horizontal {"
+                  "background-color: black; "
+                  "}"
+                  "QScrollBar:handle:horizontal {"
+                  "background-color: #3e0000; "
+                  "}"
+                  "QScrollBar:vertical {"
+                  "background-color: black; "
+                  "}"
                   "QPushbutton { "
                     "background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 black, stop: 1 grey); "
                     "border-style: outset; "
@@ -57,10 +93,18 @@ MainWindow::MainWindow(QWidget *parent)
     loadSerialPorts();
 
     ui->SeekSlider->setDisabled(true);
-
+    ui->SeekSlider->SetRange(0, 100);
+    ui->SeekSlider->setOption(RangeSlider::Option::RightHandle);
+    ui->SeekSlider->setUpperValue(0);
+    ui->SeekSlider->setBackGroundEnabledColor(QColorConstants::Red);
 
     on_load_library(SettingsHandler::getSelectedLibrary());
-    ui->VolumeSlider->setValue(SettingsHandler::getPlayerVolume());
+
+    ui->VolumeSlider->setDisabled(false);
+    ui->VolumeSlider->SetRange(0, 30);
+    ui->VolumeSlider->setOption(RangeSlider::Option::RightHandle);
+    ui->VolumeSlider->setUpperValue(SettingsHandler::getPlayerVolume());
+    ui->VolumeSlider->setBackGroundEnabledColor(QColorConstants::Red);
 
     ui->SerialOutputCmb->setCurrentText(SettingsHandler::getSerialPort());
     ui->networkAddressTxt->setText(SettingsHandler::getServerAddress());
@@ -84,6 +128,7 @@ MainWindow::MainWindow(QWidget *parent)
     xRangeLabel->setFont(font);
     ui->RangeSettingsGrid->addWidget(xRangeLabel, 0,0);
     xRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
+    xRangeSlider->setBackGroundEnabledColor(QColorConstants::Red);
     xRangeSlider->SetRange(1, 999);
     xRangeSlider->setLowerValue(SettingsHandler::getXMin());
     xRangeSlider->setUpperValue(SettingsHandler::getXMax());
@@ -93,6 +138,7 @@ MainWindow::MainWindow(QWidget *parent)
     yRollRangeLabel->setFont(font);
     ui->RangeSettingsGrid->addWidget(yRollRangeLabel, 2,0);
     yRollRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
+    yRollRangeSlider->setBackGroundEnabledColor(QColorConstants::Red);
     yRollRangeSlider->SetRange(1, 999);
     yRollRangeSlider->setLowerValue(SettingsHandler::getYRollMin());
     yRollRangeSlider->setUpperValue(SettingsHandler::getYRollMax());
@@ -102,6 +148,7 @@ MainWindow::MainWindow(QWidget *parent)
     xRollRangeLabel->setFont(font);
     ui->RangeSettingsGrid->addWidget(xRollRangeLabel, 4,0);
     xRollRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
+    xRollRangeSlider->setBackGroundEnabledColor(QColorConstants::Red);
     xRollRangeSlider->SetRange(1, 999);
     xRollRangeSlider->setLowerValue(SettingsHandler::getXRollMin());
     xRollRangeSlider->setUpperValue(SettingsHandler::getXRollMax());
@@ -110,9 +157,10 @@ MainWindow::MainWindow(QWidget *parent)
     offSetLabel = new QLabel("Offset: " + QString::number(SettingsHandler::getoffSet()));
     offSetLabel->setFont(font);
     ui->RangeSettingsGrid->addWidget(offSetLabel, 6,0);
-    offSetSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::LeftHandle, nullptr);
+    offSetSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::RightHandle, nullptr);
+    offSetSlider->setBackGroundEnabledColor(QColorConstants::Red);
     offSetSlider->SetRange(1, 2000);
-    offSetSlider->setLowerValue(SettingsHandler::getoffSetMap());
+    offSetSlider->setUpperValue(SettingsHandler::getoffSetMap());
     ui->RangeSettingsGrid->addWidget(offSetSlider, 7,0);
 
 
@@ -124,21 +172,27 @@ MainWindow::MainWindow(QWidget *parent)
     connect(xRollRangeSlider, &RangeSlider::upperValueChanged, this, &MainWindow::onXRollRange_valueChanged);
     connect(offSetSlider, &RangeSlider::lowerValueChanged, this, &MainWindow::onOffSet_valueChanged);
 
-    connect(videoHandler->player, &AVPlayer::positionChanged, this, &MainWindow::on_media_positionChanged);
-    connect(videoHandler->player, &AVPlayer::mediaStatusChanged, this, &MainWindow::on_media_statusChanged);
-    connect(videoHandler->player, &AVPlayer::started, this, &MainWindow::on_media_start);
-    connect(videoHandler->player, &AVPlayer::stopped, this, &MainWindow::on_media_stop);
-    connect(ui->SeekSlider, &QSlider::sliderMoved, this, &MainWindow::on_seekSlider_sliderMoved);
+    connect(videoHandler, &VideoHandler::positionChanged, this, &MainWindow::on_media_positionChanged);
+    connect(videoHandler, &VideoHandler::mediaStatusChanged, this, &MainWindow::on_media_statusChanged);
+    connect(videoHandler, &VideoHandler::started, this, &MainWindow::on_media_start);
+    connect(videoHandler, &VideoHandler::stopped, this, &MainWindow::on_media_stop);
+
+    connect(ui->SeekSlider, &RangeSlider::upperValueMove, this, &MainWindow::on_seekSlider_sliderMoved);
+    connect(ui->VolumeSlider, &RangeSlider::upperValueMove, this, &MainWindow::on_VolumeSlider_valueChanged);
     //connect(player, static_cast<void(AVPlayer::*)(AVPlayer::Error )>(&AVPlayer::error), this, &MainWindow::on_media_error);
 
     connect(videoHandler, &VideoHandler::doubleClicked, this, &MainWindow::media_double_click_event);
     //connect(vw, &XVideoWidget::singleClicked, this, &MainWindow::media_single_click_event);
     connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
-    connect(videoHandler, &VideoHandler::mouseEnter, this, &MainWindow::on_video_mouse_enter);
+    //connect(videoHandler, &VideoHandler::mouseEnter, this, &MainWindow::on_video_mouse_enter);
     connect(serialHandler, &SerialHandler::connectionChange, this, &MainWindow::on_device_connectionChanged);
     connect(serialHandler, &SerialHandler::errorOccurred, this, &MainWindow::on_device_error);
     connect(udpHandler, &UdpHandler::connectionChange, this, &MainWindow::on_device_connectionChanged);
     connect(udpHandler, &UdpHandler::errorOccurred, this, &MainWindow::on_device_error);
+
+    ui->LibraryList->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->LibraryList, &QListWidget::customContextMenuRequested, this, &MainWindow::onLibraryList_ContextMenuRequested);
+
     if(SettingsHandler::getSelectedDevice() == DeviceType::Network)
     {
         on_networkOutputRdo_clicked();
@@ -191,7 +245,7 @@ void MainWindow::onXRange_valueChanged(int value)
 {
     SettingsHandler::setXMin(xRangeSlider->GetLowerValue());
     SettingsHandler::setXMax(xRangeSlider->GetUpperValue());
-    if (!videoHandler->player->isPlaying() && selectedDevice->isRunning())
+    if (!videoHandler->isPlaying() && selectedDevice->isRunning())
     {
         selectedDevice->sendTCode("L0" + QString::number(value) + "S1000");
     }
@@ -219,15 +273,32 @@ void MainWindow::onXRollRange_valueChanged(int value)
 
 void MainWindow::onOffSet_valueChanged(int value)
 {
-    SettingsHandler::setoffSet(offSetSlider->GetLowerValue());
+    SettingsHandler::setoffSet(offSetSlider->GetUpperValue());
     offSetLabel->setText("Offset: " + QString::number(SettingsHandler::getoffSet()));
+}
+
+void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
+{
+    // Handle global position
+    QPoint globalPos = ui->LibraryList->mapToGlobal(pos);
+
+    // Create menu and insert some actions
+    QMenu myMenu;
+
+    myMenu.addAction("Play", this, &MainWindow::playFileFromContextMenu);
+    myMenu.addAction("Play with funscript...", this, &MainWindow::playFileWithCustomScript);
+
+    // Show context menu at handling position
+    myMenu.exec(globalPos);
 }
 
 void MainWindow::on_load_library(QString path)
 {
-    if (!path.isNull() && !path.isEmpty()) {
+    if (!path.isNull() && !path.isEmpty())
+    {
         QDir directory(path);
-        if (directory.exists()) {
+        if (directory.exists())
+        {
             ui->LibraryList->clear();
             videos.clear();
             QDirIterator library(path, QStringList()
@@ -248,7 +319,8 @@ void MainWindow::on_load_library(QString path)
                         << "*.flv"
                         << "*.swf"
                         << "*.avchd", QDir::Files, QDirIterator::Subdirectories);
-            while (library.hasNext()) {
+            while (library.hasNext())
+            {
                 QFileInfo fileinfo(library.next());
                 QString videoPath = fileinfo.filePath();
                 QString videoPathTemp = fileinfo.filePath();
@@ -256,32 +328,33 @@ void MainWindow::on_load_library(QString path)
                 QString fileNameTemp = fileinfo.fileName();
                 QString scriptFile = fileNameTemp.remove(fileNameTemp.lastIndexOf('.'), fileNameTemp.length() -  1) + ".funscript";
                 QString scriptPath;
-                if (SettingsHandler::getSelectedFunscriptLibrary() == Q_NULLPTR) {
-                    scriptPath = videoPathTemp.remove(videoPathTemp.lastIndexOf('.'), videoPathTemp.length() -  1) + ".funscript";
-                } else {
-                    scriptPath = SettingsHandler::getSelectedFunscriptLibrary() + QDir::separator() + scriptFile;
-                }
-                if (funscriptHandler->exists(scriptPath))
+                if (SettingsHandler::getSelectedFunscriptLibrary() == Q_NULLPTR)
                 {
-                    LibraryListItem item
-                    {
-                        videoPath, // path
-                        fileName, // name
-                        scriptPath // script
-                    };
-                    QVariant listItem;
-                    listItem.setValue(item);
-                    QListWidgetItem* qListWidgetItem = new QListWidgetItem;
-                    qListWidgetItem->setText(fileinfo.fileName());
-                    qListWidgetItem->setToolTip(videoPath);
-                    qListWidgetItem->setData(Qt::UserRole, listItem);
-                    ui->LibraryList->addItem(qListWidgetItem);
-                    videos.push_back(videoPath);
+                    scriptPath = videoPathTemp.remove(videoPathTemp.lastIndexOf('.'), videoPathTemp.length() -  1) + ".funscript";
                 }
                 else
                 {
+                    scriptPath = SettingsHandler::getSelectedFunscriptLibrary() + QDir::separator() + scriptFile;
+                }
+                if (!funscriptHandler->exists(scriptPath))
+                {
+                    scriptPath = nullptr;
                     LogHandler::Debug("Script does not exist for video: " + videoPath);
                 }
+                LibraryListItem item
+                {
+                    videoPath, // path
+                    fileName, // name
+                    scriptPath // script
+                };
+                QVariant listItem;
+                listItem.setValue(item);
+                QListWidgetItem* qListWidgetItem = new QListWidgetItem;
+                qListWidgetItem->setText(fileinfo.fileName());
+                qListWidgetItem->setToolTip(videoPath);
+                qListWidgetItem->setData(Qt::UserRole, listItem);
+                ui->LibraryList->addItem(qListWidgetItem);
+                videos.push_back(videoPath);
             }
         }
         else
@@ -319,27 +392,43 @@ void MainWindow::on_LibraryList_itemClicked(QListWidgetItem *item)
 void MainWindow::on_LibraryList_itemDoubleClicked(QListWidgetItem *item)
 {
     selectedFileListItem = item->data(Qt::UserRole).value<LibraryListItem>();
-    MainWindow::playFile(selectedFileListItem);
+    playFile(selectedFileListItem);
+}
+void MainWindow::playFileFromContextMenu()
+{
+    LibraryListItem selectedFileListItem = ui->LibraryList->selectedItems().first()->data(Qt::UserRole).value<LibraryListItem>();
+    playFile(selectedFileListItem);
 }
 
-void MainWindow::playFile(LibraryListItem selectedFileListItem)
+void MainWindow::playFileWithCustomScript()
 {
-    videoHandler->player->stop();
+    QString selectedScript = QFileDialog::getOpenFileName(this, tr("Choose script"), SettingsHandler::getSelectedLibrary(), tr("Script Files (*.funscript)"));
+    if (selectedScript != Q_NULLPTR)
+    {
+        LibraryListItem selectedFileListItem = ui->LibraryList->selectedItems().first()->data(Qt::UserRole).value<LibraryListItem>();
+        playFile(selectedFileListItem, selectedScript);
+    }
+}
+
+void MainWindow::playFile(LibraryListItem selectedFileListItem, QString customScript)
+{
+    videoHandler->stop();
     QFile file(selectedFileListItem.path);
     if (file.exists())
     {
-        videoHandler->player->setFile(selectedFileListItem.path);
-        videoHandler->player->load();
-        if(funscriptHandler->load(selectedFileListItem.script))
+        videoHandler->setFile(selectedFileListItem.path);
+        videoHandler->load();
+        QString scriptFile = customScript == nullptr ? selectedFileListItem.script : customScript;
+        if(funscriptHandler->load(scriptFile))
         {
             SettingsHandler::setSelectedFile(selectedFileListItem.path);
             //QUrl url = QUrl::fromLocalFile(selectedFileListItem.path);
-            videoHandler->player->play();
+            videoHandler->play();
             selectedFileListIndex = ui->LibraryList->currentRow();
         }
         else
         {
-            LogHandler::Dialog("Error loading '" + selectedFileListItem.script + "'!", XLogLevel::Critical);
+            LogHandler::Dialog("Error loading script " + customScript + "!", XLogLevel::Critical);
         }
     }
     else {
@@ -362,23 +451,32 @@ void MainWindow::loadSerialPorts()
 
 void MainWindow::togglePause()
 {
-    videoHandler->player->togglePause();
+    videoHandler->togglePause();
 }
 
 void MainWindow::toggleFullScreen()
 {
-    if(videoHandler->player->state() == AVPlayer::PlayingState) {
-        toggleUI();
+    if(videoHandler->isPlaying()) {
+        //toggleUI();
         QScreen *screen = QGuiApplication::primaryScreen();
         QSize screenSize = screen->size();
-        if(!isFullScreen()) {
+        if(!QMainWindow::isFullScreen()) {
             videoSize = videoHandler->size();
             appSize = size();
             appPos = pos();
-            //videoHandler->setParent(this, Qt::Tool);
             setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
-            //videoHandler->move(QPoint(0, 0));
-            showFullScreen();
+            videoHandler->move(QPoint(0, 0));
+            ui->MainFrame->layout()->removeWidget(videoHandler);
+            //ui->MainFrame->layout()->setMargin(0);
+//            ui->MainFrame->hide();
+//            ui->statusbar->hide();
+            ui->menubar->hide();
+            QMainWindow::layout()->addWidget(videoHandler);
+            QMainWindow::showFullScreen();
+            videoHandler->layout()->setMargin(0);
+//            QMainWindow::layout()->setContentsMargins(0,0,0,0);
+//            QMainWindow::layout()->setMargin(0);
+            videoHandler->move(QPoint(0, 0));
             //videoHandler->resize(QSize(screenSize.width()+1, screenSize.height()+1));
             videoHandler->resize(screenSize);
         }
@@ -387,27 +485,16 @@ void MainWindow::toggleFullScreen()
             //videoHandler->setParent(this, Qt::Widget);
             setWindowFlags(Qt::Window);
             //videoHandler->resize(videoSize);
-            showNormal();
-            resize(appSize);
-            move(appPos);
+            QMainWindow::showNormal();
+            QMainWindow::resize(appSize);
+            QMainWindow::move(appPos);
+            QMainWindow::layout()->removeWidget(videoHandler);
+//            QMainWindow::layout()->setContentsMargins(9,9,9,9);
+//            QMainWindow::layout()->setMargin(9);
             ui->MediaGrid->addWidget(videoHandler);
+            videoHandler->layout()->setMargin(9);
         }
     }
-}
-
-void MainWindow::toggleUI()
-{
-    if(!ui->LibraryList->isHidden())
-    {
-        ui->LibraryList->hide();
-        ui->menubar->hide();
-    }
-    else
-    {
-        ui->LibraryList->show();
-        ui->menubar->show();
-    }
-    toggleControls();
 }
 
 void MainWindow::toggleControls()
@@ -424,9 +511,9 @@ void MainWindow::toggleControls()
 
 void MainWindow::on_VolumeSlider_valueChanged(int value)
 {
-    if(!videoHandler->player->audio()->isMute())
+    if(!videoHandler->isMute())
     {
-        videoHandler->player->audio()->setVolume(value);
+        videoHandler->setVolume(value);
         SettingsHandler::setPlayerVolume(value);
     }
     ui->VolumeSlider->setToolTip(QString::number(value));
@@ -434,7 +521,8 @@ void MainWindow::on_VolumeSlider_valueChanged(int value)
 
 void MainWindow::on_PlayBtn_clicked()
 {
-    if(selectedFileListItem.name != "") {
+    if(selectedFileListItem.name != "" && selectedFileListItem.path != videoHandler->file())
+    {
         MainWindow::playFile(selectedFileListItem);
     }
 }
@@ -446,23 +534,27 @@ void MainWindow::on_PauseBtn_clicked()
 
 void MainWindow::on_StopBtn_clicked()
 {
-    if(videoHandler->player->PlayingState == AVPlayer::State::PlayingState) {
-        videoHandler->player->stop();
+    if(videoHandler->isPlaying())
+    {
+        if(videoHandler->isPaused())
+        {
+            ui->PauseBtn->setChecked(false);
+        }
+        videoHandler->stop();
     }
 }
 
 void MainWindow::on_MuteBtn_toggled(bool checked)
 {
+    videoHandler->toggleMute();
     if (checked)
     {
-        voulumeBeforeMute = ui->VolumeSlider->value();
-        videoHandler->player->audio()->setMute(checked);
-        ui->VolumeSlider->setValue(0);
+        voulumeBeforeMute = ui->VolumeSlider->GetUpperValue();
+        ui->VolumeSlider->setUpperValue(0);
     }
     else
     {
-        videoHandler->player->audio()->setMute(checked);
-        ui->VolumeSlider->setValue(voulumeBeforeMute);
+        ui->VolumeSlider->setUpperValue(voulumeBeforeMute);
     }
 }
 
@@ -478,21 +570,21 @@ void MainWindow::on_serialRefreshBtn_clicked()
 
 void MainWindow::on_seekSlider_sliderMoved(int position)
 {
-    qint64 playerPosition = XMath::mapRange(static_cast<qint64>(position), 0, 100, 0, videoHandler->player->duration());
+    qint64 playerPosition = XMath::mapRange(static_cast<qint64>(position), 0, 100, 0, videoHandler->duration());
     ui->SeekSlider->setToolTip(QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")));
-    videoHandler->player->setPosition(playerPosition);
+    videoHandler->setPosition(playerPosition);
 }
 
 void MainWindow::on_media_positionChanged(qint64 position)
 {
-    ui->lblCurrentDuration->setText( second_to_minutes(position / 1000).append("/").append( second_to_minutes( (videoHandler->player->duration())/1000 ) ) );
+    ui->lblCurrentDuration->setText( second_to_minutes(position / 1000).append("/").append( second_to_minutes( (videoHandler->duration())/1000 ) ) );
 
     //ui->lblCurrentDuration->setText(QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")));
-    qint64 duration = videoHandler->player->duration();
+    qint64 duration = videoHandler->duration();
     if (duration > 0)
     {
         qint64 sliderPosition = XMath::mapRange(position, 0, duration, 0, 100);
-        ui->SeekSlider->setValue(static_cast<int>(sliderPosition));
+        ui->SeekSlider->setUpperValue(static_cast<int>(sliderPosition));
     }
 }
 
@@ -507,10 +599,10 @@ void MainWindow::on_media_start()
         funscriptFuture.cancel();
         funscriptFuture.waitForFinished();
     }
-    funscriptFuture = QtConcurrent::run(syncFunscript, videoHandler->player, serialHandler, udpHandler, tcodeHandler, funscriptHandler);
+    funscriptFuture = QtConcurrent::run(syncFunscript, videoHandler, serialHandler, udpHandler, tcodeHandler, funscriptHandler);
 }
 
-void syncFunscript(AVPlayer* player, SerialHandler* serialHandler, UdpHandler* udpHandler, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler)
+void syncFunscript(VideoHandler* player, SerialHandler* serialHandler, UdpHandler* udpHandler, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler)
 {
     std::unique_ptr<FunscriptAction> actionPosition;
     while (player->isPlaying())
@@ -535,7 +627,7 @@ void syncFunscript(AVPlayer* player, SerialHandler* serialHandler, UdpHandler* u
 
 void MainWindow::on_media_stop()
 {
-    ui->SeekSlider->setValue(0);
+    ui->SeekSlider->setUpperValue(0);
     qDebug(">>>>>>>>>>>>>>disable slider");
     ui->SeekSlider->setDisabled(true);
     ui->StopBtn->setDisabled(true);
@@ -556,7 +648,7 @@ void MainWindow::on_media_stop()
 
 void MainWindow::on_media_statusChanged(MediaStatus status)
 {
-    switch (videoHandler->player->mediaStatus()) {
+    switch (status) {
     case EndOfMedia:
         ++selectedFileListIndex;
         if(selectedFileListIndex < videos.length())

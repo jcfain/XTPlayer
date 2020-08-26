@@ -38,7 +38,7 @@ namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 
-extern void syncFunscript(AVPlayer* player, SerialHandler* serialHandler, UdpHandler* udphandler, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler);
+extern void syncFunscript(VideoHandler* player, SerialHandler* serialHandler, UdpHandler* udphandler, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler);
 extern void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo);
 extern void initNetwork(UdpHandler* serialHandler, NetworkAddress address);
 
@@ -85,7 +85,9 @@ private slots:
     void onYRollRange_valueChanged(int value);
     void onXRollRange_valueChanged(int value);
     void onOffSet_valueChanged(int value);
-
+    void onLibraryList_ContextMenuRequested(const QPoint &pos);
+    void playFileFromContextMenu();
+    void playFileWithCustomScript();
     void on_actionAbout_triggered();
 
     void on_actionDonate_triggered();
@@ -110,6 +112,8 @@ private:
     QLabel* yRollRangeLabel;
     QLabel* xRollRangeLabel;
     QLabel* offSetLabel;
+    RangeSlider* volumeSlider;
+    RangeSlider* seekSlider;
     RangeSlider* xRangeSlider;
     RangeSlider* yRollRangeSlider;
     RangeSlider* xRollRangeSlider;
@@ -141,7 +145,7 @@ private:
     void setDeviceStatusStyle(ConnectionStatus status, DeviceType deviceType, QString message = "");
 
     void loadSerialPorts();
-    void playFile(LibraryListItem selectedFileListItem);
+    void playFile(LibraryListItem selectedFileListItem, QString funscript = nullptr);
     void initNetworkEvent();
     void initSerialEvent();
 

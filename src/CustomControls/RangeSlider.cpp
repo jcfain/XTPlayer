@@ -60,7 +60,7 @@ void RangeSlider::paintEvent(QPaintEvent* aEvent)
     QPen pen(Qt::gray, 0.8);
     painter.setPen(pen);
     painter.setRenderHint(QPainter::Qt4CompatiblePainting);
-    QBrush backgroundBrush(QColor(0xD0, 0xD0, 0xD0));
+    QBrush backgroundBrush(isEnabled() ? QColor(0xF8, 0xF8, 0xFF) : QColorConstants::LightGray);
     painter.setBrush(backgroundBrush);
     painter.drawRoundedRect(backgroundRect, 1, 1);
 
@@ -69,7 +69,7 @@ void RangeSlider::paintEvent(QPaintEvent* aEvent)
     pen.setWidth(0.5);
     painter.setPen(pen);
     painter.setRenderHint(QPainter::Antialiasing);
-    QBrush handleBrush(QColor(0xFA, 0xFA, 0xFA));
+    QBrush handleBrush(isEnabled() ? QColor(0xFA, 0xFA, 0xFA) : QColorConstants::LightGray);
     painter.setBrush(handleBrush);
     QRectF leftHandleRect = firstHandleRect();
     if(type.testFlag(LeftHandle))
@@ -117,6 +117,10 @@ QRectF RangeSlider::handleRect(int aValue) const
 
 void RangeSlider::mousePressEvent(QMouseEvent* aEvent)
 {
+    if (!isEnabled())
+    {
+        return;
+    }
     if(aEvent->buttons() & Qt::LeftButton)
     {
         int posCheck, posMax, posValue, firstHandleRectPosValue, secondHandleRectPosValue;
@@ -165,6 +169,10 @@ void RangeSlider::mousePressEvent(QMouseEvent* aEvent)
 
 void RangeSlider::mouseMoveEvent(QMouseEvent* aEvent)
 {
+    if (!isEnabled())
+    {
+        return;
+    }
     if(aEvent->buttons() & Qt::LeftButton)
     {
         int posValue, firstHandleRectPosValue, secondHandleRectPosValue;
@@ -176,22 +184,28 @@ void RangeSlider::mouseMoveEvent(QMouseEvent* aEvent)
         {
             if(posValue - mDelta + scHandleSideLength / 2 <= secondHandleRectPosValue)
             {
-                setLowerValue((posValue - mDelta - scLeftRightMargin - scHandleSideLength / 2) * 1.0 / validLength() * mInterval + mMinimum);
+                int lowerValue = (posValue - mDelta - scLeftRightMargin - scHandleSideLength / 2) * 1.0 / validLength() * mInterval + mMinimum;
+                setLowerValue(lowerValue);
+                emit lowerValueMove(lowerValue);
             }
             else
             {
                 setLowerValue(mUpperValue);
+                emit lowerValueMove(mUpperValue);
             }
         }
         else if(mSecondHandlePressed && type.testFlag(RightHandle))
         {
             if(firstHandleRectPosValue + scHandleSideLength * (type.testFlag(DoubleHandles) ? 1.5 : 0.5) <= posValue - mDelta)
             {
-                setUpperValue((posValue - mDelta - scLeftRightMargin - scHandleSideLength / 2 - (type.testFlag(DoubleHandles) ? scHandleSideLength : 0)) * 1.0 / validLength() * mInterval + mMinimum);
+                int upperValue = (posValue - mDelta - scLeftRightMargin - scHandleSideLength / 2 - (type.testFlag(DoubleHandles) ? scHandleSideLength : 0)) * 1.0 / validLength() * mInterval + mMinimum;
+                setUpperValue(upperValue);
+                emit upperValueMove(upperValue);
             }
             else
             {
                 setUpperValue(mLowerValue);
+                emit upperValueMove(mLowerValue);
             }
         }
     }
@@ -354,4 +368,28 @@ void RangeSlider::SetRange(int aMinimum, int mMaximum)
 {
     setMinimum(aMinimum);
     setMaximum(mMaximum);
+}
+
+void RangeSlider::setOrientation(Qt::Orientation ori)
+{
+    orientation = ori;
+}
+
+void RangeSlider::setOption(Options t)
+{
+    type = t;
+}
+
+void RangeSlider::setBackGroundEnabledColor(QColor color)
+{
+    mBackgroudColorEnabled = color;
+    if(isEnabled())
+    {
+        mBackgroudColor = mBackgroudColorEnabled;
+    }
+    else
+    {
+        mBackgroudColor = mBackgroudColorDisabled;
+    }
+    update();
 }

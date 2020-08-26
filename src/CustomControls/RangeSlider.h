@@ -36,6 +36,9 @@ public:
     void SetUpperValue(int aUpperValue);
 
     void SetRange(int aMinimum, int aMaximum);
+    void setOrientation(Qt::Orientation ori);
+    void setOption(Options t = DoubleHandles);
+    void setBackGroundEnabledColor(QColor color);
 
 protected:
     void paintEvent(QPaintEvent* aEvent) override;
@@ -51,6 +54,8 @@ protected:
 signals:
     void lowerValueChanged(int aLowerValue);
     void upperValueChanged(int aUpperValue);
+    void lowerValueMove(int aLowerValue);
+    void upperValueMove(int aUpperValue);
     void rangeChanged(int aMin, int aMax);
 
 public slots:

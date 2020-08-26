@@ -16,7 +16,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_5">
     <item row="0" column="0">
-     <widget class="QFrame" name="frame">
+     <widget class="QFrame" name="MainFrame">
       <property name="frameShape">
        <enum>QFrame::StyledPanel</enum>
       </property>
@@ -77,10 +77,33 @@
            </layout>
           </item>
           <item row="0" column="0" colspan="2">
-           <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0" columnstretch="0,0,0,0,0,0" rowminimumheight="0,0,0" columnminimumwidth="0,0,0,0,0,0">
+           <layout class="QGridLayout" name="playerControlsGrid" rowstretch="0,0,0" columnstretch="0,0,0,0,0,0">
             <property name="sizeConstraint">
              <enum>QLayout::SetMaximumSize</enum>
             </property>
+            <item row="2" column="4">
+             <widget class="QPushButton" name="MuteBtn">
+              <property name="text">
+               <string/>
+              </property>
+              <property name="icon">
+               <iconset resource="icons.qrc">
+                <normaloff>:/images/icons/speaker.png</normaloff>:/images/icons/speaker.png</iconset>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>40</width>
+                <height>40</height>
+               </size>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="flat">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
             <item row="2" column="1">
              <widget class="QPushButton" name="PauseBtn">
               <property name="enabled">
@@ -110,45 +133,32 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="4">
-             <widget class="QPushButton" name="MuteBtn">
+            <item row="0" column="5">
+             <widget class="QLabel" name="lblCurrentDuration">
               <property name="text">
-               <string/>
+               <string>0:00</string>
               </property>
-              <property name="icon">
-               <iconset resource="icons.qrc">
-                <normaloff>:/images/icons/speaker.png</normaloff>:/images/icons/speaker.png</iconset>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>40</width>
-                <height>40</height>
-               </size>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-              <property name="flat">
-               <bool>true</bool>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
-            <item row="2" column="5">
-             <widget class="QPushButton" name="fullScreenBtn">
-              <property name="enabled">
-               <bool>false</bool>
+            <item row="2" column="0">
+             <widget class="QPushButton" name="PlayBtn">
+              <property name="toolTip">
+               <string>Play</string>
               </property>
               <property name="text">
                <string/>
               </property>
               <property name="icon">
                <iconset resource="icons.qrc">
-                <normaloff>:/images/icons/fullscreen.png</normaloff>:/images/icons/fullscreen.png</iconset>
+                <normaloff>:/images/icons/play.png</normaloff>:/images/icons/play.png</iconset>
               </property>
               <property name="iconSize">
                <size>
-                <width>40</width>
-                <height>40</height>
+                <width>50</width>
+                <height>50</height>
                </size>
               </property>
               <property name="flat">
@@ -182,22 +192,22 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="0">
-             <widget class="QPushButton" name="PlayBtn">
-              <property name="toolTip">
-               <string>Play</string>
+            <item row="2" column="5">
+             <widget class="QPushButton" name="fullScreenBtn">
+              <property name="enabled">
+               <bool>false</bool>
               </property>
               <property name="text">
                <string/>
               </property>
               <property name="icon">
                <iconset resource="icons.qrc">
-                <normaloff>:/images/icons/play.png</normaloff>:/images/icons/play.png</iconset>
+                <normaloff>:/images/icons/fullscreen.png</normaloff>:/images/icons/fullscreen.png</iconset>
               </property>
               <property name="iconSize">
                <size>
-                <width>50</width>
-                <height>50</height>
+                <width>40</width>
+                <height>40</height>
                </size>
               </property>
               <property name="flat">
@@ -206,14 +216,14 @@
              </widget>
             </item>
             <item row="2" column="3">
-             <widget class="QSlider" name="VolumeSlider">
+             <widget class="RangeSlider" name="VolumeSlider">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
              </widget>
             </item>
             <item row="0" column="0" colspan="5">
-             <widget class="QSlider" name="SeekSlider">
+             <widget class="RangeSlider" name="SeekSlider">
               <property name="enabled">
                <bool>false</bool>
               </property>
@@ -225,20 +235,10 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="5">
-             <widget class="QLabel" name="lblCurrentDuration">
-              <property name="text">
-               <string>0:00</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-             </widget>
-            </item>
            </layout>
           </item>
           <item row="1" column="1">
-           <layout class="QGridLayout" name="gridLayout_2">
+           <layout class="QGridLayout" name="deviceStatusGrid">
             <item row="0" column="1">
              <widget class="QLabel" name="serialStatuslbl">
               <property name="text">
@@ -308,6 +308,9 @@
          <property name="leftMargin">
           <number>0</number>
          </property>
+         <property name="spacing">
+          <number>0</number>
+         </property>
         </layout>
        </item>
       </layout>
@@ -357,6 +360,13 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>RangeSlider</class>
+   <extends>QSlider</extends>
+   <header>CustomControls/rangeslider.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="icons.qrc"/>
  </resources>
