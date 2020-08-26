@@ -140,7 +140,6 @@ private:
     bool isPlayingFile(QString file);
     void togglePause();
     void toggleFullScreen();
-    void toggleUI();
     void toggleControls();
     void setDeviceStatusStyle(ConnectionStatus status, DeviceType deviceType, QString message = "");
 
@@ -149,6 +148,7 @@ private:
     void initNetworkEvent();
     void initSerialEvent();
 
+    void setVolumeIcon(int volume);
     void on_seekSlider_sliderMoved(int position);
     void on_key_press(QKeyEvent* event);
     void on_video_mouse_enter(QEvent* event);

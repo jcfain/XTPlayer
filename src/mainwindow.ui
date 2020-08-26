@@ -13,6 +13,16 @@
   <property name="windowTitle">
    <string>XTPlayer</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="icons.qrc">
+    <normaloff>:/images/icons/XTP-window-icon.png</normaloff>:/images/icons/XTP-window-icon.png</iconset>
+  </property>
+  <property name="iconSize">
+   <size>
+    <width>200</width>
+    <height>20</height>
+   </size>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_5">
     <item row="0" column="0">
@@ -88,12 +98,12 @@
               </property>
               <property name="icon">
                <iconset resource="icons.qrc">
-                <normaloff>:/images/icons/speaker.png</normaloff>:/images/icons/speaker.png</iconset>
+                <normaloff>:/images/icons/speakerMute.svg</normaloff>:/images/icons/speakerMute.svg</iconset>
               </property>
               <property name="iconSize">
                <size>
-                <width>40</width>
-                <height>40</height>
+                <width>50</width>
+                <height>50</height>
                </size>
               </property>
               <property name="checkable">
@@ -117,7 +127,7 @@
               </property>
               <property name="icon">
                <iconset resource="icons.qrc">
-                <normaloff>:/images/icons/pause.png</normaloff>:/images/icons/pause.png</iconset>
+                <normaloff>:/images/icons/pause.svg</normaloff>:/images/icons/pause.svg</iconset>
               </property>
               <property name="iconSize">
                <size>
@@ -153,7 +163,7 @@
               </property>
               <property name="icon">
                <iconset resource="icons.qrc">
-                <normaloff>:/images/icons/play.png</normaloff>:/images/icons/play.png</iconset>
+                <normaloff>:/images/icons/play.svg</normaloff>:/images/icons/play.svg</iconset>
               </property>
               <property name="iconSize">
                <size>
@@ -179,7 +189,7 @@
               </property>
               <property name="icon">
                <iconset resource="icons.qrc">
-                <normaloff>:/images/icons/stop.png</normaloff>:/images/icons/stop.png</iconset>
+                <normaloff>:/images/icons/stop.svg</normaloff>:/images/icons/stop.svg</iconset>
               </property>
               <property name="iconSize">
                <size>
@@ -202,12 +212,12 @@
               </property>
               <property name="icon">
                <iconset resource="icons.qrc">
-                <normaloff>:/images/icons/fullscreen.png</normaloff>:/images/icons/fullscreen.png</iconset>
+                <normaloff>:/images/icons/fullscreen.svg</normaloff>:/images/icons/fullscreen.svg</iconset>
               </property>
               <property name="iconSize">
                <size>
-                <width>40</width>
-                <height>40</height>
+                <width>55</width>
+                <height>50</height>
                </size>
               </property>
               <property name="flat">
@@ -239,28 +249,45 @@
           </item>
           <item row="1" column="1">
            <layout class="QGridLayout" name="deviceStatusGrid">
-            <item row="0" column="1">
-             <widget class="QLabel" name="serialStatuslbl">
+            <item row="0" column="2">
+             <widget class="QWidget" name="widget" native="true">
+              <widget class="QPushButton" name="serialRefreshBtn">
+               <property name="geometry">
+                <rect>
+                 <x>-10</x>
+                 <y>0</y>
+                 <width>66</width>
+                 <height>23</height>
+                </rect>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/images/icons/refreshSerial.svg</normaloff>:/images/icons/refreshSerial.svg</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>15</width>
+                 <height>15</height>
+                </size>
+               </property>
+               <property name="flat">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="networkStatuslbl">
               <property name="text">
                <string/>
               </property>
              </widget>
             </item>
-            <item row="0" column="2">
-             <widget class="QPushButton" name="serialRefreshBtn">
-              <property name="text">
-               <string>Refresh</string>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>50</width>
-                <height>50</height>
-               </size>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QLabel" name="networkStatuslbl">
+            <item row="0" column="1">
+             <widget class="QLabel" name="serialStatuslbl">
               <property name="text">
                <string/>
               </property>

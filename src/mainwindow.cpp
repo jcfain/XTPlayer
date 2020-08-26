@@ -58,15 +58,9 @@ MainWindow::MainWindow(QWidget *parent)
                   "QScrollBar:vertical {"
                   "background-color: black; "
                   "}"
-                  "QPushbutton { "
+                  "QPushButton { "
                     "background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 black, stop: 1 grey); "
-                    "border-style: outset; "
-                    "border-width: 2px; "
-                    "border-radius: 10px; "
-                    "border-color: beige; "
-                    "font: bold 14px; "
-                    "min-width: 10em; "
-                    "padding: 6px; "
+                    "color: red; "
                     "}; ");
 //                   "QPushButton:pressed { "
 //                      "background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 red, stop: 1 black); "
@@ -82,6 +76,7 @@ MainWindow::MainWindow(QWidget *parent)
 //    QFile file(":/qss/default.qss");
 //    file.open(QFile::ReadOnly);
 //    QString styleSheet = QLatin1String(file.readAll());
+
     SettingsHandler::Load();
 
     //keyPress = new KeyPress();
@@ -105,6 +100,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->VolumeSlider->setOption(RangeSlider::Option::RightHandle);
     ui->VolumeSlider->setUpperValue(SettingsHandler::getPlayerVolume());
     ui->VolumeSlider->setBackGroundEnabledColor(QColorConstants::Red);
+    setVolumeIcon(SettingsHandler::getPlayerVolume());
 
     ui->SerialOutputCmb->setCurrentText(SettingsHandler::getSerialPort());
     ui->networkAddressTxt->setText(SettingsHandler::getServerAddress());
@@ -224,10 +220,24 @@ void MainWindow::on_key_press(QKeyEvent * event)
     switch(event->key())
     {
         case Qt::Key_Space:
+        case Qt::Key_MediaPause:
             MainWindow::togglePause();
             break;
         case Qt::Key_F11:
             MainWindow::toggleFullScreen();
+            break;
+        case Qt::Key_M:
+            MainWindow::on_MuteBtn_toggled(!videoHandler->isMute());
+            break;
+        case Qt::Key_MediaStop:
+        case Qt::Key_MediaTogglePlayPause:
+            MainWindow::on_media_stop();
+            break;
+        case Qt::Key_MediaNext:
+            //MainWindow::on_media_stop();
+            break;
+        case Qt::Key_MediaPrevious:
+            //MainWindow::on_media_stop();
             break;
     }
 }
@@ -467,30 +477,21 @@ void MainWindow::toggleFullScreen()
             setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
             videoHandler->move(QPoint(0, 0));
             ui->MainFrame->layout()->removeWidget(videoHandler);
-            //ui->MainFrame->layout()->setMargin(0);
-//            ui->MainFrame->hide();
-//            ui->statusbar->hide();
             ui->menubar->hide();
             QMainWindow::layout()->addWidget(videoHandler);
             QMainWindow::showFullScreen();
             videoHandler->layout()->setMargin(0);
-//            QMainWindow::layout()->setContentsMargins(0,0,0,0);
-//            QMainWindow::layout()->setMargin(0);
             videoHandler->move(QPoint(0, 0));
             //videoHandler->resize(QSize(screenSize.width()+1, screenSize.height()+1));
             videoHandler->resize(screenSize);
         }
         else
         {
-            //videoHandler->setParent(this, Qt::Widget);
             setWindowFlags(Qt::Window);
-            //videoHandler->resize(videoSize);
             QMainWindow::showNormal();
             QMainWindow::resize(appSize);
             QMainWindow::move(appPos);
             QMainWindow::layout()->removeWidget(videoHandler);
-//            QMainWindow::layout()->setContentsMargins(9,9,9,9);
-//            QMainWindow::layout()->setMargin(9);
             ui->MediaGrid->addWidget(videoHandler);
             videoHandler->layout()->setMargin(9);
         }
@@ -516,6 +517,7 @@ void MainWindow::on_VolumeSlider_valueChanged(int value)
         videoHandler->setVolume(value);
         SettingsHandler::setPlayerVolume(value);
     }
+    setVolumeIcon(value);
     ui->VolumeSlider->setToolTip(QString::number(value));
 }
 
@@ -546,16 +548,28 @@ void MainWindow::on_StopBtn_clicked()
 
 void MainWindow::on_MuteBtn_toggled(bool checked)
 {
+    voulumeBeforeMute = ui->VolumeSlider->GetUpperValue();
     videoHandler->toggleMute();
     if (checked)
     {
-        voulumeBeforeMute = ui->VolumeSlider->GetUpperValue();
+        ui->MuteBtn->setIcon(QIcon(":/images/icons/speakerMute.svg"));
         ui->VolumeSlider->setUpperValue(0);
     }
     else
     {
+        setVolumeIcon(voulumeBeforeMute);
         ui->VolumeSlider->setUpperValue(voulumeBeforeMute);
     }
+}
+
+void MainWindow::setVolumeIcon(int volume)
+{
+    if (volume > 15)
+        ui->MuteBtn->setIcon(QIcon(":/images/icons/speakerLoud.svg"));
+    else if (volume > 0)
+        ui->MuteBtn->setIcon(QIcon(":/images/icons/speakerMid.svg"));
+    else
+        ui->MuteBtn->setIcon(QIcon(":/images/icons/speakerMute.svg"));
 }
 
 void MainWindow::on_fullScreenBtn_clicked()
