@@ -56,6 +56,18 @@ private slots:
 
     void on_buttonBox_clicked(QAbstractButton *button);
 
+    void on_xRollMultiplierCheckBox_clicked();
+
+    void on_xRollMultiplierSpinBox_valueChanged(double arg1);
+
+    void on_yRollMultiplierCheckBox_clicked();
+
+    void on_yRollMultiplierSpinBox_valueChanged(double arg1);
+
+    void on_twistMultiplierCheckBox_clicked();
+
+    void on_twistMultiplierSpinBox_valueChanged(double arg1);
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();

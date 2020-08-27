@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="icons.qrc">
-    <normaloff>:/images/icons/XTP-window-icon.png</normaloff>:/images/icons/XTP-window-icon.png</iconset>
+    <normaloff>:/images/icons/XTP-window-icon.ico</normaloff>:/images/icons/XTP-window-icon.ico</iconset>
   </property>
   <property name="iconSize">
    <size>

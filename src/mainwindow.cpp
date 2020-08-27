@@ -226,7 +226,6 @@ void MainWindow::on_load_library(QString path)
                 if (!funscriptHandler->exists(scriptPath))
                 {
                     scriptPath = nullptr;
-                    LogHandler::Debug("Script does not exist for video: " + videoPath);
                 }
                 LibraryListItem item
                 {
@@ -237,8 +236,16 @@ void MainWindow::on_load_library(QString path)
                 QVariant listItem;
                 listItem.setValue(item);
                 QListWidgetItem* qListWidgetItem = new QListWidgetItem;
+                if (!funscriptHandler->exists(scriptPath))
+                {
+                    qListWidgetItem->setToolTip(videoPath + "\nNo script file of the same name found.\nRight click and Play with funscript.");
+                    qListWidgetItem->setForeground(QColorConstants::Gray);
+                }
+                else
+                {
+                    qListWidgetItem->setToolTip(videoPath);
+                }
                 qListWidgetItem->setText(fileinfo.fileName());
-                qListWidgetItem->setToolTip(videoPath);
                 qListWidgetItem->setData(Qt::UserRole, listItem);
                 ui->LibraryList->addItem(qListWidgetItem);
                 videos.push_back(videoPath);
@@ -306,16 +313,15 @@ void MainWindow::playFile(LibraryListItem selectedFileListItem, QString customSc
         videoHandler->setFile(selectedFileListItem.path);
         videoHandler->load();
         QString scriptFile = customScript == nullptr ? selectedFileListItem.script : customScript;
-        if(funscriptHandler->load(scriptFile))
+        bool funscriptLoaded = funscriptHandler->load(scriptFile);
+        SettingsHandler::setSelectedFile(selectedFileListItem.path);
+        //QUrl url = QUrl::fromLocalFile(selectedFileListItem.path);
+        videoHandler->play();
+        selectedFileListIndex = ui->LibraryList->currentRow();
+        if(!funscriptLoaded)
         {
-            SettingsHandler::setSelectedFile(selectedFileListItem.path);
-            //QUrl url = QUrl::fromLocalFile(selectedFileListItem.path);
-            videoHandler->play();
-            selectedFileListIndex = ui->LibraryList->currentRow();
-        }
-        else
-        {
-            LogHandler::Dialog("Error loading script " + customScript + "!", XLogLevel::Critical);
+            LogHandler::Dialog("Error loading script " + customScript + "!", XLogLevel::Warning);
+
         }
     }
     else {
@@ -645,6 +651,13 @@ void MainWindow::on_actionAbout_triggered()
     sources.setText("This software uses libraries from:");
     sources.setAlignment(Qt::AlignHCenter);
     layout.addWidget(&sources);
+    QLabel qtInfo;
+    qtInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    qtInfo.setText("<b>Qt 1.15.0<br>"
+                   "Distributed under the terms of LGPLv3 or later.<br>"
+                   "Source: <a href='https://github.com/qt/qt5/releases/tag/v5.15.0'>https://github.com/qt/qt5/releases/tag/v5.15.0</a>");
+    qtInfo.setAlignment(Qt::AlignHCenter);
+    layout.addWidget(&qtInfo);
     QLabel qtAVInfo;
     qtAVInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
     qtAVInfo.setText("<b>QtAV 1.12.0(Aug 17 2020, 22:01:37)</b><br>"
@@ -661,7 +674,7 @@ void MainWindow::on_actionAbout_triggered()
     layout.addWidget(&qtAVInfo);
     QLabel libAVInfo;
     libAVInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    libAVInfo.setText("<b>Libav</b><br>"
+    libAVInfo.setText("<b>Libav 12.3</b><br>"
                       "the Libav project under the LGPLv2.1<br>"
                       "<a href='https://libav.org/download/'>https://libav.org/download/</a>");
     libAVInfo.setAlignment(Qt::AlignHCenter);

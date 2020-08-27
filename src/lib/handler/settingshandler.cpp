@@ -23,6 +23,12 @@ void SettingsHandler::Load()
     serialPort = settings.value("serialPort").toString();
     serverAddress = settings.value("serverAddress").toString();
     serverPort = settings.value("serverPort").toString();
+    yRollMultiplierChecked = settings.value("yRollMultiplierChecked").toBool();
+    yRollMultiplierValue = settings.value("yRollMultiplierValue").toFloat();
+    xRollMultiplierChecked = settings.value("xRollMultiplierChecked").toBool();
+    xRollMultiplierValue = settings.value("xRollMultiplierValue").toFloat();
+    twistMultiplierChecked = settings.value("twistMultiplierChecked").toBool();
+    twistMultiplierValue = settings.value("twistMultiplierValue").toFloat();
 }
 
 void SettingsHandler::Save()
@@ -42,6 +48,12 @@ void SettingsHandler::Save()
     settings.setValue("serialPort", serialPort);
     settings.setValue("serverAddress", serverAddress);
     settings.setValue("serverPort", serverPort);
+    settings.setValue("yRollMultiplierChecked", yRollMultiplierChecked);
+    settings.setValue("yRollMultiplierValue", yRollMultiplierValue);
+    settings.setValue("xRollMultiplierChecked", xRollMultiplierChecked);
+    settings.setValue("xRollMultiplierValue", xRollMultiplierValue);
+    settings.setValue("twistMultiplierChecked", twistMultiplierChecked);
+    settings.setValue("twistMultiplierValue", twistMultiplierValue);
 
 }
 
@@ -61,6 +73,12 @@ void SettingsHandler::Default()
     settings.setValue("serialPort", QVariant::String);
     settings.setValue("serverAddress", QVariant::String);
     settings.setValue("serverPort", 0);
+    settings.setValue("yRollMultiplierChecked", false);
+    settings.setValue("yRollMultiplierValue", 0);
+    settings.setValue("xRollMultiplierChecked", false);
+    settings.setValue("xRollMultiplierValue", 0);
+    settings.setValue("twistMultiplierChecked", false);
+    settings.setValue("twistMultiplierValue", 0);
 }
 
 
@@ -127,6 +145,30 @@ int SettingsHandler::getYRollMax()
 int SettingsHandler::getXRollMax()
 {
     return xRollMax;
+}
+bool SettingsHandler::getYRollMultiplierChecked()
+{
+    return yRollMultiplierChecked;
+}
+float SettingsHandler::getYRollMultiplierValue()
+{
+    return yRollMultiplierValue;
+}
+bool SettingsHandler::getXRollMultiplierChecked()
+{
+    return xRollMultiplierChecked;
+}
+float SettingsHandler::getXRollMultiplierValue()
+{
+    return xRollMultiplierValue;
+}
+bool SettingsHandler::getTwistMultiplierChecked()
+{
+    return twistMultiplierChecked;
+}
+float SettingsHandler::getTwistMultiplierValue()
+{
+    return twistMultiplierValue;
 }
 
 void SettingsHandler::setSelectedLibrary(QString value)
@@ -206,6 +248,37 @@ void SettingsHandler::setXRollMax(int value)
     xRollMax = value;
 }
 
+void SettingsHandler::setYRollMultiplierChecked(bool value)
+{
+    QMutexLocker locker(&mutex);
+    yRollMultiplierChecked = value;
+}
+void SettingsHandler::setYRollMultiplierValue(float value)
+{
+    QMutexLocker locker(&mutex);
+    yRollMultiplierValue = value;
+}
+void SettingsHandler::setXRollMultiplierChecked(bool value)
+{
+    QMutexLocker locker(&mutex);
+    xRollMultiplierChecked = value;
+}
+void SettingsHandler::setXRollMultiplierValue(float value)
+{
+    QMutexLocker locker(&mutex);
+    xRollMultiplierValue = value;
+}
+void SettingsHandler::setTwistMultiplierChecked(bool value)
+{
+    QMutexLocker locker(&mutex);
+    twistMultiplierChecked = value;
+}
+void SettingsHandler::setTwistMultiplierValue(float value)
+{
+    QMutexLocker locker(&mutex);
+    twistMultiplierValue = value;
+}
+
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
 const QString SettingsHandler::XTPVersion = "0.1a";
 const float SettingsHandler::XTPVersionNum = 0.1f;
@@ -227,6 +300,12 @@ int SettingsHandler::xRollMin;
 int SettingsHandler::xMax;
 int SettingsHandler::yRollMax;
 int SettingsHandler::xRollMax;
+bool SettingsHandler::yRollMultiplierChecked;
+float SettingsHandler::yRollMultiplierValue;
+bool SettingsHandler::xRollMultiplierChecked;
+float SettingsHandler::xRollMultiplierValue;
+bool SettingsHandler::twistMultiplierChecked;
+float SettingsHandler::twistMultiplierValue;
 QString SettingsHandler::selectedFunscriptLibrary;
 QString SettingsHandler::selectedFile;
 QString SettingsHandler::serialPort;

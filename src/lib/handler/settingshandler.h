@@ -35,6 +35,13 @@ public:
     static int getYRollMax();
     static int getXRollMax();
 
+    static bool getYRollMultiplierChecked();
+    static float getYRollMultiplierValue();
+    static bool getXRollMultiplierChecked();
+    static float getXRollMultiplierValue();
+    static bool getTwistMultiplierChecked();
+    static float getTwistMultiplierValue();
+
     static void setSelectedLibrary(QString value);
     static void setSelectedFunscriptLibrary(QString value);
     static void setSelectedFile(QString value);
@@ -50,6 +57,13 @@ public:
     static void setXMax(int value);
     static void setYRollMax(int value);
     static void setXRollMax(int value);
+
+    static void setYRollMultiplierChecked(bool value);
+    static void setYRollMultiplierValue(float value);
+    static void setXRollMultiplierChecked(bool value);
+    static void setXRollMultiplierValue(float value);
+    static void setTwistMultiplierChecked(bool value);
+    static void setTwistMultiplierValue(float value);
 
     static void Load();
     static void Save();
@@ -73,6 +87,12 @@ private:
     static int xMax;
     static int yRollMax;
     static int xRollMax;
+    static bool yRollMultiplierChecked;
+    static float yRollMultiplierValue;
+    static bool xRollMultiplierChecked;
+    static float xRollMultiplierValue;
+    static bool twistMultiplierChecked;
+    static float twistMultiplierValue;
 
     static QSettings settings;
     static QMutex mutex;

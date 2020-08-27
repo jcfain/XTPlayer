@@ -55,6 +55,12 @@ void SettingsDialog::setupUi()
         ui.SerialOutputCmb->setCurrentText(SettingsHandler::getSerialPort());
         ui.networkAddressTxt->setText(SettingsHandler::getServerAddress());
         ui.networkPortTxt->setText(SettingsHandler::getServerPort());
+        ui.xRollMultiplierCheckBox->setChecked(SettingsHandler::getXRollMultiplierChecked());
+        ui.xRollMultiplierSpinBox->setValue(SettingsHandler::getXRollMultiplierValue());
+        ui.yRollMultiplierCheckBox->setChecked(SettingsHandler::getYRollMultiplierChecked());
+        ui.yRollMultiplierSpinBox->setValue(SettingsHandler::getYRollMultiplierValue());
+        ui.twistMultiplierCheckBox->setChecked(SettingsHandler::getTwistMultiplierChecked());
+        ui.twistMultiplierSpinBox->setValue(SettingsHandler::getTwistMultiplierValue());
         if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
         {
             ui.serialOutputRdo->setChecked(true);
@@ -344,6 +350,36 @@ void SettingsDialog::on_networkPortTxt_editingFinished()
 {
     SettingsHandler::setServerAddress(ui.networkAddressTxt->text());
     on_networkOutputRdo_clicked();
+}
+
+void SettingsDialog::on_xRollMultiplierCheckBox_clicked()
+{
+    SettingsHandler::setXRollMultiplierChecked(ui.xRollMultiplierCheckBox->isChecked());
+}
+
+void SettingsDialog::on_xRollMultiplierSpinBox_valueChanged(double value)
+{
+    SettingsHandler::setXRollMultiplierValue(value);
+}
+
+void SettingsDialog::on_yRollMultiplierCheckBox_clicked()
+{
+    SettingsHandler::setYRollMultiplierChecked(ui.yRollMultiplierCheckBox->isChecked());
+}
+
+void SettingsDialog::on_yRollMultiplierSpinBox_valueChanged(double value)
+{
+    SettingsHandler::setYRollMultiplierValue(value);
+}
+
+void SettingsDialog::on_twistMultiplierCheckBox_clicked()
+{
+    SettingsHandler::setTwistMultiplierChecked(ui.twistMultiplierCheckBox->isChecked());
+}
+
+void SettingsDialog::on_twistMultiplierSpinBox_valueChanged(double value)
+{
+    SettingsHandler::setTwistMultiplierValue(value);
 }
 
 void SettingsDialog::on_buttonBox_clicked(QAbstractButton *button)
