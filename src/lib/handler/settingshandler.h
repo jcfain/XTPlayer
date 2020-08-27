@@ -1,11 +1,11 @@
 #ifndef SETTINGSHANDLER_H
 #define SETTINGSHANDLER_H
 #include <QSettings>
-#include <QSettings>
 #include <QMutex>
 #include "../lookup/enum.h"
 #include "../tool/xmath.h"
 #include "loghandler.h"
+#include "devicehandler.h"
 
 class SettingsHandler
 {
@@ -57,6 +57,7 @@ public:
 
 private:
     SettingsHandler();
+    ~SettingsHandler();
     static QString selectedLibrary;
     static QString selectedFunscriptLibrary;
     static QString selectedFile;

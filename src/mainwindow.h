@@ -10,16 +10,21 @@
 #include <iostream>
 #include <QtAV>
 #include <QtGlobal>
+#include <QtConcurrent/QtConcurrent>
 #include <QFuture>
 #include <QDesktopServices>
+#include <QDirIterator>
+#include <qfloat16.h>
+#include <QtConcurrent/QtConcurrent>
+#include <QFuture>
+#include <QScreen>
+#include "settingsdialog.h"
 #include "lib/handler/videohandler.h"
 #include "CustomControls/RangeSlider.h"
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/loghandler.h"
 #include "lib/handler/funscripthandler.h"
 #include "lib/handler/tcodehandler.h"
-#include "lib/handler/serialhandler.h"
-#include "lib/handler/udphandler.h"
 #include "lib/handler/devicehandler.h"
 #include "lib/struct/LibraryListItem.h"
 #include "lib/struct/SerialComboboxItem.h"
@@ -27,20 +32,13 @@
 #include "lib/tool/xmath.h"
 #include "lib/lookup/enum.h"
 
-Q_DECLARE_METATYPE(LibraryListItem);
-Q_DECLARE_METATYPE(SerialComboboxItem);
-//Q_DECLARE_METATYPE(DeviceType);
-//Q_DECLARE_METATYPE(ConnectionStatus);
-
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 
-extern void syncFunscript(VideoHandler* player, SerialHandler* serialHandler, UdpHandler* udphandler, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler);
-extern void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo);
-extern void initNetwork(UdpHandler* serialHandler, NetworkAddress address);
+extern void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler);
 
 class MainWindow : public QMainWindow
 {
@@ -69,28 +67,18 @@ private slots:
 
     void on_fullScreenBtn_clicked();
 
-    void on_SerialOutputCmb_currentIndexChanged(int index);
-
-    void on_serialRefreshBtn_clicked();
-
-    void on_serialOutputRdo_clicked();
-
-    void on_networkOutputRdo_clicked();
-
-    void on_networkAddressTxt_editingFinished();
-
-    void on_networkPortTxt_editingFinished();
-
-    void onXRange_valueChanged(int value);
-    void onYRollRange_valueChanged(int value);
-    void onXRollRange_valueChanged(int value);
-    void onOffSet_valueChanged(int value);
     void onLibraryList_ContextMenuRequested(const QPoint &pos);
     void playFileFromContextMenu();
     void playFileWithCustomScript();
     void on_actionAbout_triggered();
 
     void on_actionDonate_triggered();
+
+    void on_actionSettings_triggered();
+
+    void on_skipForwardButton_clicked();
+
+    void on_skipBackButton_clicked();
 
 signals:
     void keyPressed(QKeyEvent * event);
@@ -103,34 +91,19 @@ protected:
 
 private:
     Ui::MainWindow *ui;
-    DeviceHandler* selectedDevice;
-    QFuture<void> initFuture;
+    SettingsDialog* _xSettings;
     QFuture<void> funscriptFuture;
     QProgressBar* bar;
     VideoHandler* videoHandler;
-    QLabel* xRangeLabel;
-    QLabel* yRollRangeLabel;
-    QLabel* xRollRangeLabel;
-    QLabel* offSetLabel;
-    RangeSlider* volumeSlider;
-    RangeSlider* seekSlider;
-    RangeSlider* xRangeSlider;
-    RangeSlider* yRollRangeSlider;
-    RangeSlider* xRollRangeSlider;
-    RangeSlider* offSetSlider;
-    QWidget* fullscreenWindow;
     FunscriptHandler* funscriptHandler;
     TCodeHandler* tcodeHandler;
-    SerialHandler* serialHandler;
-    UdpHandler* udpHandler;
-    QList<SerialComboboxItem> serialPorts;
-    SerialComboboxItem selectedSerialPort;
     QSize videoSize;
     QSize appSize;
     QPoint appPos;
     LibraryListItem selectedFileListItem;
     int selectedFileListIndex;
     bool deviceConnected;
+    int voulumeBeforeMute;
 
     QList<QString> videos;
     void on_load_library(QString path);
@@ -141,12 +114,12 @@ private:
     void togglePause();
     void toggleFullScreen();
     void toggleControls();
-    void setDeviceStatusStyle(ConnectionStatus status, DeviceType deviceType, QString message = "");
 
-    void loadSerialPorts();
     void playFile(LibraryListItem selectedFileListItem, QString funscript = nullptr);
     void initNetworkEvent();
     void initSerialEvent();
+    void skipForward();
+    void skipBack();
 
     void setVolumeIcon(int volume);
     void on_seekSlider_sliderMoved(int position);

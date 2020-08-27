@@ -3,7 +3,9 @@
 SettingsHandler::SettingsHandler()
 {
 }
-
+SettingsHandler::~SettingsHandler()
+{
+}
 void SettingsHandler::Load()
 {
     QMutexLocker locker(&mutex);

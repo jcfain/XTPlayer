@@ -38,7 +38,8 @@ SOURCES += \
     lib/handler/videohandler.cpp \
     lib/tool/xmath.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    settingsdialog.cpp
 
 HEADERS += \
     CustomControls/RangeSlider.h \
@@ -59,10 +60,12 @@ HEADERS += \
     lib/struct/NetworkAddress.h \
     lib/struct/SerialComboboxItem.h \
     lib/tool/xmath.h \
-    mainwindow.h
+    mainwindow.h \
+    settingsdialog.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    settings.ui
 
 # LIBS       += -lVLCQtCore -lVLCQtWidgets
 unix:!mac {

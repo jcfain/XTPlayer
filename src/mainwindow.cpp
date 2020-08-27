@@ -1,20 +1,13 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <QDirIterator>
-#include <qfloat16.h>
-#include <QtConcurrent/QtConcurrent>
-#include <QFuture>
-#include <QScreen>
-
-int voulumeBeforeMute;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    setStyleSheet("QMainWindow {"
+    setStyleSheet("QMainWindow, QDialog {"
                   "background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1.5, stop: 0 black, stop: 1 darkred); "
                   "color: white; "
                   "}"
@@ -42,7 +35,7 @@ MainWindow::MainWindow(QWidget *parent)
                   "background-color: darkred; "
                   "color: white; "
                   "}"
-                  "QRadioButton {"
+                  "QRadioButton, QCheckBox, QGroupBox {"
                   "background-color: transparent; "
                   "color: white; "
                   "}"
@@ -67,25 +60,17 @@ MainWindow::MainWindow(QWidget *parent)
 //                      "border-style: inset; "
 //                    "}; ");
 
-
-
-
-
-
-
 //    QFile file(":/qss/default.qss");
 //    file.open(QFile::ReadOnly);
 //    QString styleSheet = QLatin1String(file.readAll());
 
     SettingsHandler::Load();
 
-    //keyPress = new KeyPress();
-    //keyPress->show();
-    serialHandler = new SerialHandler(this);
-    udpHandler = new UdpHandler(this);
     videoHandler = new VideoHandler(this);
     ui->MediaGrid->addWidget(videoHandler);
-    loadSerialPorts();
+
+    _xSettings = new SettingsDialog(this);
+    _xSettings->init(videoHandler);
 
     ui->SeekSlider->setDisabled(true);
     ui->SeekSlider->SetRange(0, 100);
@@ -102,71 +87,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->VolumeSlider->setBackGroundEnabledColor(QColorConstants::Red);
     setVolumeIcon(SettingsHandler::getPlayerVolume());
 
-    ui->SerialOutputCmb->setCurrentText(SettingsHandler::getSerialPort());
-    ui->networkAddressTxt->setText(SettingsHandler::getServerAddress());
-    ui->networkPortTxt->setText(SettingsHandler::getServerPort());
-    if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
-    {
-        selectedDevice = serialHandler;
-        ui->serialOutputRdo->setChecked(true);
-    }
-    else if (SettingsHandler::getSelectedDevice() == DeviceType::Network)
-    {
-        selectedDevice = udpHandler;
-        ui->networkOutputRdo->setChecked(true);
-    }
-    setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceType::Serial);
-    setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceType::Network);
-
-    QFont font( "Sans Serif", 7);
-
-    xRangeLabel = new QLabel("X Range");
-    xRangeLabel->setFont(font);
-    ui->RangeSettingsGrid->addWidget(xRangeLabel, 0,0);
-    xRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
-    xRangeSlider->setBackGroundEnabledColor(QColorConstants::Red);
-    xRangeSlider->SetRange(1, 999);
-    xRangeSlider->setLowerValue(SettingsHandler::getXMin());
-    xRangeSlider->setUpperValue(SettingsHandler::getXMax());
-    ui->RangeSettingsGrid->addWidget(xRangeSlider, 1,0);
-
-    yRollRangeLabel = new QLabel("Y Roll Range");
-    yRollRangeLabel->setFont(font);
-    ui->RangeSettingsGrid->addWidget(yRollRangeLabel, 2,0);
-    yRollRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
-    yRollRangeSlider->setBackGroundEnabledColor(QColorConstants::Red);
-    yRollRangeSlider->SetRange(1, 999);
-    yRollRangeSlider->setLowerValue(SettingsHandler::getYRollMin());
-    yRollRangeSlider->setUpperValue(SettingsHandler::getYRollMax());
-    ui->RangeSettingsGrid->addWidget(yRollRangeSlider, 3,0);
-
-    xRollRangeLabel = new QLabel("X Roll Range");
-    xRollRangeLabel->setFont(font);
-    ui->RangeSettingsGrid->addWidget(xRollRangeLabel, 4,0);
-    xRollRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
-    xRollRangeSlider->setBackGroundEnabledColor(QColorConstants::Red);
-    xRollRangeSlider->SetRange(1, 999);
-    xRollRangeSlider->setLowerValue(SettingsHandler::getXRollMin());
-    xRollRangeSlider->setUpperValue(SettingsHandler::getXRollMax());
-    ui->RangeSettingsGrid->addWidget(xRollRangeSlider, 5,0);
-
-    offSetLabel = new QLabel("Offset: " + QString::number(SettingsHandler::getoffSet()));
-    offSetLabel->setFont(font);
-    ui->RangeSettingsGrid->addWidget(offSetLabel, 6,0);
-    offSetSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::RightHandle, nullptr);
-    offSetSlider->setBackGroundEnabledColor(QColorConstants::Red);
-    offSetSlider->SetRange(1, 2000);
-    offSetSlider->setUpperValue(SettingsHandler::getoffSetMap());
-    ui->RangeSettingsGrid->addWidget(offSetSlider, 7,0);
-
-
-    connect(xRangeSlider, &RangeSlider::lowerValueChanged, this, &MainWindow::onXRange_valueChanged);
-    connect(xRangeSlider, &RangeSlider::upperValueChanged, this, &MainWindow::onXRange_valueChanged);
-    connect(yRollRangeSlider, &RangeSlider::lowerValueChanged, this, &MainWindow::onYRollRange_valueChanged);
-    connect(yRollRangeSlider, &RangeSlider::upperValueChanged, this, &MainWindow::onYRollRange_valueChanged);
-    connect(xRollRangeSlider, &RangeSlider::lowerValueChanged, this, &MainWindow::onXRollRange_valueChanged);
-    connect(xRollRangeSlider, &RangeSlider::upperValueChanged, this, &MainWindow::onXRollRange_valueChanged);
-    connect(offSetSlider, &RangeSlider::lowerValueChanged, this, &MainWindow::onOffSet_valueChanged);
 
     connect(videoHandler, &VideoHandler::positionChanged, this, &MainWindow::on_media_positionChanged);
     connect(videoHandler, &VideoHandler::mediaStatusChanged, this, &MainWindow::on_media_statusChanged);
@@ -181,38 +101,26 @@ MainWindow::MainWindow(QWidget *parent)
     //connect(vw, &XVideoWidget::singleClicked, this, &MainWindow::media_single_click_event);
     connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
     //connect(videoHandler, &VideoHandler::mouseEnter, this, &MainWindow::on_video_mouse_enter);
-    connect(serialHandler, &SerialHandler::connectionChange, this, &MainWindow::on_device_connectionChanged);
-    connect(serialHandler, &SerialHandler::errorOccurred, this, &MainWindow::on_device_error);
-    connect(udpHandler, &UdpHandler::connectionChange, this, &MainWindow::on_device_connectionChanged);
-    connect(udpHandler, &UdpHandler::errorOccurred, this, &MainWindow::on_device_error);
 
     ui->LibraryList->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->LibraryList, &QListWidget::customContextMenuRequested, this, &MainWindow::onLibraryList_ContextMenuRequested);
 
-    if(SettingsHandler::getSelectedDevice() == DeviceType::Network)
-    {
-        on_networkOutputRdo_clicked();
-    }
+    connect(_xSettings, &SettingsDialog::deviceConnectionChange, this, &MainWindow::on_device_connectionChanged);
+    connect(_xSettings, &SettingsDialog::deviceError, this, &MainWindow::on_device_error);
+
 }
 
 MainWindow::~MainWindow()
 {
     SettingsHandler::Save();
-    udpHandler->dispose();
-    serialHandler->dispose();
     delete ui;
     delete videoHandler;
-    if(initFuture.isRunning())
-    {
-        initFuture.cancel();
-        initFuture.waitForFinished();
-    }
+    delete _xSettings;
     if(funscriptFuture.isRunning())
     {
         funscriptFuture.cancel();
         funscriptFuture.waitForFinished();
     }
-    //delete keyPress;
 }
 
 void MainWindow::on_key_press(QKeyEvent * event)
@@ -224,6 +132,7 @@ void MainWindow::on_key_press(QKeyEvent * event)
             MainWindow::togglePause();
             break;
         case Qt::Key_F11:
+        case Qt::Key_Escape:
             MainWindow::toggleFullScreen();
             break;
         case Qt::Key_M:
@@ -234,10 +143,12 @@ void MainWindow::on_key_press(QKeyEvent * event)
             MainWindow::on_media_stop();
             break;
         case Qt::Key_MediaNext:
-            //MainWindow::on_media_stop();
+        case Qt::Key_Right:
+            MainWindow::skipForward();
             break;
         case Qt::Key_MediaPrevious:
-            //MainWindow::on_media_stop();
+        case Qt::Key_Left:
+            MainWindow::skipBack();
             break;
     }
 }
@@ -251,41 +162,7 @@ void MainWindow::on_video_mouse_enter(QEvent * event)
     }
 }
 
-void MainWindow::onXRange_valueChanged(int value)
-{
-    SettingsHandler::setXMin(xRangeSlider->GetLowerValue());
-    SettingsHandler::setXMax(xRangeSlider->GetUpperValue());
-    if (!videoHandler->isPlaying() && selectedDevice->isRunning())
-    {
-        selectedDevice->sendTCode("L0" + QString::number(value) + "S1000");
-    }
-}
 
-void MainWindow::onYRollRange_valueChanged(int value)
-{
-    SettingsHandler::setYRollMin(yRollRangeSlider->GetLowerValue());
-    SettingsHandler::setYRollMax(yRollRangeSlider->GetUpperValue());
-    if ( selectedDevice->isRunning())
-    {
-        selectedDevice->sendTCode("R1" + QString::number(value) + "S1000");
-    }
-}
-
-void MainWindow::onXRollRange_valueChanged(int value)
-{
-    SettingsHandler::setXRollMin(xRollRangeSlider->GetLowerValue());
-    SettingsHandler::setXRollMax(xRollRangeSlider->GetUpperValue());
-    if (selectedDevice->isRunning())
-    {
-        selectedDevice->sendTCode("R2" + QString::number(value) + "S1000");
-    }
-}
-
-void MainWindow::onOffSet_valueChanged(int value)
-{
-    SettingsHandler::setoffSet(offSetSlider->GetUpperValue());
-    offSetLabel->setText("Offset: " + QString::number(SettingsHandler::getoffSet()));
-}
 
 void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
 {
@@ -446,18 +323,6 @@ void MainWindow::playFile(LibraryListItem selectedFileListItem, QString customSc
     }
 }
 
-void MainWindow::loadSerialPorts()
-{
-    ui->SerialOutputCmb->clear();
-    serialPorts.clear();
-    serialPorts = serialHandler->getPorts();
-    foreach(SerialComboboxItem item , serialPorts)
-    {
-        QVariant itemVarient;
-        itemVarient.setValue(item);
-        ui->SerialOutputCmb->addItem(item.friendlyName, itemVarient);
-    }
-}
 
 void MainWindow::togglePause()
 {
@@ -500,13 +365,13 @@ void MainWindow::toggleFullScreen()
 
 void MainWindow::toggleControls()
 {
-    if(!ui->TCodeQuickSettingsGroup->isHidden())
+    if(!ui->playerControlsFrame->isHidden())
     {
-        ui->TCodeQuickSettingsGroup->hide();
+        ui->playerControlsFrame->hide();
     }
     else
     {
-        ui->TCodeQuickSettingsGroup->show();
+        ui->playerControlsFrame->show();
     }
 }
 
@@ -523,8 +388,15 @@ void MainWindow::on_VolumeSlider_valueChanged(int value)
 
 void MainWindow::on_PlayBtn_clicked()
 {
-    if(selectedFileListItem.name != "" && selectedFileListItem.path != videoHandler->file())
+    if(ui->LibraryList->selectedItems().length() > 0 && selectedFileListItem.path != videoHandler->file() || ui->LibraryList->selectedItems().length() > 0 && !videoHandler->isPlaying())
     {
+        MainWindow::playFile(selectedFileListItem);
+    }
+    else if(ui->LibraryList->selectedItems().length() == 0)
+    {
+        selectedFileListIndex = 0;
+        ui->LibraryList->setCurrentRow(0);
+        selectedFileListItem = ui->LibraryList->selectedItems()[0]->data(Qt::UserRole).value<LibraryListItem>();
         MainWindow::playFile(selectedFileListItem);
     }
 }
@@ -548,11 +420,10 @@ void MainWindow::on_StopBtn_clicked()
 
 void MainWindow::on_MuteBtn_toggled(bool checked)
 {
-    voulumeBeforeMute = ui->VolumeSlider->GetUpperValue();
-    videoHandler->toggleMute();
     if (checked)
     {
-        ui->MuteBtn->setIcon(QIcon(":/images/icons/speakerMute.svg"));
+        voulumeBeforeMute = ui->VolumeSlider->GetUpperValue();
+        setVolumeIcon(0);
         ui->VolumeSlider->setUpperValue(0);
     }
     else
@@ -560,6 +431,7 @@ void MainWindow::on_MuteBtn_toggled(bool checked)
         setVolumeIcon(voulumeBeforeMute);
         ui->VolumeSlider->setUpperValue(voulumeBeforeMute);
     }
+    videoHandler->toggleMute();
 }
 
 void MainWindow::setVolumeIcon(int volume)
@@ -575,11 +447,6 @@ void MainWindow::setVolumeIcon(int volume)
 void MainWindow::on_fullScreenBtn_clicked()
 {
     MainWindow::toggleFullScreen();
-}
-
-void MainWindow::on_serialRefreshBtn_clicked()
-{
-    MainWindow::loadSerialPorts();
 }
 
 void MainWindow::on_seekSlider_sliderMoved(int position)
@@ -613,23 +480,21 @@ void MainWindow::on_media_start()
         funscriptFuture.cancel();
         funscriptFuture.waitForFinished();
     }
-    funscriptFuture = QtConcurrent::run(syncFunscript, videoHandler, serialHandler, udpHandler, tcodeHandler, funscriptHandler);
+    funscriptFuture = QtConcurrent::run(syncFunscript, videoHandler, _xSettings, tcodeHandler, funscriptHandler);
 }
 
-void syncFunscript(VideoHandler* player, SerialHandler* serialHandler, UdpHandler* udpHandler, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler)
+void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler)
 {
     std::unique_ptr<FunscriptAction> actionPosition;
+    DeviceHandler* device = xSettings->getSelectedDeviceHandler();
     while (player->isPlaying())
     {
-        if(serialHandler->isConnected() || udpHandler->isConnected()) {
+        if(xSettings->isConnected()) {
             qint64 position = player->position();
             actionPosition = funscriptHandler->getPosition(position);
             if (actionPosition != nullptr)
             {
-                if (SettingsHandler::getSelectedDevice() == DeviceType::Serial)
-                    serialHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
-                else if (SettingsHandler::getSelectedDevice() == DeviceType::Network)
-                    udpHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
+                device->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
             }
             actionPosition.reset();
         }
@@ -653,24 +518,28 @@ void MainWindow::on_media_stop()
     {
         funscriptFuture.cancel();
     }
-    if (selectedDevice->isRunning())
+    if (_xSettings->getSelectedDeviceHandler()->isRunning())
     {
-        selectedDevice->dispose();
+        _xSettings->getSelectedDeviceHandler()->dispose();
     }
 
+}
+
+void MainWindow::on_skipForwardButton_clicked()
+{
+    skipForward();
+}
+
+void MainWindow::on_skipBackButton_clicked()
+{
+    skipBack();
 }
 
 void MainWindow::on_media_statusChanged(MediaStatus status)
 {
     switch (status) {
     case EndOfMedia:
-        ++selectedFileListIndex;
-        if(selectedFileListIndex < videos.length())
-        {
-            ui->LibraryList->setCurrentRow(selectedFileListIndex);
-            selectedFileListItem = ui->LibraryList->selectedItems()[0]->data(Qt::UserRole).value<LibraryListItem>();
-            on_PlayBtn_clicked();
-        }
+        skipForward();
     break;
     case NoMedia:
         //status = tr("No media");
@@ -700,6 +569,28 @@ void MainWindow::on_media_statusChanged(MediaStatus status)
     }
 }
 
+void MainWindow::skipForward()
+{
+    ++selectedFileListIndex;
+    if(selectedFileListIndex < videos.length())
+    {
+        ui->LibraryList->setCurrentRow(selectedFileListIndex);
+        selectedFileListItem = ui->LibraryList->selectedItems()[0]->data(Qt::UserRole).value<LibraryListItem>();
+        on_PlayBtn_clicked();
+    }
+}
+
+void MainWindow::skipBack()
+{
+    --selectedFileListIndex;
+    if(selectedFileListIndex >= 0)
+    {
+        ui->LibraryList->setCurrentRow(selectedFileListIndex);
+        selectedFileListItem = ui->LibraryList->selectedItems()[0]->data(Qt::UserRole).value<LibraryListItem>();
+        on_PlayBtn_clicked();
+    }
+}
+
 void MainWindow::media_double_click_event(QMouseEvent * event)
 {
     if ( event->button() == Qt::LeftButton )
@@ -719,47 +610,6 @@ void MainWindow::media_single_click_event(QMouseEvent * event)
 void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
 {
     deviceConnected = event.status == ConnectionStatus::Connected;
-    if(event.deviceType == DeviceType::Serial)
-    {
-        SettingsHandler::setSerialPort(ui->SerialOutputCmb->currentText());
-        ui->serialStatuslbl->setText(event.message);
-    }
-    else if (event.deviceType == DeviceType::Network)
-    {
-    }
-    if (event.status == ConnectionStatus::Error)
-        setDeviceStatusStyle(event.status, event.deviceType, event.message);
-    else
-        setDeviceStatusStyle(event.status, event.deviceType);
-}
-
-void MainWindow::setDeviceStatusStyle(ConnectionStatus status, DeviceType deviceType, QString message)
-{
-    QString statusUnicode = "\u2717";
-    QString statusColor = "red";
-    QFont font( "Sans Serif", 12);
-    if (status == ConnectionStatus::Connected)
-    {
-        statusUnicode = "\u2713";
-        statusColor = "green";
-    }
-    else if (status == ConnectionStatus::Connecting)
-    {
-        statusUnicode = "\u231B";
-        statusColor = "yellow";
-    }
-    if (deviceType == DeviceType::Serial)
-    {
-        ui->serialStatuslbl->setText(statusUnicode + " " + message);
-        ui->serialStatuslbl->setFont(font);
-        ui->serialStatuslbl->setStyleSheet("color: " + statusColor);
-    }
-    else if (deviceType == DeviceType::Network)
-    {
-        ui->networkStatuslbl->setText(statusUnicode + " " + message);
-        ui->networkStatuslbl->setFont(font);
-        ui->networkStatuslbl->setStyleSheet("color: " + statusColor);
-    }
 }
 
 void MainWindow::on_device_error(QString error)
@@ -777,91 +627,6 @@ QString MainWindow::second_to_minutes(int seconds)
     return (mn.length() == 1 ? "0" + mn : mn ) + ":" + (sc.length() == 1 ? "0" + sc : sc);
 }
 
-void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo)
-{
-    if(!serialHandler->isRunning())
-        serialHandler->init(serialInfo.portName);
-}
-
-void initNetwork(UdpHandler* udpHandler, NetworkAddress address)
-{
-    if(!udpHandler->isRunning())
-        udpHandler->init(address);
-}
-
-void MainWindow::initSerialEvent()
-{
-    if (selectedDevice->isRunning())
-    {
-        selectedDevice->dispose();
-    }
-    if(initFuture.isRunning())
-    {
-        initFuture.cancel();
-        initFuture.waitForFinished();
-    }
-    SettingsHandler::setSelectedDevice(DeviceType::Serial);
-    selectedDevice = serialHandler;
-    initFuture = QtConcurrent::run(initSerial, serialHandler, selectedSerialPort);
-}
-
-void MainWindow::initNetworkEvent()
-{
-    if (selectedDevice->isRunning())
-    {
-        selectedDevice->dispose();
-    }
-    if(initFuture.isRunning())
-    {
-        initFuture.cancel();
-        initFuture.waitForFinished();
-    }
-    SettingsHandler::setSelectedDevice(DeviceType::Network);
-    selectedDevice = udpHandler;
-    if(SettingsHandler::getServerAddress() != "" && SettingsHandler::getServerPort() != "")
-    {
-        NetworkAddress address { ui->networkAddressTxt->text(),  ui->networkPortTxt->text().toInt() };
-        initFuture = QtConcurrent::run(initNetwork, udpHandler, address);
-    }
-}
-
-void MainWindow::on_serialOutputRdo_clicked()
-{
-    ui->SerialOutputCmb->setEnabled(true);;
-    ui->networkAddressTxt->setEnabled(false);
-    ui->networkPortTxt->setEnabled(false);
-    initSerialEvent();
-}
-
-void MainWindow::on_networkOutputRdo_clicked()
-{
-    ui->SerialOutputCmb->setEnabled(false);
-    ui->networkAddressTxt->setEnabled(true);
-    ui->networkPortTxt->setEnabled(true);
-    initNetworkEvent();
-}
-
-void MainWindow::on_networkAddressTxt_editingFinished()
-{
-    SettingsHandler::setServerAddress(ui->networkAddressTxt->text());
-    on_networkOutputRdo_clicked();
-}
-
-void MainWindow::on_networkPortTxt_editingFinished()
-{
-    SettingsHandler::setServerPort(ui->networkPortTxt->text());
-    on_networkOutputRdo_clicked();
-}
-
-void MainWindow::on_SerialOutputCmb_currentIndexChanged(int index)
-{
-    SerialComboboxItem serialInfo = ui->SerialOutputCmb->currentData(Qt::UserRole).value<SerialComboboxItem>();
-    selectedSerialPort = serialInfo;
-    if (SettingsHandler::getSelectedDevice() == DeviceType::Serial)
-    {
-        on_serialOutputRdo_clicked();
-    }
-}
 
 void MainWindow::on_actionAbout_triggered()
 {
@@ -916,4 +681,10 @@ void MainWindow::on_actionAbout_triggered()
 void MainWindow::on_actionDonate_triggered()
 {
     QDesktopServices::openUrl(QUrl(QString::fromLatin1("https://www.patreon.com/Khrull")));
+}
+
+void MainWindow::on_actionSettings_triggered()
+{
+    _xSettings->setupUi();
+    _xSettings->exec();
 }

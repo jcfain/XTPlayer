@@ -3,7 +3,9 @@
 DeviceHandler::DeviceHandler(QObject *parent) :
     QThread(parent)
 {
+
 }
+
 DeviceHandler::~DeviceHandler()
 {
 }
