@@ -5,6 +5,7 @@
 #include <QDialog>
 #include <QtConcurrent/QtConcurrent>
 #include <QFuture>
+#include <QSpinBox>
 #include "CustomControls/RangeSlider.h"
 #include "lib/handler/settingshandler.h"
 #include "lib/struct/SerialComboboxItem.h"
@@ -70,6 +71,10 @@ private slots:
 
     void on_twistMultiplierSpinBox_valueChanged(double arg1);
 
+    void on_vibMultiplierSpinBox_valueChanged(double arg1);
+
+    void on_vibMultiplierCheckBox_clicked();
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();
@@ -86,15 +91,23 @@ private:
     UdpHandler* _udpHandler;
     QFuture<void> _initFuture;
     QLabel* xRangeLabel;
+    QLabel* xRangeMinLabel;
+    QLabel* xRangeMaxLabel;
     QLabel* yRollRangeLabel;
+    QLabel* yRollRangeMinLabel;
+    QLabel* yRollRangeMaxLabel;
     QLabel* xRollRangeLabel;
+    QLabel* xRollRangeMinLabel;
+    QLabel* xRollRangeMaxLabel;
     QLabel* twistRangeLabel;
+    QLabel* twistRangeMinLabel;
+    QLabel* twistRangeMaxLabel;
     QLabel* offSetLabel;
     RangeSlider* xRangeSlider;
     RangeSlider* yRollRangeSlider;
     RangeSlider* xRollRangeSlider;
     RangeSlider* twistRangeSlider;
-    RangeSlider* offSetSlider;
+    QSpinBox* offSetSpinBox;
 
     void setDeviceStatusStyle(ConnectionStatus status, DeviceType deviceType, QString message = "");
 };

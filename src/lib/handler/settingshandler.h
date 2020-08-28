@@ -27,7 +27,6 @@ public:
     static QString getServerPort();
     static int getPlayerVolume();
     static int getoffSet();
-    static int getoffSetMap();
     static int getXMin();
     static int getYRollMin();
     static int getXRollMin();
@@ -43,6 +42,8 @@ public:
     static float getXRollMultiplierValue();
     static bool getTwistMultiplierChecked();
     static float getTwistMultiplierValue();
+    static bool getVibMultiplierChecked();
+    static float getVibMultiplierValue();
 
     static void setSelectedLibrary(QString value);
     static void setSelectedFunscriptLibrary(QString value);
@@ -68,6 +69,8 @@ public:
     static void setXRollMultiplierValue(float value);
     static void setTwistMultiplierChecked(bool value);
     static void setTwistMultiplierValue(float value);
+    static void setVibMultiplierChecked(bool value);
+    static void setVibMultiplierValue(float value);
 
     static void Load();
     static void Save();
@@ -99,6 +102,8 @@ private:
     static float xRollMultiplierValue;
     static bool twistMultiplierChecked;
     static float twistMultiplierValue;
+    static bool vibMultiplierChecked;
+    static float vibMultiplierValue;
 
     static QSettings settings;
     static QMutex mutex;

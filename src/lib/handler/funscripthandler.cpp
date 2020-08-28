@@ -20,7 +20,7 @@ bool FunscriptHandler::load(QString funscriptString)
     QFile loadFile(funscriptString);
 
     lastActionIndex = -1;
-    nextActionIndex = 0;
+    nextActionIndex = 1;
     if (!loadFile.open(QIODevice::ReadOnly)) {
         qWarning("Couldn't open funscript file.");
         return false;
@@ -78,22 +78,22 @@ std::unique_ptr<FunscriptAction> FunscriptHandler::getPosition(qint64 millis)
 {
     QMutexLocker locker(&mutex);
     millis += SettingsHandler::getoffSet();
-    qint64 currentMillis = findClosest(millis, posList);
-    //lastActionIndex = posList.indexOf(currentMillis);
-    nextActionIndex = posList.indexOf(currentMillis) + 1;
+    qint64 closestMillis = findClosest(millis, posList);
+    nextActionIndex = posList.indexOf(closestMillis) + 1;
     qint64 nextMillis = posList[nextActionIndex];
-    if ((lastActionIndex != nextActionIndex) && millis >= currentMillis)
+    if ((lastActionIndex != nextActionIndex && millis >= closestMillis) || lastActionIndex == -1)
     {
-        nextMillis = lastActionIndex == -1 ? currentMillis : nextMillis;
-        int speed = lastActionIndex == -1 ? currentMillis : (nextMillis - currentMillis);
+        int speed = lastActionIndex == -1 ? closestMillis : nextMillis - closestMillis;
         //LogHandler::Debug("millis: "+ QString::number(millis));
-        //LogHandler::Debug("currentMillis: "+ QString::number(currentMillis));
+        //LogHandler::Debug("closestMillis: "+ QString::number(closestMillis));
         //LogHandler::Debug("speed: "+ QString::number(speed));
         //LogHandler::Debug("nextMillis: "+ QString::number(nextMillis));
         //LogHandler::Debug("lastActionIndex: "+ QString::number(lastActionIndex));
         //LogHandler::Debug("nextActionIndex: "+ QString::number(nextActionIndex));
-        std::unique_ptr<FunscriptAction> nextAction(new FunscriptAction { nextMillis, funscript->actions.value(nextMillis), speed } );
-        lastActionIndex = nextActionIndex;
+        //LogHandler::Debug("nextActionPos: "+ QString::number(funscript->actions.value(nextMillis)));
+        qint64 executionMillis = lastActionIndex == -1 ? closestMillis : nextMillis;
+        std::unique_ptr<FunscriptAction> nextAction(new FunscriptAction { executionMillis, funscript->actions.value(executionMillis), speed } );
+        lastActionIndex++;
         return nextAction;
     }
     return nullptr;

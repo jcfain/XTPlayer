@@ -30,7 +30,7 @@ SettingsDialog::~SettingsDialog()
     delete yRollRangeSlider;
     delete xRollRangeSlider;
     delete twistRangeSlider;
-    delete offSetSlider;
+    delete offSetSpinBox;
 
     _udpHandler->dispose();
     _serialHandler->dispose();
@@ -87,49 +87,107 @@ void SettingsDialog::setupUi()
 
         QFont font( "Sans Serif", 7);
 
+        xRangeMinLabel = new QLabel(QString::number(SettingsHandler::getXMin()));
+        xRangeMinLabel->setFont(font);
+        xRangeMinLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+        ui.RangeSettingsGrid->addWidget(xRangeMinLabel, 0,0);
         xRangeLabel = new QLabel("X Range");
         xRangeLabel->setFont(font);
-        ui.RangeSettingsGrid->addWidget(xRangeLabel, 0,0);
+        xRangeLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        ui.RangeSettingsGrid->addWidget(xRangeLabel, 0,1);
+        xRangeMaxLabel = new QLabel(QString::number(SettingsHandler::getXMax()));
+        xRangeMaxLabel->setFont(font);
+        xRangeMaxLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        ui.RangeSettingsGrid->addWidget(xRangeMaxLabel, 0,2);
         xRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
         xRangeSlider->SetRange(1, 999);
         xRangeSlider->setLowerValue(SettingsHandler::getXMin());
         xRangeSlider->setUpperValue(SettingsHandler::getXMax());
-        ui.RangeSettingsGrid->addWidget(xRangeSlider, 1,0);
+        ui.RangeSettingsGrid->addWidget(xRangeSlider, 1,0,1,3);
 
+        yRollRangeMinLabel = new QLabel(QString::number(SettingsHandler::getYRollMin()));
+        yRollRangeMinLabel->setFont(font);
+        yRollRangeMinLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+        ui.RangeSettingsGrid->addWidget(yRollRangeMinLabel, 2,0);
         yRollRangeLabel = new QLabel("Y Roll Range");
         yRollRangeLabel->setFont(font);
-        ui.RangeSettingsGrid->addWidget(yRollRangeLabel, 2,0);
+        yRollRangeLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        ui.RangeSettingsGrid->addWidget(yRollRangeLabel, 2,1);
+        yRollRangeMaxLabel = new QLabel(QString::number(SettingsHandler::getYRollMax()));
+        yRollRangeMaxLabel->setFont(font);
+        yRollRangeMaxLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        ui.RangeSettingsGrid->addWidget(yRollRangeMaxLabel, 2,2);
         yRollRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
         yRollRangeSlider->SetRange(1, 999);
         yRollRangeSlider->setLowerValue(SettingsHandler::getYRollMin());
         yRollRangeSlider->setUpperValue(SettingsHandler::getYRollMax());
-        ui.RangeSettingsGrid->addWidget(yRollRangeSlider, 3,0);
+        ui.RangeSettingsGrid->addWidget(yRollRangeSlider, 3,0,1,3);
 
+        xRollRangeMinLabel = new QLabel(QString::number(SettingsHandler::getXRollMin()));
+        xRollRangeMinLabel->setFont(font);
+        xRollRangeMinLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+        ui.RangeSettingsGrid->addWidget(xRollRangeMinLabel, 4,0);
         xRollRangeLabel = new QLabel("X Roll Range");
         xRollRangeLabel->setFont(font);
-        ui.RangeSettingsGrid->addWidget(xRollRangeLabel, 4,0);
+        xRollRangeLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        ui.RangeSettingsGrid->addWidget(xRollRangeLabel, 4,1);
+        xRollRangeMaxLabel = new QLabel(QString::number(SettingsHandler::getXRollMax()));
+        xRollRangeMaxLabel->setFont(font);
+        xRollRangeMaxLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        ui.RangeSettingsGrid->addWidget(xRollRangeMaxLabel, 4,2);
         xRollRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
         xRollRangeSlider->SetRange(1, 999);
         xRollRangeSlider->setLowerValue(SettingsHandler::getXRollMin());
         xRollRangeSlider->setUpperValue(SettingsHandler::getXRollMax());
-        ui.RangeSettingsGrid->addWidget(xRollRangeSlider, 5,0);
+        ui.RangeSettingsGrid->addWidget(xRollRangeSlider, 5,0,1,3);
 
+        twistRangeMinLabel = new QLabel(QString::number(SettingsHandler::getTwistMin()));
+        twistRangeMinLabel->setFont(font);
+        twistRangeMinLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+        ui.RangeSettingsGrid->addWidget(twistRangeMinLabel, 6,0);
         twistRangeLabel = new QLabel("Twist Range");
         twistRangeLabel->setFont(font);
-        ui.RangeSettingsGrid->addWidget(twistRangeLabel, 6,0);
+        twistRangeLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        ui.RangeSettingsGrid->addWidget(twistRangeLabel, 6,1);
+        twistRangeMaxLabel = new QLabel(QString::number(SettingsHandler::getTwistMin()));
+        twistRangeMaxLabel->setFont(font);
+        twistRangeMaxLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        ui.RangeSettingsGrid->addWidget(twistRangeMaxLabel, 6,2);
         twistRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
         twistRangeSlider->SetRange(1, 999);
         twistRangeSlider->setLowerValue(SettingsHandler::getTwistMin());
         twistRangeSlider->setUpperValue(SettingsHandler::getTwistMax());
-        ui.RangeSettingsGrid->addWidget(twistRangeSlider, 7,0);
+        ui.RangeSettingsGrid->addWidget(twistRangeSlider, 7,0,1,3);
 
-        offSetLabel = new QLabel("Offset: " + QString::number(SettingsHandler::getoffSet()));
+//        offSetLabel = new QLabel("Sync offset: " + QString::number(SettingsHandler::getoffSet()));
+//        offSetLabel->setFont(font);
+//        ui.RangeSettingsGrid->addWidget(offSetLabel, 8,0);
+//        offSetSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::RightHandle, nullptr);
+//        offSetSlider->SetRange(1, 2000);
+//        offSetSlider->setUpperValue(SettingsHandler::getoffSetMap());
+//        ui.RangeSettingsGrid->addWidget(offSetSlider, 9,0,1,3);
+
+        offSetLabel = new QLabel("Sync offset");
         offSetLabel->setFont(font);
-        ui.RangeSettingsGrid->addWidget(offSetLabel, 8,0);
-        offSetSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::RightHandle, nullptr);
-        offSetSlider->SetRange(1, 2000);
-        offSetSlider->setUpperValue(SettingsHandler::getoffSetMap());
-        ui.RangeSettingsGrid->addWidget(offSetSlider, 9,0);
+        offSetLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+        ui.RangeSettingsGrid->addWidget(offSetLabel, 8,1);
+        offSetSpinBox = new QSpinBox(this);
+        offSetSpinBox->setSuffix("ms");
+        offSetSpinBox->setSingleStep(1);
+        offSetSpinBox->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+        offSetSpinBox->setMinimum(std::numeric_limits<int>::lowest());
+        offSetSpinBox->setMaximum(std::numeric_limits<int>::max());
+        offSetSpinBox->setValue(SettingsHandler::getoffSet());
+        ui.RangeSettingsGrid->addWidget(offSetSpinBox, 9,1,1,1);
+
+        ui.vibMultiplierSpinBox->setMinimum(std::numeric_limits<int>::lowest());
+        ui.vibMultiplierSpinBox->setMaximum(std::numeric_limits<int>::max());
+        ui.xRollMultiplierSpinBox->setMinimum(std::numeric_limits<int>::lowest());
+        ui.xRollMultiplierSpinBox->setMaximum(std::numeric_limits<int>::max());
+        ui.yRollMultiplierSpinBox->setMinimum(std::numeric_limits<int>::lowest());
+        ui.yRollMultiplierSpinBox->setMaximum(std::numeric_limits<int>::max());
+        ui.twistMultiplierSpinBox->setMinimum(std::numeric_limits<int>::lowest());
+        ui.twistMultiplierSpinBox->setMaximum(std::numeric_limits<int>::max());
 
         connect(xRangeSlider, &RangeSlider::lowerValueChanged, this, &SettingsDialog::onXRange_valueChanged);
         connect(xRangeSlider, &RangeSlider::upperValueChanged, this, &SettingsDialog::onXRange_valueChanged);
@@ -139,7 +197,8 @@ void SettingsDialog::setupUi()
         connect(xRollRangeSlider, &RangeSlider::upperValueChanged, this, &SettingsDialog::onXRollRange_valueChanged);
         connect(twistRangeSlider, &RangeSlider::lowerValueChanged, this, &SettingsDialog::onTwistRange_valueChanged);
         connect(twistRangeSlider, &RangeSlider::upperValueChanged, this, &SettingsDialog::onTwistRange_valueChanged);
-        connect(offSetSlider, &RangeSlider::upperValueChanged, this, &SettingsDialog::onOffSet_valueChanged);
+        //connect(offSetSlider, &RangeSlider::upperValueChanged, this, &SettingsDialog::onOffSet_valueChanged);
+        connect(offSetSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onOffSet_valueChanged);
 
         if(SettingsHandler::getSelectedDevice() == DeviceType::Network)
         {
@@ -344,8 +403,7 @@ void SettingsDialog::onTwistRange_valueChanged(int value)
 
 void SettingsDialog::onOffSet_valueChanged(int value)
 {
-    SettingsHandler::setoffSet(offSetSlider->GetUpperValue());
-    offSetLabel->setText("Offset: " + QString::number(SettingsHandler::getoffSet()));
+    SettingsHandler::setoffSet(value);
 }
 
 
@@ -426,6 +484,16 @@ void SettingsDialog::on_twistMultiplierCheckBox_clicked()
 void SettingsDialog::on_twistMultiplierSpinBox_valueChanged(double value)
 {
     SettingsHandler::setTwistMultiplierValue(value);
+}
+
+void SettingsDialog::on_vibMultiplierSpinBox_valueChanged(double value)
+{
+    SettingsHandler::setVibMultiplierValue(value);
+}
+
+void SettingsDialog::on_vibMultiplierCheckBox_clicked()
+{
+    SettingsHandler::setVibMultiplierChecked(ui.vibMultiplierCheckBox->isChecked());
 }
 
 void SettingsDialog::on_buttonBox_clicked(QAbstractButton *button)

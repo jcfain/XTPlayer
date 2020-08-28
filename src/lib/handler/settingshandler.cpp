@@ -31,6 +31,8 @@ void SettingsHandler::Load()
     xRollMultiplierValue = settings.value("xRollMultiplierValue").toFloat();
     twistMultiplierChecked = settings.value("twistMultiplierChecked").toBool();
     twistMultiplierValue = settings.value("twistMultiplierValue").toFloat();
+    twistMultiplierChecked = settings.value("vibMultiplierChecked").toBool();
+    twistMultiplierValue = settings.value("vibMultiplierValue").toFloat();
 }
 
 void SettingsHandler::Save()
@@ -58,6 +60,8 @@ void SettingsHandler::Save()
     settings.setValue("xRollMultiplierValue", xRollMultiplierValue);
     settings.setValue("twistMultiplierChecked", twistMultiplierChecked);
     settings.setValue("twistMultiplierValue", twistMultiplierValue);
+    settings.setValue("vibMultiplierChecked", twistMultiplierChecked);
+    settings.setValue("vibMultiplierValue", twistMultiplierValue);
 
 }
 
@@ -66,6 +70,7 @@ void SettingsHandler::Default()
     QMutexLocker locker(&mutex);
     settings.setValue("selectedLibrary", QVariant::String);
     settings.setValue("playerVolume", 0);
+    settings.setValue("offSet", 0);
     settings.setValue("speed", 1000);
     settings.setValue("xMin", 1);
     settings.setValue("yRollMin", 1);
@@ -85,6 +90,8 @@ void SettingsHandler::Default()
     settings.setValue("xRollMultiplierValue", 0);
     settings.setValue("twistMultiplierChecked", false);
     settings.setValue("twistMultiplierValue", 0);
+    settings.setValue("vibMultiplierChecked", false);
+    settings.setValue("vibMultiplierValue", 0);
 }
 
 
@@ -123,10 +130,6 @@ int SettingsHandler::getPlayerVolume()
 int SettingsHandler::getoffSet()
 {
     return offSet;
-}
-int SettingsHandler::getoffSetMap()
-{
-    return XMath::mapRange(offSet, minOffSet, maxOffSet, minOffSetMap, maxOffSetMap);
 }
 int SettingsHandler::getXMin()
 {
@@ -184,6 +187,14 @@ float SettingsHandler::getTwistMultiplierValue()
 {
     return twistMultiplierValue;
 }
+bool SettingsHandler::getVibMultiplierChecked()
+{
+    return vibMultiplierChecked;
+}
+float SettingsHandler::getVibMultiplierValue()
+{
+    return vibMultiplierValue;
+}
 
 void SettingsHandler::setSelectedLibrary(QString value)
 {
@@ -228,8 +239,7 @@ void SettingsHandler::setPlayerVolume(int value)
 void SettingsHandler::setoffSet(int value)
 {
     QMutexLocker locker(&mutex);
-    int rangeValue = XMath::mapRange(value, minOffSetMap, maxOffSetMap, minOffSet, maxOffSet);
-    offSet = rangeValue;
+    offSet = value;
 }
 void SettingsHandler::setXMin(int value)
 {
@@ -302,6 +312,16 @@ void SettingsHandler::setTwistMultiplierValue(float value)
     QMutexLocker locker(&mutex);
     twistMultiplierValue = value;
 }
+void SettingsHandler::setVibMultiplierChecked(bool value)
+{
+    QMutexLocker locker(&mutex);
+    twistMultiplierChecked = value;
+}
+void SettingsHandler::setVibMultiplierValue(float value)
+{
+    QMutexLocker locker(&mutex);
+    twistMultiplierValue = value;
+}
 
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
 const QString SettingsHandler::XTPVersion = "0.1a";
@@ -332,6 +352,8 @@ bool SettingsHandler::xRollMultiplierChecked;
 float SettingsHandler::xRollMultiplierValue;
 bool SettingsHandler::twistMultiplierChecked;
 float SettingsHandler::twistMultiplierValue;
+bool SettingsHandler::vibMultiplierChecked;
+float SettingsHandler::vibMultiplierValue;
 QString SettingsHandler::selectedFunscriptLibrary;
 QString SettingsHandler::selectedFile;
 QString SettingsHandler::serialPort;

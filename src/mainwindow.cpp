@@ -437,6 +437,8 @@ void MainWindow::on_media_positionChanged(qint64 position)
 
 void MainWindow::on_media_start()
 {
+    ui->videoLoadingLabel->show();
+    movie->start();
     ui->SeekSlider->setDisabled(false);
     ui->StopBtn->setDisabled(false);
     ui->PauseBtn->setDisabled(false);
@@ -483,10 +485,6 @@ void MainWindow::on_media_stop()
     if(funscriptFuture.isRunning())
     {
         funscriptFuture.cancel();
-    }
-    if (_xSettings->getSelectedDeviceHandler()->isRunning())
-    {
-        _xSettings->getSelectedDeviceHandler()->dispose();
     }
 
 }
@@ -591,7 +589,7 @@ void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
     message += event.status;
     message += " " + event.message;
     connectionStatusLabel->setText(message);
-    if(event.status == ConnectionStatus::Error)
+    if(event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected)
     {
         retryConnectionButton->show();
     }

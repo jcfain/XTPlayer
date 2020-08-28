@@ -58,6 +58,19 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
           tcode += QString::number(speed);
         }
     }
+
+    if (SettingsHandler::getVibMultiplierChecked() && SettingsHandler::getVibMultiplierValue() !=0)
+    {
+        char tcodeVibValueString[4];
+        int vibValue = qRound(xValue * SettingsHandler::getVibMultiplierValue());
+        sprintf(tcodeVibValueString, "%03d", XMath::constrain(vibValue, 0, 1000));
+        tcode += " V0";
+        tcode += tcodeVibValueString;
+        if (speed != 0) {
+          tcode += "I";
+          tcode += QString::number(speed);
+        }
+    }
     return tcode;
 }
 
