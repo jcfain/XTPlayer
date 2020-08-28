@@ -39,6 +39,10 @@ public:
     void setOrientation(Qt::Orientation ori);
     void setOption(Options t = DoubleHandles);
     void setBackGroundEnabledColor(QColor color);
+    void setForgroundEnabledColor(QColor color);
+    void setBackGroundDisabledColor(QColor color);
+    void setForgroundDisabledColor(QColor color);
+    void updateColor();
 
 protected:
     void paintEvent(QPaintEvent* aEvent) override;
@@ -77,9 +81,15 @@ private:
     bool mSecondHandlePressed;
     int mInterval;
     int mDelta;
+
     QColor mBackgroudColorEnabled;
     QColor mBackgroudColorDisabled;
     QColor mBackgroudColor;
+
+    QColor mForgroundColorEnabled;
+    QColor mForgroundColorDisabled;
+    QColor mForgroundColor;
+
     Qt::Orientation orientation;
     Options type;
 };

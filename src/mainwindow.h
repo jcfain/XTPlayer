@@ -103,6 +103,8 @@ private:
     LibraryListItem selectedFileListItem;
     int selectedFileListIndex;
     bool deviceConnected;
+    QLabel* connectionStatusLabel;
+    QPushButton* retryConnectionButton;
     int voulumeBeforeMute;
 
     QList<QString> videos;

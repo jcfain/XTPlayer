@@ -21,6 +21,17 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
 }
 SettingsDialog::~SettingsDialog()
 {
+    delete xRangeLabel;
+    delete yRollRangeLabel;
+    delete xRollRangeLabel;
+    delete twistRangeLabel;
+    delete offSetLabel;
+    delete xRangeSlider;
+    delete yRollRangeSlider;
+    delete xRollRangeSlider;
+    delete twistRangeSlider;
+    delete offSetSlider;
+
     _udpHandler->dispose();
     _serialHandler->dispose();
     if(_initFuture.isRunning())
@@ -28,6 +39,8 @@ SettingsDialog::~SettingsDialog()
         _initFuture.cancel();
         _initFuture.waitForFinished();
     }
+    delete _serialHandler;
+    delete _udpHandler;
 }
 
 void SettingsDialog::init(VideoHandler* videoHandler)
@@ -41,6 +54,7 @@ void SettingsDialog::init(VideoHandler* videoHandler)
     {
         initNetworkEvent();
     }
+    setupUi();
 }
 
 void SettingsDialog::setupUi()
@@ -50,8 +64,8 @@ void SettingsDialog::setupUi()
     if (!_interfaceInitialized)
     {
         _interfaceInitialized = true;
-        setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceType::Serial);
-        setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceType::Network);
+        setDeviceStatusStyle(_connectionStatus, DeviceType::Serial);
+        setDeviceStatusStyle(_connectionStatus, DeviceType::Network);
         ui.SerialOutputCmb->setCurrentText(SettingsHandler::getSerialPort());
         ui.networkAddressTxt->setText(SettingsHandler::getServerAddress());
         ui.networkPortTxt->setText(SettingsHandler::getServerPort());
@@ -77,7 +91,6 @@ void SettingsDialog::setupUi()
         xRangeLabel->setFont(font);
         ui.RangeSettingsGrid->addWidget(xRangeLabel, 0,0);
         xRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
-        xRangeSlider->setBackGroundEnabledColor(QColorConstants::Red);
         xRangeSlider->SetRange(1, 999);
         xRangeSlider->setLowerValue(SettingsHandler::getXMin());
         xRangeSlider->setUpperValue(SettingsHandler::getXMax());
@@ -87,7 +100,6 @@ void SettingsDialog::setupUi()
         yRollRangeLabel->setFont(font);
         ui.RangeSettingsGrid->addWidget(yRollRangeLabel, 2,0);
         yRollRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
-        yRollRangeSlider->setBackGroundEnabledColor(QColorConstants::Red);
         yRollRangeSlider->SetRange(1, 999);
         yRollRangeSlider->setLowerValue(SettingsHandler::getYRollMin());
         yRollRangeSlider->setUpperValue(SettingsHandler::getYRollMax());
@@ -97,20 +109,27 @@ void SettingsDialog::setupUi()
         xRollRangeLabel->setFont(font);
         ui.RangeSettingsGrid->addWidget(xRollRangeLabel, 4,0);
         xRollRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
-        xRollRangeSlider->setBackGroundEnabledColor(QColorConstants::Red);
         xRollRangeSlider->SetRange(1, 999);
         xRollRangeSlider->setLowerValue(SettingsHandler::getXRollMin());
         xRollRangeSlider->setUpperValue(SettingsHandler::getXRollMax());
         ui.RangeSettingsGrid->addWidget(xRollRangeSlider, 5,0);
 
+        twistRangeLabel = new QLabel("Twist Range");
+        twistRangeLabel->setFont(font);
+        ui.RangeSettingsGrid->addWidget(twistRangeLabel, 6,0);
+        twistRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
+        twistRangeSlider->SetRange(1, 999);
+        twistRangeSlider->setLowerValue(SettingsHandler::getTwistMin());
+        twistRangeSlider->setUpperValue(SettingsHandler::getTwistMax());
+        ui.RangeSettingsGrid->addWidget(twistRangeSlider, 7,0);
+
         offSetLabel = new QLabel("Offset: " + QString::number(SettingsHandler::getoffSet()));
         offSetLabel->setFont(font);
-        ui.RangeSettingsGrid->addWidget(offSetLabel, 6,0);
+        ui.RangeSettingsGrid->addWidget(offSetLabel, 8,0);
         offSetSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::RightHandle, nullptr);
-        offSetSlider->setBackGroundEnabledColor(QColorConstants::Red);
         offSetSlider->SetRange(1, 2000);
         offSetSlider->setUpperValue(SettingsHandler::getoffSetMap());
-        ui.RangeSettingsGrid->addWidget(offSetSlider, 7,0);
+        ui.RangeSettingsGrid->addWidget(offSetSlider, 9,0);
 
         connect(xRangeSlider, &RangeSlider::lowerValueChanged, this, &SettingsDialog::onXRange_valueChanged);
         connect(xRangeSlider, &RangeSlider::upperValueChanged, this, &SettingsDialog::onXRange_valueChanged);
@@ -118,7 +137,9 @@ void SettingsDialog::setupUi()
         connect(yRollRangeSlider, &RangeSlider::upperValueChanged, this, &SettingsDialog::onYRollRange_valueChanged);
         connect(xRollRangeSlider, &RangeSlider::lowerValueChanged, this, &SettingsDialog::onXRollRange_valueChanged);
         connect(xRollRangeSlider, &RangeSlider::upperValueChanged, this, &SettingsDialog::onXRollRange_valueChanged);
-        connect(offSetSlider, &RangeSlider::lowerValueChanged, this, &SettingsDialog::onOffSet_valueChanged);
+        connect(twistRangeSlider, &RangeSlider::lowerValueChanged, this, &SettingsDialog::onTwistRange_valueChanged);
+        connect(twistRangeSlider, &RangeSlider::upperValueChanged, this, &SettingsDialog::onTwistRange_valueChanged);
+        connect(offSetSlider, &RangeSlider::upperValueChanged, this, &SettingsDialog::onOffSet_valueChanged);
 
         if(SettingsHandler::getSelectedDevice() == DeviceType::Network)
         {
@@ -138,7 +159,7 @@ SerialHandler* SettingsDialog::getSerialHandler()
 }
 bool SettingsDialog::isConnected()
 {
-    return _deviceConnected;
+    return _connectionStatus == ConnectionStatus::Connected;
 }
 void SettingsDialog::setSelectedDeviceHandler(DeviceHandler* device)
 {
@@ -150,6 +171,17 @@ DeviceHandler* SettingsDialog::getSelectedDeviceHandler()
     return selectedDeviceHandler;
 }
 
+void SettingsDialog::initDeviceRetry()
+{
+    if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
+    {
+        initSerialEvent();
+    }
+    else if (SettingsHandler::getSelectedDevice() == DeviceType::Network)
+    {
+        initNetworkEvent();
+    }
+}
 void SettingsDialog::initSerialEvent()
 {
     if (!_serialHandler->isRunning())
@@ -187,7 +219,7 @@ void SettingsDialog::initNetworkEvent()
         setSelectedDeviceHandler(_udpHandler);
         if(SettingsHandler::getServerAddress() != "" && SettingsHandler::getServerPort() != "")
         {
-            NetworkAddress address { ui.networkAddressTxt->text(),  ui.networkPortTxt->text().toInt() };
+            NetworkAddress address { SettingsHandler::getServerAddress(), SettingsHandler::getServerPort().toInt() };
             _initFuture = QtConcurrent::run(initNetwork, _udpHandler, address);
         }
     }
@@ -300,6 +332,16 @@ void SettingsDialog::onXRollRange_valueChanged(int value)
     }
 }
 
+void SettingsDialog::onTwistRange_valueChanged(int value)
+{
+    SettingsHandler::setTwistMin(xRollRangeSlider->GetLowerValue());
+    SettingsHandler::setTwistMax(xRollRangeSlider->GetUpperValue());
+    if (!_videoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
+    {
+        getSelectedDeviceHandler()->sendTCode("R0" + QString::number(value) + "S1000");
+    }
+}
+
 void SettingsDialog::onOffSet_valueChanged(int value)
 {
     SettingsHandler::setoffSet(offSetSlider->GetUpperValue());
@@ -309,7 +351,7 @@ void SettingsDialog::onOffSet_valueChanged(int value)
 
 void SettingsDialog::on_device_connectionChanged(ConnectionChangedSignal event)
 {
-    _deviceConnected = event.status == ConnectionStatus::Connected;
+    _connectionStatus = event.status;
     if(event.deviceType == DeviceType::Serial)
     {
         SettingsHandler::setSerialPort(ui.SerialOutputCmb->currentText());
@@ -319,9 +361,14 @@ void SettingsDialog::on_device_connectionChanged(ConnectionChangedSignal event)
     {
     }
     if (event.status == ConnectionStatus::Error)
+    {
         setDeviceStatusStyle(event.status, event.deviceType, event.message);
+        getSelectedDeviceHandler()->dispose();
+    }
     else
+    {
         setDeviceStatusStyle(event.status, event.deviceType);
+    }
     emit deviceConnectionChange({event.deviceType, event.status, event.message});
 }
 

@@ -19,9 +19,12 @@ RangeSlider::RangeSlider(QWidget* aParent)
       mFirstHandlePressed(false),
       mSecondHandlePressed(false),
       mInterval(mMaximum - mMinimum),
-      mBackgroudColorEnabled(QColor(0x1E, 0x90, 0xFF)),
-      mBackgroudColorDisabled(Qt::darkGray),
+      mBackgroudColorEnabled(QColorConstants::White),
+      mBackgroudColorDisabled(QColorConstants::LightGray),
       mBackgroudColor(mBackgroudColorEnabled),
+      mForgroundColorEnabled(QColorConstants::Black),
+      mForgroundColorDisabled(QColorConstants::LightGray),
+      mForgroundColor(mForgroundColorEnabled),
       orientation(Qt::Horizontal)
 {
     setMouseTracking(true);
@@ -36,9 +39,12 @@ RangeSlider::RangeSlider(Qt::Orientation ori, Options t, QWidget* aParent)
       mFirstHandlePressed(false),
       mSecondHandlePressed(false),
       mInterval(mMaximum - mMinimum),
-      mBackgroudColorEnabled(QColor(0x1E, 0x90, 0xFF)),
-      mBackgroudColorDisabled(Qt::darkGray),
+      mBackgroudColorEnabled(QColorConstants::White),
+      mBackgroudColorDisabled(QColorConstants::LightGray),
       mBackgroudColor(mBackgroudColorEnabled),
+      mForgroundColorEnabled(QColorConstants::Black),
+      mForgroundColorDisabled(QColorConstants::LightGray),
+      mForgroundColor(mForgroundColorEnabled),
       orientation(ori),
       type(t)
 {
@@ -60,7 +66,7 @@ void RangeSlider::paintEvent(QPaintEvent* aEvent)
     QPen pen(Qt::gray, 0.8);
     painter.setPen(pen);
     painter.setRenderHint(QPainter::Qt4CompatiblePainting);
-    QBrush backgroundBrush(isEnabled() ? QColor(0xF8, 0xF8, 0xFF) : QColorConstants::LightGray);
+    QBrush backgroundBrush(mBackgroudColor);
     painter.setBrush(backgroundBrush);
     painter.drawRoundedRect(backgroundRect, 1, 1);
 
@@ -69,16 +75,16 @@ void RangeSlider::paintEvent(QPaintEvent* aEvent)
     pen.setWidth(0.5);
     painter.setPen(pen);
     painter.setRenderHint(QPainter::Antialiasing);
-    QBrush handleBrush(isEnabled() ? QColor(0xFA, 0xFA, 0xFA) : QColorConstants::LightGray);
+    QBrush handleBrush(mBackgroudColor);
     painter.setBrush(handleBrush);
     QRectF leftHandleRect = firstHandleRect();
     if(type.testFlag(LeftHandle))
-        painter.drawRoundedRect(leftHandleRect, 2, 2);
+        painter.drawRoundedRect(leftHandleRect, 4, 4);
 
     // Second value handle rect
     QRectF rightHandleRect = secondHandleRect();
     if(type.testFlag(RightHandle))
-        painter.drawRoundedRect(rightHandleRect, 2, 2);
+        painter.drawRoundedRect(rightHandleRect, 4, 4);
 
     // Handles
     painter.setRenderHint(QPainter::Antialiasing, false);
@@ -90,7 +96,7 @@ void RangeSlider::paintEvent(QPaintEvent* aEvent)
         selectedRect.setTop((type.testFlag(LeftHandle) ? leftHandleRect.bottom() : leftHandleRect.top()) + 0.5);
         selectedRect.setBottom((type.testFlag(RightHandle) ? rightHandleRect.top() : rightHandleRect.bottom()) - 0.5);
     }
-    QBrush selectedBrush(mBackgroudColor);
+    QBrush selectedBrush(mForgroundColor);
     painter.setBrush(selectedBrush);
     painter.drawRect(selectedRect);
 }
@@ -223,15 +229,7 @@ void RangeSlider::changeEvent(QEvent* aEvent)
 {
     if(aEvent->type() == QEvent::EnabledChange)
     {
-        if(isEnabled())
-        {
-            mBackgroudColor = mBackgroudColorEnabled;
-        }
-        else
-        {
-            mBackgroudColor = mBackgroudColorDisabled;
-        }
-        update();
+        updateColor();
     }
 }
 
@@ -383,13 +381,37 @@ void RangeSlider::setOption(Options t)
 void RangeSlider::setBackGroundEnabledColor(QColor color)
 {
     mBackgroudColorEnabled = color;
-    if(isEnabled())
-    {
-        mBackgroudColor = mBackgroudColorEnabled;
-    }
-    else
-    {
-        mBackgroudColor = mBackgroudColorDisabled;
-    }
-    update();
+    updateColor();
 }
+
+void RangeSlider::setForgroundEnabledColor(QColor color)
+{
+    mForgroundColorEnabled = color;
+    updateColor();
+}
+
+void RangeSlider::setBackGroundDisabledColor(QColor color)
+{
+    mBackgroudColorDisabled = color;
+    updateColor();
+}
+void RangeSlider::setForgroundDisabledColor(QColor color)
+{
+    mForgroundColorDisabled = color;
+    updateColor();
+}
+
+ void RangeSlider::updateColor()
+ {
+     if(isEnabled())
+     {
+         mBackgroudColor = mBackgroudColorEnabled;
+         mForgroundColor = mForgroundColorEnabled;
+     }
+     else
+     {
+         mBackgroudColor = mBackgroudColorDisabled;
+         mForgroundColor = mForgroundColorDisabled;
+     }
+     update();
+ }

@@ -29,6 +29,7 @@ public:
     void setSelectedDeviceHandler(DeviceHandler* device);
     DeviceHandler* getSelectedDeviceHandler();
     bool isConnected();
+    void initDeviceRetry();
 
 signals:
     void deviceError(QString error);
@@ -44,6 +45,7 @@ private slots:
     void onXRange_valueChanged(int value);
     void onYRollRange_valueChanged(int value);
     void onXRollRange_valueChanged(int value);
+    void onTwistRange_valueChanged(int value);
     void onOffSet_valueChanged(int value);
     void on_device_connectionChanged(ConnectionChangedSignal event);
     void on_device_error(QString error);
@@ -75,7 +77,7 @@ private:
     void initNetworkEvent();
 
     bool _interfaceInitialized;
-    bool _deviceConnected = false;
+    ConnectionStatus _connectionStatus = ConnectionStatus::Disconnected;
     QList<SerialComboboxItem> serialPorts;
     SerialComboboxItem selectedSerialPort;
     DeviceHandler* selectedDeviceHandler;
@@ -86,12 +88,12 @@ private:
     QLabel* xRangeLabel;
     QLabel* yRollRangeLabel;
     QLabel* xRollRangeLabel;
+    QLabel* twistRangeLabel;
     QLabel* offSetLabel;
-    RangeSlider* volumeSlider;
-    RangeSlider* seekSlider;
     RangeSlider* xRangeSlider;
     RangeSlider* yRollRangeSlider;
     RangeSlider* xRollRangeSlider;
+    RangeSlider* twistRangeSlider;
     RangeSlider* offSetSlider;
 
     void setDeviceStatusStyle(ConnectionStatus status, DeviceType deviceType, QString message = "");

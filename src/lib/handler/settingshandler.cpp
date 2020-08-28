@@ -19,6 +19,8 @@ void SettingsHandler::Load()
     xMax = settings.value("xMax").toInt();
     yRollMax = settings.value("yRollMax").toInt();
     xRollMax = settings.value("xRollMax").toInt();
+    twistMax = settings.value("twistMax").toInt();
+    twistMin = settings.value("twistMin").toInt();
     selectedFunscriptLibrary = settings.value("selectedFunscriptLibrary").toString();
     serialPort = settings.value("serialPort").toString();
     serverAddress = settings.value("serverAddress").toString();
@@ -44,6 +46,8 @@ void SettingsHandler::Save()
     settings.setValue("yRollMax", yRollMax == 0 ? 999 : yRollMax );
     settings.setValue("xRollMin", xRollMin );
     settings.setValue("xRollMax", xRollMax == 0 ? 999 : xRollMax );
+    settings.setValue("twistMin", twistMin );
+    settings.setValue("twistMax", twistMax == 0 ? 999 : twistMax );
     settings.setValue("selectedFunscriptLibrary", selectedFunscriptLibrary);
     settings.setValue("serialPort", serialPort);
     settings.setValue("serverAddress", serverAddress);
@@ -69,6 +73,8 @@ void SettingsHandler::Default()
     settings.setValue("xMax", 999);
     settings.setValue("yRollMax", 999);
     settings.setValue("xRollMax", 999);
+    settings.setValue("twistMax", 999);
+    settings.setValue("twistMin", 1);
     settings.setValue("selectedFunscriptLibrary", QVariant::String);
     settings.setValue("serialPort", QVariant::String);
     settings.setValue("serverAddress", QVariant::String);
@@ -145,6 +151,14 @@ int SettingsHandler::getYRollMax()
 int SettingsHandler::getXRollMax()
 {
     return xRollMax;
+}
+int SettingsHandler::getTwistMax()
+{
+    return twistMax;
+}
+int SettingsHandler::getTwistMin()
+{
+    return twistMin;
 }
 bool SettingsHandler::getYRollMultiplierChecked()
 {
@@ -247,6 +261,16 @@ void SettingsHandler::setXRollMax(int value)
     QMutexLocker locker(&mutex);
     xRollMax = value;
 }
+void SettingsHandler::setTwistMax(int value)
+{
+    QMutexLocker locker(&mutex);
+    twistMax = value;
+}
+void SettingsHandler::setTwistMin(int value)
+{
+    QMutexLocker locker(&mutex);
+    twistMin = value;
+}
 
 void SettingsHandler::setYRollMultiplierChecked(bool value)
 {
@@ -300,6 +324,8 @@ int SettingsHandler::xRollMin;
 int SettingsHandler::xMax;
 int SettingsHandler::yRollMax;
 int SettingsHandler::xRollMax;
+int SettingsHandler::twistMin;
+int SettingsHandler::twistMax;
 bool SettingsHandler::yRollMultiplierChecked;
 float SettingsHandler::yRollMultiplierValue;
 bool SettingsHandler::xRollMultiplierChecked;

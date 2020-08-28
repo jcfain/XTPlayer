@@ -7,64 +7,19 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    setStyleSheet("QMainWindow, QDialog {"
-                  "background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1.5, stop: 0 black, stop: 1 darkred); "
-                  "color: white; "
-                  "}"
-                  "QLabel {"
-                  "background-color: transparent; "
-                  "color: white; "
-                  "}"
-                  "QListWidget {"
-                  "background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1.5, stop: 0 black, stop: 1 darkred); "
-                  "color: white; "
-                  "}"
-                  "QMenuBar {"
-                  "background-color: black; "
-                  "color: white; "
-                  "}"
-                  "QMenu {"
-                  "background-color: black; "
-                  "color: white; "
-                  "}"
-                  "QMenu:hover:!pressed {"
-                  "background-color: darkred; "
-                  "color: white; "
-                  "}"
-                  "QAction:hover:!pressed {"
-                  "background-color: darkred; "
-                  "color: white; "
-                  "}"
-                  "QRadioButton, QCheckBox, QGroupBox {"
-                  "background-color: transparent; "
-                  "color: white; "
-                  "}"
-                  "QScrollBar:handle:vertical {"
-                  "background-color: #4f0000; "
-                  "}"
-                  "QScrollBar:horizontal {"
-                  "background-color: black; "
-                  "}"
-                  "QScrollBar:handle:horizontal {"
-                  "background-color: #3e0000; "
-                  "}"
-                  "QScrollBar:vertical {"
-                  "background-color: black; "
-                  "}"
-                  "QPushButton { "
-                    "background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 black, stop: 1 grey); "
-                    "color: red; "
-                    "}; ");
-//                   "QPushButton:pressed { "
-//                      "background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 red, stop: 1 black); "
-//                      "border-style: inset; "
-//                    "}; ");
 
-//    QFile file(":/qss/default.qss");
-//    file.open(QFile::ReadOnly);
-//    QString styleSheet = QLatin1String(file.readAll());
+    QFile file(QApplication::applicationDirPath() + "/themes/default.qss");
+    file.open(QFile::ReadOnly);
+    QString styleSheet = QLatin1String(file.readAll());
+    setStyleSheet(styleSheet);
 
     SettingsHandler::Load();
+    connectionStatusLabel = new QLabel(this);
+    retryConnectionButton = new QPushButton(this);
+    retryConnectionButton->hide();
+    retryConnectionButton->setText("Retry");
+    ui->statusbar->addPermanentWidget(connectionStatusLabel);
+    ui->statusbar->addPermanentWidget(retryConnectionButton);
 
     videoHandler = new VideoHandler(this);
     ui->MediaGrid->addWidget(videoHandler);
@@ -76,7 +31,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->SeekSlider->SetRange(0, 100);
     ui->SeekSlider->setOption(RangeSlider::Option::RightHandle);
     ui->SeekSlider->setUpperValue(0);
-    ui->SeekSlider->setBackGroundEnabledColor(QColorConstants::Red);
 
     on_load_library(SettingsHandler::getSelectedLibrary());
 
@@ -84,7 +38,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->VolumeSlider->SetRange(0, 30);
     ui->VolumeSlider->setOption(RangeSlider::Option::RightHandle);
     ui->VolumeSlider->setUpperValue(SettingsHandler::getPlayerVolume());
-    ui->VolumeSlider->setBackGroundEnabledColor(QColorConstants::Red);
     setVolumeIcon(SettingsHandler::getPlayerVolume());
 
 
@@ -108,6 +61,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(_xSettings, &SettingsDialog::deviceConnectionChange, this, &MainWindow::on_device_connectionChanged);
     connect(_xSettings, &SettingsDialog::deviceError, this, &MainWindow::on_device_error);
 
+    connect(retryConnectionButton, &QPushButton::clicked, _xSettings, &SettingsDialog::initDeviceRetry);
+
 }
 
 MainWindow::~MainWindow()
@@ -116,6 +71,8 @@ MainWindow::~MainWindow()
     delete ui;
     delete videoHandler;
     delete _xSettings;
+    delete connectionStatusLabel;
+    delete retryConnectionButton;
     if(funscriptFuture.isRunning())
     {
         funscriptFuture.cancel();
@@ -616,6 +573,26 @@ void MainWindow::media_single_click_event(QMouseEvent * event)
 void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
 {
     deviceConnected = event.status == ConnectionStatus::Connected;
+    QString message = "";
+    if (event.deviceType == DeviceType::Serial)
+    {
+        message += "Serial: ";
+    }
+    else if(event.deviceType == DeviceType::Network)
+    {
+        message += "Network: ";
+    }
+    message += event.status;
+    message += " " + event.message;
+    connectionStatusLabel->setText(message);
+    if(event.status == ConnectionStatus::Error)
+    {
+        retryConnectionButton->show();
+    }
+    else
+    {
+        retryConnectionButton->hide();
+    }
 }
 
 void MainWindow::on_device_error(QString error)
@@ -698,6 +675,5 @@ void MainWindow::on_actionDonate_triggered()
 
 void MainWindow::on_actionSettings_triggered()
 {
-    _xSettings->setupUi();
     _xSettings->exec();
 }

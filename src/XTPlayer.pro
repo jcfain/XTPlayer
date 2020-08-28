@@ -76,8 +76,17 @@ unix:mac {
     QMAKE_LFLAGS += -F$$QT.core.libs
     LIBS += -framework QtAV
 }
+unix {
+    DESTDIR = $$shell_path($$OUT_PWD)
+}
 win32{
     LIBS += -L$$QT.core.libs -lQtAV1
+    build_pass: CONFIG(debug, debug|release) {
+        DESTDIR = $$shell_path($$OUT_PWD/debug)
+    }
+    else: build_pass {
+        DESTDIR = $$shell_path($$OUT_PWD/release)
+    }
 }
 
 #mkspecs_features.files    = $$PWD/qss/default.qss
@@ -91,13 +100,27 @@ win32{
 #export(copydata.commands)
 #QMAKE_EXTRA_TARGETS += first copydata
 
+copydata.commands = $(COPY_DIR) $$shell_path($$PWD/themes) $$shell_path($$DESTDIR/themes)
+first.depends = $(first) copydata
+export(first.depends)
+export(copydata.commands)
+QMAKE_EXTRA_TARGETS += first copydata
+
+#QMAKE_EXTRA_TARGETS += foo bar
+#foo.target = $$shell_path($$DESTDIR/themes)
+#foo.commands = $(MKDIR) $$shell_path($$DESTDIR/themes)
+#bar.target = $$OUT_PWD/newFolder/file
+#bar.commands = $(COPY_DIR) $$shell_path($$PWD/themes/default.qss)
+#bar.depends = foo
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 DISTFILES += \
-    qss/default.qss
+    qss/default.qss \
+    themes/default.qss
 
 RESOURCES += \
     icons.qrc

@@ -34,6 +34,8 @@ public:
     static int getXMax();
     static int getYRollMax();
     static int getXRollMax();
+    static int getTwistMax();
+    static int getTwistMin();
 
     static bool getYRollMultiplierChecked();
     static float getYRollMultiplierValue();
@@ -57,6 +59,8 @@ public:
     static void setXMax(int value);
     static void setYRollMax(int value);
     static void setXRollMax(int value);
+    static void setTwistMin(int value);
+    static void setTwistMax(int value);
 
     static void setYRollMultiplierChecked(bool value);
     static void setYRollMultiplierValue(float value);
@@ -87,6 +91,8 @@ private:
     static int xMax;
     static int yRollMax;
     static int xRollMax;
+    static int twistMax;
+    static int twistMin;
     static bool yRollMultiplierChecked;
     static float yRollMultiplierValue;
     static bool xRollMultiplierChecked;
