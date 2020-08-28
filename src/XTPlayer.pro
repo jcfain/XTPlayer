@@ -87,6 +87,7 @@ win32{
     else: build_pass {
         DESTDIR = $$shell_path($$OUT_PWD/release)
     }
+    RC_FILE = XTPlayer.rc
 }
 
 #mkspecs_features.files    = $$PWD/qss/default.qss

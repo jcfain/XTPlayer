@@ -26,6 +26,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     _xSettings = new SettingsDialog(this);
     _xSettings->init(videoHandler);
+    ui->videoLoadingLabel->hide();
+    movie = new QMovie(QApplication::applicationDirPath() + "/themes/loading.gif");
+    ui->videoLoadingLabel->setMovie(movie);
 
     ui->SeekSlider->setDisabled(true);
     ui->SeekSlider->SetRange(0, 100);
@@ -511,19 +514,22 @@ void MainWindow::on_media_statusChanged(MediaStatus status)
         //status = tr("Invalid meida");
         break;
     case BufferingMedia:
-        //status = tr("Buffering...");
+        ui->videoLoadingLabel->show();
+        movie->start();
         break;
     case BufferedMedia:
-        //status = tr("Buffered");
+        ui->videoLoadingLabel->hide();
+        movie->stop();
         break;
     case LoadingMedia:
-        //status = tr("Loading...");
+
         break;
     case LoadedMedia:
-        //status = tr("Loaded");
+
         break;
     case StalledMedia:
-        //status = tr("Stalled");
+        ui->videoLoadingLabel->hide();
+        movie->stop();
         break;
     default:
         //status = QString();

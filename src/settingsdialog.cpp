@@ -355,7 +355,6 @@ void SettingsDialog::on_device_connectionChanged(ConnectionChangedSignal event)
     if(event.deviceType == DeviceType::Serial)
     {
         SettingsHandler::setSerialPort(ui.SerialOutputCmb->currentText());
-        ui.serialStatuslbl->setText(event.message);
     }
     else if (event.deviceType == DeviceType::Network)
     {

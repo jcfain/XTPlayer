@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>images/gif/loading.gif</file>
         <file>images/icons/fullscreen.svg</file>
         <file>images/icons/pause.svg</file>
         <file>images/icons/play.svg</file>

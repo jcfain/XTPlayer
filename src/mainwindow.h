@@ -18,6 +18,7 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QFuture>
 #include <QScreen>
+#include <QMovie>
 #include "settingsdialog.h"
 #include "lib/handler/videohandler.h"
 #include "CustomControls/RangeSlider.h"
@@ -100,6 +101,7 @@ private:
     QSize videoSize;
     QSize appSize;
     QPoint appPos;
+    QMovie* movie;
     LibraryListItem selectedFileListItem;
     int selectedFileListIndex;
     bool deviceConnected;
