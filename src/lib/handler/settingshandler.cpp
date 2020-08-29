@@ -6,9 +6,17 @@ SettingsHandler::SettingsHandler()
 SettingsHandler::~SettingsHandler()
 {
 }
+bool resetRequired = false;
 void SettingsHandler::Load()
 {
     QMutexLocker locker(&mutex);
+    float currentVersion = settings.value("version").toFloat();
+    if (currentVersion == 0 || (currentVersion < XTPVersionNum && resetRequired))
+    {
+        locker.unlock();
+        Default();
+    }
+    locker.relock();
     selectedLibrary = settings.value("selectedLibrary").toString();
     selectedDevice = settings.value("selectedDevice").toInt();
     playerVolume = settings.value("playerVolume").toInt();
@@ -38,6 +46,7 @@ void SettingsHandler::Load()
 void SettingsHandler::Save()
 {
     QMutexLocker locker(&mutex);
+    settings.setValue("version", XTPVersionNum);
     settings.setValue("selectedLibrary", selectedLibrary);
     settings.setValue("selectedDevice", selectedDevice);
     settings.setValue("playerVolume", playerVolume);
@@ -324,7 +333,7 @@ void SettingsHandler::setVibMultiplierValue(float value)
 }
 
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.1a";
+const QString SettingsHandler::XTPVersion = "0.1b";
 const float SettingsHandler::XTPVersionNum = 0.1f;
 
 const int SettingsHandler::minOffSetMap = 1;

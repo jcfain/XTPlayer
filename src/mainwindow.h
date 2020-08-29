@@ -105,6 +105,7 @@ private:
     LibraryListItem selectedFileListItem;
     int selectedFileListIndex;
     bool deviceConnected;
+    bool _funscriptLoaded;
     QLabel* connectionStatusLabel;
     QPushButton* retryConnectionButton;
     int voulumeBeforeMute;

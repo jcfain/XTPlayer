@@ -1,22 +1,22 @@
 
 QMainWindow, QDialog {
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1.5, stop: 0 black, stop: 1 silver);
-    color: white;
+    background-image: url(./themes/sky.jpg) no-repeat center fixed;
+    color: black;
 }
 QLabel {
     background-color: transparent;
     color: white;
 }
 QListWidget {
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1.5, stop: 0 black, stop: 1 silver);
+    background-color: transparent;
     color: white;
 }
 QMenuBar {
-    background-color: black;
+    background-color: transparent;
     color: white;
 }
 QMenu {
-    background-color: black;
+    background-color: transparent;
     color: white;
 }
 QMenu:hover:!pressed {
@@ -32,13 +32,13 @@ QRadioButton, QCheckBox, QGroupBox {
     color: white;
 }
 QScrollBar:handle:vertical {
-    background-color: grey;
+    background-color: #a15f59;
 }
 QScrollBar:horizontal {
     background-color: black;
 }
 QScrollBar:handle:horizontal {
-    background-color: grey;
+    background-color: #a15f59;
 }
 QScrollBar:vertical {
     background-color: black;

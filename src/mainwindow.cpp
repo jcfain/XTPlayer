@@ -71,16 +71,16 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     SettingsHandler::Save();
-    delete ui;
-    delete videoHandler;
-    delete _xSettings;
-    delete connectionStatusLabel;
-    delete retryConnectionButton;
     if(funscriptFuture.isRunning())
     {
         funscriptFuture.cancel();
         funscriptFuture.waitForFinished();
     }
+    delete ui;
+    delete videoHandler;
+    delete _xSettings;
+    delete connectionStatusLabel;
+    delete retryConnectionButton;
 }
 
 void MainWindow::on_key_press(QKeyEvent * event)
@@ -273,14 +273,14 @@ void MainWindow::playFile(LibraryListItem selectedFileListItem, QString customSc
         videoHandler->setFile(selectedFileListItem.path);
         videoHandler->load();
         QString scriptFile = customScript == nullptr ? selectedFileListItem.script : customScript;
-        bool funscriptLoaded = funscriptHandler->load(scriptFile);
+        _funscriptLoaded = funscriptHandler->load(scriptFile);
         SettingsHandler::setSelectedFile(selectedFileListItem.path);
         //QUrl url = QUrl::fromLocalFile(selectedFileListItem.path);
         videoHandler->play();
         selectedFileListIndex = ui->LibraryList->currentRow();
-        if(!funscriptLoaded)
+        if(!_funscriptLoaded)
         {
-            LogHandler::Dialog("Error loading script " + customScript + "!", XLogLevel::Warning);
+            LogHandler::Dialog("Error loading script " + customScript + "!\nTry right clicking on the video in the list\nand loading with another script.", XLogLevel::Warning);
 
         }
     }
@@ -297,15 +297,16 @@ void MainWindow::togglePause()
 
 void MainWindow::toggleFullScreen()
 {
-    if(videoHandler->isPlaying()) {
-        //toggleUI();
+    if(videoHandler->isPlaying())
+    {
         QScreen *screen = QGuiApplication::primaryScreen();
         QSize screenSize = screen->size();
-        if(!QMainWindow::isFullScreen()) {
+        if(!QMainWindow::isFullScreen())
+        {
             videoSize = videoHandler->size();
             appSize = size();
             appPos = pos();
-            setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+            QMainWindow::setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
             videoHandler->move(QPoint(0, 0));
             ui->MainFrame->layout()->removeWidget(videoHandler);
             ui->menubar->hide();
@@ -318,10 +319,11 @@ void MainWindow::toggleFullScreen()
         }
         else
         {
-            setWindowFlags(Qt::Window);
+            QMainWindow::setWindowFlags(Qt::Window);
             QMainWindow::showNormal();
             QMainWindow::resize(appSize);
             QMainWindow::move(appPos);
+            ui->menubar->show();
             QMainWindow::layout()->removeWidget(videoHandler);
             ui->MediaGrid->addWidget(videoHandler);
             videoHandler->layout()->setMargin(9);
@@ -442,13 +444,17 @@ void MainWindow::on_media_start()
     ui->SeekSlider->setDisabled(false);
     ui->StopBtn->setDisabled(false);
     ui->PauseBtn->setDisabled(false);
+    ui->PauseBtn->setChecked(false);
     ui->fullScreenBtn->setDisabled(false);
     if(funscriptFuture.isRunning())
     {
         funscriptFuture.cancel();
         funscriptFuture.waitForFinished();
     }
-    funscriptFuture = QtConcurrent::run(syncFunscript, videoHandler, _xSettings, tcodeHandler, funscriptHandler);
+    if (_funscriptLoaded)
+    {
+        funscriptFuture = QtConcurrent::run(syncFunscript, videoHandler, _xSettings, tcodeHandler, funscriptHandler);
+    }
 }
 
 void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler)
@@ -474,11 +480,13 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
 
 void MainWindow::on_media_stop()
 {
+    ui->videoLoadingLabel->hide();
+    movie->stop();
     ui->SeekSlider->setUpperValue(0);
-    qDebug(">>>>>>>>>>>>>>disable slider");
     ui->SeekSlider->setDisabled(true);
     ui->StopBtn->setDisabled(true);
     ui->PauseBtn->setDisabled(true);
+    ui->PauseBtn->setChecked(false);
     ui->fullScreenBtn->setDisabled(true);
     ui->lblCurrentDuration->setText("00:00:00");
 
@@ -520,14 +528,15 @@ void MainWindow::on_media_statusChanged(MediaStatus status)
         movie->stop();
         break;
     case LoadingMedia:
-
+        ui->videoLoadingLabel->show();
+        movie->start();
         break;
     case LoadedMedia:
-
-        break;
-    case StalledMedia:
         ui->videoLoadingLabel->hide();
         movie->stop();
+        break;
+    case StalledMedia:
+
         break;
     default:
         //status = QString();
@@ -624,6 +633,7 @@ void MainWindow::on_actionAbout_triggered()
     layout.setGeometry(windowRect);
     QLabel copyright;
     copyright.setText("<b>XTPlayer v"+SettingsHandler::XTPVersion + "</b><br>"
+                       + SettingsHandler::TCodeVersion + "<br>"
                                                                     "Copyright 2020 Jason C. Fain<br>"
                                                                     "Donate: <a href='https://www.patreon.com/Khrull'>https://www.patreon.com/Khrull</a>");
     copyright.setAlignment(Qt::AlignHCenter);
@@ -634,7 +644,7 @@ void MainWindow::on_actionAbout_triggered()
     layout.addWidget(&sources);
     QLabel qtInfo;
     qtInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    qtInfo.setText("<b>Qt 1.15.0<br>"
+    qtInfo.setText("<b>Qt 1.15.0</b><br>"
                    "Distributed under the terms of LGPLv3 or later.<br>"
                    "Source: <a href='https://github.com/qt/qt5/releases/tag/v5.15.0'>https://github.com/qt/qt5/releases/tag/v5.15.0</a>");
     qtInfo.setAlignment(Qt::AlignHCenter);
@@ -650,7 +660,7 @@ void MainWindow::on_actionAbout_triggered()
                      "Email: <a href='mailto:wbsecg1@gmail.com'>wbsecg1@gmail.com</a><br>"
                      "Donate: <a href='http://qtav.org/donate.html'>http://qtav.org/donate.html</a><br>"
                      "Source: <a href='https://github.com/wang-bin/QtAV'>https://github.com/wang-bin/QtAV</a><br>"
-                     "Home page: <a href='http://qtav.org'>href='http://qtav.org</a>");
+                     "Home page: <a href='http://qtav.org'>http://qtav.org</a>");
     qtAVInfo.setAlignment(Qt::AlignHCenter);
     layout.addWidget(&qtAVInfo);
     QLabel libAVInfo;

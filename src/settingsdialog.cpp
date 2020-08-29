@@ -21,17 +21,6 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
 }
 SettingsDialog::~SettingsDialog()
 {
-    delete xRangeLabel;
-    delete yRollRangeLabel;
-    delete xRollRangeLabel;
-    delete twistRangeLabel;
-    delete offSetLabel;
-    delete xRangeSlider;
-    delete yRollRangeSlider;
-    delete xRollRangeSlider;
-    delete twistRangeSlider;
-    delete offSetSpinBox;
-
     _udpHandler->dispose();
     _serialHandler->dispose();
     if(_initFuture.isRunning())
@@ -46,6 +35,7 @@ SettingsDialog::~SettingsDialog()
 void SettingsDialog::init(VideoHandler* videoHandler)
 {
     _videoHandler = videoHandler;
+    setupUi();
     if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
     {
         initSerialEvent();
@@ -54,7 +44,6 @@ void SettingsDialog::init(VideoHandler* videoHandler)
     {
         initNetworkEvent();
     }
-    setupUi();
 }
 
 void SettingsDialog::setupUi()
@@ -159,14 +148,6 @@ void SettingsDialog::setupUi()
         twistRangeSlider->setUpperValue(SettingsHandler::getTwistMax());
         ui.RangeSettingsGrid->addWidget(twistRangeSlider, 7,0,1,3);
 
-//        offSetLabel = new QLabel("Sync offset: " + QString::number(SettingsHandler::getoffSet()));
-//        offSetLabel->setFont(font);
-//        ui.RangeSettingsGrid->addWidget(offSetLabel, 8,0);
-//        offSetSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::RightHandle, nullptr);
-//        offSetSlider->SetRange(1, 2000);
-//        offSetSlider->setUpperValue(SettingsHandler::getoffSetMap());
-//        ui.RangeSettingsGrid->addWidget(offSetSlider, 9,0,1,3);
-
         offSetLabel = new QLabel("Sync offset");
         offSetLabel->setFont(font);
         offSetLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
@@ -197,7 +178,6 @@ void SettingsDialog::setupUi()
         connect(xRollRangeSlider, &RangeSlider::upperValueChanged, this, &SettingsDialog::onXRollRange_valueChanged);
         connect(twistRangeSlider, &RangeSlider::lowerValueChanged, this, &SettingsDialog::onTwistRange_valueChanged);
         connect(twistRangeSlider, &RangeSlider::upperValueChanged, this, &SettingsDialog::onTwistRange_valueChanged);
-        //connect(offSetSlider, &RangeSlider::upperValueChanged, this, &SettingsDialog::onOffSet_valueChanged);
         connect(offSetSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onOffSet_valueChanged);
 
         if(SettingsHandler::getSelectedDevice() == DeviceType::Network)
@@ -276,7 +256,8 @@ void SettingsDialog::initNetworkEvent()
         }
         SettingsHandler::setSelectedDevice(DeviceType::Network);
         setSelectedDeviceHandler(_udpHandler);
-        if(SettingsHandler::getServerAddress() != "" && SettingsHandler::getServerPort() != "")
+        if(SettingsHandler::getServerAddress() != "" && SettingsHandler::getServerPort() != "" &&
+         SettingsHandler::getServerAddress() != "0" && SettingsHandler::getServerPort() != "0")
         {
             NetworkAddress address { SettingsHandler::getServerAddress(), SettingsHandler::getServerPort().toInt() };
             _initFuture = QtConcurrent::run(initNetwork, _udpHandler, address);
@@ -365,6 +346,8 @@ void SettingsDialog::onXRange_valueChanged(int value)
 {
     SettingsHandler::setXMin(xRangeSlider->GetLowerValue());
     SettingsHandler::setXMax(xRangeSlider->GetUpperValue());
+    xRangeMinLabel->setText(QString::number(xRangeSlider->GetLowerValue()));
+    xRangeMaxLabel->setText(QString::number(xRangeSlider->GetUpperValue()));
     if (!_videoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
     {
         getSelectedDeviceHandler()->sendTCode("L0" + QString::number(value) + "S1000");
@@ -375,6 +358,8 @@ void SettingsDialog::onYRollRange_valueChanged(int value)
 {
     SettingsHandler::setYRollMin(yRollRangeSlider->GetLowerValue());
     SettingsHandler::setYRollMax(yRollRangeSlider->GetUpperValue());
+    yRollRangeMinLabel->setText(QString::number(yRollRangeSlider->GetLowerValue()));
+    yRollRangeMaxLabel->setText(QString::number(yRollRangeSlider->GetUpperValue()));
     if (!_videoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
     {
         getSelectedDeviceHandler()->sendTCode("R1" + QString::number(value) + "S1000");
@@ -385,6 +370,8 @@ void SettingsDialog::onXRollRange_valueChanged(int value)
 {
     SettingsHandler::setXRollMin(xRollRangeSlider->GetLowerValue());
     SettingsHandler::setXRollMax(xRollRangeSlider->GetUpperValue());
+    xRollRangeMinLabel->setText(QString::number(xRollRangeSlider->GetLowerValue()));
+    xRollRangeMaxLabel->setText(QString::number(xRollRangeSlider->GetUpperValue()));
     if (!_videoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
     {
         getSelectedDeviceHandler()->sendTCode("R2" + QString::number(value) + "S1000");
@@ -395,6 +382,8 @@ void SettingsDialog::onTwistRange_valueChanged(int value)
 {
     SettingsHandler::setTwistMin(xRollRangeSlider->GetLowerValue());
     SettingsHandler::setTwistMax(xRollRangeSlider->GetUpperValue());
+    twistRangeMinLabel->setText(QString::number(twistRangeSlider->GetLowerValue()));
+    twistRangeMaxLabel->setText(QString::number(twistRangeSlider->GetUpperValue()));
     if (!_videoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
     {
         getSelectedDeviceHandler()->sendTCode("R0" + QString::number(value) + "S1000");
@@ -440,20 +429,20 @@ void SettingsDialog::on_SerialOutputCmb_currentIndexChanged(int index)
     selectedSerialPort = serialInfo;
     if (SettingsHandler::getSelectedDevice() == DeviceType::Serial)
     {
-        on_serialOutputRdo_clicked();
+        initSerialEvent();
     }
 }
 
 void SettingsDialog::on_networkAddressTxt_editingFinished()
 {
-    SettingsHandler::setServerPort(ui.networkPortTxt->text());
-    on_networkOutputRdo_clicked();
+    SettingsHandler::setServerAddress(ui.networkAddressTxt->text());
+    initNetworkEvent();
 }
 
 void SettingsDialog::on_networkPortTxt_editingFinished()
 {
-    SettingsHandler::setServerAddress(ui.networkAddressTxt->text());
-    on_networkOutputRdo_clicked();
+    SettingsHandler::setServerPort(ui.networkPortTxt->text());
+    initNetworkEvent();
 }
 
 void SettingsDialog::on_xRollMultiplierCheckBox_clicked()

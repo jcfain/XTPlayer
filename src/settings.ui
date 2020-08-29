@@ -155,7 +155,7 @@
         <height>112</height>
        </rect>
       </property>
-      <layout class="QGridLayout" name="gridLayout">
+      <layout class="QGridLayout" name="FunscriptSettingsGrid">
        <item row="2" column="2">
         <widget class="QDoubleSpinBox" name="twistMultiplierSpinBox">
          <property name="singleStep">
