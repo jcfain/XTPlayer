@@ -49,4 +49,8 @@ QStatusBar {
 QPushButton {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 black, stop: 1 grey);
     color: white;
+}
+QPushButton:disabled {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 lightgrey, stop: 1 lightgrey);
+    color: grey;
 };

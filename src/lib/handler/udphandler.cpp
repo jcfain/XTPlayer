@@ -33,6 +33,7 @@ void UdpHandler::init(NetworkAddress address, int waitTimeout)
     if (timeouttracker > 3)
     {
         _stop = true;
+        _isConnected = false;
         emit connectionChange({DeviceType::Network, ConnectionStatus::Error, "Timed out"});
     }
 }
@@ -134,9 +135,10 @@ void UdpHandler::run()
 
 void UdpHandler::dispose()
 {
-    QMutexLocker locker(&_mutex);
+    _mutex.lock();
     _isConnected = false;
     _stop = true;
+    _mutex.unlock();
     emit connectionChange({DeviceType::Network, ConnectionStatus::Disconnected, "Disconnected"});
     _cond.wakeOne();
 }

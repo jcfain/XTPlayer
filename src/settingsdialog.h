@@ -24,7 +24,6 @@ public:
     ~SettingsDialog();
 
     void init(VideoHandler* videoHandler);
-    void setupUi();
     UdpHandler* getNetworkHandler();
     SerialHandler* getSerialHandler();
     void setSelectedDeviceHandler(DeviceHandler* device);
@@ -75,13 +74,18 @@ private slots:
 
     void on_vibMultiplierCheckBox_clicked();
 
+    void on_serialConnectButton_clicked();
+
+    void on_networkConnectButton_clicked();
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();
     void initSerialEvent();
     void initNetworkEvent();
+    void setupUi();
 
-    bool _interfaceInitialized;
+    bool _interfaceInitialized = false;
     ConnectionStatus _connectionStatus = ConnectionStatus::Disconnected;
     QList<SerialComboboxItem> serialPorts;
     SerialComboboxItem selectedSerialPort;

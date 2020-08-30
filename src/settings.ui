@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>532</width>
+    <width>690</width>
     <height>567</height>
    </rect>
   </property>
@@ -44,7 +44,43 @@
        </layout>
       </item>
       <item row="0" column="0">
-       <layout class="QGridLayout" name="OutputSettings" rowstretch="0,0" columnstretch="0,0,0,0,0,0,0,0,0,0">
+       <layout class="QGridLayout" name="OutputSettings" rowstretch="0,0" columnstretch="0,0,0,0,0,0,0,0,0,0,0">
+        <item row="0" column="9">
+         <widget class="QLabel" name="serialStatuslbl">
+          <property name="minimumSize">
+           <size>
+            <width>50</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Timed out</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2" colspan="6">
+         <widget class="QLineEdit" name="networkAddressTxt"/>
+        </item>
+        <item row="1" column="0" colspan="2">
+         <widget class="QRadioButton" name="networkOutputRdo">
+          <property name="text">
+           <string>Network</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="2">
+         <widget class="QRadioButton" name="serialOutputRdo">
+          <property name="text">
+           <string>Serial</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2" colspan="6">
+         <widget class="QComboBox" name="SerialOutputCmb"/>
+        </item>
         <item row="1" column="9">
          <widget class="QLabel" name="networkStatuslbl">
           <property name="minimumSize">
@@ -55,26 +91,6 @@
           </property>
           <property name="text">
            <string>Timed out</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="8">
-         <widget class="QLineEdit" name="networkPortTxt">
-          <property name="maximumSize">
-           <size>
-            <width>100</width>
-            <height>100</height>
-           </size>
-          </property>
-          <property name="maxLength">
-           <number>5</number>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0" colspan="2">
-         <widget class="QRadioButton" name="serialOutputRdo">
-          <property name="text">
-           <string>Serial</string>
           </property>
          </widget>
         </item>
@@ -90,7 +106,7 @@
            <string>Refresh serial port list</string>
           </property>
           <property name="text">
-           <string>Refresh</string>
+           <string>Rescan</string>
           </property>
           <property name="icon">
            <iconset resource="icons.qrc">
@@ -107,34 +123,32 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="9">
-         <widget class="QLabel" name="serialStatuslbl">
-          <property name="minimumSize">
+        <item row="1" column="8">
+         <widget class="QLineEdit" name="networkPortTxt">
+          <property name="maximumSize">
            <size>
-            <width>50</width>
-            <height>0</height>
+            <width>100</width>
+            <height>100</height>
            </size>
           </property>
-          <property name="text">
-           <string>Timed out</string>
+          <property name="maxLength">
+           <number>5</number>
           </property>
          </widget>
         </item>
-        <item row="1" column="0" colspan="2">
-         <widget class="QRadioButton" name="networkOutputRdo">
+        <item row="0" column="10">
+         <widget class="QPushButton" name="serialConnectButton">
           <property name="text">
-           <string>Network</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
+           <string>Connect</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="2" colspan="6">
-         <widget class="QLineEdit" name="networkAddressTxt"/>
-        </item>
-        <item row="0" column="2" colspan="6">
-         <widget class="QComboBox" name="SerialOutputCmb"/>
+        <item row="1" column="10">
+         <widget class="QPushButton" name="networkConnectButton">
+          <property name="text">
+           <string>Connect</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>

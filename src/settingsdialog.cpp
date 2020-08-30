@@ -64,15 +64,6 @@ void SettingsDialog::setupUi()
         ui.yRollMultiplierSpinBox->setValue(SettingsHandler::getYRollMultiplierValue());
         ui.twistMultiplierCheckBox->setChecked(SettingsHandler::getTwistMultiplierChecked());
         ui.twistMultiplierSpinBox->setValue(SettingsHandler::getTwistMultiplierValue());
-        if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
-        {
-            ui.serialOutputRdo->setChecked(true);
-        }
-        else if (SettingsHandler::getSelectedDevice() == DeviceType::Network)
-        {
-            ui.networkOutputRdo->setChecked(true);
-        }
-
 
         QFont font( "Sans Serif", 7);
 
@@ -180,8 +171,14 @@ void SettingsDialog::setupUi()
         connect(twistRangeSlider, &RangeSlider::upperValueChanged, this, &SettingsDialog::onTwistRange_valueChanged);
         connect(offSetSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onOffSet_valueChanged);
 
-        if(SettingsHandler::getSelectedDevice() == DeviceType::Network)
+        if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
         {
+            ui.serialOutputRdo->setChecked(true);
+            on_serialOutputRdo_clicked();
+        }
+        else if (SettingsHandler::getSelectedDevice() == DeviceType::Network)
+        {
+            ui.networkOutputRdo->setChecked(true);
             on_networkOutputRdo_clicked();
         }
     }
@@ -196,15 +193,18 @@ SerialHandler* SettingsDialog::getSerialHandler()
 {
     return _serialHandler;
 }
+
 bool SettingsDialog::isConnected()
 {
     return _connectionStatus == ConnectionStatus::Connected;
 }
+
 void SettingsDialog::setSelectedDeviceHandler(DeviceHandler* device)
 {
     selectedDeviceHandler = device;
 
 }
+
 DeviceHandler* SettingsDialog::getSelectedDeviceHandler()
 {
     return selectedDeviceHandler;
@@ -221,10 +221,12 @@ void SettingsDialog::initDeviceRetry()
         initNetworkEvent();
     }
 }
+
 void SettingsDialog::initSerialEvent()
 {
     if (!_serialHandler->isRunning())
     {
+        setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceType::Serial);
         if (getSelectedDeviceHandler()->isRunning())
         {
             getSelectedDeviceHandler()->dispose();
@@ -240,11 +242,11 @@ void SettingsDialog::initSerialEvent()
     }
 }
 
-
 void SettingsDialog::initNetworkEvent()
 {
     if (!_udpHandler->isRunning())
     {
+        setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceType::Network);
         if (getSelectedDeviceHandler()->isRunning())
         {
             getSelectedDeviceHandler()->dispose();
@@ -257,14 +259,13 @@ void SettingsDialog::initNetworkEvent()
         SettingsHandler::setSelectedDevice(DeviceType::Network);
         setSelectedDeviceHandler(_udpHandler);
         if(SettingsHandler::getServerAddress() != "" && SettingsHandler::getServerPort() != "" &&
-         SettingsHandler::getServerAddress() != "0" && SettingsHandler::getServerPort() != "0")
+            SettingsHandler::getServerAddress() != "0" && SettingsHandler::getServerPort() != "0")
         {
             NetworkAddress address { SettingsHandler::getServerAddress(), SettingsHandler::getServerPort().toInt() };
             _initFuture = QtConcurrent::run(initNetwork, _udpHandler, address);
         }
     }
 }
-
 
 void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo)
 {
@@ -326,7 +327,8 @@ void SettingsDialog::on_serialOutputRdo_clicked()
     ui.SerialOutputCmb->setEnabled(true);;
     ui.networkAddressTxt->setEnabled(false);
     ui.networkPortTxt->setEnabled(false);
-    initSerialEvent();
+    ui.networkConnectButton->setEnabled(false);
+    ui.serialConnectButton->setEnabled(true);
 }
 
 void SettingsDialog::on_networkOutputRdo_clicked()
@@ -334,7 +336,8 @@ void SettingsDialog::on_networkOutputRdo_clicked()
     ui.SerialOutputCmb->setEnabled(false);
     ui.networkAddressTxt->setEnabled(true);
     ui.networkPortTxt->setEnabled(true);
-    initNetworkEvent();
+    ui.serialConnectButton->setEnabled(false);
+    ui.networkConnectButton->setEnabled(true);
 }
 
 void SettingsDialog::on_serialRefreshBtn_clicked()
@@ -427,22 +430,16 @@ void SettingsDialog::on_SerialOutputCmb_currentIndexChanged(int index)
 {
     SerialComboboxItem serialInfo = ui.SerialOutputCmb->currentData(Qt::UserRole).value<SerialComboboxItem>();
     selectedSerialPort = serialInfo;
-    if (SettingsHandler::getSelectedDevice() == DeviceType::Serial)
-    {
-        initSerialEvent();
-    }
 }
 
 void SettingsDialog::on_networkAddressTxt_editingFinished()
 {
     SettingsHandler::setServerAddress(ui.networkAddressTxt->text());
-    initNetworkEvent();
 }
 
 void SettingsDialog::on_networkPortTxt_editingFinished()
 {
     SettingsHandler::setServerPort(ui.networkPortTxt->text());
-    initNetworkEvent();
 }
 
 void SettingsDialog::on_xRollMultiplierCheckBox_clicked()
@@ -487,6 +484,23 @@ void SettingsDialog::on_vibMultiplierCheckBox_clicked()
 
 void SettingsDialog::on_buttonBox_clicked(QAbstractButton *button)
 {
-    //if (button->Cl)
     hide();
+}
+
+void SettingsDialog::on_serialConnectButton_clicked()
+{
+    initSerialEvent();
+}
+
+void SettingsDialog::on_networkConnectButton_clicked()
+{
+    if(SettingsHandler::getServerAddress() != "" && SettingsHandler::getServerPort() != "" &&
+     SettingsHandler::getServerAddress() != "0" && SettingsHandler::getServerPort() != "0")
+    {
+        initNetworkEvent();
+    }
+    else
+    {
+        LogHandler::Dialog("Invalid network address!", XLogLevel::Critical);
+    }
 }

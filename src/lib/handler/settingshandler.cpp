@@ -333,8 +333,8 @@ void SettingsHandler::setVibMultiplierValue(float value)
 }
 
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.1b";
-const float SettingsHandler::XTPVersionNum = 0.1f;
+const QString SettingsHandler::XTPVersion = "0.11b";
+const float SettingsHandler::XTPVersionNum = 0.11f;
 
 const int SettingsHandler::minOffSetMap = 1;
 const int SettingsHandler::midOffSetMap = 1000;

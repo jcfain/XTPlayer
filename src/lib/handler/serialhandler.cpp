@@ -32,6 +32,7 @@ void SerialHandler::init(const QString &portName, int waitTimeout)
     if (timeouttracker > 3)
     {
         _stop = true;
+        _isConnected = false;
         emit connectionChange({DeviceType::Serial, ConnectionStatus::Error, "Timed out"});
     }
 }
@@ -159,6 +160,7 @@ void SerialHandler::dispose()
 {
     _mutex.lock();
     _stop = true;
+    _isConnected = false;
     _mutex.unlock();
     _cond.wakeOne();
     emit connectionChange({DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"});
