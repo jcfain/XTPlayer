@@ -27,7 +27,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    CustomControls/RangeSlider.cpp \
+    CustomControls/rangeslider.cpp \
     lib/handler/devicehandler.cpp \
     lib/handler/funscripthandler.cpp \
     lib/handler/loghandler.cpp \
@@ -42,7 +42,7 @@ SOURCES += \
     settingsdialog.cpp
 
 HEADERS += \
-    CustomControls/RangeSlider.h \
+    CustomControls/rangeslider.h \
     lib/handler/devicehandler.h \
     lib/handler/videohandler.h \
     lib/lookup/enum.h \

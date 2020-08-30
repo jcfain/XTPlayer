@@ -6,7 +6,7 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QFuture>
 #include <QSpinBox>
-#include "CustomControls/RangeSlider.h"
+#include "CustomControls/rangeslider.h"
 #include "lib/handler/settingshandler.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/handler/serialhandler.h"
