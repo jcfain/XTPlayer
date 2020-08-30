@@ -1,4 +1,4 @@
-#include "RangeSlider.h"
+#include "rangeslider.h"
 #include <QDebug>
 
 namespace

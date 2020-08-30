@@ -21,7 +21,7 @@
 #include <QMovie>
 #include "settingsdialog.h"
 #include "lib/handler/videohandler.h"
-#include "CustomControls/RangeSlider.h"
+#include "CustomControls/rangeslider.h"
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/loghandler.h"
 #include "lib/handler/funscripthandler.h"

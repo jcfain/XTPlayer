@@ -80,6 +80,7 @@ void SerialHandler::run()
 
             if (!serial.open(QIODevice::ReadWrite))
             {
+                dispose();
                 emit errorOccurred(tr("Can't open %1, error code %2")
                            .arg(_portName).arg(serial.error()));
                 return;

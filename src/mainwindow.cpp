@@ -472,7 +472,7 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
             }
             actionPosition.reset();
         }
-        Sleep(1);
+        //Sleep(1);
     }
     //serialHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos));
     LogHandler::Debug("exit syncFunscript");
