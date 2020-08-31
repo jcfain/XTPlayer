@@ -266,6 +266,8 @@ void MainWindow::playFileWithCustomScript()
 
 void MainWindow::playFile(LibraryListItem selectedFileListItem, QString customScript)
 {
+    ui->videoLoadingLabel->show();
+    movie->start();
     videoHandler->stop();
     QFile file(selectedFileListItem.path);
     if (file.exists())
@@ -472,7 +474,6 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
             }
             actionPosition.reset();
         }
-        //Sleep(1);
     }
     //serialHandler->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos));
     LogHandler::Debug("exit syncFunscript");

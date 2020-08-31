@@ -329,6 +329,7 @@ void SettingsDialog::on_serialOutputRdo_clicked()
     ui.networkPortTxt->setEnabled(false);
     ui.networkConnectButton->setEnabled(false);
     ui.serialConnectButton->setEnabled(true);
+    ui.serialRefreshBtn->setEnabled(true);
 }
 
 void SettingsDialog::on_networkOutputRdo_clicked()
@@ -338,6 +339,7 @@ void SettingsDialog::on_networkOutputRdo_clicked()
     ui.networkPortTxt->setEnabled(true);
     ui.serialConnectButton->setEnabled(false);
     ui.networkConnectButton->setEnabled(true);
+    ui.serialRefreshBtn->setEnabled(false);
 }
 
 void SettingsDialog::on_serialRefreshBtn_clicked()
