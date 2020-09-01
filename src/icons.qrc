@@ -13,5 +13,6 @@
         <file>images/icons/XTP-icon.png</file>
         <file>images/icons/XTP-window-icon.png</file>
         <file>images/icons/XTP-window-icon.ico</file>
+        <file>images/icons/error.png</file>
     </qresource>
 </RCC>

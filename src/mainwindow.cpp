@@ -45,7 +45,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     thumbSize = {SettingsHandler::getThumbSize(), SettingsHandler::getThumbSize()};
     thumbSizeList = {SettingsHandler::getThumbSizeList(),SettingsHandler::getThumbSizeList()};
-    thumbCaptureTime = 30000;
+    thumbCaptureTime = 35000;
     libraryViewGroup = new QActionGroup(this);
     libraryViewGroup->addAction(ui->actionList);
     libraryViewGroup->addAction(ui->actionThumbnail);
@@ -79,31 +79,28 @@ MainWindow::MainWindow(QWidget *parent)
     libraryThumbSizeGroup->addAction(action150_Size);
     libraryThumbSizeGroup->addAction(action175_Size);
 
-    if (SettingsHandler::getLibraryView() == LibraryView::Thumb)
+    switch(SettingsHandler::getThumbSize())
     {
-        switch(SettingsHandler::getThumbSize())
-        {
-            case 75:
+        case 75:
             action75_Size->setChecked(true);
             on_action75_triggered();
-            break;
-            case 100:
+        break;
+        case 100:
             action100_Size->setChecked(true);
             on_action100_triggered();
-            break;
-            case 125:
+        break;
+        case 125:
             action125_Size->setChecked(true);
             on_action125_triggered();
-            break;
-            case 150:
+        break;
+        case 150:
             action150_Size->setChecked(true);
             on_action150_triggered();
-            break;
-            case 175:
+        break;
+        case 175:
             action175_Size->setChecked(true);
             on_action175_triggered();
-            break;
-        }
+        break;
     }
 
     on_load_library(SettingsHandler::getSelectedLibrary());
@@ -283,23 +280,23 @@ void MainWindow::on_load_library(QString path)
                 }
 
                 QString thumbFile =  thumbPath + fileName + ".jpg";
-
                 QFileInfo thumbInfo(thumbFile);
                 if (!thumbInfo.exists())
                 {
                     saveThumb(videoPath, thumbFile, qListWidgetItem);
                     QIcon thumb;
                     thumb.addFile(QApplication::applicationDirPath() + "/themes/loading.gif");
-                    thumb.actualSize(thumbSize);
+                    //thumb.actualSize(thumbSize);
                     qListWidgetItem->setIcon(thumb);
                 }
                 else
                 {
                     QIcon thumb;
                     thumb.addFile(thumbFile);
-                    thumb.actualSize(thumbSize);
+                    //thumb.actualSize(thumbSize);
                     qListWidgetItem->setIcon(thumb);
                 }
+
                 qListWidgetItem->setText(fileinfo.fileName());
                 qListWidgetItem->setData(Qt::UserRole, listItem);
                 ui->LibraryList->addItem(qListWidgetItem);
@@ -327,25 +324,28 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
        extractor,
        [this, extractor, videoFile, thumbFile, qListWidgetItem](const QtAV::VideoFrame& frame) {
            const auto& img = frame.toImage();
+           QString thumbFileTemp = thumbFile;
            if (!img.save(thumbFile, nullptr, 15))
            {
                LogHandler::Debug("Error saving thumbnail: " + thumbFile + " for video: " + videoFile);
+               thumbFileTemp = "://images/icons/error.png";
            }
-           else
-           {
-               QIcon thumb;
-               thumb.addFile(thumbFile);
-               thumb.actualSize(thumbSize);
-               qListWidgetItem->setIcon(thumb);
-           }
+           QIcon thumb;
+           thumb.addFile(thumbFileTemp);
+           //thumb.actualSize(thumbSize);
+           qListWidgetItem->setIcon(thumb);
            extractor->deleteLater();
        });
    connect(
        extractor,
        &QtAV::VideoFrameExtractor::error,
        extractor,
-       [this, extractor, videoFile]() {
-           LogHandler::Debug("Error saving thumbnail for video: " + videoFile);
+       [this, extractor, videoFile, qListWidgetItem](const QString &errorMessage) {
+           LogHandler::Debug("Error saving thumbnail for video: " + videoFile + " Error: " + errorMessage);
+           QIcon thumb;
+           thumb.addFile("://images/icons/error.png");
+           //thumb.actualSize(thumbSize);
+           qListWidgetItem->setIcon(thumb);
            extractor->deleteLater();
        });
 
