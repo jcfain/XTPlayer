@@ -45,6 +45,10 @@ public:
     static bool getVibMultiplierChecked();
     static float getVibMultiplierValue();
 
+    static int getLibraryView();
+    static int getThumbSize();
+    static int getThumbSizeList();
+
     static void setSelectedLibrary(QString value);
     static void setSelectedFunscriptLibrary(QString value);
     static void setSelectedFile(QString value);
@@ -71,6 +75,10 @@ public:
     static void setTwistMultiplierValue(float value);
     static void setVibMultiplierChecked(bool value);
     static void setVibMultiplierValue(float value);
+
+    static void setLibraryView(int value);
+    static void setThumbSize(int value);
+    static void setThumbSizeList(int value);
 
     static void Load();
     static void Save();
@@ -104,6 +112,10 @@ private:
     static float twistMultiplierValue;
     static bool vibMultiplierChecked;
     static float vibMultiplierValue;
+
+    static int libraryView;
+    static int thumbSize;
+    static int thumbSizeList;
 
     static QSettings settings;
     static QMutex mutex;

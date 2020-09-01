@@ -33,7 +33,7 @@
       <property name="frameShadow">
        <enum>QFrame::Raised</enum>
       </property>
-      <layout class="QGridLayout" name="gridLayout_3" rowstretch="0,0,0,0,0,0,0" columnstretch="0,0,0">
+      <layout class="QGridLayout" name="gridLayout_3" rowstretch="0,0,0,0,0,0" columnstretch="0,0,0">
        <item row="0" column="0" rowspan="6">
         <widget class="QListWidget" name="LibraryList">
          <property name="minimumSize">
@@ -334,7 +334,15 @@
     <addaction name="actionAbout"/>
     <addaction name="actionDonate"/>
    </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <addaction name="actionList"/>
+    <addaction name="actionThumbnail"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuView"/>
   </widget>
   <action name="actionSelect_library">
    <property name="text">
@@ -354,6 +362,28 @@
   <action name="actionSettings">
    <property name="text">
     <string>Settings</string>
+   </property>
+  </action>
+  <action name="actionList">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>List</string>
+   </property>
+  </action>
+  <action name="actionThumbnail">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Thumbnail</string>
    </property>
   </action>
  </widget>

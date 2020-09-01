@@ -19,6 +19,7 @@
 #include <QFuture>
 #include <QScreen>
 #include <QMovie>
+#include <QActionGroup>
 #include "settingsdialog.h"
 #include "lib/handler/videohandler.h"
 #include "CustomControls/rangeslider.h"
@@ -72,6 +73,11 @@ private slots:
     void playFileFromContextMenu();
     void playFileWithCustomScript();
     void on_actionAbout_triggered();
+    void on_action75_triggered();
+    void on_action100_triggered();
+    void on_action125_triggered();
+    void on_action150_triggered();
+    void on_action175_triggered();
 
     void on_actionDonate_triggered();
 
@@ -80,6 +86,10 @@ private slots:
     void on_skipForwardButton_clicked();
 
     void on_skipBackButton_clicked();
+
+    void on_actionThumbnail_triggered();
+
+    void on_actionList_triggered();
 
 signals:
     void keyPressed(QKeyEvent * event);
@@ -100,6 +110,8 @@ private:
     TCodeHandler* tcodeHandler;
     QSize videoSize;
     QSize appSize;
+    QSize thumbSize;
+    QSize thumbSizeList;
     QPoint appPos;
     QMovie* movie;
     LibraryListItem selectedFileListItem;
@@ -109,6 +121,10 @@ private:
     QLabel* connectionStatusLabel;
     QPushButton* retryConnectionButton;
     int voulumeBeforeMute;
+    QActionGroup* libraryViewGroup;
+    QActionGroup* libraryThumbSizeGroup;
+    qint64 thumbCaptureTime;
+
 
     QList<QString> videos;
     void on_load_library(QString path);
@@ -119,6 +135,7 @@ private:
     void togglePause();
     void toggleFullScreen();
     void toggleControls();
+    void saveThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem);
 
     void playFile(LibraryListItem selectedFileListItem, QString funscript = nullptr);
     void initNetworkEvent();

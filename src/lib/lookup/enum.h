@@ -15,4 +15,10 @@ enum ConnectionStatus
     Error
 };
 
+enum LibraryView
+{
+    Thumb,
+    List
+};
+
 #endif // ENUM_H

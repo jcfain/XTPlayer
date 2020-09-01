@@ -35,14 +35,84 @@ MainWindow::MainWindow(QWidget *parent)
     ui->SeekSlider->setOption(RangeSlider::Option::RightHandle);
     ui->SeekSlider->setUpperValue(0);
 
-    on_load_library(SettingsHandler::getSelectedLibrary());
-
     ui->VolumeSlider->setDisabled(false);
     ui->VolumeSlider->SetRange(0, 30);
     ui->VolumeSlider->setOption(RangeSlider::Option::RightHandle);
     ui->VolumeSlider->setUpperValue(SettingsHandler::getPlayerVolume());
     setVolumeIcon(SettingsHandler::getPlayerVolume());
 
+    ui->LibraryList->setUniformItemSizes(true);
+
+    thumbSize = {SettingsHandler::getThumbSize(), SettingsHandler::getThumbSize()};
+    thumbSizeList = {SettingsHandler::getThumbSizeList(),SettingsHandler::getThumbSizeList()};
+    thumbCaptureTime = 30000;
+    libraryViewGroup = new QActionGroup(this);
+    libraryViewGroup->addAction(ui->actionList);
+    libraryViewGroup->addAction(ui->actionThumbnail);
+
+    if (SettingsHandler::getLibraryView() == LibraryView::List)
+    {
+        on_actionList_triggered();
+        ui->actionList->setChecked(true);
+    }
+    else
+    {
+        ui->actionThumbnail->setChecked(true);
+        on_actionThumbnail_triggered();
+    }
+
+    QMenu* submenuSize = ui->menuView->addMenu( "Size" );
+    QAction* action75_Size = submenuSize->addAction( "75" );
+    action75_Size->setCheckable(true);
+    QAction* action100_Size = submenuSize->addAction( "100" );
+    action100_Size->setCheckable(true);
+    QAction* action125_Size = submenuSize->addAction( "125" );
+    action125_Size->setCheckable(true);
+    QAction* action150_Size = submenuSize->addAction( "150" );
+    action150_Size->setCheckable(true);
+    QAction* action175_Size = submenuSize->addAction( "175" );
+    action175_Size->setCheckable(true);
+    libraryThumbSizeGroup = new QActionGroup(this);
+    libraryThumbSizeGroup->addAction(action75_Size);
+    libraryThumbSizeGroup->addAction(action100_Size);
+    libraryThumbSizeGroup->addAction(action125_Size);
+    libraryThumbSizeGroup->addAction(action150_Size);
+    libraryThumbSizeGroup->addAction(action175_Size);
+
+    if (SettingsHandler::getLibraryView() == LibraryView::Thumb)
+    {
+        switch(SettingsHandler::getThumbSize())
+        {
+            case 75:
+            action75_Size->setChecked(true);
+            on_action75_triggered();
+            break;
+            case 100:
+            action100_Size->setChecked(true);
+            on_action100_triggered();
+            break;
+            case 125:
+            action125_Size->setChecked(true);
+            on_action125_triggered();
+            break;
+            case 150:
+            action150_Size->setChecked(true);
+            on_action150_triggered();
+            break;
+            case 175:
+            action175_Size->setChecked(true);
+            on_action175_triggered();
+            break;
+        }
+    }
+
+    on_load_library(SettingsHandler::getSelectedLibrary());
+
+    connect(action75_Size, &QAction::triggered, this, &MainWindow::on_action75_triggered);
+    connect(action100_Size, &QAction::triggered, this, &MainWindow::on_action100_triggered);
+    connect(action125_Size, &QAction::triggered, this, &MainWindow::on_action125_triggered);
+    connect(action150_Size, &QAction::triggered, this, &MainWindow::on_action150_triggered);
+    connect(action175_Size, &QAction::triggered, this, &MainWindow::on_action175_triggered);
 
     connect(videoHandler, &VideoHandler::positionChanged, this, &MainWindow::on_media_positionChanged);
     connect(videoHandler, &VideoHandler::mediaStatusChanged, this, &MainWindow::on_media_statusChanged);
@@ -143,6 +213,12 @@ void MainWindow::on_load_library(QString path)
 {
     if (!path.isNull() && !path.isEmpty())
     {
+        QString thumbPath = QCoreApplication::applicationDirPath() + "/thumbs/";
+        QDir thumbDir(thumbPath);
+        if (!thumbDir.exists())
+        {
+            thumbDir.mkdir(thumbPath);
+        }
         QDir directory(path);
         if (directory.exists())
         {
@@ -205,6 +281,25 @@ void MainWindow::on_load_library(QString path)
                 {
                     qListWidgetItem->setToolTip(videoPath);
                 }
+
+                QString thumbFile =  thumbPath + fileName + ".jpg";
+
+                QFileInfo thumbInfo(thumbFile);
+                if (!thumbInfo.exists())
+                {
+                    saveThumb(videoPath, thumbFile, qListWidgetItem);
+                    QIcon thumb;
+                    thumb.addFile(QApplication::applicationDirPath() + "/themes/loading.gif");
+                    thumb.actualSize(thumbSize);
+                    qListWidgetItem->setIcon(thumb);
+                }
+                else
+                {
+                    QIcon thumb;
+                    thumb.addFile(thumbFile);
+                    thumb.actualSize(thumbSize);
+                    qListWidgetItem->setIcon(thumb);
+                }
                 qListWidgetItem->setText(fileinfo.fileName());
                 qListWidgetItem->setData(Qt::UserRole, listItem);
                 ui->LibraryList->addItem(qListWidgetItem);
@@ -213,7 +308,7 @@ void MainWindow::on_load_library(QString path)
         }
         else
         {
-           LogHandler::Dialog("Library path '" + path + "' does not exist", XLogLevel::Critical);
+           LogHandler::Dialog("Library path '" + path + "' does not exist anymore!", XLogLevel::Critical);
            on_actionSelect_library_triggered();
         }
     }
@@ -221,6 +316,43 @@ void MainWindow::on_load_library(QString path)
     {
         on_actionSelect_library_triggered();
     }
+}
+
+void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem)
+{
+   auto extractor = new QtAV::VideoFrameExtractor;
+   connect(
+       extractor,
+       &QtAV::VideoFrameExtractor::frameExtracted,
+       extractor,
+       [this, extractor, videoFile, thumbFile, qListWidgetItem](const QtAV::VideoFrame& frame) {
+           const auto& img = frame.toImage();
+           if (!img.save(thumbFile, nullptr, 15))
+           {
+               LogHandler::Debug("Error saving thumbnail: " + thumbFile + " for video: " + videoFile);
+           }
+           else
+           {
+               QIcon thumb;
+               thumb.addFile(thumbFile);
+               thumb.actualSize(thumbSize);
+               qListWidgetItem->setIcon(thumb);
+           }
+           extractor->deleteLater();
+       });
+   connect(
+       extractor,
+       &QtAV::VideoFrameExtractor::error,
+       extractor,
+       [this, extractor, videoFile]() {
+           LogHandler::Debug("Error saving thumbnail for video: " + videoFile);
+           extractor->deleteLater();
+       });
+
+   //extractor->setAutoExtract(true);
+   extractor->setAsync(true);
+   extractor->setSource(videoFile);
+   extractor->setPosition(thumbCaptureTime);
 }
 
 void MainWindow::on_libray_path_select(QString path)
@@ -691,4 +823,53 @@ void MainWindow::on_actionDonate_triggered()
 void MainWindow::on_actionSettings_triggered()
 {
     _xSettings->exec();
+}
+
+void MainWindow::on_actionThumbnail_triggered()
+{
+    SettingsHandler::setLibraryView(LibraryView::Thumb);
+    ui->LibraryList->setResizeMode(QListView::Adjust);
+    ui->LibraryList->setIconSize(thumbSize);
+    ui->LibraryList->setFlow(QListView::LeftToRight);
+    ui->LibraryList->setViewMode(QListView::IconMode);
+}
+
+void MainWindow::on_actionList_triggered()
+{
+    SettingsHandler::setLibraryView(LibraryView::List);
+    ui->LibraryList->setResizeMode(QListView::Fixed);
+    ui->LibraryList->setIconSize(thumbSizeList);
+    ui->LibraryList->setFlow(QListView::TopToBottom);
+    ui->LibraryList->setViewMode(QListView::ListMode);
+}
+
+void MainWindow::on_action75_triggered()
+{
+    SettingsHandler::setThumbSize(75);
+    thumbSize = {SettingsHandler::getThumbSize(), SettingsHandler::getThumbSize()};
+    ui->LibraryList->setIconSize(thumbSize);
+}
+void MainWindow::on_action100_triggered()
+{
+    SettingsHandler::setThumbSize(100);
+    thumbSize = {SettingsHandler::getThumbSize(), SettingsHandler::getThumbSize()};
+    ui->LibraryList->setIconSize(thumbSize);
+}
+void MainWindow::on_action125_triggered()
+{
+    SettingsHandler::setThumbSize(125);
+    thumbSize = {SettingsHandler::getThumbSize(), SettingsHandler::getThumbSize()};
+    ui->LibraryList->setIconSize(thumbSize);
+}
+void MainWindow::on_action150_triggered()
+{
+    SettingsHandler::setThumbSize(150);
+    thumbSize = {SettingsHandler::getThumbSize(), SettingsHandler::getThumbSize()};
+    ui->LibraryList->setIconSize(thumbSize);
+}
+void MainWindow::on_action175_triggered()
+{
+    SettingsHandler::setThumbSize(175);
+    thumbSize = {SettingsHandler::getThumbSize(), SettingsHandler::getThumbSize()};
+    ui->LibraryList->setIconSize(thumbSize);
 }

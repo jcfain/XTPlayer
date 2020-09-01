@@ -41,6 +41,10 @@ void SettingsHandler::Load()
     twistMultiplierValue = settings.value("twistMultiplierValue").toFloat();
     twistMultiplierChecked = settings.value("vibMultiplierChecked").toBool();
     twistMultiplierValue = settings.value("vibMultiplierValue").toFloat();
+
+    libraryView = settings.value("libraryView").toInt();
+    thumbSize = settings.value("thumbSize").toInt();
+    thumbSizeList = settings.value("thumbSizeList").toInt();
 }
 
 void SettingsHandler::Save()
@@ -72,6 +76,10 @@ void SettingsHandler::Save()
     settings.setValue("vibMultiplierChecked", twistMultiplierChecked);
     settings.setValue("vibMultiplierValue", twistMultiplierValue);
 
+    settings.setValue("libraryView", libraryView == 0 ? 0 : libraryView);
+    settings.setValue("thumbSize", thumbSize == 0 ? 150 : thumbSize);
+    settings.setValue("thumbSizeList", thumbSizeList == 0 ? 50 : thumbSizeList);
+
 }
 
 void SettingsHandler::Default()
@@ -101,6 +109,10 @@ void SettingsHandler::Default()
     settings.setValue("twistMultiplierValue", 0);
     settings.setValue("vibMultiplierChecked", false);
     settings.setValue("vibMultiplierValue", 0);
+
+    settings.setValue("libraryView", 0);
+    settings.setValue("thumbSize", 150);
+    settings.setValue("thumbSizeList", 50);
 }
 
 
@@ -203,6 +215,19 @@ bool SettingsHandler::getVibMultiplierChecked()
 float SettingsHandler::getVibMultiplierValue()
 {
     return vibMultiplierValue;
+}
+
+int SettingsHandler::getLibraryView()
+{
+    return libraryView;
+}
+int SettingsHandler::getThumbSize()
+{
+    return thumbSize;
+}
+int SettingsHandler::getThumbSizeList()
+{
+    return thumbSizeList;
 }
 
 void SettingsHandler::setSelectedLibrary(QString value)
@@ -332,6 +357,19 @@ void SettingsHandler::setVibMultiplierValue(float value)
     twistMultiplierValue = value;
 }
 
+void SettingsHandler::setLibraryView(int value)
+{
+    libraryView = value;
+}
+void SettingsHandler::setThumbSize(int value)
+{
+    thumbSize = value;
+}
+void SettingsHandler::setThumbSizeList(int value)
+{
+    thumbSizeList = value;
+}
+
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
 const QString SettingsHandler::XTPVersion = "0.11b";
 const float SettingsHandler::XTPVersionNum = 0.11f;
@@ -363,6 +401,11 @@ bool SettingsHandler::twistMultiplierChecked;
 float SettingsHandler::twistMultiplierValue;
 bool SettingsHandler::vibMultiplierChecked;
 float SettingsHandler::vibMultiplierValue;
+
+int SettingsHandler::libraryView = LibraryView::Thumb;
+int SettingsHandler::thumbSize = 175;
+int SettingsHandler::thumbSizeList = 50;
+
 QString SettingsHandler::selectedFunscriptLibrary;
 QString SettingsHandler::selectedFile;
 QString SettingsHandler::serialPort;
