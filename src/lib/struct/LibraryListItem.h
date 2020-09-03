@@ -8,6 +8,7 @@ struct LibraryListItem
     QString path;
     QString name;
     QString script;
+    QString thumbFile;
 };
 
 Q_DECLARE_METATYPE(LibraryListItem);

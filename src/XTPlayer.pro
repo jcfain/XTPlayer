@@ -28,6 +28,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     CustomControls/rangeslider.cpp \
+    lib/handler/deohandler.cpp \
     lib/handler/devicehandler.cpp \
     lib/handler/funscripthandler.cpp \
     lib/handler/loghandler.cpp \
@@ -43,6 +44,7 @@ SOURCES += \
 
 HEADERS += \
     CustomControls/rangeslider.h \
+    lib/handler/deohandler.h \
     lib/handler/devicehandler.h \
     lib/handler/videohandler.h \
     lib/lookup/enum.h \

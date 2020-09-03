@@ -72,6 +72,7 @@ private slots:
     void onLibraryList_ContextMenuRequested(const QPoint &pos);
     void playFileFromContextMenu();
     void playFileWithCustomScript();
+    void regenerateThumbNail();
     void on_actionAbout_triggered();
     void on_action75_triggered();
     void on_action100_triggered();
@@ -90,6 +91,7 @@ private slots:
     void on_actionThumbnail_triggered();
 
     void on_actionList_triggered();
+    void on_seekslider_hover(int position, int time);
 
 signals:
     void keyPressed(QKeyEvent * event);
@@ -103,6 +105,7 @@ protected:
 private:
     Ui::MainWindow *ui;
     SettingsDialog* _xSettings;
+    //VideoPreviewWidget* videoPreviewWidget;
     QFuture<void> funscriptFuture;
     QProgressBar* bar;
     VideoHandler* videoHandler;
@@ -110,8 +113,8 @@ private:
     TCodeHandler* tcodeHandler;
     QSize videoSize;
     QSize appSize;
-    QSize thumbSize;
-    QSize thumbSizeList;
+    QSize currentThumbSize;
+    QSize currentMaxThumbSize;
     QPoint appPos;
     QMovie* movie;
     LibraryListItem selectedFileListItem;
@@ -123,6 +126,11 @@ private:
     int voulumeBeforeMute;
     QActionGroup* libraryViewGroup;
     QActionGroup* libraryThumbSizeGroup;
+    QAction* action75_Size;
+    QAction* action100_Size;
+    QAction* action125_Size;
+    QAction* action150_Size;
+    QAction* action175_Size;
     qint64 thumbCaptureTime;
 
 
@@ -136,6 +144,8 @@ private:
     void toggleFullScreen();
     void toggleControls();
     void saveThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem);
+    void updateThumbSizeUI(int size);
+    void setThumbSize(int size);
 
     void playFile(LibraryListItem selectedFileListItem, QString funscript = nullptr);
     void initNetworkEvent();
@@ -145,6 +155,7 @@ private:
 
     void setVolumeIcon(int volume);
     void on_seekSlider_sliderMoved(int position);
+    void showPreview(int position, qint64 time);
     void on_key_press(QKeyEvent* event);
     void on_video_mouse_enter(QEvent* event);
     void on_media_positionChanged(qint64 position);

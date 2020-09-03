@@ -61,6 +61,7 @@ signals:
     void lowerValueMove(int aLowerValue);
     void upperValueMove(int aUpperValue);
     void rangeChanged(int aMin, int aMax);
+    void onHover(int aMin, int aMax);
 
 public slots:
     void setLowerValue(int aLowerValue);

@@ -4,7 +4,6 @@
 #include <QtAV>
 #include <QtAVWidgets>
 #include <QHBoxLayout>
-
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/loghandler.h"
 

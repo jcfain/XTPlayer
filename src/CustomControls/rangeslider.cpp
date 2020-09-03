@@ -1,5 +1,6 @@
 #include "rangeslider.h"
 #include <QDebug>
+#include <QStyle>
 
 namespace
 {
@@ -215,6 +216,10 @@ void RangeSlider::mouseMoveEvent(QMouseEvent* aEvent)
             }
         }
     }
+
+    const int o = style()->pixelMetric(QStyle::PM_SliderLength ) - 1;
+    int v = QStyle::sliderValueFromPosition(GetMinimun(), GetMaximun(), aEvent->pos().x()-o/2, width()-o, false);
+    emit onHover(aEvent->x(), v);
 }
 
 void RangeSlider::mouseReleaseEvent(QMouseEvent* aEvent)

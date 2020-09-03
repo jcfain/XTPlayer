@@ -12,10 +12,12 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent)
         LogHandler::Dialog("QtAV Video renderer is not availabe on your platform!", XLogLevel::Critical);
         return;
     }
+
     player = new AVPlayer(videoRenderer->widget());
     player->setRenderer(videoRenderer);
     player->audio()->setVolume(SettingsHandler::getPlayerVolume());
     widgetLayout->addWidget(videoRenderer->widget());
+
 
     connect(player, &AVPlayer::positionChanged, this, &VideoHandler::on_media_positionChanged);
     connect(player, &AVPlayer::mediaStatusChanged, this, &VideoHandler::on_media_statusChanged);
