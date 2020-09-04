@@ -9,6 +9,7 @@
 #include <QMessageBox>
 #include <iostream>
 #include <QtAV>
+#include <QtAVWidgets>
 #include <QtGlobal>
 #include <QtConcurrent/QtConcurrent>
 #include <QFuture>
@@ -20,6 +21,7 @@
 #include <QScreen>
 #include <QMovie>
 #include <QActionGroup>
+#include <QToolTip>
 #include "settingsdialog.h"
 #include "lib/handler/videohandler.h"
 #include "CustomControls/rangeslider.h"
@@ -73,6 +75,7 @@ private slots:
     void playFileFromContextMenu();
     void playFileWithCustomScript();
     void regenerateThumbNail();
+    void setThumbNailFromCurrent();
     void on_actionAbout_triggered();
     void on_action75_triggered();
     void on_action100_triggered();
@@ -92,6 +95,9 @@ private slots:
 
     void on_actionList_triggered();
     void on_seekslider_hover(int position, int time);
+    void on_seekslider_leave();
+
+    void on_SeekSlider_valueChanged(int value);
 
 signals:
     void keyPressed(QKeyEvent * event);
@@ -105,7 +111,7 @@ protected:
 private:
     Ui::MainWindow *ui;
     SettingsDialog* _xSettings;
-    //VideoPreviewWidget* videoPreviewWidget;
+    VideoPreviewWidget* videoPreviewWidget;
     QFuture<void> funscriptFuture;
     QProgressBar* bar;
     VideoHandler* videoHandler;
@@ -132,6 +138,7 @@ private:
     QAction* action150_Size;
     QAction* action175_Size;
     qint64 thumbCaptureTime;
+    QFrame* playerControlsPlaceHolder;
 
 
     QList<QString> videos;
@@ -142,8 +149,9 @@ private:
     bool isPlayingFile(QString file);
     void togglePause();
     void toggleFullScreen();
-    void toggleControls();
-    void saveThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem);
+    void hideControls();
+    void showControls();
+    void saveThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem, qint64 position = 0);
     void updateThumbSizeUI(int size);
     void setThumbSize(int size);
 
@@ -153,11 +161,12 @@ private:
     void skipForward();
     void skipBack();
 
+    bool eventFilter(QObject *obj, QEvent *event) override;
+
     void setVolumeIcon(int volume);
     void on_seekSlider_sliderMoved(int position);
-    void showPreview(int position, qint64 time);
     void on_key_press(QKeyEvent* event);
-    void on_video_mouse_enter(QEvent* event);
+    void on_controls_mouse_enter(QMouseEvent* event);
     void on_media_positionChanged(qint64 position);
     void media_single_click_event(QMouseEvent * event);
     void on_media_statusChanged(QtAV::MediaStatus status);

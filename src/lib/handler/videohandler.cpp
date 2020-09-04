@@ -18,6 +18,7 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent)
     player->audio()->setVolume(SettingsHandler::getPlayerVolume());
     widgetLayout->addWidget(videoRenderer->widget());
 
+    player->setSeekType(AccurateSeek);
 
     connect(player, &AVPlayer::positionChanged, this, &VideoHandler::on_media_positionChanged);
     connect(player, &AVPlayer::mediaStatusChanged, this, &VideoHandler::on_media_statusChanged);
@@ -143,6 +144,11 @@ AVPlayer::State VideoHandler::state()
 void VideoHandler::setPosition(qint64 position)
 {
     player->setPosition(position);
+}
+
+void VideoHandler::seek(qint64 position)
+{
+    player->seek(position);
 }
 
 qint64 VideoHandler::position()

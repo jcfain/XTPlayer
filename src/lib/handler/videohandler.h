@@ -43,16 +43,19 @@ public:;
     void toggleMute();
     void setVolume(int value);
     AVPlayer::State state();
+    void seek(qint64 position);
     void setPosition(qint64 position);
     qint64 position();
     qint64 duration();
     QHBoxLayout* layout();
+    void showPreview(int position, qint64 time);
 
 
 private:
     QHBoxLayout* widgetLayout;
     AVPlayer* player;
     VideoOutput* videoRenderer;
+    VideoPreviewWidget* videoPreviewWidget;
     QString currentFile;
     void mouseDoubleClickEvent(QMouseEvent * e) override;
     void keyPressEvent(QKeyEvent * e) override;

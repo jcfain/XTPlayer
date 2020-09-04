@@ -130,9 +130,10 @@ void RangeSlider::mousePressEvent(QMouseEvent* aEvent)
     }
     if(aEvent->buttons() & Qt::LeftButton)
     {
-        int posCheck, posMax, posValue, firstHandleRectPosValue, secondHandleRectPosValue;
+        int posCheck, posMax, posValue, sliderLength, firstHandleRectPosValue, secondHandleRectPosValue;
         posCheck = (orientation == Qt::Horizontal) ? aEvent->pos().y() : aEvent->pos().x();
         posMax = (orientation == Qt::Horizontal) ? height() : width();
+        sliderLength = (orientation == Qt::Horizontal) ?  width() :height();
         posValue = (orientation == Qt::Horizontal) ? aEvent->pos().x() : aEvent->pos().y();
         firstHandleRectPosValue = (orientation == Qt::Horizontal) ? firstHandleRect().x() : firstHandleRect().y();
         secondHandleRectPosValue = (orientation == Qt::Horizontal) ? secondHandleRect().x() : secondHandleRect().y();
@@ -151,25 +152,48 @@ void RangeSlider::mousePressEvent(QMouseEvent* aEvent)
         if(posCheck >= 2
            && posCheck <= posMax - 2)
         {
-            int step = mInterval / 10 < 1 ? 1 : mInterval / 10;
+            int slidervalue = XMath::mapRange(posValue, 0, sliderLength, GetMinimum(), GetMaximum());
+            //int step = mInterval / 10 < 1 ? 1 : mInterval / 10;
             if(posValue < firstHandleRectPosValue)
-                setLowerValue(mLowerValue - step);
+            {
+                setLowerValue(slidervalue);
+                emit lowerValueMove(slidervalue);
+            }
             else if(((posValue > firstHandleRectPosValue + scHandleSideLength) || !type.testFlag(LeftHandle))
                     && ((posValue < secondHandleRectPosValue) || !type.testFlag(RightHandle)))
             {
                 if(type.testFlag(DoubleHandles))
                     if(posValue - (firstHandleRectPosValue + scHandleSideLength) <
                             (secondHandleRectPosValue - (firstHandleRectPosValue + scHandleSideLength)) / 2)
-                        setLowerValue((mLowerValue + step < mUpperValue) ? mLowerValue + step : mUpperValue);
+                    {
+                        int value = (mLowerValue + slidervalue < mUpperValue) ? mLowerValue + slidervalue : mUpperValue;
+                        setLowerValue(slidervalue);
+                        emit lowerValueMove(slidervalue);
+                    }
                     else
-                        setUpperValue((mUpperValue - step > mLowerValue) ? mUpperValue - step : mLowerValue);
+                    {
+                        int value = (mUpperValue - slidervalue > mLowerValue) ? mUpperValue - slidervalue : mLowerValue;
+                        setUpperValue(slidervalue);
+                        emit upperValueMove(slidervalue);
+                    }
                 else if(type.testFlag(LeftHandle))
-                    setLowerValue((mLowerValue + step < mUpperValue) ? mLowerValue + step : mUpperValue);
+                {
+                    int value = (mLowerValue + slidervalue < mUpperValue) ? mLowerValue + slidervalue : mUpperValue;
+                    setLowerValue(slidervalue);
+                    emit lowerValueMove(slidervalue);
+                }
                 else if(type.testFlag(RightHandle))
-                    setUpperValue((mUpperValue - step > mLowerValue) ? mUpperValue - step : mLowerValue);
+                {
+                    int value = (mUpperValue - slidervalue > mLowerValue) ? mUpperValue - slidervalue : mLowerValue;
+                    setUpperValue(slidervalue);
+                    emit upperValueMove(slidervalue);
+                }
             }
             else if(posValue > secondHandleRectPosValue + scHandleSideLength)
-                setUpperValue(mUpperValue + step);
+            {
+                setUpperValue(slidervalue);
+                emit upperValueMove(slidervalue);
+            }
         }
     }
 }
@@ -217,11 +241,21 @@ void RangeSlider::mouseMoveEvent(QMouseEvent* aEvent)
         }
     }
 
+
     const int o = style()->pixelMetric(QStyle::PM_SliderLength ) - 1;
-    int v = QStyle::sliderValueFromPosition(GetMinimun(), GetMaximun(), aEvent->pos().x()-o/2, width()-o, false);
-    emit onHover(aEvent->x(), v);
+    int sliderValue = QStyle::sliderValueFromPosition(GetMinimum(), GetMaximum(), aEvent->pos().x()-o/2, width()-o, false);
+    emit onHover(aEvent->x(), sliderValue);
 }
 
+void RangeSlider::enterEvent(QEvent * event)
+{
+
+}
+
+void RangeSlider::leaveEvent(QEvent * event)
+{
+    emit onLeave();
+}
 void RangeSlider::mouseReleaseEvent(QMouseEvent* aEvent)
 {
     Q_UNUSED(aEvent);
@@ -243,7 +277,7 @@ QSize RangeSlider::minimumSizeHint() const
     return QSize(scHandleSideLength * 2 + scLeftRightMargin * 2, scHandleSideLength);
 }
 
-int RangeSlider::GetMinimun() const
+int RangeSlider::GetMinimum() const
 {
     return mMinimum;
 }
@@ -253,7 +287,7 @@ void RangeSlider::SetMinimum(int aMinimum)
     setMinimum(aMinimum);
 }
 
-int RangeSlider::GetMaximun() const
+int RangeSlider::GetMaximum() const
 {
     return mMaximum;
 }

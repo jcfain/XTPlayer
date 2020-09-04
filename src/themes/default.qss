@@ -53,4 +53,16 @@ QPushButton {
 QPushButton:disabled {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 lightgrey, stop: 1 lightgrey);
     color: grey;
-};
+}
+
+QFrame[cssClass="windowedControls"] {
+    background-color: transparent;
+    color: black;
+}
+
+QFrame[cssClass="fullScreenControls"] {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: black;
+}
+
+;

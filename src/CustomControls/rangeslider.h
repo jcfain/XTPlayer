@@ -3,6 +3,7 @@
 #include <QWidget>
 #include <QPainter>
 #include <QMouseEvent>
+#include "lib/tool/xmath.h"
 
 class RangeSlider : public QWidget
 {
@@ -23,10 +24,10 @@ public:
 
     QSize minimumSizeHint() const override;
 
-    int GetMinimun() const;
+    int GetMinimum() const;
     void SetMinimum(int aMinimum);
 
-    int GetMaximun() const;
+    int GetMaximum() const;
     void SetMaximum(int aMaximum);
 
     int GetLowerValue() const;
@@ -50,6 +51,8 @@ protected:
     void mouseMoveEvent(QMouseEvent* aEvent) override;
     void mouseReleaseEvent(QMouseEvent* aEvent) override;
     void changeEvent(QEvent* aEvent) override;
+    void enterEvent(QEvent * event) override;
+    void leaveEvent(QEvent * event) override;
 
     QRectF firstHandleRect() const;
     QRectF secondHandleRect() const;
@@ -61,7 +64,8 @@ signals:
     void lowerValueMove(int aLowerValue);
     void upperValueMove(int aUpperValue);
     void rangeChanged(int aMin, int aMax);
-    void onHover(int aMin, int aMax);
+    void onHover(int position, int sliderValue);
+    void onLeave();
 
 public slots:
     void setLowerValue(int aLowerValue);

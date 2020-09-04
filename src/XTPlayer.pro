@@ -1,4 +1,4 @@
-QT       += core gui serialport network
+QT += core gui serialport network
 
 greaterThan(QT_MAJOR_VERSION, 4) {
     QT += widgets avwidgets
@@ -71,7 +71,7 @@ FORMS += \
 
 # LIBS       += -lVLCQtCore -lVLCQtWidgets
 unix:!mac {
-    LIBS += -L$$QT.core.libs -lQtAV
+    LIBS += -L$$QT.core.libs -lQtAV -lQtAVWidgets
 }
 unix:mac {
     INCLUDEPATH += $$QT.core.libs/QtAV.framework/Versions/1/Headers
@@ -82,7 +82,7 @@ unix {
     DESTDIR = $$shell_path($$OUT_PWD)
 }
 win32{
-    LIBS += -L$$QT.core.libs -lQtAV1
+    LIBS += -L$$QT.core.libs -lQtAV1 -lQtAVWidgets1
     build_pass: CONFIG(debug, debug|release) {
         DESTDIR = $$shell_path($$OUT_PWD/debug)
     }

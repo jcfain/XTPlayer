@@ -50,8 +50,9 @@ MainWindow::MainWindow(QWidget *parent)
     libraryViewGroup->addAction(ui->actionList);
     libraryViewGroup->addAction(ui->actionThumbnail);
 
-//    videoPreviewWidget = new VideoPreviewWidget;
-//    videoPreviewWidget->resize(160, 90);
+    videoPreviewWidget = new VideoPreviewWidget(this);
+    videoPreviewWidget->resize(160, 90);
+    videoPreviewWidget->hide();
 
     QMenu* submenuSize = ui->menuView->addMenu( "Size" );
     submenuSize->setObjectName("sizeMenu");
@@ -81,6 +82,13 @@ MainWindow::MainWindow(QWidget *parent)
         ui->actionThumbnail->setChecked(true);
         on_actionThumbnail_triggered();
     }
+    playerControlsPlaceHolder = new QFrame;
+    auto controlsGrid = new QGridLayout;
+    controlsGrid->setContentsMargins(0,0,0,0);
+    controlsGrid->setSpacing(0);
+    playerControlsPlaceHolder->setLayout(controlsGrid);
+    playerControlsPlaceHolder->setContentsMargins(0,0,0,0);
+    playerControlsPlaceHolder->installEventFilter(this);
 
     on_load_library(SettingsHandler::getSelectedLibrary());
 
@@ -97,6 +105,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->SeekSlider, &RangeSlider::upperValueMove, this, &MainWindow::on_seekSlider_sliderMoved);
     connect(ui->SeekSlider, &RangeSlider::onHover, this, &MainWindow::on_seekslider_hover );
+    connect(ui->SeekSlider, &RangeSlider::onLeave, this, &MainWindow::on_seekslider_leave );
     connect(ui->VolumeSlider, &RangeSlider::upperValueMove, this, &MainWindow::on_VolumeSlider_valueChanged);
     //connect(player, static_cast<void(AVPlayer::*)(AVPlayer::Error )>(&AVPlayer::error), this, &MainWindow::on_media_error);
 
@@ -127,7 +136,29 @@ MainWindow::~MainWindow()
     delete _xSettings;
     delete connectionStatusLabel;
     delete retryConnectionButton;
-    //delete videoPreviewWidget;
+    delete videoPreviewWidget;
+    delete playerControlsPlaceHolder;
+}
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+{
+    // This function repeatedly call for those QObjects
+    // which have installed eventFilter (Step 2)
+
+    if (obj == (QObject*)playerControlsPlaceHolder) {
+        if (event->type() == QEvent::Enter)
+        {
+            showControls();
+        }
+        else if(event->type() == QEvent::Leave)
+        {
+            hideControls();
+        }
+        return true;
+    }else {
+        // pass the event on to the parent class
+        return QWidget::eventFilter(obj, event);
+    }
 }
 
 void MainWindow::on_key_press(QKeyEvent * event)
@@ -160,16 +191,6 @@ void MainWindow::on_key_press(QKeyEvent * event)
     }
 }
 
-void MainWindow::on_video_mouse_enter(QEvent * event)
-{
-    if (isFullScreen())
-    {
-        toggleControls();
-        QTimer::singleShot(2000, this, &MainWindow::toggleControls);
-    }
-}
-
-
 void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
 {
     // Handle global position
@@ -180,7 +201,8 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
 
     myMenu.addAction("Play", this, &MainWindow::playFileFromContextMenu);
     myMenu.addAction("Play with funscript...", this, &MainWindow::playFileWithCustomScript);
-    myMenu.addAction("Regenerate Thumbnail", this, &MainWindow::regenerateThumbNail);
+    myMenu.addAction("Regenerate thumbnail", this, &MainWindow::regenerateThumbNail);
+    myMenu.addAction("Set thumbnail from current", this, &MainWindow::setThumbNailFromCurrent);
     // Show context menu at handling position
     myMenu.exec(globalPos);
 }
@@ -292,7 +314,7 @@ void MainWindow::on_load_library(QString path)
     }
 }
 
-void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem)
+void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem, qint64 position)
 {
     QIcon thumb;
     QPixmap bgPixmap(QApplication::applicationDirPath() + "/themes/loading.png");
@@ -350,10 +372,10 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
     connect(thumbNailPlayer,
            &AVPlayer::loaded,
            thumbNailPlayer,
-           [thumbNailPlayer, extractor]()
+           [thumbNailPlayer, extractor, position]()
             {
                LogHandler::Debug("Loaded video for thumb duration: "+ QString::number(thumbNailPlayer->duration()));
-               qint64 randomPosition = XMath::rand(1, thumbNailPlayer->duration());
+               qint64 randomPosition = position > 0 ? position : XMath::rand(1, thumbNailPlayer->duration());
                LogHandler::Debug("randomPosition: " + QString::number(randomPosition));
                extractor->setPosition(randomPosition);
                thumbNailPlayer->deleteLater();
@@ -362,11 +384,11 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
     connect(thumbNailPlayer,
            &AVPlayer::error,
            thumbNailPlayer,
-           [this, thumbNailPlayer, extractor]()
+           [this, thumbNailPlayer, extractor, position]()
             {
 
                LogHandler::Debug("Video load error");
-               qint64 randomPosition = XMath::rand(1, thumbCaptureTime);
+               qint64 randomPosition = XMath::rand(1, position > 0 ? position : thumbCaptureTime);
                LogHandler::Debug("randomPosition: " + QString::number(randomPosition));
                extractor->setPosition(randomPosition);
                thumbNailPlayer->deleteLater();
@@ -406,6 +428,12 @@ void MainWindow::regenerateThumbNail()
     saveThumb(selectedFileListItem.path, selectedFileListItem.thumbFile, selectedItem);
 }
 
+void MainWindow::setThumbNailFromCurrent()
+{
+    QListWidgetItem* selectedItem = ui->LibraryList->selectedItems().first();
+    LibraryListItem selectedFileListItem = selectedItem->data(Qt::UserRole).value<LibraryListItem>();
+    saveThumb(selectedFileListItem.path, selectedFileListItem.thumbFile, selectedItem, videoHandler->position());
+}
 
 void MainWindow::playFileFromContextMenu()
 {
@@ -432,7 +460,7 @@ void MainWindow::playFile(LibraryListItem selectedFileListItem, QString customSc
     if (file.exists())
     {
         videoHandler->setFile(selectedFileListItem.path);
-        //videoPreviewWidget->setFile(selectedFileListItem.path);
+        videoPreviewWidget->setFile(selectedFileListItem.path);
 
         videoHandler->load();
         QString scriptFile = customScript == nullptr ? selectedFileListItem.script : customScript;
@@ -460,51 +488,73 @@ void MainWindow::togglePause()
 
 void MainWindow::toggleFullScreen()
 {
-    if(videoHandler->isPlaying())
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QSize screenSize = screen->size();
+    if(!QMainWindow::isFullScreen())
     {
-        QScreen *screen = QGuiApplication::primaryScreen();
-        QSize screenSize = screen->size();
-        if(!QMainWindow::isFullScreen())
-        {
-            videoSize = videoHandler->size();
-            appSize = size();
-            appPos = pos();
-            QMainWindow::setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
-            videoHandler->move(QPoint(0, 0));
-            ui->MainFrame->layout()->removeWidget(videoHandler);
-            ui->menubar->hide();
-            QMainWindow::layout()->addWidget(videoHandler);
-            QMainWindow::showFullScreen();
-            videoHandler->layout()->setMargin(0);
-            videoHandler->move(QPoint(0, 0));
-            //videoHandler->resize(QSize(screenSize.width()+1, screenSize.height()+1));
-            videoHandler->resize(screenSize);
-        }
-        else
-        {
-            QMainWindow::setWindowFlags(Qt::Window);
-            QMainWindow::showNormal();
-            QMainWindow::resize(appSize);
-            QMainWindow::move(appPos);
-            ui->menubar->show();
-            QMainWindow::layout()->removeWidget(videoHandler);
-            ui->MediaGrid->addWidget(videoHandler);
-            videoHandler->layout()->setMargin(9);
-        }
+        videoSize = videoHandler->size();
+        appSize = size();
+        appPos = pos();
+        QMainWindow::setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+        ui->MainFrame->layout()->removeWidget(videoHandler);
+        ui->MainFrame->layout()->removeWidget(ui->playerControlsFrame);
+        playerControlsPlaceHolder->setWindowFlags(Qt::Tool | Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+        playerControlsPlaceHolder->move(QPoint(0, screenSize.height() - ui->playerControlsFrame->height()));
+        playerControlsPlaceHolder->setFixedWidth(screenSize.width());
+        playerControlsPlaceHolder->setFixedHeight(ui->playerControlsFrame->height());
+        playerControlsPlaceHolder->layout()->addWidget(ui->playerControlsFrame);
+        QMainWindow::layout()->addWidget(videoHandler);
+        QMainWindow::layout()->addWidget(playerControlsPlaceHolder);
+        ui->playerControlsFrame->setProperty("cssClass", "fullScreenControls");
+        ui->playerControlsFrame->style()->unpolish(ui->playerControlsFrame);
+        ui->playerControlsFrame->style()->polish(ui->playerControlsFrame);
+        QMainWindow::showFullScreen();
+        videoHandler->layout()->setMargin(0);
+        videoHandler->move(QPoint(0, 0));
+        //videoHandler->resize(QSize(screenSize.width()+1, screenSize.height()+1));
+        ui->playerControlsFrame->hide();
+        videoHandler->resize(screenSize);
+        ui->menubar->hide();
+    }
+    else
+    {
+        QMainWindow::setWindowFlags(Qt::Window);
+        QMainWindow::showNormal();
+        QMainWindow::resize(appSize);
+        QMainWindow::move(appPos);
+        ui->menubar->show();
+        QMainWindow::layout()->removeWidget(videoHandler);
+        ui->MediaGrid->addWidget(videoHandler);
+        playerControlsPlaceHolder->layout()->removeWidget(ui->playerControlsFrame);
+        QMainWindow::layout()->removeWidget(playerControlsPlaceHolder);
+        ui->playerControlsFrame->setWindowFlags(Qt::Widget);
+        ui->playerControlsFrame->setMinimumSize(QSize(700, 0));
+        ui->playerControlsFrame->setMaximumSize(QSize(16777215, 16777215));
+        ui->ControlsGrid->addWidget(ui->playerControlsFrame);
+        ui->playerControlsFrame->setProperty("cssClass", "windowedControls");
+        ui->playerControlsFrame->style()->unpolish(ui->playerControlsFrame);
+        ui->playerControlsFrame->style()->polish(ui->playerControlsFrame);
+        ui->playerControlsFrame->show();
+        videoHandler->layout()->setMargin(9);
     }
 }
 
-void MainWindow::toggleControls()
+void MainWindow::hideControls()
 {
-    if(!ui->playerControlsFrame->isHidden())
+    if (isFullScreen())
     {
         ui->playerControlsFrame->hide();
     }
-    else
+}
+
+void MainWindow::showControls()
+{
+    if (isFullScreen())
     {
         ui->playerControlsFrame->show();
     }
 }
+
 
 void MainWindow::on_VolumeSlider_valueChanged(int value)
 {
@@ -580,36 +630,56 @@ void MainWindow::on_fullScreenBtn_clicked()
     MainWindow::toggleFullScreen();
 }
 
-void MainWindow::on_seekslider_hover(int position, int time)
+void MainWindow::on_seekslider_hover(int position, int sliderValue)
 {
-    showPreview(position, time);
-}
-
-#include <QToolTip>
-void MainWindow::showPreview(int position, qint64 time)
-{
+    qint64 sliderValueTime = XMath::mapRange(static_cast<qint64>(sliderValue), 0, 100, 0, videoHandler->duration());
 //    if (!videoPreviewWidget)
-//        videoPreviewWidget = new VideoPreviewWidget();
-//    videoPreviewWidget->setTimestamp(time);
-//    videoPreviewWidget->preview();
+//        videoPreviewWidget = new VideoPreviewWidget;
+    videoPreviewWidget->setTimestamp(sliderValueTime);
+    videoPreviewWidget->preview();
+//    LogHandler::Debug("mousePosition: "+QString::number(sliderValue));
+//    LogHandler::Debug("time: "+QString::number(sliderValueTime));
+//    LogHandler::Debug("position: "+QString::number(position));
+    QPoint gpos = mapToGlobal(ui->playerControlsFrame->pos() + ui->SeekSlider->pos() + QPoint(position, 0));
+//    LogHandler::Debug("gpos x: "+QString::number(gpos.x()));
+//    LogHandler::Debug("gpos y: "+QString::number(gpos.y()));
+    QToolTip::showText(gpos, QTime(0, 0, 0).addMSecs(sliderValueTime).toString(QString::fromLatin1("HH:mm:ss")));
+//    if (!Config::instance().previewEnabled())
+//        return;
 
-//    //QPoint gpos = mapToGlobal(mpTimeSlider->pos() + QPoint(position, 0));
-//    QToolTip::showText(QPoint(position, 0), QTime(0, 0, 0).addMSecs(time).toString(QString::fromLatin1("HH:mm:ss")));
-////    if (!Config::instance().previewEnabled())
-////        return;
-
-//   // const int w = Config::instance().previewWidth();
-//    //const int h = Config::instance().previewHeight();
-//    videoPreviewWidget->setWindowFlags(Qt::Tool |Qt::FramelessWindowHint|Qt::WindowStaysOnTopHint);
-//    videoPreviewWidget->resize(175, 175);
-//    videoPreviewWidget->move(QPoint(position, 0) - QPoint(175/2, 175));
-//    videoPreviewWidget->show();
+   //const int w = Config::instance().previewWidth();
+    //const int h = Config::instance().previewHeight();
+    videoPreviewWidget->setWindowFlags(Qt::Tool |Qt::FramelessWindowHint|Qt::WindowStaysOnTopHint);
+    videoPreviewWidget->resize(175, 175);
+    videoPreviewWidget->move(gpos - QPoint(175/2, 175));
+    videoPreviewWidget->show();
 }
+
+void MainWindow::on_seekslider_leave()
+{
+    if (!videoPreviewWidget)
+    {
+        return;
+    }
+    if (videoPreviewWidget->isVisible())
+    {
+        videoPreviewWidget->close();
+    }
+//    delete videoPreviewWidget;
+//    videoPreviewWidget = NULL;
+}
+
 void MainWindow::on_seekSlider_sliderMoved(int position)
 {
     qint64 playerPosition = XMath::mapRange(static_cast<qint64>(position), 0, 100, 0, videoHandler->duration());
     ui->SeekSlider->setToolTip(QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")));
     videoHandler->setPosition(playerPosition);
+}
+
+
+void MainWindow::on_SeekSlider_valueChanged(int position)
+{
+
 }
 
 void MainWindow::on_media_positionChanged(qint64 position)
