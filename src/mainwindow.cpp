@@ -219,7 +219,7 @@ void MainWindow::on_load_library(QString path)
         if (directory.exists())
         {
             ui->LibraryList->clear();
-            videos.clear();
+            libraryItems.clear();
             QDirIterator library(path, QStringList()
                         << "*.mp4"
                         << "*.avi"
@@ -281,24 +281,23 @@ void MainWindow::on_load_library(QString path)
                 }
 
                 QFileInfo thumbInfo(thumbFile);
+                QString thumbString = thumbFile;
                 if (!thumbInfo.exists())
                 {
-                    saveThumb(videoPath, thumbFile, qListWidgetItem);
+                    thumbString = QApplication::applicationDirPath() + "/themes/loading.png";
                 }
-                else
-                {
-                    QIcon thumb;
-                    QPixmap bgPixmap(thumbFile);
-                    QPixmap scaled = bgPixmap.scaled(currentMaxThumbSize, Qt::AspectRatioMode::KeepAspectRatio);
-                    thumb.addPixmap(scaled);
-                    qListWidgetItem->setIcon(thumb);
-                }
+                QIcon thumb;
+                QPixmap bgPixmap(thumbString);
+                QPixmap scaled = bgPixmap.scaled(currentMaxThumbSize, Qt::AspectRatioMode::KeepAspectRatio);
+                thumb.addPixmap(scaled);
+                qListWidgetItem->setIcon(thumb);
 
                 qListWidgetItem->setText(fileinfo.fileName());
                 qListWidgetItem->setData(Qt::UserRole, listItem);
                 ui->LibraryList->addItem(qListWidgetItem);
-                videos.push_back(videoPath);
+                libraryItems.push_back(qListWidgetItem);
             }
+            saveNewThumbs();
         }
         else
         {
@@ -311,7 +310,31 @@ void MainWindow::on_load_library(QString path)
         on_actionSelect_library_triggered();
     }
 }
+int thumbNailSearchIterator = 0;
+void MainWindow::saveNewThumbs()
+{
+    if (thumbNailSearchIterator < libraryItems.count())
+    {
+        QListWidgetItem* listWidgetItem = libraryItems.at(thumbNailSearchIterator);
+        LibraryListItem item = getLibraryListItemFromQListItem(listWidgetItem);
+        thumbNailSearchIterator++;
+        QFileInfo thumbInfo(item.thumbFile);
+        if (!thumbInfo.exists())
+        {
+            saveThumb(item.path, item.thumbFile, listWidgetItem);
+        }
+        else
+        {
+            saveNewThumbs();
+        }
+    }
+    else
+    {
+        thumbNailSearchIterator = 0;
+    }
 
+
+}
 void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem, qint64 position)
 {
     QIcon thumb;
@@ -319,7 +342,6 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
     QPixmap scaled = bgPixmap.scaled(currentMaxThumbSize, Qt::AspectRatioMode::KeepAspectRatio);
     thumb.addPixmap(scaled);
     qListWidgetItem->setIcon(thumb);
-
     VideoFrameExtractor* extractor = new VideoFrameExtractor;
 
     connect(extractor,
@@ -341,6 +363,10 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
                QPixmap scaled = bgPixmap.scaled(currentMaxThumbSize, Qt::AspectRatioMode::KeepAspectRatio);
                thumb.addPixmap(scaled);
                qListWidgetItem->setIcon(thumb);
+               if(thumbNailSearchIterator > 0)
+               {
+                   saveNewThumbs();
+               }
                extractor->deleteLater();
             });
     connect(extractor,
@@ -356,6 +382,10 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
                QPixmap scaled = bgPixmap.scaled(currentMaxThumbSize);
                thumb.addPixmap(scaled);
                qListWidgetItem->setIcon(thumb);
+               if(thumbNailSearchIterator > 0)
+               {
+                   saveNewThumbs();
+               }
                extractor->deleteLater();
             });
 
@@ -424,20 +454,20 @@ void MainWindow::on_LibraryList_itemDoubleClicked(QListWidgetItem *item)
 void MainWindow::regenerateThumbNail()
 {
     QListWidgetItem* selectedItem = ui->LibraryList->selectedItems().first();
-    LibraryListItem selectedFileListItem = selectedItem->data(Qt::UserRole).value<LibraryListItem>();
+    LibraryListItem selectedFileListItem = getLibraryListItemFromQListItem(selectedItem);
     saveThumb(selectedFileListItem.path, selectedFileListItem.thumbFile, selectedItem);
 }
 
 void MainWindow::setThumbNailFromCurrent()
 {
     QListWidgetItem* selectedItem = ui->LibraryList->selectedItems().first();
-    LibraryListItem selectedFileListItem = selectedItem->data(Qt::UserRole).value<LibraryListItem>();
+    LibraryListItem selectedFileListItem = getLibraryListItemFromQListItem(selectedItem);
     saveThumb(selectedFileListItem.path, selectedFileListItem.thumbFile, selectedItem, videoHandler->position());
 }
 
 void MainWindow::playFileFromContextMenu()
 {
-    LibraryListItem selectedFileListItem = ui->LibraryList->selectedItems().first()->data(Qt::UserRole).value<LibraryListItem>();
+    LibraryListItem selectedFileListItem = getLibraryListItemFromQListItem(ui->LibraryList->selectedItems().first());
     playVideo(selectedFileListItem);
 }
 
@@ -446,7 +476,7 @@ void MainWindow::playFileWithCustomScript()
     QString selectedScript = QFileDialog::getOpenFileName(this, tr("Choose script"), SettingsHandler::getSelectedLibrary(), tr("Script Files (*.funscript)"));
     if (selectedScript != Q_NULLPTR)
     {
-        LibraryListItem selectedFileListItem = ui->LibraryList->selectedItems().first()->data(Qt::UserRole).value<LibraryListItem>();
+        LibraryListItem selectedFileListItem = getLibraryListItemFromQListItem(ui->LibraryList->selectedItems().first());
         playVideo(selectedFileListItem, selectedScript);
     }
 }
@@ -496,7 +526,7 @@ void MainWindow::toggleFullScreen()
         videoSize = videoHandler->size();
         appSize = size();
         appPos = pos();
-        QMainWindow::setWindowFlags(Qt::FramelessWindowHint);
+        QMainWindow::setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
         ui->MainFrame->layout()->removeWidget(videoHandler);
         ui->MainFrame->layout()->removeWidget(ui->playerControlsFrame);
 
@@ -507,7 +537,7 @@ void MainWindow::toggleFullScreen()
         playerControlsPlaceHolder->setLayout(placeHolderControlsGrid);
         playerControlsPlaceHolder->setContentsMargins(0,0,0,0);
         playerControlsPlaceHolder->installEventFilter(this);
-        playerControlsPlaceHolder->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
+        playerControlsPlaceHolder->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
         playerControlsPlaceHolder->move(QPoint(0, screenSize.height() - ui->playerControlsFrame->height()));
         playerControlsPlaceHolder->setFixedWidth(screenSize.width());
         playerControlsPlaceHolder->setFixedHeight(ui->playerControlsFrame->height());
@@ -587,7 +617,7 @@ void MainWindow::on_PlayBtn_clicked()
         {
             ui->LibraryList->setCurrentRow(0);
         }
-        LibraryListItem selectedFileListItem = ui->LibraryList->selectedItems().first()->data(Qt::UserRole).value<LibraryListItem>();
+        LibraryListItem selectedFileListItem = getLibraryListItemFromQListItem(ui->LibraryList->selectedItems().first());
         if(selectedFileListItem.path != videoHandler->file() || !videoHandler->isPlaying())
         {
             playVideo(selectedFileListItem);
@@ -672,7 +702,7 @@ void MainWindow::on_seekslider_hover(int position, int sliderValue)
 
    //const int w = Config::instance().previewWidth();
     //const int h = Config::instance().previewHeight();
-    videoPreviewWidget->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
+    videoPreviewWidget->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
     videoPreviewWidget->resize(175, 175);
     videoPreviewWidget->move(gpos - QPoint(175/2, 175));
     videoPreviewWidget->raise();
@@ -829,7 +859,7 @@ void MainWindow::on_media_statusChanged(MediaStatus status)
 void MainWindow::skipForward()
 {
     ++playingVideoListIndex;
-    if(playingVideoListIndex < videos.length())
+    if(playingVideoListIndex < ui->LibraryList->count())
     {
         ui->LibraryList->setCurrentRow(playingVideoListIndex);
         on_PlayBtn_clicked();
@@ -1062,3 +1092,9 @@ void MainWindow::setThumbSize(int size)
         SettingsHandler::setThumbSize(size);
     }
 }
+
+LibraryListItem MainWindow::getLibraryListItemFromQListItem(QListWidgetItem* qListWidgetItem)
+{
+    return qListWidgetItem->data(Qt::UserRole).value<LibraryListItem>();
+}
+

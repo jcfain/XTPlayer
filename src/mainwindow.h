@@ -141,7 +141,7 @@ private:
     QGridLayout* placeHolderControlsGrid;
 
 
-    QList<QString> videos;
+    QList<QListWidgetItem*> libraryItems;
     void on_load_library(QString path);
     void on_libray_path_select(QString path);
     void media_double_click_event(QMouseEvent * event);
@@ -152,8 +152,10 @@ private:
     void hideControls();
     void showControls();
     void saveThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem, qint64 position = 0);
+    void saveNewThumbs();
     void updateThumbSizeUI(int size);
     void setThumbSize(int size);
+    LibraryListItem getLibraryListItemFromQListItem(QListWidgetItem* qListWidgetItem);
 
     void playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr);
     void initNetworkEvent();
