@@ -20,7 +20,6 @@ public:
     static const int minOffSetMap;
     static QString getSelectedLibrary();
     static QString getSelectedFunscriptLibrary();
-    static QString getSelectedFile();
     static int getSelectedDevice();
     static QString getSerialPort();
     static QString getServerAddress();
@@ -51,7 +50,6 @@ public:
 
     static void setSelectedLibrary(QString value);
     static void setSelectedFunscriptLibrary(QString value);
-    static void setSelectedFile(QString value);
     static void setSelectedDevice(int value);
     static void setSerialPort(QString value);
     static void setServerAddress(QString value);

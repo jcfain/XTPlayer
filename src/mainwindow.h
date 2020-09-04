@@ -123,8 +123,7 @@ private:
     QSize currentMaxThumbSize;
     QPoint appPos;
     QMovie* movie;
-    LibraryListItem selectedFileListItem;
-    int selectedFileListIndex;
+    int playingVideoListIndex;
     bool deviceConnected;
     bool _funscriptLoaded;
     QLabel* connectionStatusLabel;
@@ -139,6 +138,7 @@ private:
     QAction* action175_Size;
     qint64 thumbCaptureTime;
     QFrame* playerControlsPlaceHolder;
+    QGridLayout* placeHolderControlsGrid;
 
 
     QList<QString> videos;
@@ -155,7 +155,7 @@ private:
     void updateThumbSizeUI(int size);
     void setThumbSize(int size);
 
-    void playFile(LibraryListItem selectedFileListItem, QString funscript = nullptr);
+    void playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr);
     void initNetworkEvent();
     void initSerialEvent();
     void skipForward();

@@ -124,10 +124,6 @@ QString SettingsHandler::getSelectedLibrary()
 {
     return selectedFunscriptLibrary;
 }
-QString SettingsHandler::getSelectedFile()
-{
-    return selectedFile;
-}
 int SettingsHandler::getSelectedDevice()
 {
     return selectedDevice;
@@ -239,11 +235,6 @@ void SettingsHandler::setSelectedFunscriptLibrary(QString value)
 {
     QMutexLocker locker(&mutex);
     selectedFunscriptLibrary = value;
-}
-void SettingsHandler::setSelectedFile(QString value)
-{
-    QMutexLocker locker(&mutex);
-    selectedFile = value;
 }
 void SettingsHandler::setSelectedDevice(int value)
 {

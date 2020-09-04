@@ -3,41 +3,41 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent)
 {
     //QtAV::setLogLevel(QtAV::LogLevel::LogAll);
     //new QOpenGLWidget(this);
-    widgetLayout = new QHBoxLayout;
+    _widgetLayout = new QHBoxLayout;
     //QtAV::Widgets::registerRenderers();
-    videoRenderer = new VideoOutput(this);
+    _videoRenderer = new VideoOutput(this);
     //videoRenderer = new VideoOutput(QtAV::VideoRendererId_GLWidget2, this);
-    if (!videoRenderer || !videoRenderer->isAvailable() || !videoRenderer->widget())
+    if (!_videoRenderer || !_videoRenderer->isAvailable() || !_videoRenderer->widget())
     {
         LogHandler::Dialog("QtAV Video renderer is not availabe on your platform!", XLogLevel::Critical);
         return;
     }
 
-    player = new AVPlayer(videoRenderer->widget());
-    player->setRenderer(videoRenderer);
-    player->audio()->setVolume(SettingsHandler::getPlayerVolume());
-    widgetLayout->addWidget(videoRenderer->widget());
+    _player = new AVPlayer(_videoRenderer->widget());
+    _player->setRenderer(_videoRenderer);
+    _player->audio()->setVolume(SettingsHandler::getPlayerVolume());
+    _widgetLayout->addWidget(_videoRenderer->widget());
 
-    player->setSeekType(AccurateSeek);
+    _player->setSeekType(AccurateSeek);
 
-    connect(player, &AVPlayer::positionChanged, this, &VideoHandler::on_media_positionChanged);
-    connect(player, &AVPlayer::mediaStatusChanged, this, &VideoHandler::on_media_statusChanged);
-    connect(player, &AVPlayer::started, this, &VideoHandler::on_media_start);
-    connect(player, &AVPlayer::stopped, this, &VideoHandler::on_media_stop);
+    connect(_player, &AVPlayer::positionChanged, this, &VideoHandler::on_media_positionChanged);
+    connect(_player, &AVPlayer::mediaStatusChanged, this, &VideoHandler::on_media_statusChanged);
+    connect(_player, &AVPlayer::started, this, &VideoHandler::on_media_start);
+    connect(_player, &AVPlayer::stopped, this, &VideoHandler::on_media_stop);
 
-    setLayout(widgetLayout);
+    setLayout(_widgetLayout);
 }
 
 VideoHandler::~VideoHandler()
 {
-    delete widgetLayout;
-    delete player;
-    delete videoRenderer;
+    delete _widgetLayout;
+    delete _player;
+    delete _videoRenderer;
 }
 
 QString VideoHandler::file()
 {
-    return currentFile;
+    return _currentFile;
 }
 
 void VideoHandler::mouseDoubleClickEvent(QMouseEvent * e)
@@ -77,91 +77,91 @@ void VideoHandler::on_media_stop()
 
 bool VideoHandler::isPlaying()
 {
-    return player->isPlaying();
+    return _player->isPlaying();
 }
 
 void VideoHandler::play()
 {
-    player->play();
+    _player->play();
 }
 
 void VideoHandler::stop()
 {
-    player->stop();
+    _player->stop();
 }
 
 void VideoHandler::togglePause()
 {
-    player->togglePause();
+    _player->togglePause();
 }
 
 void VideoHandler::setFile(QString file)
 {
-    currentFile = file;
-    player->setFile(file);
+    _currentFile = file;
+    _player->setFile(file);
 }
 
 void VideoHandler::load()
 {
-    player->load();
+    _player->load();
 }
 
 bool VideoHandler::isPaused()
 {
-    return player->isPaused();
+    return _player->isPaused();
 }
 
 bool VideoHandler::isMute()
 {
-    return player->audio()->isMute();
+    return _player->audio()->isMute();
 }
 
 qreal volumeBeforeMute;
 void VideoHandler::toggleMute()
 {
-    if (!player->audio()->isMute())
+    if (!_player->audio()->isMute())
     {
-        volumeBeforeMute = player->audio()->volume();
-        player->audio()->setMute(true);
+        volumeBeforeMute = _player->audio()->volume();
+        _player->audio()->setMute(true);
     }
     else
     {
-        player->audio()->setMute(false);
-        player->audio()->setVolume(volumeBeforeMute);
+        _player->audio()->setMute(false);
+        _player->audio()->setVolume(volumeBeforeMute);
     }
 }
 
 void VideoHandler::setVolume(int value)
 {
-    player->audio()->setVolume(value);
+    _player->audio()->setVolume(value);
 }
 
 AVPlayer::State VideoHandler::state()
 {
-    return player->state();
+    return _player->state();
 }
 
 void VideoHandler::setPosition(qint64 position)
 {
-    player->setPosition(position);
+    _player->setPosition(position);
 }
 
 void VideoHandler::seek(qint64 position)
 {
-    player->seek(position);
+    _player->seek(position);
 }
 
 qint64 VideoHandler::position()
 {
-    return player->position();
+    return _player->position();
 }
 
 qint64 VideoHandler::duration()
 {
-    return player->duration();
+    return _player->duration();
 }
 
 QHBoxLayout* VideoHandler::layout()
 {
-    return widgetLayout;
+    return _widgetLayout;
 }

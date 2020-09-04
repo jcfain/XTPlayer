@@ -52,11 +52,12 @@ public:;
 
 
 private:
-    QHBoxLayout* widgetLayout;
-    AVPlayer* player;
-    VideoOutput* videoRenderer;
-    VideoPreviewWidget* videoPreviewWidget;
-    QString currentFile;
+    QHBoxLayout* _widgetLayout;
+    AVPlayer* _player;
+    VideoOutput* _videoRenderer;
+    VideoPreviewWidget* _videoPreviewWidget;
+    QString _currentFile;
+
     void mouseDoubleClickEvent(QMouseEvent * e) override;
     void keyPressEvent(QKeyEvent * e) override;
     void enterEvent(QEvent * e) override;

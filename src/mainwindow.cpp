@@ -82,13 +82,6 @@ MainWindow::MainWindow(QWidget *parent)
         ui->actionThumbnail->setChecked(true);
         on_actionThumbnail_triggered();
     }
-    playerControlsPlaceHolder = new QFrame;
-    auto controlsGrid = new QGridLayout;
-    controlsGrid->setContentsMargins(0,0,0,0);
-    controlsGrid->setSpacing(0);
-    playerControlsPlaceHolder->setLayout(controlsGrid);
-    playerControlsPlaceHolder->setContentsMargins(0,0,0,0);
-    playerControlsPlaceHolder->installEventFilter(this);
 
     on_load_library(SettingsHandler::getSelectedLibrary());
 
@@ -126,6 +119,10 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     SettingsHandler::Save();
+    if (videoHandler->isPlaying())
+    {
+        videoHandler->stop();
+    }
     if(funscriptFuture.isRunning())
     {
         funscriptFuture.cancel();
@@ -137,7 +134,6 @@ MainWindow::~MainWindow()
     delete connectionStatusLabel;
     delete retryConnectionButton;
     delete videoPreviewWidget;
-    delete playerControlsPlaceHolder;
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
@@ -155,7 +151,9 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
             hideControls();
         }
         return true;
-    }else {
+    }
+    else
+    {
         // pass the event on to the parent class
         return QWidget::eventFilter(obj, event);
     }
@@ -412,13 +410,15 @@ void MainWindow::on_actionSelect_library_triggered()
 
 void MainWindow::on_LibraryList_itemClicked(QListWidgetItem *item)
 {
-    selectedFileListItem = item->data(Qt::UserRole).value<LibraryListItem>();
+//    if(!videoHandler->isPlaying())
+//    {
+//        loadVideo(item->data(Qt::UserRole).value<LibraryListItem>());
+//    }
 }
 
 void MainWindow::on_LibraryList_itemDoubleClicked(QListWidgetItem *item)
 {
-    selectedFileListItem = item->data(Qt::UserRole).value<LibraryListItem>();
-    playFile(selectedFileListItem);
+    playVideo(item->data(Qt::UserRole).value<LibraryListItem>());
 }
 
 void MainWindow::regenerateThumbNail()
@@ -438,7 +438,7 @@ void MainWindow::setThumbNailFromCurrent()
 void MainWindow::playFileFromContextMenu()
 {
     LibraryListItem selectedFileListItem = ui->LibraryList->selectedItems().first()->data(Qt::UserRole).value<LibraryListItem>();
-    playFile(selectedFileListItem);
+    playVideo(selectedFileListItem);
 }
 
 void MainWindow::playFileWithCustomScript()
@@ -447,39 +447,40 @@ void MainWindow::playFileWithCustomScript()
     if (selectedScript != Q_NULLPTR)
     {
         LibraryListItem selectedFileListItem = ui->LibraryList->selectedItems().first()->data(Qt::UserRole).value<LibraryListItem>();
-        playFile(selectedFileListItem, selectedScript);
+        playVideo(selectedFileListItem, selectedScript);
     }
 }
 
-void MainWindow::playFile(LibraryListItem selectedFileListItem, QString customScript)
+void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customScript)
 {
-    ui->videoLoadingLabel->show();
-    movie->start();
-    videoHandler->stop();
     QFile file(selectedFileListItem.path);
     if (file.exists())
     {
-        videoHandler->setFile(selectedFileListItem.path);
-        videoPreviewWidget->setFile(selectedFileListItem.path);
-
-        videoHandler->load();
-        QString scriptFile = customScript == nullptr ? selectedFileListItem.script : customScript;
-        _funscriptLoaded = funscriptHandler->load(scriptFile);
-        SettingsHandler::setSelectedFile(selectedFileListItem.path);
+        ui->videoLoadingLabel->show();
+        movie->start();
+        videoHandler->stop();
+        if (videoHandler->file() != selectedFileListItem.path)
+        {
+            videoHandler->setFile(selectedFileListItem.path);
+            videoPreviewWidget->setFile(selectedFileListItem.path);
+            videoHandler->load();
+            QString scriptFile = customScript == nullptr ? selectedFileListItem.script : customScript;
+            _funscriptLoaded = funscriptHandler->load(scriptFile);
+        }
         //QUrl url = QUrl::fromLocalFile(selectedFileListItem.path);
         videoHandler->play();
-        selectedFileListIndex = ui->LibraryList->currentRow();
+        playingVideoListIndex = ui->LibraryList->currentRow();
         if(!_funscriptLoaded)
         {
             LogHandler::Dialog("Error loading script " + customScript + "!\nTry right clicking on the video in the list\nand loading with another script.", XLogLevel::Warning);
 
         }
     }
-    else {
+    else
+    {
         LogHandler::Dialog("File '" + selectedFileListItem.path + "' does not exist!", XLogLevel::Critical);
     }
 }
-
 
 void MainWindow::togglePause()
 {
@@ -495,14 +496,23 @@ void MainWindow::toggleFullScreen()
         videoSize = videoHandler->size();
         appSize = size();
         appPos = pos();
-        QMainWindow::setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+        QMainWindow::setWindowFlags(Qt::FramelessWindowHint);
         ui->MainFrame->layout()->removeWidget(videoHandler);
         ui->MainFrame->layout()->removeWidget(ui->playerControlsFrame);
-        playerControlsPlaceHolder->setWindowFlags(Qt::Tool | Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+
+        playerControlsPlaceHolder = new QFrame;
+        placeHolderControlsGrid = new QGridLayout;
+        placeHolderControlsGrid->setContentsMargins(0,0,0,0);
+        placeHolderControlsGrid->setSpacing(0);
+        playerControlsPlaceHolder->setLayout(placeHolderControlsGrid);
+        playerControlsPlaceHolder->setContentsMargins(0,0,0,0);
+        playerControlsPlaceHolder->installEventFilter(this);
+        playerControlsPlaceHolder->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
         playerControlsPlaceHolder->move(QPoint(0, screenSize.height() - ui->playerControlsFrame->height()));
         playerControlsPlaceHolder->setFixedWidth(screenSize.width());
         playerControlsPlaceHolder->setFixedHeight(ui->playerControlsFrame->height());
         playerControlsPlaceHolder->layout()->addWidget(ui->playerControlsFrame);
+
         QMainWindow::layout()->addWidget(videoHandler);
         QMainWindow::layout()->addWidget(playerControlsPlaceHolder);
         ui->playerControlsFrame->setProperty("cssClass", "fullScreenControls");
@@ -536,6 +546,8 @@ void MainWindow::toggleFullScreen()
         ui->playerControlsFrame->style()->polish(ui->playerControlsFrame);
         ui->playerControlsFrame->show();
         videoHandler->layout()->setMargin(9);
+        delete placeHolderControlsGrid;
+        delete playerControlsPlaceHolder;
     }
 }
 
@@ -569,16 +581,23 @@ void MainWindow::on_VolumeSlider_valueChanged(int value)
 
 void MainWindow::on_PlayBtn_clicked()
 {
-    if(ui->LibraryList->selectedItems().length() > 0 && selectedFileListItem.path != videoHandler->file() || ui->LibraryList->selectedItems().length() > 0 && !videoHandler->isPlaying())
+    if (ui->LibraryList->count() > 0)
     {
-        MainWindow::playFile(selectedFileListItem);
-    }
-    else if(ui->LibraryList->selectedItems().length() == 0)
-    {
-        selectedFileListIndex = 0;
-        ui->LibraryList->setCurrentRow(0);
-        selectedFileListItem = ui->LibraryList->selectedItems()[0]->data(Qt::UserRole).value<LibraryListItem>();
-        MainWindow::playFile(selectedFileListItem);
+        if(ui->LibraryList->selectedItems().length() == 0)
+        {
+            ui->LibraryList->setCurrentRow(0);
+        }
+        LibraryListItem selectedFileListItem = ui->LibraryList->selectedItems().first()->data(Qt::UserRole).value<LibraryListItem>();
+        if(selectedFileListItem.path != videoHandler->file() || !videoHandler->isPlaying())
+        {
+            playVideo(selectedFileListItem);
+        }
+        else if(ui->LibraryList->selectedItems().length() == 0)
+        {
+            playingVideoListIndex = 0;
+            ui->LibraryList->setCurrentRow(0);
+            playVideo(ui->LibraryList->selectedItems()[0]->data(Qt::UserRole).value<LibraryListItem>());
+        }
     }
 }
 
@@ -634,13 +653,17 @@ void MainWindow::on_seekslider_hover(int position, int sliderValue)
 {
     qint64 sliderValueTime = XMath::mapRange(static_cast<qint64>(sliderValue), 0, 100, 0, videoHandler->duration());
 //    if (!videoPreviewWidget)
-//        videoPreviewWidget = new VideoPreviewWidget;
+//        videoPreviewWidget = new VideoPreviewWidget();
     videoPreviewWidget->setTimestamp(sliderValueTime);
     videoPreviewWidget->preview();
 //    LogHandler::Debug("mousePosition: "+QString::number(sliderValue));
 //    LogHandler::Debug("time: "+QString::number(sliderValueTime));
 //    LogHandler::Debug("position: "+QString::number(position));
-    QPoint gpos = mapToGlobal(ui->playerControlsFrame->pos() + ui->SeekSlider->pos() + QPoint(position, 0));
+    QPoint gpos;
+    if(MainWindow::isFullScreen())
+        gpos = mapToGlobal(playerControlsPlaceHolder->pos() + ui->SeekSlider->pos() + QPoint(position, 0));
+    else
+        gpos = mapToGlobal(ui->playerControlsFrame->pos() + ui->SeekSlider->pos() + QPoint(position, 0));
 //    LogHandler::Debug("gpos x: "+QString::number(gpos.x()));
 //    LogHandler::Debug("gpos y: "+QString::number(gpos.y()));
     QToolTip::showText(gpos, QTime(0, 0, 0).addMSecs(sliderValueTime).toString(QString::fromLatin1("HH:mm:ss")));
@@ -649,9 +672,10 @@ void MainWindow::on_seekslider_hover(int position, int sliderValue)
 
    //const int w = Config::instance().previewWidth();
     //const int h = Config::instance().previewHeight();
-    videoPreviewWidget->setWindowFlags(Qt::Tool |Qt::FramelessWindowHint|Qt::WindowStaysOnTopHint);
+    videoPreviewWidget->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
     videoPreviewWidget->resize(175, 175);
     videoPreviewWidget->move(gpos - QPoint(175/2, 175));
+    videoPreviewWidget->raise();
     videoPreviewWidget->show();
 }
 
@@ -697,8 +721,8 @@ void MainWindow::on_media_positionChanged(qint64 position)
 
 void MainWindow::on_media_start()
 {
-    ui->videoLoadingLabel->show();
-    movie->start();
+    ui->videoLoadingLabel->hide();
+    movie->stop();
     ui->SeekSlider->setDisabled(false);
     ui->StopBtn->setDisabled(false);
     ui->PauseBtn->setDisabled(false);
@@ -804,22 +828,20 @@ void MainWindow::on_media_statusChanged(MediaStatus status)
 
 void MainWindow::skipForward()
 {
-    ++selectedFileListIndex;
-    if(selectedFileListIndex < videos.length())
+    ++playingVideoListIndex;
+    if(playingVideoListIndex < videos.length())
     {
-        ui->LibraryList->setCurrentRow(selectedFileListIndex);
-        selectedFileListItem = ui->LibraryList->selectedItems()[0]->data(Qt::UserRole).value<LibraryListItem>();
+        ui->LibraryList->setCurrentRow(playingVideoListIndex);
         on_PlayBtn_clicked();
     }
 }
 
 void MainWindow::skipBack()
 {
-    --selectedFileListIndex;
-    if(selectedFileListIndex >= 0)
+    --playingVideoListIndex;
+    if(playingVideoListIndex >= 0)
     {
-        ui->LibraryList->setCurrentRow(selectedFileListIndex);
-        selectedFileListItem = ui->LibraryList->selectedItems()[0]->data(Qt::UserRole).value<LibraryListItem>();
+        ui->LibraryList->setCurrentRow(playingVideoListIndex);
         on_PlayBtn_clicked();
     }
 }
