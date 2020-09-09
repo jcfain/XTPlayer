@@ -14,18 +14,24 @@ MainWindow::MainWindow(QWidget *parent)
     setStyleSheet(styleSheet);
 
     SettingsHandler::Load();
+
+    deoConnectionStatusLabel = new QLabel(this);
+    deoRetryConnectionButton = new QPushButton(this);
+    deoRetryConnectionButton->hide();
+    deoRetryConnectionButton->setText("DeoVR Retry");
+    ui->statusbar->addPermanentWidget(deoConnectionStatusLabel);
+    ui->statusbar->addPermanentWidget(deoRetryConnectionButton);
+
     connectionStatusLabel = new QLabel(this);
     retryConnectionButton = new QPushButton(this);
     retryConnectionButton->hide();
-    retryConnectionButton->setText("Retry");
+    retryConnectionButton->setText("TCode Retry");
     ui->statusbar->addPermanentWidget(connectionStatusLabel);
     ui->statusbar->addPermanentWidget(retryConnectionButton);
 
     videoHandler = new VideoHandler(this);
     ui->MediaGrid->addWidget(videoHandler);
 
-    _xSettings = new SettingsDialog(this);
-    _xSettings->init(videoHandler);
     ui->videoLoadingLabel->hide();
     movie = new QMovie(QApplication::applicationDirPath() + "/themes/loading.gif");
     ui->videoLoadingLabel->setMovie(movie);
@@ -85,6 +91,15 @@ MainWindow::MainWindow(QWidget *parent)
 
     on_load_library(SettingsHandler::getSelectedLibrary());
 
+    _xSettings = new SettingsDialog(this);
+    _xSettings->init(videoHandler);
+
+    connect(_xSettings, &SettingsDialog::deoDeviceConnectionChange, this, &MainWindow::on_deo_device_connectionChanged);
+    connect(_xSettings, &SettingsDialog::deoDeviceError, this, &MainWindow::on_deo_device_error);
+    connect(_xSettings, &SettingsDialog::deviceConnectionChange, this, &MainWindow::on_device_connectionChanged);
+    connect(_xSettings, &SettingsDialog::deviceError, this, &MainWindow::on_device_error);
+    connect(_xSettings->getDeoHandler(), &DeoHandler::messageRecieved, this, &MainWindow::onDeoMessageRecieved);
+
     connect(action75_Size, &QAction::triggered, this, &MainWindow::on_action75_triggered);
     connect(action100_Size, &QAction::triggered, this, &MainWindow::on_action100_triggered);
     connect(action125_Size, &QAction::triggered, this, &MainWindow::on_action125_triggered);
@@ -109,16 +124,23 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->LibraryList, &QListWidget::customContextMenuRequested, this, &MainWindow::onLibraryList_ContextMenuRequested);
 
-    connect(_xSettings, &SettingsDialog::deviceConnectionChange, this, &MainWindow::on_device_connectionChanged);
-    connect(_xSettings, &SettingsDialog::deviceError, this, &MainWindow::on_device_error);
 
     connect(retryConnectionButton, &QPushButton::clicked, _xSettings, &SettingsDialog::initDeviceRetry);
+    connect(deoRetryConnectionButton, &QPushButton::clicked, _xSettings, &SettingsDialog::initDeoRetry);
+    connect(QApplication::instance(), &QCoreApplication::aboutToQuit, this, &MainWindow::dispose);
+
 
 
 }
 MainWindow::~MainWindow()
 {
+
+}
+
+void MainWindow::dispose()
+{
     SettingsHandler::Save();
+    _xSettings->dispose();
     if (videoHandler->isPlaying())
     {
         videoHandler->stop();
@@ -128,12 +150,11 @@ MainWindow::~MainWindow()
         funscriptFuture.cancel();
         funscriptFuture.waitForFinished();
     }
-    delete ui;
     delete videoHandler;
-    delete _xSettings;
     delete connectionStatusLabel;
     delete retryConnectionButton;
     delete videoPreviewWidget;
+    delete ui;
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
@@ -355,7 +376,7 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
 
                if (!img.save(thumbFile, nullptr, 15))
                {
-                   LogHandler::Debug("Error saving thumbnail: " + thumbFile + " for video: " + videoFile);
+                   //LogHandler::Debug("Error saving thumbnail: " + thumbFile + " for video: " + videoFile);
                    thumbFileTemp = "://images/icons/error.png";
                }
                QIcon thumb;
@@ -375,7 +396,7 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
            [this, extractor, videoFile, qListWidgetItem](const QString &errorMessage)
             {
 
-               LogHandler::Debug("Error accessing video file: " + videoFile + " Error: " + errorMessage);
+               //LogHandler::Debug("Error accessing video file: " + videoFile + " Error: " + errorMessage);
 
                QIcon thumb;
                QPixmap bgPixmap("://images/icons/error.png");
@@ -402,9 +423,9 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
            thumbNailPlayer,
            [thumbNailPlayer, extractor, position]()
             {
-               LogHandler::Debug("Loaded video for thumb duration: "+ QString::number(thumbNailPlayer->duration()));
+               //LogHandler::Debug("Loaded video for thumb duration: "+ QString::number(thumbNailPlayer->duration()));
                qint64 randomPosition = position > 0 ? position : XMath::rand(1, thumbNailPlayer->duration());
-               LogHandler::Debug("randomPosition: " + QString::number(randomPosition));
+               //LogHandler::Debug("randomPosition: " + QString::number(randomPosition));
                extractor->setPosition(randomPosition);
                thumbNailPlayer->deleteLater();
             });
@@ -415,9 +436,9 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
            [this, thumbNailPlayer, extractor, position]()
             {
 
-               LogHandler::Debug("Video load error");
+               //LogHandler::Debug("Video load error");
                qint64 randomPosition = XMath::rand(1, position > 0 ? position : thumbCaptureTime);
-               LogHandler::Debug("randomPosition: " + QString::number(randomPosition));
+               //LogHandler::Debug("randomPosition: " + QString::number(randomPosition));
                extractor->setPosition(randomPosition);
                thumbNailPlayer->deleteLater();
             });
@@ -768,6 +789,104 @@ void MainWindow::on_media_start()
         funscriptFuture = QtConcurrent::run(syncFunscript, videoHandler, _xSettings, tcodeHandler, funscriptHandler);
     }
 }
+bool deoDnlaFileSelectorOpen = false;
+void MainWindow::onDeoMessageRecieved(DeoPacket packet)
+{
+//        LogHandler::Debug("Deo path: "+packet.path);
+//LogHandler::Debug("Deo duration: "+QString::number(packet.duration));
+//        LogHandler::Debug("Deo currentTime: "+QString::number(packet.currentTime));
+//        LogHandler::Debug("Deo playbackSpeed: "+QString::number(packet.playbackSpeed));
+//        LogHandler::Debug("Deo playing: "+QString::number(packet.playing));
+
+    if (!deoDnlaFileSelectorOpen && packet.duration > 0)
+    {
+        QString videoPath = packet.path;
+        if (videoPath.startsWith("http"))
+        {
+            QString scriptPath = SettingsHandler::getDeoDnlaFunscript(videoPath);
+            //LogHandler::Debug("scriptPath: "+scriptPath);
+            if (scriptPath == nullptr)
+            {
+                deoDnlaFileSelectorOpen = true;
+                QString selectedScript = QFileDialog::getOpenFileName(this, "Choose script", SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
+                deoDnlaFileSelectorOpen = false;
+                if (selectedScript != Q_NULLPTR)
+                {
+                    SettingsHandler::setDeoDnlaFunscript(videoPath, selectedScript);
+                }
+            }
+        }
+    }
+}
+
+void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler)
+{
+    DeviceHandler* device = xSettings->getSelectedDeviceHandler();
+    std::shared_ptr<FunscriptAction> actionPosition;
+    DeoPacket* currentDeoPacket = deoPlayer->getCurrentDeoPacket();
+
+    qint64 lastDeoActionTime = 0;
+    qint64 timeTracker = 0;
+    qint64 elapsedTracker = 0;
+    bool funscriptLoaded = false;
+    QElapsedTimer timer;
+    while (deoPlayer->isConnected() && !xPlayer->isPlaying())
+    {
+        timer.start();
+//        LogHandler::Debug("deoPlayer->isConnected(): "+QString::number(deoPlayer->isConnected()));
+//        LogHandler::Debug("xPlayer->isPlaying()): "+QString::number(xPlayer->isPlaying()));
+        if(xSettings->isConnected() && funscriptLoaded && currentDeoPacket != nullptr && currentDeoPacket->duration > 0 && currentDeoPacket->playing)
+        {
+            qint64 currentTime = currentDeoPacket->currentTime;
+            if (lastDeoActionTime != currentTime && currentTime > timeTracker + 100 ||
+                lastDeoActionTime != currentTime && currentTime < timeTracker - 100)
+            {
+                LogHandler::Debug("currentTime != lastDeoActionTime: "+QString::number(currentTime)+ " != "+QString::number(lastDeoActionTime));
+                LogHandler::Debug("timeTracker: "+QString::number(timeTracker));
+                lastDeoActionTime = currentTime;
+                timeTracker = currentTime;
+            }
+            else
+            {
+                timeTracker += elapsedTracker;
+                currentTime = timeTracker;
+                LogHandler::Debug("else: "+QString::number(currentTime));
+            }
+            actionPosition = funscriptHandler->getPosition(currentTime);
+            if (actionPosition != nullptr)
+            {
+                device->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
+            }
+            if (actionPosition != nullptr)
+            {
+                LogHandler::Debug("actionPosition->pos: "+QString::number(actionPosition->pos));
+            }
+            //LogHandler::Debug("timer elapsed: "+QString::number(timer.elapsed()));
+            QThread::currentThread()->usleep(1);
+            elapsedTracker = (round(timer.nsecsElapsed()) / 1000000);
+            LogHandler::Debug("timer nsecsElapsed: "+QString::number(elapsedTracker));
+        }
+        else if(xSettings->isConnected() && currentDeoPacket != nullptr && currentDeoPacket->duration > 0 && currentDeoPacket->playing)
+        {
+            QString funscriptPath;
+            if (currentDeoPacket->path.startsWith("http"))
+            {
+                funscriptPath = SettingsHandler::getDeoDnlaFunscript(currentDeoPacket->path);
+            }
+            else if(!currentDeoPacket->path.isEmpty() && !currentDeoPacket->path.isNull())
+            {
+                int indexOfSuffix = currentDeoPacket->path.lastIndexOf(".");
+                funscriptPath = currentDeoPacket->path.replace(indexOfSuffix, currentDeoPacket->path.length() - indexOfSuffix, ".funscript");
+            }
+            funscriptLoaded = funscriptHandler->load(funscriptPath);
+        }
+        currentDeoPacket = deoPlayer->getCurrentDeoPacket();
+
+
+    }
+    delete currentDeoPacket;
+    LogHandler::Debug("exit syncDeoFunscript");
+}
 
 void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler)
 {
@@ -783,8 +902,9 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
             {
                 device->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
             }
-            actionPosition.reset();
+            actionPosition = nullptr;
         }
+        QThread::currentThread()->msleep(1);
     }
     LogHandler::Debug("exit syncFunscript");
 }
@@ -904,7 +1024,6 @@ void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
     {
         message += "Network: ";
     }
-    message += event.status;
     message += " " + event.message;
     connectionStatusLabel->setText(message);
     if(event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected)
@@ -920,6 +1039,44 @@ void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
 void MainWindow::on_device_error(QString error)
 {
     LogHandler::Dialog(error, XLogLevel::Critical);
+}
+
+void MainWindow::on_deo_device_connectionChanged(ConnectionChangedSignal event)
+{
+    deviceConnected = event.status == ConnectionStatus::Connected;
+    QString message = "";
+    message += "DeoVR: ";
+    message += " " + event.message;
+    deoConnectionStatusLabel->setText(message);
+    if(event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected)
+    {
+        deoRetryConnectionButton->show();
+        if(funscriptFuture.isRunning())
+        {
+            funscriptFuture.cancel();
+            funscriptFuture.waitForFinished();
+        }
+    }
+    else if(deviceConnected)
+    {
+        deoRetryConnectionButton->hide();
+        if(funscriptFuture.isRunning())
+        {
+            funscriptFuture.cancel();
+            funscriptFuture.waitForFinished();
+        }
+        funscriptFuture = QtConcurrent::run(syncDeoFunscript, _xSettings->getDeoHandler(), videoHandler, _xSettings, tcodeHandler, funscriptHandler);
+
+    }
+    else
+    {
+        deoRetryConnectionButton->hide();
+    }
+}
+
+void MainWindow::on_deo_device_error(QString error)
+{
+    LogHandler::Dialog("Deo error: "+error, XLogLevel::Critical);
 }
 
 QString MainWindow::second_to_minutes(int seconds)

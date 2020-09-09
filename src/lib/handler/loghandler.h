@@ -4,6 +4,9 @@
 #include <QMessageBox>
 #include <QDebug>
 #include <QMutex>
+#include <QFile>
+#include <QDateTime>
+#include <QApplication>
 
 enum XLogLevel
 {
@@ -23,10 +26,15 @@ public:
     static void Warn(QString message);
     static void Dialog(QString message, XLogLevel level);
     static QString getLevel(XLogLevel level);
+    static void UserDebug(bool on);
 
 private:
     LogHandler();
+    static void DebugToFile(QtMsgType type, const QMessageLogContext &, const QString & msg);
     static QMutex mutex;
+    static QString _debugFileName;
+    static bool _debugMode;
+
 };
 
 #endif // LOGHANDLER_H

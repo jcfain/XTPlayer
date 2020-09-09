@@ -57,6 +57,7 @@ HEADERS += \
     lib/handler/udphandler.h \
     lib/lookup/enum.h \
     lib/struct/ConnectionChangedSignal.h \
+    lib/struct/DeoPacket.h \
     lib/struct/Funscript.h \
     lib/struct/LibraryListItem.h \
     lib/struct/NetworkAddress.h \

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>690</width>
-    <height>567</height>
+    <width>705</width>
+    <height>710</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,148 +17,184 @@
    <iconset resource="icons.qrc">
     <normaloff>:/images/icons/XTP-icon.png</normaloff>:/images/icons/XTP-icon.png</iconset>
   </property>
-  <layout class="QGridLayout" name="gridLayout_2">
+  <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0,0,0,0">
    <property name="sizeConstraint">
     <enum>QLayout::SetNoConstraint</enum>
    </property>
    <item row="0" column="0">
-    <widget class="QGroupBox" name="TCodeQuickSettingsGroup">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>0</height>
-      </size>
-     </property>
+    <widget class="QGroupBox" name="connectionSettingsGroup">
      <property name="title">
-      <string>TCode settings</string>
+      <string>Connection</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_3">
-      <item row="1" column="0" rowspan="2">
-       <layout class="QGridLayout" name="RangeSettingsGrid">
-        <property name="horizontalSpacing">
-         <number>2</number>
-        </property>
-        <property name="verticalSpacing">
-         <number>0</number>
-        </property>
-       </layout>
-      </item>
-      <item row="0" column="0">
-       <layout class="QGridLayout" name="OutputSettings" rowstretch="0,0" columnstretch="0,0,0,0,0,0,0,0,0,0,0">
-        <item row="0" column="9">
-         <widget class="QLabel" name="serialStatuslbl">
-          <property name="minimumSize">
-           <size>
-            <width>50</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Timed out</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2" colspan="6">
-         <widget class="QLineEdit" name="networkAddressTxt"/>
-        </item>
-        <item row="1" column="0" colspan="2">
-         <widget class="QRadioButton" name="networkOutputRdo">
-          <property name="text">
-           <string>Network</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0" colspan="2">
-         <widget class="QRadioButton" name="serialOutputRdo">
-          <property name="text">
-           <string>Serial</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2" colspan="6">
-         <widget class="QComboBox" name="SerialOutputCmb"/>
-        </item>
-        <item row="1" column="9">
-         <widget class="QLabel" name="networkStatuslbl">
-          <property name="minimumSize">
-           <size>
-            <width>75</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Timed out</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="8">
-         <widget class="QPushButton" name="serialRefreshBtn">
-          <property name="minimumSize">
-           <size>
-            <width>50</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="statusTip">
-           <string>Refresh serial port list</string>
-          </property>
-          <property name="text">
-           <string>Rescan</string>
-          </property>
-          <property name="icon">
-           <iconset resource="icons.qrc">
-            <normaloff>:/images/icons/refreshSerial.svg</normaloff>:/images/icons/refreshSerial.svg</iconset>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>15</width>
-            <height>15</height>
-           </size>
-          </property>
-          <property name="flat">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="8">
-         <widget class="QLineEdit" name="networkPortTxt">
-          <property name="maximumSize">
-           <size>
-            <width>100</width>
-            <height>100</height>
-           </size>
-          </property>
-          <property name="maxLength">
-           <number>5</number>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="10">
-         <widget class="QPushButton" name="serialConnectButton">
-          <property name="text">
-           <string>Connect</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="10">
-         <widget class="QPushButton" name="networkConnectButton">
-          <property name="text">
-           <string>Connect</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>30</y>
+        <width>648</width>
+        <height>81</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="ConnectionSettings" rowstretch="0,0,0" columnstretch="0,0,0,0,0,0,0,0,0,0,0">
+       <item row="1" column="8">
+        <widget class="QLineEdit" name="networkPortTxt">
+         <property name="maximumSize">
+          <size>
+           <width>100</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="maxLength">
+          <number>5</number>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="QRadioButton" name="networkOutputRdo">
+         <property name="text">
+          <string>Network</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2" colspan="6">
+        <widget class="QComboBox" name="SerialOutputCmb"/>
+       </item>
+       <item row="1" column="9">
+        <widget class="QLabel" name="networkStatuslbl">
+         <property name="minimumSize">
+          <size>
+           <width>75</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Timed out</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="10">
+        <widget class="QPushButton" name="networkConnectButton">
+         <property name="text">
+          <string>Connect</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="2">
+        <widget class="QRadioButton" name="serialOutputRdo">
+         <property name="text">
+          <string>Serial</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="10">
+        <widget class="QPushButton" name="serialConnectButton">
+         <property name="text">
+          <string>Connect</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="9">
+        <widget class="QLabel" name="serialStatuslbl">
+         <property name="minimumSize">
+          <size>
+           <width>50</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Timed out</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2" colspan="6">
+        <widget class="QLineEdit" name="networkAddressTxt"/>
+       </item>
+       <item row="0" column="8">
+        <widget class="QPushButton" name="serialRefreshBtn">
+         <property name="minimumSize">
+          <size>
+           <width>50</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="statusTip">
+          <string>Refresh serial port list</string>
+         </property>
+         <property name="text">
+          <string>Rescan</string>
+         </property>
+         <property name="icon">
+          <iconset resource="icons.qrc">
+           <normaloff>:/images/icons/refreshSerial.svg</normaloff>:/images/icons/refreshSerial.svg</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>15</width>
+           <height>15</height>
+          </size>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="QCheckBox" name="deoCheckbox">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>Deo VR</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2" colspan="6">
+        <widget class="QLineEdit" name="deoAddressTxt"/>
+       </item>
+       <item row="2" column="8">
+        <widget class="QLineEdit" name="deoPortTxt">
+         <property name="maximumSize">
+          <size>
+           <width>100</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="maxLength">
+          <number>5</number>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="10">
+        <widget class="QPushButton" name="deoConnectButton">
+         <property name="text">
+          <string>Connect</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="9">
+        <widget class="QLabel" name="deoStatuslbl">
+         <property name="minimumSize">
+          <size>
+           <width>75</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Timed out</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
-   <item row="1" column="0">
+   <item row="3" column="0">
     <widget class="QGroupBox" name="FunscriptsSettingsGroup">
      <property name="title">
-      <string>Funscript settings</string>
+      <string>Funscript</string>
      </property>
      <widget class="QWidget" name="gridLayoutWidget">
       <property name="geometry">
@@ -230,7 +266,7 @@
      </widget>
     </widget>
    </item>
-   <item row="2" column="0">
+   <item row="5" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -238,6 +274,47 @@
      <property name="standardButtons">
       <set>QDialogButtonBox::Close</set>
      </property>
+    </widget>
+   </item>
+   <item row="1" column="0" rowspan="2">
+    <widget class="QGroupBox" name="TCodeQuickSettingsGroup">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="title">
+      <string>TCode</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0" rowspan="2">
+       <layout class="QGridLayout" name="RangeSettingsGrid">
+        <property name="horizontalSpacing">
+         <number>2</number>
+        </property>
+        <property name="verticalSpacing">
+         <number>0</number>
+        </property>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Application</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="checkBox">
+        <property name="text">
+         <string>Debug</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
   </layout>

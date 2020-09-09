@@ -33,6 +33,9 @@ void SettingsHandler::Load()
     serialPort = settings.value("serialPort").toString();
     serverAddress = settings.value("serverAddress").toString();
     serverPort = settings.value("serverPort").toString();
+    deoAddress = settings.value("deoAddress").toString();
+    deoPort = settings.value("deoPort").toString();
+    deoEnabled = settings.value("deoEnabled").toBool();
     yRollMultiplierChecked = settings.value("yRollMultiplierChecked").toBool();
     yRollMultiplierValue = settings.value("yRollMultiplierValue").toFloat();
     xRollMultiplierChecked = settings.value("xRollMultiplierChecked").toBool();
@@ -45,6 +48,7 @@ void SettingsHandler::Load()
     libraryView = settings.value("libraryView").toInt();
     thumbSize = settings.value("thumbSize").toInt();
     thumbSizeList = settings.value("thumbSizeList").toInt();
+    deoDnlaFunscriptLookup = settings.value("deoDnlaFunscriptLookup").toHash();
 }
 
 void SettingsHandler::Save()
@@ -67,6 +71,9 @@ void SettingsHandler::Save()
     settings.setValue("serialPort", serialPort);
     settings.setValue("serverAddress", serverAddress);
     settings.setValue("serverPort", serverPort);
+    settings.setValue("deoAddress", deoAddress);
+    settings.setValue("deoPort", deoPort == nullptr ? "23554" : deoPort);
+    settings.setValue("deoEnabled", deoEnabled);
     settings.setValue("yRollMultiplierChecked", yRollMultiplierChecked);
     settings.setValue("yRollMultiplierValue", yRollMultiplierValue);
     settings.setValue("xRollMultiplierChecked", xRollMultiplierChecked);
@@ -79,6 +86,8 @@ void SettingsHandler::Save()
     settings.setValue("libraryView", libraryView == 0 ? 0 : libraryView);
     settings.setValue("thumbSize", thumbSize == 0 ? 150 : thumbSize);
     settings.setValue("thumbSizeList", thumbSizeList == 0 ? 50 : thumbSizeList);
+
+    settings.setValue("deoDnlaFunscriptLookup", deoDnlaFunscriptLookup);
 
 }
 
@@ -100,7 +109,10 @@ void SettingsHandler::Default()
     settings.setValue("selectedFunscriptLibrary", QVariant::String);
     settings.setValue("serialPort", QVariant::String);
     settings.setValue("serverAddress", QVariant::String);
-    settings.setValue("serverPort", 0);
+    settings.setValue("serverPort", "0");
+    settings.setValue("deoAddress", QVariant::String);
+    settings.setValue("deoPort", "23554");
+    settings.setValue("deoEnabled", false);
     settings.setValue("yRollMultiplierChecked", false);
     settings.setValue("yRollMultiplierValue", 0);
     settings.setValue("xRollMultiplierChecked", false);
@@ -114,7 +126,6 @@ void SettingsHandler::Default()
     settings.setValue("thumbSize", 150);
     settings.setValue("thumbSizeList", 50);
 }
-
 
 QString SettingsHandler::getSelectedLibrary()
 {
@@ -139,6 +150,18 @@ QString SettingsHandler::getServerAddress()
 QString SettingsHandler::getServerPort()
 {
     return serverPort;
+}
+QString SettingsHandler::getDeoAddress()
+{
+    return deoAddress;
+}
+QString SettingsHandler::getDeoPort()
+{
+    return deoPort;
+}
+bool SettingsHandler::getDeoEnabled()
+{
+    return deoEnabled;
 }
 int SettingsHandler::getPlayerVolume()
 {
@@ -225,6 +248,14 @@ int SettingsHandler::getThumbSizeList()
 {
     return thumbSizeList;
 }
+QString SettingsHandler::getDeoDnlaFunscript(QString key)
+{
+    if (deoDnlaFunscriptLookup.contains(key))
+    {
+        return deoDnlaFunscriptLookup[key].toString();
+    }
+    return nullptr;
+}
 
 void SettingsHandler::setSelectedLibrary(QString value)
 {
@@ -255,6 +286,21 @@ void SettingsHandler::setServerPort(QString value)
 {
     QMutexLocker locker(&mutex);
     serverPort = value;
+}
+void SettingsHandler::setDeoAddress(QString value)
+{
+    QMutexLocker locker(&mutex);
+    deoAddress = value;
+}
+void SettingsHandler::setDeoPort(QString value)
+{
+    QMutexLocker locker(&mutex);
+    deoPort = value;
+}
+void SettingsHandler::setDeoEnabled(bool value)
+{
+    QMutexLocker locker(&mutex);
+    deoEnabled = value;
 }
 void SettingsHandler::setPlayerVolume(int value)
 {
@@ -350,20 +396,28 @@ void SettingsHandler::setVibMultiplierValue(float value)
 
 void SettingsHandler::setLibraryView(int value)
 {
+    QMutexLocker locker(&mutex);
     libraryView = value;
 }
 void SettingsHandler::setThumbSize(int value)
 {
+    QMutexLocker locker(&mutex);
     thumbSize = value;
 }
 void SettingsHandler::setThumbSizeList(int value)
 {
+    QMutexLocker locker(&mutex);
     thumbSizeList = value;
+}
+void SettingsHandler::setDeoDnlaFunscript(QString key, QString value)
+{
+    QMutexLocker locker(&mutex);
+    deoDnlaFunscriptLookup[key] = value;
 }
 
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.11b";
-const float SettingsHandler::XTPVersionNum = 0.11f;
+const QString SettingsHandler::XTPVersion = "0.12b";
+const float SettingsHandler::XTPVersionNum = 0.12f;
 
 const int SettingsHandler::minOffSetMap = 1;
 const int SettingsHandler::midOffSetMap = 1000;
@@ -372,6 +426,7 @@ const int SettingsHandler::minOffSet = -1000;
 const int SettingsHandler::maxOffSet = 1000;
 QSettings SettingsHandler::settings{"cUrbSide prOd", "XTPlayer"};
 QMutex SettingsHandler::mutex;
+QHash<QString, QVariant> SettingsHandler::deoDnlaFunscriptLookup;
 QString SettingsHandler::selectedLibrary;
 int SettingsHandler::selectedDevice;
 int SettingsHandler::playerVolume;
@@ -402,3 +457,6 @@ QString SettingsHandler::selectedFile;
 QString SettingsHandler::serialPort;
 QString SettingsHandler::serverAddress;
 QString SettingsHandler::serverPort;
+QString SettingsHandler::deoAddress;
+QString SettingsHandler::deoPort;
+bool SettingsHandler::deoEnabled;

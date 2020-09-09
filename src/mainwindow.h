@@ -43,6 +43,7 @@ QT_END_NAMESPACE
 
 
 extern void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler);
+extern void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler);
 
 class MainWindow : public QMainWindow
 {
@@ -76,12 +77,14 @@ private slots:
     void playFileWithCustomScript();
     void regenerateThumbNail();
     void setThumbNailFromCurrent();
+    void onDeoMessageRecieved(DeoPacket packet);
     void on_actionAbout_triggered();
     void on_action75_triggered();
     void on_action100_triggered();
     void on_action125_triggered();
     void on_action150_triggered();
     void on_action175_triggered();
+    void dispose();
 
     void on_actionDonate_triggered();
 
@@ -127,7 +130,9 @@ private:
     bool deviceConnected;
     bool _funscriptLoaded;
     QLabel* connectionStatusLabel;
+    QLabel* deoConnectionStatusLabel;
     QPushButton* retryConnectionButton;
+    QPushButton* deoRetryConnectionButton;
     int voulumeBeforeMute;
     QActionGroup* libraryViewGroup;
     QActionGroup* libraryThumbSizeGroup;
@@ -176,6 +181,8 @@ private:
     void on_media_stop();
     void on_device_connectionChanged(ConnectionChangedSignal event);
     void on_device_error(QString error);
+    void on_deo_device_connectionChanged(ConnectionChangedSignal event);
+    void on_deo_device_error(QString error);
     void donate();
 };
 #endif // MAINWINDOW_H

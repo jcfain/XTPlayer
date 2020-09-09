@@ -22,7 +22,6 @@ public:
     explicit DeviceHandler(QObject *parent = nullptr);
     ~DeviceHandler();
     virtual void sendTCode(const QString &tcode);
-    //virtual void init(const QString &portName, int waitTimeout = 5000);
     virtual void dispose();
     virtual bool isConnected();
 

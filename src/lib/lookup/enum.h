@@ -4,7 +4,8 @@
 enum DeviceType
 {
     Serial,
-    Network
+    Network,
+    Deo
 };
 
 enum ConnectionStatus

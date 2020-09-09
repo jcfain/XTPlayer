@@ -12,9 +12,11 @@
 #include "lib/handler/serialhandler.h"
 #include "lib/handler/videohandler.h"
 #include "lib/handler/udphandler.h"
+#include "lib/handler/deohandler.h"
 
 extern void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo);
 extern void initNetwork(UdpHandler* serialHandler, NetworkAddress address);
+extern void initDeo(DeoHandler* deoHandler, NetworkAddress address);
 
 class SettingsDialog : public QDialog
 {
@@ -26,14 +28,19 @@ public:
     void init(VideoHandler* videoHandler);
     UdpHandler* getNetworkHandler();
     SerialHandler* getSerialHandler();
+    DeoHandler* getDeoHandler();
     void setSelectedDeviceHandler(DeviceHandler* device);
     DeviceHandler* getSelectedDeviceHandler();
     bool isConnected();
     void initDeviceRetry();
+    void initDeoRetry();
+    void dispose();
 
 signals:
     void deviceError(QString error);
+    void deoDeviceError(QString error);
     void deviceConnectionChange(ConnectionChangedSignal event);
+    void deoDeviceConnectionChange(ConnectionChangedSignal event);
 
 private slots:
     void on_serialOutputRdo_clicked();
@@ -49,6 +56,8 @@ private slots:
     void onOffSet_valueChanged(int value);
     void on_device_connectionChanged(ConnectionChangedSignal event);
     void on_device_error(QString error);
+    void on_deo_connectionChanged(ConnectionChangedSignal event);
+    void on_deo_error(QString error);
 
     void on_SerialOutputCmb_currentIndexChanged(int index);
 
@@ -78,11 +87,22 @@ private slots:
 
     void on_networkConnectButton_clicked();
 
+    void on_deoConnectButton_clicked();
+
+    void on_deoAddressTxt_editingFinished();
+
+    void on_deoPortTxt_editingFinished();
+
+    void on_deoCheckbox_clicked(bool checked);
+
+    void on_checkBox_clicked(bool checked);
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();
     void initSerialEvent();
     void initNetworkEvent();
+    void initDeoEvent();
     void setupUi();
 
     bool _interfaceInitialized = false;
@@ -93,7 +113,9 @@ private:
     VideoHandler* _videoHandler;
     SerialHandler* _serialHandler;
     UdpHandler* _udpHandler;
+    DeoHandler* _deoHandler;
     QFuture<void> _initFuture;
+    QFuture<void> _initDeoFuture;
     QLabel* xRangeLabel;
     QLabel* xRangeMinLabel;
     QLabel* xRangeMaxLabel;

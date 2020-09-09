@@ -6,11 +6,6 @@ UdpHandler::UdpHandler(QObject *parent) :
 }
 UdpHandler::~UdpHandler()
 {
-    _mutex.lock();
-    _stop = true;
-    _cond.wakeOne();
-    _mutex.unlock();
-    wait();
 }
 
 void UdpHandler::init(NetworkAddress address, int waitTimeout)
@@ -27,7 +22,7 @@ void UdpHandler::init(NetworkAddress address, int waitTimeout)
     while(!_isConnected && !_stop && timeouttracker <= 3)
     {
         sendTCode("D1");
-        sleep(_waitTimeout / 1000 + 1);
+        QThread::currentThread()->sleep(_waitTimeout / 1000 + 1);
         ++timeouttracker;
     }
     if (timeouttracker > 3)
@@ -139,8 +134,8 @@ void UdpHandler::dispose()
     _isConnected = false;
     _stop = true;
     _mutex.unlock();
-    emit connectionChange({DeviceType::Network, ConnectionStatus::Disconnected, "Disconnected"});
     _cond.wakeOne();
+    emit connectionChange({DeviceType::Network, ConnectionStatus::Disconnected, "Disconnected"});
 }
 
 bool UdpHandler::isConnected()

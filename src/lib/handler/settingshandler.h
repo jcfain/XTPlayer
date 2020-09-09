@@ -2,6 +2,7 @@
 #define SETTINGSHANDLER_H
 #include <QSettings>
 #include <QMutex>
+#include <QHash>
 #include "../lookup/enum.h"
 #include "../tool/xmath.h"
 #include "loghandler.h"
@@ -18,12 +19,16 @@ public:
     static const int maxOffSetMap;
     static const int midOffSetMap;
     static const int minOffSetMap;
+    static QString getDeoDnlaFunscript(QString key);
     static QString getSelectedLibrary();
     static QString getSelectedFunscriptLibrary();
     static int getSelectedDevice();
     static QString getSerialPort();
     static QString getServerAddress();
     static QString getServerPort();
+    static QString getDeoAddress();
+    static QString getDeoPort();
+    static bool getDeoEnabled();
     static int getPlayerVolume();
     static int getoffSet();
     static int getXMin();
@@ -48,12 +53,16 @@ public:
     static int getThumbSize();
     static int getThumbSizeList();
 
+    static void setDeoDnlaFunscript(QString key, QString value);
     static void setSelectedLibrary(QString value);
     static void setSelectedFunscriptLibrary(QString value);
     static void setSelectedDevice(int value);
     static void setSerialPort(QString value);
     static void setServerAddress(QString value);
     static void setServerPort(QString value);
+    static void setDeoAddress(QString value);
+    static void setDeoPort(QString value);
+    static void setDeoEnabled(bool value);
     static void setPlayerVolume(int value);
     static void setoffSet(int value);
     static void setXMin(int value);
@@ -85,6 +94,7 @@ public:
 private:
     SettingsHandler();
     ~SettingsHandler();
+    static QHash<QString, QVariant> deoDnlaFunscriptLookup;
     static QString selectedLibrary;
     static QString selectedFunscriptLibrary;
     static QString selectedFile;
@@ -92,6 +102,9 @@ private:
     static QString serialPort;
     static QString serverAddress;
     static QString serverPort;
+    static QString deoAddress;
+    static QString deoPort;
+    static bool deoEnabled;
     static int playerVolume;
     static int offSet;
     static int xMin;
