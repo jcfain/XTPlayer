@@ -14,11 +14,11 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
     {
         setSelectedDeviceHandler(_udpHandler);
     }
-    ui.deoAddressTxt->setHidden(true);
-    ui.deoCheckbox->setHidden(true);
-    ui.deoConnectButton->setHidden(true);
-    ui.deoPortTxt->setHidden(true);
-    ui.deoStatuslbl->setHidden(true);
+//    ui.deoAddressTxt->setHidden(true);
+//    ui.deoCheckbox->setHidden(true);
+//    ui.deoConnectButton->setHidden(true);
+//    ui.deoPortTxt->setHidden(true);
+//    ui.deoStatuslbl->setHidden(true);
 
     connect(_serialHandler, &SerialHandler::connectionChange, this, &SettingsDialog::on_device_connectionChanged);
     connect(_serialHandler, &SerialHandler::errorOccurred, this, &SettingsDialog::on_device_error);

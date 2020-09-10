@@ -71,8 +71,11 @@ void DeoHandler::send(const QString &command)
 
 void DeoHandler::dispose()
 {
-//    disconnect(tcpSocket, &QTcpSocket::stateChanged, this, &DeoHandler::onSocketStateChange);
-//    disconnect(tcpSocket, &QTcpSocket::errorOccurred, this, &DeoHandler::tcpErrorOccured);
+    if (tcpSocket != nullptr)
+    {
+        disconnect(tcpSocket, &QTcpSocket::stateChanged, this, &DeoHandler::onSocketStateChange);
+        disconnect(tcpSocket, &QTcpSocket::errorOccurred, this, &DeoHandler::tcpErrorOccured);
+    }
     const QMutexLocker locker(&_mutex);
     _isConnected = false;
     if (keepAliveTimer != nullptr && keepAliveTimer->isActive())
