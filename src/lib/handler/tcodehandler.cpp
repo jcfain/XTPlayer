@@ -9,10 +9,9 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
 {
     QMutexLocker locker(&mutex);
     QString tcode = "";
-    int xValue = XMath::mapRange(position, 50, 100, 500, 999);
 
     char tcodeValueString[4];
-    sprintf(tcodeValueString, "%03d", calculateRange("L0", xValue));
+    sprintf(tcodeValueString, "%03d", calculateRange("L0", position));
     tcode += "L0";
     tcode += tcodeValueString;
     if (speed != 0) {
@@ -23,7 +22,7 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
     if (SettingsHandler::getYRollMultiplierChecked() && SettingsHandler::getYRollMultiplierValue() !=0)
     {
         char tcodeYRollValueString[4];
-        int yRollValue = qRound(xValue * SettingsHandler::getYRollMultiplierValue());
+        int yRollValue = qRound(position * SettingsHandler::getYRollMultiplierValue());
         sprintf(tcodeYRollValueString, "%03d", calculateRange("R1", yRollValue));
         tcode += " R1";
         tcode += tcodeYRollValueString;
@@ -36,7 +35,7 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
     if (SettingsHandler::getXRollMultiplierChecked() && SettingsHandler::getXRollMultiplierValue() !=0)
     {
         char tcodeXRollValueString[4];
-        int xRollValue = qRound(xValue * SettingsHandler::getXRollMultiplierValue());
+        int xRollValue = qRound(position * SettingsHandler::getXRollMultiplierValue());
         sprintf(tcodeXRollValueString, "%03d", calculateRange("R2", xRollValue));
         tcode += " R2";
         tcode += tcodeXRollValueString;
@@ -49,7 +48,7 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
     if (SettingsHandler::getTwistMultiplierChecked() && SettingsHandler::getTwistMultiplierValue() !=0)
     {
         char tcodeTwistValueString[4];
-        int twistValue = qRound(xValue * SettingsHandler::getTwistMultiplierValue());
+        int twistValue = qRound(position * SettingsHandler::getTwistMultiplierValue());
         sprintf(tcodeTwistValueString, "%03d", calculateRange("R0", twistValue));
         tcode += " R0";
         tcode += tcodeTwistValueString;
@@ -62,8 +61,8 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
     if (SettingsHandler::getVibMultiplierChecked() && SettingsHandler::getVibMultiplierValue() !=0)
     {
         char tcodeVibValueString[4];
-        int vibValue = qRound(xValue * SettingsHandler::getVibMultiplierValue());
-        sprintf(tcodeVibValueString, "%03d", XMath::constrain(vibValue, 0, 1000));
+        int vibValue = qRound(position * SettingsHandler::getVibMultiplierValue());
+        sprintf(tcodeVibValueString, "%03d", XMath::constrain(vibValue, 1, 1000));
         tcode += " V0";
         tcode += tcodeVibValueString;
         if (speed != 0) {
@@ -74,9 +73,12 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
     return tcode;
 }
 
-int TCodeHandler::calculateRange(const char* channel, int value)
+int TCodeHandler::calculateRange(const char* channel, int rawValue)
 {
-    return XMath::constrain(value, getchannelMin(channel), getchannelMax(channel));
+    int xMax = getchannelMax(channel);
+    int xMin = getchannelMin(channel);
+    int xMid = qRound((xMax + xMin) / 2.0);
+    return XMath::mapRange(rawValue, 50, 100, xMid, xMax);
 }
 
 int TCodeHandler::getchannelMin(const char* channel)
