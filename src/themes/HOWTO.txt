@@ -1,0 +1,10 @@
+Themes in XTP is pretty simple. It uses QTs build in CSS system.
+Basically if you know a little CSS you will feel right at home.
+Even if you know no CSS you will still be able to modify these files 
+as they are mostly in english. 
+
+For more specific info on the CSS presented in these themes see the following link.
+
+https://doc.qt.io/Qt-5/stylesheet-syntax.html
+
+In XTP choose "File > Change theme..." to choose a css file.

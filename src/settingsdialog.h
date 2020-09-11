@@ -97,6 +97,8 @@ private slots:
 
     void on_checkBox_clicked(bool checked);
 
+    void on_resetAllButton_clicked();
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();

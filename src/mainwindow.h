@@ -102,6 +102,8 @@ private slots:
 
     void on_SeekSlider_valueChanged(int value);
 
+    void on_actionChange_theme_triggered();
+
 signals:
     void keyPressed(QKeyEvent * event);
     void sendTCode(QString tcode);
@@ -144,6 +146,7 @@ private:
     qint64 thumbCaptureTime;
     QFrame* playerControlsPlaceHolder;
     QGridLayout* placeHolderControlsGrid;
+    bool funscriptFileSelectorOpen = false;
 
 
     QList<QListWidgetItem*> libraryItems;
@@ -161,6 +164,7 @@ private:
     void updateThumbSizeUI(int size);
     void setThumbSize(int size);
     LibraryListItem getLibraryListItemFromQListItem(QListWidgetItem* qListWidgetItem);
+    void changeDeoFunscript();
 
     void playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr);
     void initNetworkEvent();

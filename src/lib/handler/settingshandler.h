@@ -20,6 +20,7 @@ public:
     static const int midOffSetMap;
     static const int minOffSetMap;
     static QString getDeoDnlaFunscript(QString key);
+    static QString getSelectedTheme();
     static QString getSelectedLibrary();
     static QString getSelectedFunscriptLibrary();
     static int getSelectedDevice();
@@ -54,6 +55,7 @@ public:
     static int getThumbSizeList();
 
     static void setDeoDnlaFunscript(QString key, QString value);
+    static void setSelectedTheme(QString value);
     static void setSelectedLibrary(QString value);
     static void setSelectedFunscriptLibrary(QString value);
     static void setSelectedDevice(int value);
@@ -95,6 +97,7 @@ private:
     SettingsHandler();
     ~SettingsHandler();
     static QHash<QString, QVariant> deoDnlaFunscriptLookup;
+    static QString selectedTheme;
     static QString selectedLibrary;
     static QString selectedFunscriptLibrary;
     static QString selectedFile;
@@ -127,6 +130,8 @@ private:
     static int libraryView;
     static int thumbSize;
     static int thumbSizeList;
+
+    static bool defaultReset;
 
     static QSettings settings;
     static QMutex mutex;

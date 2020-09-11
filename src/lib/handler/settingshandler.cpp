@@ -17,6 +17,8 @@ void SettingsHandler::Load()
         Default();
     }
     locker.relock();
+    selectedTheme = settings.value("selectedTheme").toString();
+    selectedTheme = selectedTheme.isNull() ? QApplication::applicationDirPath() + "/themes/default.css" : selectedTheme;
     selectedLibrary = settings.value("selectedLibrary").toString();
     selectedDevice = settings.value("selectedDevice").toInt();
     playerVolume = settings.value("playerVolume").toInt();
@@ -34,7 +36,9 @@ void SettingsHandler::Load()
     serverAddress = settings.value("serverAddress").toString();
     serverPort = settings.value("serverPort").toString();
     deoAddress = settings.value("deoAddress").toString();
+    deoAddress = deoAddress.isNull() ? "127.0.0.1" : deoAddress;
     deoPort = settings.value("deoPort").toString();
+    deoPort = deoPort.isNull() ? "23554" : deoPort;
     deoEnabled = settings.value("deoEnabled").toBool();
     yRollMultiplierChecked = settings.value("yRollMultiplierChecked").toBool();
     yRollMultiplierValue = settings.value("yRollMultiplierValue").toFloat();
@@ -54,46 +58,52 @@ void SettingsHandler::Load()
 void SettingsHandler::Save()
 {
     QMutexLocker locker(&mutex);
-    settings.setValue("version", XTPVersionNum);
-    settings.setValue("selectedLibrary", selectedLibrary);
-    settings.setValue("selectedDevice", selectedDevice);
-    settings.setValue("playerVolume", playerVolume);
-    settings.setValue("offSet", offSet);
-    settings.setValue("xMin", xMin);
-    settings.setValue("xMax", xMax == 0 ? 999 : xMax );
-    settings.setValue("yRollMin", yRollMin );
-    settings.setValue("yRollMax", yRollMax == 0 ? 999 : yRollMax );
-    settings.setValue("xRollMin", xRollMin );
-    settings.setValue("xRollMax", xRollMax == 0 ? 999 : xRollMax );
-    settings.setValue("twistMin", twistMin );
-    settings.setValue("twistMax", twistMax == 0 ? 999 : twistMax );
-    settings.setValue("selectedFunscriptLibrary", selectedFunscriptLibrary);
-    settings.setValue("serialPort", serialPort);
-    settings.setValue("serverAddress", serverAddress);
-    settings.setValue("serverPort", serverPort);
-    settings.setValue("deoAddress", deoAddress);
-    settings.setValue("deoPort", deoPort == nullptr ? "23554" : deoPort);
-    settings.setValue("deoEnabled", deoEnabled);
-    settings.setValue("yRollMultiplierChecked", yRollMultiplierChecked);
-    settings.setValue("yRollMultiplierValue", yRollMultiplierValue);
-    settings.setValue("xRollMultiplierChecked", xRollMultiplierChecked);
-    settings.setValue("xRollMultiplierValue", xRollMultiplierValue);
-    settings.setValue("twistMultiplierChecked", twistMultiplierChecked);
-    settings.setValue("twistMultiplierValue", twistMultiplierValue);
-    settings.setValue("vibMultiplierChecked", twistMultiplierChecked);
-    settings.setValue("vibMultiplierValue", twistMultiplierValue);
+    if (!defaultReset)
+    {
+        settings.setValue("version", XTPVersionNum);
+        settings.setValue("selectedLibrary", selectedLibrary);
+        settings.setValue("selectedTheme", selectedTheme);
+        settings.setValue("selectedDevice", selectedDevice);
+        settings.setValue("playerVolume", playerVolume);
+        settings.setValue("offSet", offSet);
+        settings.setValue("xMin", xMin);
+        settings.setValue("xMax", xMax == 0 ? 999 : xMax );
+        settings.setValue("yRollMin", yRollMin );
+        settings.setValue("yRollMax", yRollMax == 0 ? 999 : yRollMax );
+        settings.setValue("xRollMin", xRollMin );
+        settings.setValue("xRollMax", xRollMax == 0 ? 999 : xRollMax );
+        settings.setValue("twistMin", twistMin );
+        settings.setValue("twistMax", twistMax == 0 ? 999 : twistMax );
+        settings.setValue("selectedFunscriptLibrary", selectedFunscriptLibrary);
+        settings.setValue("serialPort", serialPort);
+        settings.setValue("serverAddress", serverAddress);
+        settings.setValue("serverPort", serverPort);
+        settings.setValue("deoAddress", deoAddress);
+        settings.setValue("deoPort", deoPort == nullptr ? "23554" : deoPort);
+        settings.setValue("deoEnabled", deoEnabled);
+        settings.setValue("yRollMultiplierChecked", yRollMultiplierChecked);
+        settings.setValue("yRollMultiplierValue", yRollMultiplierValue);
+        settings.setValue("xRollMultiplierChecked", xRollMultiplierChecked);
+        settings.setValue("xRollMultiplierValue", xRollMultiplierValue);
+        settings.setValue("twistMultiplierChecked", twistMultiplierChecked);
+        settings.setValue("twistMultiplierValue", twistMultiplierValue);
+        settings.setValue("vibMultiplierChecked", twistMultiplierChecked);
+        settings.setValue("vibMultiplierValue", twistMultiplierValue);
 
-    settings.setValue("libraryView", libraryView == 0 ? 0 : libraryView);
-    settings.setValue("thumbSize", thumbSize == 0 ? 150 : thumbSize);
-    settings.setValue("thumbSizeList", thumbSizeList == 0 ? 50 : thumbSizeList);
+        settings.setValue("libraryView", libraryView == 0 ? 0 : libraryView);
+        settings.setValue("thumbSize", thumbSize == 0 ? 150 : thumbSize);
+        settings.setValue("thumbSizeList", thumbSizeList == 0 ? 50 : thumbSizeList);
 
-    settings.setValue("deoDnlaFunscriptLookup", deoDnlaFunscriptLookup);
+        settings.setValue("deoDnlaFunscriptLookup", deoDnlaFunscriptLookup);
+    }
 
 }
 
 void SettingsHandler::Default()
 {
     QMutexLocker locker(&mutex);
+    defaultReset = true;
+    settings.setValue("selectedTheme", QApplication::applicationDirPath() + "/themes/default.qss");
     settings.setValue("selectedLibrary", QVariant::String);
     settings.setValue("playerVolume", 0);
     settings.setValue("offSet", 0);
@@ -110,7 +120,7 @@ void SettingsHandler::Default()
     settings.setValue("serialPort", QVariant::String);
     settings.setValue("serverAddress", QVariant::String);
     settings.setValue("serverPort", "0");
-    settings.setValue("deoAddress", QVariant::String);
+    settings.setValue("deoAddress", "127.0.0.1");
     settings.setValue("deoPort", "23554");
     settings.setValue("deoEnabled", false);
     settings.setValue("yRollMultiplierChecked", false);
@@ -127,6 +137,10 @@ void SettingsHandler::Default()
     settings.setValue("thumbSizeList", 50);
 }
 
+QString SettingsHandler::getSelectedTheme()
+{
+    return selectedTheme;
+}
 QString SettingsHandler::getSelectedLibrary()
 {
     return selectedLibrary;
@@ -257,6 +271,11 @@ QString SettingsHandler::getDeoDnlaFunscript(QString key)
     return nullptr;
 }
 
+void SettingsHandler::setSelectedTheme(QString value)
+{
+    QMutexLocker locker(&mutex);
+    selectedTheme = value;
+}
 void SettingsHandler::setSelectedLibrary(QString value)
 {
     QMutexLocker locker(&mutex);
@@ -427,6 +446,7 @@ const int SettingsHandler::maxOffSet = 1000;
 QSettings SettingsHandler::settings{"cUrbSide prOd", "XTPlayer"};
 QMutex SettingsHandler::mutex;
 QHash<QString, QVariant> SettingsHandler::deoDnlaFunscriptLookup;
+QString SettingsHandler::selectedTheme;
 QString SettingsHandler::selectedLibrary;
 int SettingsHandler::selectedDevice;
 int SettingsHandler::playerVolume;
@@ -460,3 +480,4 @@ QString SettingsHandler::serverPort;
 QString SettingsHandler::deoAddress;
 QString SettingsHandler::deoPort;
 bool SettingsHandler::deoEnabled;
+bool SettingsHandler::defaultReset = false;

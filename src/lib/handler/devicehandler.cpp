@@ -8,7 +8,7 @@ DeviceHandler::DeviceHandler(QObject *parent) :
 
 DeviceHandler::~DeviceHandler()
 {
-    wait();
+    //wait();
 }
 
 void DeviceHandler::run(){}

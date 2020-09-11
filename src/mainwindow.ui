@@ -33,7 +33,7 @@
       <property name="frameShadow">
        <enum>QFrame::Raised</enum>
       </property>
-      <layout class="QGridLayout" name="mainGrid" rowstretch="0,0,0,0,0,0" columnstretch="0,0,0,0">
+      <layout class="QGridLayout" name="mainGrid" rowstretch="0,0,0,0,0,0" columnstretch="0,0">
        <item row="0" column="0" rowspan="6">
         <widget class="QListWidget" name="LibraryList">
          <property name="minimumSize">
@@ -340,6 +340,7 @@
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
     <addaction name="actionDonate"/>
+    <addaction name="actionChange_theme"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -353,7 +354,7 @@
   </widget>
   <action name="actionSelect_library">
    <property name="text">
-    <string>Select library</string>
+    <string>Select library...</string>
    </property>
   </action>
   <action name="actionAbout">
@@ -391,6 +392,11 @@
    </property>
    <property name="text">
     <string>Thumbnail</string>
+   </property>
+  </action>
+  <action name="actionChange_theme">
+   <property name="text">
+    <string>Change theme...</string>
    </property>
   </action>
  </widget>

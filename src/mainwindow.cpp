@@ -8,12 +8,12 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    QFile file(QApplication::applicationDirPath() + "/themes/default.qss");
+    SettingsHandler::Load();
+
+    QFile file(SettingsHandler::getSelectedTheme());
     file.open(QFile::ReadOnly);
     QString styleSheet = QLatin1String(file.readAll());
     setStyleSheet(styleSheet);
-
-    SettingsHandler::Load();
 
     deoConnectionStatusLabel = new QLabel(this);
     deoRetryConnectionButton = new QPushButton(this);
@@ -222,8 +222,28 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
     myMenu.addAction("Play with funscript...", this, &MainWindow::playFileWithCustomScript);
     myMenu.addAction("Regenerate thumbnail", this, &MainWindow::regenerateThumbNail);
     myMenu.addAction("Set thumbnail from current", this, &MainWindow::setThumbNailFromCurrent);
+
+    LibraryListItem selectedItem = getLibraryListItemFromQListItem(ui->LibraryList->selectedItems()[0]);
+    QString funscriptPath = SettingsHandler::getDeoDnlaFunscript(selectedItem.path);
+    if (funscriptPath != nullptr)
+    {
+        myMenu.addAction("Change DeoVR funscript...", this, &MainWindow::changeDeoFunscript);
+    }
+
     // Show context menu at handling position
     myMenu.exec(globalPos);
+}
+
+void MainWindow::changeDeoFunscript()
+{
+    LibraryListItem selectedItem = getLibraryListItemFromQListItem(ui->LibraryList->selectedItems()[0]);
+    QFileInfo videoFile(selectedItem.path);
+    funscriptFileSelectorOpen = true;
+    QString funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + videoFile.fileName(), SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
+    funscriptFileSelectorOpen = false;
+    if (funscriptPath != nullptr)
+        //Store the location of the file so the above check doesnt happen again.
+        SettingsHandler::setDeoDnlaFunscript(selectedItem.path, funscriptPath);
 }
 
 void MainWindow::on_load_library(QString path)
@@ -789,7 +809,6 @@ void MainWindow::on_media_start()
         funscriptFuture = QtConcurrent::run(syncFunscript, videoHandler, _xSettings, tcodeHandler, funscriptHandler);
     }
 }
-bool deoDnlaFileSelectorOpen = false;
 void MainWindow::onDeoMessageRecieved(DeoPacket packet)
 {
 //        LogHandler::Debug("Deo path: "+packet.path);
@@ -798,24 +817,44 @@ void MainWindow::onDeoMessageRecieved(DeoPacket packet)
 //        LogHandler::Debug("Deo playbackSpeed: "+QString::number(packet.playbackSpeed));
 //        LogHandler::Debug("Deo playing: "+QString::number(packet.playing));
 
-    if (!deoDnlaFileSelectorOpen && packet.duration > 0)
+    if (!funscriptFileSelectorOpen && packet.duration > 0)
     {
         QString videoPath = packet.path;
-        if (videoPath.startsWith("http"))
+        QFileInfo videoFile(videoPath);
+        QString funscriptPath = SettingsHandler::getDeoDnlaFunscript(videoPath);
+        QFileInfo funscriptFile(funscriptPath);
+        if (funscriptPath == nullptr || !funscriptFile.exists())
         {
-            QString scriptPath = SettingsHandler::getDeoDnlaFunscript(videoPath);
-            //LogHandler::Debug("scriptPath: "+scriptPath);
-            if (scriptPath == nullptr)
+            _funscriptLoaded = false;
+            //Check the deo device local video directory for funscript.
+            int indexOfSuffix = packet.path.lastIndexOf(".");
+            QString localFunscriptPath = packet.path.replace(indexOfSuffix, packet.path.length() - indexOfSuffix, ".funscript");
+            QFile localFile(localFunscriptPath);
+            if(localFile.exists())
             {
-                _funscriptLoaded = false;
-                deoDnlaFileSelectorOpen = true;
-                QString selectedScript = QFileDialog::getOpenFileName(this, "Choose script", SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
-                deoDnlaFileSelectorOpen = false;
-                if (selectedScript != Q_NULLPTR)
+                funscriptPath = localFunscriptPath;
+            }
+            else
+            {
+                //Check the user selected library location.
+                QFileInfo fileinfo(packet.path);
+                QString libraryScriptFile = fileinfo.fileName().remove(fileinfo.fileName().lastIndexOf('.'), fileinfo.fileName().length() -  1) + ".funscript";
+                QString libraryScriptPath = SettingsHandler::getSelectedFunscriptLibrary() + QDir::separator() + libraryScriptFile;
+                QFile libraryFile(libraryScriptPath);
+                if(libraryFile.exists())
                 {
-                    SettingsHandler::setDeoDnlaFunscript(videoPath, selectedScript);
+                    funscriptPath = libraryScriptPath;
                 }
             }
+            //If the above locations fail ask the user to select a file manually.
+            if (funscriptPath == nullptr)
+            {
+                funscriptFileSelectorOpen = true;
+                funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + videoFile.fileName(), SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
+                funscriptFileSelectorOpen = false;
+            }
+            //Store the location of the file so the above check doesnt happen again.
+            SettingsHandler::setDeoDnlaFunscript(videoPath, funscriptPath);
         }
     }
 }
@@ -867,18 +906,12 @@ void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDial
         }
         else if(xSettings->isConnected() && currentDeoPacket != nullptr && currentDeoPacket->duration > 0 && currentDeoPacket->playing)
         {
-            QString funscriptPath;
-            if (currentDeoPacket->path.startsWith("http"))
+            if (!currentDeoPacket->path.isEmpty() && !currentDeoPacket->path.isNull())
             {
-                funscriptPath = SettingsHandler::getDeoDnlaFunscript(currentDeoPacket->path);
+                QString funscriptPath = SettingsHandler::getDeoDnlaFunscript(currentDeoPacket->path);
+                currentVideo = currentDeoPacket->path;
+                funscriptLoaded = funscriptHandler->load(funscriptPath);
             }
-            else if(!currentDeoPacket->path.isEmpty() && !currentDeoPacket->path.isNull())
-            {
-                int indexOfSuffix = currentDeoPacket->path.lastIndexOf(".");
-                funscriptPath = currentDeoPacket->path.replace(indexOfSuffix, currentDeoPacket->path.length() - indexOfSuffix, ".funscript");
-            }
-            currentVideo = currentDeoPacket->path;
-            funscriptLoaded = funscriptHandler->load(funscriptPath);
         }
 
         if(currentDeoPacket != nullptr && currentVideo != currentDeoPacket->path)
@@ -1259,3 +1292,15 @@ LibraryListItem MainWindow::getLibraryListItemFromQListItem(QListWidgetItem* qLi
     return qListWidgetItem->data(Qt::UserRole).value<LibraryListItem>();
 }
 
+
+void MainWindow::on_actionChange_theme_triggered()
+{
+    QFileInfo selectedThemeInfo(SettingsHandler::getSelectedTheme());
+    QString selectedTheme = QFileDialog::getOpenFileName(this, "Choose XTP theme", selectedThemeInfo.absoluteDir().absolutePath(), "CSS Files (*.css)");
+    if(!selectedTheme.isNull())
+        SettingsHandler::setSelectedTheme(selectedTheme);
+    QFile file(selectedTheme);
+    file.open(QFile::ReadOnly);
+    QString styleSheet = QLatin1String(file.readAll());
+    setStyleSheet(styleSheet);
+}

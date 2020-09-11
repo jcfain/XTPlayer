@@ -3,6 +3,7 @@
 UdpHandler::UdpHandler(QObject *parent) :
     DeviceHandler(parent)
 {
+    qRegisterMetaType<ConnectionChangedSignal>();
 }
 UdpHandler::~UdpHandler()
 {
@@ -10,20 +11,25 @@ UdpHandler::~UdpHandler()
 
 void UdpHandler::init(NetworkAddress address, int waitTimeout)
 {
-    qRegisterMetaType<ConnectionChangedSignal>();
     emit connectionChange({DeviceType::Network, ConnectionStatus::Connecting, "Connecting..."});
-    _mutex.lock();
+    //_mutex.lock();
     _stop = false;
     _isSelected = true;
     _waitTimeout = waitTimeout;
     _address = address;
-    _mutex.unlock();
+    //_mutex.unlock();
     int timeouttracker = 0;
+    qint64 time1 = QTime::currentTime().msecsSinceStartOfDay();
+    qint64 time2 = QTime::currentTime().msecsSinceStartOfDay();
     while(!_isConnected && !_stop && timeouttracker <= 3)
     {
-        sendTCode("D1");
-        QThread::currentThread()->sleep(_waitTimeout / 1000 + 1);
-        ++timeouttracker;
+        if (time2 - time1 >= _waitTimeout + 1000 || timeouttracker == 0)
+        {
+            time1 = time2;
+            sendTCode("D1");
+            ++timeouttracker;
+        }
+        time2 = QTime::currentTime().msecsSinceStartOfDay();
     }
     if (timeouttracker > 3)
     {
@@ -107,24 +113,27 @@ void UdpHandler::run()
         }
 
 
-        _mutex.lock();
-        _cond.wait(&_mutex);
-        if (currentAddress != _address.address || currentPort != _address.port)
+        if (!_stop)
         {
-            currentAddress = _address.address;
-            addressObj.setAddress(_address.address);
-            currentPort = _address.port;
-            currentAddressChanged = true;
-            _isConnected = false;
-        }
-        else
-        {
-            currentAddressChanged = false;
-        }
+            _mutex.lock();
+            _cond.wait(&_mutex);
+            if (currentAddress != _address.address || currentPort != _address.port)
+            {
+                currentAddress = _address.address;
+                addressObj.setAddress(_address.address);
+                currentPort = _address.port;
+                currentAddressChanged = true;
+                _isConnected = false;
+            }
+            else
+            {
+                currentAddressChanged = false;
+            }
 
-        currentRequest.clear();
-        currentRequest.append(_tcode);
-        _mutex.unlock();
+            currentRequest.clear();
+            currentRequest.append(_tcode);
+            _mutex.unlock();
+        }
     }
 }
 
@@ -136,6 +145,11 @@ void UdpHandler::dispose()
     _mutex.unlock();
     _cond.wakeOne();
     emit connectionChange({DeviceType::Network, ConnectionStatus::Disconnected, "Disconnected"});
+    if(isRunning())
+    {
+        quit();
+        wait();
+    }
 }
 
 bool UdpHandler::isConnected()

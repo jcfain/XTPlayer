@@ -307,12 +307,34 @@
       <string>Application</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="2">
+       <widget class="QWidget" name="widget_4" native="true"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QPushButton" name="resetAllButton">
+        <property name="text">
+         <string>Reset ALL</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="0">
        <widget class="QCheckBox" name="checkBox">
         <property name="text">
          <string>Debug</string>
         </property>
        </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QWidget" name="widget_3" native="true"/>
+      </item>
+      <item row="0" column="5">
+       <widget class="QWidget" name="widget" native="true"/>
+      </item>
+      <item row="0" column="4">
+       <widget class="QWidget" name="widget_2" native="true"/>
+      </item>
+      <item row="0" column="1">
+       <widget class="QWidget" name="widget_5" native="true"/>
       </item>
      </layout>
     </widget>

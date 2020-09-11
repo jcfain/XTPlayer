@@ -37,11 +37,12 @@ void SettingsDialog::dispose()
     _deoHandler->dispose();
     if(_initFuture.isRunning())
     {
-        _initFuture.cancel();
+        //_initFuture.cancel();
         _initFuture.waitForFinished();
     }
     delete _serialHandler;
     delete _udpHandler;
+    delete _deoHandler;
 }
 void SettingsDialog::init(VideoHandler* videoHandler)
 {
@@ -277,9 +278,7 @@ void SettingsDialog::initNetworkEvent()
 {
     if (!_udpHandler->isRunning())
     {
-        ui.networkConnectButton->setEnabled(false);
         //ui.serialConnectButton->setEnabled(false);
-        setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceType::Network);
         if (getSelectedDeviceHandler()->isRunning())
         {
             getSelectedDeviceHandler()->dispose();
@@ -294,6 +293,8 @@ void SettingsDialog::initNetworkEvent()
         if(SettingsHandler::getServerAddress() != "" && SettingsHandler::getServerPort() != "" &&
             SettingsHandler::getServerAddress() != "0" && SettingsHandler::getServerPort() != "0")
         {
+            setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceType::Network);
+            ui.networkConnectButton->setEnabled(false);
             NetworkAddress address { SettingsHandler::getServerAddress(), SettingsHandler::getServerPort().toInt() };
             _initFuture = QtConcurrent::run(initNetwork, _udpHandler, address);
         }
@@ -672,4 +673,16 @@ void SettingsDialog::on_deoCheckbox_clicked(bool checked)
 void SettingsDialog::on_checkBox_clicked(bool checked)
 {
     LogHandler::UserDebug(checked);
+}
+
+void SettingsDialog::on_resetAllButton_clicked()
+{
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset ALL settings?",
+                                  QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes) {
+        SettingsHandler::Default();
+        LogHandler::Dialog("Changes will take effect on restart.\nNo settings that are changed\nwill be saved this session.", XLogLevel::Information);
+      QApplication::quit();
+    }
 }

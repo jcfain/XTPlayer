@@ -3,18 +3,13 @@
 DeoHandler::DeoHandler(QObject *parent) :
     QObject(parent)
 {
-    emit connectionChange({DeviceType::Deo, ConnectionStatus::Disconnected, "Disconnected"});
 }
 
 DeoHandler::~DeoHandler()
 {
     _isConnected = false;
     if (tcpSocket != nullptr)
-    {
-//        if(tcpSocket->isOpen())
-//            tcpSocket->close();
         delete tcpSocket;
-    }
     if (keepAliveTimer != nullptr)
         delete keepAliveTimer;
     if (currentDeoPacket != nullptr)
@@ -71,18 +66,18 @@ void DeoHandler::send(const QString &command)
 
 void DeoHandler::dispose()
 {
-    if (tcpSocket != nullptr)
-    {
-        disconnect(tcpSocket, &QTcpSocket::stateChanged, this, &DeoHandler::onSocketStateChange);
-        disconnect(tcpSocket, &QTcpSocket::errorOccurred, this, &DeoHandler::tcpErrorOccured);
-    }
     const QMutexLocker locker(&_mutex);
     _isConnected = false;
     if (keepAliveTimer != nullptr && keepAliveTimer->isActive())
         keepAliveTimer->stop();
-//    if (tcpSocket != nullptr && tcpSocket->isOpen())
-//        tcpSocket->close();
     emit connectionChange({DeviceType::Deo, ConnectionStatus::Disconnected, "Disconnected"});
+    if (tcpSocket != nullptr)
+    {
+        if (tcpSocket->isOpen())
+            tcpSocket->close();
+        disconnect(tcpSocket, &QTcpSocket::stateChanged, this, &DeoHandler::onSocketStateChange);
+        disconnect(tcpSocket, &QTcpSocket::errorOccurred, this, &DeoHandler::tcpErrorOccured);
+    }
 }
 
 void DeoHandler::readData()

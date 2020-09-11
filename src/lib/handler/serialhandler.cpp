@@ -2,6 +2,7 @@
 SerialHandler::SerialHandler(QObject *parent) :
     DeviceHandler(parent)
 {
+    qRegisterMetaType<ConnectionChangedSignal>();
 }
 
 SerialHandler::~SerialHandler()
@@ -10,7 +11,6 @@ SerialHandler::~SerialHandler()
 
 void SerialHandler::init(const QString &portName, int waitTimeout)
 {
-    qRegisterMetaType<ConnectionChangedSignal>();
     emit connectionChange({DeviceType::Serial, ConnectionStatus::Connecting, "Connecting..."});
     _mutex.lock();
     _stop = false;
@@ -18,11 +18,17 @@ void SerialHandler::init(const QString &portName, int waitTimeout)
     _waitTimeout = waitTimeout;
     _mutex.unlock();
     int timeouttracker = 0;
-    while(!_isConnected && !_stop && timeouttracker <= 5)
+    qint64 time1 = QTime::currentTime().msecsSinceStartOfDay();
+    qint64 time2 = QTime::currentTime().msecsSinceStartOfDay();
+    while(!_isConnected && !_stop && timeouttracker <= 4)
     {
-        sendTCode("D1");
-        sleep(_waitTimeout / 1000 + 1);
-        ++timeouttracker;
+        if (time2 - time1 >= _waitTimeout + 1000 || timeouttracker == 0)
+        {
+            time1 = time2;
+            sendTCode("D1");
+            ++timeouttracker;
+        }
+        time2 = QTime::currentTime().msecsSinceStartOfDay();
     }
     if (timeouttracker > 4)
     {
@@ -133,22 +139,25 @@ void SerialHandler::run()
             LogHandler::Debug(tr("Write tcode to serial timeout %1")
                          .arg(QTime::currentTime().toString()));
         }
-        _mutex.lock();
-        _cond.wait(&_mutex);
-        if (currentPortName != _portName)
+        if (!_stop)
         {
-            LogHandler::Debug("Port name change "+ _portName);
-            currentPortName = _portName;
-            currentPortNameChanged = true;
-            _isConnected = false;
+            _mutex.lock();
+            _cond.wait(&_mutex);
+            if (currentPortName != _portName)
+            {
+                LogHandler::Debug("Port name change "+ _portName);
+                currentPortName = _portName;
+                currentPortNameChanged = true;
+                _isConnected = false;
+            }
+            else
+            {
+                currentPortNameChanged = false;
+            }
+            currentWaitTimeout = _waitTimeout;
+            currentRequest = _tcode;
+            _mutex.unlock();
         }
-        else
-        {
-            currentPortNameChanged = false;
-        }
-        currentWaitTimeout = _waitTimeout;
-        currentRequest = _tcode;
-        _mutex.unlock();
     }
 }
 
@@ -167,7 +176,11 @@ void SerialHandler::dispose()
     _mutex.unlock();
     _cond.wakeOne();
     emit connectionChange({DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"});
-    //wait(5000);
+    if(isRunning())
+    {
+        quit();
+        wait();
+    }
 }
 
 QList<SerialComboboxItem> SerialHandler::getPorts()
