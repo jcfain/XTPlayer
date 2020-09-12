@@ -115,6 +115,7 @@ void SettingsHandler::Default()
     defaultReset = true;
     settings.setValue("selectedTheme", QApplication::applicationDirPath() + "/themes/black-silver.css");
     settings.setValue("selectedLibrary", QVariant::String);
+    settings.setValue("selectedDevice", DeviceType::Serial);
     settings.setValue("playerVolume", 0);
     settings.setValue("offSet", 0);
     settings.setValue("speed", 1000);

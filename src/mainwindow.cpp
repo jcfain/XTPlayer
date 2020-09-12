@@ -1085,12 +1085,11 @@ void MainWindow::on_device_error(QString error)
 
 void MainWindow::on_deo_device_connectionChanged(ConnectionChangedSignal event)
 {
-    deviceConnected = event.status == ConnectionStatus::Connected;
     QString message = "";
     message += "DeoVR: ";
     message += " " + event.message;
     deoConnectionStatusLabel->setText(message);
-    if(event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected)
+    if(SettingsHandler::getDeoEnabled() && (event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected))
     {
         deoRetryConnectionButton->show();
         if(funscriptFuture.isRunning())
@@ -1099,7 +1098,7 @@ void MainWindow::on_deo_device_connectionChanged(ConnectionChangedSignal event)
             funscriptFuture.waitForFinished();
         }
     }
-    else if(deviceConnected)
+    else if(event.status == ConnectionStatus::Connected)
     {
         deoRetryConnectionButton->hide();
         if(funscriptFuture.isRunning())

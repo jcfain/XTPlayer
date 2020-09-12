@@ -268,8 +268,8 @@ void SettingsDialog::initSerialEvent()
             _initFuture.cancel();
             _initFuture.waitForFinished();
         }
-        SettingsHandler::setSelectedDevice(DeviceType::Serial);
         setSelectedDeviceHandler(_serialHandler);
+        SettingsHandler::setSelectedDevice(DeviceType::Serial);
         _initFuture = QtConcurrent::run(initSerial, _serialHandler, selectedSerialPort);
     }
 }
@@ -288,11 +288,11 @@ void SettingsDialog::initNetworkEvent()
             _initFuture.cancel();
             _initFuture.waitForFinished();
         }
-        SettingsHandler::setSelectedDevice(DeviceType::Network);
         setSelectedDeviceHandler(_udpHandler);
         if(SettingsHandler::getServerAddress() != "" && SettingsHandler::getServerPort() != "" &&
             SettingsHandler::getServerAddress() != "0" && SettingsHandler::getServerPort() != "0")
         {
+            SettingsHandler::setSelectedDevice(DeviceType::Network);
             setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceType::Network);
             ui.networkConnectButton->setEnabled(false);
             NetworkAddress address { SettingsHandler::getServerAddress(), SettingsHandler::getServerPort().toInt() };
@@ -560,6 +560,7 @@ void SettingsDialog::on_device_error(QString error)
 
 void SettingsDialog::on_SerialOutputCmb_currentIndexChanged(int index)
 {
+    ui.serialConnectButton->setEnabled(true);
     SerialComboboxItem serialInfo = ui.SerialOutputCmb->currentData(Qt::UserRole).value<SerialComboboxItem>();
     selectedSerialPort = serialInfo;
 }
@@ -649,14 +650,17 @@ void SettingsDialog::on_networkConnectButton_clicked()
 
 void SettingsDialog::on_deoConnectButton_clicked()
 {
-    if(SettingsHandler::getDeoAddress() != "" && SettingsHandler::getDeoPort() != "" &&
-     SettingsHandler::getDeoAddress() != "0" && SettingsHandler::getDeoPort() != "0")
+    if(SettingsHandler::getDeoEnabled())
     {
-        initDeoEvent();
-    }
-    else
-    {
-        LogHandler::Dialog("Invalid deo vr address!", XLogLevel::Critical);
+        if(SettingsHandler::getDeoAddress() != "" && SettingsHandler::getDeoPort() != "" &&
+         SettingsHandler::getDeoAddress() != "0" && SettingsHandler::getDeoPort() != "0")
+        {
+            initDeoEvent();
+        }
+        else
+        {
+            LogHandler::Dialog("Invalid deo vr address!", XLogLevel::Critical);
+        }
     }
 }
 
