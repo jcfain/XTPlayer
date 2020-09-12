@@ -83,7 +83,7 @@ void SettingsDialog::setupUi()
         ui.twistMultiplierCheckBox->setChecked(SettingsHandler::getTwistMultiplierChecked());
         ui.twistMultiplierSpinBox->setValue(SettingsHandler::getTwistMultiplierValue());
 
-        QFont font( "Sans Serif", 7);
+        QFont font( "Sans Serif", 8);
 
         xRangeMinLabel = new QLabel(QString::number(SettingsHandler::getXMin()));
         xRangeMinLabel->setFont(font);
@@ -147,7 +147,7 @@ void SettingsDialog::setupUi()
         twistRangeLabel->setFont(font);
         twistRangeLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         ui.RangeSettingsGrid->addWidget(twistRangeLabel, 6,1);
-        twistRangeMaxLabel = new QLabel(QString::number(SettingsHandler::getTwistMin()));
+        twistRangeMaxLabel = new QLabel(QString::number(SettingsHandler::getTwistMax()));
         twistRangeMaxLabel->setFont(font);
         twistRangeMaxLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
         ui.RangeSettingsGrid->addWidget(twistRangeMaxLabel, 6,2);
@@ -451,8 +451,8 @@ void SettingsDialog::onXRollRange_valueChanged(int value)
 
 void SettingsDialog::onTwistRange_valueChanged(int value)
 {
-    SettingsHandler::setTwistMin(xRollRangeSlider->GetLowerValue());
-    SettingsHandler::setTwistMax(xRollRangeSlider->GetUpperValue());
+    SettingsHandler::setTwistMin(twistRangeSlider->GetLowerValue());
+    SettingsHandler::setTwistMax(twistRangeSlider->GetUpperValue());
     twistRangeMinLabel->setText(QString::number(twistRangeSlider->GetLowerValue()));
     twistRangeMaxLabel->setText(QString::number(twistRangeSlider->GetUpperValue()));
     if (!_videoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
@@ -680,9 +680,16 @@ void SettingsDialog::on_resetAllButton_clicked()
     QMessageBox::StandardButton reply;
     reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset ALL settings?",
                                   QMessageBox::Yes|QMessageBox::No);
-    if (reply == QMessageBox::Yes) {
+    if (reply == QMessageBox::Yes)
+    {
         SettingsHandler::Default();
-        LogHandler::Dialog("Changes will take effect on restart.\nNo settings that are changed\nwill be saved this session.", XLogLevel::Information);
-      QApplication::quit();
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this, "Restart Application?", "Changes will take effect on application restart.\nNo settings that are changed this session will be saved.\nRestart this application now?",
+                                      QMessageBox::Yes|QMessageBox::No);
+        if (reply == QMessageBox::Yes)
+        {
+          QApplication::quit();
+          QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
+        }
     }
 }

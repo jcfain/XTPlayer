@@ -31,6 +31,10 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
           tcode += QString::number(speed);
         }
     }
+    else
+    {
+        tcode += " R1500S1000";
+    }
 
     if (SettingsHandler::getXRollMultiplierChecked() && SettingsHandler::getXRollMultiplierValue() !=0)
     {
@@ -43,6 +47,10 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
           tcode += "I";
           tcode += QString::number(speed);
         }
+    }
+    else
+    {
+        tcode += " R2500S1000";
     }
 
     if (SettingsHandler::getTwistMultiplierChecked() && SettingsHandler::getTwistMultiplierValue() !=0)
@@ -57,6 +65,10 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
           tcode += QString::number(speed);
         }
     }
+    else
+    {
+        tcode += " R0500S1000";
+    }
 
     if (SettingsHandler::getVibMultiplierChecked() && SettingsHandler::getVibMultiplierValue() !=0)
     {
@@ -69,6 +81,10 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
           tcode += "I";
           tcode += QString::number(speed);
         }
+    }
+    else
+    {
+        tcode += " V0500S1000";
     }
     return tcode;
 }

@@ -14,11 +14,6 @@ public:
     static const QString TCodeVersion;
     static const QString XTPVersion;
     static const float XTPVersionNum;
-    static const int maxOffSet;
-    static const int minOffSet;
-    static const int maxOffSetMap;
-    static const int midOffSetMap;
-    static const int minOffSetMap;
     static QString getDeoDnlaFunscript(QString key);
     static QString getSelectedTheme();
     static QString getSelectedLibrary();

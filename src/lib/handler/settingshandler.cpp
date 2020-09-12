@@ -18,19 +18,27 @@ void SettingsHandler::Load()
     }
     locker.relock();
     selectedTheme = settings.value("selectedTheme").toString();
-    selectedTheme = selectedTheme.isNull() ? QApplication::applicationDirPath() + "/themes/default.css" : selectedTheme;
+    selectedTheme = selectedTheme.isNull() ? QApplication::applicationDirPath() + "/themes/black-silver.css" : selectedTheme;
     selectedLibrary = settings.value("selectedLibrary").toString();
     selectedDevice = settings.value("selectedDevice").toInt();
     playerVolume = settings.value("playerVolume").toInt();
     offSet = settings.value("offSet").toInt();
     xMin = settings.value("xMin").toInt();
-    yRollMin = settings.value("xRollMin").toInt();
-    xRollMin = settings.value("yRollMin").toInt();
+    xMin = xMin == 0 ? 1 : xMin;
     xMax = settings.value("xMax").toInt();
+    xMax = xMax == 0 ? 999 : xMax;
+    yRollMin = settings.value("yRollMin").toInt();
+    yRollMin = yRollMin == 0 ? 1 : yRollMin;
     yRollMax = settings.value("yRollMax").toInt();
+    yRollMax = yRollMax == 0 ? 999 : yRollMax;
+    xRollMin = settings.value("xRollMin").toInt();
+    xRollMin = xRollMin == 0 ? 1 : xRollMin;
     xRollMax = settings.value("xRollMax").toInt();
-    twistMax = settings.value("twistMax").toInt();
+    xRollMax = xRollMax == 0 ? 999 : xRollMax;
     twistMin = settings.value("twistMin").toInt();
+    twistMin = twistMin == 0 ? 1 : twistMin;
+    twistMax = settings.value("twistMax").toInt();
+    twistMax = twistMax == 0 ? 999 : twistMax;
     selectedFunscriptLibrary = settings.value("selectedFunscriptLibrary").toString();
     serialPort = settings.value("serialPort").toString();
     serverAddress = settings.value("serverAddress").toString();
@@ -51,7 +59,9 @@ void SettingsHandler::Load()
 
     libraryView = settings.value("libraryView").toInt();
     thumbSize = settings.value("thumbSize").toInt();
+    thumbSize = thumbSize == 0 ? 150 : thumbSize;
     thumbSizeList = settings.value("thumbSizeList").toInt();
+    thumbSizeList = thumbSizeList == 0 ? 50 : thumbSizeList;
     deoDnlaFunscriptLookup = settings.value("deoDnlaFunscriptLookup").toHash();
 }
 
@@ -67,19 +77,19 @@ void SettingsHandler::Save()
         settings.setValue("playerVolume", playerVolume);
         settings.setValue("offSet", offSet);
         settings.setValue("xMin", xMin);
-        settings.setValue("xMax", xMax == 0 ? 999 : xMax );
+        settings.setValue("xMax", xMax);
         settings.setValue("yRollMin", yRollMin );
-        settings.setValue("yRollMax", yRollMax == 0 ? 999 : yRollMax );
+        settings.setValue("yRollMax", yRollMax);
         settings.setValue("xRollMin", xRollMin );
-        settings.setValue("xRollMax", xRollMax == 0 ? 999 : xRollMax );
+        settings.setValue("xRollMax", xRollMax);
         settings.setValue("twistMin", twistMin );
-        settings.setValue("twistMax", twistMax == 0 ? 999 : twistMax );
+        settings.setValue("twistMax", twistMax);
         settings.setValue("selectedFunscriptLibrary", selectedFunscriptLibrary);
         settings.setValue("serialPort", serialPort);
         settings.setValue("serverAddress", serverAddress);
         settings.setValue("serverPort", serverPort);
         settings.setValue("deoAddress", deoAddress);
-        settings.setValue("deoPort", deoPort == nullptr ? "23554" : deoPort);
+        settings.setValue("deoPort", deoPort);
         settings.setValue("deoEnabled", deoEnabled);
         settings.setValue("yRollMultiplierChecked", yRollMultiplierChecked);
         settings.setValue("yRollMultiplierValue", yRollMultiplierValue);
@@ -90,9 +100,9 @@ void SettingsHandler::Save()
         settings.setValue("vibMultiplierChecked", twistMultiplierChecked);
         settings.setValue("vibMultiplierValue", twistMultiplierValue);
 
-        settings.setValue("libraryView", libraryView == 0 ? 0 : libraryView);
-        settings.setValue("thumbSize", thumbSize == 0 ? 150 : thumbSize);
-        settings.setValue("thumbSizeList", thumbSizeList == 0 ? 50 : thumbSizeList);
+        settings.setValue("libraryView", libraryView);
+        settings.setValue("thumbSize", thumbSize);
+        settings.setValue("thumbSizeList", thumbSizeList);
 
         settings.setValue("deoDnlaFunscriptLookup", deoDnlaFunscriptLookup);
     }
@@ -103,19 +113,19 @@ void SettingsHandler::Default()
 {
     QMutexLocker locker(&mutex);
     defaultReset = true;
-    settings.setValue("selectedTheme", QApplication::applicationDirPath() + "/themes/default.qss");
+    settings.setValue("selectedTheme", QApplication::applicationDirPath() + "/themes/black-silver.css");
     settings.setValue("selectedLibrary", QVariant::String);
     settings.setValue("playerVolume", 0);
     settings.setValue("offSet", 0);
     settings.setValue("speed", 1000);
     settings.setValue("xMin", 1);
-    settings.setValue("yRollMin", 1);
-    settings.setValue("xRollMin", 1);
     settings.setValue("xMax", 999);
+    settings.setValue("yRollMin", 1);
     settings.setValue("yRollMax", 999);
+    settings.setValue("xRollMin", 1);
     settings.setValue("xRollMax", 999);
-    settings.setValue("twistMax", 999);
     settings.setValue("twistMin", 1);
+    settings.setValue("twistMax", 999);
     settings.setValue("selectedFunscriptLibrary", QVariant::String);
     settings.setValue("serialPort", QVariant::String);
     settings.setValue("serverAddress", QVariant::String);
@@ -435,14 +445,9 @@ void SettingsHandler::setDeoDnlaFunscript(QString key, QString value)
 }
 
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.12b";
-const float SettingsHandler::XTPVersionNum = 0.12f;
+const QString SettingsHandler::XTPVersion = "0.13b";
+const float SettingsHandler::XTPVersionNum = 0.13f;
 
-const int SettingsHandler::minOffSetMap = 1;
-const int SettingsHandler::midOffSetMap = 1000;
-const int SettingsHandler::maxOffSetMap = 2000;
-const int SettingsHandler::minOffSet = -1000;
-const int SettingsHandler::maxOffSet = 1000;
 QSettings SettingsHandler::settings{"cUrbSide prOd", "XTPlayer"};
 QMutex SettingsHandler::mutex;
 QHash<QString, QVariant> SettingsHandler::deoDnlaFunscriptLookup;

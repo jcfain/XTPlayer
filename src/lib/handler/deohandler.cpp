@@ -46,37 +46,35 @@ void DeoHandler::sendKeepAlive()
 
 void DeoHandler::send(const QString &command)
 {
-    const QMutexLocker locker(&_mutex);
     _sendCommand = command;
-    LogHandler::Debug("Sending to Deo: "+command);
     if (command != nullptr)
     {
+        LogHandler::Debug("Sending to Deo: "+command);
         QByteArray currentRequest;
         currentRequest.append(command);
         tcpSocket->write(currentRequest);
     }
     else
     {
-        char str[4];
-        QByteArray currentRequest(str, 4);
-        tcpSocket->write(currentRequest);
+        QByteArray data("\0\0\0");
+        tcpSocket->write(data, 4);
+        tcpSocket->waitForBytesWritten();
     }
     tcpSocket->flush();
 }
 
 void DeoHandler::dispose()
 {
-    const QMutexLocker locker(&_mutex);
     _isConnected = false;
     if (keepAliveTimer != nullptr && keepAliveTimer->isActive())
         keepAliveTimer->stop();
     emit connectionChange({DeviceType::Deo, ConnectionStatus::Disconnected, "Disconnected"});
     if (tcpSocket != nullptr)
     {
-        if (tcpSocket->isOpen())
-            tcpSocket->close();
         disconnect(tcpSocket, &QTcpSocket::stateChanged, this, &DeoHandler::onSocketStateChange);
         disconnect(tcpSocket, &QTcpSocket::errorOccurred, this, &DeoHandler::tcpErrorOccured);
+        if (tcpSocket->isOpen())
+            tcpSocket->disconnectFromHost();
     }
 }
 
@@ -91,7 +89,7 @@ void DeoHandler::readData()
     QJsonDocument doc = QJsonDocument::fromJson(datagram, &error);
     if (error.errorString() != "no error occurred")
     {
-        LogHandler::Debug("Deo json response error: "+error.errorString());
+        LogHandler::Error("Deo json response error: "+error.errorString());
         //emit connectionChange({DeviceType::Deo, ConnectionStatus::Error, "Read error: " + error.errorString()});
     }
     else
@@ -135,7 +133,7 @@ bool DeoHandler::isConnected()
 
 DeoPacket* DeoHandler::getCurrentDeoPacket()
 {
-    //const QMutexLocker locker(&_mutex);
+    const QMutexLocker locker(&_mutex);
     return currentDeoPacket;
 }
 
@@ -147,6 +145,7 @@ void DeoHandler::onSocketStateChange (QAbstractSocket::SocketState state)
         {
             //_mutex.lock();
             _isConnected = true;
+            LogHandler::Debug("Deo connected");
             send(nullptr);
             connect(tcpSocket, &QTcpSocket::readyRead, this, &DeoHandler::readData);
             if (keepAliveTimer != nullptr && keepAliveTimer->isActive())
@@ -155,7 +154,6 @@ void DeoHandler::onSocketStateChange (QAbstractSocket::SocketState state)
             //_mutex.unlock();
             connect(keepAliveTimer, &QTimer::timeout, this, &DeoHandler::sendKeepAlive);
             keepAliveTimer->start(1000);
-            LogHandler::Debug("Deo connected");
             emit connectionChange({DeviceType::Deo, ConnectionStatus::Connected, "Connected"});
             break;
         }

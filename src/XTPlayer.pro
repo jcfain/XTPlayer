@@ -123,8 +123,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 DISTFILES += \
-    qss/default.qss \
-    themes/default.qss
+    qss/default.qss
 
 RESOURCES += \
     icons.qrc

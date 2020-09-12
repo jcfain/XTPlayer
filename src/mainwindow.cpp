@@ -722,32 +722,35 @@ void MainWindow::on_fullScreenBtn_clicked()
 
 void MainWindow::on_seekslider_hover(int position, int sliderValue)
 {
-    qint64 sliderValueTime = XMath::mapRange(static_cast<qint64>(sliderValue), 0, 100, 0, videoHandler->duration());
-//    if (!videoPreviewWidget)
-//        videoPreviewWidget = new VideoPreviewWidget();
-    videoPreviewWidget->setTimestamp(sliderValueTime);
-    videoPreviewWidget->preview();
-//    LogHandler::Debug("mousePosition: "+QString::number(sliderValue));
-//    LogHandler::Debug("time: "+QString::number(sliderValueTime));
-//    LogHandler::Debug("position: "+QString::number(position));
-    QPoint gpos;
-    if(MainWindow::isFullScreen())
-        gpos = mapToGlobal(playerControlsPlaceHolder->pos() + ui->SeekSlider->pos() + QPoint(position, 0));
-    else
-        gpos = mapToGlobal(ui->playerControlsFrame->pos() + ui->SeekSlider->pos() + QPoint(position, 0));
-//    LogHandler::Debug("gpos x: "+QString::number(gpos.x()));
-//    LogHandler::Debug("gpos y: "+QString::number(gpos.y()));
-    QToolTip::showText(gpos, QTime(0, 0, 0).addMSecs(sliderValueTime).toString(QString::fromLatin1("HH:mm:ss")));
-//    if (!Config::instance().previewEnabled())
-//        return;
+    if(!isFullScreen())
+    {
+        qint64 sliderValueTime = XMath::mapRange(static_cast<qint64>(sliderValue), 0, 100, 0, videoHandler->duration());
+    //    if (!videoPreviewWidget)
+    //        videoPreviewWidget = new VideoPreviewWidget();
+        videoPreviewWidget->setTimestamp(sliderValueTime);
+        videoPreviewWidget->preview();
+    //    LogHandler::Debug("mousePosition: "+QString::number(sliderValue));
+    //    LogHandler::Debug("time: "+QString::number(sliderValueTime));
+    //    LogHandler::Debug("position: "+QString::number(position));
+        QPoint gpos;
+        if(MainWindow::isFullScreen())
+            gpos = mapToGlobal(playerControlsPlaceHolder->pos() + ui->SeekSlider->pos() + QPoint(position, 0));
+        else
+            gpos = mapToGlobal(ui->playerControlsFrame->pos() + ui->SeekSlider->pos() + QPoint(position, 0));
+    //    LogHandler::Debug("gpos x: "+QString::number(gpos.x()));
+    //    LogHandler::Debug("gpos y: "+QString::number(gpos.y()));
+        QToolTip::showText(gpos, QTime(0, 0, 0).addMSecs(sliderValueTime).toString(QString::fromLatin1("HH:mm:ss")));
+    //    if (!Config::instance().previewEnabled())
+    //        return;
 
-   //const int w = Config::instance().previewWidth();
-    //const int h = Config::instance().previewHeight();
-    videoPreviewWidget->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
-    videoPreviewWidget->resize(175, 175);
-    videoPreviewWidget->move(gpos - QPoint(175/2, 175));
-    videoPreviewWidget->raise();
-    videoPreviewWidget->show();
+       //const int w = Config::instance().previewWidth();
+        //const int h = Config::instance().previewHeight();
+        videoPreviewWidget->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+        videoPreviewWidget->resize(175, 175);
+        videoPreviewWidget->move(gpos - QPoint(175/2, 175));
+        videoPreviewWidget->raise();
+        videoPreviewWidget->show();
+    }
 }
 
 void MainWindow::on_seekslider_leave()
@@ -779,9 +782,10 @@ void MainWindow::on_SeekSlider_valueChanged(int position)
 
 void MainWindow::on_media_positionChanged(qint64 position)
 {
-    ui->lblCurrentDuration->setText( second_to_minutes(position / 1000).append("/").append( second_to_minutes( (videoHandler->duration())/1000 ) ) );
+    //ui->lblCurrentDuration->setText( second_to_minutes(position / 1000).append("/").append( second_to_minutes( (videoHandler->duration())/1000 ) ) );
 
-    //ui->lblCurrentDuration->setText(QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")));
+    ui->lblCurrentDuration->setText(QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")).append("/")
+                                    .append(QTime(0, 0, 0).addMSecs(videoHandler->duration()).toString(QString::fromLatin1("HH:mm:ss"))));
     qint64 duration = videoHandler->duration();
     if (duration > 0)
     {
@@ -830,6 +834,7 @@ void MainWindow::onDeoMessageRecieved(DeoPacket packet)
             int indexOfSuffix = packet.path.lastIndexOf(".");
             QString localFunscriptPath = packet.path.replace(indexOfSuffix, packet.path.length() - indexOfSuffix, ".funscript");
             QFile localFile(localFunscriptPath);
+            LogHandler::Debug("Searching local path: "+localFunscriptPath);
             if(localFile.exists())
             {
                 funscriptPath = localFunscriptPath;
@@ -839,7 +844,7 @@ void MainWindow::onDeoMessageRecieved(DeoPacket packet)
                 //Check the user selected library location.
                 QFileInfo fileinfo(packet.path);
                 QString libraryScriptFile = fileinfo.fileName().remove(fileinfo.fileName().lastIndexOf('.'), fileinfo.fileName().length() -  1) + ".funscript";
-                QString libraryScriptPath = SettingsHandler::getSelectedFunscriptLibrary() + QDir::separator() + libraryScriptFile;
+                QString libraryScriptPath = SettingsHandler::getSelectedLibrary() + QDir::separator() + libraryScriptFile;
                 QFile libraryFile(libraryScriptPath);
                 if(libraryFile.exists())
                 {
@@ -877,7 +882,7 @@ void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDial
         //timer.start();
         if(xSettings->isConnected() && funscriptLoaded && currentDeoPacket != nullptr && currentDeoPacket->duration > 0 && currentDeoPacket->playing)
         {
-            //execute once every milli second
+            //execute once every millisecond
             if (timer2 - timer1 >= 1)
             {
                 timer1 = timer2;
@@ -956,7 +961,7 @@ void MainWindow::on_media_stop()
     ui->PauseBtn->setDisabled(true);
     ui->PauseBtn->setChecked(false);
     ui->fullScreenBtn->setDisabled(true);
-    ui->lblCurrentDuration->setText("00:00:00");
+    ui->lblCurrentDuration->setText("00:00:00/00:00:00");
 
     if(funscriptFuture.isRunning())
     {
@@ -1147,7 +1152,7 @@ void MainWindow::on_actionAbout_triggered()
     layout.addWidget(&sources);
     QLabel qtInfo;
     qtInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    qtInfo.setText("<b>Qt 1.15.0</b><br>"
+    qtInfo.setText("<b>Qt v5.15.0</b><br>"
                    "Distributed under the terms of LGPLv3 or later.<br>"
                    "Source: <a href='https://github.com/qt/qt5/releases/tag/v5.15.0'>https://github.com/qt/qt5/releases/tag/v5.15.0</a>");
     qtInfo.setAlignment(Qt::AlignHCenter);
@@ -1297,10 +1302,12 @@ void MainWindow::on_actionChange_theme_triggered()
 {
     QFileInfo selectedThemeInfo(SettingsHandler::getSelectedTheme());
     QString selectedTheme = QFileDialog::getOpenFileName(this, "Choose XTP theme", selectedThemeInfo.absoluteDir().absolutePath(), "CSS Files (*.css)");
-    if(!selectedTheme.isNull())
+    if(!selectedTheme.isEmpty())
+    {
         SettingsHandler::setSelectedTheme(selectedTheme);
-    QFile file(selectedTheme);
-    file.open(QFile::ReadOnly);
-    QString styleSheet = QLatin1String(file.readAll());
-    setStyleSheet(styleSheet);
+        QFile file(selectedTheme);
+        file.open(QFile::ReadOnly);
+        QString styleSheet = QLatin1String(file.readAll());
+        setStyleSheet(styleSheet);
+    }
 }

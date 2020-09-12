@@ -177,7 +177,7 @@
             <item row="1" column="5" colspan="2">
              <widget class="QLabel" name="lblCurrentDuration">
               <property name="text">
-               <string>00:00/00:00</string>
+               <string>00:00:00/00:00:00</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
