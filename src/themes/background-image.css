@@ -1,0 +1,66 @@
+
+QMainWindow, QDialog {
+    background-image: url(./themes/sky.jpg) no-repeat center fixed;
+    color: black;
+}
+QLabel {
+    background-color: transparent;
+    color: white;
+}
+QListWidget {
+    background-color: transparent;
+    color: white;
+}
+QMenuBar {
+    background-color: transparent;
+    color: white;
+}
+QMenu {
+    background-color: transparent;
+    color: white;
+}
+QMenu:hover:!pressed {
+    background-color: darkred;
+    color: white;
+}
+QAction:hover:!pressed {
+    background-color: darkred;
+    color: white;
+}
+QRadioButton, QCheckBox, QGroupBox {
+    background-color: transparent;
+    color: white;
+}
+QScrollBar:handle:vertical {
+    background-color: #a15f59;
+}
+QScrollBar:horizontal {
+    background-color: black;
+}
+QScrollBar:handle:horizontal {
+    background-color: #a15f59;
+}
+QScrollBar:vertical {
+    background-color: black;
+}
+QStatusBar {
+    color: white;
+}
+QPushButton {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 black, stop: 1 grey);
+    color: white;
+}
+QPushButton:disabled {
+    background-color: lightgrey;
+    color: grey;
+}
+
+QFrame[cssClass="windowedControls"] {
+    background-color: transparent;
+    color: black;
+}
+
+QFrame[cssClass="fullScreenControls"] {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: black;
+};

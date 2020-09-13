@@ -1,0 +1,66 @@
+
+QMainWindow, QDialog {
+    background-color: #f2f3f4;
+    color: black;
+}
+QLabel {
+    background-color: transparent;
+    color: black;
+}
+QListWidget {
+    background-color: #f2f3f4;
+    color: black;
+}
+QMenuBar {
+    background-color: #f2f3f4;
+    color: black;
+}
+QMenu {
+    background-color: #f2f3f4;
+    color: black;
+}
+QMenu:hover:!pressed {
+    background-color: #dbe9f4;
+    color: black;
+}
+QAction:hover:!pressed {
+    background-color: #dbe9f4;
+    color: black;
+}
+QRadioButton, QCheckBox, QGroupBox {
+    background-color: transparent;
+    color: black;
+}
+QScrollBar:handle:vertical {
+    background-color: grey;
+}
+QScrollBar:horizontal {
+    background-color: #f2f3f4;
+}
+QScrollBar:handle:horizontal {
+    background-color: grey;
+}
+QScrollBar:vertical {
+    background-color: #f2f3f4;
+}
+QStatusBar {
+    color: black;
+}
+QPushButton {
+    background-color: #dbe9f4;
+    color: black;
+}
+QPushButton:disabled {
+    background-color: lightgrey;
+    color: grey;
+}
+
+QFrame[cssClass="windowedControls"] {
+    background-color: transparent;
+    color: black;
+}
+
+QFrame[cssClass="fullScreenControls"] {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: black;
+};
