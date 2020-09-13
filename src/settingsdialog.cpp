@@ -66,11 +66,19 @@ void SettingsDialog::setupUi()
 {
 
     loadSerialPorts();
+    setDeviceStatusStyle(_connectionStatus, DeviceType::Serial);
+    setDeviceStatusStyle(_connectionStatus, DeviceType::Network);
+    if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
+    {
+        ui.serialOutputRdo->setChecked(true);
+    }
+    else if (SettingsHandler::getSelectedDevice() == DeviceType::Network)
+    {
+        ui.networkOutputRdo->setChecked(true);
+    }
     if (!_interfaceInitialized)
     {
         _interfaceInitialized = true;
-        setDeviceStatusStyle(_connectionStatus, DeviceType::Serial);
-        setDeviceStatusStyle(_connectionStatus, DeviceType::Network);
         ui.SerialOutputCmb->setCurrentText(SettingsHandler::getSerialPort());
         ui.networkAddressTxt->setText(SettingsHandler::getServerAddress());
         ui.networkPortTxt->setText(SettingsHandler::getServerPort());
@@ -191,16 +199,15 @@ void SettingsDialog::setupUi()
 
         if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
         {
-            ui.serialOutputRdo->setChecked(true);
             on_serialOutputRdo_clicked();
         }
         else if (SettingsHandler::getSelectedDevice() == DeviceType::Network)
         {
-            ui.networkOutputRdo->setChecked(true);
             on_networkOutputRdo_clicked();
         }
-        ui.deoCheckbox->setChecked(SettingsHandler::getDeoEnabled());
-        on_deoCheckbox_clicked(SettingsHandler::getDeoEnabled());
+        bool deoEnabled = SettingsHandler::getDeoEnabled();
+        ui.deoCheckbox->setChecked(deoEnabled);
+        on_deoCheckbox_clicked(deoEnabled);
     }
 }
 
@@ -314,6 +321,7 @@ void SettingsDialog::initDeoEvent()
         if(SettingsHandler::getDeoAddress() != "" && SettingsHandler::getDeoPort() != "" &&
             SettingsHandler::getDeoAddress() != "0" && SettingsHandler::getDeoPort() != "0")
         {
+            ui.deoConnectButton->setEnabled(false);
             NetworkAddress address { SettingsHandler::getDeoAddress(), SettingsHandler::getDeoPort().toInt() };
             _deoHandler->init(address);
             //_initDeoFuture = QtConcurrent::run(initDeo, _deoHandler, address);
@@ -470,10 +478,19 @@ void SettingsDialog::on_deo_connectionChanged(ConnectionChangedSignal event)
 {
     if (event.status == ConnectionStatus::Error)
     {
+        ui.deoConnectButton->setEnabled(true);
         setDeviceStatusStyle(event.status, event.deviceType, event.message);
     }
     else
     {
+        if (event.status == ConnectionStatus::Connected || event.status == ConnectionStatus::Connecting)
+        {
+            ui.deoConnectButton->setEnabled(false);
+        }
+        else if(SettingsHandler::getDeoEnabled())
+        {
+            ui.deoConnectButton->setEnabled(true);
+        }
         setDeviceStatusStyle(event.status, event.deviceType);
     }
     emit deoDeviceConnectionChange({event.deviceType, event.status, event.message});
