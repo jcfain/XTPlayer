@@ -223,27 +223,22 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
     myMenu.addAction("Regenerate thumbnail", this, &MainWindow::regenerateThumbNail);
     myMenu.addAction("Set thumbnail from current", this, &MainWindow::setThumbNailFromCurrent);
 
-    LibraryListItem selectedItem = getLibraryListItemFromQListItem(ui->LibraryList->selectedItems()[0]);
-    QString funscriptPath = SettingsHandler::getDeoDnlaFunscript(selectedItem.path);
-    if (funscriptPath != nullptr)
-    {
-        myMenu.addAction("Change DeoVR funscript...", this, &MainWindow::changeDeoFunscript);
-    }
-
     // Show context menu at handling position
     myMenu.exec(globalPos);
 }
 
 void MainWindow::changeDeoFunscript()
 {
-    LibraryListItem selectedItem = getLibraryListItemFromQListItem(ui->LibraryList->selectedItems()[0]);
-    QFileInfo videoFile(selectedItem.path);
-    funscriptFileSelectorOpen = true;
-    QString funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + videoFile.fileName(), SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
-    funscriptFileSelectorOpen = false;
-    if (funscriptPath != nullptr)
-        //Store the location of the file so the above check doesnt happen again.
-        SettingsHandler::setDeoDnlaFunscript(selectedItem.path, funscriptPath);
+    DeoPacket* playingPacket = _xSettings->getDeoHandler()->getCurrentDeoPacket();
+    if (playingPacket != nullptr)
+    {
+        QFileInfo videoFile(playingPacket->path);
+        funscriptFileSelectorOpen = true;
+        QString funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + videoFile.fileName(), SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
+        funscriptFileSelectorOpen = false;
+        if (!funscriptPath.isEmpty())
+            SettingsHandler::setDeoDnlaFunscript(playingPacket->path, funscriptPath);
+    }
 }
 
 void MainWindow::on_load_library(QString path)
@@ -1091,6 +1086,7 @@ void MainWindow::on_deo_device_connectionChanged(ConnectionChangedSignal event)
     deoConnectionStatusLabel->setText(message);
     if(SettingsHandler::getDeoEnabled() && (event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected))
     {
+        ui->actionChange_current_deo_script->setEnabled(false);
         deoRetryConnectionButton->show();
         if(funscriptFuture.isRunning())
         {
@@ -1100,6 +1096,7 @@ void MainWindow::on_deo_device_connectionChanged(ConnectionChangedSignal event)
     }
     else if(event.status == ConnectionStatus::Connected)
     {
+        ui->actionChange_current_deo_script->setEnabled(true);
         deoRetryConnectionButton->hide();
         if(funscriptFuture.isRunning())
         {
@@ -1111,6 +1108,7 @@ void MainWindow::on_deo_device_connectionChanged(ConnectionChangedSignal event)
     }
     else
     {
+        ui->actionChange_current_deo_script->setEnabled(false);
         deoRetryConnectionButton->hide();
     }
 }
@@ -1308,5 +1306,15 @@ void MainWindow::on_actionChange_theme_triggered()
         file.open(QFile::ReadOnly);
         QString styleSheet = QLatin1String(file.readAll());
         setStyleSheet(styleSheet);
+    }
+}
+
+void MainWindow::on_actionChange_current_deo_script_triggered()
+{
+    LibraryListItem selectedItem = getLibraryListItemFromQListItem(ui->LibraryList->selectedItems()[0]);
+    QString funscriptPath = SettingsHandler::getDeoDnlaFunscript(selectedItem.path);
+    if (funscriptPath != nullptr)
+    {
+        changeDeoFunscript();
     }
 }

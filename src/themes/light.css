@@ -12,21 +12,38 @@ QListWidget {
     color: black;
 }
 QMenuBar {
-    background-color: #f2f3f4;
+    background-color: transparent;
     color: black;
+}
+QMenuBar::item {
+    padding: 1px 4px;
+    background: transparent;
+    border-radius: 4px;
+}
+QMenuBar::item:selected { /* when selected using mouse or keyboard */
+    background: black;;
+	color: #f2f3f4;
+}
+QMenuBar::item:pressed {
+    background: black;;
+	color: #f2f3f4;
 }
 QMenu {
-    background-color: #f2f3f4;
-    color: black;
+    background-color: transparent;
+    color: white;
 }
-QMenu:hover:!pressed {
-    background-color: #dbe9f4;
-    color: black;
+QMenu::item{
+ background-color: transparent;
+ color: white;
 }
-QAction:hover:!pressed {
-    background-color: #dbe9f4;
-    color: black;
-}
+QMenu::item:selected:!disabled{
+background-color: #f2f3f4;;
+color: black;
+} 
+QMenu::item:disabled{
+background-color: grey;
+color: lightgrey;
+} 
 QRadioButton, QCheckBox, QGroupBox {
     background-color: transparent;
     color: black;

@@ -15,18 +15,35 @@ QMenuBar {
     background-color: black;
     color: white;
 }
+QMenuBar::item {
+    padding: 1px 4px;
+    background: transparent;
+    border-radius: 4px;
+}
+QMenuBar::item:selected { /* when selected using mouse or keyboard */
+    background: darkred;
+	color: black;
+}
+QMenuBar::item:pressed {
+    background: darkred;
+	color: black;
+}
 QMenu {
     background-color: black;
     color: white;
 }
-QMenu:hover:!pressed {
-    background-color: darkred;
-    color: white;
+QMenu::item{
+ background-color: transparent;
+ color: white;
 }
-QAction:hover:!pressed {
-    background-color: darkred;
-    color: white;
-}
+QMenu::item:selected:!disabled{
+background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1.5, stop: 0 black, stop: 1 darkred);
+color: white;
+} 
+QMenu::item:disabled{
+background-color: grey;
+color: lightgrey;
+} 
 QRadioButton, QCheckBox, QGroupBox {
     background-color: transparent;
     color: white;

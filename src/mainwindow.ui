@@ -349,7 +349,14 @@
     <addaction name="actionList"/>
     <addaction name="actionThumbnail"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="actionChange_current_deo_script"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
    <addaction name="menuView"/>
   </widget>
   <action name="actionSelect_library">
@@ -397,6 +404,14 @@
   <action name="actionChange_theme">
    <property name="text">
     <string>Change theme...</string>
+   </property>
+  </action>
+  <action name="actionChange_current_deo_script">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Change current deo script...</string>
    </property>
   </action>
  </widget>

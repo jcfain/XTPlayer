@@ -104,6 +104,8 @@ private slots:
 
     void on_actionChange_theme_triggered();
 
+    void on_actionChange_current_deo_script_triggered();
+
 signals:
     void keyPressed(QKeyEvent * event);
     void sendTCode(QString tcode);
