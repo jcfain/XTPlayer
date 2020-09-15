@@ -239,6 +239,10 @@ void MainWindow::changeDeoFunscript()
         if (!funscriptPath.isEmpty())
             SettingsHandler::setDeoDnlaFunscript(playingPacket->path, funscriptPath);
     }
+    else
+    {
+        LogHandler::Dialog("No packet for current video or no video playing", XLogLevel::Information);
+    }
 }
 
 void MainWindow::on_load_library(QString path)
@@ -1311,10 +1315,5 @@ void MainWindow::on_actionChange_theme_triggered()
 
 void MainWindow::on_actionChange_current_deo_script_triggered()
 {
-    LibraryListItem selectedItem = getLibraryListItemFromQListItem(ui->LibraryList->selectedItems()[0]);
-    QString funscriptPath = SettingsHandler::getDeoDnlaFunscript(selectedItem.path);
-    if (funscriptPath != nullptr)
-    {
-        changeDeoFunscript();
-    }
+    changeDeoFunscript();
 }
