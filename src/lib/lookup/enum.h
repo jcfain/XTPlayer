@@ -5,7 +5,8 @@ enum DeviceType
 {
     Serial,
     Network,
-    Deo
+    Deo,
+    Gamepad
 };
 
 enum ConnectionStatus

@@ -1,4 +1,4 @@
-QT += core gui serialport network
+QT += core gui serialport network gamepad
 
 greaterThan(QT_MAJOR_VERSION, 4) {
     QT += widgets avwidgets
@@ -31,6 +31,7 @@ SOURCES += \
     lib/handler/deohandler.cpp \
     lib/handler/devicehandler.cpp \
     lib/handler/funscripthandler.cpp \
+    lib/handler/gamepadhandler.cpp \
     lib/handler/loghandler.cpp \
     lib/handler/serialhandler.cpp \
     lib/handler/settingshandler.cpp \
@@ -46,7 +47,10 @@ HEADERS += \
     CustomControls/rangeslider.h \
     lib/handler/deohandler.h \
     lib/handler/devicehandler.h \
+    lib/handler/gamepadhandler.h \
     lib/handler/videohandler.h \
+    lib/lookup/AxisNames.h \
+    lib/lookup/GamepadAxisNames.h \
     lib/lookup/enum.h \
     lib/handler/funscripthandler.h \
     lib/handler/loghandler.h \
@@ -56,9 +60,11 @@ HEADERS += \
     lib/handler/tcodehandler.h \
     lib/handler/udphandler.h \
     lib/lookup/enum.h \
+    lib/struct/ChannelModel.h \
     lib/struct/ConnectionChangedSignal.h \
     lib/struct/DeoPacket.h \
     lib/struct/Funscript.h \
+    lib/struct/GamepadState.h \
     lib/struct/LibraryListItem.h \
     lib/struct/NetworkAddress.h \
     lib/struct/SerialComboboxItem.h \

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>705</width>
-    <height>710</height>
+    <height>877</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -32,10 +32,10 @@
         <x>10</x>
         <y>30</y>
         <width>648</width>
-        <height>81</height>
+        <height>106</height>
        </rect>
       </property>
-      <layout class="QGridLayout" name="ConnectionSettings" rowstretch="0,0,0" columnstretch="0,0,0,0,0,0,0,0,0,0,0">
+      <layout class="QGridLayout" name="ConnectionSettings" rowstretch="0,0,0,0" columnstretch="0,0,0,0,0,0,0,0,0,0,0">
        <item row="1" column="8">
         <widget class="QLineEdit" name="networkPortTxt">
          <property name="maximumSize">
@@ -55,15 +55,15 @@
           <string>Network</string>
          </property>
          <property name="checked">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
         </widget>
        </item>
-       <item row="0" column="2" colspan="6">
-        <widget class="QComboBox" name="SerialOutputCmb"/>
+       <item row="1" column="2" colspan="6">
+        <widget class="QLineEdit" name="networkAddressTxt"/>
        </item>
-       <item row="1" column="9">
-        <widget class="QLabel" name="networkStatuslbl">
+       <item row="2" column="9">
+        <widget class="QLabel" name="deoStatuslbl">
          <property name="minimumSize">
           <size>
            <width>75</width>
@@ -75,22 +75,21 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="10">
-        <widget class="QPushButton" name="networkConnectButton">
-         <property name="text">
-          <string>Connect</string>
-         </property>
-        </widget>
+       <item row="0" column="2" colspan="6">
+        <widget class="QComboBox" name="SerialOutputCmb"/>
        </item>
        <item row="0" column="0" colspan="2">
         <widget class="QRadioButton" name="serialOutputRdo">
          <property name="text">
           <string>Serial</string>
          </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
-       <item row="0" column="10">
-        <widget class="QPushButton" name="serialConnectButton">
+       <item row="1" column="10">
+        <widget class="QPushButton" name="networkConnectButton">
          <property name="text">
           <string>Connect</string>
          </property>
@@ -109,8 +108,25 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="2" colspan="6">
-        <widget class="QLineEdit" name="networkAddressTxt"/>
+       <item row="2" column="2" colspan="6">
+        <widget class="QLineEdit" name="deoAddressTxt"/>
+       </item>
+       <item row="2" column="10">
+        <widget class="QPushButton" name="deoConnectButton">
+         <property name="text">
+          <string>Connect</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="QCheckBox" name="deoCheckbox">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>Deo VR</string>
+         </property>
+        </widget>
        </item>
        <item row="0" column="8">
         <widget class="QPushButton" name="serialRefreshBtn">
@@ -141,18 +157,25 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="0" colspan="2">
-        <widget class="QCheckBox" name="deoCheckbox">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
+       <item row="0" column="10">
+        <widget class="QPushButton" name="serialConnectButton">
          <property name="text">
-          <string>Deo VR</string>
+          <string>Connect</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="2" colspan="6">
-        <widget class="QLineEdit" name="deoAddressTxt"/>
+       <item row="1" column="9">
+        <widget class="QLabel" name="networkStatuslbl">
+         <property name="minimumSize">
+          <size>
+           <width>75</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Timed out</string>
+         </property>
+        </widget>
        </item>
        <item row="2" column="8">
         <widget class="QLineEdit" name="deoPortTxt">
@@ -167,21 +190,15 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="10">
-        <widget class="QPushButton" name="deoConnectButton">
+       <item row="3" column="0" colspan="2">
+        <widget class="QCheckBox" name="gamePadCheckbox">
          <property name="text">
-          <string>Connect</string>
+          <string>Gamepad</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="9">
-        <widget class="QLabel" name="deoStatuslbl">
-         <property name="minimumSize">
-          <size>
-           <width>75</width>
-           <height>0</height>
-          </size>
-         </property>
+       <item row="3" column="2" colspan="2">
+        <widget class="QLabel" name="gamepadStatusLbl">
          <property name="text">
           <string>Timed out</string>
          </property>
@@ -276,31 +293,6 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0" rowspan="2">
-    <widget class="QGroupBox" name="TCodeQuickSettingsGroup">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="title">
-      <string>TCode</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_3">
-      <item row="0" column="0" rowspan="2">
-       <layout class="QGridLayout" name="RangeSettingsGrid">
-        <property name="horizontalSpacing">
-         <number>2</number>
-        </property>
-        <property name="verticalSpacing">
-         <number>0</number>
-        </property>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
    <item row="4" column="0">
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
@@ -335,6 +327,31 @@
       </item>
       <item row="0" column="1">
        <widget class="QWidget" name="widget_5" native="true"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="0" rowspan="2">
+    <widget class="QGroupBox" name="TCodeQuickSettingsGroup">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="title">
+      <string>TCode</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0" rowspan="2">
+       <layout class="QGridLayout" name="RangeSettingsGrid">
+        <property name="horizontalSpacing">
+         <number>2</number>
+        </property>
+        <property name="verticalSpacing">
+         <number>0</number>
+        </property>
+       </layout>
       </item>
      </layout>
     </widget>

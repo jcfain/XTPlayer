@@ -13,6 +13,7 @@
 #include "lib/handler/videohandler.h"
 #include "lib/handler/udphandler.h"
 #include "lib/handler/deohandler.h"
+#include "lib/handler/gamepadhandler.h"
 
 extern void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo);
 extern void initNetwork(UdpHandler* serialHandler, NetworkAddress address);
@@ -58,6 +59,7 @@ private slots:
     void on_device_error(QString error);
     void on_deo_connectionChanged(ConnectionChangedSignal event);
     void on_deo_error(QString error);
+    void on_gamepad_connectionChanged(ConnectionChangedSignal event);
 
     void on_SerialOutputCmb_currentIndexChanged(int index);
 
@@ -99,6 +101,8 @@ private slots:
 
     void on_resetAllButton_clicked();
 
+    void on_gamePadCheckbox_clicked(bool checked);
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();
@@ -116,6 +120,7 @@ private:
     SerialHandler* _serialHandler;
     UdpHandler* _udpHandler;
     DeoHandler* _deoHandler;
+    GamepadHandler* _gamepadHandler;
     QFuture<void> _initFuture;
     QFuture<void> _initDeoFuture;
     QLabel* xRangeLabel;

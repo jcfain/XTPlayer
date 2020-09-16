@@ -6,6 +6,7 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
     _serialHandler = new SerialHandler(this);
     _udpHandler = new UdpHandler(this);
     _deoHandler = new DeoHandler(this);
+    _gamepadHandler = new GamepadHandler(this);
     if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
     {
         setSelectedDeviceHandler(_serialHandler);
@@ -14,11 +15,6 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
     {
         setSelectedDeviceHandler(_udpHandler);
     }
-//    ui.deoAddressTxt->setHidden(true);
-//    ui.deoCheckbox->setHidden(true);
-//    ui.deoConnectButton->setHidden(true);
-//    ui.deoPortTxt->setHidden(true);
-//    ui.deoStatuslbl->setHidden(true);
 
     connect(_serialHandler, &SerialHandler::connectionChange, this, &SettingsDialog::on_device_connectionChanged);
     connect(_serialHandler, &SerialHandler::errorOccurred, this, &SettingsDialog::on_device_error);
@@ -26,6 +22,7 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
     connect(_udpHandler, &UdpHandler::errorOccurred, this, &SettingsDialog::on_device_error);
     connect(_deoHandler, &DeoHandler::connectionChange, this, &SettingsDialog::on_deo_connectionChanged);
     connect(_deoHandler, &DeoHandler::errorOccurred, this, &SettingsDialog::on_deo_error);
+    connect(_gamepadHandler, &GamepadHandler::connectionChange, this, &SettingsDialog::on_gamepad_connectionChanged);
 }
 SettingsDialog::~SettingsDialog()
 {
@@ -35,6 +32,7 @@ void SettingsDialog::dispose()
     _udpHandler->dispose();
     _serialHandler->dispose();
     _deoHandler->dispose();
+    _gamepadHandler->dispose();
     if(_initFuture.isRunning())
     {
         //_initFuture.cancel();
@@ -43,6 +41,7 @@ void SettingsDialog::dispose()
     delete _serialHandler;
     delete _udpHandler;
     delete _deoHandler;
+    delete _gamepadHandler;
 }
 void SettingsDialog::init(VideoHandler* videoHandler)
 {
@@ -58,7 +57,13 @@ void SettingsDialog::init(VideoHandler* videoHandler)
     }
     if(SettingsHandler::getDeoEnabled())
     {
+        setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceType::Deo);
         initDeoEvent();
+    }
+    if(SettingsHandler::getGamepadEnabled())
+    {
+        setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceType::Gamepad);
+        _gamepadHandler->init();
     }
 }
 
@@ -208,6 +213,7 @@ void SettingsDialog::setupUi()
         bool deoEnabled = SettingsHandler::getDeoEnabled();
         ui.deoCheckbox->setChecked(deoEnabled);
         on_deoCheckbox_clicked(deoEnabled);
+        ui.gamePadCheckbox->setChecked(SettingsHandler::getGamepadEnabled());
     }
 }
 
@@ -394,6 +400,12 @@ void SettingsDialog::setDeviceStatusStyle(ConnectionStatus status, DeviceType de
         ui.deoStatuslbl->setFont(font);
         ui.deoStatuslbl->setStyleSheet("color: " + statusColor);
     }
+    else if (deviceType == DeviceType::Gamepad)
+    {
+        ui.gamepadStatusLbl->setText(statusUnicode + " " + message);
+        ui.gamepadStatusLbl->setFont(font);
+        ui.gamepadStatusLbl->setStyleSheet("color: " + statusColor);
+    }
 }
 
 void SettingsDialog::on_serialOutputRdo_clicked()
@@ -562,6 +574,11 @@ void SettingsDialog::on_device_connectionChanged(ConnectionChangedSignal event)
     emit deviceConnectionChange({event.deviceType, event.status, event.message});
 }
 
+void SettingsDialog::on_gamepad_connectionChanged(ConnectionChangedSignal event)
+{
+    setDeviceStatusStyle(event.status, event.deviceType);
+}
+
 void SettingsDialog::on_device_error(QString error)
 {
     if (SettingsHandler::getSelectedDevice() == DeviceType::Serial)
@@ -712,5 +729,18 @@ void SettingsDialog::on_resetAllButton_clicked()
           QApplication::quit();
           QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
         }
+    }
+}
+
+void SettingsDialog::on_gamePadCheckbox_clicked(bool checked)
+{
+    SettingsHandler::setGamepadEnabled(checked);
+    if (checked)
+    {
+        _gamepadHandler->init();
+    }
+    else
+    {
+        _gamepadHandler->dispose();
     }
 }

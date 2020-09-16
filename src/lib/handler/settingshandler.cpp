@@ -6,7 +6,7 @@ SettingsHandler::SettingsHandler()
 SettingsHandler::~SettingsHandler()
 {
 }
-bool resetRequired = false;
+bool resetRequired = true;
 void SettingsHandler::Load()
 {
     QMutexLocker locker(&mutex);
@@ -15,6 +15,7 @@ void SettingsHandler::Load()
     {
         locker.unlock();
         Default();
+        defaultReset = false;
     }
     locker.relock();
     selectedTheme = settings.value("selectedTheme").toString();
@@ -63,6 +64,15 @@ void SettingsHandler::Load()
     thumbSizeList = settings.value("thumbSizeList").toInt();
     thumbSizeList = thumbSizeList == 0 ? 50 : thumbSizeList;
     deoDnlaFunscriptLookup = settings.value("deoDnlaFunscriptLookup").toHash();
+
+    _gamePadEnabled = settings.value("gamePadEnabled").toBool();
+    auto availableAxis = settings.value("availableAxis").toHash();
+    _availableAxis.clear();
+    foreach(auto axis, availableAxis.keys())
+    {
+        _availableAxis.insert(axis, availableAxis[axis].value<ChannelModel>());
+    }
+    _gamepadButtonMap = settings.value("gamepadButtonMap").toHash();
 }
 
 void SettingsHandler::Save()
@@ -105,6 +115,17 @@ void SettingsHandler::Save()
         settings.setValue("thumbSizeList", thumbSizeList);
 
         settings.setValue("deoDnlaFunscriptLookup", deoDnlaFunscriptLookup);
+
+        settings.setValue("gamePadEnabled", _gamePadEnabled);
+        QHash<QString, QVariant> availableAxis;
+        foreach(auto axis, _availableAxis.keys())
+        {
+            QVariant axisVariant;
+            axisVariant.setValue(_availableAxis[axis]);
+            availableAxis.insert(axis, axisVariant);
+        }
+        settings.setValue("availableAxis", availableAxis);
+        settings.setValue("gamepadButtonMap", _gamepadButtonMap);
     }
 
 }
@@ -113,6 +134,7 @@ void SettingsHandler::Default()
 {
     QMutexLocker locker(&mutex);
     defaultReset = true;
+    settings.setValue("version", XTPVersionNum);
     settings.setValue("selectedTheme", QApplication::applicationDirPath() + "/themes/black-silver.css");
     settings.setValue("selectedLibrary", QVariant::String);
     settings.setValue("selectedDevice", DeviceType::Serial);
@@ -146,6 +168,10 @@ void SettingsHandler::Default()
     settings.setValue("libraryView", 0);
     settings.setValue("thumbSize", 150);
     settings.setValue("thumbSizeList", 50);
+
+    settings.setValue("gamePadEnabled", false);
+    SetupAvailableAxis();
+    SetupGamepadButtonMap();
 }
 
 QString SettingsHandler::getSelectedTheme()
@@ -273,11 +299,32 @@ int SettingsHandler::getThumbSizeList()
 {
     return thumbSizeList;
 }
+
 QString SettingsHandler::getDeoDnlaFunscript(QString key)
 {
     if (deoDnlaFunscriptLookup.contains(key))
     {
         return deoDnlaFunscriptLookup[key].toString();
+    }
+    return nullptr;
+}
+
+bool SettingsHandler::getGamepadEnabled()
+{
+    return _gamePadEnabled;
+}
+
+ChannelModel SettingsHandler::getAvailableAxis(QString axis)
+{
+    QMutexLocker locker(&mutex);
+    return _availableAxis[axis];
+}
+
+QString SettingsHandler::getGamePadButtonMap(QString gamepadButton)
+{
+    if (_gamepadButtonMap.contains(gamepadButton))
+    {
+        return _gamepadButtonMap[gamepadButton].toString();;
     }
     return nullptr;
 }
@@ -445,9 +492,79 @@ void SettingsHandler::setDeoDnlaFunscript(QString key, QString value)
     deoDnlaFunscriptLookup[key] = value;
 }
 
+void SettingsHandler::setGamepadEnabled(bool value)
+{
+    QMutexLocker locker(&mutex);
+    _gamePadEnabled = value;
+}
+
+void SettingsHandler::setAvailableAxis(QString axis, ChannelModel channel)
+{
+    QMutexLocker locker(&mutex);
+    _availableAxis[axis] = channel;
+}
+
+void SettingsHandler::setGamePadButtonMap(QString gamePadButton, QString axis)
+{
+    QMutexLocker locker(&mutex);
+    _gamepadButtonMap[gamePadButton] = axis;
+}
+
+//private
+void SettingsHandler::SetupAvailableAxis()
+{
+    AxisNames axisNames;
+    _availableAxis = {
+                {axisNames.None, { axisNames.None, axisNames.None, axisNames.None, 1, 500, 999 } },
+                {axisNames.TcXUpDownL0, { "X (Up/down L0)", axisNames.TcXUpDownL0, "L0", 1, 500, 999 } },
+                {axisNames.TcXDownL0, { "X (Down)", axisNames.TcXDownL0, "L0", 1, 500, 999 } },
+                {axisNames.TcXUpL0, { "X (Up)", axisNames.TcXUpL0, "L0", 1, 500, 999 } },
+                {axisNames.TcXRollR2, { "X (Roll R2)", axisNames.TcXRollR2, "R2", 1, 500, 999 } },
+                {axisNames.TcXRollForwardR2, { "X (Roll Forward)", axisNames.TcXRollForwardR2, "R2", 1, 500, 999 } },
+                {axisNames.TcXRollBackR2, { "X (Roll Back)", axisNames.TcXRollBackR2, "R2", 1, 500, 999 } },
+                {axisNames.TcYRollR1, { "Y (Roll R1)", axisNames.TcYRollR1, "R1", 1, 500, 999 } },
+                {axisNames.TcYRollLeftR1, { "Y (Roll Left)", axisNames.TcYRollLeftR1, "R1", 1, 500, 999 } },
+                {axisNames.TcYRollRightR1, { "Y (Roll Right)", axisNames.TcYRollRightR1, "R1", 1, 500, 999 } },
+                {axisNames.TcTwistR0, { "Twist R0", axisNames.TcTwistR0, "R0", 1, 500, 999 } },
+                {axisNames.TcTwistCWR0, { "Twist (CW)", axisNames.TcTwistCWR0, "R0", 1, 500, 999 } },
+                {axisNames.TcTwistCCWR0, { "Twist (CCW)", axisNames.TcTwistCCWR0, "R0", 1, 500, 999 } },
+                {axisNames.TcVibV0, { "Vib V0", axisNames.TcVibV0, "V0", 1, 500, 999 } },
+                {axisNames.TcPumpV2, { "Pump V2", axisNames.TcPumpV2, "V2", 1, 500, 999 } }
+            };
+}
+
+void SettingsHandler::SetupGamepadButtonMap()
+{
+    GamepadAxisNames gamepadAxisNames;
+    AxisNames axisNames;
+    _gamepadButtonMap = {
+        { "None", axisNames.None },
+        { gamepadAxisNames.LeftXAxis, axisNames.TcVibV0 },
+        { gamepadAxisNames.LeftYAxis,  axisNames.TcXUpDownL0 },
+        { gamepadAxisNames.RightYAxis ,  axisNames.TcXRollR2  },
+        { gamepadAxisNames.RightXAxis, axisNames.TcYRollR1  },
+        { gamepadAxisNames.RightTrigger, axisNames.TcTwistCWR0 },
+        { gamepadAxisNames.LeftTrigger, axisNames.TcTwistCCWR0 },
+        { gamepadAxisNames.RightBumper, axisNames.None },
+        { gamepadAxisNames.LeftBumper, axisNames.None },
+        { gamepadAxisNames.Select, axisNames.None },
+        { gamepadAxisNames.Start, axisNames.None },
+        { gamepadAxisNames.X, axisNames.None },
+        { gamepadAxisNames.Y, axisNames.None },
+        { gamepadAxisNames.B, axisNames.None },
+        { gamepadAxisNames.A, axisNames.None },
+        { gamepadAxisNames.DPadUp, axisNames.None },
+        { gamepadAxisNames.DPadDown, axisNames.None },
+        { gamepadAxisNames.DPadLeft, axisNames.None },
+        { gamepadAxisNames.DPadRight, axisNames.None },
+        { gamepadAxisNames.RightAxisButton, axisNames.None },
+        { gamepadAxisNames.LeftAxisButton, axisNames.None }
+    };
+}
+
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.13b";
-const float SettingsHandler::XTPVersionNum = 0.13f;
+const QString SettingsHandler::XTPVersion = "0.14b";
+const float SettingsHandler::XTPVersionNum = 0.14f;
 
 QSettings SettingsHandler::settings{"cUrbSide prOd", "XTPlayer"};
 QMutex SettingsHandler::mutex;
@@ -477,6 +594,10 @@ float SettingsHandler::vibMultiplierValue;
 int SettingsHandler::libraryView = LibraryView::Thumb;
 int SettingsHandler::thumbSize = 175;
 int SettingsHandler::thumbSizeList = 50;
+
+bool SettingsHandler::_gamePadEnabled;
+QHash<QString, QVariant> SettingsHandler::_gamepadButtonMap;
+QHash<QString, ChannelModel> SettingsHandler::_availableAxis;
 
 QString SettingsHandler::selectedFunscriptLibrary;
 QString SettingsHandler::selectedFile;

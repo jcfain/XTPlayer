@@ -4,7 +4,10 @@
 #include <QMutex>
 #include <QHash>
 #include "../lookup/enum.h"
+#include "../lookup/AxisNames.h"
+#include "../lookup/GamepadAxisNames.h"
 #include "../tool/xmath.h"
+#include "../struct/ChannelModel.h"
 #include "loghandler.h"
 #include "devicehandler.h"
 
@@ -49,6 +52,10 @@ public:
     static int getThumbSize();
     static int getThumbSizeList();
 
+    static bool getGamepadEnabled();
+    static QString getGamePadButtonMap(QString gamepadButton);
+    static ChannelModel getAvailableAxis(QString axis);
+
     static void setDeoDnlaFunscript(QString key, QString value);
     static void setSelectedTheme(QString value);
     static void setSelectedLibrary(QString value);
@@ -84,6 +91,10 @@ public:
     static void setThumbSize(int value);
     static void setThumbSizeList(int value);
 
+    static void setGamepadEnabled(bool value);
+    static void setGamePadButtonMap(QString gamePadButton, QString axis);
+    static void setAvailableAxis(QString axis, ChannelModel channel);
+
     static void Load();
     static void Save();
     static void Default();
@@ -91,6 +102,10 @@ public:
 private:
     SettingsHandler();
     ~SettingsHandler();
+
+    static void SetupAvailableAxis();
+    static void SetupGamepadButtonMap();
+
     static QHash<QString, QVariant> deoDnlaFunscriptLookup;
     static QString selectedTheme;
     static QString selectedLibrary;
@@ -121,6 +136,10 @@ private:
     static float twistMultiplierValue;
     static bool vibMultiplierChecked;
     static float vibMultiplierValue;
+
+    static bool _gamePadEnabled;
+    static QHash<QString, QVariant> _gamepadButtonMap;
+    static QHash<QString, ChannelModel> _availableAxis;
 
     static int libraryView;
     static int thumbSize;
