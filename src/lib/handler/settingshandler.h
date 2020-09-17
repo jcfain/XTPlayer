@@ -39,6 +39,8 @@ public:
     static int getTwistMax();
     static int getTwistMin();
 
+    static float getMultiplierValue(QString channel);
+    static bool getMultiplierChecked(QString channel);
     static bool getYRollMultiplierChecked();
     static float getYRollMultiplierValue();
     static bool getXRollMultiplierChecked();
@@ -55,6 +57,9 @@ public:
     static bool getGamepadEnabled();
     static QString getGamePadButtonMap(QString gamepadButton);
     static ChannelModel getAvailableAxis(QString axis);
+    static bool getInverseTcXL0();
+    static bool getInverseTcXRollR2();
+    static bool getInverseTcYRollR1();
 
     static void setDeoDnlaFunscript(QString key, QString value);
     static void setSelectedTheme(QString value);
@@ -94,6 +99,9 @@ public:
     static void setGamepadEnabled(bool value);
     static void setGamePadButtonMap(QString gamePadButton, QString axis);
     static void setAvailableAxis(QString axis, ChannelModel channel);
+    static void setInverseTcXL0(bool value);
+    static void setInverseTcXRollR2(bool value);
+    static void setInverseTcYRollR1(bool value);
 
     static void Load();
     static void Save();
@@ -140,6 +148,9 @@ private:
     static bool _gamePadEnabled;
     static QHash<QString, QVariant> _gamepadButtonMap;
     static QHash<QString, ChannelModel> _availableAxis;
+    static bool _inverseTcXL0;
+    static bool _inverseTcXRollR2;
+    static bool _inverseTcYRollR1;
 
     static int libraryView;
     static int thumbSize;

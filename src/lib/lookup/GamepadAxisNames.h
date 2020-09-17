@@ -23,5 +23,7 @@ struct GamepadAxisNames
     const QString DPadDown = "DPadDown";
     const QString DPadLeft = "DPadLeft";
     const QString DPadRight = "DPadRight";
+    const QString Guide = "Guide";
+    const QString Center = "Center";
 };
 #endif // GAMEPADAXISNAMES_H

@@ -2,8 +2,9 @@
 
 TCodeHandler::TCodeHandler()
 {
-
 }
+
+const QList<QString> _multiplierAxis = {"R0", "R1", "R2", "V0"};
 
 QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
 {
@@ -19,72 +20,41 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
       tcode += QString::number(speed);
     }
 
-    if (SettingsHandler::getYRollMultiplierChecked() && SettingsHandler::getYRollMultiplierValue() !=0)
+    if(!SettingsHandler::getGamepadEnabled())
     {
-        char tcodeYRollValueString[4];
-        int yRollValue = qRound(position * SettingsHandler::getYRollMultiplierValue());
-        sprintf(tcodeYRollValueString, "%03d", calculateRange("R1", yRollValue));
-        tcode += " R1";
-        tcode += tcodeYRollValueString;
-        if (speed != 0) {
-          tcode += "I";
-          tcode += QString::number(speed);
+        foreach(QString axis, _multiplierAxis)
+        {
+            float multiplierValue = SettingsHandler::getMultiplierValue(axis);
+            if (SettingsHandler::getMultiplierChecked(axis) && multiplierValue != 0)
+            {
+                char tcodeValueString[4];
+                int value = qRound(position * multiplierValue);
+                sprintf(tcodeValueString, "%03d", calculateRange(axis.toUtf8(), value));
+                tcode += " ";
+                tcode += axis;
+                tcode += tcodeValueString;
+                if (speed > 0) {
+                  tcode += "I";
+                  tcode += QString::number(speed);
+                }
+            }
+            else
+            {
+                tcode += " ";
+                tcode += axis;
+                tcode += "500S1000";
+            }
         }
     }
-    else
+    else if(SettingsHandler::getGamepadEnabled())
     {
-        tcode += " R1500S1000";
-    }
-
-    if (SettingsHandler::getXRollMultiplierChecked() && SettingsHandler::getXRollMultiplierValue() !=0)
-    {
-        char tcodeXRollValueString[4];
-        int xRollValue = qRound(position * SettingsHandler::getXRollMultiplierValue());
-        sprintf(tcodeXRollValueString, "%03d", calculateRange("R2", xRollValue));
-        tcode += " R2";
-        tcode += tcodeXRollValueString;
-        if (speed != 0) {
-          tcode += "I";
-          tcode += QString::number(speed);
-        }
-    }
-    else
-    {
-        tcode += " R2500S1000";
-    }
-
-    if (SettingsHandler::getTwistMultiplierChecked() && SettingsHandler::getTwistMultiplierValue() !=0)
-    {
-        char tcodeTwistValueString[4];
-        int twistValue = qRound(position * SettingsHandler::getTwistMultiplierValue());
-        sprintf(tcodeTwistValueString, "%03d", calculateRange("R0", twistValue));
-        tcode += " R0";
-        tcode += tcodeTwistValueString;
-        if (speed != 0) {
-          tcode += "I";
-          tcode += QString::number(speed);
-        }
-    }
-    else
-    {
-        tcode += " R0500S1000";
-    }
-
-    if (SettingsHandler::getVibMultiplierChecked() && SettingsHandler::getVibMultiplierValue() !=0)
-    {
-        char tcodeVibValueString[4];
-        int vibValue = qRound(position * SettingsHandler::getVibMultiplierValue());
-        sprintf(tcodeVibValueString, "%03d", XMath::constrain(vibValue, 1, 1000));
-        tcode += " V0";
-        tcode += tcodeVibValueString;
-        if (speed != 0) {
-          tcode += "I";
-          tcode += QString::number(speed);
-        }
-    }
-    else
-    {
-        tcode += " V0500S1000";
+//        QHash<QString, QVariant>* state = _xSettings->getGamepadHandler()->getState();
+//        foreach(QString gamepadAxis, state->keys())
+//        {
+//            QString tcodeAxis = SettingsHandler::getGamePadButtonMap(gamepadAxis);;
+//            if(tcodeAxis != "L0")
+//                tcode += " " + gamePadToTCode(tcodeAxis, state->value(gamepadAxis).toDouble());
+//        }
     }
     return tcode;
 }
@@ -115,7 +85,7 @@ int TCodeHandler::getchannelMin(const char* channel)
     {
         return SettingsHandler::getTwistMin();
     }
-    return 1;
+    return SettingsHandler::getAvailableAxis(channel).Min;
 }
 
 int TCodeHandler::getchannelMax(const char* channel)
@@ -136,7 +106,7 @@ int TCodeHandler::getchannelMax(const char* channel)
     {
         return SettingsHandler::getTwistMax();
     }
-    return 1000;
+    return SettingsHandler::getAvailableAxis(channel).Max;
 }
 
 QMutex TCodeHandler::mutex;

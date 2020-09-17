@@ -93,6 +93,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     _xSettings = new SettingsDialog(this);
     _xSettings->init(videoHandler);
+    tcodeHandler = new TCodeHandler();
 
     connect(_xSettings, &SettingsDialog::deoDeviceConnectionChange, this, &MainWindow::on_deo_device_connectionChanged);
     connect(_xSettings, &SettingsDialog::deoDeviceError, this, &MainWindow::on_deo_device_error);
@@ -150,6 +151,7 @@ void MainWindow::dispose()
         funscriptFuture.cancel();
         funscriptFuture.waitForFinished();
     }
+    delete tcodeHandler;
     delete videoHandler;
     delete connectionStatusLabel;
     delete retryConnectionButton;
@@ -723,7 +725,7 @@ void MainWindow::on_seekslider_hover(int position, int sliderValue)
 {
     if(!isFullScreen())
     {
-        qint64 sliderValueTime = XMath::mapRange(static_cast<qint64>(sliderValue), 0, 100, 0, videoHandler->duration());
+        qint64 sliderValueTime = XMath::mapRange(static_cast<qint64>(sliderValue), (qint64)0, (qint64)100, (qint64)0, videoHandler->duration());
     //    if (!videoPreviewWidget)
     //        videoPreviewWidget = new VideoPreviewWidget();
         videoPreviewWidget->setTimestamp(sliderValueTime);
@@ -768,7 +770,7 @@ void MainWindow::on_seekslider_leave()
 
 void MainWindow::on_seekSlider_sliderMoved(int position)
 {
-    qint64 playerPosition = XMath::mapRange(static_cast<qint64>(position), 0, 100, 0, videoHandler->duration());
+    qint64 playerPosition = XMath::mapRange(static_cast<qint64>(position), (qint64)0, (qint64)100, (qint64)0, videoHandler->duration());
     ui->SeekSlider->setToolTip(QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")));
     videoHandler->setPosition(playerPosition);
 }
@@ -788,7 +790,7 @@ void MainWindow::on_media_positionChanged(qint64 position)
     qint64 duration = videoHandler->duration();
     if (duration > 0)
     {
-        qint64 sliderPosition = XMath::mapRange(position, 0, duration, 0, 100);
+        qint64 sliderPosition = XMath::mapRange(position,  (qint64)0, duration, (qint64)0, (qint64)100);
         ui->SeekSlider->setUpperValue(static_cast<int>(sliderPosition));
     }
 }

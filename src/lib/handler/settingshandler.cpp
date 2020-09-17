@@ -66,6 +66,8 @@ void SettingsHandler::Load()
     deoDnlaFunscriptLookup = settings.value("deoDnlaFunscriptLookup").toHash();
 
     _gamePadEnabled = settings.value("gamePadEnabled").toBool();
+    qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
+    qRegisterMetaType<ChannelModel>();
     auto availableAxis = settings.value("availableAxis").toHash();
     _availableAxis.clear();
     foreach(auto axis, availableAxis.keys())
@@ -73,6 +75,9 @@ void SettingsHandler::Load()
         _availableAxis.insert(axis, availableAxis[axis].value<ChannelModel>());
     }
     _gamepadButtonMap = settings.value("gamepadButtonMap").toHash();
+    _inverseTcXL0 = settings.value("inverseTcXL0").toBool();
+    _inverseTcXRollR2 = settings.value("inverseTcXRollR2").toBool();
+    _inverseTcYRollR1 = settings.value("inverseTcYRollR1").toBool();
 }
 
 void SettingsHandler::Save()
@@ -117,6 +122,8 @@ void SettingsHandler::Save()
         settings.setValue("deoDnlaFunscriptLookup", deoDnlaFunscriptLookup);
 
         settings.setValue("gamePadEnabled", _gamePadEnabled);
+        qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
+        qRegisterMetaType<ChannelModel>();
         QHash<QString, QVariant> availableAxis;
         foreach(auto axis, _availableAxis.keys())
         {
@@ -126,6 +133,9 @@ void SettingsHandler::Save()
         }
         settings.setValue("availableAxis", availableAxis);
         settings.setValue("gamepadButtonMap", _gamepadButtonMap);
+        settings.setValue("inverseTcXL0", _inverseTcXL0);
+        settings.setValue("inverseTcXRollR2", _inverseTcXRollR2);
+        settings.setValue("inverseTcYRollR1", _inverseTcYRollR1);
     }
 
 }
@@ -170,6 +180,9 @@ void SettingsHandler::Default()
     settings.setValue("thumbSizeList", 50);
 
     settings.setValue("gamePadEnabled", false);
+    settings.setValue("inverseTcXL0", false);
+    settings.setValue("inverseTcXRollR2", false);
+    settings.setValue("inverseTcYRollR1", false);
     SetupAvailableAxis();
     SetupGamepadButtonMap();
 }
@@ -254,6 +267,46 @@ int SettingsHandler::getTwistMin()
 {
     return twistMin;
 }
+float SettingsHandler::getMultiplierValue(QString channel)
+{
+    if(channel == "R0")
+    {
+        return getTwistMultiplierValue();
+    }
+    else if(channel == "R1")
+    {
+        return getYRollMultiplierValue();
+    }
+    else if(channel == "R2")
+    {
+        return getXRollMultiplierValue();
+    }
+    else if(channel == "V0")
+    {
+        return getVibMultiplierValue();
+    }
+    return 0.0;
+}
+bool SettingsHandler::getMultiplierChecked(QString channel)
+{
+    if(channel == "R0")
+    {
+        return getTwistMultiplierChecked();
+    }
+    else if(channel == "R1")
+    {
+        return getYRollMultiplierChecked();
+    }
+    else if(channel == "R2")
+    {
+        return getXRollMultiplierChecked();
+    }
+    else if(channel == "V0")
+    {
+        return getVibMultiplierChecked();
+    }
+    return false;
+}
 bool SettingsHandler::getYRollMultiplierChecked()
 {
     return yRollMultiplierChecked;
@@ -314,17 +367,30 @@ bool SettingsHandler::getGamepadEnabled()
     return _gamePadEnabled;
 }
 
+bool SettingsHandler::getInverseTcXL0()
+{
+    return _inverseTcXL0;
+}
+bool SettingsHandler::getInverseTcXRollR2()
+{
+    return _inverseTcXRollR2;
+}
+bool SettingsHandler::getInverseTcYRollR1()
+{
+    return _inverseTcYRollR1;
+}
+
 ChannelModel SettingsHandler::getAvailableAxis(QString axis)
 {
     QMutexLocker locker(&mutex);
     return _availableAxis[axis];
 }
 
-QString SettingsHandler::getGamePadButtonMap(QString gamepadButton)
+QString SettingsHandler::getGamePadButtonMap(QString gamepadAxis)
 {
-    if (_gamepadButtonMap.contains(gamepadButton))
+    if (_gamepadButtonMap.contains(gamepadAxis))
     {
-        return _gamepadButtonMap[gamepadButton].toString();;
+        return _gamepadButtonMap[gamepadAxis].toString();;
     }
     return nullptr;
 }
@@ -510,27 +576,40 @@ void SettingsHandler::setGamePadButtonMap(QString gamePadButton, QString axis)
     _gamepadButtonMap[gamePadButton] = axis;
 }
 
+void SettingsHandler::setInverseTcXL0(bool value)
+{
+    _inverseTcXL0 = value;
+}
+void SettingsHandler::setInverseTcXRollR2(bool value)
+{
+    _inverseTcXRollR2 = value;
+}
+void SettingsHandler::setInverseTcYRollR1(bool value)
+{
+    _inverseTcYRollR1  = value;
+}
+
 //private
 void SettingsHandler::SetupAvailableAxis()
 {
     AxisNames axisNames;
     _availableAxis = {
-                {axisNames.None, { axisNames.None, axisNames.None, axisNames.None, 1, 500, 999 } },
-                {axisNames.TcXUpDownL0, { "X (Up/down L0)", axisNames.TcXUpDownL0, "L0", 1, 500, 999 } },
-                {axisNames.TcXDownL0, { "X (Down)", axisNames.TcXDownL0, "L0", 1, 500, 999 } },
-                {axisNames.TcXUpL0, { "X (Up)", axisNames.TcXUpL0, "L0", 1, 500, 999 } },
-                {axisNames.TcXRollR2, { "X (Roll R2)", axisNames.TcXRollR2, "R2", 1, 500, 999 } },
-                {axisNames.TcXRollForwardR2, { "X (Roll Forward)", axisNames.TcXRollForwardR2, "R2", 1, 500, 999 } },
-                {axisNames.TcXRollBackR2, { "X (Roll Back)", axisNames.TcXRollBackR2, "R2", 1, 500, 999 } },
-                {axisNames.TcYRollR1, { "Y (Roll R1)", axisNames.TcYRollR1, "R1", 1, 500, 999 } },
-                {axisNames.TcYRollLeftR1, { "Y (Roll Left)", axisNames.TcYRollLeftR1, "R1", 1, 500, 999 } },
-                {axisNames.TcYRollRightR1, { "Y (Roll Right)", axisNames.TcYRollRightR1, "R1", 1, 500, 999 } },
-                {axisNames.TcTwistR0, { "Twist R0", axisNames.TcTwistR0, "R0", 1, 500, 999 } },
-                {axisNames.TcTwistCWR0, { "Twist (CW)", axisNames.TcTwistCWR0, "R0", 1, 500, 999 } },
-                {axisNames.TcTwistCCWR0, { "Twist (CCW)", axisNames.TcTwistCCWR0, "R0", 1, 500, 999 } },
-                {axisNames.TcVibV0, { "Vib V0", axisNames.TcVibV0, "V0", 1, 500, 999 } },
-                {axisNames.TcPumpV2, { "Pump V2", axisNames.TcPumpV2, "V2", 1, 500, 999 } }
-            };
+        {axisNames.None, { axisNames.None, axisNames.None, axisNames.None, 1, 500, 999 } },
+        {axisNames.TcXUpDownL0, { "X (Up/down L0)", axisNames.TcXUpDownL0, "L0", 1, 500, 999 } },
+        {axisNames.TcXDownL0, { "X (Down)", axisNames.TcXDownL0, "L0", 1, 500, 999 } },
+        {axisNames.TcXUpL0, { "X (Up)", axisNames.TcXUpL0, "L0", 1, 500, 999 } },
+        {axisNames.TcXRollR2, { "X (Roll R2)", axisNames.TcXRollR2, "R2", 1, 500, 999 } },
+        {axisNames.TcXRollForwardR2, { "X (Roll Forward)", axisNames.TcXRollForwardR2, "R2", 1, 500, 999 } },
+        {axisNames.TcXRollBackR2, { "X (Roll Back)", axisNames.TcXRollBackR2, "R2", 1, 500, 999 } },
+        {axisNames.TcYRollR1, { "Y (Roll R1)", axisNames.TcYRollR1, "R1", 1, 500, 999 } },
+        {axisNames.TcYRollLeftR1, { "Y (Roll Left)", axisNames.TcYRollLeftR1, "R1", 1, 500, 999 } },
+        {axisNames.TcYRollRightR1, { "Y (Roll Right)", axisNames.TcYRollRightR1, "R1", 1, 500, 999 } },
+        {axisNames.TcTwistR0, { "Twist R0", axisNames.TcTwistR0, "R0", 1, 500, 999 } },
+        {axisNames.TcTwistCWR0, { "Twist (CW)", axisNames.TcTwistCWR0, "R0", 1, 500, 999 } },
+        {axisNames.TcTwistCCWR0, { "Twist (CCW)", axisNames.TcTwistCCWR0, "R0", 1, 500, 999 } },
+        {axisNames.TcVibV0, { "Vib V0", axisNames.TcVibV0, "V0", 1, 500, 999 } },
+        {axisNames.TcPumpV2, { "Pump V2", axisNames.TcPumpV2, "V2", 1, 500, 999 } }
+    };
 }
 
 void SettingsHandler::SetupGamepadButtonMap()
@@ -598,6 +677,9 @@ int SettingsHandler::thumbSizeList = 50;
 bool SettingsHandler::_gamePadEnabled;
 QHash<QString, QVariant> SettingsHandler::_gamepadButtonMap;
 QHash<QString, ChannelModel> SettingsHandler::_availableAxis;
+bool SettingsHandler::_inverseTcXL0;
+bool SettingsHandler::_inverseTcXRollR2;
+bool SettingsHandler::_inverseTcYRollR1;
 
 QString SettingsHandler::selectedFunscriptLibrary;
 QString SettingsHandler::selectedFile;

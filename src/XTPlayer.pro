@@ -38,6 +38,7 @@ SOURCES += \
     lib/handler/tcodehandler.cpp \
     lib/handler/udphandler.cpp \
     lib/handler/videohandler.cpp \
+    lib/tool/tcodefactory.cpp \
     lib/tool/xmath.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -68,6 +69,8 @@ HEADERS += \
     lib/struct/LibraryListItem.h \
     lib/struct/NetworkAddress.h \
     lib/struct/SerialComboboxItem.h \
+    lib/tool/boolinq.h \
+    lib/tool/tcodefactory.h \
     lib/tool/xmath.h \
     mainwindow.h \
     settingsdialog.h

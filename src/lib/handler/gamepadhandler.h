@@ -3,16 +3,15 @@
 
 #include <QGamepad>
 #include "devicehandler.h"
-#include "../struct/GamepadState.h"
+#include "../tool/tcodefactory.h"
 
 
 class GamepadHandler : public DeviceHandler
 {
-
 public:
     GamepadHandler(QObject *parent = nullptr);
     ~GamepadHandler();
-    GamepadState* getState();
+    QHash<QString, QVariant>* getState();
     void init();
     void dispose() override;
     bool isConnected() override;
@@ -25,7 +24,7 @@ private:
     double calculateDeadZone(double gpIn);
     QList<int> _gamepads;
     QGamepad* _gamepad = nullptr;
-    GamepadState* _gamepadState = nullptr;
+    QHash<QString, QVariant>* _gamepadState = nullptr;
     QMutex _mutex;
     QWaitCondition _cond;
     int _waitTimeout = 0;

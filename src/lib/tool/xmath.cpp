@@ -2,12 +2,23 @@
 #include <QRandomGenerator>
 #include <random>
 #include <chrono>
-qint64 XMath::mapRange(qint64 value, qint64 inStart, qint64 inEnd, qint64 outStart, qint64 outEnd)
+
+int XMath::mapRange(int value, int inStart, int inEnd, int outStart, int outEnd)
 {
     double slope = (double)(outEnd - outStart) / (inEnd - inStart);
     return qRound64(outStart + slope * (value - inStart));
 }
 
+qint64 XMath::mapRange(qint64 value, qint64 inStart, qint64 inEnd, qint64 outStart, qint64 outEnd)
+{
+    double slope = (double)(outEnd - outStart) / (inEnd - inStart);
+    return qRound64(outStart + slope * (value - inStart));
+}
+qint64 XMath::mapRange(double value, double inStart, double inEnd, int outStart, int outEnd)
+{
+    double slope = (outEnd - outStart) / (inEnd - inStart);
+    return qRound64(outStart + slope * (value - inStart));
+}
 
 int  XMath::constrain(int value, int min, int max)
 {

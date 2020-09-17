@@ -7,8 +7,8 @@
 #include <QFuture>
 #include <QSpinBox>
 #include "CustomControls/rangeslider.h"
-#include "lib/handler/settingshandler.h"
 #include "lib/struct/SerialComboboxItem.h"
+#include "lib/handler/settingshandler.h"
 #include "lib/handler/serialhandler.h"
 #include "lib/handler/videohandler.h"
 #include "lib/handler/udphandler.h"
@@ -30,6 +30,7 @@ public:
     UdpHandler* getNetworkHandler();
     SerialHandler* getSerialHandler();
     DeoHandler* getDeoHandler();
+    GamepadHandler* getGamepadHandler();
     void setSelectedDeviceHandler(DeviceHandler* device);
     DeviceHandler* getSelectedDeviceHandler();
     bool isConnected();
@@ -60,6 +61,7 @@ private slots:
     void on_deo_connectionChanged(ConnectionChangedSignal event);
     void on_deo_error(QString error);
     void on_gamepad_connectionChanged(ConnectionChangedSignal event);
+    void on_gamepad_sendTCode(QString tcode);
 
     void on_SerialOutputCmb_currentIndexChanged(int index);
 

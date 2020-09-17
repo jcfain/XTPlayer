@@ -1,7 +1,6 @@
 #include "gamepadhandler.h"
-#include <QWindow>
 
-GamepadHandler::GamepadHandler(QObject *parent) :
+GamepadHandler::GamepadHandler(QObject *parent):
     DeviceHandler(parent)
 {
     qRegisterMetaType<ConnectionChangedSignal>();
@@ -59,32 +58,67 @@ void GamepadHandler::gamePadConnectionChanged(bool connected)
 
 void GamepadHandler::run()
 {
-    _gamepadState = new GamepadState();
+    QString lastTCode;
+    TCodeFactory* tcodeFactory = new TCodeFactory(0.0, 1.0);
+    QVector<ChannelValueModel> axisValues;
+    //_gamepadState = new QHash<QString, QVariant>();
+    GamepadAxisNames gamepadAxisNames;
     while(!_stop)
     {
         _mutex.lock();
-        _gamepadState->axisLeftX = calculateDeadZone(_gamepad->axisLeftX());
-        _gamepadState->axisLeftY = calculateDeadZone(_gamepad->axisLeftY());
-        _gamepadState->axisRightX = calculateDeadZone(_gamepad->axisRightX());
-        _gamepadState->axisRightY = calculateDeadZone(_gamepad->axisLeftX());
-        _gamepadState->buttonA = _gamepad->buttonA();
-        _gamepadState->buttonB = _gamepad->buttonB();
-        _gamepadState->buttonX = _gamepad->buttonX();
-        _gamepadState->buttonY = _gamepad->buttonY();
-        _gamepadState->buttonL1 = _gamepad->buttonL1();
-        _gamepadState->buttonL2 = _gamepad->buttonL2();
-        _gamepadState->buttonL3 = _gamepad->buttonL3();
-        _gamepadState->buttonR1 = _gamepad->buttonR1();
-        _gamepadState->buttonR2 = _gamepad->buttonR2();
-        _gamepadState->buttonR3 = _gamepad->buttonR3();
-        _gamepadState->buttonUp = _gamepad->buttonUp();
-        _gamepadState->buttonDown = _gamepad->buttonDown();
-        _gamepadState->buttonLeft = _gamepad->buttonLeft();
-        _gamepadState->buttonRight = _gamepad->buttonRight();
-        _gamepadState->buttonSelect = _gamepad->buttonSelect();
-        _gamepadState->buttonStart = _gamepad->buttonStart();
-        _gamepadState->buttonCenter = _gamepad->buttonCenter();
-        _gamepadState->buttonGuide = _gamepad->buttonGuide();
+//        _gamepadState->insert(gamepadAxisNames.LeftXAxis, calculateDeadZone(_gamepad->axisLeftX()));
+//        _gamepadState->insert(gamepadAxisNames.LeftYAxis, calculateDeadZone(_gamepad->axisLeftY()));
+//        _gamepadState->insert(gamepadAxisNames.RightXAxis, calculateDeadZone(_gamepad->axisRightX()));
+//        _gamepadState->insert(gamepadAxisNames.RightYAxis, calculateDeadZone(_gamepad->axisRightY()));
+//        _gamepadState->insert(gamepadAxisNames.A, _gamepad->buttonA());
+//        _gamepadState->insert(gamepadAxisNames.B, _gamepad->buttonB());
+//        _gamepadState->insert(gamepadAxisNames.X, _gamepad->buttonX());
+//        _gamepadState->insert(gamepadAxisNames.Y, _gamepad->buttonY());
+//        _gamepadState->insert(gamepadAxisNames.LeftBumper, _gamepad->buttonL1());
+//        _gamepadState->insert(gamepadAxisNames.LeftTrigger, _gamepad->buttonL2());
+//        _gamepadState->insert(gamepadAxisNames.LeftAxisButton, _gamepad->buttonL3());
+//        _gamepadState->insert(gamepadAxisNames.RightBumper, _gamepad->buttonR1());
+//        _gamepadState->insert(gamepadAxisNames.RightTrigger, _gamepad->buttonR2());
+//        _gamepadState->insert(gamepadAxisNames.RightAxisButton, _gamepad->buttonR3());
+//        _gamepadState->insert(gamepadAxisNames.DPadUp, _gamepad->buttonUp());
+//        _gamepadState->insert(gamepadAxisNames.DPadDown, _gamepad->buttonDown());
+//        _gamepadState->insert(gamepadAxisNames.DPadLeft, _gamepad->buttonLeft());
+//        _gamepadState->insert(gamepadAxisNames.DPadRight, _gamepad->buttonRight());
+//        _gamepadState->insert(gamepadAxisNames.Select, _gamepad->buttonSelect());
+//        _gamepadState->insert(gamepadAxisNames.Start, _gamepad->buttonStart());
+//        _gamepadState->insert(gamepadAxisNames.Center, _gamepad->buttonCenter());
+//        _gamepadState->insert(gamepadAxisNames.Guide, _gamepad->buttonGuide());var axisValues = new HashSet<ChannelValueModel>();
+        axisValues.clear();
+        tcodeFactory->calculate(gamepadAxisNames.LeftXAxis, calculateDeadZone(_gamepad->axisLeftX()), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.LeftYAxis, calculateDeadZone(_gamepad->axisLeftY()), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.RightXAxis, calculateDeadZone(_gamepad->axisRightX()), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.RightYAxis, calculateDeadZone(_gamepad->axisRightY()), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.RightTrigger, _gamepad->buttonR2(), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.LeftTrigger, _gamepad->buttonL2(), axisValues);
+        // Binary inputs
+        tcodeFactory->calculate(gamepadAxisNames.A, _gamepad->buttonA(), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.B, _gamepad->buttonB(), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.X, _gamepad->buttonX(), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.Y, _gamepad->buttonY(), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.RightBumper, _gamepad->buttonR1(), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.LeftBumper, _gamepad->buttonL1(), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.Start, _gamepad->buttonStart(), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.Select, _gamepad->buttonSelect(), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.DPadUp, _gamepad->buttonUp(), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.DPadDown, _gamepad->buttonDown(), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.DPadLeft, _gamepad->buttonLeft(), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.DPadRight, _gamepad->buttonRight(), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.RightAxisButton, _gamepad->buttonR3(), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.LeftAxisButton, _gamepad->buttonL3(), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.Center, _gamepad->buttonCenter(), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.Guide, _gamepad->buttonGuide(), axisValues);
+
+        QString currentTCode = tcodeFactory->formatTCode(&axisValues);
+        if (lastTCode != currentTCode)
+        {
+            lastTCode = currentTCode;
+            emit emitTCode(currentTCode);
+        }
         _mutex.unlock();
 
 //        if (!_stop)
@@ -94,6 +128,7 @@ void GamepadHandler::run()
 //            _mutex.unlock();
 //        }
     }
+    delete tcodeFactory;
 }
 
 double GamepadHandler::calculateDeadZone(double gpIn)
@@ -120,7 +155,7 @@ void GamepadHandler::dispose()
     }
 }
 
-GamepadState* GamepadHandler::getState()
+QHash<QString, QVariant>* GamepadHandler::getState()
 {
     const QMutexLocker locker(&_mutex);
     return _gamepadState;
