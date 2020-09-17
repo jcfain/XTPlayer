@@ -63,10 +63,11 @@ QString TCodeFactory::formatTCode(QVector<ChannelValueModel>* values)
 
 int TCodeFactory::calculateTcodeRange(double value, QString channel)
 {
-    auto output_end = SettingsHandler::getAvailableAxis(channel).Max;
-    auto output_start = SettingsHandler::getAvailableAxis(channel).Mid;
-    auto slope = (output_end - output_start) / (_input_end - _input_start);
-    return (int)(output_start + slope * (value - _input_start));
+    int output_end = SettingsHandler::getAvailableAxis(channel).UserMax;
+    int min = SettingsHandler::getAvailableAxis(channel).UserMin;
+    int output_start = qRound((output_end + min) / 2.0);
+    double slope = (output_end - output_start) / (_input_end - _input_start);
+    return qRound(output_start + slope * (value - _input_start));
 }
 
 int TCodeFactory::calculateGamepadSpeed(double gpIn)

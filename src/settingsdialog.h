@@ -43,6 +43,7 @@ signals:
     void deoDeviceError(QString error);
     void deviceConnectionChange(ConnectionChangedSignal event);
     void deoDeviceConnectionChange(ConnectionChangedSignal event);
+    void gamepadConnectionChange(ConnectionChangedSignal event);
 
 private slots:
     void on_serialOutputRdo_clicked();
@@ -61,7 +62,6 @@ private slots:
     void on_deo_connectionChanged(ConnectionChangedSignal event);
     void on_deo_error(QString error);
     void on_gamepad_connectionChanged(ConnectionChangedSignal event);
-    void on_gamepad_sendTCode(QString tcode);
 
     void on_SerialOutputCmb_currentIndexChanged(int index);
 

@@ -78,6 +78,8 @@ private slots:
     void regenerateThumbNail();
     void setThumbNailFromCurrent();
     void onDeoMessageRecieved(DeoPacket packet);
+    void on_gamepad_sendTCode(QString tcode);
+    void on_gamepad_connectionChanged(ConnectionChangedSignal event);
     void on_actionAbout_triggered();
     void on_action75_triggered();
     void on_action100_triggered();
@@ -135,6 +137,7 @@ private:
     bool _funscriptLoaded;
     QLabel* connectionStatusLabel;
     QLabel* deoConnectionStatusLabel;
+    QLabel* gamepadConnectionStatusLabel;
     QPushButton* retryConnectionButton;
     QPushButton* deoRetryConnectionButton;
     int voulumeBeforeMute;

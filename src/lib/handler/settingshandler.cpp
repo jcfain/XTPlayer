@@ -24,22 +24,22 @@ void SettingsHandler::Load()
     selectedDevice = settings.value("selectedDevice").toInt();
     playerVolume = settings.value("playerVolume").toInt();
     offSet = settings.value("offSet").toInt();
-    xMin = settings.value("xMin").toInt();
-    xMin = xMin == 0 ? 1 : xMin;
-    xMax = settings.value("xMax").toInt();
-    xMax = xMax == 0 ? 999 : xMax;
-    yRollMin = settings.value("yRollMin").toInt();
-    yRollMin = yRollMin == 0 ? 1 : yRollMin;
-    yRollMax = settings.value("yRollMax").toInt();
-    yRollMax = yRollMax == 0 ? 999 : yRollMax;
-    xRollMin = settings.value("xRollMin").toInt();
-    xRollMin = xRollMin == 0 ? 1 : xRollMin;
-    xRollMax = settings.value("xRollMax").toInt();
-    xRollMax = xRollMax == 0 ? 999 : xRollMax;
-    twistMin = settings.value("twistMin").toInt();
-    twistMin = twistMin == 0 ? 1 : twistMin;
-    twistMax = settings.value("twistMax").toInt();
-    twistMax = twistMax == 0 ? 999 : twistMax;
+//    xMin = settings.value("xMin").toInt();
+//    xMin = xMin == 0 ? 1 : xMin;
+//    xMax = settings.value("xMax").toInt();
+//    xMax = xMax == 0 ? 999 : xMax;
+//    yRollMin = settings.value("yRollMin").toInt();
+//    yRollMin = yRollMin == 0 ? 1 : yRollMin;
+//    yRollMax = settings.value("yRollMax").toInt();
+//    yRollMax = yRollMax == 0 ? 999 : yRollMax;
+//    xRollMin = settings.value("xRollMin").toInt();
+//    xRollMin = xRollMin == 0 ? 1 : xRollMin;
+//    xRollMax = settings.value("xRollMax").toInt();
+//    xRollMax = xRollMax == 0 ? 999 : xRollMax;
+//    twistMin = settings.value("twistMin").toInt();
+//    twistMin = twistMin == 0 ? 1 : twistMin;
+//    twistMax = settings.value("twistMax").toInt();
+//    twistMax = twistMax == 0 ? 999 : twistMax;
     selectedFunscriptLibrary = settings.value("selectedFunscriptLibrary").toString();
     serialPort = settings.value("serialPort").toString();
     serverAddress = settings.value("serverAddress").toString();
@@ -78,6 +78,8 @@ void SettingsHandler::Load()
     _inverseTcXL0 = settings.value("inverseTcXL0").toBool();
     _inverseTcXRollR2 = settings.value("inverseTcXRollR2").toBool();
     _inverseTcYRollR1 = settings.value("inverseTcYRollR1").toBool();
+//    SetupAvailableAxis();
+//    SetupGamepadButtonMap();
 }
 
 void SettingsHandler::Save()
@@ -91,14 +93,14 @@ void SettingsHandler::Save()
         settings.setValue("selectedDevice", selectedDevice);
         settings.setValue("playerVolume", playerVolume);
         settings.setValue("offSet", offSet);
-        settings.setValue("xMin", xMin);
-        settings.setValue("xMax", xMax);
-        settings.setValue("yRollMin", yRollMin );
-        settings.setValue("yRollMax", yRollMax);
-        settings.setValue("xRollMin", xRollMin );
-        settings.setValue("xRollMax", xRollMax);
-        settings.setValue("twistMin", twistMin );
-        settings.setValue("twistMax", twistMax);
+//        settings.setValue("xMin", xMin);
+//        settings.setValue("xMax", xMax);
+//        settings.setValue("yRollMin", yRollMin );
+//        settings.setValue("yRollMax", yRollMax);
+//        settings.setValue("xRollMin", xRollMin );
+//        settings.setValue("xRollMax", xRollMax);
+//        settings.setValue("twistMin", twistMin );
+//        settings.setValue("twistMax", twistMax);
         settings.setValue("selectedFunscriptLibrary", selectedFunscriptLibrary);
         settings.setValue("serialPort", serialPort);
         settings.setValue("serverAddress", serverAddress);
@@ -151,14 +153,14 @@ void SettingsHandler::Default()
     settings.setValue("playerVolume", 0);
     settings.setValue("offSet", 0);
     settings.setValue("speed", 1000);
-    settings.setValue("xMin", 1);
-    settings.setValue("xMax", 999);
-    settings.setValue("yRollMin", 1);
-    settings.setValue("yRollMax", 999);
-    settings.setValue("xRollMin", 1);
-    settings.setValue("xRollMax", 999);
-    settings.setValue("twistMin", 1);
-    settings.setValue("twistMax", 999);
+//    settings.setValue("xMin", 1);
+//    settings.setValue("xMax", 999);
+//    settings.setValue("yRollMin", 1);
+//    settings.setValue("yRollMax", 999);
+//    settings.setValue("xRollMin", 1);
+//    settings.setValue("xRollMax", 999);
+//    settings.setValue("twistMin", 1);
+//    settings.setValue("twistMax", 999);
     settings.setValue("selectedFunscriptLibrary", QVariant::String);
     settings.setValue("serialPort", QVariant::String);
     settings.setValue("serverAddress", QVariant::String);
@@ -237,35 +239,35 @@ int SettingsHandler::getoffSet()
 }
 int SettingsHandler::getXMin()
 {
-    return xMin;
+    return getAvailableAxis(axisNames.TcXUpDownL0).UserMin;
 }
 int SettingsHandler::getYRollMin()
 {
-    return yRollMin;
+    return getAvailableAxis(axisNames.TcYRollR1).UserMin;
 }
 int SettingsHandler::getXRollMin()
 {
-    return xRollMin;
+    return getAvailableAxis(axisNames.TcXRollR2).UserMin;
 }
 int SettingsHandler::getXMax()
 {
-    return xMax;
+    return getAvailableAxis(axisNames.TcXUpDownL0).UserMax;
 }
 int SettingsHandler::getYRollMax()
 {
-    return yRollMax;
+    return getAvailableAxis(axisNames.TcYRollR1).UserMax;
 }
 int SettingsHandler::getXRollMax()
 {
-    return xRollMax;
+    return getAvailableAxis(axisNames.TcXRollR2).UserMax;
 }
 int SettingsHandler::getTwistMax()
 {
-    return twistMax;
+    return getAvailableAxis(axisNames.TcTwistR0).UserMax;
 }
 int SettingsHandler::getTwistMin()
 {
-    return twistMin;
+    return getAvailableAxis(axisNames.TcTwistR0).UserMin;
 }
 float SettingsHandler::getMultiplierValue(QString channel)
 {
@@ -458,42 +460,42 @@ void SettingsHandler::setoffSet(int value)
 void SettingsHandler::setXMin(int value)
 {
     QMutexLocker locker(&mutex);
-    xMin = value;
+    _availableAxis[axisNames.TcXUpDownL0].UserMin = value;
 }
 void SettingsHandler::setYRollMin(int value)
 {
     QMutexLocker locker(&mutex);
-    yRollMin = value;
+    _availableAxis[axisNames.TcYRollR1].UserMin = value;
 }
 void SettingsHandler::setXRollMin(int value)
 {
     QMutexLocker locker(&mutex);
-    xRollMin = value;
+    _availableAxis[axisNames.TcXRollR2].UserMin = value;
 }
 void SettingsHandler::setXMax(int value)
 {
     QMutexLocker locker(&mutex);
-    xMax = value;
+    _availableAxis[axisNames.TcXUpDownL0].UserMax = value;
 }
 void SettingsHandler::setYRollMax(int value)
 {
     QMutexLocker locker(&mutex);
-    yRollMax = value;
+    _availableAxis[axisNames.TcYRollR1].UserMax = value;
 }
 void SettingsHandler::setXRollMax(int value)
 {
     QMutexLocker locker(&mutex);
-    xRollMax = value;
+    _availableAxis[axisNames.TcXRollR2].UserMax = value;
 }
 void SettingsHandler::setTwistMax(int value)
 {
     QMutexLocker locker(&mutex);
-    twistMax = value;
+    _availableAxis[axisNames.TcTwistR0].UserMax = value;
 }
 void SettingsHandler::setTwistMin(int value)
 {
     QMutexLocker locker(&mutex);
-    twistMin = value;
+    _availableAxis[axisNames.TcTwistR0].UserMin = value;
 }
 
 void SettingsHandler::setYRollMultiplierChecked(bool value)
@@ -592,30 +594,27 @@ void SettingsHandler::setInverseTcYRollR1(bool value)
 //private
 void SettingsHandler::SetupAvailableAxis()
 {
-    AxisNames axisNames;
     _availableAxis = {
-        {axisNames.None, { axisNames.None, axisNames.None, axisNames.None, 1, 500, 999 } },
-        {axisNames.TcXUpDownL0, { "X (Up/down L0)", axisNames.TcXUpDownL0, "L0", 1, 500, 999 } },
-        {axisNames.TcXDownL0, { "X (Down)", axisNames.TcXDownL0, "L0", 1, 500, 999 } },
-        {axisNames.TcXUpL0, { "X (Up)", axisNames.TcXUpL0, "L0", 1, 500, 999 } },
-        {axisNames.TcXRollR2, { "X (Roll R2)", axisNames.TcXRollR2, "R2", 1, 500, 999 } },
-        {axisNames.TcXRollForwardR2, { "X (Roll Forward)", axisNames.TcXRollForwardR2, "R2", 1, 500, 999 } },
-        {axisNames.TcXRollBackR2, { "X (Roll Back)", axisNames.TcXRollBackR2, "R2", 1, 500, 999 } },
-        {axisNames.TcYRollR1, { "Y (Roll R1)", axisNames.TcYRollR1, "R1", 1, 500, 999 } },
-        {axisNames.TcYRollLeftR1, { "Y (Roll Left)", axisNames.TcYRollLeftR1, "R1", 1, 500, 999 } },
-        {axisNames.TcYRollRightR1, { "Y (Roll Right)", axisNames.TcYRollRightR1, "R1", 1, 500, 999 } },
-        {axisNames.TcTwistR0, { "Twist R0", axisNames.TcTwistR0, "R0", 1, 500, 999 } },
-        {axisNames.TcTwistCWR0, { "Twist (CW)", axisNames.TcTwistCWR0, "R0", 1, 500, 999 } },
-        {axisNames.TcTwistCCWR0, { "Twist (CCW)", axisNames.TcTwistCCWR0, "R0", 1, 500, 999 } },
-        {axisNames.TcVibV0, { "Vib V0", axisNames.TcVibV0, "V0", 1, 500, 999 } },
-        {axisNames.TcPumpV2, { "Pump V2", axisNames.TcPumpV2, "V2", 1, 500, 999 } }
+        {axisNames.None, { axisNames.None, axisNames.None, axisNames.None, 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcXUpDownL0, { "X (Up/down L0)", axisNames.TcXUpDownL0, "L0", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcXDownL0, { "X (Down)", axisNames.TcXDownL0, "L0", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcXUpL0, { "X (Up)", axisNames.TcXUpL0, "L0", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcXRollR2, { "X (Roll R2)", axisNames.TcXRollR2, "R2", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcXRollForwardR2, { "X (Roll Forward)", axisNames.TcXRollForwardR2, "R2", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcXRollBackR2, { "X (Roll Back)", axisNames.TcXRollBackR2, "R2", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcYRollR1, { "Y (Roll R1)", axisNames.TcYRollR1, "R1", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcYRollLeftR1, { "Y (Roll Left)", axisNames.TcYRollLeftR1, "R1", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcYRollRightR1, { "Y (Roll Right)", axisNames.TcYRollRightR1, "R1", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcTwistR0, { "Twist R0", axisNames.TcTwistR0, "R0", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcTwistCWR0, { "Twist (CW)", axisNames.TcTwistCWR0, "R0", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcTwistCCWR0, { "Twist (CCW)", axisNames.TcTwistCCWR0, "R0", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcVibV0, { "Vib V0", axisNames.TcVibV0, "V0", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcPumpV2, { "Pump V2", axisNames.TcPumpV2, "V2", 1, 500, 999, 1, 500, 999 } }
     };
 }
 
 void SettingsHandler::SetupGamepadButtonMap()
 {
-    GamepadAxisNames gamepadAxisNames;
-    AxisNames axisNames;
     _gamepadButtonMap = {
         { "None", axisNames.None },
         { gamepadAxisNames.LeftXAxis, axisNames.TcVibV0 },
@@ -637,7 +636,9 @@ void SettingsHandler::SetupGamepadButtonMap()
         { gamepadAxisNames.DPadLeft, axisNames.None },
         { gamepadAxisNames.DPadRight, axisNames.None },
         { gamepadAxisNames.RightAxisButton, axisNames.None },
-        { gamepadAxisNames.LeftAxisButton, axisNames.None }
+        { gamepadAxisNames.LeftAxisButton, axisNames.None },
+        { gamepadAxisNames.Center, axisNames.None },
+        { gamepadAxisNames.Guide, axisNames.None }
     };
 }
 
@@ -647,20 +648,22 @@ const float SettingsHandler::XTPVersionNum = 0.14f;
 
 QSettings SettingsHandler::settings{"cUrbSide prOd", "XTPlayer"};
 QMutex SettingsHandler::mutex;
+GamepadAxisNames SettingsHandler::gamepadAxisNames;
+AxisNames SettingsHandler::axisNames;
 QHash<QString, QVariant> SettingsHandler::deoDnlaFunscriptLookup;
 QString SettingsHandler::selectedTheme;
 QString SettingsHandler::selectedLibrary;
 int SettingsHandler::selectedDevice;
 int SettingsHandler::playerVolume;
 int SettingsHandler::offSet;
-int SettingsHandler::xMin;
-int SettingsHandler::yRollMin;
-int SettingsHandler::xRollMin;
-int SettingsHandler::xMax;
-int SettingsHandler::yRollMax;
-int SettingsHandler::xRollMax;
-int SettingsHandler::twistMin;
-int SettingsHandler::twistMax;
+//int SettingsHandler::xMin;
+//int SettingsHandler::yRollMin;
+//int SettingsHandler::xRollMin;
+//int SettingsHandler::xMax;
+//int SettingsHandler::yRollMax;
+//int SettingsHandler::xRollMax;
+//int SettingsHandler::twistMin;
+//int SettingsHandler::twistMax;
 bool SettingsHandler::yRollMultiplierChecked;
 float SettingsHandler::yRollMultiplierValue;
 bool SettingsHandler::xRollMultiplierChecked;

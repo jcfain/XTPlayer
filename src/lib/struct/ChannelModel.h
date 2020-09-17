@@ -27,6 +27,9 @@ struct ChannelModel
     int Min;
     int Mid;
     int Max;
+    int UserMin;
+    int UserMid;
+    int UserMax;
 
     friend QDataStream & operator<<( QDataStream &dataStream, const ChannelModel &object )
     {
@@ -36,6 +39,9 @@ struct ChannelModel
         dataStream << object.Min;
         dataStream << object.Mid;
         dataStream << object.Max;
+        dataStream << object.UserMin;
+        dataStream << object.UserMid;
+        dataStream << object.UserMax;
         return dataStream;
     }
 
@@ -47,6 +53,9 @@ struct ChannelModel
         dataStream >> object.Min;
         dataStream >> object.Mid;
         dataStream >> object.Max;
+        dataStream >> object.UserMin;
+        dataStream >> object.UserMid;
+        dataStream >> object.UserMax;
         return dataStream;
     }
 };

@@ -113,6 +113,8 @@ private:
 
     static void SetupAvailableAxis();
     static void SetupGamepadButtonMap();
+    static GamepadAxisNames gamepadAxisNames;
+    static AxisNames axisNames;
 
     static QHash<QString, QVariant> deoDnlaFunscriptLookup;
     static QString selectedTheme;
@@ -128,14 +130,14 @@ private:
     static bool deoEnabled;
     static int playerVolume;
     static int offSet;
-    static int xMin;
-    static int yRollMin;
-    static int xRollMin;
-    static int xMax;
-    static int yRollMax;
-    static int xRollMax;
-    static int twistMax;
-    static int twistMin;
+//    static int xMin;
+//    static int yRollMin;
+//    static int xRollMin;
+//    static int xMax;
+//    static int yRollMax;
+//    static int xRollMax;
+//    static int twistMax;
+//    static int twistMin;
     static bool yRollMultiplierChecked;
     static float yRollMultiplierValue;
     static bool xRollMultiplierChecked;

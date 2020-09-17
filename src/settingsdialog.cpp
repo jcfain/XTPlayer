@@ -23,7 +23,6 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
     connect(_deoHandler, &DeoHandler::connectionChange, this, &SettingsDialog::on_deo_connectionChanged);
     connect(_deoHandler, &DeoHandler::errorOccurred, this, &SettingsDialog::on_deo_error);
     connect(_gamepadHandler, &GamepadHandler::connectionChange, this, &SettingsDialog::on_gamepad_connectionChanged);
-    connect(_gamepadHandler, &GamepadHandler::emitTCode, this, &SettingsDialog::on_gamepad_sendTCode);
 }
 SettingsDialog::~SettingsDialog()
 {
@@ -578,14 +577,10 @@ void SettingsDialog::on_device_connectionChanged(ConnectionChangedSignal event)
     emit deviceConnectionChange({event.deviceType, event.status, event.message});
 }
 
-void SettingsDialog::on_gamepad_sendTCode(QString value)
-{
-    getSelectedDeviceHandler()->sendTCode(value);
-}
-
 void SettingsDialog::on_gamepad_connectionChanged(ConnectionChangedSignal event)
 {
     setDeviceStatusStyle(event.status, event.deviceType);
+    emit gamepadConnectionChange(event);
 }
 
 void SettingsDialog::on_device_error(QString error)

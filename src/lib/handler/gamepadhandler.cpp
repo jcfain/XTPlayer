@@ -90,9 +90,9 @@ void GamepadHandler::run()
 //        _gamepadState->insert(gamepadAxisNames.Guide, _gamepad->buttonGuide());var axisValues = new HashSet<ChannelValueModel>();
         axisValues.clear();
         tcodeFactory->calculate(gamepadAxisNames.LeftXAxis, calculateDeadZone(_gamepad->axisLeftX()), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.LeftYAxis, calculateDeadZone(_gamepad->axisLeftY()), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.LeftYAxis, calculateDeadZone(-_gamepad->axisLeftY()), axisValues);
         tcodeFactory->calculate(gamepadAxisNames.RightXAxis, calculateDeadZone(_gamepad->axisRightX()), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.RightYAxis, calculateDeadZone(_gamepad->axisRightY()), axisValues);
+        tcodeFactory->calculate(gamepadAxisNames.RightYAxis, calculateDeadZone(-_gamepad->axisRightY()), axisValues);
         tcodeFactory->calculate(gamepadAxisNames.RightTrigger, _gamepad->buttonR2(), axisValues);
         tcodeFactory->calculate(gamepadAxisNames.LeftTrigger, _gamepad->buttonL2(), axisValues);
         // Binary inputs

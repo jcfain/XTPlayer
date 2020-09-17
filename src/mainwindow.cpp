@@ -29,6 +29,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->statusbar->addPermanentWidget(connectionStatusLabel);
     ui->statusbar->addPermanentWidget(retryConnectionButton);
 
+    gamepadConnectionStatusLabel = new QLabel(this);
+    ui->statusbar->addPermanentWidget(gamepadConnectionStatusLabel);
+
+
     videoHandler = new VideoHandler(this);
     ui->MediaGrid->addWidget(videoHandler);
 
@@ -100,6 +104,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(_xSettings, &SettingsDialog::deviceConnectionChange, this, &MainWindow::on_device_connectionChanged);
     connect(_xSettings, &SettingsDialog::deviceError, this, &MainWindow::on_device_error);
     connect(_xSettings->getDeoHandler(), &DeoHandler::messageRecieved, this, &MainWindow::onDeoMessageRecieved);
+    connect(_xSettings, &SettingsDialog::gamepadConnectionChange, this, &MainWindow::on_gamepad_connectionChanged);
+    connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitTCode, this, &MainWindow::on_gamepad_sendTCode);
+
 
     connect(action75_Size, &QAction::triggered, this, &MainWindow::on_action75_triggered);
     connect(action100_Size, &QAction::triggered, this, &MainWindow::on_action100_triggered);
@@ -952,6 +959,16 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
     LogHandler::Debug("exit syncFunscript");
 }
 
+void MainWindow::on_gamepad_sendTCode(QString value)
+{
+    if(_funscriptLoaded && videoHandler->isPlaying())
+    {
+        QRegularExpression rx("L0[^\\s]*\\s?");
+        value = value.remove(rx);
+    }
+    _xSettings->getSelectedDeviceHandler()->sendTCode(value);
+}
+
 void MainWindow::on_media_stop()
 {
     ui->videoLoadingLabel->hide();
@@ -1079,6 +1096,14 @@ void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
     }
 }
 
+void MainWindow::on_gamepad_connectionChanged(ConnectionChangedSignal event)
+{
+    QString message = "";
+    message += "Gamepad: ";
+    message += " " + event.message;
+    gamepadConnectionStatusLabel->setText(message);
+}
+
 void MainWindow::on_device_error(QString error)
 {
     LogHandler::Dialog(error, XLogLevel::Critical);
@@ -1183,11 +1208,19 @@ void MainWindow::on_actionAbout_triggered()
     layout.addWidget(&libAVInfo);
     QLabel rangeSliderInfo;
     rangeSliderInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    rangeSliderInfo.setText("<b>Qt-RangeSlider</b><br>"
+    rangeSliderInfo.setText("<b>Qt-RangeSlider (MIT)</b><br>"
                       "Copyright (c) 2019 ThisIsClark<br>"
+                      "Modifications Copyright (c) 2020 Jason C. Fain<br>"
                       "<a href='https://github.com/ThisIsClark/Qt-RangeSlider'>https://github.com/ThisIsClark/Qt-RangeSlider</a>");
     rangeSliderInfo.setAlignment(Qt::AlignHCenter);
     layout.addWidget(&rangeSliderInfo);
+    QLabel boolinqInfo;
+    boolinqInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    boolinqInfo.setText("<b>boolinq</b><br>"
+                      "Copyright (C) 2019 by Anton Bukov (MIT)<br>"
+                      "<a href='https://github.com/k06a/boolinq'>https://github.com/k06a/boolinq</a>");
+    boolinqInfo.setAlignment(Qt::AlignHCenter);
+    layout.addWidget(&boolinqInfo);
     aboutWindow.setLayout(&layout);
     aboutWindow.exec();
 }

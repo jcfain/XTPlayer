@@ -34,7 +34,7 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
                 tcode += axis;
                 tcode += tcodeValueString;
                 if (speed > 0) {
-                  tcode += "I";
+                  tcode += "S";
                   tcode += QString::number(speed);
                 }
             }
@@ -61,52 +61,10 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
 
 int TCodeHandler::calculateRange(const char* channel, int rawValue)
 {
-    int xMax = getchannelMax(channel);
-    int xMin = getchannelMin(channel);
+    int xMax = SettingsHandler::getAvailableAxis(channel).UserMax;
+    int xMin = SettingsHandler::getAvailableAxis(channel).UserMin;
     int xMid = qRound((xMax + xMin) / 2.0);
     return XMath::mapRange(rawValue, 50, 100, xMid, xMax);
-}
-
-int TCodeHandler::getchannelMin(const char* channel)
-{
-    if (strcmp(channel, "L0") == 0)
-    {
-        return SettingsHandler::getXMin();
-    }
-    else if (strcmp(channel, "R1") == 0)
-    {
-        return SettingsHandler::getYRollMin();
-    }
-    else if (strcmp(channel, "R2") == 0)
-    {
-        return SettingsHandler::getXRollMin();
-    }
-    else if (strcmp(channel, "R0") == 0)
-    {
-        return SettingsHandler::getTwistMin();
-    }
-    return SettingsHandler::getAvailableAxis(channel).Min;
-}
-
-int TCodeHandler::getchannelMax(const char* channel)
-{
-    if (strcmp(channel, "L0") == 0)
-    {
-        return SettingsHandler::getXMax();
-    }
-    else if (strcmp(channel, "R1") == 0)
-    {
-        return SettingsHandler::getYRollMax();
-    }
-    else if (strcmp(channel, "R2") == 0)
-    {
-        return SettingsHandler::getXRollMax();
-    }
-    else if (strcmp(channel, "R0") == 0)
-    {
-        return SettingsHandler::getTwistMax();
-    }
-    return SettingsHandler::getAvailableAxis(channel).Max;
 }
 
 QMutex TCodeHandler::mutex;

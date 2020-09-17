@@ -16,8 +16,6 @@ public:
     QString funscriptToTCode(qint64 position, int speed = 0);
 
     int calculateRange(const char* channel, int rawValue);
-    int getchannelMin(const char* channel);
-    int getchannelMax(const char* channel);
 
 private:
     static QMutex mutex;
