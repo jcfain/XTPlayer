@@ -147,7 +147,11 @@ void GamepadHandler::dispose()
     _isConnected = false;
     if (_gamepad != nullptr && _gamepad->isConnected())
         _gamepad->disconnect();
-    disconnect(_gamepad, &QGamepad::connectedChanged, this, &GamepadHandler::gamePadConnectionChanged);
+
+    if (_gamepad != nullptr)
+        disconnect(_gamepad, &QGamepad::connectedChanged, this, &GamepadHandler::gamePadConnectionChanged);
+
+    emit connectionChange({DeviceType::Gamepad, ConnectionStatus::Disconnected, "Disconnected"});
     if(isRunning())
     {
         quit();

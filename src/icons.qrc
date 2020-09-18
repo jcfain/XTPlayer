@@ -14,5 +14,6 @@
         <file>images/icons/XTP-window-icon.png</file>
         <file>images/icons/XTP-window-icon.ico</file>
         <file>images/icons/error.png</file>
+        <file>images/blank_xbox_360_controller_map.png</file>
     </qresource>
 </RCC>

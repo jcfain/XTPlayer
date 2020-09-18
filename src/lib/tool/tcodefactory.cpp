@@ -13,10 +13,10 @@ void TCodeFactory::init()
 void TCodeFactory::calculate(QString axisName, double value, QVector<ChannelValueModel> &axisValues)
 {
     AxisNames axisNames;
-    auto tcodeAxisName = SettingsHandler::getGamePadButtonMap(axisName);
+    auto tcodeAxisName = SettingsHandler::getGamePadMapButton(axisName);
     if (tcodeAxisName != axisNames.None)
     {
-        auto tcodeAxis = SettingsHandler::getAvailableAxis(tcodeAxisName);
+        auto tcodeAxis = SettingsHandler::getAxis(tcodeAxisName);
         auto isNegative = tcodeAxis.AxisName.contains(axisNames.NegativeModifier);
         //auto isPositive = tcodeAxis.AxisName.contains(axisNames.PositiveModifier);
         if (_addedAxis->contains(tcodeAxis.Channel) && _addedAxis->value(tcodeAxis.Channel) == 0 && value != 0)
@@ -53,8 +53,8 @@ QString TCodeFactory::formatTCode(QVector<ChannelValueModel>* values)
     QString tCode = "";
     foreach (auto value, *values)
     {
-        auto minValue = SettingsHandler::getAvailableAxis(value.Channel).Min;
-        auto maxValue = SettingsHandler::getAvailableAxis(value.Channel).Max;
+        auto minValue = SettingsHandler::getAxis(value.Channel).Min;
+        auto maxValue = SettingsHandler::getAxis(value.Channel).Max;
         auto clampedValue = maxValue == 0 ? value.Value : XMath::constrain(value.Value, minValue, maxValue);
         tCode += value.Channel + (clampedValue < 10 ? "0" : "") + QString::number(clampedValue) + "S1000 ";
     }
@@ -63,8 +63,8 @@ QString TCodeFactory::formatTCode(QVector<ChannelValueModel>* values)
 
 int TCodeFactory::calculateTcodeRange(double value, QString channel)
 {
-    int output_end = SettingsHandler::getAvailableAxis(channel).UserMax;
-    int min = SettingsHandler::getAvailableAxis(channel).UserMin;
+    int output_end = SettingsHandler::getAxis(channel).UserMax;
+    int min = SettingsHandler::getAxis(channel).UserMin;
     int output_start = qRound((output_end + min) / 2.0);
     double slope = (output_end - output_start) / (_input_end - _input_start);
     return qRound(output_start + slope * (value - _input_start));

@@ -1,7 +1,19 @@
 
-QMainWindow, QDialog {
+QMainWindow, QDialog, QTabWidget > QWidget {
     background-color: #f2f3f4;
     color: black;
+}
+QTabBar::tab {
+  background: silver; 
+  border: 1px solid lightgray; 
+  padding: 5px;
+  color: black;
+  border-radius: 4px 4px 0px 0px;
+} 
+QTabBar::tab:selected { 
+  background: black; 
+  border: 1px solid #f2f3f4; 
+  color: #f2f3f4;
 }
 QLabel {
     background-color: transparent;

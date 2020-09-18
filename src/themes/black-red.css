@@ -1,7 +1,19 @@
 
-QMainWindow, QDialog {
+QMainWindow, QDialog, QTabWidget > QWidget {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1.5, stop: 0 black, stop: 1 darkred);
     color: white;
+}
+QTabBar::tab {
+  background: transparent; 
+  border: 1px solid silver; 
+  padding: 5px;
+  color: silver;
+  border-radius: 4px 4px 0px 0px;
+} 
+QTabBar::tab:selected { 
+  background: transparent; 
+  border: 1px solid darkred; 
+  color: red;
 }
 QLabel {
     background-color: transparent;

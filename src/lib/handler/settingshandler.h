@@ -55,8 +55,10 @@ public:
     static int getThumbSizeList();
 
     static bool getGamepadEnabled();
-    static QString getGamePadButtonMap(QString gamepadButton);
-    static ChannelModel getAvailableAxis(QString axis);
+    static QHash<QString, QString> getGamePadMap();
+    static QString getGamePadMapButton(QString gamepadButton);
+    static QHash<QString, ChannelModel> getAvailableAxis();
+    static ChannelModel getAxis(QString axis);
     static bool getInverseTcXL0();
     static bool getInverseTcXRollR2();
     static bool getInverseTcYRollR1();
@@ -97,8 +99,8 @@ public:
     static void setThumbSizeList(int value);
 
     static void setGamepadEnabled(bool value);
-    static void setGamePadButtonMap(QString gamePadButton, QString axis);
-    static void setAvailableAxis(QString axis, ChannelModel channel);
+    static void setGamePadMapButton(QString gamePadButton, QString axis);
+    static void setAxis(QString axis, ChannelModel channel);
     static void setInverseTcXL0(bool value);
     static void setInverseTcXRollR2(bool value);
     static void setInverseTcYRollR1(bool value);
@@ -148,7 +150,7 @@ private:
     static float vibMultiplierValue;
 
     static bool _gamePadEnabled;
-    static QHash<QString, QVariant> _gamepadButtonMap;
+    static QHash<QString, QString> _gamepadButtonMap;
     static QHash<QString, ChannelModel> _availableAxis;
     static bool _inverseTcXL0;
     static bool _inverseTcXRollR2;

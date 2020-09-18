@@ -61,8 +61,8 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
 
 int TCodeHandler::calculateRange(const char* channel, int rawValue)
 {
-    int xMax = SettingsHandler::getAvailableAxis(channel).UserMax;
-    int xMin = SettingsHandler::getAvailableAxis(channel).UserMin;
+    int xMax = SettingsHandler::getAxis(channel).UserMax;
+    int xMin = SettingsHandler::getAxis(channel).UserMin;
     int xMid = qRound((xMax + xMin) / 2.0);
     return XMath::mapRange(rawValue, 50, 100, xMid, xMax);
 }

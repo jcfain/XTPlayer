@@ -112,9 +112,12 @@ private:
     void initNetworkEvent();
     void initDeoEvent();
     void setupUi();
+    void setupGamepadMap();
 
     bool _interfaceInitialized = false;
-    ConnectionStatus _connectionStatus = ConnectionStatus::Disconnected;
+    ConnectionStatus _outConnectionStatus = ConnectionStatus::Disconnected;
+    ConnectionStatus _deoConnectionStatus = ConnectionStatus::Disconnected;
+    ConnectionStatus _gamepadConnectionStatus = ConnectionStatus::Disconnected;
     QList<SerialComboboxItem> serialPorts;
     SerialComboboxItem selectedSerialPort;
     DeviceHandler* selectedDeviceHandler;

@@ -1,7 +1,18 @@
 
-QMainWindow, QDialog {
+QMainWindow, QDialog, QTabWidget > QWidget {
     background-image: url(./themes/sky.jpg) no-repeat center fixed;
     color: black;
+}
+QTabBar::tab {
+  background: transparent; 
+  border: 1px solid lightgray; 
+  padding: 5px;
+  color: white;
+  border-radius: 4px 4px 0px 0px;
+} 
+QTabBar::tab:selected { 
+  background: #a15f59; 
+  color: white;
 }
 QLabel {
     background-color: transparent;

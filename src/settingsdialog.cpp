@@ -71,8 +71,10 @@ void SettingsDialog::setupUi()
 {
 
     loadSerialPorts();
-    setDeviceStatusStyle(_connectionStatus, DeviceType::Serial);
-    setDeviceStatusStyle(_connectionStatus, DeviceType::Network);
+    setDeviceStatusStyle(_outConnectionStatus, DeviceType::Serial);
+    setDeviceStatusStyle(_outConnectionStatus, DeviceType::Network);
+    setDeviceStatusStyle(_deoConnectionStatus, DeviceType::Deo);
+    setDeviceStatusStyle(_gamepadConnectionStatus, DeviceType::Gamepad);
     if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
     {
         ui.serialOutputRdo->setChecked(true);
@@ -214,9 +216,50 @@ void SettingsDialog::setupUi()
         ui.deoCheckbox->setChecked(deoEnabled);
         on_deoCheckbox_clicked(deoEnabled);
         ui.gamePadCheckbox->setChecked(SettingsHandler::getGamepadEnabled());
+        ui.gamePadMapGroupbox->setHidden(!SettingsHandler::getGamepadEnabled());
+        setupGamepadMap();
     }
 }
+void SettingsDialog::setupGamepadMap()
+{
+    auto gamepadMap = SettingsHandler::getGamePadMap();
+    auto availableAxis = SettingsHandler::getAvailableAxis();
+    int rowIterator = 0;
+    int columnIterator = 0;
+    int maxRows = 4;
+    int maxColumns = 5;
+    foreach(auto button, gamepadMap.keys())
+    {
+        QLabel* mapLabel = new QLabel(this);
+        mapLabel->setText(button);
+        QComboBox* mapComboBox = new QComboBox(this);
+        foreach(auto axis, availableAxis.keys())
+        {
+            auto channel = availableAxis.value(axis);
+            QVariant variant;
+            variant.setValue(channel);
+            mapComboBox->addItem(channel.FriendlyName, variant);
+        }
+        auto gameMap = gamepadMap.value(button);
+        mapComboBox->setCurrentText(availableAxis.value(gameMap).FriendlyName);
+        ui.gamePadMapGridLayout->addWidget(mapLabel, rowIterator, columnIterator, Qt::AlignRight);
+        ui.gamePadMapGridLayout->addWidget(mapComboBox, rowIterator, columnIterator + 1, Qt::AlignLeft);
 
+        connect(mapComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+                [mapComboBox, gamepadMap, button](int index)
+                  {
+                        ChannelModel selectedChannel = mapComboBox->currentData().value<ChannelModel>();
+                        SettingsHandler::setGamePadMapButton(button, selectedChannel.AxisName);
+                  });
+        if (rowIterator <= maxRows)
+            rowIterator++;
+        else
+        {
+            rowIterator = 0;
+            columnIterator += 2;
+        }
+    }
+}
 UdpHandler* SettingsDialog::getNetworkHandler()
 {
     return _udpHandler;
@@ -237,7 +280,7 @@ GamepadHandler* SettingsDialog::getGamepadHandler()
 }
 bool SettingsDialog::isConnected()
 {
-    return _connectionStatus == ConnectionStatus::Connected;
+    return _outConnectionStatus == ConnectionStatus::Connected;
 }
 
 void SettingsDialog::setSelectedDeviceHandler(DeviceHandler* device)
@@ -491,6 +534,7 @@ void SettingsDialog::onOffSet_valueChanged(int value)
 
 void SettingsDialog::on_deo_connectionChanged(ConnectionChangedSignal event)
 {
+    _deoConnectionStatus = event.status;
     if (event.status == ConnectionStatus::Error)
     {
         ui.deoConnectButton->setEnabled(true);
@@ -517,7 +561,7 @@ void SettingsDialog::on_deo_error(QString error)
 }
 void SettingsDialog::on_device_connectionChanged(ConnectionChangedSignal event)
 {
-    _connectionStatus = event.status;
+    _outConnectionStatus = event.status;
     if(event.deviceType == DeviceType::Serial)
     {
         SettingsHandler::setSerialPort(ui.SerialOutputCmb->currentText());
@@ -579,6 +623,7 @@ void SettingsDialog::on_device_connectionChanged(ConnectionChangedSignal event)
 
 void SettingsDialog::on_gamepad_connectionChanged(ConnectionChangedSignal event)
 {
+    _gamepadConnectionStatus = event.status;
     setDeviceStatusStyle(event.status, event.deviceType);
     emit gamepadConnectionChange(event);
 }
@@ -739,6 +784,7 @@ void SettingsDialog::on_resetAllButton_clicked()
 void SettingsDialog::on_gamePadCheckbox_clicked(bool checked)
 {
     SettingsHandler::setGamepadEnabled(checked);
+    ui.gamePadMapGroupbox->setHidden(!checked);
     if (checked)
     {
         _gamepadHandler->init();

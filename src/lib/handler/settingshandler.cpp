@@ -74,7 +74,11 @@ void SettingsHandler::Load()
     {
         _availableAxis.insert(axis, availableAxis[axis].value<ChannelModel>());
     }
-    _gamepadButtonMap = settings.value("gamepadButtonMap").toHash();
+    auto gamepadButtonMap = settings.value("gamepadButtonMap").toHash();
+    foreach(auto button, gamepadButtonMap.keys())
+    {
+        _gamepadButtonMap.insert(button, gamepadButtonMap[button].toString());
+    }
     _inverseTcXL0 = settings.value("inverseTcXL0").toBool();
     _inverseTcXRollR2 = settings.value("inverseTcXRollR2").toBool();
     _inverseTcYRollR1 = settings.value("inverseTcYRollR1").toBool();
@@ -134,7 +138,14 @@ void SettingsHandler::Save()
             availableAxis.insert(axis, axisVariant);
         }
         settings.setValue("availableAxis", availableAxis);
-        settings.setValue("gamepadButtonMap", _gamepadButtonMap);
+        QHash<QString, QVariant> gamepadMap;
+        foreach(auto button, _gamepadButtonMap.keys())
+        {
+            QVariant buttonVariant;
+            buttonVariant.setValue(_gamepadButtonMap[button]);
+            gamepadMap.insert(button, buttonVariant);
+        }
+        settings.setValue("gamepadButtonMap", gamepadMap);
         settings.setValue("inverseTcXL0", _inverseTcXL0);
         settings.setValue("inverseTcXRollR2", _inverseTcXRollR2);
         settings.setValue("inverseTcYRollR1", _inverseTcYRollR1);
@@ -239,35 +250,35 @@ int SettingsHandler::getoffSet()
 }
 int SettingsHandler::getXMin()
 {
-    return getAvailableAxis(axisNames.TcXUpDownL0).UserMin;
+    return getAxis(axisNames.TcXUpDownL0).UserMin;
 }
 int SettingsHandler::getYRollMin()
 {
-    return getAvailableAxis(axisNames.TcYRollR1).UserMin;
+    return getAxis(axisNames.TcYRollR1).UserMin;
 }
 int SettingsHandler::getXRollMin()
 {
-    return getAvailableAxis(axisNames.TcXRollR2).UserMin;
+    return getAxis(axisNames.TcXRollR2).UserMin;
 }
 int SettingsHandler::getXMax()
 {
-    return getAvailableAxis(axisNames.TcXUpDownL0).UserMax;
+    return getAxis(axisNames.TcXUpDownL0).UserMax;
 }
 int SettingsHandler::getYRollMax()
 {
-    return getAvailableAxis(axisNames.TcYRollR1).UserMax;
+    return getAxis(axisNames.TcYRollR1).UserMax;
 }
 int SettingsHandler::getXRollMax()
 {
-    return getAvailableAxis(axisNames.TcXRollR2).UserMax;
+    return getAxis(axisNames.TcXRollR2).UserMax;
 }
 int SettingsHandler::getTwistMax()
 {
-    return getAvailableAxis(axisNames.TcTwistR0).UserMax;
+    return getAxis(axisNames.TcTwistR0).UserMax;
 }
 int SettingsHandler::getTwistMin()
 {
-    return getAvailableAxis(axisNames.TcTwistR0).UserMin;
+    return getAxis(axisNames.TcTwistR0).UserMin;
 }
 float SettingsHandler::getMultiplierValue(QString channel)
 {
@@ -381,22 +392,27 @@ bool SettingsHandler::getInverseTcYRollR1()
 {
     return _inverseTcYRollR1;
 }
-
-ChannelModel SettingsHandler::getAvailableAxis(QString axis)
+ChannelModel SettingsHandler::getAxis(QString axis)
 {
     QMutexLocker locker(&mutex);
     return _availableAxis[axis];
 }
-
-QString SettingsHandler::getGamePadButtonMap(QString gamepadAxis)
+QHash<QString, QString>  SettingsHandler::getGamePadMap()
+{
+    return _gamepadButtonMap;
+}
+QHash<QString, ChannelModel>  SettingsHandler::getAvailableAxis()
+{
+    return _availableAxis;
+}
+QString SettingsHandler::getGamePadMapButton(QString gamepadAxis)
 {
     if (_gamepadButtonMap.contains(gamepadAxis))
     {
-        return _gamepadButtonMap[gamepadAxis].toString();;
+        return _gamepadButtonMap[gamepadAxis];
     }
     return nullptr;
 }
-
 void SettingsHandler::setSelectedTheme(QString value)
 {
     QMutexLocker locker(&mutex);
@@ -566,13 +582,13 @@ void SettingsHandler::setGamepadEnabled(bool value)
     _gamePadEnabled = value;
 }
 
-void SettingsHandler::setAvailableAxis(QString axis, ChannelModel channel)
+void SettingsHandler::setAxis(QString axis, ChannelModel channel)
 {
     QMutexLocker locker(&mutex);
     _availableAxis[axis] = channel;
 }
 
-void SettingsHandler::setGamePadButtonMap(QString gamePadButton, QString axis)
+void SettingsHandler::setGamePadMapButton(QString gamePadButton, QString axis)
 {
     QMutexLocker locker(&mutex);
     _gamepadButtonMap[gamePadButton] = axis;
@@ -595,7 +611,7 @@ void SettingsHandler::setInverseTcYRollR1(bool value)
 void SettingsHandler::SetupAvailableAxis()
 {
     _availableAxis = {
-        {axisNames.None, { axisNames.None, axisNames.None, axisNames.None, 1, 500, 999, 1, 500, 999 } },
+        {axisNames.None, { "None", axisNames.None, axisNames.None, 1, 500, 999, 1, 500, 999 } },
         {axisNames.TcXUpDownL0, { "X (Up/down L0)", axisNames.TcXUpDownL0, "L0", 1, 500, 999, 1, 500, 999 } },
         {axisNames.TcXDownL0, { "X (Down)", axisNames.TcXDownL0, "L0", 1, 500, 999, 1, 500, 999 } },
         {axisNames.TcXUpL0, { "X (Up)", axisNames.TcXUpL0, "L0", 1, 500, 999, 1, 500, 999 } },
@@ -678,7 +694,7 @@ int SettingsHandler::thumbSize = 175;
 int SettingsHandler::thumbSizeList = 50;
 
 bool SettingsHandler::_gamePadEnabled;
-QHash<QString, QVariant> SettingsHandler::_gamepadButtonMap;
+QHash<QString, QString> SettingsHandler::_gamepadButtonMap;
 QHash<QString, ChannelModel> SettingsHandler::_availableAxis;
 bool SettingsHandler::_inverseTcXL0;
 bool SettingsHandler::_inverseTcXRollR2;
