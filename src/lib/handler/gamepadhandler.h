@@ -21,6 +21,7 @@ private:
     void run() override;
     void gamePadConnectionChanged(bool connected);
     void connectedGamepadsChanged();
+    void disposeInternal();
     double calculateDeadZone(double gpIn);
     QList<int> _gamepads;
     QGamepad* _gamepad = nullptr;
@@ -30,7 +31,6 @@ private:
     int _waitTimeout = 0;
     bool _stop = false;
     bool _isConnected = false;
-    bool _initialized = false;
     double _deadzone = 0.2;
 };
 

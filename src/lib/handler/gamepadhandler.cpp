@@ -17,24 +17,35 @@ GamepadHandler::~GamepadHandler()
 void GamepadHandler::init()
 {
     _stop = false;
-    _isConnected = false;
     emit connectionChange({DeviceType::Gamepad, ConnectionStatus::Connecting, "Connecting..."});
     connect(QGamepadManager::instance(), &QGamepadManager::connectedGamepadsChanged, this, &GamepadHandler::connectedGamepadsChanged);
+    connectedGamepadsChanged();
 }
 
 void GamepadHandler::connectedGamepadsChanged()
 {
-    if(!_initialized)
+    _gamepads = QGamepadManager::instance()->connectedGamepads();
+    if(_gamepads.count() > 0 && (_gamepad == nullptr || !_isConnected))
     {
-        _gamepads = QGamepadManager::instance()->connectedGamepads();
         LogHandler::Debug("Gamepad connected: "+ QString::number(*_gamepads.begin()));
-        _initialized = true;
-        _isConnected = true;
+        LogHandler::Debug("Gamepads connected count: "+ QString::number(_gamepads.count()));
         _stop = false;
+        _isConnected = true;
         _gamepad = new QGamepad(*_gamepads.begin(), this);
         emit connectionChange({DeviceType::Gamepad, ConnectionStatus::Connected, "Connected"});
         connect(_gamepad, &QGamepad::connectedChanged, this, &GamepadHandler::gamePadConnectionChanged);
-        start();
+        if(!isRunning())
+            start();
+    }
+    else if (_gamepad != nullptr && !_gamepad->isConnected())
+    {
+        LogHandler::Debug("Gamepads disconnected: "+ QString::number(_gamepads.count()));
+        _isConnected = false;
+        disposeInternal();
+    }
+    else
+    {
+        LogHandler::Debug("Gamepad connectionchange count: "+ QString::number(_gamepads.count()));
     }
 }
 
@@ -43,16 +54,14 @@ void GamepadHandler::gamePadConnectionChanged(bool connected)
     //_isConnected = connected;
     if(connected)
     {
-        LogHandler::Debug("Gamepad connected");
+        LogHandler::Debug("Gamepads connected event");
 //        _stop = false;
 //        emit connectionChange({DeviceType::Gamepad, ConnectionStatus::Connected, "Connected"});
 //        start();
     }
     else
     {
-        LogHandler::Debug("Gamepad disconnected");
-        emit connectionChange({DeviceType::Gamepad, ConnectionStatus::Disconnected, "Disconnected"});
-        dispose();
+        LogHandler::Debug("Gamepad disconnected event");
     }
 }
 
@@ -140,9 +149,9 @@ double GamepadHandler::calculateDeadZone(double gpIn)
     return gpIn;
 }
 
-void GamepadHandler::dispose()
+void GamepadHandler::disposeInternal()
 {
-    _initialized = false;
+    _mutex.lock();
     _stop = true;
     _isConnected = false;
     if (_gamepad != nullptr && _gamepad->isConnected())
@@ -150,6 +159,7 @@ void GamepadHandler::dispose()
 
     if (_gamepad != nullptr)
         disconnect(_gamepad, &QGamepad::connectedChanged, this, &GamepadHandler::gamePadConnectionChanged);
+    _mutex.unlock();
 
     emit connectionChange({DeviceType::Gamepad, ConnectionStatus::Disconnected, "Disconnected"});
     if(isRunning())
@@ -157,6 +167,12 @@ void GamepadHandler::dispose()
         quit();
         wait();
     }
+}
+
+void GamepadHandler::dispose()
+{
+    disposeInternal();
+    disconnect(QGamepadManager::instance(), &QGamepadManager::connectedGamepadsChanged, this, &GamepadHandler::connectedGamepadsChanged);
 }
 
 QHash<QString, QVariant>* GamepadHandler::getState()

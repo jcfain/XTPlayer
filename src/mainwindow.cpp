@@ -96,7 +96,6 @@ MainWindow::MainWindow(QWidget *parent)
     on_load_library(SettingsHandler::getSelectedLibrary());
 
     _xSettings = new SettingsDialog(this);
-    _xSettings->init(videoHandler);
     tcodeHandler = new TCodeHandler();
 
     connect(_xSettings, &SettingsDialog::deoDeviceConnectionChange, this, &MainWindow::on_deo_device_connectionChanged);
@@ -106,6 +105,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(_xSettings->getDeoHandler(), &DeoHandler::messageRecieved, this, &MainWindow::onDeoMessageRecieved);
     connect(_xSettings, &SettingsDialog::gamepadConnectionChange, this, &MainWindow::on_gamepad_connectionChanged);
     connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitTCode, this, &MainWindow::on_gamepad_sendTCode);
+
+    _xSettings->init(videoHandler);
 
 
     connect(action75_Size, &QAction::triggered, this, &MainWindow::on_action75_triggered);
@@ -1101,7 +1102,23 @@ void MainWindow::on_gamepad_connectionChanged(ConnectionChangedSignal event)
     QString message = "";
     message += "Gamepad: ";
     message += " " + event.message;
-    gamepadConnectionStatusLabel->setText(message);
+    QPixmap bgPixmap;
+    if(event.status == ConnectionStatus::Connected)
+    {
+        bgPixmap.load(("://images/gamepad-icon.png"));
+    }
+    else if(event.status == ConnectionStatus::Disconnected)
+    {
+
+        bgPixmap.load(("://images/gamepad-icon-disconnected.png"));
+    }
+    else if(event.status == ConnectionStatus::Connecting)
+    {
+        bgPixmap.load(("://images/gamepad-icon-disconnected.png"));
+    }
+    QPixmap scaled = bgPixmap.scaled({40, 30}, Qt::AspectRatioMode::KeepAspectRatio);
+    gamepadConnectionStatusLabel->setPixmap(scaled);
+    gamepadConnectionStatusLabel->setToolTip(message);
 }
 
 void MainWindow::on_device_error(QString error)

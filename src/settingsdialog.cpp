@@ -214,7 +214,9 @@ void SettingsDialog::setupUi()
         }
         bool deoEnabled = SettingsHandler::getDeoEnabled();
         ui.deoCheckbox->setChecked(deoEnabled);
-        on_deoCheckbox_clicked(deoEnabled);
+        ui.deoAddressTxt->setEnabled(deoEnabled);
+        ui.deoPortTxt->setEnabled(deoEnabled);
+        ui.deoConnectButton->setEnabled(deoEnabled);
         ui.gamePadCheckbox->setChecked(SettingsHandler::getGamepadEnabled());
         ui.gamePadMapGroupbox->setHidden(!SettingsHandler::getGamepadEnabled());
         setupGamepadMap();

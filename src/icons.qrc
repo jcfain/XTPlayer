@@ -15,5 +15,8 @@
         <file>images/icons/XTP-window-icon.ico</file>
         <file>images/icons/error.png</file>
         <file>images/blank_xbox_360_controller_map.png</file>
+        <file>images/gamepad-icon.png</file>
+        <file>images/gamepad-icon-connecting.png</file>
+        <file>images/gamepad-icon-disconnected.png</file>
     </qresource>
 </RCC>
