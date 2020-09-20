@@ -112,7 +112,7 @@ public:
 private:
     SettingsHandler();
     ~SettingsHandler();
-
+    static void SetMapDefaults();
     static void SetupAvailableAxis();
     static void SetupGamepadButtonMap();
     static GamepadAxisNames gamepadAxisNames;

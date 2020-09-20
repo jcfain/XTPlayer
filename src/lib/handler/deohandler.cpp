@@ -66,6 +66,7 @@ void DeoHandler::send(const QString &command)
 void DeoHandler::dispose()
 {
     _isConnected = false;
+    _isPlaying = false;
     if (keepAliveTimer != nullptr && keepAliveTimer->isActive())
         keepAliveTimer->stop();
     emit connectionChange({DeviceType::Deo, ConnectionStatus::Disconnected, "Disconnected"});
@@ -103,7 +104,7 @@ void DeoHandler::readData()
         bool playing = jsonObject["playerState"].toInt() == 0 ? true : false;
         //LogHandler::Debug("Deo path: "+path);
         //LogHandler::Debug("Deo duration: "+QString::number(duration));
-        LogHandler::Debug("Deo currentTime: "+QString::number(currentTime));
+        //LogHandler::Debug("Deo currentTime: "+QString::number(currentTime));
     //    LogHandler::Debug("Deo playbackSpeed: "+QString::number(playbackSpeed));
     //    LogHandler::Debug("Deo playing: "+QString::number(playing));
         _mutex.lock();
@@ -115,6 +116,8 @@ void DeoHandler::readData()
             playbackSpeed,
             playing
        };
+        _isPlaying = playing;
+        //LogHandler::Debug("Deo _isPlaying: "+QString::number(_isPlaying));
         _mutex.unlock();
         emit messageRecieved({
                                  path,
@@ -123,6 +126,7 @@ void DeoHandler::readData()
                                  playbackSpeed,
                                  playing
                             });
+
     }
 }
 
@@ -130,7 +134,12 @@ bool DeoHandler::isConnected()
 {
     return _isConnected;
 }
-
+bool DeoHandler::isPlaying()
+{
+    const QMutexLocker locker(&_mutex);
+    //LogHandler::Debug("DeoHandler::isPlaying(): "+ QString::number(_isPlaying));
+    return _isPlaying;
+}
 DeoPacket* DeoHandler::getCurrentDeoPacket()
 {
     const QMutexLocker locker(&_mutex);
@@ -161,6 +170,7 @@ void DeoHandler::onSocketStateChange (QAbstractSocket::SocketState state)
         {
             //_mutex.lock();
             _isConnected = false;
+            _isPlaying = false;
             //_mutex.unlock();
             if (keepAliveTimer != nullptr && keepAliveTimer->isActive())
                 keepAliveTimer->stop();

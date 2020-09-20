@@ -15,6 +15,8 @@ MainWindow::MainWindow(QWidget *parent)
     QString styleSheet = QLatin1String(file.readAll());
     setStyleSheet(styleSheet);
 
+    funscriptHandler = new FunscriptHandler();
+
     deoConnectionStatusLabel = new QLabel(this);
     deoRetryConnectionButton = new QPushButton(this);
     deoRetryConnectionButton->hide();
@@ -108,7 +110,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     _xSettings->init(videoHandler);
 
-
     connect(action75_Size, &QAction::triggered, this, &MainWindow::on_action75_triggered);
     connect(action100_Size, &QAction::triggered, this, &MainWindow::on_action100_triggered);
     connect(action125_Size, &QAction::triggered, this, &MainWindow::on_action125_triggered);
@@ -159,8 +160,14 @@ void MainWindow::dispose()
         funscriptFuture.cancel();
         funscriptFuture.waitForFinished();
     }
+    if(funscriptDeoFuture.isRunning())
+    {
+        funscriptDeoFuture.cancel();
+        funscriptDeoFuture.waitForFinished();
+    }
     delete tcodeHandler;
     delete videoHandler;
+    delete funscriptHandler;
     delete connectionStatusLabel;
     delete retryConnectionButton;
     delete videoPreviewWidget;
@@ -247,7 +254,10 @@ void MainWindow::changeDeoFunscript()
         QString funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + videoFile.fileName(), SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
         funscriptFileSelectorOpen = false;
         if (!funscriptPath.isEmpty())
+        {
             SettingsHandler::setDeoDnlaFunscript(playingPacket->path, funscriptPath);
+            funscriptHandler->setLoaded(false);
+        }
     }
     else
     {
@@ -545,12 +555,12 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
             videoPreviewWidget->setFile(selectedFileListItem.path);
             videoHandler->load();
             QString scriptFile = customScript == nullptr ? selectedFileListItem.script : customScript;
-            _funscriptLoaded = funscriptHandler->load(scriptFile);
+            funscriptHandler->load(scriptFile);
         }
         //QUrl url = QUrl::fromLocalFile(selectedFileListItem.path);
         videoHandler->play();
         playingVideoListIndex = ui->LibraryList->currentRow();
-        if(!_funscriptLoaded)
+        if(!funscriptHandler->isLoaded())
         {
             LogHandler::Dialog("Error loading script " + customScript + "!\nTry right clicking on the video in the list\nand loading with another script.", XLogLevel::Warning);
 
@@ -812,15 +822,37 @@ void MainWindow::on_media_start()
     ui->PauseBtn->setDisabled(false);
     ui->PauseBtn->setChecked(false);
     ui->fullScreenBtn->setDisabled(false);
+    if(SettingsHandler::getDeoEnabled() && _xSettings->getDeoHandler()->isConnected())
+        _xSettings->getDeoHandler()->dispose();
     if(funscriptFuture.isRunning())
     {
         funscriptFuture.cancel();
         funscriptFuture.waitForFinished();
     }
-    if (_funscriptLoaded)
+    if (funscriptHandler->isLoaded())
     {
         funscriptFuture = QtConcurrent::run(syncFunscript, videoHandler, _xSettings, tcodeHandler, funscriptHandler);
     }
+}
+
+void MainWindow::on_media_stop()
+{
+    ui->videoLoadingLabel->hide();
+    movie->stop();
+    ui->SeekSlider->setUpperValue(0);
+    ui->SeekSlider->setDisabled(true);
+    ui->StopBtn->setDisabled(true);
+    ui->PauseBtn->setDisabled(true);
+    ui->PauseBtn->setChecked(false);
+    ui->fullScreenBtn->setDisabled(true);
+    //funscriptHandler->setLoaded(false);
+    ui->lblCurrentDuration->setText("00:00:00/00:00:00");
+
+    if(funscriptFuture.isRunning())
+    {
+        funscriptFuture.cancel();
+    }
+
 }
 void MainWindow::onDeoMessageRecieved(DeoPacket packet)
 {
@@ -838,7 +870,7 @@ void MainWindow::onDeoMessageRecieved(DeoPacket packet)
         QFileInfo funscriptFile(funscriptPath);
         if (funscriptPath == nullptr || !funscriptFile.exists())
         {
-            _funscriptLoaded = false;
+            funscriptHandler->setLoaded(false);
             //Check the deo device local video directory for funscript.
             int indexOfSuffix = packet.path.lastIndexOf(".");
             QString localFunscriptPath = packet.path.replace(indexOfSuffix, packet.path.length() - indexOfSuffix, ".funscript");
@@ -875,6 +907,11 @@ void MainWindow::onDeoMessageRecieved(DeoPacket packet)
 
 void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler)
 {
+    if(xPlayer->isPlaying())
+    {
+        xPlayer->stop();
+        funscriptHandler->setLoaded(false);
+    }
     DeviceHandler* device = xSettings->getSelectedDeviceHandler();
     std::shared_ptr<FunscriptAction> actionPosition;
     DeoPacket* currentDeoPacket = deoPlayer->getCurrentDeoPacket();
@@ -884,12 +921,11 @@ void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDial
     qint64 timer1 = QTime::currentTime().msecsSinceStartOfDay();
     qint64 timer2 = QTime::currentTime().msecsSinceStartOfDay();
     //qint64 elapsedTracker = 0;
-    bool funscriptLoaded = false;
     //QElapsedTimer timer;
     while (deoPlayer->isConnected() && !xPlayer->isPlaying())
     {
         //timer.start();
-        if(xSettings->isConnected() && funscriptLoaded && currentDeoPacket != nullptr && currentDeoPacket->duration > 0 && currentDeoPacket->playing)
+        if(xSettings->isConnected() && funscriptHandler->isLoaded() && currentDeoPacket != nullptr && currentDeoPacket->duration > 0 && currentDeoPacket->playing)
         {
             //execute once every millisecond
             if (timer2 - timer1 >= 1)
@@ -924,14 +960,14 @@ void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDial
             {
                 QString funscriptPath = SettingsHandler::getDeoDnlaFunscript(currentDeoPacket->path);
                 currentVideo = currentDeoPacket->path;
-                funscriptLoaded = funscriptHandler->load(funscriptPath);
+                funscriptHandler->load(funscriptPath);
             }
         }
 
         if(currentDeoPacket != nullptr && currentVideo != currentDeoPacket->path)
         {
             currentVideo = currentDeoPacket->path;
-            funscriptLoaded = false;
+            funscriptHandler->setLoaded(false);
         }
         currentDeoPacket = deoPlayer->getCurrentDeoPacket();
 
@@ -943,50 +979,40 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
 {
     std::unique_ptr<FunscriptAction> actionPosition;
     DeviceHandler* device = xSettings->getSelectedDeviceHandler();
+    qint64 timer1 = QTime::currentTime().msecsSinceStartOfDay();
+    qint64 timer2 = QTime::currentTime().msecsSinceStartOfDay();
     while (player->isPlaying())
     {
-        if(xSettings->isConnected())
+        if (timer2 - timer1 >= 1)
         {
-            qint64 position = player->position();
-            actionPosition = funscriptHandler->getPosition(position);
-            if (actionPosition != nullptr)
+            timer1 = timer2;
+            if(xSettings->isConnected())
             {
-                device->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
+                qint64 position = player->position();
+                actionPosition = funscriptHandler->getPosition(position);
+                if (actionPosition != nullptr)
+                {
+                    device->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
+                }
+                actionPosition = nullptr;
             }
-            actionPosition = nullptr;
         }
-        QThread::currentThread()->msleep(1);
+        timer2 = QTime::currentTime().msecsSinceStartOfDay();
     }
     LogHandler::Debug("exit syncFunscript");
 }
 
 void MainWindow::on_gamepad_sendTCode(QString value)
 {
-    if(_funscriptLoaded && videoHandler->isPlaying())
+    if(_xSettings->isConnected())
     {
-        QRegularExpression rx("L0[^\\s]*\\s?");
-        value = value.remove(rx);
+        if(funscriptHandler->isLoaded() && (videoHandler->isPlaying() || _xSettings->getDeoHandler()->isPlaying()))
+        {
+            QRegularExpression rx("L0[^\\s]*\\s?");
+            value = value.remove(rx);
+        }
+        _xSettings->getSelectedDeviceHandler()->sendTCode(value);
     }
-    _xSettings->getSelectedDeviceHandler()->sendTCode(value);
-}
-
-void MainWindow::on_media_stop()
-{
-    ui->videoLoadingLabel->hide();
-    movie->stop();
-    ui->SeekSlider->setUpperValue(0);
-    ui->SeekSlider->setDisabled(true);
-    ui->StopBtn->setDisabled(true);
-    ui->PauseBtn->setDisabled(true);
-    ui->PauseBtn->setChecked(false);
-    ui->fullScreenBtn->setDisabled(true);
-    ui->lblCurrentDuration->setText("00:00:00/00:00:00");
-
-    if(funscriptFuture.isRunning())
-    {
-        funscriptFuture.cancel();
-    }
-
 }
 
 void MainWindow::on_skipForwardButton_clicked()
@@ -1136,22 +1162,22 @@ void MainWindow::on_deo_device_connectionChanged(ConnectionChangedSignal event)
     {
         ui->actionChange_current_deo_script->setEnabled(false);
         deoRetryConnectionButton->show();
-        if(funscriptFuture.isRunning())
+        if(funscriptDeoFuture.isRunning())
         {
-            funscriptFuture.cancel();
-            funscriptFuture.waitForFinished();
+            funscriptDeoFuture.cancel();
+            funscriptDeoFuture.waitForFinished();
         }
     }
     else if(event.status == ConnectionStatus::Connected)
     {
         ui->actionChange_current_deo_script->setEnabled(true);
         deoRetryConnectionButton->hide();
-        if(funscriptFuture.isRunning())
+        if(funscriptDeoFuture.isRunning())
         {
-            funscriptFuture.cancel();
-            funscriptFuture.waitForFinished();
+            funscriptDeoFuture.cancel();
+            funscriptDeoFuture.waitForFinished();
         }
-        funscriptFuture = QtConcurrent::run(syncDeoFunscript, _xSettings->getDeoHandler(), videoHandler, _xSettings, tcodeHandler, funscriptHandler);
+        funscriptDeoFuture = QtConcurrent::run(syncDeoFunscript, _xSettings->getDeoHandler(), videoHandler, _xSettings, tcodeHandler, funscriptHandler);
 
     }
     else

@@ -11,11 +11,17 @@ void SettingsHandler::Load()
 {
     QMutexLocker locker(&mutex);
     float currentVersion = settings.value("version").toFloat();
-    if (currentVersion == 0 || (currentVersion < XTPVersionNum && resetRequired))
+    if (currentVersion == 0)
     {
         locker.unlock();
+//        if((currentVersion < XTPVersionNum && resetRequired))
+//            LogHandler::Dialog("Sorry, your settings have been set to default for a new data structure.", XLogLevel::Information);
         Default();
         defaultReset = false;
+    }
+    else if(currentVersion < XTPVersionNum && resetRequired)
+    {
+        SetMapDefaults();
     }
     locker.relock();
     selectedTheme = settings.value("selectedTheme").toString();
@@ -24,22 +30,6 @@ void SettingsHandler::Load()
     selectedDevice = settings.value("selectedDevice").toInt();
     playerVolume = settings.value("playerVolume").toInt();
     offSet = settings.value("offSet").toInt();
-//    xMin = settings.value("xMin").toInt();
-//    xMin = xMin == 0 ? 1 : xMin;
-//    xMax = settings.value("xMax").toInt();
-//    xMax = xMax == 0 ? 999 : xMax;
-//    yRollMin = settings.value("yRollMin").toInt();
-//    yRollMin = yRollMin == 0 ? 1 : yRollMin;
-//    yRollMax = settings.value("yRollMax").toInt();
-//    yRollMax = yRollMax == 0 ? 999 : yRollMax;
-//    xRollMin = settings.value("xRollMin").toInt();
-//    xRollMin = xRollMin == 0 ? 1 : xRollMin;
-//    xRollMax = settings.value("xRollMax").toInt();
-//    xRollMax = xRollMax == 0 ? 999 : xRollMax;
-//    twistMin = settings.value("twistMin").toInt();
-//    twistMin = twistMin == 0 ? 1 : twistMin;
-//    twistMax = settings.value("twistMax").toInt();
-//    twistMax = twistMax == 0 ? 999 : twistMax;
     selectedFunscriptLibrary = settings.value("selectedFunscriptLibrary").toString();
     serialPort = settings.value("serialPort").toString();
     serverAddress = settings.value("serverAddress").toString();
@@ -97,14 +87,6 @@ void SettingsHandler::Save()
         settings.setValue("selectedDevice", selectedDevice);
         settings.setValue("playerVolume", playerVolume);
         settings.setValue("offSet", offSet);
-//        settings.setValue("xMin", xMin);
-//        settings.setValue("xMax", xMax);
-//        settings.setValue("yRollMin", yRollMin );
-//        settings.setValue("yRollMax", yRollMax);
-//        settings.setValue("xRollMin", xRollMin );
-//        settings.setValue("xRollMax", xRollMax);
-//        settings.setValue("twistMin", twistMin );
-//        settings.setValue("twistMax", twistMax);
         settings.setValue("selectedFunscriptLibrary", selectedFunscriptLibrary);
         settings.setValue("serialPort", serialPort);
         settings.setValue("serverAddress", serverAddress);
@@ -196,8 +178,31 @@ void SettingsHandler::Default()
     settings.setValue("inverseTcXL0", false);
     settings.setValue("inverseTcXRollR2", false);
     settings.setValue("inverseTcYRollR1", false);
+    SetMapDefaults();
+}
+
+void SettingsHandler::SetMapDefaults()
+{
     SetupAvailableAxis();
     SetupGamepadButtonMap();
+    qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
+    qRegisterMetaType<ChannelModel>();
+    QHash<QString, QVariant> availableAxis;
+    foreach(auto axis, _availableAxis.keys())
+    {
+        QVariant axisVariant;
+        axisVariant.setValue(_availableAxis[axis]);
+        availableAxis.insert(axis, axisVariant);
+    }
+    settings.setValue("availableAxis", availableAxis);
+    QHash<QString, QVariant> gamepadMap;
+    foreach(auto button, _gamepadButtonMap.keys())
+    {
+        QVariant buttonVariant;
+        buttonVariant.setValue(_gamepadButtonMap[button]);
+        gamepadMap.insert(button, buttonVariant);
+    }
+    settings.setValue("gamepadButtonMap", gamepadMap);
 }
 
 QString SettingsHandler::getSelectedTheme()
@@ -662,7 +667,7 @@ const QString SettingsHandler::TCodeVersion = "TCode v0.2";
 const QString SettingsHandler::XTPVersion = "0.14b";
 const float SettingsHandler::XTPVersionNum = 0.14f;
 
-QSettings SettingsHandler::settings{"cUrbSide prOd", "XTPlayer"};
+QSettings SettingsHandler::settings("cUrbSide prOd", "XTPlayer");
 QMutex SettingsHandler::mutex;
 GamepadAxisNames SettingsHandler::gamepadAxisNames;
 AxisNames SettingsHandler::axisNames;

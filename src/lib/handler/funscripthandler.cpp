@@ -4,9 +4,9 @@
 Funscript* funscript = new Funscript();
 qint64 lastActionIndex;
 qint64  nextActionIndex;
+QList<qint64> posList;
+int n;
 
- QList<qint64> posList;
- int n;
 FunscriptHandler::FunscriptHandler()
 {
 }
@@ -15,11 +15,14 @@ FunscriptHandler::~FunscriptHandler()
     delete(funscript);
 }
 
-bool FunscriptHandler::load(QString funscriptString)
+void FunscriptHandler::load(QString funscriptString)
 {
+    QMutexLocker locker(&mutex);
+    LogHandler::Debug("Funscript load: "+funscriptString);
     if (funscriptString == nullptr)
     {
-        return false;
+        _loaded = false;
+        return;
     }
     QFile loadFile(funscriptString);
 
@@ -27,7 +30,8 @@ bool FunscriptHandler::load(QString funscriptString)
     nextActionIndex = 1;
     if (!loadFile.open(QIODevice::ReadOnly)) {
         qWarning("Couldn't open funscript file.");
-        return false;
+        _loaded = false;
+        return;
     }
 
     QByteArray funData = loadFile.readAll();
@@ -37,14 +41,25 @@ bool FunscriptHandler::load(QString funscriptString)
     if(doc.isNull()) {
         emit errorOccurred("loading funscript failed: " + error->errorString());
         delete error;
-        return false;
+        _loaded = false;
+        return;
     }
     delete error;
     JSonToFunscript(doc.object());
 
-    return true;
+    _loaded = true;
 }
 
+bool FunscriptHandler::isLoaded()
+{
+    QMutexLocker locker(&mutex);
+    return _loaded;
+}
+void FunscriptHandler::setLoaded(bool value)
+{
+    QMutexLocker locker(&mutex);
+    _loaded = value;
+}
 void FunscriptHandler::JSonToFunscript(QJsonObject json)
 {
     if (json.contains("range"))
@@ -140,4 +155,3 @@ qint64 FunscriptHandler::findClosest(qint64 value, QList<qint64> a) {
       return (a[lo] - value) < (value - a[hi]) ? a[lo] : a[hi];
   }
 
-QMutex FunscriptHandler::mutex;

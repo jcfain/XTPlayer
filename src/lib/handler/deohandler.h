@@ -31,6 +31,7 @@ public:
     void dispose();
     void send(const QString &command);
     bool isConnected();
+    bool isPlaying();
     DeoPacket* getCurrentDeoPacket();
 
 private:
@@ -47,6 +48,7 @@ private:
     QString _sendCommand;
     int _waitTimeout = 0;
     bool _isConnected = false;
+    bool _isPlaying = false;
     bool _isSelected = false;
     quint64 _currentTime;
 };

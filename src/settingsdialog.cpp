@@ -489,7 +489,9 @@ void SettingsDialog::onXRange_valueChanged(int value)
     xRangeMaxLabel->setText(QString::number(xRangeSlider->GetUpperValue()));
     if (!_videoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
     {
-        getSelectedDeviceHandler()->sendTCode("L0" + QString::number(value) + "S1000");
+        char tcodeValueString[4];
+        sprintf(tcodeValueString, "%03d", value);
+        getSelectedDeviceHandler()->sendTCode("L0" + QString(tcodeValueString) + "S1000");
     }
 }
 
@@ -501,7 +503,9 @@ void SettingsDialog::onYRollRange_valueChanged(int value)
     yRollRangeMaxLabel->setText(QString::number(yRollRangeSlider->GetUpperValue()));
     if (!_videoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
     {
-        getSelectedDeviceHandler()->sendTCode("R1" + QString::number(value) + "S1000");
+        char tcodeValueString[4];
+        sprintf(tcodeValueString, "%03d", value);
+        getSelectedDeviceHandler()->sendTCode("R1" + QString(tcodeValueString) + "S1000");
     }
 }
 
@@ -513,7 +517,9 @@ void SettingsDialog::onXRollRange_valueChanged(int value)
     xRollRangeMaxLabel->setText(QString::number(xRollRangeSlider->GetUpperValue()));
     if (!_videoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
     {
-        getSelectedDeviceHandler()->sendTCode("R2" + QString::number(value) + "S1000");
+        char tcodeValueString[4];
+        sprintf(tcodeValueString, "%03d", value);
+        getSelectedDeviceHandler()->sendTCode("R2" + QString(tcodeValueString) + "S1000");
     }
 }
 
@@ -525,7 +531,9 @@ void SettingsDialog::onTwistRange_valueChanged(int value)
     twistRangeMaxLabel->setText(QString::number(twistRangeSlider->GetUpperValue()));
     if (!_videoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
     {
-        getSelectedDeviceHandler()->sendTCode("R0" + QString::number(value) + "S1000");
+        char tcodeValueString[4];
+        sprintf(tcodeValueString, "%03d", value);
+        getSelectedDeviceHandler()->sendTCode("R0" + QString(tcodeValueString) + "S1000");
     }
 }
 

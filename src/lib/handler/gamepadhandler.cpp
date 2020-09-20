@@ -74,7 +74,7 @@ void GamepadHandler::run()
     GamepadAxisNames gamepadAxisNames;
     while(!_stop)
     {
-        _mutex.lock();
+        //_mutex.lock();
 //        _gamepadState->insert(gamepadAxisNames.LeftXAxis, calculateDeadZone(_gamepad->axisLeftX()));
 //        _gamepadState->insert(gamepadAxisNames.LeftYAxis, calculateDeadZone(_gamepad->axisLeftY()));
 //        _gamepadState->insert(gamepadAxisNames.RightXAxis, calculateDeadZone(_gamepad->axisRightX()));
@@ -128,7 +128,7 @@ void GamepadHandler::run()
             lastTCode = currentTCode;
             emit emitTCode(currentTCode);
         }
-        _mutex.unlock();
+        //_mutex.unlock();
 
 //        if (!_stop)
 //        {

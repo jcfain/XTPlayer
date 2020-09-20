@@ -24,13 +24,16 @@ signals:
 public:
     FunscriptHandler();
     ~FunscriptHandler();
-    bool load(QString funscript);
+    void load(QString funscript);
+    bool isLoaded();
+    void setLoaded(bool value);
     bool exists(QString path);
     std::unique_ptr<FunscriptAction> getPosition(qint64 at);
 
 
 private:
-    static QMutex mutex;
+    QMutex mutex;
+    bool _loaded = false;
     void JSonToFunscript(QJsonObject jsonDoc);
     qint64 findClosest(qint64 value, QList<qint64> a);
 };

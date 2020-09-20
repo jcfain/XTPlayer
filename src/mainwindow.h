@@ -122,6 +122,7 @@ private:
     SettingsDialog* _xSettings;
     VideoPreviewWidget* videoPreviewWidget;
     QFuture<void> funscriptFuture;
+    QFuture<void> funscriptDeoFuture;
     QProgressBar* bar;
     VideoHandler* videoHandler;
     FunscriptHandler* funscriptHandler;
@@ -134,7 +135,6 @@ private:
     QMovie* movie;
     int playingVideoListIndex;
     bool deviceConnected;
-    bool _funscriptLoaded;
     QLabel* connectionStatusLabel;
     QLabel* deoConnectionStatusLabel;
     QLabel* gamepadConnectionStatusLabel;
