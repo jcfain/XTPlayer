@@ -134,51 +134,50 @@ void SettingsHandler::Save()
     }
 
 }
-
+void SettingsHandler::Clear()
+{
+    QMutexLocker locker(&mutex);
+    defaultReset = true;
+    settings.clear();
+}
 void SettingsHandler::Default()
 {
     QMutexLocker locker(&mutex);
     defaultReset = true;
-    settings.setValue("version", XTPVersionNum);
-    settings.setValue("selectedTheme", QApplication::applicationDirPath() + "/themes/black-silver.css");
-    settings.setValue("selectedLibrary", QVariant::String);
-    settings.setValue("selectedDevice", DeviceType::Serial);
-    settings.setValue("playerVolume", 0);
-    settings.setValue("offSet", 0);
-    settings.setValue("speed", 1000);
-//    settings.setValue("xMin", 1);
-//    settings.setValue("xMax", 999);
-//    settings.setValue("yRollMin", 1);
-//    settings.setValue("yRollMax", 999);
-//    settings.setValue("xRollMin", 1);
-//    settings.setValue("xRollMax", 999);
-//    settings.setValue("twistMin", 1);
-//    settings.setValue("twistMax", 999);
-    settings.setValue("selectedFunscriptLibrary", QVariant::String);
-    settings.setValue("serialPort", QVariant::String);
-    settings.setValue("serverAddress", QVariant::String);
-    settings.setValue("serverPort", "0");
-    settings.setValue("deoAddress", "127.0.0.1");
-    settings.setValue("deoPort", "23554");
-    settings.setValue("deoEnabled", false);
-    settings.setValue("yRollMultiplierChecked", false);
-    settings.setValue("yRollMultiplierValue", 0);
-    settings.setValue("xRollMultiplierChecked", false);
-    settings.setValue("xRollMultiplierValue", 0);
-    settings.setValue("twistMultiplierChecked", false);
-    settings.setValue("twistMultiplierValue", 0);
-    settings.setValue("vibMultiplierChecked", false);
-    settings.setValue("vibMultiplierValue", 0);
-
-    settings.setValue("libraryView", 0);
-    settings.setValue("thumbSize", 150);
-    settings.setValue("thumbSizeList", 50);
-
-    settings.setValue("gamePadEnabled", false);
-    settings.setValue("inverseTcXL0", false);
-    settings.setValue("inverseTcXRollR2", false);
-    settings.setValue("inverseTcYRollR1", false);
+    settings.clear();
     SetMapDefaults();
+    settings.setValue("version", XTPVersionNum);
+//    settings.setValue("selectedTheme", QApplication::applicationDirPath() + "/themes/black-silver.css");
+//    settings.setValue("selectedLibrary", QVariant::String);
+//    settings.setValue("selectedDevice", DeviceType::Serial);
+//    settings.setValue("playerVolume", 0);
+//    settings.setValue("offSet", 0);
+//    settings.setValue("speed", 1000);
+//    settings.setValue("selectedFunscriptLibrary", QVariant::String);
+//    settings.setValue("serialPort", QVariant::String);
+//    settings.setValue("serverAddress", QVariant::String);
+//    settings.setValue("serverPort", "0");
+//    settings.setValue("deoAddress", "127.0.0.1");
+//    settings.setValue("deoPort", "23554");
+//    settings.setValue("deoEnabled", false);
+//    settings.setValue("yRollMultiplierChecked", false);
+//    settings.setValue("yRollMultiplierValue", 0);
+//    settings.setValue("xRollMultiplierChecked", false);
+//    settings.setValue("xRollMultiplierValue", 0);
+//    settings.setValue("twistMultiplierChecked", false);
+//    settings.setValue("twistMultiplierValue", 0);
+//    settings.setValue("vibMultiplierChecked", false);
+//    settings.setValue("vibMultiplierValue", 0);
+
+//    settings.setValue("libraryView", 0);
+//    settings.setValue("thumbSize", 150);
+//    settings.setValue("thumbSizeList", 50);
+
+//    settings.setValue("gamePadEnabled", false);
+//    settings.setValue("inverseTcXL0", false);
+//    settings.setValue("inverseTcXRollR2", false);
+//    settings.setValue("inverseTcYRollR1", false);
+//    SetMapDefaults();
 }
 
 void SettingsHandler::SetMapDefaults()

@@ -108,6 +108,7 @@ public:
     static void Load();
     static void Save();
     static void Default();
+    static void Clear();
 
 private:
     SettingsHandler();

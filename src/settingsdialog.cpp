@@ -487,7 +487,7 @@ void SettingsDialog::onXRange_valueChanged(int value)
     SettingsHandler::setXMax(xRangeSlider->GetUpperValue());
     xRangeMinLabel->setText(QString::number(xRangeSlider->GetLowerValue()));
     xRangeMaxLabel->setText(QString::number(xRangeSlider->GetUpperValue()));
-    if (!_videoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
+    if (!_videoHandler->isPlaying() && !_deoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
     {
         char tcodeValueString[4];
         sprintf(tcodeValueString, "%03d", value);
@@ -501,7 +501,7 @@ void SettingsDialog::onYRollRange_valueChanged(int value)
     SettingsHandler::setYRollMax(yRollRangeSlider->GetUpperValue());
     yRollRangeMinLabel->setText(QString::number(yRollRangeSlider->GetLowerValue()));
     yRollRangeMaxLabel->setText(QString::number(yRollRangeSlider->GetUpperValue()));
-    if (!_videoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
+    if (!_videoHandler->isPlaying() && !_deoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
     {
         char tcodeValueString[4];
         sprintf(tcodeValueString, "%03d", value);
@@ -515,7 +515,7 @@ void SettingsDialog::onXRollRange_valueChanged(int value)
     SettingsHandler::setXRollMax(xRollRangeSlider->GetUpperValue());
     xRollRangeMinLabel->setText(QString::number(xRollRangeSlider->GetLowerValue()));
     xRollRangeMaxLabel->setText(QString::number(xRollRangeSlider->GetUpperValue()));
-    if (!_videoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
+    if (!_videoHandler->isPlaying() && !_deoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
     {
         char tcodeValueString[4];
         sprintf(tcodeValueString, "%03d", value);
@@ -529,7 +529,7 @@ void SettingsDialog::onTwistRange_valueChanged(int value)
     SettingsHandler::setTwistMax(twistRangeSlider->GetUpperValue());
     twistRangeMinLabel->setText(QString::number(twistRangeSlider->GetLowerValue()));
     twistRangeMaxLabel->setText(QString::number(twistRangeSlider->GetUpperValue()));
-    if (!_videoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
+    if (!_videoHandler->isPlaying() && !_deoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
     {
         char tcodeValueString[4];
         sprintf(tcodeValueString, "%03d", value);
@@ -780,13 +780,22 @@ void SettingsDialog::on_resetAllButton_clicked()
     if (reply == QMessageBox::Yes)
     {
         SettingsHandler::Default();
-        QMessageBox::StandardButton reply;
-        reply = QMessageBox::question(this, "Restart Application?", "Changes will take effect on application restart.\nNo settings that are changed this session will be saved.\nRestart this application now?",
-                                      QMessageBox::Yes|QMessageBox::No);
-        if (reply == QMessageBox::Yes)
+        int reply;
+        reply = QMessageBox::question(this, "Restart Application?", "Changes will take effect on application restart.\n\n"
+                                                                    "Restart this application now?\n\n"
+                                                                    "Close XTP will remove all settings from this PC and close the application\n"
+                                                                    "Return will return you to XTP. Settings will be reset on restart.\n"
+                                                                    "No settings that are changed this session will be saved.",
+                                      "Restart", "Close XTP", "Return", 0, 2);
+        if (reply == 0)
         {
-          QApplication::quit();
-          QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
+            QApplication::quit();
+            QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
+        }
+        else if (reply == 1)
+        {
+            SettingsHandler::Clear();
+            QApplication::quit();
         }
     }
 }

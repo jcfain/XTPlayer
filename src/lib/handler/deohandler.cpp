@@ -137,7 +137,7 @@ bool DeoHandler::isConnected()
 bool DeoHandler::isPlaying()
 {
     const QMutexLocker locker(&_mutex);
-    //LogHandler::Debug("DeoHandler::isPlaying(): "+ QString::number(_isPlaying));
+    //LogHandler::Error("DeoHandler::isPlaying(): "+ QString::number(_isPlaying));
     return _isPlaying;
 }
 DeoPacket* DeoHandler::getCurrentDeoPacket()
