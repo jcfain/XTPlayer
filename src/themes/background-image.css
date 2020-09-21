@@ -55,7 +55,7 @@ QMenu::item:disabled{
 background-color: grey;
 color: lightgrey;
 } 
-QRadioButton, QCheckBox, QGroupBox {
+QRadioButton, QCheckBox, QGroupBox, QLabel {
     background-color: transparent;
     color: white;
 }
