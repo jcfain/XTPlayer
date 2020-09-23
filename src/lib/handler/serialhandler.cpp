@@ -11,6 +11,11 @@ SerialHandler::~SerialHandler()
 
 void SerialHandler::init(const QString &portName, int waitTimeout)
 {
+    if(portName.isEmpty())
+    {
+        LogHandler::Dialog("No portname specified", XLogLevel::Critical);
+        return;
+    }
     emit connectionChange({DeviceType::Serial, ConnectionStatus::Connecting, "Connecting..."});
     _mutex.lock();
     _stop = false;

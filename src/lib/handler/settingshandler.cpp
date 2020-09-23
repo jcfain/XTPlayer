@@ -6,7 +6,7 @@ SettingsHandler::SettingsHandler()
 SettingsHandler::~SettingsHandler()
 {
 }
-bool resetRequired = true;
+bool resetRequired = false;
 void SettingsHandler::Load()
 {
     QMutexLocker locker(&mutex);
@@ -56,15 +56,15 @@ void SettingsHandler::Load()
     deoDnlaFunscriptLookup = settings.value("deoDnlaFunscriptLookup").toHash();
 
     _gamePadEnabled = settings.value("gamePadEnabled").toBool();
-    qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
-    qRegisterMetaType<ChannelModel>();
-    auto availableAxis = settings.value("availableAxis").toHash();
+//    qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
+//    qRegisterMetaType<ChannelModel>();
+    QVariantHash availableAxis = settings.value("availableAxis").toHash();
     _availableAxis.clear();
     foreach(auto axis, availableAxis.keys())
     {
         _availableAxis.insert(axis, availableAxis[axis].value<ChannelModel>());
     }
-    auto gamepadButtonMap = settings.value("gamepadButtonMap").toHash();
+    QVariantHash gamepadButtonMap = settings.value("gamepadButtonMap").toHash();
     foreach(auto button, gamepadButtonMap.keys())
     {
         _gamepadButtonMap.insert(button, gamepadButtonMap[button].toString());
@@ -110,22 +110,18 @@ void SettingsHandler::Save()
         settings.setValue("deoDnlaFunscriptLookup", deoDnlaFunscriptLookup);
 
         settings.setValue("gamePadEnabled", _gamePadEnabled);
-        qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
-        qRegisterMetaType<ChannelModel>();
-        QHash<QString, QVariant> availableAxis;
+//        qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
+//        qRegisterMetaType<ChannelModel>();
+        QVariantHash availableAxis;
         foreach(auto axis, _availableAxis.keys())
         {
-            QVariant axisVariant;
-            axisVariant.setValue(_availableAxis[axis]);
-            availableAxis.insert(axis, axisVariant);
+            availableAxis.insert(axis, QVariant::fromValue(_availableAxis[axis]));
         }
         settings.setValue("availableAxis", availableAxis);
-        QHash<QString, QVariant> gamepadMap;
+        QVariantHash gamepadMap;
         foreach(auto button, _gamepadButtonMap.keys())
         {
-            QVariant buttonVariant;
-            buttonVariant.setValue(_gamepadButtonMap[button]);
-            gamepadMap.insert(button, buttonVariant);
+            gamepadMap.insert(button, QVariant::fromValue(_gamepadButtonMap[button]));
         }
         settings.setValue("gamepadButtonMap", gamepadMap);
         settings.setValue("inverseTcXL0", _inverseTcXL0);
@@ -184,9 +180,9 @@ void SettingsHandler::SetMapDefaults()
 {
     SetupAvailableAxis();
     SetupGamepadButtonMap();
-    qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
-    qRegisterMetaType<ChannelModel>();
-    QHash<QString, QVariant> availableAxis;
+//    qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
+//    qRegisterMetaType<ChannelModel>();
+    QVariantHash availableAxis;
     foreach(auto axis, _availableAxis.keys())
     {
         QVariant axisVariant;
@@ -194,7 +190,7 @@ void SettingsHandler::SetMapDefaults()
         availableAxis.insert(axis, axisVariant);
     }
     settings.setValue("availableAxis", availableAxis);
-    QHash<QString, QVariant> gamepadMap;
+    QVariantHash gamepadMap;
     foreach(auto button, _gamepadButtonMap.keys())
     {
         QVariant buttonVariant;

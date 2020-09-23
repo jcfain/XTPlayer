@@ -71,6 +71,9 @@ Thumbs.db
 *.dll
 *.exe
 
+*.tar.gz
+*.zip
 /bin
 /build*
 /libav*
+/XTPlayer-release
