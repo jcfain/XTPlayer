@@ -149,6 +149,9 @@ private:
     QAction* action150_Size;
     QAction* action175_Size;
     qint64 thumbCaptureTime;
+    QWidget *normalWindowWidget;
+    QWidget *fullScreenWidget;
+    QGridLayout *fullScreenLayout;
     QFrame* playerControlsPlaceHolder;
     QGridLayout* placeHolderControlsGrid;
     bool funscriptFileSelectorOpen = false;

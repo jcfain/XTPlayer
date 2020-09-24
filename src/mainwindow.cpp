@@ -587,8 +587,8 @@ void MainWindow::toggleFullScreen()
         appSize = size();
         appPos = pos();
         QMainWindow::setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
-        ui->MainFrame->layout()->removeWidget(videoHandler);
-        ui->MainFrame->layout()->removeWidget(ui->playerControlsFrame);
+        ui->MediaGrid->removeWidget(videoHandler);
+        ui->ControlsGrid->removeWidget(ui->playerControlsFrame);
 
         playerControlsPlaceHolder = new QFrame;
         placeHolderControlsGrid = new QGridLayout;
@@ -603,30 +603,34 @@ void MainWindow::toggleFullScreen()
         playerControlsPlaceHolder->setFixedHeight(ui->playerControlsFrame->height());
         playerControlsPlaceHolder->layout()->addWidget(ui->playerControlsFrame);
 
-        QMainWindow::layout()->addWidget(videoHandler);
-        QMainWindow::layout()->addWidget(playerControlsPlaceHolder);
+        ui->fullScreenGrid->addWidget(videoHandler);
+        ui->fullScreenGrid->addWidget(playerControlsPlaceHolder);
         ui->playerControlsFrame->setProperty("cssClass", "fullScreenControls");
         ui->playerControlsFrame->style()->unpolish(ui->playerControlsFrame);
         ui->playerControlsFrame->style()->polish(ui->playerControlsFrame);
+        ui->mainStackedWidget->setCurrentIndex(1);
+        QMainWindow::resize(screenSize);
+        QMainWindow::centralWidget()->layout()->setMargin(0);
         QMainWindow::showFullScreen();
         videoHandler->layout()->setMargin(0);
+        ui->mainStackedWidget->move(QPoint(0, 0));
         videoHandler->move(QPoint(0, 0));
         //videoHandler->resize(QSize(screenSize.width()+1, screenSize.height()+1));
         ui->playerControlsFrame->hide();
-        videoHandler->resize(screenSize);
         ui->menubar->hide();
+        ui->statusbar->hide();
+        videoHandler->resize(screenSize);
     }
     else
     {
-        QMainWindow::setWindowFlags(Qt::Window);
+        QMainWindow::setWindowFlags(Qt::WindowFlags());
         QMainWindow::showNormal();
-        QMainWindow::resize(appSize);
-        QMainWindow::move(appPos);
-        ui->menubar->show();
-        QMainWindow::layout()->removeWidget(videoHandler);
-        ui->MediaGrid->addWidget(videoHandler);
+
+        ui->fullScreenGrid->removeWidget(videoHandler);
         playerControlsPlaceHolder->layout()->removeWidget(ui->playerControlsFrame);
-        QMainWindow::layout()->removeWidget(playerControlsPlaceHolder);
+        videoHandler->resize(videoSize);
+        ui->MediaGrid->addWidget(videoHandler);
+        ui->fullScreenGrid->removeWidget(playerControlsPlaceHolder);
         ui->playerControlsFrame->setWindowFlags(Qt::Widget);
         ui->playerControlsFrame->setMinimumSize(QSize(700, 0));
         ui->playerControlsFrame->setMaximumSize(QSize(16777215, 16777215));
@@ -636,6 +640,14 @@ void MainWindow::toggleFullScreen()
         ui->playerControlsFrame->style()->polish(ui->playerControlsFrame);
         ui->playerControlsFrame->show();
         videoHandler->layout()->setMargin(9);
+        QMainWindow::centralWidget()->layout()->setMargin(9);
+
+        ui->mainStackedWidget->setCurrentIndex(0);
+
+        QMainWindow::resize(appSize);
+        QMainWindow::move(appPos);
+        ui->menubar->show();
+        ui->statusbar->show();
         delete placeHolderControlsGrid;
         delete playerControlsPlaceHolder;
     }
