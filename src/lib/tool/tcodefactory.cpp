@@ -13,10 +13,9 @@ void TCodeFactory::init()
 void TCodeFactory::calculate(QString axisName, double value, QVector<ChannelValueModel> &axisValues)
 {
     AxisNames axisNames;
-    auto tcodeAxisName = SettingsHandler::getGamePadMapButton(axisName);
-    if (tcodeAxisName != axisNames.None)
+    if (axisName != axisNames.None)
     {
-        auto tcodeAxis = SettingsHandler::getAxis(tcodeAxisName);
+        auto tcodeAxis = SettingsHandler::getAxis(axisName);
         auto isNegative = tcodeAxis.AxisName.contains(axisNames.NegativeModifier);
         //auto isPositive = tcodeAxis.AxisName.contains(axisNames.PositiveModifier);
         if (_addedAxis->contains(tcodeAxis.Channel) && _addedAxis->value(tcodeAxis.Channel) == 0 && value != 0)

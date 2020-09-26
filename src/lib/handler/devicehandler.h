@@ -18,6 +18,7 @@ signals:
     void errorOccurred(QString error);
     void connectionChange(ConnectionChangedSignal status);
     void emitTCode(QString tcode);
+    void emitAction(QString tcode);
 
 public:
     explicit DeviceHandler(QObject *parent = nullptr);

@@ -63,7 +63,7 @@ MainWindow::MainWindow(QWidget *parent)
     libraryViewGroup->addAction(ui->actionThumbnail);
 
     videoPreviewWidget = new VideoPreviewWidget(this);
-    videoPreviewWidget->resize(160, 90);
+    videoPreviewWidget->resize(150, 90);
     videoPreviewWidget->hide();
 
     QMenu* submenuSize = ui->menuView->addMenu( "Size" );
@@ -107,6 +107,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(_xSettings->getDeoHandler(), &DeoHandler::messageRecieved, this, &MainWindow::onDeoMessageRecieved);
     connect(_xSettings, &SettingsDialog::gamepadConnectionChange, this, &MainWindow::on_gamepad_connectionChanged);
     connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitTCode, this, &MainWindow::on_gamepad_sendTCode);
+    connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitAction, this, &MainWindow::on_gamepad_sendAction);
 
     _xSettings->init(videoHandler);
 
@@ -120,6 +121,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(videoHandler, &VideoHandler::mediaStatusChanged, this, &MainWindow::on_media_statusChanged);
     connect(videoHandler, &VideoHandler::started, this, &MainWindow::on_media_start);
     connect(videoHandler, &VideoHandler::stopped, this, &MainWindow::on_media_stop);
+    connect(videoHandler, &VideoHandler::togglePaused, this, &MainWindow::onVideoHandler_togglePaused);
 
     connect(ui->SeekSlider, &RangeSlider::upperValueMove, this, &MainWindow::on_seekSlider_sliderMoved);
     connect(ui->SeekSlider, &RangeSlider::onHover, this, &MainWindow::on_seekslider_hover );
@@ -139,7 +141,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(deoRetryConnectionButton, &QPushButton::clicked, _xSettings, &SettingsDialog::initDeoRetry);
     connect(QApplication::instance(), &QCoreApplication::aboutToQuit, this, &MainWindow::dispose);
 
-
+    setFocus();
 
 }
 MainWindow::~MainWindow()
@@ -199,34 +201,94 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 
 void MainWindow::on_key_press(QKeyEvent * event)
 {
+    MediaActions actions;
     switch(event->key())
     {
         case Qt::Key_Space:
         case Qt::Key_MediaPause:
-            MainWindow::togglePause();
+            mediaAction(actions.TogglePause);
             break;
         case Qt::Key_F11:
         case Qt::Key_Escape:
-            MainWindow::toggleFullScreen();
+            mediaAction(actions.FullScreen);
             break;
         case Qt::Key_M:
-            MainWindow::on_MuteBtn_toggled(!videoHandler->isMute());
+            mediaAction(actions.Mute);
             break;
         case Qt::Key_MediaStop:
         case Qt::Key_MediaTogglePlayPause:
-            MainWindow::on_media_stop();
+        case Qt::Key_S:
+            mediaAction(actions.Stop);
             break;
         case Qt::Key_MediaNext:
         case Qt::Key_Right:
-            MainWindow::skipForward();
+            mediaAction(actions.Next);
             break;
         case Qt::Key_MediaPrevious:
         case Qt::Key_Left:
-            MainWindow::skipBack();
+            mediaAction(actions.Back);
+            break;
+        case Qt::Key_VolumeUp:
+        case Qt::Key_Up:
+            mediaAction(actions.VolumeUp);
+            break;
+        case Qt::Key_VolumeDown:
+        case Qt::Key_Down:
+            mediaAction(actions.VolumeDown);
             break;
     }
 }
-
+void MainWindow::mediaAction(QString action)
+{
+    MediaActions actions;
+    if (action == actions.TogglePause)
+    {
+        if (videoHandler->isPaused() || videoHandler->isPlaying())
+        {
+            videoHandler->togglePause();
+        }
+        else
+        {
+            on_PlayBtn_clicked();
+        }
+    }
+    else if(action == actions.FullScreen)
+    {
+        MainWindow::toggleFullScreen();
+    }
+    else if(action == actions.Mute)
+    {
+        MainWindow::on_MuteBtn_toggled(!videoHandler->isMute());
+    }
+    else if(action == actions.Stop)
+    {
+        MainWindow::on_media_stop();
+    }
+     else if(action == actions.Next)
+    {
+        MainWindow::skipForward();
+    }
+    else if(action == actions.Back)
+    {
+        MainWindow::skipBack();
+    }
+    else if(action == actions.VolumeUp)
+    {
+        int currentVolume = ui->VolumeSlider->GetUpperValue();
+        int maxVolume = ui->VolumeSlider->GetMaximum();
+        int newVolume = currentVolume - maxVolume <= 5 ? currentVolume + 5 : maxVolume;
+        ui->VolumeSlider->setUpperValue(newVolume);
+        on_VolumeSlider_valueChanged(newVolume);
+    }
+    else if(action == actions.VolumeUp)
+    {
+        int currentVolume = ui->VolumeSlider->GetUpperValue();
+        int minVolume = ui->VolumeSlider->GetMinimum();
+        int newVolume = currentVolume - minVolume  >= 5 ? currentVolume - 5 : minVolume;
+        ui->VolumeSlider->setUpperValue(newVolume);
+        on_VolumeSlider_valueChanged(newVolume);
+    }
+}
 void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
 {
     // Handle global position
@@ -572,10 +634,6 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
     }
 }
 
-void MainWindow::togglePause()
-{
-    videoHandler->togglePause();
-}
 
 void MainWindow::toggleFullScreen()
 {
@@ -590,21 +648,22 @@ void MainWindow::toggleFullScreen()
         ui->MediaGrid->removeWidget(videoHandler);
         ui->ControlsGrid->removeWidget(ui->playerControlsFrame);
 
-        playerControlsPlaceHolder = new QFrame;
-        placeHolderControlsGrid = new QGridLayout;
+        placeHolderControlsGrid = new QGridLayout(this);
         placeHolderControlsGrid->setContentsMargins(0,0,0,0);
         placeHolderControlsGrid->setSpacing(0);
+        placeHolderControlsGrid->addWidget(ui->playerControlsFrame);
+
+        playerControlsPlaceHolder = new QFrame(this);
         playerControlsPlaceHolder->setLayout(placeHolderControlsGrid);
         playerControlsPlaceHolder->setContentsMargins(0,0,0,0);
         playerControlsPlaceHolder->installEventFilter(this);
-        playerControlsPlaceHolder->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+        playerControlsPlaceHolder->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint );
         playerControlsPlaceHolder->move(QPoint(0, screenSize.height() - ui->playerControlsFrame->height()));
         playerControlsPlaceHolder->setFixedWidth(screenSize.width());
         playerControlsPlaceHolder->setFixedHeight(ui->playerControlsFrame->height());
-        playerControlsPlaceHolder->layout()->addWidget(ui->playerControlsFrame);
 
-        ui->fullScreenGrid->addWidget(videoHandler);
-        ui->fullScreenGrid->addWidget(playerControlsPlaceHolder);
+        ui->fullScreenGrid->addWidget(videoHandler, 0, 0, 2, 1);
+        ui->fullScreenGrid->addWidget(playerControlsPlaceHolder, 1, 0);
         ui->playerControlsFrame->setProperty("cssClass", "fullScreenControls");
         ui->playerControlsFrame->style()->unpolish(ui->playerControlsFrame);
         ui->playerControlsFrame->style()->polish(ui->playerControlsFrame);
@@ -620,6 +679,7 @@ void MainWindow::toggleFullScreen()
         ui->menubar->hide();
         ui->statusbar->hide();
         videoHandler->resize(screenSize);
+        QMainWindow::setFocus();
     }
     else
     {
@@ -700,24 +760,17 @@ void MainWindow::on_PlayBtn_clicked()
             ui->LibraryList->setCurrentRow(0);
             playVideo(ui->LibraryList->selectedItems()[0]->data(Qt::UserRole).value<LibraryListItem>());
         }
-    }
-}
-
-void MainWindow::on_PauseBtn_clicked()
-{
-    MainWindow::togglePause();
-}
-
-void MainWindow::on_StopBtn_clicked()
-{
-    if(videoHandler->isPlaying())
-    {
-        if(videoHandler->isPaused())
+        else if(videoHandler->isPaused() || videoHandler->isPlaying())
         {
-            ui->PauseBtn->setChecked(false);
+            videoHandler->togglePause();
         }
-        videoHandler->stop();
     }
+}
+
+void MainWindow::onVideoHandler_togglePaused(bool paused)
+{
+    QIcon icon(paused ? "://images/icons/play.svg" : "://images/icons/pause.svg" );
+    ui->PlayBtn->setIcon(icon);
 }
 
 void MainWindow::on_MuteBtn_toggled(bool checked)
@@ -753,8 +806,8 @@ void MainWindow::on_fullScreenBtn_clicked()
 
 void MainWindow::on_seekslider_hover(int position, int sliderValue)
 {
-    if(!isFullScreen())
-    {
+//    if(!isFullScreen())
+//    {
         qint64 sliderValueTime = XMath::mapRange(static_cast<qint64>(sliderValue), (qint64)0, (qint64)100, (qint64)0, videoHandler->duration());
     //    if (!videoPreviewWidget)
     //        videoPreviewWidget = new VideoPreviewWidget();
@@ -765,9 +818,13 @@ void MainWindow::on_seekslider_hover(int position, int sliderValue)
     //    LogHandler::Debug("position: "+QString::number(position));
         QPoint gpos;
         if(MainWindow::isFullScreen())
+        {
             gpos = mapToGlobal(playerControlsPlaceHolder->pos() + ui->SeekSlider->pos() + QPoint(position, 0));
+        }
         else
+        {
             gpos = mapToGlobal(ui->playerControlsFrame->pos() + ui->SeekSlider->pos() + QPoint(position, 0));
+        }
     //    LogHandler::Debug("gpos x: "+QString::number(gpos.x()));
     //    LogHandler::Debug("gpos y: "+QString::number(gpos.y()));
         QToolTip::showText(gpos, QTime(0, 0, 0).addMSecs(sliderValueTime).toString(QString::fromLatin1("HH:mm:ss")));
@@ -776,12 +833,13 @@ void MainWindow::on_seekslider_hover(int position, int sliderValue)
 
        //const int w = Config::instance().previewWidth();
         //const int h = Config::instance().previewHeight();
-        videoPreviewWidget->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
-        videoPreviewWidget->resize(175, 175);
-        videoPreviewWidget->move(gpos - QPoint(175/2, 175));
-        videoPreviewWidget->raise();
+        videoPreviewWidget->setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+        videoPreviewWidget->resize(175, 100);
+        videoPreviewWidget->move(gpos - QPoint(175/2, 100));
         videoPreviewWidget->show();
-    }
+        //videoPreviewWidget->raise();
+        //videoPreviewWidget->activateWindow();
+    //}
 }
 
 void MainWindow::on_seekslider_leave()
@@ -830,10 +888,9 @@ void MainWindow::on_media_start()
     ui->videoLoadingLabel->hide();
     movie->stop();
     ui->SeekSlider->setDisabled(false);
-    ui->StopBtn->setDisabled(false);
-    ui->PauseBtn->setDisabled(false);
-    ui->PauseBtn->setChecked(false);
     ui->fullScreenBtn->setDisabled(false);
+    QIcon icon("://images/icons/pause.svg" );
+    ui->PlayBtn->setIcon(icon);
     if(SettingsHandler::getDeoEnabled() && _xSettings->getDeoHandler()->isConnected())
         _xSettings->getDeoHandler()->dispose();
     if(funscriptFuture.isRunning())
@@ -853,9 +910,8 @@ void MainWindow::on_media_stop()
     movie->stop();
     ui->SeekSlider->setUpperValue(0);
     ui->SeekSlider->setDisabled(true);
-    ui->StopBtn->setDisabled(true);
-    ui->PauseBtn->setDisabled(true);
-    ui->PauseBtn->setChecked(false);
+    QIcon icon("://images/icons/play.svg" );
+    ui->PlayBtn->setIcon(icon);
     ui->fullScreenBtn->setDisabled(true);
     //funscriptHandler->setLoaded(false);
     ui->lblCurrentDuration->setText("00:00:00/00:00:00");
@@ -1027,6 +1083,11 @@ void MainWindow::on_gamepad_sendTCode(QString value)
     }
 }
 
+void MainWindow::on_gamepad_sendAction(QString action)
+{
+    mediaAction(action);
+}
+
 void MainWindow::on_skipForwardButton_clicked()
 {
     skipForward();
@@ -1107,7 +1168,7 @@ void MainWindow::media_single_click_event(QMouseEvent * event)
 {
     if ( event->button() == Qt::LeftButton )
     {
-        MainWindow::togglePause();
+        videoHandler->togglePause();
     }
 }
 

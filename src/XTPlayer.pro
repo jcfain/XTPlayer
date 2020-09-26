@@ -52,6 +52,7 @@ HEADERS += \
     lib/handler/videohandler.h \
     lib/lookup/AxisNames.h \
     lib/lookup/GamepadAxisNames.h \
+    lib/lookup/MediaActions.h \
     lib/lookup/enum.h \
     lib/handler/funscripthandler.h \
     lib/handler/loghandler.h \

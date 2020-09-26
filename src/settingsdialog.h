@@ -8,6 +8,7 @@
 #include <QSpinBox>
 #include "CustomControls/rangeslider.h"
 #include "lib/struct/SerialComboboxItem.h"
+#include "lib/lookup/MediaActions.h"
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/serialhandler.h"
 #include "lib/handler/videohandler.h"

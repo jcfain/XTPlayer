@@ -4,6 +4,7 @@
 #include <QGamepad>
 #include "devicehandler.h"
 #include "../tool/tcodefactory.h"
+#include "../lookup/MediaActions.h"
 
 
 class GamepadHandler : public DeviceHandler

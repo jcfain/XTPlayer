@@ -33,6 +33,7 @@
 #include "lib/struct/LibraryListItem.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/ConnectionChangedSignal.h"
+#include "lib/lookup/MediaActions.h"
 #include "lib/tool/xmath.h"
 #include "lib/lookup/enum.h"
 
@@ -64,21 +65,19 @@ private slots:
 
     void on_PlayBtn_clicked();
 
-    void on_PauseBtn_clicked();
-
-    void on_StopBtn_clicked();
-
     void on_MuteBtn_toggled(bool checked);
 
     void on_fullScreenBtn_clicked();
 
     void onLibraryList_ContextMenuRequested(const QPoint &pos);
+    void onVideoHandler_togglePaused(bool paused);
     void playFileFromContextMenu();
     void playFileWithCustomScript();
     void regenerateThumbNail();
     void setThumbNailFromCurrent();
     void onDeoMessageRecieved(DeoPacket packet);
     void on_gamepad_sendTCode(QString tcode);
+    void on_gamepad_sendAction(QString action);
     void on_gamepad_connectionChanged(ConnectionChangedSignal event);
     void on_actionAbout_triggered();
     void on_action75_triggered();
@@ -163,7 +162,8 @@ private:
     void media_double_click_event(QMouseEvent * event);
     QString second_to_minutes(int seconds);
     bool isPlayingFile(QString file);
-    void togglePause();
+
+    void mediaAction(QString action);
     void toggleFullScreen();
     void hideControls();
     void showControls();

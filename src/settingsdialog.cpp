@@ -226,6 +226,7 @@ void SettingsDialog::setupGamepadMap()
 {
     auto gamepadMap = SettingsHandler::getGamePadMap();
     auto availableAxis = SettingsHandler::getAvailableAxis();
+    MediaActions actions;
     int rowIterator = 0;
     int columnIterator = 0;
     int maxRows = 4;
@@ -242,8 +243,22 @@ void SettingsDialog::setupGamepadMap()
             variant.setValue(channel);
             mapComboBox->addItem(channel.FriendlyName, variant);
         }
+        foreach(auto action, actions.Values.keys())
+        {
+            ChannelModel channel;
+            channel.AxisName = action;
+            channel.FriendlyName = actions.Values.value(action);
+            QVariant variant;
+            variant.setValue(channel);
+            mapComboBox->addItem(channel.FriendlyName, variant);
+        }
         auto gameMap = gamepadMap.value(button);
-        mapComboBox->setCurrentText(availableAxis.value(gameMap).FriendlyName);
+
+        if (availableAxis.contains(gameMap))
+            mapComboBox->setCurrentText(availableAxis.value(gameMap).FriendlyName);
+        else
+            mapComboBox->setCurrentText(actions.Values.value(gameMap));
+
         ui.gamePadMapGridLayout->addWidget(mapLabel, rowIterator, columnIterator, Qt::AlignRight);
         ui.gamePadMapGridLayout->addWidget(mapComboBox, rowIterator, columnIterator + 1, Qt::AlignLeft);
 

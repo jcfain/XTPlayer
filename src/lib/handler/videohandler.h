@@ -27,6 +27,7 @@ signals:
     void mediaStatusChanged(MediaStatus status);
     void started();
     void stopped();
+    void togglePaused(bool paused);
 
 public:;
     VideoHandler(QWidget* parent = 0);

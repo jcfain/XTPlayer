@@ -93,6 +93,7 @@ void VideoHandler::stop()
 void VideoHandler::togglePause()
 {
     _player->togglePause();
+    emit togglePaused(isPaused());
 }
 
 void VideoHandler::setFile(QString file)

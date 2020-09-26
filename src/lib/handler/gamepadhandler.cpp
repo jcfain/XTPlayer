@@ -68,59 +68,251 @@ void GamepadHandler::gamePadConnectionChanged(bool connected)
 void GamepadHandler::run()
 {
     QString lastTCode;
+    QString lastAction;
     TCodeFactory* tcodeFactory = new TCodeFactory(0.0, 1.0);
     QVector<ChannelValueModel> axisValues;
-    //_gamepadState = new QHash<QString, QVariant>();
     GamepadAxisNames gamepadAxisNames;
+    AxisNames axisNames;
+    MediaActions mediaActions;
+    bool resetActionTimer = false;
+    qint64 timer1 = QTime::currentTime().msecsSinceStartOfDay();
+    qint64 timer2 = QTime::currentTime().msecsSinceStartOfDay();
     while(!_stop)
     {
-        //_mutex.lock();
-//        _gamepadState->insert(gamepadAxisNames.LeftXAxis, calculateDeadZone(_gamepad->axisLeftX()));
-//        _gamepadState->insert(gamepadAxisNames.LeftYAxis, calculateDeadZone(_gamepad->axisLeftY()));
-//        _gamepadState->insert(gamepadAxisNames.RightXAxis, calculateDeadZone(_gamepad->axisRightX()));
-//        _gamepadState->insert(gamepadAxisNames.RightYAxis, calculateDeadZone(_gamepad->axisRightY()));
-//        _gamepadState->insert(gamepadAxisNames.A, _gamepad->buttonA());
-//        _gamepadState->insert(gamepadAxisNames.B, _gamepad->buttonB());
-//        _gamepadState->insert(gamepadAxisNames.X, _gamepad->buttonX());
-//        _gamepadState->insert(gamepadAxisNames.Y, _gamepad->buttonY());
-//        _gamepadState->insert(gamepadAxisNames.LeftBumper, _gamepad->buttonL1());
-//        _gamepadState->insert(gamepadAxisNames.LeftTrigger, _gamepad->buttonL2());
-//        _gamepadState->insert(gamepadAxisNames.LeftAxisButton, _gamepad->buttonL3());
-//        _gamepadState->insert(gamepadAxisNames.RightBumper, _gamepad->buttonR1());
-//        _gamepadState->insert(gamepadAxisNames.RightTrigger, _gamepad->buttonR2());
-//        _gamepadState->insert(gamepadAxisNames.RightAxisButton, _gamepad->buttonR3());
-//        _gamepadState->insert(gamepadAxisNames.DPadUp, _gamepad->buttonUp());
-//        _gamepadState->insert(gamepadAxisNames.DPadDown, _gamepad->buttonDown());
-//        _gamepadState->insert(gamepadAxisNames.DPadLeft, _gamepad->buttonLeft());
-//        _gamepadState->insert(gamepadAxisNames.DPadRight, _gamepad->buttonRight());
-//        _gamepadState->insert(gamepadAxisNames.Select, _gamepad->buttonSelect());
-//        _gamepadState->insert(gamepadAxisNames.Start, _gamepad->buttonStart());
-//        _gamepadState->insert(gamepadAxisNames.Center, _gamepad->buttonCenter());
-//        _gamepadState->insert(gamepadAxisNames.Guide, _gamepad->buttonGuide());var axisValues = new HashSet<ChannelValueModel>();
+        if (timer2 - timer1 >= 500)
+        {
+            timer1 = timer2;
+            if(resetActionTimer)
+            {
+                lastAction = nullptr;
+                resetActionTimer = false;
+            }
+        }
+        timer2 = QTime::currentTime().msecsSinceStartOfDay();
+
         axisValues.clear();
-        tcodeFactory->calculate(gamepadAxisNames.LeftXAxis, calculateDeadZone(_gamepad->axisLeftX()), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.LeftYAxis, calculateDeadZone(-_gamepad->axisLeftY()), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.RightXAxis, calculateDeadZone(_gamepad->axisRightX()), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.RightYAxis, calculateDeadZone(-_gamepad->axisRightY()), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.RightTrigger, _gamepad->buttonR2(), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.LeftTrigger, _gamepad->buttonL2(), axisValues);
+        QString LeftXAxis = SettingsHandler::getGamePadMapButton(gamepadAxisNames.LeftXAxis);
+        if (!mediaActions.Values.contains(LeftXAxis))
+        {
+            tcodeFactory->calculate(LeftXAxis, calculateDeadZone(_gamepad->axisLeftX()), axisValues);
+        }
+        else if(_gamepad->axisLeftX() != 0 && LeftXAxis != axisNames.None && lastAction != LeftXAxis)
+        {
+            emit emitAction(LeftXAxis);
+            lastAction = LeftXAxis;
+            resetActionTimer = true;
+        }
+
+        QString LeftYAxis = SettingsHandler::getGamePadMapButton(gamepadAxisNames.LeftYAxis);
+        if (!mediaActions.Values.contains(LeftYAxis))
+            tcodeFactory->calculate(LeftYAxis, calculateDeadZone(-_gamepad->axisLeftY()), axisValues);
+        else if(_gamepad->axisLeftY() != 0 && LeftYAxis != axisNames.None && lastAction != LeftYAxis)
+        {
+            emit emitAction(LeftYAxis);
+            lastAction = LeftYAxis;
+            resetActionTimer = true;
+        }
+
+        QString RightXAxis = SettingsHandler::getGamePadMapButton(gamepadAxisNames.RightXAxis);
+        if (!mediaActions.Values.contains(RightXAxis))
+            tcodeFactory->calculate(RightXAxis, calculateDeadZone(_gamepad->axisRightX()), axisValues);
+        else if(_gamepad->axisRightX() != 0 && RightXAxis != axisNames.None && lastAction != RightXAxis)
+        {
+            emit emitAction(RightXAxis);
+            lastAction = RightXAxis;
+            resetActionTimer = true;
+        }
+
+        QString RightYAxis = SettingsHandler::getGamePadMapButton(gamepadAxisNames.RightYAxis);
+        if (!mediaActions.Values.contains(RightYAxis))
+            tcodeFactory->calculate(RightYAxis, calculateDeadZone(-_gamepad->axisRightY()), axisValues);
+        else if(_gamepad->axisRightY() != 0 && RightYAxis != axisNames.None && lastAction != RightYAxis)
+        {
+            emit emitAction(RightYAxis);
+            lastAction = RightYAxis;
+            resetActionTimer = true;
+        }
+
+        QString RightTrigger = SettingsHandler::getGamePadMapButton(gamepadAxisNames.RightTrigger);
+        if (!mediaActions.Values.contains(RightTrigger))
+            tcodeFactory->calculate(RightTrigger, _gamepad->buttonR2(), axisValues);
+        else if(_gamepad->buttonR2() != 0 && RightTrigger != axisNames.None && lastAction != RightTrigger)
+        {
+            emit emitAction(RightTrigger);
+            lastAction = RightTrigger;
+            resetActionTimer = true;
+        }
+
+        QString LeftTrigger = SettingsHandler::getGamePadMapButton(gamepadAxisNames.LeftTrigger);
+        if (!mediaActions.Values.contains(LeftTrigger))
+            tcodeFactory->calculate(LeftTrigger, _gamepad->buttonL2(), axisValues);
+        else if(_gamepad->buttonL2() != 0 && LeftTrigger != axisNames.None && lastAction != LeftTrigger)
+        {
+            emit emitAction(LeftTrigger);
+            lastAction = LeftTrigger;
+            resetActionTimer = true;
+        }
+
         // Binary inputs
-        tcodeFactory->calculate(gamepadAxisNames.A, _gamepad->buttonA(), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.B, _gamepad->buttonB(), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.X, _gamepad->buttonX(), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.Y, _gamepad->buttonY(), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.RightBumper, _gamepad->buttonR1(), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.LeftBumper, _gamepad->buttonL1(), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.Start, _gamepad->buttonStart(), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.Select, _gamepad->buttonSelect(), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.DPadUp, _gamepad->buttonUp(), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.DPadDown, _gamepad->buttonDown(), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.DPadLeft, _gamepad->buttonLeft(), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.DPadRight, _gamepad->buttonRight(), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.RightAxisButton, _gamepad->buttonR3(), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.LeftAxisButton, _gamepad->buttonL3(), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.Center, _gamepad->buttonCenter(), axisValues);
-        tcodeFactory->calculate(gamepadAxisNames.Guide, _gamepad->buttonGuide(), axisValues);
+        QString A = SettingsHandler::getGamePadMapButton(gamepadAxisNames.A);
+        if (!mediaActions.Values.contains(A))
+            tcodeFactory->calculate(A, _gamepad->buttonA(), axisValues);
+        else if(_gamepad->buttonA() && A != axisNames.None && lastAction != A)
+        {
+            emit emitAction(LeftXAxis);
+            lastAction = A;
+            resetActionTimer = true;
+        }
+
+        QString B = SettingsHandler::getGamePadMapButton(gamepadAxisNames.B);
+        if (!mediaActions.Values.contains(B))
+            tcodeFactory->calculate(B, _gamepad->buttonB(), axisValues);
+        else if(_gamepad->buttonB() && B != axisNames.None && lastAction != B)
+        {
+            emit emitAction(B);
+            lastAction = B;
+            resetActionTimer = true;
+        }
+
+        QString X = SettingsHandler::getGamePadMapButton(gamepadAxisNames.X);
+        if (!mediaActions.Values.contains(X))
+            tcodeFactory->calculate(X, _gamepad->buttonX(), axisValues);
+        else if(_gamepad->buttonX() && X != axisNames.None && lastAction != X)
+        {
+            emit emitAction(X);
+            lastAction = X;
+            resetActionTimer = true;
+        }
+
+        QString Y = SettingsHandler::getGamePadMapButton(gamepadAxisNames.Y);
+        if (!mediaActions.Values.contains(Y))
+            tcodeFactory->calculate(Y, _gamepad->buttonY(), axisValues);
+        else if(_gamepad->buttonY() && Y != axisNames.None && lastAction != Y)
+        {
+            emit emitAction(Y);
+            lastAction = Y;
+            resetActionTimer = true;
+        }
+
+        QString RightBumper = SettingsHandler::getGamePadMapButton(gamepadAxisNames.RightBumper);
+        if (!mediaActions.Values.contains(RightBumper))
+            tcodeFactory->calculate(RightBumper, _gamepad->buttonR1(), axisValues);
+        else if(_gamepad->buttonR1() && RightBumper != axisNames.None && lastAction != RightBumper)
+        {
+            emit emitAction(RightBumper);
+            lastAction = RightBumper;
+            resetActionTimer = true;
+        }
+
+        QString LeftBumper = SettingsHandler::getGamePadMapButton(gamepadAxisNames.LeftBumper);
+        if (!mediaActions.Values.contains(LeftBumper))
+            tcodeFactory->calculate(LeftBumper, _gamepad->buttonL1(), axisValues);
+        else if(_gamepad->buttonL1() && LeftBumper != axisNames.None && lastAction != LeftBumper)
+        {
+            emit emitAction(LeftBumper);
+            lastAction = LeftBumper;
+            resetActionTimer = true;
+        }
+
+        QString Start = SettingsHandler::getGamePadMapButton(gamepadAxisNames.Start);
+        if (!mediaActions.Values.contains(Start))
+            tcodeFactory->calculate(Start, _gamepad->buttonStart(), axisValues);
+        else if(_gamepad->buttonStart() && Start != axisNames.None && lastAction != Start)
+        {
+            emit emitAction(Start);
+            lastAction = Start;
+            resetActionTimer = true;
+        }
+
+        QString Select = SettingsHandler::getGamePadMapButton(gamepadAxisNames.Select);
+        if (!mediaActions.Values.contains(Select))
+            tcodeFactory->calculate(Select, _gamepad->buttonSelect(), axisValues);
+        else if(_gamepad->buttonSelect() && Select != axisNames.None && lastAction != Select)
+        {
+            emit emitAction(Select);
+            lastAction = Select;
+            resetActionTimer = true;
+        }
+
+        QString DPadUp = SettingsHandler::getGamePadMapButton(gamepadAxisNames.DPadUp);
+        if (!mediaActions.Values.contains(DPadUp))
+            tcodeFactory->calculate(DPadUp, _gamepad->buttonUp(), axisValues);
+        else if(_gamepad->buttonUp() && DPadUp != axisNames.None && lastAction != DPadUp)
+        {
+            emit emitAction(DPadUp);
+            lastAction = DPadUp;
+            resetActionTimer = true;
+        }
+
+        QString DPadDown = SettingsHandler::getGamePadMapButton(gamepadAxisNames.DPadDown);
+        if (!mediaActions.Values.contains(DPadDown))
+            tcodeFactory->calculate(DPadDown, _gamepad->buttonDown(), axisValues);
+        else if(_gamepad->buttonDown() && DPadDown != axisNames.None && lastAction != DPadDown)
+        {
+            emit emitAction(DPadDown);
+            lastAction = DPadDown;
+            resetActionTimer = true;
+        }
+
+        QString DPadLeft = SettingsHandler::getGamePadMapButton(gamepadAxisNames.DPadLeft);
+        if (!mediaActions.Values.contains(DPadLeft))
+            tcodeFactory->calculate(DPadLeft, _gamepad->buttonLeft(), axisValues);
+        else if(_gamepad->buttonLeft() && DPadLeft != axisNames.None && lastAction != DPadLeft)
+        {
+            emit emitAction(DPadLeft);
+            lastAction = DPadLeft;
+            resetActionTimer = true;
+        }
+
+        QString DPadRight = SettingsHandler::getGamePadMapButton(gamepadAxisNames.DPadRight);
+        if (!mediaActions.Values.contains(DPadRight))
+            tcodeFactory->calculate(DPadRight, _gamepad->buttonRight(), axisValues);
+        else if(_gamepad->buttonRight() && DPadRight != axisNames.None && lastAction != DPadRight)
+        {
+            emit emitAction(DPadRight);
+            lastAction = DPadRight;
+            resetActionTimer = true;
+        }
+
+        QString RightAxisButton = SettingsHandler::getGamePadMapButton(gamepadAxisNames.RightAxisButton);
+        if (!mediaActions.Values.contains(RightAxisButton))
+            tcodeFactory->calculate(RightAxisButton, _gamepad->buttonR3(), axisValues);
+        else if(_gamepad->buttonR3() && RightAxisButton != axisNames.None && lastAction != RightAxisButton)
+        {
+            emit emitAction(RightAxisButton);
+            lastAction = RightAxisButton;
+            resetActionTimer = true;
+        }
+
+        QString LeftAxisButton = SettingsHandler::getGamePadMapButton(gamepadAxisNames.LeftAxisButton);
+        if (!mediaActions.Values.contains(LeftAxisButton))
+            tcodeFactory->calculate(LeftAxisButton, _gamepad->buttonL3(), axisValues);
+        else if(_gamepad->buttonL3() && LeftAxisButton != axisNames.None && lastAction != LeftAxisButton)
+        {
+            emit emitAction(LeftAxisButton);
+            lastAction = LeftAxisButton;
+            resetActionTimer = true;
+        }
+
+        QString Center = SettingsHandler::getGamePadMapButton(gamepadAxisNames.Center);
+        if (!mediaActions.Values.contains(Center))
+            tcodeFactory->calculate(Center, _gamepad->buttonCenter(), axisValues);
+        else if(_gamepad->buttonCenter() && Center != axisNames.None && lastAction != Center)
+        {
+            emit emitAction(Center);
+            lastAction = Center;
+            resetActionTimer = true;
+        }
+
+        QString Guide = SettingsHandler::getGamePadMapButton(gamepadAxisNames.Guide);
+        if (!mediaActions.Values.contains(Guide))
+            tcodeFactory->calculate(Guide, _gamepad->buttonGuide(), axisValues);
+        else if(_gamepad->buttonGuide() && Guide != axisNames.None && lastAction != Guide)
+        {
+            emit emitAction(Guide);
+            lastAction = Guide;
+            resetActionTimer = true;
+        }
 
         QString currentTCode = tcodeFactory->formatTCode(&axisValues);
         if (lastTCode != currentTCode)
@@ -128,14 +320,6 @@ void GamepadHandler::run()
             lastTCode = currentTCode;
             emit emitTCode(currentTCode);
         }
-        //_mutex.unlock();
-
-//        if (!_stop)
-//        {
-//            _mutex.lock();
-//            _cond.wait(&_mutex);
-//            _mutex.unlock();
-//        }
     }
     delete tcodeFactory;
 }
