@@ -53,6 +53,8 @@ void SettingsHandler::Load()
     thumbSize = thumbSize == 0 ? 150 : thumbSize;
     thumbSizeList = settings.value("thumbSizeList").toInt();
     thumbSizeList = thumbSizeList == 0 ? 50 : thumbSizeList;
+    videoIncrement = settings.value("videoIncrement").toInt();
+    videoIncrement = videoIncrement == 0 ? 10 : videoIncrement;
     deoDnlaFunscriptLookup = settings.value("deoDnlaFunscriptLookup").toHash();
 
     _gamePadEnabled = settings.value("gamePadEnabled").toBool();
@@ -106,6 +108,7 @@ void SettingsHandler::Save()
         settings.setValue("libraryView", libraryView);
         settings.setValue("thumbSize", thumbSize);
         settings.setValue("thumbSizeList", thumbSizeList);
+        settings.setValue("videoIncrement", videoIncrement);
 
         settings.setValue("deoDnlaFunscriptLookup", deoDnlaFunscriptLookup);
 
@@ -365,7 +368,10 @@ int SettingsHandler::getThumbSizeList()
 {
     return thumbSizeList;
 }
-
+int SettingsHandler::getVideoIncrement()
+{
+    return videoIncrement;
+}
 QString SettingsHandler::getDeoDnlaFunscript(QString key)
 {
     if (deoDnlaFunscriptLookup.contains(key))
@@ -570,6 +576,10 @@ void SettingsHandler::setThumbSizeList(int value)
     QMutexLocker locker(&mutex);
     thumbSizeList = value;
 }
+void SettingsHandler::setVideoIncrement(int value)
+{
+    videoIncrement = value;
+}
 void SettingsHandler::setDeoDnlaFunscript(QString key, QString value)
 {
     QMutexLocker locker(&mutex);
@@ -639,18 +649,18 @@ void SettingsHandler::SetupGamepadButtonMap()
         { gamepadAxisNames.RightXAxis, axisNames.TcYRollR1  },
         { gamepadAxisNames.RightTrigger, axisNames.TcTwistCWR0 },
         { gamepadAxisNames.LeftTrigger, axisNames.TcTwistCCWR0 },
-        { gamepadAxisNames.RightBumper, axisNames.None },
-        { gamepadAxisNames.LeftBumper, axisNames.None },
-        { gamepadAxisNames.Select, axisNames.None },
-        { gamepadAxisNames.Start, axisNames.None },
+        { gamepadAxisNames.RightBumper, mediaActions.FastForward },
+        { gamepadAxisNames.LeftBumper, mediaActions.Rewind },
+        { gamepadAxisNames.Select, mediaActions.FullScreen },
+        { gamepadAxisNames.Start, mediaActions.TogglePause },
         { gamepadAxisNames.X, axisNames.None },
-        { gamepadAxisNames.Y, axisNames.None },
-        { gamepadAxisNames.B, axisNames.None },
-        { gamepadAxisNames.A, axisNames.None },
-        { gamepadAxisNames.DPadUp, axisNames.None },
-        { gamepadAxisNames.DPadDown, axisNames.None },
-        { gamepadAxisNames.DPadLeft, axisNames.None },
-        { gamepadAxisNames.DPadRight, axisNames.None },
+        { gamepadAxisNames.Y, mediaActions.Loop },
+        { gamepadAxisNames.B, mediaActions.Stop },
+        { gamepadAxisNames.A, mediaActions.Mute },
+        { gamepadAxisNames.DPadUp, mediaActions.VolumeUp },
+        { gamepadAxisNames.DPadDown, mediaActions.VolumeDown },
+        { gamepadAxisNames.DPadLeft, mediaActions.Back },
+        { gamepadAxisNames.DPadRight, mediaActions.Next },
         { gamepadAxisNames.RightAxisButton, axisNames.None },
         { gamepadAxisNames.LeftAxisButton, axisNames.None },
         { gamepadAxisNames.Center, axisNames.None },
@@ -659,13 +669,14 @@ void SettingsHandler::SetupGamepadButtonMap()
 }
 
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.14b";
-const float SettingsHandler::XTPVersionNum = 0.14f;
+const QString SettingsHandler::XTPVersion = "0.15b";
+const float SettingsHandler::XTPVersionNum = 0.15f;
 
 QSettings SettingsHandler::settings("cUrbSide prOd", "XTPlayer");
 QMutex SettingsHandler::mutex;
 GamepadAxisNames SettingsHandler::gamepadAxisNames;
 AxisNames SettingsHandler::axisNames;
+MediaActions SettingsHandler::mediaActions;
 QHash<QString, QVariant> SettingsHandler::deoDnlaFunscriptLookup;
 QString SettingsHandler::selectedTheme;
 QString SettingsHandler::selectedLibrary;
@@ -692,6 +703,7 @@ float SettingsHandler::vibMultiplierValue;
 int SettingsHandler::libraryView = LibraryView::Thumb;
 int SettingsHandler::thumbSize = 175;
 int SettingsHandler::thumbSizeList = 50;
+int SettingsHandler::videoIncrement = 10;
 
 bool SettingsHandler::_gamePadEnabled;
 QHash<QString, QString> SettingsHandler::_gamepadButtonMap;

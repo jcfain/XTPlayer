@@ -5,6 +5,7 @@
 #include "devicehandler.h"
 #include "../tool/tcodefactory.h"
 #include "../lookup/MediaActions.h"
+#include "../tool/xtimer.h"
 
 
 class GamepadHandler : public DeviceHandler

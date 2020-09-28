@@ -130,7 +130,7 @@ MainWindow::MainWindow(QWidget *parent)
     //connect(player, static_cast<void(AVPlayer::*)(AVPlayer::Error )>(&AVPlayer::error), this, &MainWindow::on_media_error);
 
     connect(videoHandler, &VideoHandler::doubleClicked, this, &MainWindow::media_double_click_event);
-    //connect(vw, &XVideoWidget::singleClicked, this, &MainWindow::media_single_click_event);
+    connect(videoHandler, &VideoHandler::rightClicked, this, &MainWindow::media_single_click_event);
     connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
     //connect(videoHandler, &VideoHandler::mouseEnter, this, &MainWindow::on_video_mouse_enter);
 
@@ -236,6 +236,9 @@ void MainWindow::on_key_press(QKeyEvent * event)
         case Qt::Key_Down:
             mediaAction(actions.VolumeDown);
             break;
+        case Qt::Key_L:
+            mediaAction(actions.Loop);
+            break;
     }
 }
 void MainWindow::mediaAction(QString action)
@@ -262,7 +265,7 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.Stop)
     {
-        MainWindow::on_media_stop();
+        MainWindow::on_StopBtn_clicked();
     }
      else if(action == actions.Next)
     {
@@ -280,13 +283,25 @@ void MainWindow::mediaAction(QString action)
         ui->VolumeSlider->setUpperValue(newVolume);
         on_VolumeSlider_valueChanged(newVolume);
     }
-    else if(action == actions.VolumeUp)
+    else if(action == actions.VolumeDown)
     {
         int currentVolume = ui->VolumeSlider->GetUpperValue();
         int minVolume = ui->VolumeSlider->GetMinimum();
         int newVolume = currentVolume - minVolume  >= 5 ? currentVolume - 5 : minVolume;
         ui->VolumeSlider->setUpperValue(newVolume);
         on_VolumeSlider_valueChanged(newVolume);
+    }
+    else if(action == actions.Loop)
+    {
+        toggleLoop();
+    }
+    else if(action == actions.Rewind)
+    {
+        rewind();
+    }
+    else if(action == actions.FastForward)
+    {
+        fastForward();
     }
 }
 void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
@@ -413,7 +428,7 @@ void MainWindow::on_load_library(QString path)
                 QPixmap scaled = bgPixmap.scaled(currentMaxThumbSize, Qt::AspectRatioMode::KeepAspectRatio);
                 thumb.addPixmap(scaled);
                 qListWidgetItem->setIcon(thumb);
-
+                qListWidgetItem->setSizeHint({SettingsHandler::getThumbSize(), SettingsHandler::getThumbSize()});
                 qListWidgetItem->setText(fileinfo.fileName());
                 qListWidgetItem->setData(Qt::UserRole, listItem);
                 ui->LibraryList->addItem(qListWidgetItem);
@@ -713,6 +728,29 @@ void MainWindow::toggleFullScreen()
     }
 }
 
+void MainWindow::toggleLoop()
+{
+    if(!ui->loopToggleButton->isChecked() && !autoLoopOn)
+    {
+        autoLoopOn = true;
+        ui->loopToggleButton->setChecked(true);
+        qint64 currentVideoPositionPercentage = XMath::mapRange(videoHandler->position(),  (qint64)0, videoHandler->duration(), (qint64)0, (qint64)100);
+        ui->SeekSlider->setLowerValue(currentVideoPositionPercentage);
+    }
+    else if (ui->loopToggleButton->isChecked() && autoLoopOn)
+    {
+        autoLoopOn = false;
+        int lowerValue = ui->SeekSlider->GetLowerValue();
+        qint64 currentVideoPositionPercentage = XMath::mapRange(videoHandler->position(),  (qint64)0, videoHandler->duration(), (qint64)0, (qint64)100);
+        ui->SeekSlider->setUpperValue(currentVideoPositionPercentage > lowerValue + ui->SeekSlider->GetMinimumRange()
+                                      ? currentVideoPositionPercentage : currentVideoPositionPercentage + lowerValue + ui->SeekSlider->GetMinimumRange());
+    }
+    else
+    {
+        ui->loopToggleButton->setChecked(false);
+    }
+}
+
 void MainWindow::hideControls()
 {
     if (isFullScreen())
@@ -765,6 +803,16 @@ void MainWindow::on_PlayBtn_clicked()
             videoHandler->togglePause();
         }
     }
+}
+
+void MainWindow::on_StopBtn_clicked()
+{
+    if(videoHandler->isPlaying())
+    {
+        videoHandler->stop();
+    }
+    QIcon icon("://images/icons/play.svg");
+    ui->PlayBtn->setIcon(icon);
 }
 
 void MainWindow::onVideoHandler_togglePaused(bool paused)
@@ -858,9 +906,12 @@ void MainWindow::on_seekslider_leave()
 
 void MainWindow::on_seekSlider_sliderMoved(int position)
 {
-    qint64 playerPosition = XMath::mapRange(static_cast<qint64>(position), (qint64)0, (qint64)100, (qint64)0, videoHandler->duration());
-    ui->SeekSlider->setToolTip(QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")));
-    videoHandler->setPosition(playerPosition);
+    if (!ui->loopToggleButton->isChecked())
+    {
+        qint64 playerPosition = XMath::mapRange(static_cast<qint64>(position), (qint64)0, (qint64)100, (qint64)0, videoHandler->duration());
+        ui->SeekSlider->setToolTip(QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")));
+        videoHandler->setPosition(playerPosition);
+    }
 }
 
 
@@ -869,18 +920,79 @@ void MainWindow::on_SeekSlider_valueChanged(int position)
 
 }
 
+void MainWindow::onLoopRange_valueChanged(int position)
+{
+    int endLoop = ui->SeekSlider->GetUpperValue();
+    int startLoop = ui->SeekSlider->GetLowerValue();
+    qint64 duration = videoHandler->duration();
+
+    qint64 currentVideoPositionPercentage = XMath::mapRange(videoHandler->position(),  (qint64)0, duration, (qint64)0, (qint64)100);
+    qint64 destinationVideoPosition = XMath::mapRange((qint64)position, (qint64)0, (qint64)100,  (qint64)0, duration);
+
+    QString timeCurrent = mSecondFormat(destinationVideoPosition);
+    ui->SeekSlider->setToolTip(timeCurrent);
+
+    if(currentVideoPositionPercentage < startLoop)
+    {
+        videoHandler->setPosition(destinationVideoPosition);
+    }
+    else if (currentVideoPositionPercentage >= endLoop)
+    {
+        qint64 startLoopVideoPosition = XMath::mapRange((qint64)startLoop, (qint64)0, (qint64)100,  (qint64)0, duration);
+        if(startLoopVideoPosition <= 0)
+            startLoopVideoPosition = 50;
+        if (videoHandler->position() != startLoopVideoPosition)
+            videoHandler->setPosition(startLoopVideoPosition);
+    }
+}
+
 void MainWindow::on_media_positionChanged(qint64 position)
 {
-    //ui->lblCurrentDuration->setText( second_to_minutes(position / 1000).append("/").append( second_to_minutes( (videoHandler->duration())/1000 ) ) );
-
-    ui->lblCurrentDuration->setText(QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")).append("/")
-                                    .append(QTime(0, 0, 0).addMSecs(videoHandler->duration()).toString(QString::fromLatin1("HH:mm:ss"))));
     qint64 duration = videoHandler->duration();
-    if (duration > 0)
+    qint64 videoToSliderPosition = XMath::mapRange(position,  (qint64)0, duration, (qint64)0, (qint64)100);
+    if (!ui->loopToggleButton->isChecked())
     {
-        qint64 sliderPosition = XMath::mapRange(position,  (qint64)0, duration, (qint64)0, (qint64)100);
-        ui->SeekSlider->setUpperValue(static_cast<int>(sliderPosition));
+        if (duration > 0)
+        {
+            ui->SeekSlider->setUpperValue(static_cast<int>(videoToSliderPosition));
+        }
     }
+    else
+    {
+        int endLoop = ui->SeekSlider->GetUpperValue();
+        qint64 endLoopToVideoPosition = XMath::mapRange((qint64)endLoop, (qint64)0, (qint64)100,  (qint64)0, duration);
+        if (position >= endLoopToVideoPosition)
+        {
+            int startLoop = ui->SeekSlider->GetLowerValue();
+            qint64 startLoopVideoPosition = XMath::mapRange((qint64)startLoop, (qint64)0, (qint64)100,  (qint64)0, duration);
+            if(startLoopVideoPosition <= 0)
+                startLoopVideoPosition = 50;
+            if (videoHandler->position() != startLoopVideoPosition)
+                videoHandler->setPosition(startLoopVideoPosition);
+        }
+    }
+    ui->lblCurrentDuration->setText(mSecondFormat(position).append("/").append(mSecondFormat(duration)));
+    //    QString timeCurrent = QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss"));
+    //    QString timeDuration = QTime(0, 0, 0).addMSecs(duration).toString(QString::fromLatin1("HH:mm:ss"));
+    //    QString timeStamp = timeCurrent.append("/").append(timeDuration);
+    //    ui->lblCurrentDuration->setText(timeStamp);
+}
+
+QString MainWindow::mSecondFormat(int mSecs)
+{
+    int seconds = mSecs / 1000;
+    mSecs %= 1000;
+
+    int minutes = seconds / 60;
+    seconds %= 60;
+
+    int hours = minutes / 60;
+    minutes %= 60;
+    QString hr = QString::number(hours);
+    QString mn = QString::number(minutes);
+    QString sc = QString::number(seconds);
+
+    return (hr.length() == 1 ? "0" + hr : hr ) + ":" + (mn.length() == 1 ? "0" + mn : mn ) + ":" + (sc.length() == 1 ? "0" + sc : sc);
 }
 
 void MainWindow::on_media_start()
@@ -1102,7 +1214,8 @@ void MainWindow::on_media_statusChanged(MediaStatus status)
 {
     switch (status) {
     case EndOfMedia:
-        skipForward();
+        if (!ui->loopToggleButton->isChecked())
+            skipForward();
     break;
     case NoMedia:
         //status = tr("No media");
@@ -1138,22 +1251,58 @@ void MainWindow::on_media_statusChanged(MediaStatus status)
 
 void MainWindow::skipForward()
 {
-    ++playingVideoListIndex;
-    if(playingVideoListIndex < ui->LibraryList->count())
+    if (ui->LibraryList->count() > 0)
     {
-        ui->LibraryList->setCurrentRow(playingVideoListIndex);
-        on_PlayBtn_clicked();
+        ++playingVideoListIndex;
+        if(playingVideoListIndex < ui->LibraryList->count())
+        {
+            ui->LibraryList->setCurrentRow(playingVideoListIndex);
+            LibraryListItem selectedFileListItem = getLibraryListItemFromQListItem(ui->LibraryList->selectedItems().first());
+            playVideo(selectedFileListItem);
+        }
+        else
+        {
+            playingVideoListIndex = ui->LibraryList->count() - 1;
+        }
     }
 }
 
 void MainWindow::skipBack()
 {
-    --playingVideoListIndex;
-    if(playingVideoListIndex >= 0)
+    if (ui->LibraryList->count() > 0)
     {
-        ui->LibraryList->setCurrentRow(playingVideoListIndex);
-        on_PlayBtn_clicked();
+        --playingVideoListIndex;
+        if(playingVideoListIndex >= 0)
+        {
+            ui->LibraryList->setCurrentRow(playingVideoListIndex);
+            LibraryListItem selectedFileListItem = getLibraryListItemFromQListItem(ui->LibraryList->selectedItems().first());
+            playVideo(selectedFileListItem);
+        }
+        else
+        {
+            playingVideoListIndex = 0;
+        }
     }
+}
+
+void MainWindow::rewind()
+{
+    qint64 position = videoHandler->position();
+    qint64 videoIncrement = SettingsHandler::getVideoIncrement() * 1000;
+    if (position > videoIncrement)
+        videoHandler->seek(videoHandler->position() - videoIncrement);
+    else
+        skipBack();
+}
+
+void MainWindow::fastForward()
+{
+    qint64 position = videoHandler->position();
+    qint64 videoIncrement = SettingsHandler::getVideoIncrement() * 1000;
+    if (position < videoHandler->duration() - videoIncrement)
+        videoHandler->seek(videoHandler->position() + videoIncrement);
+    else
+        skipForward();
 }
 
 void MainWindow::media_double_click_event(QMouseEvent * event)
@@ -1166,7 +1315,7 @@ void MainWindow::media_double_click_event(QMouseEvent * event)
 
 void MainWindow::media_single_click_event(QMouseEvent * event)
 {
-    if ( event->button() == Qt::LeftButton )
+    if (event->button() == Qt::MouseButton::RightButton)
     {
         videoHandler->togglePause();
     }
@@ -1263,16 +1412,6 @@ void MainWindow::on_deo_device_connectionChanged(ConnectionChangedSignal event)
 void MainWindow::on_deo_device_error(QString error)
 {
     LogHandler::Dialog("Deo error: "+error, XLogLevel::Critical);
-}
-
-QString MainWindow::second_to_minutes(int seconds)
-{
-    int sec = seconds;
-    QString mn = QString::number( (sec ) / 60);
-    int _tmp_mn  = mn.toInt() * 60;
-    QString sc= QString::number( (seconds - _tmp_mn  ) % 60 );
-
-    return (mn.length() == 1 ? "0" + mn : mn ) + ":" + (sc.length() == 1 ? "0" + sc : sc);
 }
 
 
@@ -1467,4 +1606,32 @@ void MainWindow::on_actionChange_theme_triggered()
 void MainWindow::on_actionChange_current_deo_script_triggered()
 {
     changeDeoFunscript();
+}
+
+void MainWindow::on_settingsButton_clicked()
+{
+    on_actionSettings_triggered();
+}
+
+void MainWindow::on_loopToggleButton_toggled(bool checked)
+{
+    if (checked)
+    {
+        ui->SeekSlider->setOption(RangeSlider::Option::DoubleHandles);
+        ui->SeekSlider->SetRange(0, 100);
+        connect(ui->SeekSlider, &RangeSlider::lowerValueChanged, this, &MainWindow::onLoopRange_valueChanged);
+        connect(ui->SeekSlider, &RangeSlider::upperValueChanged, this, &MainWindow::onLoopRange_valueChanged);
+        videoHandler->setRepeat(-1);
+    }
+    else
+    {
+        ui->SeekSlider->setOption(RangeSlider::Option::RightHandle);
+        on_media_positionChanged(videoHandler->position());
+        ui->SeekSlider->updateColor();
+        disconnect(ui->SeekSlider, &RangeSlider::lowerValueChanged, this, &MainWindow::onLoopRange_valueChanged);
+        disconnect(ui->SeekSlider, &RangeSlider::upperValueChanged, this, &MainWindow::onLoopRange_valueChanged);
+        qint64 position = videoHandler->position();
+        videoHandler->setRepeat();
+        videoHandler->setPosition(position);
+    }
 }

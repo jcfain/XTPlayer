@@ -6,6 +6,7 @@
 #include "../lookup/enum.h"
 #include "../lookup/AxisNames.h"
 #include "../lookup/GamepadAxisNames.h"
+#include "../lookup/MediaActions.h"
 #include "../tool/xmath.h"
 #include "../struct/ChannelModel.h"
 #include "loghandler.h"
@@ -53,6 +54,7 @@ public:
     static int getLibraryView();
     static int getThumbSize();
     static int getThumbSizeList();
+    static int getVideoIncrement();
 
     static bool getGamepadEnabled();
     static QHash<QString, QString> getGamePadMap();
@@ -97,6 +99,7 @@ public:
     static void setLibraryView(int value);
     static void setThumbSize(int value);
     static void setThumbSizeList(int value);
+    static void setVideoIncrement(int value);
 
     static void setGamepadEnabled(bool value);
     static void setGamePadMapButton(QString gamePadButton, QString axis);
@@ -118,6 +121,7 @@ private:
     static void SetupGamepadButtonMap();
     static GamepadAxisNames gamepadAxisNames;
     static AxisNames axisNames;
+    static MediaActions mediaActions;
 
     static QHash<QString, QVariant> deoDnlaFunscriptLookup;
     static QString selectedTheme;
@@ -160,6 +164,7 @@ private:
     static int libraryView;
     static int thumbSize;
     static int thumbSizeList;
+    static int videoIncrement;
 
     static bool defaultReset;
 

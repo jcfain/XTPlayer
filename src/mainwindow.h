@@ -65,6 +65,8 @@ private slots:
 
     void on_PlayBtn_clicked();
 
+    void on_StopBtn_clicked();
+
     void on_MuteBtn_toggled(bool checked);
 
     void on_fullScreenBtn_clicked();
@@ -102,10 +104,15 @@ private slots:
     void on_seekslider_leave();
 
     void on_SeekSlider_valueChanged(int value);
+    void onLoopRange_valueChanged(int value);
 
     void on_actionChange_theme_triggered();
 
     void on_actionChange_current_deo_script_triggered();
+
+    void on_settingsButton_clicked();
+
+    void on_loopToggleButton_toggled(bool checked);
 
 signals:
     void keyPressed(QKeyEvent * event);
@@ -134,6 +141,7 @@ private:
     QMovie* movie;
     int playingVideoListIndex;
     bool deviceConnected;
+    bool autoLoopOn = false;
     QLabel* connectionStatusLabel;
     QLabel* deoConnectionStatusLabel;
     QLabel* gamepadConnectionStatusLabel;
@@ -160,11 +168,12 @@ private:
     void on_load_library(QString path);
     void on_libray_path_select(QString path);
     void media_double_click_event(QMouseEvent * event);
-    QString second_to_minutes(int seconds);
+    QString mSecondFormat(int seconds);
     bool isPlayingFile(QString file);
 
     void mediaAction(QString action);
     void toggleFullScreen();
+    void toggleLoop();
     void hideControls();
     void showControls();
     void saveThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem, qint64 position = 0);
@@ -179,6 +188,8 @@ private:
     void initSerialEvent();
     void skipForward();
     void skipBack();
+    void rewind();
+    void fastForward();
 
     bool eventFilter(QObject *obj, QEvent *event) override;
 

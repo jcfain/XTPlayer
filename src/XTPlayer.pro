@@ -40,6 +40,7 @@ SOURCES += \
     lib/handler/videohandler.cpp \
     lib/tool/tcodefactory.cpp \
     lib/tool/xmath.cpp \
+    lib/tool/xtimer.cpp \
     main.cpp \
     mainwindow.cpp \
     settingsdialog.cpp
@@ -73,6 +74,7 @@ HEADERS += \
     lib/tool/boolinq.h \
     lib/tool/tcodefactory.h \
     lib/tool/xmath.h \
+    lib/tool/xtimer.h \
     mainwindow.h \
     settingsdialog.h
 

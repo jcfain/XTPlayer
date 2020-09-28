@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>783</width>
-    <height>491</height>
+    <width>879</width>
+    <height>490</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -379,6 +379,35 @@
        </property>
        <property name="text">
         <string>Reset ALL</string>
+       </property>
+      </widget>
+      <widget class="QSpinBox" name="videoIncrementSpinBox">
+       <property name="geometry">
+        <rect>
+         <x>130</x>
+         <y>90</y>
+         <width>51</width>
+         <height>22</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>This sets the value the video will either skip forward or back via shortcuts.</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_2">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>90</y>
+         <width>111</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>This sets the value the video will either skip forward or back via shortcuts.</string>
+       </property>
+       <property name="text">
+        <string>Video move increment</string>
        </property>
       </widget>
      </widget>

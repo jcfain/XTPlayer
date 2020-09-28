@@ -27,6 +27,9 @@ public:
     int GetMinimum() const;
     void SetMinimum(int aMinimum);
 
+    int GetMinimumRange();
+    void SetMinimumRange(int aMinimumRange);
+
     int GetMaximum() const;
     void SetMaximum(int aMaximum);
 
@@ -80,6 +83,7 @@ private:
 
     int mMinimum;
     int mMaximum;
+    int _aMinimumRange = 1;
     int mLowerValue;
     int mUpperValue;
     bool mFirstHandlePressed;

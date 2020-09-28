@@ -19,6 +19,8 @@ void UdpHandler::init(NetworkAddress address, int waitTimeout)
     _address = address;
     //_mutex.unlock();
     int timeouttracker = 0;
+    QMutex mutex;
+    QWaitCondition cond;
     qint64 time1 = QTime::currentTime().msecsSinceStartOfDay();
     qint64 time2 = QTime::currentTime().msecsSinceStartOfDay();
     while(!_isConnected && !_stop && timeouttracker <= 3)
@@ -30,6 +32,9 @@ void UdpHandler::init(NetworkAddress address, int waitTimeout)
             ++timeouttracker;
         }
         time2 = QTime::currentTime().msecsSinceStartOfDay();
+        mutex.lock();
+        cond.wait(&mutex, 1);
+        mutex.unlock();
     }
     if (timeouttracker > 3)
     {

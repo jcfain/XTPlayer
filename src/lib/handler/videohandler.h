@@ -21,6 +21,7 @@ private slots:
 
 signals:
     void doubleClicked(QMouseEvent* e);
+    void rightClicked(QMouseEvent* e);
     void keyPressed(QKeyEvent* k);
     void mouseEnter(QEvent* e);
     void positionChanged(int position);
@@ -36,6 +37,7 @@ public:;
     void play();
     void stop();
     void togglePause();
+    void pause();
     void setFile(QString file);
     QString file();
     void load();
@@ -46,6 +48,8 @@ public:;
     AVPlayer::State state();
     void seek(qint64 position);
     void setPosition(qint64 position);
+    void setRepeat(int max = 0);
+    void setSpeed(qreal speed);
     qint64 position();
     qint64 duration();
     QHBoxLayout* layout();
@@ -58,8 +62,10 @@ private:
     VideoOutput* _videoRenderer;
     VideoPreviewWidget* _videoPreviewWidget;
     QString _currentFile;
+    QMutex _mutex;
 
     void mouseDoubleClickEvent(QMouseEvent * e) override;
+    void mousePressEvent(QMouseEvent * e) override;
     void keyPressEvent(QKeyEvent * e) override;
     void enterEvent(QEvent * e) override;
 

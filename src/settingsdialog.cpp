@@ -219,6 +219,7 @@ void SettingsDialog::setupUi()
         ui.deoConnectButton->setEnabled(deoEnabled);
         ui.gamePadCheckbox->setChecked(SettingsHandler::getGamepadEnabled());
         ui.gamePadMapGroupbox->setHidden(!SettingsHandler::getGamepadEnabled());
+        ui.videoIncrementSpinBox->setValue(SettingsHandler::getVideoIncrement());
         setupGamepadMap();
     }
 }
@@ -827,4 +828,9 @@ void SettingsDialog::on_gamePadCheckbox_clicked(bool checked)
     {
         _gamepadHandler->dispose();
     }
+}
+
+void SettingsDialog::on_videoIncrementSpinBox_valueChanged(int value)
+{
+    SettingsHandler::setVideoIncrement(value);
 }

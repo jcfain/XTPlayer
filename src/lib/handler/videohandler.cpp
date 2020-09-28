@@ -44,7 +44,11 @@ void VideoHandler::mouseDoubleClickEvent(QMouseEvent * e)
 {
     emit doubleClicked(e);
 }
-
+void VideoHandler::mousePressEvent(QMouseEvent * e)
+{
+    if(e->button() == Qt::MouseButton::RightButton)
+        emit rightClicked(e);
+}
 void VideoHandler::keyPressEvent(QKeyEvent * e)
 {
     emit keyPressed(e);
@@ -57,6 +61,7 @@ void VideoHandler::enterEvent(QEvent * e)
 
 void VideoHandler::on_media_positionChanged(qint64 position)
 {
+    //const QMutexLocker locker(&_mutex);
     emit positionChanged(position);
 }
 
@@ -93,6 +98,12 @@ void VideoHandler::stop()
 void VideoHandler::togglePause()
 {
     _player->togglePause();
+    emit togglePaused(isPaused());
+}
+
+void VideoHandler::pause()
+{
+    _player->pause();
     emit togglePaused(isPaused());
 }
 
@@ -136,7 +147,10 @@ void VideoHandler::setVolume(int value)
 {
     _player->audio()->setVolume(value);
 }
-
+void VideoHandler::setRepeat(int max)
+{
+    _player->setRepeat(max);
+}
 AVPlayer::State VideoHandler::state()
 {
     return _player->state();
@@ -144,12 +158,20 @@ AVPlayer::State VideoHandler::state()
 
 void VideoHandler::setPosition(qint64 position)
 {
+    //const QMutexLocker locker(&_mutex);
+    disconnect(_player, &AVPlayer::positionChanged, this, &VideoHandler::on_media_positionChanged);
     _player->setPosition(position);
+    connect(_player, &AVPlayer::positionChanged, this, &VideoHandler::on_media_positionChanged);
 }
 
 void VideoHandler::seek(qint64 position)
 {
     _player->seek(position);
+}
+
+void VideoHandler::setSpeed(qreal speed)
+{
+    _player->setSpeed(speed);
 }
 
 qint64 VideoHandler::position()

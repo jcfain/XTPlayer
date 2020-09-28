@@ -18,5 +18,7 @@
         <file>images/gamepad-icon.png</file>
         <file>images/gamepad-icon-connecting.png</file>
         <file>images/gamepad-icon-disconnected.png</file>
+        <file>images/icons/loop.svg</file>
+        <file>images/icons/settings.svg</file>
     </qresource>
 </RCC>

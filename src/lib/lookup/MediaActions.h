@@ -13,6 +13,9 @@ struct MediaActions
     const QString VolumeDown = "VolumeDown";
     const QString Mute = "Mute";
     const QString Stop = "Stop";
+    const QString Loop = "Loop";
+    const QString Rewind = "Rewind";
+    const QString FastForward = "Fast forward";
     const QHash<QString, QString> Values {
         {TogglePause, "Toggle pause"},
         {Next, "Next video"},
@@ -21,7 +24,10 @@ struct MediaActions
         {VolumeUp, "Volume up"},
         {VolumeDown, "Volume down"},
         {Mute, "Toggle mute"},
-        {Stop, "Stop video"}
+        {Stop, "Stop video"},
+        {Loop, "Toggle loop A/B/off"},
+        {Rewind, "Rewind"},
+        {FastForward, "Fast forward"}
     };
 };
 #endif // MEDIAACTIONS_H

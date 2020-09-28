@@ -106,6 +106,8 @@ private slots:
 
     void on_gamePadCheckbox_clicked(bool checked);
 
+    void on_videoIncrementSpinBox_valueChanged(int value);
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();
