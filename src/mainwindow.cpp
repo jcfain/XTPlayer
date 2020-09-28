@@ -698,8 +698,6 @@ void MainWindow::toggleFullScreen()
     }
     else
     {
-        QMainWindow::setWindowFlags(Qt::WindowFlags());
-        QMainWindow::showNormal();
 
         ui->fullScreenGrid->removeWidget(videoHandler);
         playerControlsPlaceHolder->layout()->removeWidget(ui->playerControlsFrame);
@@ -719,8 +717,10 @@ void MainWindow::toggleFullScreen()
 
         ui->mainStackedWidget->setCurrentIndex(0);
 
+        QMainWindow::setWindowFlags(Qt::WindowFlags());
         QMainWindow::resize(appSize);
         QMainWindow::move(appPos);
+        QMainWindow::showNormal();
         ui->menubar->show();
         ui->statusbar->show();
         delete placeHolderControlsGrid;
