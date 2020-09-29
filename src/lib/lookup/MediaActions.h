@@ -16,6 +16,8 @@ struct MediaActions
     const QString Loop = "Loop";
     const QString Rewind = "Rewind";
     const QString FastForward = "Fast forward";
+    const QString TCodeSpeedUp = "TCodeSpeedUp";
+    const QString TCodeSpeedDown = "TCodeSpeedDown";
     const QHash<QString, QString> Values {
         {TogglePause, "Toggle pause"},
         {Next, "Next video"},
@@ -27,7 +29,9 @@ struct MediaActions
         {Stop, "Stop video"},
         {Loop, "Toggle loop A/B/off"},
         {Rewind, "Rewind"},
-        {FastForward, "Fast forward"}
+        {FastForward, "Fast forward"},
+        {TCodeSpeedUp, "TCode speed up"},
+        {TCodeSpeedDown, "TCode speed down"}
     };
 };
 #endif // MEDIAACTIONS_H

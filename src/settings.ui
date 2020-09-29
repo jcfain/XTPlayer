@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>879</width>
+    <width>912</width>
     <height>490</height>
    </rect>
   </property>
@@ -384,14 +384,23 @@
       <widget class="QSpinBox" name="videoIncrementSpinBox">
        <property name="geometry">
         <rect>
-         <x>130</x>
+         <x>190</x>
          <y>90</y>
-         <width>51</width>
+         <width>71</width>
          <height>22</height>
         </rect>
        </property>
        <property name="toolTip">
         <string>This sets the value the video will either skip forward or back via shortcuts.</string>
+       </property>
+       <property name="suffix">
+        <string>s</string>
+       </property>
+       <property name="maximum">
+        <number>5000</number>
+       </property>
+       <property name="singleStep">
+        <number>10</number>
        </property>
       </widget>
       <widget class="QLabel" name="label_2">
@@ -399,7 +408,7 @@
         <rect>
          <x>20</x>
          <y>90</y>
-         <width>111</width>
+         <width>171</width>
          <height>21</height>
         </rect>
        </property>
@@ -407,7 +416,7 @@
         <string>This sets the value the video will either skip forward or back via shortcuts.</string>
        </property>
        <property name="text">
-        <string>Video move increment</string>
+        <string>Video move increment in secs</string>
        </property>
       </widget>
      </widget>

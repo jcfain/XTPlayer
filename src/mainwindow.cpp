@@ -303,6 +303,14 @@ void MainWindow::mediaAction(QString action)
     {
         fastForward();
     }
+    else if(action == actions.TCodeSpeedUp)
+    {
+        SettingsHandler::setLiveGamepadSpeed(SettingsHandler::getLiveGamepadSpeed() + SettingsHandler::getGamepadSpeedIncrement());
+    }
+    else if(action == actions.TCodeSpeedDown)
+    {
+        SettingsHandler::setLiveGamepadSpeed(SettingsHandler::getLiveGamepadSpeed() - SettingsHandler::getGamepadSpeedIncrement());
+    }
 }
 void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
 {
@@ -342,6 +350,7 @@ void MainWindow::changeDeoFunscript()
     }
 }
 
+bool stopThumbProcess = false;
 void MainWindow::on_load_library(QString path)
 {
     if (!path.isNull() && !path.isEmpty())
@@ -434,6 +443,7 @@ void MainWindow::on_load_library(QString path)
                 ui->LibraryList->addItem(qListWidgetItem);
                 libraryItems.push_back(qListWidgetItem);
             }
+            stopThumbProcess = true;
             saveNewThumbs();
         }
         else
@@ -450,6 +460,11 @@ void MainWindow::on_load_library(QString path)
 int thumbNailSearchIterator = 0;
 void MainWindow::saveNewThumbs()
 {
+    if (stopThumbProcess)
+    {
+        stopThumbProcess = false;
+        thumbNailSearchIterator = 0;
+    }
     if (thumbNailSearchIterator < libraryItems.count())
     {
         QListWidgetItem* listWidgetItem = libraryItems.at(thumbNailSearchIterator);
@@ -467,6 +482,7 @@ void MainWindow::saveNewThumbs()
     }
     else
     {
+        stopThumbProcess = false;
         thumbNailSearchIterator = 0;
     }
 

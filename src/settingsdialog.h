@@ -108,6 +108,12 @@ private slots:
 
     void on_videoIncrementSpinBox_valueChanged(int value);
 
+    void on_inverseTcXL0_valueChanged(bool checked);
+    void on_inverseTcXRollR2_valueChanged(bool checked);
+    void on_inverseTcYRollR1_valueChanged(bool checked);
+    void on_speedInput_valueChanged(int value);
+    void on_speedIncrementInput_valueChanged(int value);
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();

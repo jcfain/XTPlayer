@@ -64,6 +64,9 @@ public:
     static bool getInverseTcXL0();
     static bool getInverseTcXRollR2();
     static bool getInverseTcYRollR1();
+    static int getGamepadSpeed();
+    static int getLiveGamepadSpeed();
+    static int getGamepadSpeedIncrement();
 
     static void setDeoDnlaFunscript(QString key, QString value);
     static void setSelectedTheme(QString value);
@@ -107,6 +110,9 @@ public:
     static void setInverseTcXL0(bool value);
     static void setInverseTcXRollR2(bool value);
     static void setInverseTcYRollR1(bool value);
+    static void setGamepadSpeed(int value);
+    static void setGamepadSpeedIncrement(int value);
+    static void setLiveGamepadSpeed(int value);
 
     static void Load();
     static void Save();
@@ -160,6 +166,9 @@ private:
     static bool _inverseTcXL0;
     static bool _inverseTcXRollR2;
     static bool _inverseTcYRollR1;
+    static int _gamepadSpeed;
+    static int _gamepadSpeedIncrement;
+    static int _livegamepadSpeed;
 
     static int libraryView;
     static int thumbSize;
@@ -168,7 +177,7 @@ private:
 
     static bool defaultReset;
 
-    static QSettings settings;
+    static QSettings* settings;
     static QMutex mutex;
 };
 

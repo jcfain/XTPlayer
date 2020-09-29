@@ -2,15 +2,28 @@
 
 SettingsHandler::SettingsHandler()
 {
+    QCoreApplication::setOrganizationName("cUrbSide prOd");
+    QCoreApplication::setOrganizationDomain("https://www.patreon.com/Khrull");
+    QCoreApplication::setApplicationName("XTPlayer");
 }
 SettingsHandler::~SettingsHandler()
 {
+    delete settings;
 }
 bool resetRequired = false;
 void SettingsHandler::Load()
 {
     QMutexLocker locker(&mutex);
-    float currentVersion = settings.value("version").toFloat();
+    QFile settingsini(QApplication::applicationDirPath() + "/settings.ini");
+    if(settingsini.exists())
+    {
+        settings = new QSettings("settings.ini", QSettings::Format::IniFormat);
+    }
+    else
+    {
+        settings = new QSettings("cUrbSide prOd", "XTPlayer");
+    }
+    float currentVersion = settings->value("version").toFloat();
     if (currentVersion == 0)
     {
         locker.unlock();
@@ -24,56 +37,61 @@ void SettingsHandler::Load()
         SetMapDefaults();
     }
     locker.relock();
-    selectedTheme = settings.value("selectedTheme").toString();
+    selectedTheme = settings->value("selectedTheme").toString();
     selectedTheme = selectedTheme.isNull() ? QApplication::applicationDirPath() + "/themes/black-silver.css" : selectedTheme;
-    selectedLibrary = settings.value("selectedLibrary").toString();
-    selectedDevice = settings.value("selectedDevice").toInt();
-    playerVolume = settings.value("playerVolume").toInt();
-    offSet = settings.value("offSet").toInt();
-    selectedFunscriptLibrary = settings.value("selectedFunscriptLibrary").toString();
-    serialPort = settings.value("serialPort").toString();
-    serverAddress = settings.value("serverAddress").toString();
-    serverPort = settings.value("serverPort").toString();
-    deoAddress = settings.value("deoAddress").toString();
+    selectedLibrary = settings->value("selectedLibrary").toString();
+    selectedDevice = settings->value("selectedDevice").toInt();
+    playerVolume = settings->value("playerVolume").toInt();
+    offSet = settings->value("offSet").toInt();
+    selectedFunscriptLibrary = settings->value("selectedFunscriptLibrary").toString();
+    serialPort = settings->value("serialPort").toString();
+    serverAddress = settings->value("serverAddress").toString();
+    serverPort = settings->value("serverPort").toString();
+    deoAddress = settings->value("deoAddress").toString();
     deoAddress = deoAddress.isNull() ? "127.0.0.1" : deoAddress;
-    deoPort = settings.value("deoPort").toString();
+    deoPort = settings->value("deoPort").toString();
     deoPort = deoPort.isNull() ? "23554" : deoPort;
-    deoEnabled = settings.value("deoEnabled").toBool();
-    yRollMultiplierChecked = settings.value("yRollMultiplierChecked").toBool();
-    yRollMultiplierValue = settings.value("yRollMultiplierValue").toFloat();
-    xRollMultiplierChecked = settings.value("xRollMultiplierChecked").toBool();
-    xRollMultiplierValue = settings.value("xRollMultiplierValue").toFloat();
-    twistMultiplierChecked = settings.value("twistMultiplierChecked").toBool();
-    twistMultiplierValue = settings.value("twistMultiplierValue").toFloat();
-    twistMultiplierChecked = settings.value("vibMultiplierChecked").toBool();
-    twistMultiplierValue = settings.value("vibMultiplierValue").toFloat();
+    deoEnabled = settings->value("deoEnabled").toBool();
+    yRollMultiplierChecked = settings->value("yRollMultiplierChecked").toBool();
+    yRollMultiplierValue = settings->value("yRollMultiplierValue").toFloat();
+    xRollMultiplierChecked = settings->value("xRollMultiplierChecked").toBool();
+    xRollMultiplierValue = settings->value("xRollMultiplierValue").toFloat();
+    twistMultiplierChecked = settings->value("twistMultiplierChecked").toBool();
+    twistMultiplierValue = settings->value("twistMultiplierValue").toFloat();
+    twistMultiplierChecked = settings->value("vibMultiplierChecked").toBool();
+    twistMultiplierValue = settings->value("vibMultiplierValue").toFloat();
 
-    libraryView = settings.value("libraryView").toInt();
-    thumbSize = settings.value("thumbSize").toInt();
+    libraryView = settings->value("libraryView").toInt();
+    thumbSize = settings->value("thumbSize").toInt();
     thumbSize = thumbSize == 0 ? 150 : thumbSize;
-    thumbSizeList = settings.value("thumbSizeList").toInt();
+    thumbSizeList = settings->value("thumbSizeList").toInt();
     thumbSizeList = thumbSizeList == 0 ? 50 : thumbSizeList;
-    videoIncrement = settings.value("videoIncrement").toInt();
+    videoIncrement = settings->value("videoIncrement").toInt();
     videoIncrement = videoIncrement == 0 ? 10 : videoIncrement;
-    deoDnlaFunscriptLookup = settings.value("deoDnlaFunscriptLookup").toHash();
+    deoDnlaFunscriptLookup = settings->value("deoDnlaFunscriptLookup").toHash();
 
-    _gamePadEnabled = settings.value("gamePadEnabled").toBool();
+    _gamePadEnabled = settings->value("gamePadEnabled").toBool();
 //    qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
 //    qRegisterMetaType<ChannelModel>();
-    QVariantHash availableAxis = settings.value("availableAxis").toHash();
+    QVariantHash availableAxis = settings->value("availableAxis").toHash();
     _availableAxis.clear();
     foreach(auto axis, availableAxis.keys())
     {
         _availableAxis.insert(axis, availableAxis[axis].value<ChannelModel>());
     }
-    QVariantHash gamepadButtonMap = settings.value("gamepadButtonMap").toHash();
+    QVariantHash gamepadButtonMap = settings->value("gamepadButtonMap").toHash();
     foreach(auto button, gamepadButtonMap.keys())
     {
         _gamepadButtonMap.insert(button, gamepadButtonMap[button].toString());
     }
-    _inverseTcXL0 = settings.value("inverseTcXL0").toBool();
-    _inverseTcXRollR2 = settings.value("inverseTcXRollR2").toBool();
-    _inverseTcYRollR1 = settings.value("inverseTcYRollR1").toBool();
+    _inverseTcXL0 = settings->value("inverseTcXL0").toBool();
+    _inverseTcXRollR2 = settings->value("inverseTcXRollR2").toBool();
+    _inverseTcYRollR1 = settings->value("inverseTcYRollR1").toBool();
+    _gamepadSpeed = settings->value("gamepadSpeed").toInt();
+    _gamepadSpeed = _gamepadSpeed == 0 ? 1000 : _gamepadSpeed;
+    _gamepadSpeedIncrement = settings->value("gamepadSpeedIncrement").toInt();
+    _gamepadSpeedIncrement = _gamepadSpeedIncrement == 0 ? 500 : _gamepadSpeedIncrement;
+    _livegamepadSpeed = _gamepadSpeed;
 //    SetupAvailableAxis();
 //    SetupGamepadButtonMap();
 }
@@ -83,36 +101,36 @@ void SettingsHandler::Save()
     QMutexLocker locker(&mutex);
     if (!defaultReset)
     {
-        settings.setValue("version", XTPVersionNum);
-        settings.setValue("selectedLibrary", selectedLibrary);
-        settings.setValue("selectedTheme", selectedTheme);
-        settings.setValue("selectedDevice", selectedDevice);
-        settings.setValue("playerVolume", playerVolume);
-        settings.setValue("offSet", offSet);
-        settings.setValue("selectedFunscriptLibrary", selectedFunscriptLibrary);
-        settings.setValue("serialPort", serialPort);
-        settings.setValue("serverAddress", serverAddress);
-        settings.setValue("serverPort", serverPort);
-        settings.setValue("deoAddress", deoAddress);
-        settings.setValue("deoPort", deoPort);
-        settings.setValue("deoEnabled", deoEnabled);
-        settings.setValue("yRollMultiplierChecked", yRollMultiplierChecked);
-        settings.setValue("yRollMultiplierValue", yRollMultiplierValue);
-        settings.setValue("xRollMultiplierChecked", xRollMultiplierChecked);
-        settings.setValue("xRollMultiplierValue", xRollMultiplierValue);
-        settings.setValue("twistMultiplierChecked", twistMultiplierChecked);
-        settings.setValue("twistMultiplierValue", twistMultiplierValue);
-        settings.setValue("vibMultiplierChecked", twistMultiplierChecked);
-        settings.setValue("vibMultiplierValue", twistMultiplierValue);
+        settings->setValue("version", XTPVersionNum);
+        settings->setValue("selectedLibrary", selectedLibrary);
+        settings->setValue("selectedTheme", selectedTheme);
+        settings->setValue("selectedDevice", selectedDevice);
+        settings->setValue("playerVolume", playerVolume);
+        settings->setValue("offSet", offSet);
+        settings->setValue("selectedFunscriptLibrary", selectedFunscriptLibrary);
+        settings->setValue("serialPort", serialPort);
+        settings->setValue("serverAddress", serverAddress);
+        settings->setValue("serverPort", serverPort);
+        settings->setValue("deoAddress", deoAddress);
+        settings->setValue("deoPort", deoPort);
+        settings->setValue("deoEnabled", deoEnabled);
+        settings->setValue("yRollMultiplierChecked", yRollMultiplierChecked);
+        settings->setValue("yRollMultiplierValue", yRollMultiplierValue);
+        settings->setValue("xRollMultiplierChecked", xRollMultiplierChecked);
+        settings->setValue("xRollMultiplierValue", xRollMultiplierValue);
+        settings->setValue("twistMultiplierChecked", twistMultiplierChecked);
+        settings->setValue("twistMultiplierValue", twistMultiplierValue);
+        settings->setValue("vibMultiplierChecked", twistMultiplierChecked);
+        settings->setValue("vibMultiplierValue", twistMultiplierValue);
 
-        settings.setValue("libraryView", libraryView);
-        settings.setValue("thumbSize", thumbSize);
-        settings.setValue("thumbSizeList", thumbSizeList);
-        settings.setValue("videoIncrement", videoIncrement);
+        settings->setValue("libraryView", libraryView);
+        settings->setValue("thumbSize", thumbSize);
+        settings->setValue("thumbSizeList", thumbSizeList);
+        settings->setValue("videoIncrement", videoIncrement);
 
-        settings.setValue("deoDnlaFunscriptLookup", deoDnlaFunscriptLookup);
+        settings->setValue("deoDnlaFunscriptLookup", deoDnlaFunscriptLookup);
 
-        settings.setValue("gamePadEnabled", _gamePadEnabled);
+        settings->setValue("gamePadEnabled", _gamePadEnabled);
 //        qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
 //        qRegisterMetaType<ChannelModel>();
         QVariantHash availableAxis;
@@ -120,16 +138,19 @@ void SettingsHandler::Save()
         {
             availableAxis.insert(axis, QVariant::fromValue(_availableAxis[axis]));
         }
-        settings.setValue("availableAxis", availableAxis);
+        settings->setValue("availableAxis", availableAxis);
         QVariantHash gamepadMap;
         foreach(auto button, _gamepadButtonMap.keys())
         {
             gamepadMap.insert(button, QVariant::fromValue(_gamepadButtonMap[button]));
         }
-        settings.setValue("gamepadButtonMap", gamepadMap);
-        settings.setValue("inverseTcXL0", _inverseTcXL0);
-        settings.setValue("inverseTcXRollR2", _inverseTcXRollR2);
-        settings.setValue("inverseTcYRollR1", _inverseTcYRollR1);
+        settings->setValue("gamepadButtonMap", gamepadMap);
+        settings->setValue("inverseTcXL0", _inverseTcXL0);
+        settings->setValue("inverseTcXRollR2", _inverseTcXRollR2);
+        settings->setValue("inverseTcYRollR1", _inverseTcYRollR1);
+        settings->setValue("gamepadSpeed", _gamepadSpeed);
+        settings->setValue("gamepadSpeedIncrement", _gamepadSpeedIncrement);
+        settings->sync();
     }
 
 }
@@ -137,45 +158,45 @@ void SettingsHandler::Clear()
 {
     QMutexLocker locker(&mutex);
     defaultReset = true;
-    settings.clear();
+    settings->clear();
 }
 void SettingsHandler::Default()
 {
     QMutexLocker locker(&mutex);
     defaultReset = true;
-    settings.clear();
+    settings->clear();
     SetMapDefaults();
-    settings.setValue("version", XTPVersionNum);
-//    settings.setValue("selectedTheme", QApplication::applicationDirPath() + "/themes/black-silver.css");
-//    settings.setValue("selectedLibrary", QVariant::String);
-//    settings.setValue("selectedDevice", DeviceType::Serial);
-//    settings.setValue("playerVolume", 0);
-//    settings.setValue("offSet", 0);
-//    settings.setValue("speed", 1000);
-//    settings.setValue("selectedFunscriptLibrary", QVariant::String);
-//    settings.setValue("serialPort", QVariant::String);
-//    settings.setValue("serverAddress", QVariant::String);
-//    settings.setValue("serverPort", "0");
-//    settings.setValue("deoAddress", "127.0.0.1");
-//    settings.setValue("deoPort", "23554");
-//    settings.setValue("deoEnabled", false);
-//    settings.setValue("yRollMultiplierChecked", false);
-//    settings.setValue("yRollMultiplierValue", 0);
-//    settings.setValue("xRollMultiplierChecked", false);
-//    settings.setValue("xRollMultiplierValue", 0);
-//    settings.setValue("twistMultiplierChecked", false);
-//    settings.setValue("twistMultiplierValue", 0);
-//    settings.setValue("vibMultiplierChecked", false);
-//    settings.setValue("vibMultiplierValue", 0);
+    settings->setValue("version", XTPVersionNum);
+//    settings->setValue("selectedTheme", QApplication::applicationDirPath() + "/themes/black-silver.css");
+//    settings->setValue("selectedLibrary", QVariant::String);
+//    settings->setValue("selectedDevice", DeviceType::Serial);
+//    settings->setValue("playerVolume", 0);
+//    settings->setValue("offSet", 0);
+//    settings->setValue("speed", 1000);
+//    settings->setValue("selectedFunscriptLibrary", QVariant::String);
+//    settings->setValue("serialPort", QVariant::String);
+//    settings->setValue("serverAddress", QVariant::String);
+//    settings->setValue("serverPort", "0");
+//    settings->setValue("deoAddress", "127.0.0.1");
+//    settings->setValue("deoPort", "23554");
+//    settings->setValue("deoEnabled", false);
+//    settings->setValue("yRollMultiplierChecked", false);
+//    settings->setValue("yRollMultiplierValue", 0);
+//    settings->setValue("xRollMultiplierChecked", false);
+//    settings->setValue("xRollMultiplierValue", 0);
+//    settings->setValue("twistMultiplierChecked", false);
+//    settings->setValue("twistMultiplierValue", 0);
+//    settings->setValue("vibMultiplierChecked", false);
+//    settings->setValue("vibMultiplierValue", 0);
 
-//    settings.setValue("libraryView", 0);
-//    settings.setValue("thumbSize", 150);
-//    settings.setValue("thumbSizeList", 50);
+//    settings->setValue("libraryView", 0);
+//    settings->setValue("thumbSize", 150);
+//    settings->setValue("thumbSizeList", 50);
 
-//    settings.setValue("gamePadEnabled", false);
-//    settings.setValue("inverseTcXL0", false);
-//    settings.setValue("inverseTcXRollR2", false);
-//    settings.setValue("inverseTcYRollR1", false);
+//    settings->setValue("gamePadEnabled", false);
+//    settings->setValue("inverseTcXL0", false);
+//    settings->setValue("inverseTcXRollR2", false);
+//    settings->setValue("inverseTcYRollR1", false);
 //    SetMapDefaults();
 }
 
@@ -192,7 +213,7 @@ void SettingsHandler::SetMapDefaults()
         axisVariant.setValue(_availableAxis[axis]);
         availableAxis.insert(axis, axisVariant);
     }
-    settings.setValue("availableAxis", availableAxis);
+    settings->setValue("availableAxis", availableAxis);
     QVariantHash gamepadMap;
     foreach(auto button, _gamepadButtonMap.keys())
     {
@@ -200,7 +221,7 @@ void SettingsHandler::SetMapDefaults()
         buttonVariant.setValue(_gamepadButtonMap[button]);
         gamepadMap.insert(button, buttonVariant);
     }
-    settings.setValue("gamepadButtonMap", gamepadMap);
+    settings->setValue("gamepadButtonMap", gamepadMap);
 }
 
 QString SettingsHandler::getSelectedTheme()
@@ -398,6 +419,37 @@ bool SettingsHandler::getInverseTcYRollR1()
 {
     return _inverseTcYRollR1;
 }
+
+int SettingsHandler::getGamepadSpeed()
+{
+    return _gamepadSpeed;
+}
+
+void SettingsHandler::setGamepadSpeed(int value)
+{
+    _gamepadSpeed = value;
+}
+
+int SettingsHandler::getGamepadSpeedIncrement()
+{
+    return _gamepadSpeedIncrement;
+}
+
+void SettingsHandler::setGamepadSpeedIncrement(int value)
+{
+    _gamepadSpeedIncrement = value;
+}
+
+int SettingsHandler::getLiveGamepadSpeed()
+{
+    return _livegamepadSpeed;
+}
+
+void SettingsHandler::setLiveGamepadSpeed(int value)
+{
+    _livegamepadSpeed = value;
+}
+
 ChannelModel SettingsHandler::getAxis(QString axis)
 {
     QMutexLocker locker(&mutex);
@@ -667,12 +719,11 @@ void SettingsHandler::SetupGamepadButtonMap()
         { gamepadAxisNames.Guide, axisNames.None }
     };
 }
-
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.15b";
-const float SettingsHandler::XTPVersionNum = 0.15f;
+const QString SettingsHandler::XTPVersion = "0.16b";
+const float SettingsHandler::XTPVersionNum = 0.16f;
 
-QSettings SettingsHandler::settings("cUrbSide prOd", "XTPlayer");
+QSettings* SettingsHandler::settings;
 QMutex SettingsHandler::mutex;
 GamepadAxisNames SettingsHandler::gamepadAxisNames;
 AxisNames SettingsHandler::axisNames;
@@ -711,6 +762,9 @@ QHash<QString, ChannelModel> SettingsHandler::_availableAxis;
 bool SettingsHandler::_inverseTcXL0;
 bool SettingsHandler::_inverseTcXRollR2;
 bool SettingsHandler::_inverseTcYRollR1;
+int SettingsHandler::_gamepadSpeed;
+int SettingsHandler::_gamepadSpeedIncrement;
+int SettingsHandler::_livegamepadSpeed;
 
 QString SettingsHandler::selectedFunscriptLibrary;
 QString SettingsHandler::selectedFile;
