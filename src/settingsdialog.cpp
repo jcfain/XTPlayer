@@ -185,6 +185,50 @@ void SettingsDialog::setupUi()
         offSetSpinBox->setValue(SettingsHandler::getoffSet());
         ui.RangeSettingsGrid->addWidget(offSetSpinBox, 9,1,1,1);
 
+        QLabel* speedLabel = new QLabel(this);
+        speedLabel->setText("Speed");
+        speedLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+        QSpinBox* speedInput = new QSpinBox(this);
+        speedInput->setMinimum(1);
+        speedInput->setMaximum(std::numeric_limits<int>::max());
+        speedInput->setMinimumWidth(75);
+        speedInput->setSuffix("ms");
+        speedInput->setSingleStep(100);
+        speedInput->setValue(SettingsHandler::getGamepadSpeed());
+        speedInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+        connect(speedInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_speedInput_valueChanged);
+        ui.RangeSettingsGrid->addWidget(speedLabel, 10, 1, 1, 1);
+        ui.RangeSettingsGrid->addWidget(speedInput, 11, 1, 1, 1);
+
+        QLabel* speedIncrementLabel = new QLabel(this);
+        speedIncrementLabel->setText("Speed change step");
+        speedIncrementLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+        QSpinBox* speedIncrmentInput = new QSpinBox(this);
+        speedIncrmentInput->setMinimum(1);
+        speedIncrmentInput->setMaximum(std::numeric_limits<int>::max());
+        speedIncrmentInput->setMinimumWidth(75);
+        speedIncrmentInput->setSuffix("ms");
+        speedIncrmentInput->setSingleStep(100);
+        speedIncrmentInput->setValue(SettingsHandler::getGamepadSpeedIncrement());
+        speedIncrmentInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+        connect(speedIncrmentInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_speedIncrementInput_valueChanged);
+        ui.RangeSettingsGrid->addWidget(speedIncrementLabel, 12, 1, 1, 1);
+        ui.RangeSettingsGrid->addWidget(speedIncrmentInput, 13, 1, 1, 1);
+
+        QLabel* xRangeStepLabel = new QLabel(this);
+        xRangeStepLabel->setText("X range change step");
+        xRangeStepLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+        QSpinBox* xRangeStepInput = new QSpinBox(this);
+        xRangeStepInput->setMinimum(1);
+        xRangeStepInput->setMaximum(100);
+        xRangeStepInput->setMinimumWidth(75);
+        xRangeStepInput->setSingleStep(50);
+        xRangeStepInput->setValue(SettingsHandler::getGamepadSpeedIncrement());
+        xRangeStepInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+        connect(xRangeStepInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::xRangeStepInput_valueChanged);
+        ui.RangeSettingsGrid->addWidget(xRangeStepLabel, 14, 1, 1, 1);
+        ui.RangeSettingsGrid->addWidget(xRangeStepInput, 15, 1, 1, 1);
+
         ui.vibMultiplierSpinBox->setMinimum(std::numeric_limits<int>::lowest());
         ui.vibMultiplierSpinBox->setMaximum(std::numeric_limits<int>::max());
         ui.xRollMultiplierSpinBox->setMinimum(std::numeric_limits<int>::lowest());
@@ -230,8 +274,7 @@ void SettingsDialog::setupGamepadMap()
     MediaActions actions;
     int rowIterator = 0;
     int columnIterator = 0;
-    int maxRows = 4;
-    int maxColumns = 5;
+    int maxRows = 4;//6 total
     foreach(auto button, gamepadMap.keys())
     {
         if (button == "None")
@@ -279,47 +322,25 @@ void SettingsDialog::setupGamepadMap()
             columnIterator += 2;
         }
     }
-    QLabel* speedLabel = new QLabel(this);
-    speedLabel->setText("Speed");
-    QSpinBox* speedInput = new QSpinBox(this);
-    speedInput->setMinimum(0);
-    speedInput->setMaximum(5000);
-    speedInput->setMinimumWidth(75);
-    speedInput->setSuffix("ms");
-    speedInput->setSingleStep(100);
-    speedInput->setValue(SettingsHandler::getGamepadSpeed());
-    connect(speedInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_speedInput_valueChanged);
-    ui.gamePadMapGridLayout->addWidget(speedLabel, maxRows + 2, 0, Qt::AlignRight);
-    ui.gamePadMapGridLayout->addWidget(speedInput, maxRows + 2, 1, Qt::AlignLeft);
-
-    QLabel* speedIncrementLabel = new QLabel(this);
-    speedIncrementLabel->setText("Speed increment");
-    QSpinBox* speedIncrmentInput = new QSpinBox(this);
-    speedIncrmentInput->setMinimum(0);
-    speedIncrmentInput->setMaximum(5000);
-    speedIncrmentInput->setMinimumWidth(75);
-    speedIncrmentInput->setSuffix("ms");
-    speedIncrmentInput->setSingleStep(100);
-    speedIncrmentInput->setValue(SettingsHandler::getGamepadSpeedIncrement());
-    connect(speedIncrmentInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_speedIncrementInput_valueChanged);
-    ui.gamePadMapGridLayout->addWidget(speedIncrementLabel, maxRows + 2, 2, Qt::AlignRight);
-    ui.gamePadMapGridLayout->addWidget(speedIncrmentInput, maxRows + 2, 3, Qt::AlignLeft);
-
+    QGridLayout* inverseGrid = new QGridLayout(this);
+    QFrame* inverseFrame = new QFrame(this);
+    inverseFrame->setLayout(inverseGrid);
+    ui.gamePadMapGridLayout->addWidget(inverseFrame, maxRows + 2, 0, 1, columnIterator + 2);
     QCheckBox* inverseX = new QCheckBox(this);
     inverseX->setText("Inverse X (L0)");
     inverseX->setChecked(SettingsHandler::getInverseTcXL0());
     connect(inverseX, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcXL0_valueChanged);
-    ui.gamePadMapGridLayout->addWidget(inverseX, maxRows + 2, 4, Qt::AlignRight);
+    inverseGrid->addWidget(inverseX, 0, 0, Qt::AlignCenter);
     QCheckBox* inverseYRoll = new QCheckBox(this);
-    inverseYRoll->setText("Inverse Y Roll (L0)");
+    inverseYRoll->setText("Inverse Y Roll (R1)");
     inverseYRoll->setChecked(SettingsHandler::getInverseTcYRollR1());
     connect(inverseYRoll, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcYRollR1_valueChanged);
-    ui.gamePadMapGridLayout->addWidget(inverseYRoll, maxRows + 2, 5, Qt::AlignRight);
+    inverseGrid->addWidget(inverseYRoll, 0, 1, Qt::AlignCenter);
     QCheckBox* inverseXRoll = new QCheckBox(this);
-    inverseXRoll->setText("Inverse X Roll (L0)");
+    inverseXRoll->setText("Inverse X Roll (R2)");
     inverseXRoll->setChecked(SettingsHandler::getInverseTcXRollR2());
     connect(inverseXRoll, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcXRollR2_valueChanged);
-    ui.gamePadMapGridLayout->addWidget(inverseXRoll, maxRows + 2, 6, Qt::AlignRight);
+    inverseGrid->addWidget(inverseXRoll, 0, 2, Qt::AlignCenter);
 }
 
 void SettingsDialog::on_inverseTcXL0_valueChanged(bool checked)
@@ -345,7 +366,12 @@ void SettingsDialog::on_speedInput_valueChanged(int value)
 
 void SettingsDialog::on_speedIncrementInput_valueChanged(int value)
 {
-    SettingsHandler::setGamepadSpeedIncrement(value);
+    SettingsHandler::setGamepadSpeedStep(value);
+}
+
+void SettingsDialog::xRangeStepInput_valueChanged(int value)
+{
+    SettingsHandler::setXRangeStep(value);
 }
 
 UdpHandler* SettingsDialog::getNetworkHandler()

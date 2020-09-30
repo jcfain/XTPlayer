@@ -113,6 +113,7 @@ private slots:
     void on_inverseTcYRollR1_valueChanged(bool checked);
     void on_speedInput_valueChanged(int value);
     void on_speedIncrementInput_valueChanged(int value);
+    void xRangeStepInput_valueChanged(int value);
 
 private:
     Ui::SettingsDialog ui;

@@ -205,39 +205,66 @@ void MainWindow::on_key_press(QKeyEvent * event)
     switch(event->key())
     {
         case Qt::Key_Space:
+        case Qt::Key_Enter:
         case Qt::Key_MediaPause:
+        case Qt::Key_MediaTogglePlayPause:
             mediaAction(actions.TogglePause);
             break;
+        case Qt::Key_1:
         case Qt::Key_F11:
-        case Qt::Key_Escape:
             mediaAction(actions.FullScreen);
             break;
         case Qt::Key_M:
+        case Qt::Key_2:
             mediaAction(actions.Mute);
             break;
         case Qt::Key_MediaStop:
-        case Qt::Key_MediaTogglePlayPause:
-        case Qt::Key_S:
+        case Qt::Key_Escape:
             mediaAction(actions.Stop);
             break;
         case Qt::Key_MediaNext:
-        case Qt::Key_Right:
+        case Qt::Key_E:
             mediaAction(actions.Next);
             break;
         case Qt::Key_MediaPrevious:
-        case Qt::Key_Left:
+        case Qt::Key_Q:
             mediaAction(actions.Back);
             break;
         case Qt::Key_VolumeUp:
-        case Qt::Key_Up:
+        case Qt::Key_W:
             mediaAction(actions.VolumeUp);
             break;
         case Qt::Key_VolumeDown:
-        case Qt::Key_Down:
+        case Qt::Key_S:
             mediaAction(actions.VolumeDown);
             break;
         case Qt::Key_L:
+        case Qt::Key_C:
             mediaAction(actions.Loop);
+            break;
+        case Qt::Key_A:
+            mediaAction(actions.Rewind);
+            break;
+        case Qt::Key_D:
+            mediaAction(actions.FastForward);
+            break;
+        case Qt::Key_X:
+            mediaAction(actions.IncreaseXRange);
+            break;
+        case Qt::Key_Z:
+            mediaAction(actions.DecreaseXRange);
+            break;
+        case Qt::Key_F:
+            mediaAction(actions.DecreaseXUpperRange);
+            break;
+        case Qt::Key_R:
+            mediaAction(actions.IncreaseXUpperRange);
+            break;
+        case Qt::Key_G:
+            mediaAction(actions.DecreaseXLowerRange);
+            break;
+        case Qt::Key_T:
+            mediaAction(actions.IncreaseXLowerRange);
             break;
     }
 }
@@ -310,6 +337,90 @@ void MainWindow::mediaAction(QString action)
     else if(action == actions.TCodeSpeedDown)
     {
         SettingsHandler::setLiveGamepadSpeed(SettingsHandler::getLiveGamepadSpeed() - SettingsHandler::getGamepadSpeedIncrement());
+    }
+    else if(action == actions.IncreaseXLowerRange)
+    {
+        AxisNames axisNames;
+        int xRangeStep = SettingsHandler::getXRangeStep();
+        int newLiveRange = SettingsHandler::getLiveXRangeMin() + SettingsHandler::getXRangeStep();
+        int xRangeMax = SettingsHandler::getLiveXRangeMax();
+        if(newLiveRange < xRangeMax - xRangeStep)
+            SettingsHandler::setLiveXRangeMin(newLiveRange);
+        else
+            SettingsHandler::setLiveXRangeMin(xRangeMax - xRangeStep);
+    }
+    else if(action == actions.DecreaseXLowerRange)
+    {
+        AxisNames axisNames;
+        int newLiveRange = SettingsHandler::getLiveXRangeMin() - SettingsHandler::getXRangeStep();
+        int axisMin = SettingsHandler::getAxis(axisNames.TcXUpDownL0).Min;
+        if(newLiveRange > axisMin)
+            SettingsHandler::setLiveXRangeMin(newLiveRange);
+        else
+            SettingsHandler::setLiveXRangeMin(axisMin);
+    }
+    else if(action == actions.IncreaseXUpperRange)
+    {
+        AxisNames axisNames;
+        int newLiveRange = SettingsHandler::getLiveXRangeMax() + SettingsHandler::getXRangeStep();
+        int axisMax = SettingsHandler::getAxis(axisNames.TcXUpDownL0).Max;
+        if(newLiveRange < axisMax)
+            SettingsHandler::setLiveXRangeMax(newLiveRange);
+        else
+            SettingsHandler::setLiveXRangeMax(axisMax);
+    }
+    else if(action == actions.DecreaseXUpperRange)
+    {
+        AxisNames axisNames;
+        int xRangeStep = SettingsHandler::getXRangeStep();
+        int newLiveRange = SettingsHandler::getLiveXRangeMax() - xRangeStep;
+        int xRangeMin = SettingsHandler::getLiveXRangeMin();
+        if(newLiveRange > xRangeMin + xRangeStep)
+            SettingsHandler::setLiveXRangeMax(newLiveRange);
+        else
+            SettingsHandler::setLiveXRangeMax(xRangeMin + xRangeStep);
+    }
+    else if (action == actions.IncreaseXRange)
+    {
+        AxisNames axisNames;
+        int xRangeMax = SettingsHandler::getLiveXRangeMax();
+        int xRangeMin = SettingsHandler::getLiveXRangeMin();
+        int xRangeStep = SettingsHandler::getXRangeStep();
+        int newLiveMaxRange = xRangeMax + xRangeStep;
+        int axisMax = SettingsHandler::getAxis(axisNames.TcXUpDownL0).Max;
+        if(newLiveMaxRange < axisMax)
+            SettingsHandler::setLiveXRangeMax(newLiveMaxRange);
+        else
+            SettingsHandler::setLiveXRangeMax(axisMax);
+
+        int newLiveMinRange = xRangeMin - xRangeStep;
+        int axisMin = SettingsHandler::getAxis(axisNames.TcXUpDownL0).Min;
+        if(newLiveMinRange > axisMin)
+            SettingsHandler::setLiveXRangeMin(newLiveMinRange);
+        else
+            SettingsHandler::setLiveXRangeMin(axisMin);
+    }
+    else if (action == actions.DecreaseXRange)
+    {
+        AxisNames axisNames;
+        int xRangeMax = SettingsHandler::getLiveXRangeMax();
+        int xRangeMin = SettingsHandler::getLiveXRangeMin();
+        int xRangeStep = SettingsHandler::getXRangeStep();
+        int newLiveMaxRange = xRangeMax - xRangeStep;
+        if(newLiveMaxRange > xRangeMin + xRangeStep)
+            SettingsHandler::setLiveXRangeMax(newLiveMaxRange);
+        else
+            SettingsHandler::setLiveXRangeMax(xRangeMin + xRangeStep);
+
+        int newLiveMinRange = xRangeMin + xRangeStep;
+        if(newLiveMinRange < xRangeMax - xRangeStep)
+            SettingsHandler::setLiveXRangeMin(newLiveMinRange);
+        else
+            SettingsHandler::setLiveXRangeMin(xRangeMax - xRangeStep);
+    }
+    else if (action == actions.ResetLiveXRange)
+    {
+        SettingsHandler::resetLiveXRange();
     }
 }
 void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)

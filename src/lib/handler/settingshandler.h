@@ -57,9 +57,9 @@ public:
     static int getVideoIncrement();
 
     static bool getGamepadEnabled();
-    static QHash<QString, QString> getGamePadMap();
+    static QMap<QString, QString> getGamePadMap();
     static QString getGamePadMapButton(QString gamepadButton);
-    static QHash<QString, ChannelModel> getAvailableAxis();
+    static QMap<QString, ChannelModel> getAvailableAxis();
     static ChannelModel getAxis(QString axis);
     static bool getInverseTcXL0();
     static bool getInverseTcXRollR2();
@@ -111,8 +111,16 @@ public:
     static void setInverseTcXRollR2(bool value);
     static void setInverseTcYRollR1(bool value);
     static void setGamepadSpeed(int value);
-    static void setGamepadSpeedIncrement(int value);
+    static void setGamepadSpeedStep(int value);
     static void setLiveGamepadSpeed(int value);
+
+    static void setXRangeStep(int value);
+    static void setLiveXRangeMin(int value);
+    static void setLiveXRangeMax(int value);
+    static int getXRangeStep();
+    static int getLiveXRangeMin();
+    static int getLiveXRangeMax();
+    static void resetLiveXRange();
 
     static void Load();
     static void Save();
@@ -161,14 +169,18 @@ private:
     static float vibMultiplierValue;
 
     static bool _gamePadEnabled;
-    static QHash<QString, QString> _gamepadButtonMap;
-    static QHash<QString, ChannelModel> _availableAxis;
+    static QMap<QString, QString> _gamepadButtonMap;
+    static QMap<QString, ChannelModel> _availableAxis;
     static bool _inverseTcXL0;
     static bool _inverseTcXRollR2;
     static bool _inverseTcYRollR1;
     static int _gamepadSpeed;
-    static int _gamepadSpeedIncrement;
+    static int _gamepadSpeedStep;
     static int _livegamepadSpeed;
+
+    static int _xRangeStep;
+    static int _liveXRangeMax;
+    static int _liveXRangeMin;
 
     static int libraryView;
     static int thumbSize;

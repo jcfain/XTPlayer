@@ -2,7 +2,7 @@
 #define MEDIAACTIONS_H
 
 #include <QString>
-#include <QHash>
+#include <QMap>
 struct MediaActions
 {
     const QString TogglePause = "TogglePause";
@@ -18,7 +18,14 @@ struct MediaActions
     const QString FastForward = "Fast forward";
     const QString TCodeSpeedUp = "TCodeSpeedUp";
     const QString TCodeSpeedDown = "TCodeSpeedDown";
-    const QHash<QString, QString> Values {
+    const QString IncreaseXRange = "IncreaseXRange";
+    const QString DecreaseXRange = "DecreaseXRange";
+    const QString IncreaseXUpperRange = "IncreaseXUpperRange";
+    const QString DecreaseXUpperRange = "DecreaseXUpperRange";
+    const QString IncreaseXLowerRange = "IncreaseXLowerRange";
+    const QString DecreaseXLowerRange = "DecreaseXLowerRange";
+    const QString ResetLiveXRange = "ResetLiveXRange";
+    const QMap<QString, QString> Values {
         {TogglePause, "Toggle pause"},
         {Next, "Next video"},
         {Back, "Previous video"},
@@ -31,7 +38,14 @@ struct MediaActions
         {Rewind, "Rewind"},
         {FastForward, "Fast forward"},
         {TCodeSpeedUp, "TCode speed up"},
-        {TCodeSpeedDown, "TCode speed down"}
+        {TCodeSpeedDown, "TCode speed down"},
+        {IncreaseXRange, "Increase X range"},
+        {DecreaseXRange, "Decrease X range"},
+        {IncreaseXUpperRange, "Increase X upper range"},
+        {DecreaseXUpperRange, "Decrease X upper range"},
+        {IncreaseXLowerRange, "Increase X lower range"},
+        {DecreaseXLowerRange, "Decrease X lower range"},
+        {ResetLiveXRange, "Reset X range"}
     };
 };
 #endif // MEDIAACTIONS_H

@@ -64,6 +64,13 @@ int TCodeFactory::calculateTcodeRange(double value, QString channel)
 {
     int output_end = SettingsHandler::getAxis(channel).UserMax;
     int min = SettingsHandler::getAxis(channel).UserMin;
+    // Update for live x range switch
+    AxisNames axisNames;
+    if(channel == axisNames.TcXUpDownL0)
+    {
+        output_end = SettingsHandler::getLiveXRangeMax();
+        min = SettingsHandler::getLiveXRangeMin();
+    }
     int output_start = qRound((output_end + min) / 2.0);
     double slope = (output_end - output_start) / (_input_end - _input_start);
     return qRound(output_start + slope * (value - _input_start));

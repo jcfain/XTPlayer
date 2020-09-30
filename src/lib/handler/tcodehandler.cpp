@@ -63,6 +63,13 @@ int TCodeHandler::calculateRange(const char* channel, int rawValue)
 {
     int xMax = SettingsHandler::getAxis(channel).UserMax;
     int xMin = SettingsHandler::getAxis(channel).UserMin;
+    // Update for live x range switch
+    AxisNames axisNames;
+    if(QString(channel) == axisNames.TcXUpDownL0)
+    {
+        xMax = SettingsHandler::getLiveXRangeMax();
+        xMin = SettingsHandler::getLiveXRangeMin();
+    }
     int xMid = qRound((xMax + xMin) / 2.0);
     return XMath::mapRange(rawValue, 50, 100, xMid, xMax);
 }

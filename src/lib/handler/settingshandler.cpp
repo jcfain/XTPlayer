@@ -73,13 +73,15 @@ void SettingsHandler::Load()
     _gamePadEnabled = settings->value("gamePadEnabled").toBool();
 //    qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
 //    qRegisterMetaType<ChannelModel>();
-    QVariantHash availableAxis = settings->value("availableAxis").toHash();
+    QVariantMap availableAxis = settings->value("availableAxis").toMap();
     _availableAxis.clear();
     foreach(auto axis, availableAxis.keys())
     {
         _availableAxis.insert(axis, availableAxis[axis].value<ChannelModel>());
     }
-    QVariantHash gamepadButtonMap = settings->value("gamepadButtonMap").toHash();
+    _liveXRangeMax = _availableAxis[axisNames.TcXUpDownL0].UserMax;
+    _liveXRangeMin = _availableAxis[axisNames.TcXUpDownL0].UserMin;
+    QVariantMap gamepadButtonMap = settings->value("gamepadButtonMap").toMap();
     foreach(auto button, gamepadButtonMap.keys())
     {
         _gamepadButtonMap.insert(button, gamepadButtonMap[button].toString());
@@ -89,9 +91,11 @@ void SettingsHandler::Load()
     _inverseTcYRollR1 = settings->value("inverseTcYRollR1").toBool();
     _gamepadSpeed = settings->value("gamepadSpeed").toInt();
     _gamepadSpeed = _gamepadSpeed == 0 ? 1000 : _gamepadSpeed;
-    _gamepadSpeedIncrement = settings->value("gamepadSpeedIncrement").toInt();
-    _gamepadSpeedIncrement = _gamepadSpeedIncrement == 0 ? 500 : _gamepadSpeedIncrement;
+    _gamepadSpeedStep = settings->value("gamepadSpeedStep").toInt();
+    _gamepadSpeedStep = _gamepadSpeedStep == 0 ? 500 : _gamepadSpeedStep;
     _livegamepadSpeed = _gamepadSpeed;
+    _xRangeStep = settings->value("xRangeStep").toInt();
+    _xRangeStep = _xRangeStep == 0 ? 50 : _xRangeStep;
 //    SetupAvailableAxis();
 //    SetupGamepadButtonMap();
 }
@@ -133,13 +137,13 @@ void SettingsHandler::Save()
         settings->setValue("gamePadEnabled", _gamePadEnabled);
 //        qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
 //        qRegisterMetaType<ChannelModel>();
-        QVariantHash availableAxis;
+        QVariantMap availableAxis;
         foreach(auto axis, _availableAxis.keys())
         {
             availableAxis.insert(axis, QVariant::fromValue(_availableAxis[axis]));
         }
         settings->setValue("availableAxis", availableAxis);
-        QVariantHash gamepadMap;
+        QVariantMap gamepadMap;
         foreach(auto button, _gamepadButtonMap.keys())
         {
             gamepadMap.insert(button, QVariant::fromValue(_gamepadButtonMap[button]));
@@ -149,7 +153,8 @@ void SettingsHandler::Save()
         settings->setValue("inverseTcXRollR2", _inverseTcXRollR2);
         settings->setValue("inverseTcYRollR1", _inverseTcYRollR1);
         settings->setValue("gamepadSpeed", _gamepadSpeed);
-        settings->setValue("gamepadSpeedIncrement", _gamepadSpeedIncrement);
+        settings->setValue("gamepadSpeedStep", _gamepadSpeedStep);
+        settings->setValue("xRangeStep", _xRangeStep);
         settings->sync();
     }
 
@@ -432,12 +437,12 @@ void SettingsHandler::setGamepadSpeed(int value)
 
 int SettingsHandler::getGamepadSpeedIncrement()
 {
-    return _gamepadSpeedIncrement;
+    return _gamepadSpeedStep;
 }
 
-void SettingsHandler::setGamepadSpeedIncrement(int value)
+void SettingsHandler::setGamepadSpeedStep(int value)
 {
-    _gamepadSpeedIncrement = value;
+    _gamepadSpeedStep = value;
 }
 
 int SettingsHandler::getLiveGamepadSpeed()
@@ -450,16 +455,51 @@ void SettingsHandler::setLiveGamepadSpeed(int value)
     _livegamepadSpeed = value;
 }
 
+void SettingsHandler::setXRangeStep(int value)
+{
+    _xRangeStep = value;
+}
+
+int SettingsHandler::getXRangeStep()
+{
+    return _xRangeStep;
+}
+
+void SettingsHandler::setLiveXRangeMin(int value)
+{
+    _liveXRangeMin = value;
+}
+
+int SettingsHandler::getLiveXRangeMin()
+{
+    return _liveXRangeMin;
+}
+
+void SettingsHandler::setLiveXRangeMax(int value)
+{
+    _liveXRangeMax = value;
+}
+
+int SettingsHandler::getLiveXRangeMax()
+{
+    return _liveXRangeMax;
+}
+void SettingsHandler::resetLiveXRange()
+{
+    AxisNames axisNames;
+    _liveXRangeMax = getAxis(axisNames.TcXUpDownL0).UserMax;
+    _liveXRangeMin = getAxis(axisNames.TcXUpDownL0).UserMin;
+}
 ChannelModel SettingsHandler::getAxis(QString axis)
 {
     QMutexLocker locker(&mutex);
     return _availableAxis[axis];
 }
-QHash<QString, QString>  SettingsHandler::getGamePadMap()
+QMap<QString, QString>  SettingsHandler::getGamePadMap()
 {
     return _gamepadButtonMap;
 }
-QHash<QString, ChannelModel>  SettingsHandler::getAvailableAxis()
+QMap<QString, ChannelModel>  SettingsHandler::getAvailableAxis()
 {
     return _availableAxis;
 }
@@ -534,6 +574,7 @@ void SettingsHandler::setoffSet(int value)
 void SettingsHandler::setXMin(int value)
 {
     QMutexLocker locker(&mutex);
+    _liveXRangeMin = value;
     _availableAxis[axisNames.TcXUpDownL0].UserMin = value;
 }
 void SettingsHandler::setYRollMin(int value)
@@ -549,6 +590,7 @@ void SettingsHandler::setXRollMin(int value)
 void SettingsHandler::setXMax(int value)
 {
     QMutexLocker locker(&mutex);
+    _liveXRangeMax = value;
     _availableAxis[axisNames.TcXUpDownL0].UserMax = value;
 }
 void SettingsHandler::setYRollMax(int value)
@@ -757,14 +799,18 @@ int SettingsHandler::thumbSizeList = 50;
 int SettingsHandler::videoIncrement = 10;
 
 bool SettingsHandler::_gamePadEnabled;
-QHash<QString, QString> SettingsHandler::_gamepadButtonMap;
-QHash<QString, ChannelModel> SettingsHandler::_availableAxis;
+QMap<QString, QString> SettingsHandler::_gamepadButtonMap;
+QMap<QString, ChannelModel> SettingsHandler::_availableAxis;
 bool SettingsHandler::_inverseTcXL0;
 bool SettingsHandler::_inverseTcXRollR2;
 bool SettingsHandler::_inverseTcYRollR1;
 int SettingsHandler::_gamepadSpeed;
-int SettingsHandler::_gamepadSpeedIncrement;
+int SettingsHandler::_gamepadSpeedStep;
 int SettingsHandler::_livegamepadSpeed;
+
+int SettingsHandler::_xRangeStep;
+int SettingsHandler::_liveXRangeMax;
+int SettingsHandler::_liveXRangeMin;
 
 QString SettingsHandler::selectedFunscriptLibrary;
 QString SettingsHandler::selectedFile;

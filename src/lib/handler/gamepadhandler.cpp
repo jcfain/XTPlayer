@@ -113,7 +113,6 @@ void GamepadHandler::run()
         QString LeftYAxis = SettingsHandler::getGamePadMapButton(gamepadAxisNames.LeftYAxis);
         if (LeftYAxis != axisNames.None)
         {
-            auto fff = _gamepad->axisLeftY();
             if (!mediaActions.Values.contains(LeftYAxis))
                 tcodeFactory->calculate(LeftYAxis, calculateDeadZone(-_gamepad->axisLeftY()), axisValues);
             else if(leftYAxisTimer.remainingTime() <= 0  && _gamepad->axisLeftY() != 0)
