@@ -69,6 +69,7 @@ signals:
     void rangeChanged(int aMin, int aMax);
     void onHover(int position, int sliderValue);
     void onLeave();
+    void mouseRelease();
 
 public slots:
     void setLowerValue(int aLowerValue);

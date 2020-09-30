@@ -269,6 +269,7 @@ void RangeSlider::mouseReleaseEvent(QMouseEvent* aEvent)
 
     mFirstHandlePressed = false;
     mSecondHandlePressed = false;
+    emit mouseRelease();
 }
 
 void RangeSlider::changeEvent(QEvent* aEvent)

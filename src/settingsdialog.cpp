@@ -240,12 +240,17 @@ void SettingsDialog::setupUi()
 
         connect(xRangeSlider, &RangeSlider::lowerValueChanged, this, &SettingsDialog::onXRange_valueChanged);
         connect(xRangeSlider, &RangeSlider::upperValueChanged, this, &SettingsDialog::onXRange_valueChanged);
+        // mouse release work around for gamepad recalculation reseting on every valueChange event.
+        connect(xRangeSlider, &RangeSlider::mouseRelease, this, &SettingsDialog::onXRange_mouseRelease);
         connect(yRollRangeSlider, &RangeSlider::lowerValueChanged, this, &SettingsDialog::onYRollRange_valueChanged);
         connect(yRollRangeSlider, &RangeSlider::upperValueChanged, this, &SettingsDialog::onYRollRange_valueChanged);
+        connect(yRollRangeSlider, &RangeSlider::mouseRelease, this, &SettingsDialog::onYRollRange_mouseRelease);
         connect(xRollRangeSlider, &RangeSlider::lowerValueChanged, this, &SettingsDialog::onXRollRange_valueChanged);
         connect(xRollRangeSlider, &RangeSlider::upperValueChanged, this, &SettingsDialog::onXRollRange_valueChanged);
+        connect(xRollRangeSlider, &RangeSlider::mouseRelease, this, &SettingsDialog::onXRollRange_mouseRelease);
         connect(twistRangeSlider, &RangeSlider::lowerValueChanged, this, &SettingsDialog::onTwistRange_valueChanged);
         connect(twistRangeSlider, &RangeSlider::upperValueChanged, this, &SettingsDialog::onTwistRange_valueChanged);
+        connect(twistRangeSlider, &RangeSlider::mouseRelease, this, &SettingsDialog::onTwistRange_mouseRelease);
         connect(offSetSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onOffSet_valueChanged);
 
         if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
@@ -595,8 +600,6 @@ void SettingsDialog::on_serialRefreshBtn_clicked()
 
 void SettingsDialog::onXRange_valueChanged(int value)
 {
-    SettingsHandler::setXMin(xRangeSlider->GetLowerValue());
-    SettingsHandler::setXMax(xRangeSlider->GetUpperValue());
     xRangeMinLabel->setText(QString::number(xRangeSlider->GetLowerValue()));
     xRangeMaxLabel->setText(QString::number(xRangeSlider->GetUpperValue()));
     if (!_videoHandler->isPlaying() && !_deoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
@@ -609,8 +612,6 @@ void SettingsDialog::onXRange_valueChanged(int value)
 
 void SettingsDialog::onYRollRange_valueChanged(int value)
 {
-    SettingsHandler::setYRollMin(yRollRangeSlider->GetLowerValue());
-    SettingsHandler::setYRollMax(yRollRangeSlider->GetUpperValue());
     yRollRangeMinLabel->setText(QString::number(yRollRangeSlider->GetLowerValue()));
     yRollRangeMaxLabel->setText(QString::number(yRollRangeSlider->GetUpperValue()));
     if (!_videoHandler->isPlaying() && !_deoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
@@ -623,8 +624,6 @@ void SettingsDialog::onYRollRange_valueChanged(int value)
 
 void SettingsDialog::onXRollRange_valueChanged(int value)
 {
-    SettingsHandler::setXRollMin(xRollRangeSlider->GetLowerValue());
-    SettingsHandler::setXRollMax(xRollRangeSlider->GetUpperValue());
     xRollRangeMinLabel->setText(QString::number(xRollRangeSlider->GetLowerValue()));
     xRollRangeMaxLabel->setText(QString::number(xRollRangeSlider->GetUpperValue()));
     if (!_videoHandler->isPlaying() && !_deoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
@@ -637,8 +636,6 @@ void SettingsDialog::onXRollRange_valueChanged(int value)
 
 void SettingsDialog::onTwistRange_valueChanged(int value)
 {
-    SettingsHandler::setTwistMin(twistRangeSlider->GetLowerValue());
-    SettingsHandler::setTwistMax(twistRangeSlider->GetUpperValue());
     twistRangeMinLabel->setText(QString::number(twistRangeSlider->GetLowerValue()));
     twistRangeMaxLabel->setText(QString::number(twistRangeSlider->GetUpperValue()));
     if (!_videoHandler->isPlaying() && !_deoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
@@ -647,6 +644,30 @@ void SettingsDialog::onTwistRange_valueChanged(int value)
         sprintf(tcodeValueString, "%03d", value);
         getSelectedDeviceHandler()->sendTCode("R0" + QString(tcodeValueString) + "S1000");
     }
+}
+
+void SettingsDialog::onXRange_mouseRelease()
+{
+    SettingsHandler::setXMin(xRangeSlider->GetLowerValue());
+    SettingsHandler::setXMax(xRangeSlider->GetUpperValue());
+}
+
+void SettingsDialog::onYRollRange_mouseRelease()
+{
+    SettingsHandler::setYRollMin(yRollRangeSlider->GetLowerValue());
+    SettingsHandler::setYRollMax(yRollRangeSlider->GetUpperValue());
+}
+
+void SettingsDialog::onXRollRange_mouseRelease()
+{
+    SettingsHandler::setXRollMin(xRollRangeSlider->GetLowerValue());
+    SettingsHandler::setXRollMax(xRollRangeSlider->GetUpperValue());
+}
+
+void SettingsDialog::onTwistRange_mouseRelease()
+{
+    SettingsHandler::setTwistMin(twistRangeSlider->GetLowerValue());
+    SettingsHandler::setTwistMax(twistRangeSlider->GetUpperValue());
 }
 
 void SettingsDialog::onOffSet_valueChanged(int value)

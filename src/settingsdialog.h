@@ -57,6 +57,10 @@ private slots:
     void onYRollRange_valueChanged(int value);
     void onXRollRange_valueChanged(int value);
     void onTwistRange_valueChanged(int value);
+    void onXRange_mouseRelease();
+    void onYRollRange_mouseRelease();
+    void onXRollRange_mouseRelease();
+    void onTwistRange_mouseRelease();
     void onOffSet_valueChanged(int value);
     void on_device_connectionChanged(ConnectionChangedSignal event);
     void on_device_error(QString error);
