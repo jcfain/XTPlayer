@@ -18,12 +18,12 @@ FunscriptHandler::~FunscriptHandler()
 void FunscriptHandler::load(QString funscriptString)
 {
     QMutexLocker locker(&mutex);
-    LogHandler::Debug("Funscript load: "+funscriptString);
     if (funscriptString == nullptr)
     {
         _loaded = false;
         return;
     }
+    LogHandler::Debug("Funscript load: "+funscriptString);
     QFile loadFile(funscriptString);
 
     lastActionIndex = -1;

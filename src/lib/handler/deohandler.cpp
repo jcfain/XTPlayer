@@ -50,7 +50,7 @@ void DeoHandler::send(const QString &command)
     if (command != nullptr)
     {
         LogHandler::Debug("Sending to Deo: "+command);
-        QByteArray currentRequest;
+        QByteArray currentRequest("\0\0\0");
         currentRequest.append(command);
         tcpSocket->write(currentRequest);
     }
@@ -139,6 +139,19 @@ bool DeoHandler::isPlaying()
     const QMutexLocker locker(&_mutex);
     //LogHandler::Error("DeoHandler::isPlaying(): "+ QString::number(_isPlaying));
     return _isPlaying;
+}
+void DeoHandler::togglePause()
+{
+    bool isPaused = false;
+    if(!getCurrentDeoPacket()->playing)
+    {
+        isPaused = true;
+    }
+    QJsonObject pausePacket{
+        {"playerState",isPaused}
+    };
+    QJsonDocument jsonResponse = QJsonDocument(pausePacket);
+    send(QString::fromLatin1(jsonResponse.toJson()));
 }
 DeoPacket* DeoHandler::getCurrentDeoPacket()
 {

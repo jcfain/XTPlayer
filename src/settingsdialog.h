@@ -119,6 +119,8 @@ private slots:
     void on_speedIncrementInput_valueChanged(int value);
     void xRangeStepInput_valueChanged(int value);
 
+    void on_disableTextToSpeechCheckBox_clicked(bool checked);
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();

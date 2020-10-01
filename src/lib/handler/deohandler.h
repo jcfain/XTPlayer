@@ -32,6 +32,7 @@ public:
     void send(const QString &command);
     bool isConnected();
     bool isPlaying();
+    void togglePause();
     DeoPacket* getCurrentDeoPacket();
 
 private:

@@ -8,6 +8,7 @@
 #include "../lookup/GamepadAxisNames.h"
 #include "../lookup/MediaActions.h"
 #include "../tool/xmath.h"
+#include "../tool/boolinq.h"
 #include "../struct/ChannelModel.h"
 #include "loghandler.h"
 #include "devicehandler.h"
@@ -67,6 +68,9 @@ public:
     static int getGamepadSpeed();
     static int getLiveGamepadSpeed();
     static int getGamepadSpeedIncrement();
+
+    static bool getDisableSpeechToText();
+    static void setDisableSpeechToText(bool value);
 
     static void setDeoDnlaFunscript(QString key, QString value);
     static void setSelectedTheme(QString value);
@@ -187,6 +191,7 @@ private:
     static int thumbSizeList;
     static int videoIncrement;
 
+    static bool disableSpeechToText;
     static bool defaultReset;
 
     static QSettings* settings;

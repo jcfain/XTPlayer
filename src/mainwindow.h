@@ -22,6 +22,7 @@
 #include <QMovie>
 #include <QActionGroup>
 #include <QToolTip>
+#include <QTextToSpeech>
 #include "settingsdialog.h"
 #include "lib/handler/videohandler.h"
 #include "CustomControls/rangeslider.h"
@@ -126,6 +127,7 @@ protected:
 private:
     Ui::MainWindow *ui;
     SettingsDialog* _xSettings;
+    QTextToSpeech* textToSpeech;
     VideoPreviewWidget* videoPreviewWidget;
     QFuture<void> funscriptFuture;
     QFuture<void> funscriptDeoFuture;

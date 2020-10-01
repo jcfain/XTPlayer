@@ -2,9 +2,6 @@
 
 SettingsHandler::SettingsHandler()
 {
-    QCoreApplication::setOrganizationName("cUrbSide prOd");
-    QCoreApplication::setOrganizationDomain("https://www.patreon.com/Khrull");
-    QCoreApplication::setApplicationName("XTPlayer");
 }
 SettingsHandler::~SettingsHandler()
 {
@@ -14,6 +11,9 @@ bool resetRequired = false;
 void SettingsHandler::Load()
 {
     QMutexLocker locker(&mutex);
+    QCoreApplication::setOrganizationName("cUrbSide prOd");
+    QCoreApplication::setOrganizationDomain("https://www.patreon.com/Khrull");
+    QCoreApplication::setApplicationName("XTPlayer");
     QFile settingsini(QApplication::applicationDirPath() + "/settings.ini");
     if(settingsini.exists())
     {
@@ -96,6 +96,7 @@ void SettingsHandler::Load()
     _livegamepadSpeed = _gamepadSpeed;
     _xRangeStep = settings->value("xRangeStep").toInt();
     _xRangeStep = _xRangeStep == 0 ? 50 : _xRangeStep;
+    disableSpeechToText = settings->value("disableSpeechToText").toBool();
 //    SetupAvailableAxis();
 //    SetupGamepadButtonMap();
 }
@@ -155,6 +156,7 @@ void SettingsHandler::Save()
         settings->setValue("gamepadSpeed", _gamepadSpeed);
         settings->setValue("gamepadSpeedStep", _gamepadSpeedStep);
         settings->setValue("xRangeStep", _xRangeStep);
+        settings->setValue("disableSpeechToText", disableSpeechToText);
         settings->sync();
     }
 
@@ -442,6 +444,7 @@ int SettingsHandler::getGamepadSpeedIncrement()
 
 void SettingsHandler::setGamepadSpeedStep(int value)
 {
+    QMutexLocker locker(&mutex);
     _gamepadSpeedStep = value;
 }
 
@@ -452,11 +455,13 @@ int SettingsHandler::getLiveGamepadSpeed()
 
 void SettingsHandler::setLiveGamepadSpeed(int value)
 {
+    QMutexLocker locker(&mutex);
     _livegamepadSpeed = value;
 }
 
 void SettingsHandler::setXRangeStep(int value)
 {
+    QMutexLocker locker(&mutex);
     _xRangeStep = value;
 }
 
@@ -467,6 +472,7 @@ int SettingsHandler::getXRangeStep()
 
 void SettingsHandler::setLiveXRangeMin(int value)
 {
+    QMutexLocker locker(&mutex);
     _liveXRangeMin = value;
 }
 
@@ -477,6 +483,7 @@ int SettingsHandler::getLiveXRangeMin()
 
 void SettingsHandler::setLiveXRangeMax(int value)
 {
+    QMutexLocker locker(&mutex);
     _liveXRangeMax = value;
 }
 
@@ -486,9 +493,19 @@ int SettingsHandler::getLiveXRangeMax()
 }
 void SettingsHandler::resetLiveXRange()
 {
+    QMutexLocker locker(&mutex);
     AxisNames axisNames;
     _liveXRangeMax = getAxis(axisNames.TcXUpDownL0).UserMax;
     _liveXRangeMin = getAxis(axisNames.TcXUpDownL0).UserMin;
+}
+bool SettingsHandler::getDisableSpeechToText()
+{
+    return disableSpeechToText;
+}
+void SettingsHandler::setDisableSpeechToText(bool value)
+{
+    QMutexLocker locker(&mutex);
+    disableSpeechToText = value;
 }
 ChannelModel SettingsHandler::getAxis(QString axis)
 {
@@ -737,12 +754,12 @@ void SettingsHandler::SetupGamepadButtonMap()
 {
     _gamepadButtonMap = {
         { "None", axisNames.None },
-        { gamepadAxisNames.LeftXAxis, axisNames.TcVibV0 },
+        { gamepadAxisNames.LeftXAxis, axisNames.TcTwistR0 },
         { gamepadAxisNames.LeftYAxis,  axisNames.TcXUpDownL0 },
         { gamepadAxisNames.RightYAxis ,  axisNames.TcXRollR2  },
         { gamepadAxisNames.RightXAxis, axisNames.TcYRollR1  },
-        { gamepadAxisNames.RightTrigger, axisNames.TcTwistCWR0 },
-        { gamepadAxisNames.LeftTrigger, axisNames.TcTwistCCWR0 },
+        { gamepadAxisNames.RightTrigger, mediaActions.IncreaseXRange },
+        { gamepadAxisNames.LeftTrigger, mediaActions.DecreaseXRange },
         { gamepadAxisNames.RightBumper, mediaActions.FastForward },
         { gamepadAxisNames.LeftBumper, mediaActions.Rewind },
         { gamepadAxisNames.Select, mediaActions.FullScreen },
@@ -821,3 +838,4 @@ QString SettingsHandler::deoAddress;
 QString SettingsHandler::deoPort;
 bool SettingsHandler::deoEnabled;
 bool SettingsHandler::defaultReset = false;
+bool SettingsHandler::disableSpeechToText;
