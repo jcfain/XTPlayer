@@ -85,10 +85,12 @@ FORMS += \
 # LIBS       += -lVLCQtCore -lVLCQtWidgets
 unix:!mac {
     LIBS += -L$$QT.core.libs -lQtAV -lQtAVWidgets
+    QMAKE_RPATHDIR += ../lib
 }
 unix:mac {
     INCLUDEPATH += $$QT.core.libs/QtAV.framework/Versions/1/Headers
     QMAKE_LFLAGS += -F$$QT.core.libs
+    QMAKE_RPATHDIR += @executable_path/../lib /usr/lib
     LIBS += -framework QtAV
 }
 unix {
@@ -115,6 +117,11 @@ win32{
 #export(first.depends)
 #export(copydata.commands)
 #QMAKE_EXTRA_TARGETS += first copydata
+
+#execute script
+#mypackagerule.target = mypackagerule
+#mypackagerule.command = exec my_package_script.sh
+#QMAKE_EXTRA_TARGETS += mypackagerule
 
 copydata.commands = $(COPY_DIR) $$shell_path($$PWD/themes) $$shell_path($$DESTDIR/themes)
 first.depends = $(first) copydata
