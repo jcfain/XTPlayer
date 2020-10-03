@@ -495,8 +495,8 @@ void SettingsHandler::resetLiveXRange()
 {
     QMutexLocker locker(&mutex);
     AxisNames axisNames;
-    _liveXRangeMax = getAxis(axisNames.TcXUpDownL0).UserMax;
-    _liveXRangeMin = getAxis(axisNames.TcXUpDownL0).UserMin;
+    _liveXRangeMax = _availableAxis.value(axisNames.TcXUpDownL0).UserMax;
+    _liveXRangeMin = _availableAxis.value(axisNames.TcXUpDownL0).UserMin;
 }
 bool SettingsHandler::getDisableSpeechToText()
 {
@@ -779,7 +779,7 @@ void SettingsHandler::SetupGamepadButtonMap()
     };
 }
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.16b";
+const QString SettingsHandler::XTPVersion = "0.16b2";
 const float SettingsHandler::XTPVersionNum = 0.16f;
 
 QSettings* SettingsHandler::settings;
