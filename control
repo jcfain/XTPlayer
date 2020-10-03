@@ -1,0 +1,8 @@
+Package: XTPlayer
+Version: 0.16b-mint
+Maintainer: Khrull
+Section: video
+Homepage: https://www.patreon.com/Khrull
+Architecture: amd64
+Priority: optional
+Description: Cross platform TCode player
