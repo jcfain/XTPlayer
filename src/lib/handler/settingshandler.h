@@ -8,7 +8,6 @@
 #include "../lookup/GamepadAxisNames.h"
 #include "../lookup/MediaActions.h"
 #include "../tool/xmath.h"
-#include "../tool/boolinq.h"
 #include "../struct/ChannelModel.h"
 #include "loghandler.h"
 #include "devicehandler.h"

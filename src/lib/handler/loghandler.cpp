@@ -35,6 +35,7 @@ void LogHandler::Warn(QString message)
 void LogHandler::Error(QString message)
 {
     QMutexLocker locker(&mutex);
+    UserDebug(true);
     qCritical() << message;
 }
 

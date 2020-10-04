@@ -36,6 +36,7 @@ void DeoHandler::sendKeepAlive()
 {
     if (_isConnected)
     {
+        LogHandler::Debug("Sending keepalive: "+ QString::number(QTime::currentTime().msecsSinceStartOfDay()));
         send(nullptr);
     }
     else
@@ -53,6 +54,7 @@ void DeoHandler::send(const QString &command)
         QByteArray currentRequest("\0\0\0");
         currentRequest.append(command);
         tcpSocket->write(currentRequest);
+        tcpSocket->waitForBytesWritten();
     }
     else
     {
@@ -65,6 +67,7 @@ void DeoHandler::send(const QString &command)
 
 void DeoHandler::dispose()
 {
+    LogHandler::Debug("Deo: dispose");
     _isConnected = false;
     _isPlaying = false;
     if (keepAliveTimer != nullptr && keepAliveTimer->isActive())
@@ -91,6 +94,7 @@ void DeoHandler::readData()
     if (error.errorString() != "no error occurred")
     {
         LogHandler::Error("Deo json response error: "+error.errorString());
+        LogHandler::Error("datagram: "+datagram);
         //emit connectionChange({DeviceType::Deo, ConnectionStatus::Error, "Read error: " + error.errorString()});
     }
     else
@@ -99,12 +103,11 @@ void DeoHandler::readData()
         QString path = jsonObject["path"].toString();
         qint64 duration = jsonObject["duration"].toDouble() * 1000;
         qint64 currentTime = jsonObject["currentTime"].toDouble() * 1000;
-        _currentTime = currentTime;
         float playbackSpeed = jsonObject["playbackSpeed"].toDouble() * 1.0;
         bool playing = jsonObject["playerState"].toInt() == 0 ? true : false;
         //LogHandler::Debug("Deo path: "+path);
         //LogHandler::Debug("Deo duration: "+QString::number(duration));
-        //LogHandler::Debug("Deo currentTime: "+QString::number(currentTime));
+        LogHandler::Debug("Deo currentTime: "+QString::number(currentTime));
     //    LogHandler::Debug("Deo playbackSpeed: "+QString::number(playbackSpeed));
     //    LogHandler::Debug("Deo playing: "+QString::number(playing));
         _mutex.lock();
@@ -117,6 +120,7 @@ void DeoHandler::readData()
             playing
        };
         _isPlaying = playing;
+        _currentTime = currentTime;
         //LogHandler::Debug("Deo _isPlaying: "+QString::number(_isPlaying));
         _mutex.unlock();
         emit messageRecieved({

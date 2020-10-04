@@ -4,6 +4,7 @@
 #include <QSerialPortInfo>
 #include "../struct/SerialComboboxItem.h"
 #include "devicehandler.h"
+#include "../tool/boolinq.h"
 
 class SerialHandler : public DeviceHandler
 {
