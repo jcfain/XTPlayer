@@ -34,6 +34,7 @@ void FunscriptHandler::load(QString funscriptString)
         return;
     }
 
+    //LogHandler::Debug("funscriptHandler->load "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
     QByteArray funData = loadFile.readAll();
     QJsonParseError* error = new QJsonParseError();
     QJsonDocument doc = QJsonDocument::fromJson(funData, error);
@@ -104,17 +105,17 @@ std::unique_ptr<FunscriptAction> FunscriptHandler::getPosition(qint64 millis)
         return nullptr;
     }
     qint64 nextMillis = posList[nextActionIndex];
-//    LogHandler::Debug("millis: "+ QString::number(millis));
-//    LogHandler::Debug("closestMillis: "+ QString::number(closestMillis));
-//    LogHandler::Debug("lastActionIndex: "+ QString::number(lastActionIndex));
-//    LogHandler::Debug("nextActionIndex: "+ QString::number(nextActionIndex));
+    //LogHandler::Debug("millis: "+ QString::number(millis));
+    //LogHandler::Debug("closestMillis: "+ QString::number(closestMillis));
+    //LogHandler::Debug("lastActionIndex: "+ QString::number(lastActionIndex));
+    //LogHandler::Debug("nextActionIndex: "+ QString::number(nextActionIndex));
 //    LogHandler::Debug("nextMillis: "+ QString::number(nextMillis));
     if ((lastActionIndex != nextActionIndex && millis >= closestMillis) ||lastActionIndex == -1)
     {
         int speed = lastActionIndex == -1 ? closestMillis : nextMillis - closestMillis;
         //LogHandler::Debug("offSet: "+ QString::number(SettingsHandler::getoffSet()));
         //LogHandler::Debug("speed: "+ QString::number(speed));
-//        LogHandler::Debug("millis: "+ QString::number(millis));
+        //LogHandler::Debug("millis: "+ QString::number(millis));
 //        LogHandler::Debug("closestMillis: "+ QString::number(closestMillis));
 //        LogHandler::Debug("nextMillis: "+ QString::number(nextMillis));
 //        LogHandler::Debug("lastActionIndex: "+ QString::number(lastActionIndex));
@@ -122,6 +123,7 @@ std::unique_ptr<FunscriptAction> FunscriptHandler::getPosition(qint64 millis)
 //        LogHandler::Debug("nextActionPos: "+ QString::number(funscript->actions.value(nextMillis)));
         qint64 executionMillis = lastActionIndex == -1 ? closestMillis : nextMillis;
         std::unique_ptr<FunscriptAction> nextAction(new FunscriptAction { executionMillis, funscript->actions.value(executionMillis), speed });
+        //LogHandler::Debug("nextAction.speed: "+ QString::number(nextAction->speed));
         lastActionIndex = nextActionIndex;
         return nextAction;
     }

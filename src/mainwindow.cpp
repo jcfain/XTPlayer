@@ -550,16 +550,16 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
 
 void MainWindow::changeDeoFunscript()
 {
-    DeoPacket* playingPacket = _xSettings->getDeoHandler()->getCurrentDeoPacket();
-    if (playingPacket != nullptr)
+    DeoPacket playingPacket = _xSettings->getDeoHandler()->getCurrentDeoPacket();
+    if (playingPacket.path != nullptr)
     {
-        QFileInfo videoFile(playingPacket->path);
+        QFileInfo videoFile(playingPacket.path);
         funscriptFileSelectorOpen = true;
         QString funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + videoFile.fileName(), SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
         funscriptFileSelectorOpen = false;
         if (!funscriptPath.isEmpty())
         {
-            SettingsHandler::setDeoDnlaFunscript(playingPacket->path, funscriptPath);
+            SettingsHandler::setDeoDnlaFunscript(playingPacket.path, funscriptPath);
             funscriptHandler->setLoaded(false);
         }
     }
@@ -1331,29 +1331,39 @@ void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDial
     }
     DeviceHandler* device = xSettings->getSelectedDeviceHandler();
     std::shared_ptr<FunscriptAction> actionPosition;
-    DeoPacket* currentDeoPacket = deoPlayer->getCurrentDeoPacket();
+    DeoPacket currentDeoPacket = deoPlayer->getCurrentDeoPacket();
     QString currentVideo;
     qint64 timeTracker = 0;
     qint64 lastDeoTime = 0;
-    qint64 timer1 = QTime::currentTime().msecsSinceStartOfDay();
-    qint64 timer2 = QTime::currentTime().msecsSinceStartOfDay();
+    QElapsedTimer mSecTimer;
+    qint64 timer1 = 0;
+    qint64 timer2 = 0;
     //qint64 elapsedTracker = 0;
     //QElapsedTimer timer;
+    //timer.start();
+    mSecTimer.start();
     while (deoPlayer->isConnected() && !xPlayer->isPlaying())
     {
         //timer.start();
-        if(xSettings->isConnected() && funscriptHandler->isLoaded() && currentDeoPacket != nullptr && currentDeoPacket->duration > 0 && currentDeoPacket->playing)
+        if(xSettings->isConnected() && funscriptHandler->isLoaded() && !currentDeoPacket.path.isNull() && currentDeoPacket.duration > 0 && currentDeoPacket.playing)
         {
             //execute once every millisecond
             if (timer2 - timer1 >= 1)
             {
+//                LogHandler::Debug("timer "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
+//                LogHandler::Debug("timer1: "+QString::number(timer1));
+//                LogHandler::Debug("timer2: "+QString::number(timer2));
+//                LogHandler::Debug("timer2 - timer1 "+QString::number(timer2-timer1));
+//                LogHandler::Debug("Out timeTracker: "+QString::number(timeTracker));
                 timer1 = timer2;
-                qint64 currentTime = currentDeoPacket->currentTime;
-                if (currentTime > timeTracker + 100 || lastDeoTime > currentTime)
+                qint64 currentTime = currentDeoPacket.currentTime;
+                //LogHandler::Debug("Deo time reset: "+QString::number(currentTime));
+                bool hasRewind = lastDeoTime > currentTime;
+                if (currentTime > timeTracker + 100 || hasRewind)
                 {
                     lastDeoTime = currentTime;
-                    LogHandler::Debug("current time reset: "+QString::number(currentTime));
-                    LogHandler::Debug("timeTracker: "+QString::number(timeTracker));
+                    LogHandler::Debug("current time reset: " + QString::number(currentTime));
+                    LogHandler::Debug("timeTracker: " + QString::number(timeTracker));
                     timeTracker = currentTime;
                 }
                 else
@@ -1361,33 +1371,38 @@ void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDial
                     timeTracker++;
                     currentTime = timeTracker;
                 }
+                //LogHandler::Debug("funscriptHandler->getPosition: "+QString::number(currentTime));
                 actionPosition = funscriptHandler->getPosition(currentTime);
                 if (actionPosition != nullptr)
                 {
                     device->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
                 }
+                //LogHandler::Debug("timer "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
+                //timer.start();
             }
-            timer2 = QTime::currentTime().msecsSinceStartOfDay();
-            //elapsedTracker = (round(timer.nsecsElapsed()) / 1000000);
-            //LogHandler::Debug("timer nsecsElapsed: "+QString::number(elapsedTracker));
+            timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
+            //LogHandler::Debug("timer nsecsElapsed: "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
         }
-        else if(xSettings->isConnected() && currentDeoPacket != nullptr && currentDeoPacket->duration > 0 && currentDeoPacket->playing)
+        else if(xSettings->isConnected() && currentDeoPacket.duration > 0 && currentDeoPacket.playing)
         {
-            if (!currentDeoPacket->path.isEmpty() && !currentDeoPacket->path.isNull())
+            if (!currentDeoPacket.path.isEmpty() && !currentDeoPacket.path.isNull())
             {
-                QString funscriptPath = SettingsHandler::getDeoDnlaFunscript(currentDeoPacket->path);
-                currentVideo = currentDeoPacket->path;
+                QString funscriptPath = SettingsHandler::getDeoDnlaFunscript(currentDeoPacket.path);
+                currentVideo = currentDeoPacket.path;
                 funscriptHandler->load(funscriptPath);
             }
         }
 
-        if(currentDeoPacket != nullptr && currentVideo != currentDeoPacket->path)
+        if(currentVideo != currentDeoPacket.path)
         {
-            currentVideo = currentDeoPacket->path;
+            currentVideo = currentDeoPacket.path;
             funscriptHandler->setLoaded(false);
         }
-        currentDeoPacket = deoPlayer->getCurrentDeoPacket();
 
+        //LogHandler::Debug("Get deo packet: "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
+        currentDeoPacket = deoPlayer->getCurrentDeoPacket();
+        //LogHandler::Debug("After get deo packet: "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
+        //QThread::currentThread()->msleep(1);
     }
     LogHandler::Debug("exit syncDeoFunscript");
 }
@@ -1396,8 +1411,10 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
 {
     std::unique_ptr<FunscriptAction> actionPosition;
     DeviceHandler* device = xSettings->getSelectedDeviceHandler();
-    qint64 timer1 = QTime::currentTime().msecsSinceStartOfDay();
-    qint64 timer2 = QTime::currentTime().msecsSinceStartOfDay();
+    QElapsedTimer mSecTimer;
+    qint64 timer1 = 0;
+    qint64 timer2 = 0;
+    mSecTimer.start();
     while (player->isPlaying())
     {
         if (timer2 - timer1 >= 1)
@@ -1414,7 +1431,7 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
                 actionPosition = nullptr;
             }
         }
-        timer2 = QTime::currentTime().msecsSinceStartOfDay();
+        timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
     }
     LogHandler::Debug("exit syncFunscript");
 }

@@ -779,7 +779,7 @@ void SettingsHandler::SetupGamepadButtonMap()
     };
 }
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.16b2";
+const QString SettingsHandler::XTPVersion = "0.16b3";
 const float SettingsHandler::XTPVersionNum = 0.16f;
 
 QSettings* SettingsHandler::settings;

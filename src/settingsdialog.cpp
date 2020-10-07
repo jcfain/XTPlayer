@@ -38,6 +38,7 @@ void SettingsDialog::dispose()
         //_initFuture.cancel();
         _initFuture.waitForFinished();
     }
+    LogHandler::ExportDebug();
     delete _serialHandler;
     delete _udpHandler;
     delete _deoHandler;
@@ -906,6 +907,8 @@ void SettingsDialog::on_deoCheckbox_clicked(bool checked)
 void SettingsDialog::on_checkBox_clicked(bool checked)
 {
     LogHandler::UserDebug(checked);
+    if(!checked)
+        LogHandler::ExportDebug();
 }
 
 void SettingsDialog::on_resetAllButton_clicked()

@@ -59,12 +59,12 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
     return tcode;
 }
 
+AxisNames axisNames;
 int TCodeHandler::calculateRange(const char* channel, int rawValue)
 {
     int xMax = SettingsHandler::getAxis(channel).UserMax;
     int xMin = SettingsHandler::getAxis(channel).UserMin;
     // Update for live x range switch
-    AxisNames axisNames;
     if(QString(channel) == axisNames.TcXUpDownL0)
     {
         xMax = SettingsHandler::getLiveXRangeMax();

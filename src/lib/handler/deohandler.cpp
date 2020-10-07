@@ -107,7 +107,7 @@ void DeoHandler::readData()
         bool playing = jsonObject["playerState"].toInt() == 0 ? true : false;
         //LogHandler::Debug("Deo path: "+path);
         //LogHandler::Debug("Deo duration: "+QString::number(duration));
-        LogHandler::Debug("Deo currentTime: "+QString::number(currentTime));
+        LogHandler::Debug("Deo currentTime------------------------------------------------> "+QString::number(currentTime));
     //    LogHandler::Debug("Deo playbackSpeed: "+QString::number(playbackSpeed));
     //    LogHandler::Debug("Deo playing: "+QString::number(playing));
         _mutex.lock();
@@ -123,13 +123,7 @@ void DeoHandler::readData()
         _currentTime = currentTime;
         //LogHandler::Debug("Deo _isPlaying: "+QString::number(_isPlaying));
         _mutex.unlock();
-        emit messageRecieved({
-                                 path,
-                                 duration,
-                                 currentTime,
-                                 playbackSpeed,
-                                 playing
-                            });
+        emit messageRecieved(*currentDeoPacket);
 
     }
 }
@@ -144,23 +138,30 @@ bool DeoHandler::isPlaying()
     //LogHandler::Error("DeoHandler::isPlaying(): "+ QString::number(_isPlaying));
     return _isPlaying;
 }
-void DeoHandler::togglePause()
-{
-    bool isPaused = false;
-    if(!getCurrentDeoPacket()->playing)
-    {
-        isPaused = true;
-    }
-    QJsonObject pausePacket{
-        {"playerState",isPaused}
-    };
-    QJsonDocument jsonResponse = QJsonDocument(pausePacket);
-    send(QString::fromLatin1(jsonResponse.toJson()));
-}
-DeoPacket* DeoHandler::getCurrentDeoPacket()
+//void DeoHandler::togglePause()
+//{
+//    bool isPaused = false;
+//    if(!getCurrentDeoPacket()->playing)
+//    {
+//        isPaused = true;
+//    }
+//    QJsonObject pausePacket{
+//        {"playerState",isPaused}
+//    };
+//    QJsonDocument jsonResponse = QJsonDocument(pausePacket);
+//    send(QString::fromLatin1(jsonResponse.toJson()));
+//}
+DeoPacket DeoHandler::getCurrentDeoPacket()
 {
     const QMutexLocker locker(&_mutex);
-    return currentDeoPacket;
+    DeoPacket blankPacket = {
+        NULL,
+        0,
+        0,
+        0,
+        1
+    };
+    return (currentDeoPacket == nullptr) ? blankPacket : *currentDeoPacket;
 }
 
 void DeoHandler::onSocketStateChange (QAbstractSocket::SocketState state)

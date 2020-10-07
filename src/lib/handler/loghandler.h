@@ -27,13 +27,17 @@ public:
     static void Dialog(QString message, XLogLevel level);
     static QString getLevel(XLogLevel level);
     static void UserDebug(bool on);
+    static void ExportDebug();
 
 private:
     LogHandler();
-    static void DebugToFile(QtMsgType type, const QMessageLogContext &, const QString & msg);
+    static void DebugHandler(QtMsgType type, const QMessageLogContext &, const QString & msg);
     static QMutex mutex;
     static QString _debugFileName;
+    static qint64 userDebugIndex;
     static bool _debugMode;
+    static bool _userDebugMode;
+    static QHash<qint64, QString> _debugStore;
 
 };
 
