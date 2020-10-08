@@ -21,10 +21,20 @@
    <property name="sizeConstraint">
     <enum>QLayout::SetNoConstraint</enum>
    </property>
+   <item row="4" column="0">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Close</set>
+     </property>
+    </widget>
+   </item>
    <item row="3" column="0">
     <widget class="QTabWidget" name="settingsTabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="connectionTab">
       <attribute name="title">
@@ -253,27 +263,14 @@
          <x>10</x>
          <y>10</y>
          <width>257</width>
-         <height>112</height>
+         <height>137</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="FunscriptSettingsGrid">
-        <item row="2" column="2">
-         <widget class="QDoubleSpinBox" name="twistMultiplierSpinBox">
-          <property name="maximum">
-           <double>1.000000000000000</double>
-          </property>
-          <property name="singleStep">
-           <double>0.100000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QDoubleSpinBox" name="yRollMultiplierSpinBox">
-          <property name="maximum">
-           <double>1.000000000000000</double>
-          </property>
-          <property name="singleStep">
-           <double>0.100000000000000</double>
+        <item row="2" column="1">
+         <widget class="QCheckBox" name="twistMultiplierCheckBox">
+          <property name="text">
+           <string>Twist multiplier</string>
           </property>
          </widget>
         </item>
@@ -287,20 +284,6 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
-         <widget class="QCheckBox" name="yRollMultiplierCheckBox">
-          <property name="text">
-           <string>Y roll multiplier</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QCheckBox" name="twistMultiplierCheckBox">
-          <property name="text">
-           <string>Twist multiplier</string>
-          </property>
-         </widget>
-        </item>
         <item row="0" column="1">
          <widget class="QCheckBox" name="xRollMultiplierCheckBox">
           <property name="text">
@@ -308,8 +291,8 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="2">
-         <widget class="QDoubleSpinBox" name="vibMultiplierSpinBox">
+        <item row="1" column="2">
+         <widget class="QDoubleSpinBox" name="yRollMultiplierSpinBox">
           <property name="maximum">
            <double>1.000000000000000</double>
           </property>
@@ -325,20 +308,41 @@
           </property>
          </widget>
         </item>
+        <item row="1" column="1">
+         <widget class="QCheckBox" name="yRollMultiplierCheckBox">
+          <property name="text">
+           <string>Y roll multiplier</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2">
+         <widget class="QDoubleSpinBox" name="vibMultiplierSpinBox">
+          <property name="maximum">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QDoubleSpinBox" name="twistMultiplierSpinBox">
+          <property name="maximum">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QCheckBox" name="invertFunscriptXCheckBox">
+          <property name="text">
+           <string>Invert X</string>
+          </property>
+         </widget>
+        </item>
        </layout>
-      </widget>
-      <widget class="QLabel" name="label">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>130</y>
-         <width>271</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>If gamepad is enabled these values will be ignored</string>
-       </property>
       </widget>
      </widget>
      <widget class="QWidget" name="systemtab">
@@ -538,16 +542,6 @@ p, li { white-space: pre-wrap; }
        </property>
       </widget>
      </widget>
-    </widget>
-   </item>
-   <item row="4" column="0">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Close</set>
-     </property>
     </widget>
    </item>
   </layout>

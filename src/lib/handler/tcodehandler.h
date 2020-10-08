@@ -1,11 +1,12 @@
 #ifndef TCODEHANDLER_H
 #define TCODEHANDLER_H
-#import "../struct/Funscript.h"
-#import "../struct/ChannelModel.h"
-#import "../struct/GamepadState.h"
-#import "../lookup/AxisNames.h"
-#import "../tool/xmath.h"
-#import "settingshandler.h"
+#include "../struct/Funscript.h"
+#include "../struct/ChannelModel.h"
+#include "../struct/GamepadState.h"
+#include "../lookup/AxisNames.h"
+#include "../tool/xmath.h"
+#include "settingshandler.h"
+#include "funscripthandler.h"
 #include "loghandler.h"
 #include <QMap>
 
@@ -13,7 +14,7 @@ class TCodeHandler
 {
 public:
     TCodeHandler();
-    QString funscriptToTCode(qint64 position, int speed, bool inverted);
+    QString funscriptToTCode(qint64 position, int speed);
 
     int calculateRange(const char* channel, int rawValue);
 

@@ -5,12 +5,12 @@ TCodeHandler::TCodeHandler()
 }
 
 
-QString TCodeHandler::funscriptToTCode(qint64 position, int speed, bool inverted)
+QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
 {
     QMutexLocker locker(&mutex);
     QString tcode = "";
 
-    if (inverted)
+    if (FunscriptHandler::getInverted())
     {
         position = XMath::reverseNumber(position, 0, 100);
     }
@@ -35,7 +35,7 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed, bool inverted
                 int value = XMath::constrain(XMath::randSine(position * multiplierValue), 0, 100);
                 //lowMin + (highMin-lowMin)*level,lowMax + (highMax-lowMax)*level
                 //LogHandler::Debug("randSine: "+ QString::number(value));
-                if (inverted)
+                if (FunscriptHandler::getInverted())
                 {
                     //LogHandler::Debug("inverted: "+ QString::number(value));
                     value = XMath::reverseNumber(value, 0, 100);

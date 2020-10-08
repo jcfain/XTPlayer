@@ -15,6 +15,7 @@
 #include "lib/handler/udphandler.h"
 #include "lib/handler/deohandler.h"
 #include "lib/handler/gamepadhandler.h"
+#include "lib/handler/funscripthandler.h"
 
 extern void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo);
 extern void initNetwork(UdpHandler* serialHandler, NetworkAddress address);
@@ -28,6 +29,7 @@ public:
     ~SettingsDialog();
 
     void init(VideoHandler* videoHandler);
+    void initLive();
     UdpHandler* getNetworkHandler();
     SerialHandler* getSerialHandler();
     DeoHandler* getDeoHandler();
@@ -120,6 +122,8 @@ private slots:
     void xRangeStepInput_valueChanged(int value);
 
     void on_disableTextToSpeechCheckBox_clicked(bool checked);
+
+    void on_invertFunscriptXCheckBox_clicked(bool checked);
 
 private:
     Ui::SettingsDialog ui;

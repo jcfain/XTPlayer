@@ -51,11 +51,7 @@ Funscript* FunscriptHandler::currentFunscript()
     QMutexLocker locker(&mutex);
     return funscript;
 }
-bool FunscriptHandler::inversed()
-{
-    QMutexLocker locker(&mutex);
-    return _inversed;
-}
+
 bool FunscriptHandler::isLoaded()
 {
     QMutexLocker locker(&mutex);
@@ -74,7 +70,7 @@ void FunscriptHandler::JSonToFunscript(QJsonObject json)
         funscript->version = json["version"].toString();
     if (json.contains("inverted") && json["inverted"].isBool())
     {
-        _inversed = json["inverted"].toBool();
+        _inverted = json["inverted"].toBool();
         funscript->inverted = json["inverted"].toBool();
     }
     if (json.contains("actions") && json["actions"].isArray())
@@ -190,3 +186,17 @@ qint64 FunscriptHandler::findClosest(qint64 value, QList<qint64> a) {
       return (a[lo] - value) < (value - a[hi]) ? a[lo] : a[hi];
   }
 
+//static
+bool FunscriptHandler::getInverted()
+{
+    QMutexLocker locker(&mutex);
+    return _inverted;
+}
+void FunscriptHandler::setInverted(bool value)
+{
+    QMutexLocker locker(&mutex);
+    _inverted = value;
+}
+
+bool FunscriptHandler::_inverted = false;
+QMutex FunscriptHandler::mutex;

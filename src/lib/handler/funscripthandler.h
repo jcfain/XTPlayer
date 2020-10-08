@@ -29,14 +29,15 @@ public:
     void setLoaded(bool value);
     bool exists(QString path);
     Funscript* currentFunscript();
-    bool inversed();
+    static bool getInverted();
+    static void setInverted(bool value);
     std::unique_ptr<FunscriptAction> getPosition(qint64 at);
 
 
 private:
-    QMutex mutex;
+    static QMutex mutex;
     bool _loaded = false;
-    bool _inversed = false;
+    static bool _inverted;
     void JSonToFunscript(QJsonObject jsonDoc);
     qint64 findClosest(qint64 value, QList<qint64> a);
     qint64 lastActionIndex;

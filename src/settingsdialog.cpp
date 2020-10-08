@@ -68,6 +68,11 @@ void SettingsDialog::init(VideoHandler* videoHandler)
     }
 }
 
+void SettingsDialog::initLive()
+{
+    ui.invertFunscriptXCheckBox->setChecked(FunscriptHandler::getInverted());
+}
+
 void SettingsDialog::setupUi()
 {
 
@@ -961,4 +966,9 @@ void SettingsDialog::on_videoIncrementSpinBox_valueChanged(int value)
 void SettingsDialog::on_disableTextToSpeechCheckBox_clicked(bool checked)
 {
     SettingsHandler::setDisableSpeechToText(checked);
+}
+
+void SettingsDialog::on_invertFunscriptXCheckBox_clicked(bool checked)
+{
+    FunscriptHandler::setInverted(checked);
 }

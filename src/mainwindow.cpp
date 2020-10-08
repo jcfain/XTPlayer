@@ -1405,7 +1405,7 @@ void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDial
                 actionPosition = funscriptHandler->getPosition(currentTime);
                 if (actionPosition != nullptr)
                 {
-                    device->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed, funscriptHandler->inversed()));
+                    device->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
                 }
                 //LogHandler::Debug("timer "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
                 //timer.start();
@@ -1456,7 +1456,7 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
                 actionPosition = funscriptHandler->getPosition(position);
                 if (actionPosition != nullptr)
                 {
-                    device->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed, funscriptHandler->inversed()));
+                    device->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
                 }
                 actionPosition = nullptr;
             }
@@ -1772,6 +1772,7 @@ void MainWindow::on_actionDonate_triggered()
 
 void MainWindow::on_actionSettings_triggered()
 {
+    _xSettings->initLive();
     _xSettings->exec();
 }
 
