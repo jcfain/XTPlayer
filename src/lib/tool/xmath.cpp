@@ -46,6 +46,8 @@ double XMath::rand(double min, double max)
 int XMath::randSine(double angle)
 {
     int amplitude = rand(0, 100.0);
+    if(amplitude < 50)
+        reverseNumber(angle, 0, 100);
 //    LogHandler::Debug("amplitude: "+ QString::number(amplitude));
 //    LogHandler::Debug("angle: "+ QString::number(angle));
     int value = int(amplitude * sin(angle));

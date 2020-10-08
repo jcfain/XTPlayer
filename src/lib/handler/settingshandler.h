@@ -118,14 +118,18 @@ public:
     static void setLiveGamepadSpeed(int value);
 
     static void setXRangeStep(int value);
+    static int getXRangeStep();
+
+
     static void setLiveXRangeMin(int value);
     static void setLiveXRangeMax(int value);
-    static int getXRangeStep();
     static int getLiveXRangeMin();
     static int getLiveXRangeMax();
     static void resetLiveXRange();
     static bool getLiveMultiplier();
     static void setLiveMultiplier(bool value);
+    static bool getLiveGamepadConnected();
+    static void setLiveGamepadConnected(bool value);
 
     static void Load();
     static void Save();
@@ -181,7 +185,8 @@ private:
     static bool _inverseTcYRollR1;
     static int _gamepadSpeed;
     static int _gamepadSpeedStep;
-    static int _livegamepadSpeed;
+    static int _liveGamepadSpeed;
+    static bool _liveGamepadConnected;
 
     static int _xRangeStep;
     static int _liveXRangeMax;

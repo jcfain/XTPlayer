@@ -24,7 +24,8 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
       tcode += QString::number(speed);
     }
 
-    if(!SettingsHandler::getGamepadEnabled() || SettingsHandler::getLiveMultiplier())
+    if(((SettingsHandler::getGamepadEnabled() && !SettingsHandler::getLiveGamepadConnected()) && SettingsHandler::getLiveMultiplier()) ||
+            (!SettingsHandler::getGamepadEnabled() && SettingsHandler::getLiveMultiplier()))
     {
         foreach(const QString axis, _multiplierAxis)
         {
@@ -56,6 +57,15 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
                 tcode += axis;
                 tcode += "500S1000";
             }
+        }
+    }
+    else if(!SettingsHandler::getLiveGamepadConnected())
+    {
+        foreach(const QString axis, _multiplierAxis)
+        {
+            tcode += " ";
+            tcode += axis;
+            tcode += "500S1000";
         }
     }
     return tcode;

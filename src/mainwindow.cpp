@@ -272,6 +272,15 @@ void MainWindow::on_key_press(QKeyEvent * event)
         case Qt::Key_T:
             mediaAction(actions.IncreaseXLowerRange);
             break;
+        case Qt::Key_Control:
+            mediaAction(actions.ResetLiveXRange);
+            break;
+        case Qt::Key_I:
+            mediaAction(actions.ToggleFunscriptInvert);
+            break;
+        case Qt::Key_V:
+            mediaAction(actions.ToggleAxisMultiplier);
+            break;
     }
 }
 void MainWindow::mediaAction(QString action)
@@ -532,7 +541,15 @@ void MainWindow::mediaAction(QString action)
     }
     else if (action == actions.ToggleAxisMultiplier)
     {
-        SettingsHandler::setLiveMultiplier(!SettingsHandler::getLiveMultiplier());
+        bool multiplier = SettingsHandler::getLiveMultiplier();
+        textToSpeech->say(multiplier ? "Disable multiplier" : "Enable multiplier");
+        SettingsHandler::setLiveMultiplier(!multiplier);
+    }
+    else if (action == actions.ToggleFunscriptInvert)
+    {
+        bool inverted = FunscriptHandler::getInverted();
+        textToSpeech->say(inverted ? "Funscript normal" : "Funscript inverted");
+        FunscriptHandler::setInverted(!inverted);
     }
 }
 void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
@@ -862,6 +879,8 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
     QFile file(selectedFileListItem.path);
     if (file.exists())
     {
+        ui->loopToggleButton->setChecked(false);
+        //on_loopToggleButton_toggled(false);
         ui->videoLoadingLabel->show();
         _movie->start();
         videoHandler->stop();

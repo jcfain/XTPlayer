@@ -777,6 +777,7 @@ void SettingsDialog::on_gamepad_connectionChanged(ConnectionChangedSignal event)
 {
     _gamepadConnectionStatus = event.status;
     setDeviceStatusStyle(event.status, event.deviceType);
+    SettingsHandler::setLiveGamepadConnected(event.status == ConnectionStatus::Connected);
     emit gamepadConnectionChange(event);
 }
 

@@ -93,7 +93,7 @@ void SettingsHandler::Load()
     _gamepadSpeed = _gamepadSpeed == 0 ? 1000 : _gamepadSpeed;
     _gamepadSpeedStep = settings->value("gamepadSpeedStep").toInt();
     _gamepadSpeedStep = _gamepadSpeedStep == 0 ? 500 : _gamepadSpeedStep;
-    _livegamepadSpeed = _gamepadSpeed;
+    _liveGamepadSpeed = _gamepadSpeed;
     _xRangeStep = settings->value("xRangeStep").toInt();
     _xRangeStep = _xRangeStep == 0 ? 50 : _xRangeStep;
     disableSpeechToText = settings->value("disableSpeechToText").toBool();
@@ -483,15 +483,22 @@ void SettingsHandler::setGamepadSpeedStep(int value)
 int SettingsHandler::getLiveGamepadSpeed()
 {
     QMutexLocker locker(&mutex);
-    return _livegamepadSpeed;
+    return _liveGamepadSpeed;
 }
 
 void SettingsHandler::setLiveGamepadSpeed(int value)
 {
     QMutexLocker locker(&mutex);
-    _livegamepadSpeed = value;
+    _liveGamepadSpeed = value;
 }
-
+void SettingsHandler::setLiveGamepadConnected(bool value)
+{
+    _liveGamepadConnected = value;
+}
+bool SettingsHandler::getLiveGamepadConnected()
+{
+    return _liveGamepadConnected;
+}
 void SettingsHandler::setXRangeStep(int value)
 {
     QMutexLocker locker(&mutex);
@@ -877,7 +884,8 @@ bool SettingsHandler::_inverseTcXRollR2;
 bool SettingsHandler::_inverseTcYRollR1;
 int SettingsHandler::_gamepadSpeed;
 int SettingsHandler::_gamepadSpeedStep;
-int SettingsHandler::_livegamepadSpeed;
+int SettingsHandler::_liveGamepadSpeed;
+bool SettingsHandler::_liveGamepadConnected;
 
 int SettingsHandler::_xRangeStep;
 int SettingsHandler::_liveXRangeMax;
