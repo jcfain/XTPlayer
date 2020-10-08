@@ -530,6 +530,10 @@ void MainWindow::mediaAction(QString action)
             textToSpeech->say("Resetting X range");
         SettingsHandler::resetLiveXRange();
     }
+    else if (action == actions.ToggleAxisMultiplier)
+    {
+        SettingsHandler::setLiveMultiplier(!SettingsHandler::getLiveMultiplier());
+    }
 }
 void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
 {
@@ -1375,7 +1379,7 @@ void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDial
                 actionPosition = funscriptHandler->getPosition(currentTime);
                 if (actionPosition != nullptr)
                 {
-                    device->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
+                    device->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed, funscriptHandler->inversed()));
                 }
                 //LogHandler::Debug("timer "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
                 //timer.start();
@@ -1426,7 +1430,7 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
                 actionPosition = funscriptHandler->getPosition(position);
                 if (actionPosition != nullptr)
                 {
-                    device->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
+                    device->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed, funscriptHandler->inversed()));
                 }
                 actionPosition = nullptr;
             }

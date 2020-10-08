@@ -6,19 +6,21 @@
 #import "../lookup/AxisNames.h"
 #import "../tool/xmath.h"
 #import "settingshandler.h"
-#import "../../settingsdialog.h"
+#include "loghandler.h"
 #include <QMap>
 
 class TCodeHandler
 {
 public:
     TCodeHandler();
-    QString funscriptToTCode(qint64 position, int speed = 0);
+    QString funscriptToTCode(qint64 position, int speed, bool inverted);
 
     int calculateRange(const char* channel, int rawValue);
 
 private:
-    static QMutex mutex;
+    QMutex mutex;
+    const QList<QString> _multiplierAxis = {"R0", "R1", "R2", "V0"};
+    const AxisNames axisNames;
 };
 
 #endif // TCODEHANDLER_H

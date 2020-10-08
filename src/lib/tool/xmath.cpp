@@ -1,7 +1,4 @@
 #include "xmath.h"
-#include <QRandomGenerator>
-#include <random>
-#include <chrono>
 
 int XMath::mapRange(int value, int inStart, int inEnd, int outStart, int outEnd)
 {
@@ -37,3 +34,25 @@ qint64 XMath::rand(qint64 min, qint64 max)
     std::uniform_int_distribution<qint64> dist(min, max);
     return dist(mt);
 }
+
+double XMath::rand(double min, double max)
+{
+    unsigned seed1 = std::chrono::system_clock::now().time_since_epoch().count();
+    std::mt19937_64 mt(seed1);
+    std::uniform_real_distribution<double> dist(min, max);
+    return dist(mt);
+}
+
+int XMath::randSine(double angle)
+{
+    int amplitude = rand(0, 100.0);
+//    LogHandler::Debug("amplitude: "+ QString::number(amplitude));
+//    LogHandler::Debug("angle: "+ QString::number(angle));
+    int value = int(amplitude * sin(angle));
+    return value < 0 ? -value : value;
+}
+
+int XMath::reverseNumber(int num, int min, int max) {
+    return (max + min) - num;
+}
+

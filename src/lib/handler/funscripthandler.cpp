@@ -2,10 +2,6 @@
 
 
 Funscript* funscript = new Funscript();
-qint64 lastActionIndex;
-qint64  nextActionIndex;
-QList<qint64> posList;
-int n;
 
 FunscriptHandler::FunscriptHandler()
 {
@@ -50,7 +46,16 @@ void FunscriptHandler::load(QString funscriptString)
 
     _loaded = true;
 }
-
+Funscript* FunscriptHandler::currentFunscript()
+{
+    QMutexLocker locker(&mutex);
+    return funscript;
+}
+bool FunscriptHandler::inversed()
+{
+    QMutexLocker locker(&mutex);
+    return _inversed;
+}
 bool FunscriptHandler::isLoaded()
 {
     QMutexLocker locker(&mutex);
@@ -68,7 +73,10 @@ void FunscriptHandler::JSonToFunscript(QJsonObject json)
     if (json.contains("version") && json["version"].isString())
         funscript->version = json["version"].toString();
     if (json.contains("inverted") && json["inverted"].isBool())
+    {
+        _inversed = json["inverted"].toBool();
         funscript->inverted = json["inverted"].toBool();
+    }
     if (json.contains("actions") && json["actions"].isArray())
     {
         funscript->actions.clear();
@@ -80,12 +88,37 @@ void FunscriptHandler::JSonToFunscript(QJsonObject json)
             {
                 funscript->actions[(qint64)obj["at"].toDouble()] = obj["pos"].toInt();
             }
-
         }
         posList = funscript->actions.keys();
         std::sort(posList.begin(), posList.end());
         n = posList.length() / sizeof(posList.first());
     }
+    if (json.contains("creator") && json["creator"].isString())
+        funscript->metadata.creator = json["creator"].toString();
+    if (json.contains("original_name") && json["original_name"].isString())
+        funscript->metadata.original_name = json["original_name"].toString();
+    if (json.contains("url") && json["url"].isString())
+        funscript->metadata.url = json["url"].toString();
+    if (json.contains("url_video") && json["url_video"].isString())
+        funscript->metadata.url_video = json["url_video"].toString();
+    if (json.contains("tags") && json["tags"].isArray())
+    {
+        QJsonArray tags = json["tags"].toArray();;
+        foreach(QJsonValue tag, tags)
+            funscript->metadata.tags.append(tag.toString());
+    }
+    if (json.contains("performers") && json["performers"].isArray())
+    {
+        QJsonArray performers = json["performers"].toArray();;
+        foreach(QJsonValue performer, performers)
+            funscript->metadata.performers.append(performer.toString());
+    }
+    if (json.contains("paid") && json["paid"].isBool())
+        funscript->metadata.paid = json["paid"].toBool();
+    if (json.contains("comment") && json["comment"].isString())
+        funscript->metadata.comment = json["comment"].toString();
+    if (json.contains("original_total_duration_ms"))
+        funscript->metadata.original_total_duration_ms = json["original_total_duration_ms"].toString().toLongLong();
 }
 
 bool FunscriptHandler::exists(QString path)

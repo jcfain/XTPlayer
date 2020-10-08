@@ -25,6 +25,7 @@ struct MediaActions
     const QString IncreaseXLowerRange = "IncreaseXLowerRange";
     const QString DecreaseXLowerRange = "DecreaseXLowerRange";
     const QString ResetLiveXRange = "ResetLiveXRange";
+    const QString ToggleAxisMultiplier = "ToggleAxisMiltiplier";
     const QMap<QString, QString> Values {
         {TogglePause, "Toggle pause"},
         {Next, "Next video"},
@@ -45,7 +46,8 @@ struct MediaActions
         {DecreaseXUpperRange, "Decrease X upper range"},
         {IncreaseXLowerRange, "Increase X lower range"},
         {DecreaseXLowerRange, "Decrease X lower range"},
-        {ResetLiveXRange, "Reset X range"}
+        {ResetLiveXRange, "Reset X range"},
+        {ToggleAxisMultiplier, "Toggle axis multiplier"}
     };
 };
 #endif // MEDIAACTIONS_H

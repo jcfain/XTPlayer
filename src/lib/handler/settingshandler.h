@@ -124,6 +124,8 @@ public:
     static int getLiveXRangeMin();
     static int getLiveXRangeMax();
     static void resetLiveXRange();
+    static bool getLiveMultiplier();
+    static void setLiveMultiplier(bool value);
 
     static void Load();
     static void Save();
@@ -184,6 +186,7 @@ private:
     static int _xRangeStep;
     static int _liveXRangeMax;
     static int _liveXRangeMin;
+    static bool _liveMultiplier;
 
     static int libraryView;
     static int thumbSize;

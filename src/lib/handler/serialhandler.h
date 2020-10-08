@@ -2,6 +2,7 @@
 #define SERIALHANDLER_H
 #include <QSerialPort>
 #include <QSerialPortInfo>
+#include <math.h>
 #include "../struct/SerialComboboxItem.h"
 #include "devicehandler.h"
 #include "../tool/boolinq.h"

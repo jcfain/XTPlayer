@@ -233,50 +233,62 @@ void SettingsHandler::SetMapDefaults()
 
 QString SettingsHandler::getSelectedTheme()
 {
+    QMutexLocker locker(&mutex);
     return selectedTheme;
 }
 QString SettingsHandler::getSelectedLibrary()
 {
+    QMutexLocker locker(&mutex);
     return selectedLibrary;
 }
  QString SettingsHandler::getSelectedFunscriptLibrary()
 {
+     QMutexLocker locker(&mutex);
     return selectedFunscriptLibrary;
 }
 int SettingsHandler::getSelectedDevice()
 {
+    QMutexLocker locker(&mutex);
     return selectedDevice;
 }
 QString SettingsHandler::getSerialPort()
 {
+    QMutexLocker locker(&mutex);
     return serialPort;
 }
 QString SettingsHandler::getServerAddress()
 {
+    QMutexLocker locker(&mutex);
     return serverAddress;
 }
 QString SettingsHandler::getServerPort()
 {
+    QMutexLocker locker(&mutex);
     return serverPort;
 }
 QString SettingsHandler::getDeoAddress()
 {
+    QMutexLocker locker(&mutex);
     return deoAddress;
 }
 QString SettingsHandler::getDeoPort()
 {
+    QMutexLocker locker(&mutex);
     return deoPort;
 }
 bool SettingsHandler::getDeoEnabled()
 {
+    QMutexLocker locker(&mutex);
     return deoEnabled;
 }
 int SettingsHandler::getPlayerVolume()
 {
+    QMutexLocker locker(&mutex);
     return playerVolume;
 }
 int SettingsHandler::getoffSet()
 {
+    QMutexLocker locker(&mutex);
     return offSet;
 }
 int SettingsHandler::getXMin()
@@ -353,55 +365,68 @@ bool SettingsHandler::getMultiplierChecked(QString channel)
 }
 bool SettingsHandler::getYRollMultiplierChecked()
 {
+    QMutexLocker locker(&mutex);
     return yRollMultiplierChecked;
 }
 float SettingsHandler::getYRollMultiplierValue()
 {
+    QMutexLocker locker(&mutex);
     return yRollMultiplierValue;
 }
 bool SettingsHandler::getXRollMultiplierChecked()
 {
+    QMutexLocker locker(&mutex);
     return xRollMultiplierChecked;
 }
 float SettingsHandler::getXRollMultiplierValue()
 {
+    QMutexLocker locker(&mutex);
     return xRollMultiplierValue;
 }
 bool SettingsHandler::getTwistMultiplierChecked()
 {
+    QMutexLocker locker(&mutex);
     return twistMultiplierChecked;
 }
 float SettingsHandler::getTwistMultiplierValue()
 {
+    QMutexLocker locker(&mutex);
     return twistMultiplierValue;
 }
 bool SettingsHandler::getVibMultiplierChecked()
 {
+    QMutexLocker locker(&mutex);
     return vibMultiplierChecked;
 }
 float SettingsHandler::getVibMultiplierValue()
 {
+    QMutexLocker locker(&mutex);
     return vibMultiplierValue;
 }
 
 int SettingsHandler::getLibraryView()
 {
+    QMutexLocker locker(&mutex);
     return libraryView;
 }
 int SettingsHandler::getThumbSize()
 {
+    QMutexLocker locker(&mutex);
     return thumbSize;
 }
 int SettingsHandler::getThumbSizeList()
 {
+    QMutexLocker locker(&mutex);
     return thumbSizeList;
 }
 int SettingsHandler::getVideoIncrement()
 {
+    QMutexLocker locker(&mutex);
     return videoIncrement;
 }
 QString SettingsHandler::getDeoDnlaFunscript(QString key)
 {
+    QMutexLocker locker(&mutex);
     if (deoDnlaFunscriptLookup.contains(key))
     {
         return deoDnlaFunscriptLookup[key].toString();
@@ -411,34 +436,41 @@ QString SettingsHandler::getDeoDnlaFunscript(QString key)
 
 bool SettingsHandler::getGamepadEnabled()
 {
+    QMutexLocker locker(&mutex);
     return _gamePadEnabled;
 }
 
 bool SettingsHandler::getInverseTcXL0()
 {
+    QMutexLocker locker(&mutex);
     return _inverseTcXL0;
 }
 bool SettingsHandler::getInverseTcXRollR2()
 {
+    QMutexLocker locker(&mutex);
     return _inverseTcXRollR2;
 }
 bool SettingsHandler::getInverseTcYRollR1()
 {
+    QMutexLocker locker(&mutex);
     return _inverseTcYRollR1;
 }
 
 int SettingsHandler::getGamepadSpeed()
 {
+    QMutexLocker locker(&mutex);
     return _gamepadSpeed;
 }
 
 void SettingsHandler::setGamepadSpeed(int value)
 {
+    QMutexLocker locker(&mutex);
     _gamepadSpeed = value;
 }
 
 int SettingsHandler::getGamepadSpeedIncrement()
 {
+    QMutexLocker locker(&mutex);
     return _gamepadSpeedStep;
 }
 
@@ -450,6 +482,7 @@ void SettingsHandler::setGamepadSpeedStep(int value)
 
 int SettingsHandler::getLiveGamepadSpeed()
 {
+    QMutexLocker locker(&mutex);
     return _livegamepadSpeed;
 }
 
@@ -467,6 +500,7 @@ void SettingsHandler::setXRangeStep(int value)
 
 int SettingsHandler::getXRangeStep()
 {
+    QMutexLocker locker(&mutex);
     return _xRangeStep;
 }
 
@@ -478,6 +512,7 @@ void SettingsHandler::setLiveXRangeMin(int value)
 
 int SettingsHandler::getLiveXRangeMin()
 {
+    QMutexLocker locker(&mutex);
     return _liveXRangeMin;
 }
 
@@ -489,6 +524,7 @@ void SettingsHandler::setLiveXRangeMax(int value)
 
 int SettingsHandler::getLiveXRangeMax()
 {
+    QMutexLocker locker(&mutex);
     return _liveXRangeMax;
 }
 void SettingsHandler::resetLiveXRange()
@@ -498,6 +534,19 @@ void SettingsHandler::resetLiveXRange()
     _liveXRangeMax = _availableAxis.value(axisNames.TcXUpDownL0).UserMax;
     _liveXRangeMin = _availableAxis.value(axisNames.TcXUpDownL0).UserMin;
 }
+
+bool SettingsHandler::getLiveMultiplier()
+{
+    QMutexLocker locker(&mutex);
+    return _liveMultiplier;
+}
+
+void SettingsHandler::setLiveMultiplier(bool value)
+{
+    QMutexLocker locker(&mutex);
+    _liveMultiplier = value;
+}
+
 bool SettingsHandler::getDisableSpeechToText()
 {
     return disableSpeechToText;
@@ -717,20 +766,24 @@ void SettingsHandler::setGamePadMapButton(QString gamePadButton, QString axis)
 
 void SettingsHandler::setInverseTcXL0(bool value)
 {
+    QMutexLocker locker(&mutex);
     _inverseTcXL0 = value;
 }
 void SettingsHandler::setInverseTcXRollR2(bool value)
 {
+    QMutexLocker locker(&mutex);
     _inverseTcXRollR2 = value;
 }
 void SettingsHandler::setInverseTcYRollR1(bool value)
 {
+    QMutexLocker locker(&mutex);
     _inverseTcYRollR1  = value;
 }
 
 //private
 void SettingsHandler::SetupAvailableAxis()
 {
+    QMutexLocker locker(&mutex);
     _availableAxis = {
         {axisNames.None, { "None", axisNames.None, axisNames.None, 1, 500, 999, 1, 500, 999 } },
         {axisNames.TcXUpDownL0, { "X (Up/down L0)", axisNames.TcXUpDownL0, "L0", 1, 500, 999, 1, 500, 999 } },
@@ -752,6 +805,7 @@ void SettingsHandler::SetupAvailableAxis()
 
 void SettingsHandler::SetupGamepadButtonMap()
 {
+    QMutexLocker locker(&mutex);
     _gamepadButtonMap = {
         { "None", axisNames.None },
         { gamepadAxisNames.LeftXAxis, axisNames.TcTwistR0 },
@@ -768,10 +822,10 @@ void SettingsHandler::SetupGamepadButtonMap()
         { gamepadAxisNames.Y, mediaActions.Loop },
         { gamepadAxisNames.B, mediaActions.Stop },
         { gamepadAxisNames.A, mediaActions.Mute },
-        { gamepadAxisNames.DPadUp, mediaActions.VolumeUp },
-        { gamepadAxisNames.DPadDown, mediaActions.VolumeDown },
-        { gamepadAxisNames.DPadLeft, mediaActions.Back },
-        { gamepadAxisNames.DPadRight, mediaActions.Next },
+        { gamepadAxisNames.DPadUp, mediaActions.IncreaseXRange },
+        { gamepadAxisNames.DPadDown, mediaActions.DecreaseXRange },
+        { gamepadAxisNames.DPadLeft, mediaActions.TCodeSpeedDown },
+        { gamepadAxisNames.DPadRight, mediaActions.TCodeSpeedUp },
         { gamepadAxisNames.RightAxisButton, axisNames.None },
         { gamepadAxisNames.LeftAxisButton, axisNames.None },
         { gamepadAxisNames.Center, axisNames.None },
@@ -828,6 +882,7 @@ int SettingsHandler::_livegamepadSpeed;
 int SettingsHandler::_xRangeStep;
 int SettingsHandler::_liveXRangeMax;
 int SettingsHandler::_liveXRangeMin;
+bool SettingsHandler::_liveMultiplier = false;
 
 QString SettingsHandler::selectedFunscriptLibrary;
 QString SettingsHandler::selectedFile;

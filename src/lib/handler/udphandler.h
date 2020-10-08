@@ -5,6 +5,7 @@
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>
+#include <math.h>
 #include "loghandler.h"
 #include "devicehandler.h"
 #include "settingshandler.h"
