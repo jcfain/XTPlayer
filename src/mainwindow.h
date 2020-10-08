@@ -71,6 +71,7 @@ private slots:
     void on_MuteBtn_toggled(bool checked);
 
     void on_fullScreenBtn_clicked();
+    void on_mainwindow_change(QEvent* event);
 
     void onLibraryList_ContextMenuRequested(const QPoint &pos);
     void onVideoHandler_togglePaused(bool paused);
@@ -117,11 +118,16 @@ private slots:
 
 signals:
     void keyPressed(QKeyEvent * event);
+    void change(QEvent * event);
     void sendTCode(QString tcode);
 protected:
     virtual void keyPressEvent(QKeyEvent *event) override
     {
         emit keyPressed(event);
+    }
+    virtual void changeEvent(QEvent *event) override
+    {
+        emit change(event);
     }
 
 private:
@@ -135,12 +141,15 @@ private:
     VideoHandler* videoHandler;
     FunscriptHandler* funscriptHandler;
     TCodeHandler* tcodeHandler;
-    QSize videoSize;
-    QSize appSize;
-    QSize currentThumbSize;
-    QSize currentMaxThumbSize;
-    QPoint appPos;
-    QMovie* movie;
+    bool _isMaximized = false;
+    bool _isFullScreen = false;
+    QSize _videoSize;
+    QSize _appSize;
+    QSize _defaultAppSize;
+    QSize _currentThumbSize;
+    QSize _currentMaxThumbSize;
+    QPoint _appPos;
+    QMovie* _movie;
     int playingVideoListIndex;
     bool deviceConnected;
     bool autoLoopOn = false;

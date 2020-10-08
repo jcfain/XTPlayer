@@ -45,8 +45,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->MediaGrid->addWidget(videoHandler);
 
     ui->videoLoadingLabel->hide();
-    movie = new QMovie(QApplication::applicationDirPath() + "/themes/loading.gif");
-    ui->videoLoadingLabel->setMovie(movie);
+    _movie = new QMovie(QApplication::applicationDirPath() + "/themes/loading.gif");
+    ui->videoLoadingLabel->setMovie(_movie);
 
     ui->SeekSlider->setDisabled(true);
     ui->SeekSlider->SetRange(0, 100);
@@ -63,7 +63,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->LibraryList->setContextMenuPolicy(Qt::CustomContextMenu);
 
     thumbCaptureTime = 35000;
-    currentMaxThumbSize = {175,175};
+    _currentMaxThumbSize = {175,175};
     libraryViewGroup = new QActionGroup(this);
     libraryViewGroup->addAction(ui->actionList);
     libraryViewGroup->addAction(ui->actionThumbnail);
@@ -138,6 +138,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(videoHandler, &VideoHandler::doubleClicked, this, &MainWindow::media_double_click_event);
     connect(videoHandler, &VideoHandler::rightClicked, this, &MainWindow::media_single_click_event);
     connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
+    connect(this, &MainWindow::change, this, &MainWindow::on_mainwindow_change);
     //connect(videoHandler, &VideoHandler::mouseEnter, this, &MainWindow::on_video_mouse_enter);
 
     connect(ui->LibraryList, &QListWidget::customContextMenuRequested, this, &MainWindow::onLibraryList_ContextMenuRequested);
@@ -148,13 +149,13 @@ MainWindow::MainWindow(QWidget *parent)
     connect(QApplication::instance(), &QCoreApplication::aboutToQuit, this, &MainWindow::dispose);
 
     setFocus();
+    _defaultAppSize = this->size();
 
 }
 MainWindow::~MainWindow()
 {
 
 }
-
 void MainWindow::dispose()
 {
     SettingsHandler::Save();
@@ -204,7 +205,6 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
         return QWidget::eventFilter(obj, event);
     }
 }
-
 void MainWindow::on_key_press(QKeyEvent * event)
 {
     MediaActions actions;
@@ -657,7 +657,7 @@ void MainWindow::on_load_library(QString path)
                 }
                 QIcon thumb;
                 QPixmap bgPixmap(thumbString);
-                QPixmap scaled = bgPixmap.scaled(currentMaxThumbSize, Qt::AspectRatioMode::KeepAspectRatio);
+                QPixmap scaled = bgPixmap.scaled(_currentMaxThumbSize, Qt::AspectRatioMode::KeepAspectRatio);
                 thumb.addPixmap(scaled);
                 qListWidgetItem->setIcon(thumb);
                 qListWidgetItem->setSizeHint({SettingsHandler::getThumbSize(), SettingsHandler::getThumbSize()});
@@ -715,7 +715,7 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
 {
     QIcon thumb;
     QPixmap bgPixmap(QApplication::applicationDirPath() + "/themes/loading.png");
-    QPixmap scaled = bgPixmap.scaled(currentMaxThumbSize, Qt::AspectRatioMode::KeepAspectRatio);
+    QPixmap scaled = bgPixmap.scaled(_currentMaxThumbSize, Qt::AspectRatioMode::KeepAspectRatio);
     thumb.addPixmap(scaled);
     qListWidgetItem->setIcon(thumb);
     VideoFrameExtractor* extractor = new VideoFrameExtractor;
@@ -736,7 +736,7 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
                }
                QIcon thumb;
                QPixmap bgPixmap(thumbFileTemp);
-               QPixmap scaled = bgPixmap.scaled(currentMaxThumbSize, Qt::AspectRatioMode::KeepAspectRatio);
+               QPixmap scaled = bgPixmap.scaled(_currentMaxThumbSize, Qt::AspectRatioMode::KeepAspectRatio);
                thumb.addPixmap(scaled);
                qListWidgetItem->setIcon(thumb);
                if(thumbNailSearchIterator > 0)
@@ -755,7 +755,7 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
 
                QIcon thumb;
                QPixmap bgPixmap("://images/icons/error.png");
-               QPixmap scaled = bgPixmap.scaled(currentMaxThumbSize);
+               QPixmap scaled = bgPixmap.scaled(_currentMaxThumbSize);
                thumb.addPixmap(scaled);
                qListWidgetItem->setIcon(thumb);
                if(thumbNailSearchIterator > 0)
@@ -863,7 +863,7 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
     if (file.exists())
     {
         ui->videoLoadingLabel->show();
-        movie->start();
+        _movie->start();
         videoHandler->stop();
         if (videoHandler->file() != selectedFileListItem.path)
         {
@@ -888,16 +888,34 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
     }
 }
 
+void MainWindow::on_mainwindow_change(QEvent* event)
+{
+    if (event->type() == QEvent::WindowStateChange)
+    {
+        QWindowStateChangeEvent* stateEvent = (QWindowStateChangeEvent*)event;
+        if(stateEvent->oldState() == Qt::WindowState::WindowMaximized && !_isFullScreen && !_isMaximized)
+        {
+            this->resize(_defaultAppSize);
+            QMainWindow::move(_appPos.x() < 10 ? 10 : _appPos.x(), _appPos.y() < 10 ? 10 : _appPos.y());
+        }
+        else if(stateEvent->oldState() == Qt::WindowState::WindowMaximized && !_isFullScreen)
+        {
+            _isMaximized = false;
+        }
+    }
+}
 
 void MainWindow::toggleFullScreen()
 {
-    QScreen *screen = QGuiApplication::primaryScreen();
-    QSize screenSize = screen->size();
-    if(!QMainWindow::isFullScreen())
+    if(!_isFullScreen)
     {
-        videoSize = videoHandler->size();
-        appSize = size();
-        appPos = pos();
+        QScreen *screen = this->window()->windowHandle()->screen();
+        QSize screenSize = screen->size();
+        _videoSize = videoHandler->size();
+        _appSize = this->size();
+        _appPos = this->pos();
+        _isMaximized = this->isMaximized();
+        _isFullScreen = true;
         QMainWindow::setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
         ui->MediaGrid->removeWidget(videoHandler);
         ui->ControlsGrid->removeWidget(ui->playerControlsFrame);
@@ -911,7 +929,7 @@ void MainWindow::toggleFullScreen()
         playerControlsPlaceHolder->setLayout(placeHolderControlsGrid);
         playerControlsPlaceHolder->setContentsMargins(0,0,0,0);
         playerControlsPlaceHolder->installEventFilter(this);
-        playerControlsPlaceHolder->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint );
+        //playerControlsPlaceHolder->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint );
         playerControlsPlaceHolder->move(QPoint(0, screenSize.height() - ui->playerControlsFrame->height()));
         playerControlsPlaceHolder->setFixedWidth(screenSize.width());
         playerControlsPlaceHolder->setFixedHeight(ui->playerControlsFrame->height());
@@ -940,7 +958,7 @@ void MainWindow::toggleFullScreen()
 
         ui->fullScreenGrid->removeWidget(videoHandler);
         playerControlsPlaceHolder->layout()->removeWidget(ui->playerControlsFrame);
-        videoHandler->resize(videoSize);
+        videoHandler->resize(_videoSize);
         ui->MediaGrid->addWidget(videoHandler);
         ui->fullScreenGrid->removeWidget(playerControlsPlaceHolder);
         ui->playerControlsFrame->setWindowFlags(Qt::Widget);
@@ -957,9 +975,17 @@ void MainWindow::toggleFullScreen()
         ui->mainStackedWidget->setCurrentIndex(0);
 
         QMainWindow::setWindowFlags(Qt::WindowFlags());
-        QMainWindow::resize(appSize);
-        QMainWindow::move(appPos);
-        QMainWindow::showNormal();
+        if(_isMaximized)
+        {
+            QMainWindow::showMaximized();
+        }
+        else
+        {
+            QMainWindow::resize(_appSize);
+            QMainWindow::move(_appPos.x() < 100 ? 100 : _appPos.x(), _appPos.y() < 100 ? 100 : _appPos.y());
+            QMainWindow::showNormal();
+        }
+        _isFullScreen = false;
         ui->menubar->show();
         ui->statusbar->show();
         delete placeHolderControlsGrid;
@@ -992,7 +1018,7 @@ void MainWindow::toggleLoop()
 
 void MainWindow::hideControls()
 {
-    if (isFullScreen())
+    if (_isFullScreen)
     {
         ui->playerControlsFrame->hide();
     }
@@ -1000,7 +1026,7 @@ void MainWindow::hideControls()
 
 void MainWindow::showControls()
 {
-    if (isFullScreen())
+    if (_isFullScreen)
     {
         ui->playerControlsFrame->show();
     }
@@ -1104,7 +1130,7 @@ void MainWindow::on_seekslider_hover(int position, int sliderValue)
     //    LogHandler::Debug("time: "+QString::number(sliderValueTime));
     //    LogHandler::Debug("position: "+QString::number(position));
         QPoint gpos;
-        if(MainWindow::isFullScreen())
+        if(_isFullScreen)
         {
             gpos = mapToGlobal(playerControlsPlaceHolder->pos() + ui->SeekSlider->pos() + QPoint(position, 0));
         }
@@ -1237,7 +1263,7 @@ QString MainWindow::mSecondFormat(int mSecs)
 void MainWindow::on_media_start()
 {
     ui->videoLoadingLabel->hide();
-    movie->stop();
+    _movie->stop();
     ui->SeekSlider->setDisabled(false);
     ui->fullScreenBtn->setDisabled(false);
     QIcon icon("://images/icons/pause.svg" );
@@ -1258,7 +1284,7 @@ void MainWindow::on_media_start()
 void MainWindow::on_media_stop()
 {
     ui->videoLoadingLabel->hide();
-    movie->stop();
+    _movie->stop();
     ui->SeekSlider->setUpperValue(0);
     ui->SeekSlider->setDisabled(true);
     QIcon icon("://images/icons/play.svg" );
@@ -1483,19 +1509,19 @@ void MainWindow::on_media_statusChanged(MediaStatus status)
         break;
     case BufferingMedia:
         ui->videoLoadingLabel->show();
-        movie->start();
+        _movie->start();
         break;
     case BufferedMedia:
         ui->videoLoadingLabel->hide();
-        movie->stop();
+        _movie->stop();
         break;
     case LoadingMedia:
         ui->videoLoadingLabel->show();
-        movie->start();
+        _movie->start();
         break;
     case LoadedMedia:
         ui->videoLoadingLabel->hide();
-        movie->stop();
+        _movie->stop();
         break;
     case StalledMedia:
 
@@ -1801,36 +1827,36 @@ void MainWindow::updateThumbSizeUI(int size)
 void MainWindow::on_action75_triggered()
 {
     setThumbSize(75);
-    ui->LibraryList->setIconSize(currentThumbSize);
+    ui->LibraryList->setIconSize(_currentThumbSize);
 }
 
 void MainWindow::on_action100_triggered()
 {
     setThumbSize(100);
-    ui->LibraryList->setIconSize(currentThumbSize);
+    ui->LibraryList->setIconSize(_currentThumbSize);
 }
 
 void MainWindow::on_action125_triggered()
 {
     setThumbSize(125);
-    ui->LibraryList->setIconSize(currentThumbSize);
+    ui->LibraryList->setIconSize(_currentThumbSize);
 }
 
 void MainWindow::on_action150_triggered()
 {
     setThumbSize(150);
-    ui->LibraryList->setIconSize(currentThumbSize);
+    ui->LibraryList->setIconSize(_currentThumbSize);
 }
 
 void MainWindow::on_action175_triggered()
 {
     setThumbSize(175);
-    ui->LibraryList->setIconSize(currentThumbSize);
+    ui->LibraryList->setIconSize(_currentThumbSize);
 }
 
 void MainWindow::setThumbSize(int size)
 {
-    currentThumbSize = {size, size};
+    _currentThumbSize = {size, size};
     if (SettingsHandler::getLibraryView() == LibraryView::List)
     {
         SettingsHandler::setThumbSizeList(size);
