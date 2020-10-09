@@ -24,8 +24,7 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
       tcode += QString::number(speed);
     }
 
-    if(((SettingsHandler::getGamepadEnabled() && !SettingsHandler::getLiveGamepadConnected()) && SettingsHandler::getLiveMultiplier()) ||
-            (!SettingsHandler::getGamepadEnabled() && SettingsHandler::getLiveMultiplier()))
+    if(SettingsHandler::getLiveMultiplier())
     {
         foreach(const QString axis, _multiplierAxis)
         {

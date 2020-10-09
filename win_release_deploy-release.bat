@@ -8,4 +8,5 @@ xcopy C:\Qt\5.15.0\mingw81_64\bin\libstdc++-6.dll .\bin\release\
 xcopy C:\Qt\5.15.0\mingw81_64\bin\libwinpthread-1.dll .\bin\release\
 xcopy C:\Qt\5.15.0\mingw81_64\bin\Qt5OpenGL.dll .\bin\release\
 xcopy .\src\rename_me_for_local_settings.ini .\bin\release\
+xcopy .\src\XTPlayerDebug.bat .\bin\release\
 pause

@@ -6,7 +6,7 @@ int main(int argc, char *argv[])
 {
     qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
     QApplication a(argc, argv);
-    MainWindow w;
+    MainWindow w(a.arguments());
     w.show();
     return a.exec();
 }

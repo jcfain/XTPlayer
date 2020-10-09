@@ -790,7 +790,6 @@ void SettingsHandler::setInverseTcYRollR1(bool value)
 //private
 void SettingsHandler::SetupAvailableAxis()
 {
-    QMutexLocker locker(&mutex);
     _availableAxis = {
         {axisNames.None, { "None", axisNames.None, axisNames.None, 1, 500, 999, 1, 500, 999 } },
         {axisNames.TcXUpDownL0, { "X (Up/down L0)", axisNames.TcXUpDownL0, "L0", 1, 500, 999, 1, 500, 999 } },
@@ -812,7 +811,6 @@ void SettingsHandler::SetupAvailableAxis()
 
 void SettingsHandler::SetupGamepadButtonMap()
 {
-    QMutexLocker locker(&mutex);
     _gamepadButtonMap = {
         { "None", axisNames.None },
         { gamepadAxisNames.LeftXAxis, axisNames.TcTwistR0 },
@@ -833,14 +831,14 @@ void SettingsHandler::SetupGamepadButtonMap()
         { gamepadAxisNames.DPadDown, mediaActions.DecreaseXRange },
         { gamepadAxisNames.DPadLeft, mediaActions.TCodeSpeedDown },
         { gamepadAxisNames.DPadRight, mediaActions.TCodeSpeedUp },
-        { gamepadAxisNames.RightAxisButton, axisNames.None },
+        { gamepadAxisNames.RightAxisButton, mediaActions.ToggleAxisMultiplier },
         { gamepadAxisNames.LeftAxisButton, axisNames.None },
         { gamepadAxisNames.Center, axisNames.None },
         { gamepadAxisNames.Guide, axisNames.None }
     };
 }
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.16b3";
+const QString SettingsHandler::XTPVersion = "0.16b4";
 const float SettingsHandler::XTPVersionNum = 0.16f;
 
 QSettings* SettingsHandler::settings;

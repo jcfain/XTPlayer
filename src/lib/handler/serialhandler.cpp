@@ -12,6 +12,13 @@ SerialHandler::~SerialHandler()
 void SerialHandler::init(const QString &portName, int waitTimeout)
 {
     auto available = getPorts();
+
+    LogHandler::Debug("Connecting to port: "+ portName);
+    LogHandler::Debug("Availible ports length: "+ QString::number(available.length()));
+    foreach(SerialComboboxItem port, available)
+    {
+        LogHandler::Debug("Port: "+ port.portName);
+    }
     if(portName.isEmpty())
     {
         LogHandler::Dialog("No portname specified", XLogLevel::Critical);
@@ -41,10 +48,12 @@ void SerialHandler::init(const QString &portName, int waitTimeout)
     qint64 time1 = 0;
     qint64 time2 = 0;
     mSecTimer.start();
+    LogHandler::Debug("Starting timer: "+ portName);
     while(!_isConnected && !_stop && timeouttracker <= 4)
     {
         if (time2 - time1 >= _waitTimeout + 1000 || timeouttracker == 0)
         {
+            LogHandler::Debug("Not connected: "+ QString::number(timeouttracker));
             time1 = time2;
             sendTCode("D1");
             ++timeouttracker;
@@ -208,6 +217,7 @@ QList<SerialComboboxItem> SerialHandler::getPorts()
 {
     const auto serialPortInfos = QSerialPortInfo::availablePorts();
 
+    LogHandler::Debug("QSerialPortInfo::availablePorts() length: "+ QString::number(serialPortInfos.length()));
     QList<SerialComboboxItem> availablePorts;
     for (const QSerialPortInfo &serialPortInfo : serialPortInfos) {
         QString friendlyName = serialPortInfo.portName() + " " + serialPortInfo.description() ;

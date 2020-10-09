@@ -1,15 +1,23 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
     SettingsHandler::Load();
-
+    if(arguments.length() > 0)
+    {
+        foreach(QString arg, arguments)
+        {
+            if(arg.toLower().startsWith("-debug"))
+                LogHandler::UserDebug(true);
+            else if(arg.toLower().startsWith("-reset"))
+                SettingsHandler::Default();
+        }
+    }
     QFile file(SettingsHandler::getSelectedTheme());
     file.open(QFile::ReadOnly);
     QString styleSheet = QLatin1String(file.readAll());
