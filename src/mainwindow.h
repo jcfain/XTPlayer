@@ -173,6 +173,7 @@ private:
     QFrame* playerControlsPlaceHolder;
     QGridLayout* placeHolderControlsGrid;
     bool funscriptFileSelectorOpen = false;
+    bool stopThumbProcess = false;
 
 
     QList<QListWidgetItem*> libraryItems;

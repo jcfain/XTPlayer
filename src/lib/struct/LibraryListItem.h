@@ -7,7 +7,9 @@ struct LibraryListItem
 {
     QString path;
     QString name;
+    QString nameNoExtension;
     QString script;
+    QString scriptNoExtension;
     QString thumbFile;
 };
 

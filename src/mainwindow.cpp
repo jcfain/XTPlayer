@@ -560,6 +560,7 @@ void MainWindow::mediaAction(QString action)
         FunscriptHandler::setInverted(!inverted);
     }
 }
+
 void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
 {
     // Handle global position
@@ -598,7 +599,6 @@ void MainWindow::changeDeoFunscript()
     }
 }
 
-bool stopThumbProcess = false;
 void MainWindow::on_load_library(QString path)
 {
     if (!path.isNull() && !path.isEmpty())
@@ -639,14 +639,17 @@ void MainWindow::on_load_library(QString path)
                 QString videoPathTemp = fileinfo.filePath();
                 QString fileName = fileinfo.fileName();
                 QString fileNameTemp = fileinfo.fileName();
-                QString scriptFile = fileNameTemp.remove(fileNameTemp.lastIndexOf('.'), fileNameTemp.length() -  1) + ".funscript";
+                QString fileNameNoExtension = fileNameTemp.remove(fileNameTemp.lastIndexOf('.'), fileNameTemp.length() -  1);
+                QString scriptFile = fileNameNoExtension + ".funscript";
                 QString scriptPath;
+                QString scriptNoExtension = videoPathTemp.remove(videoPathTemp.lastIndexOf('.'), videoPathTemp.length() -  1);
                 if (SettingsHandler::getSelectedFunscriptLibrary() == Q_NULLPTR)
                 {
-                    scriptPath = videoPathTemp.remove(videoPathTemp.lastIndexOf('.'), videoPathTemp.length() -  1) + ".funscript";
+                    scriptPath = scriptNoExtension + ".funscript";
                 }
                 else
                 {
+                    scriptNoExtension = SettingsHandler::getSelectedFunscriptLibrary() + QDir::separator() + fileNameNoExtension;
                     scriptPath = SettingsHandler::getSelectedFunscriptLibrary() + QDir::separator() + scriptFile;
                 }
                 if (!funscriptHandler->exists(scriptPath))
@@ -658,7 +661,9 @@ void MainWindow::on_load_library(QString path)
                 {
                     videoPath, // path
                     fileName, // name
+                    fileNameNoExtension, //nameNoExtension
                     scriptPath, // script
+                    scriptNoExtension,
                     thumbFile
                 };
                 QVariant listItem;
