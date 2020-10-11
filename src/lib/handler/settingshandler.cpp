@@ -32,9 +32,9 @@ void SettingsHandler::Load()
         Default();
         defaultReset = false;
     }
-    else if(currentVersion < XTPVersionNum && resetRequired)
+    else if(currentVersion <= 0.17f)
     {
-        SetMapDefaults();
+        MigrateTo17();
     }
     locker.relock();
     selectedTheme = settings->value("selectedTheme").toString();
@@ -231,6 +231,22 @@ void SettingsHandler::SetMapDefaults()
     settings->setValue("gamepadButtonMap", gamepadMap);
 }
 
+void SettingsHandler::MigrateTo17()
+{
+    if(!_availableAxis.contains(axisNames.TcYLeftRightL1))
+        _availableAxis.insert(axisNames.TcYLeftRightL1, { "Y (Left/Right L1)", axisNames.TcYLeftRightL1, "L1", 1, 500, 999, 1, 500, 999 } );
+    if(!_availableAxis.contains(axisNames.TcYLeftL1))
+        _availableAxis.insert(axisNames.TcYLeftL1, { "Y (Left)", axisNames.TcYLeftL1, "L1", 1, 500, 999, 1, 500, 999 } );
+    if(!_availableAxis.contains(axisNames.TcYRightL1))
+        _availableAxis.insert(axisNames.TcYRightL1, { "Y (Right)", axisNames.TcYRightL1, "L1", 1, 500, 999, 1, 500, 999 } );
+    if(!_availableAxis.contains(axisNames.TcZBackForwardL2))
+        _availableAxis.insert(axisNames.TcZBackForwardL2, { "Z (Back/Forward L2)", axisNames.TcZBackForwardL2, "L2", 1, 500, 999, 1, 500, 999 }  );
+    if(!_availableAxis.contains(axisNames.TcZBackL2))
+        _availableAxis.insert(axisNames.TcZBackL2, { "Z (Back)", axisNames.TcZBackL2, "L2", 1, 500, 999, 1, 500, 999 } );
+    if(!_availableAxis.contains(axisNames.TcZForwardL2))
+        _availableAxis.insert(axisNames.TcZForwardL2, { "Z (Forward)", axisNames.TcZForwardL2, "L2", 1, 500, 999, 1, 500, 999 } );
+}
+
 QString SettingsHandler::getSelectedTheme()
 {
     QMutexLocker locker(&mutex);
@@ -291,117 +307,144 @@ int SettingsHandler::getoffSet()
     QMutexLocker locker(&mutex);
     return offSet;
 }
-int SettingsHandler::getXMin()
+
+int SettingsHandler::getChannelUserMin(QString channel)
 {
-    return getAxis(axisNames.TcXUpDownL0).UserMin;
+    QMutexLocker locker(&mutex);
+    return _availableAxis[channel].UserMin;
 }
-int SettingsHandler::getYRollMin()
+int SettingsHandler::getChannelUserMax(QString channel)
 {
-    return getAxis(axisNames.TcYRollR1).UserMin;
+    QMutexLocker locker(&mutex);
+    return _availableAxis[channel].UserMax;
 }
-int SettingsHandler::getXRollMin()
+void SettingsHandler::setChannelUserMin(QString channel, int value)
 {
-    return getAxis(axisNames.TcXRollR2).UserMin;
+    QMutexLocker locker(&mutex);
+    _availableAxis[channel].UserMin = value;
+    if(channel == axisNames.TcXUpDownL0)
+        _liveXRangeMin = value;
 }
-int SettingsHandler::getXMax()
+void SettingsHandler::setChannelUserMax(QString channel, int value)
 {
-    return getAxis(axisNames.TcXUpDownL0).UserMax;
+    QMutexLocker locker(&mutex);
+    _availableAxis[channel].UserMax = value;
+    if(channel == axisNames.TcXUpDownL0)
+        _liveXRangeMax = value;
 }
-int SettingsHandler::getYRollMax()
-{
-    return getAxis(axisNames.TcYRollR1).UserMax;
-}
-int SettingsHandler::getXRollMax()
-{
-    return getAxis(axisNames.TcXRollR2).UserMax;
-}
-int SettingsHandler::getTwistMax()
-{
-    return getAxis(axisNames.TcTwistR0).UserMax;
-}
-int SettingsHandler::getTwistMin()
-{
-    return getAxis(axisNames.TcTwistR0).UserMin;
-}
+
 float SettingsHandler::getMultiplierValue(QString channel)
 {
     if(channel == "R0")
     {
-        return getTwistMultiplierValue();
+        return twistMultiplierValue;
+    }
+    else if(channel == "L1")
+    {
+        return yMultiplierValue;
+    }
+    else if(channel == "L2")
+    {
+        return zMultiplierValue;
     }
     else if(channel == "R1")
     {
-        return getYRollMultiplierValue();
+        return yRollMultiplierValue;
     }
     else if(channel == "R2")
     {
-        return getXRollMultiplierValue();
+        return xRollMultiplierValue;
     }
     else if(channel == "V0")
     {
-        return getVibMultiplierValue();
+        return vibMultiplierValue;
     }
     return 0.0;
 }
+
 bool SettingsHandler::getMultiplierChecked(QString channel)
 {
     if(channel == "R0")
     {
-        return getTwistMultiplierChecked();
+        return twistMultiplierChecked;
+    }
+    else if(channel == "L1")
+    {
+        return yMultiplierChecked;
+    }
+    else if(channel == "L2")
+    {
+        return zMultiplierChecked;
     }
     else if(channel == "R1")
     {
-        return getYRollMultiplierChecked();
+        return yRollMultiplierChecked;
     }
     else if(channel == "R2")
     {
-        return getXRollMultiplierChecked();
+        return xRollMultiplierChecked;
     }
     else if(channel == "V0")
     {
-        return getVibMultiplierChecked();
+        return vibMultiplierChecked;
     }
     return false;
 }
-bool SettingsHandler::getYRollMultiplierChecked()
+
+void SettingsHandler::setMultiplierValue(QString channel, float value)
 {
-    QMutexLocker locker(&mutex);
-    return yRollMultiplierChecked;
+    if(channel == "R0")
+    {
+        twistMultiplierValue = value;
+    }
+    else if(channel == "L1")
+    {
+        yMultiplierValue = value;
+    }
+    else if(channel == "L2")
+    {
+        zMultiplierValue = value;
+    }
+    else if(channel == "R1")
+    {
+        yRollMultiplierValue = value;
+    }
+    else if(channel == "R2")
+    {
+        xRollMultiplierValue = value;
+    }
+    else if(channel == "V0")
+    {
+        vibMultiplierValue = value;
+    }
 }
-float SettingsHandler::getYRollMultiplierValue()
+
+void SettingsHandler::setMultiplierChecked(QString channel, bool value)
 {
-    QMutexLocker locker(&mutex);
-    return yRollMultiplierValue;
-}
-bool SettingsHandler::getXRollMultiplierChecked()
-{
-    QMutexLocker locker(&mutex);
-    return xRollMultiplierChecked;
-}
-float SettingsHandler::getXRollMultiplierValue()
-{
-    QMutexLocker locker(&mutex);
-    return xRollMultiplierValue;
-}
-bool SettingsHandler::getTwistMultiplierChecked()
-{
-    QMutexLocker locker(&mutex);
-    return twistMultiplierChecked;
-}
-float SettingsHandler::getTwistMultiplierValue()
-{
-    QMutexLocker locker(&mutex);
-    return twistMultiplierValue;
-}
-bool SettingsHandler::getVibMultiplierChecked()
-{
-    QMutexLocker locker(&mutex);
-    return vibMultiplierChecked;
-}
-float SettingsHandler::getVibMultiplierValue()
-{
-    QMutexLocker locker(&mutex);
-    return vibMultiplierValue;
+    if(channel == "R0")
+    {
+        twistMultiplierChecked = value;
+    }
+    else if(channel == "L1")
+    {
+        yMultiplierChecked = value;
+    }
+    else if(channel == "L2")
+    {
+        zMultiplierChecked = value;
+    }
+    else if(channel == "R1")
+    {
+        yRollMultiplierChecked = value;
+    }
+    else if(channel == "R2")
+    {
+        xRollMultiplierChecked = value;
+    }
+    else if(channel == "V0")
+    {
+        vibMultiplierChecked = value;
+    }
 }
 
 int SettingsHandler::getLibraryView()
@@ -644,89 +687,6 @@ void SettingsHandler::setoffSet(int value)
     QMutexLocker locker(&mutex);
     offSet = value;
 }
-void SettingsHandler::setXMin(int value)
-{
-    QMutexLocker locker(&mutex);
-    _liveXRangeMin = value;
-    _availableAxis[axisNames.TcXUpDownL0].UserMin = value;
-}
-void SettingsHandler::setYRollMin(int value)
-{
-    QMutexLocker locker(&mutex);
-    _availableAxis[axisNames.TcYRollR1].UserMin = value;
-}
-void SettingsHandler::setXRollMin(int value)
-{
-    QMutexLocker locker(&mutex);
-    _availableAxis[axisNames.TcXRollR2].UserMin = value;
-}
-void SettingsHandler::setXMax(int value)
-{
-    QMutexLocker locker(&mutex);
-    _liveXRangeMax = value;
-    _availableAxis[axisNames.TcXUpDownL0].UserMax = value;
-}
-void SettingsHandler::setYRollMax(int value)
-{
-    QMutexLocker locker(&mutex);
-    _availableAxis[axisNames.TcYRollR1].UserMax = value;
-}
-void SettingsHandler::setXRollMax(int value)
-{
-    QMutexLocker locker(&mutex);
-    _availableAxis[axisNames.TcXRollR2].UserMax = value;
-}
-void SettingsHandler::setTwistMax(int value)
-{
-    QMutexLocker locker(&mutex);
-    _availableAxis[axisNames.TcTwistR0].UserMax = value;
-}
-void SettingsHandler::setTwistMin(int value)
-{
-    QMutexLocker locker(&mutex);
-    _availableAxis[axisNames.TcTwistR0].UserMin = value;
-}
-
-void SettingsHandler::setYRollMultiplierChecked(bool value)
-{
-    QMutexLocker locker(&mutex);
-    yRollMultiplierChecked = value;
-}
-void SettingsHandler::setYRollMultiplierValue(float value)
-{
-    QMutexLocker locker(&mutex);
-    yRollMultiplierValue = value;
-}
-void SettingsHandler::setXRollMultiplierChecked(bool value)
-{
-    QMutexLocker locker(&mutex);
-    xRollMultiplierChecked = value;
-}
-void SettingsHandler::setXRollMultiplierValue(float value)
-{
-    QMutexLocker locker(&mutex);
-    xRollMultiplierValue = value;
-}
-void SettingsHandler::setTwistMultiplierChecked(bool value)
-{
-    QMutexLocker locker(&mutex);
-    twistMultiplierChecked = value;
-}
-void SettingsHandler::setTwistMultiplierValue(float value)
-{
-    QMutexLocker locker(&mutex);
-    twistMultiplierValue = value;
-}
-void SettingsHandler::setVibMultiplierChecked(bool value)
-{
-    QMutexLocker locker(&mutex);
-    twistMultiplierChecked = value;
-}
-void SettingsHandler::setVibMultiplierValue(float value)
-{
-    QMutexLocker locker(&mutex);
-    twistMultiplierValue = value;
-}
 
 void SettingsHandler::setLibraryView(int value)
 {
@@ -795,6 +755,12 @@ void SettingsHandler::SetupAvailableAxis()
         {axisNames.TcXUpDownL0, { "X (Up/down L0)", axisNames.TcXUpDownL0, "L0", 1, 500, 999, 1, 500, 999 } },
         {axisNames.TcXDownL0, { "X (Down)", axisNames.TcXDownL0, "L0", 1, 500, 999, 1, 500, 999 } },
         {axisNames.TcXUpL0, { "X (Up)", axisNames.TcXUpL0, "L0", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcYLeftRightL1, { "Y (Left/Right L1)", axisNames.TcYLeftRightL1, "L1", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcYLeftL1, { "Y (Left)", axisNames.TcYLeftL1, "L1", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcYRightL1, { "Y (Right)", axisNames.TcYRightL1, "L1", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcZBackForwardL2, { "Z (Back/Forward L2)", axisNames.TcZBackForwardL2, "L2", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcZBackL2, { "Z (Back)", axisNames.TcZBackL2, "L2", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcZForwardL2, { "Z (Forward)", axisNames.TcZForwardL2, "L2", 1, 500, 999, 1, 500, 999 } },
         {axisNames.TcXRollR2, { "X (Roll R2)", axisNames.TcXRollR2, "R2", 1, 500, 999, 1, 500, 999 } },
         {axisNames.TcXRollForwardR2, { "X (Roll Forward)", axisNames.TcXRollForwardR2, "R2", 1, 500, 999, 1, 500, 999 } },
         {axisNames.TcXRollBackR2, { "X (Roll Back)", axisNames.TcXRollBackR2, "R2", 1, 500, 999, 1, 500, 999 } },
@@ -838,8 +804,8 @@ void SettingsHandler::SetupGamepadButtonMap()
     };
 }
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.16b4";
-const float SettingsHandler::XTPVersionNum = 0.16f;
+const QString SettingsHandler::XTPVersion = "0.17b";
+const float SettingsHandler::XTPVersionNum = 0.17f;
 
 QSettings* SettingsHandler::settings;
 QMutex SettingsHandler::mutex;
@@ -862,6 +828,10 @@ int SettingsHandler::offSet;
 //int SettingsHandler::twistMax;
 bool SettingsHandler::yRollMultiplierChecked;
 float SettingsHandler::yRollMultiplierValue;
+bool SettingsHandler::zMultiplierChecked;
+float SettingsHandler::zMultiplierValue;
+bool SettingsHandler::yMultiplierChecked;
+float SettingsHandler::yMultiplierValue;
 bool SettingsHandler::xRollMultiplierChecked;
 float SettingsHandler::xRollMultiplierValue;
 bool SettingsHandler::twistMultiplierChecked;

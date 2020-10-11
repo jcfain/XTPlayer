@@ -39,6 +39,7 @@ public:
     int GetUpperValue() const;
     void SetUpperValue(int aUpperValue);
 
+    void setName(QString name);
     void SetRange(int aMinimum, int aMaximum);
     void setOrientation(Qt::Orientation ori);
     void setOption(Options t = DoubleHandles);
@@ -62,6 +63,8 @@ protected:
     QRectF handleRect(int aValue) const;
 
 signals:
+    void lowerValueChanged(QString name, int aLowerValue);
+    void upperValueChanged(QString name, int aUpperValue);
     void lowerValueChanged(int aLowerValue);
     void upperValueChanged(int aUpperValue);
     void lowerValueMove(int aLowerValue);
@@ -69,6 +72,7 @@ signals:
     void rangeChanged(int aMin, int aMax);
     void onHover(int position, int sliderValue);
     void onLeave();
+    void mouseRelease(QString name);
     void mouseRelease();
 
 public slots:
@@ -79,6 +83,7 @@ public slots:
 
 private:
     Q_DISABLE_COPY(RangeSlider)
+    QString _name;
     float currentPercentage();
     int validLength() const;
 

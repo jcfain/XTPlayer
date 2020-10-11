@@ -31,25 +31,11 @@ public:
     static bool getDeoEnabled();
     static int getPlayerVolume();
     static int getoffSet();
-    static int getXMin();
-    static int getYRollMin();
-    static int getXRollMin();
-    static int getXMax();
-    static int getYRollMax();
-    static int getXRollMax();
-    static int getTwistMax();
-    static int getTwistMin();
 
-    static float getMultiplierValue(QString channel);
-    static bool getMultiplierChecked(QString channel);
-    static bool getYRollMultiplierChecked();
-    static float getYRollMultiplierValue();
-    static bool getXRollMultiplierChecked();
-    static float getXRollMultiplierValue();
-    static bool getTwistMultiplierChecked();
-    static float getTwistMultiplierValue();
-    static bool getVibMultiplierChecked();
-    static float getVibMultiplierValue();
+    static int getChannelUserMin(QString channel);
+    static int getChannelUserMax(QString channel);
+    static void setChannelUserMin(QString channel, int value);
+    static void setChannelUserMax(QString channel, int value);
 
     static int getLibraryView();
     static int getThumbSize();
@@ -84,23 +70,11 @@ public:
     static void setDeoEnabled(bool value);
     static void setPlayerVolume(int value);
     static void setoffSet(int value);
-    static void setXMin(int value);
-    static void setYRollMin(int value);
-    static void setXRollMin(int value);
-    static void setXMax(int value);
-    static void setYRollMax(int value);
-    static void setXRollMax(int value);
-    static void setTwistMin(int value);
-    static void setTwistMax(int value);
 
-    static void setYRollMultiplierChecked(bool value);
-    static void setYRollMultiplierValue(float value);
-    static void setXRollMultiplierChecked(bool value);
-    static void setXRollMultiplierValue(float value);
-    static void setTwistMultiplierChecked(bool value);
-    static void setTwistMultiplierValue(float value);
-    static void setVibMultiplierChecked(bool value);
-    static void setVibMultiplierValue(float value);
+    static float getMultiplierValue(QString channel);
+    static bool getMultiplierChecked(QString channel);
+    static void setMultiplierChecked(QString channel, bool value);
+    static void setMultiplierValue(QString channel, float value);
 
     static void setLibraryView(int value);
     static void setThumbSize(int value);
@@ -142,6 +116,7 @@ private:
     static void SetMapDefaults();
     static void SetupAvailableAxis();
     static void SetupGamepadButtonMap();
+    static void MigrateTo17();
     static GamepadAxisNames gamepadAxisNames;
     static AxisNames axisNames;
     static MediaActions mediaActions;
@@ -160,18 +135,15 @@ private:
     static bool deoEnabled;
     static int playerVolume;
     static int offSet;
-//    static int xMin;
-//    static int yRollMin;
-//    static int xRollMin;
-//    static int xMax;
-//    static int yRollMax;
-//    static int xRollMax;
-//    static int twistMax;
-//    static int twistMin;
+
+    static bool yMultiplierChecked;
+    static float yMultiplierValue;
     static bool yRollMultiplierChecked;
     static float yRollMultiplierValue;
     static bool xRollMultiplierChecked;
     static float xRollMultiplierValue;
+    static bool zMultiplierChecked;
+    static float zMultiplierValue;
     static bool twistMultiplierChecked;
     static float twistMultiplierValue;
     static bool vibMultiplierChecked;

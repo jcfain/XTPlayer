@@ -1936,8 +1936,8 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
     {
         ui->SeekSlider->setOption(RangeSlider::Option::DoubleHandles);
         ui->SeekSlider->SetRange(0, 100);
-        connect(ui->SeekSlider, &RangeSlider::lowerValueChanged, this, &MainWindow::onLoopRange_valueChanged);
-        connect(ui->SeekSlider, &RangeSlider::upperValueChanged, this, &MainWindow::onLoopRange_valueChanged);
+        connect(ui->SeekSlider, QOverload<int>::of(&RangeSlider::lowerValueChanged), this, &MainWindow::onLoopRange_valueChanged);
+        connect(ui->SeekSlider, QOverload<int>::of(&RangeSlider::upperValueChanged), this, &MainWindow::onLoopRange_valueChanged);
         videoHandler->setRepeat(-1);
     }
     else
@@ -1945,8 +1945,8 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
         ui->SeekSlider->setOption(RangeSlider::Option::RightHandle);
         on_media_positionChanged(videoHandler->position());
         ui->SeekSlider->updateColor();
-        disconnect(ui->SeekSlider, &RangeSlider::lowerValueChanged, this, &MainWindow::onLoopRange_valueChanged);
-        disconnect(ui->SeekSlider, &RangeSlider::upperValueChanged, this, &MainWindow::onLoopRange_valueChanged);
+        disconnect(ui->SeekSlider, QOverload<int>::of(&RangeSlider::lowerValueChanged), this, &MainWindow::onLoopRange_valueChanged);
+        disconnect(ui->SeekSlider, QOverload<int>::of(&RangeSlider::upperValueChanged), this, &MainWindow::onLoopRange_valueChanged);
         qint64 position = videoHandler->position();
         videoHandler->setRepeat();
         videoHandler->setPosition(position);

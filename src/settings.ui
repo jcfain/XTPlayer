@@ -31,7 +31,7 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
+   <item row="0" column="0">
     <widget class="QTabWidget" name="settingsTabWidget">
      <property name="currentIndex">
       <number>0</number>
@@ -263,18 +263,18 @@
          <x>10</x>
          <y>10</y>
          <width>257</width>
-         <height>137</height>
+         <height>220</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="FunscriptSettingsGrid">
-        <item row="2" column="1">
+        <item row="4" column="1">
          <widget class="QCheckBox" name="twistMultiplierCheckBox">
           <property name="text">
            <string>Twist multiplier</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="2">
+        <item row="1" column="2">
          <widget class="QDoubleSpinBox" name="xRollMultiplierSpinBox">
           <property name="maximum">
            <double>1.000000000000000</double>
@@ -284,14 +284,24 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
+        <item row="1" column="1">
          <widget class="QCheckBox" name="xRollMultiplierCheckBox">
           <property name="text">
            <string>X roll multiplier</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="2">
+        <item row="2" column="2">
+         <widget class="QDoubleSpinBox" name="yMultiplierSpinBox"/>
+        </item>
+        <item row="9" column="1">
+         <widget class="QCheckBox" name="invertFunscriptXCheckBox">
+          <property name="text">
+           <string>Invert X</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2">
          <widget class="QDoubleSpinBox" name="yRollMultiplierSpinBox">
           <property name="maximum">
            <double>1.000000000000000</double>
@@ -301,21 +311,28 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="1">
+        <item row="2" column="1">
+         <widget class="QCheckBox" name="yMultiplierCheckBox">
+          <property name="text">
+           <string>Y</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="1">
          <widget class="QCheckBox" name="vibMultiplierCheckBox">
           <property name="text">
            <string>Vib multiplier</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
+        <item row="3" column="1">
          <widget class="QCheckBox" name="yRollMultiplierCheckBox">
           <property name="text">
            <string>Y roll multiplier</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="2">
+        <item row="6" column="2">
          <widget class="QDoubleSpinBox" name="vibMultiplierSpinBox">
           <property name="maximum">
            <double>1.000000000000000</double>
@@ -325,7 +342,7 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="2">
+        <item row="4" column="2">
          <widget class="QDoubleSpinBox" name="twistMultiplierSpinBox">
           <property name="maximum">
            <double>1.000000000000000</double>
@@ -335,12 +352,15 @@
           </property>
          </widget>
         </item>
-        <item row="4" column="1">
-         <widget class="QCheckBox" name="invertFunscriptXCheckBox">
+        <item row="5" column="1">
+         <widget class="QCheckBox" name="zMultiplierCheckBox">
           <property name="text">
-           <string>Invert X</string>
+           <string>Z</string>
           </property>
          </widget>
+        </item>
+        <item row="5" column="2">
+         <widget class="QDoubleSpinBox" name="zMuliplierSpinBox"/>
         </item>
        </layout>
       </widget>

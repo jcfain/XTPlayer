@@ -55,14 +55,8 @@ private slots:
 
     void on_serialRefreshBtn_clicked();
 
-    void onXRange_valueChanged(int value);
-    void onYRollRange_valueChanged(int value);
-    void onXRollRange_valueChanged(int value);
-    void onTwistRange_valueChanged(int value);
-    void onXRange_mouseRelease();
-    void onYRollRange_mouseRelease();
-    void onXRollRange_mouseRelease();
-    void onTwistRange_mouseRelease();
+    void onRange_valueChanged(QString name, int value);
+    void onRange_mouseRelease(QString name);
     void onOffSet_valueChanged(int value);
     void on_device_connectionChanged(ConnectionChangedSignal event);
     void on_device_error(QString error);
@@ -125,6 +119,14 @@ private slots:
 
     void on_invertFunscriptXCheckBox_clicked(bool checked);
 
+    void on_yMultiplierCheckBox_clicked(bool checked);
+
+    void on_yMultiplierSpinBox_valueChanged(double arg1);
+
+    void on_zCheckBox_clicked(bool checked);
+
+    void on_zMuliplierSpinBox_valueChanged(double arg1);
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();
@@ -134,6 +136,7 @@ private:
     void setupUi();
     void setupGamepadMap();
 
+    AxisNames axisNames;
     bool _interfaceInitialized = false;
     ConnectionStatus _outConnectionStatus = ConnectionStatus::Disconnected;
     ConnectionStatus _deoConnectionStatus = ConnectionStatus::Disconnected;
@@ -148,23 +151,12 @@ private:
     GamepadHandler* _gamepadHandler;
     QFuture<void> _initFuture;
     QFuture<void> _initDeoFuture;
-    QLabel* xRangeLabel;
-    QLabel* xRangeMinLabel;
-    QLabel* xRangeMaxLabel;
-    QLabel* yRollRangeLabel;
-    QLabel* yRollRangeMinLabel;
-    QLabel* yRollRangeMaxLabel;
-    QLabel* xRollRangeLabel;
-    QLabel* xRollRangeMinLabel;
-    QLabel* xRollRangeMaxLabel;
-    QLabel* twistRangeLabel;
-    QLabel* twistRangeMinLabel;
-    QLabel* twistRangeMaxLabel;
+
+    QMap<QString, QLabel*> rangeMinLabels;
+    QMap<QString, QLabel*> rangeMaxLabels;
+    QMap<QString, RangeSlider*> rangeSliders;
+
     QLabel* offSetLabel;
-    RangeSlider* xRangeSlider;
-    RangeSlider* yRollRangeSlider;
-    RangeSlider* xRollRangeSlider;
-    RangeSlider* twistRangeSlider;
     QSpinBox* offSetSpinBox;
 
     void setDeviceStatusStyle(ConnectionStatus status, DeviceType deviceType, QString message = "");

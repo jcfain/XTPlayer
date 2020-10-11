@@ -269,7 +269,7 @@ void RangeSlider::mouseReleaseEvent(QMouseEvent* aEvent)
 
     mFirstHandlePressed = false;
     mSecondHandlePressed = false;
-    emit mouseRelease();
+    emit mouseRelease(_name);
 }
 
 void RangeSlider::changeEvent(QEvent* aEvent)
@@ -283,6 +283,11 @@ void RangeSlider::changeEvent(QEvent* aEvent)
 QSize RangeSlider::minimumSizeHint() const
 {
     return QSize(scHandleSideLength * 2 + scLeftRightMargin * 2, scHandleSideLength);
+}
+
+void RangeSlider::setName(QString name)
+{
+    _name = name;
 }
 
 int RangeSlider::GetMinimum() const
@@ -338,7 +343,7 @@ void RangeSlider::setLowerValue(int aLowerValue)
     }
 
     mLowerValue = aLowerValue;
-    emit lowerValueChanged(mLowerValue);
+    emit lowerValueChanged(_name, mLowerValue);
 
     update();
 }
@@ -356,7 +361,7 @@ void RangeSlider::setUpperValue(int aUpperValue)
     }
 
     mUpperValue = aUpperValue;
-    emit upperValueChanged(mUpperValue);
+    emit upperValueChanged(_name, mUpperValue);
 
     update();
 }

@@ -20,7 +20,7 @@ public:
 
 private:
     QMutex mutex;
-    const QList<QString> _multiplierAxis = {"R0", "R1", "R2", "V0"};
+    const QList<QString> _multiplierAxis = {"L1", "L2", "R0", "R1", "R2", "V0"};
     const AxisNames axisNames;
 };
 
