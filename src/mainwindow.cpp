@@ -23,7 +23,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     QString styleSheet = QLatin1String(file.readAll());
     setStyleSheet(styleSheet);
 
-    funscriptHandler = new FunscriptHandler();
+    funscriptHandler = new FunscriptHandler(_axisNames.TcXUpDownL0);
 
     textToSpeech = new QTextToSpeech(this);
     auto availableVoices = textToSpeech->availableVoices();
@@ -184,7 +184,8 @@ void MainWindow::dispose()
     }
     delete tcodeHandler;
     delete videoHandler;
-    delete funscriptHandler;
+    foreach(auto funscriptHandler, funscriptHandlers)
+        delete funscriptHandler;
     delete connectionStatusLabel;
     delete retryConnectionButton;
     delete videoPreviewWidget;
@@ -904,6 +905,21 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
             videoHandler->load();
             QString scriptFile = customScript == nullptr ? selectedFileListItem.script : customScript;
             funscriptHandler->load(scriptFile);
+            AxisNames axisNames;
+            foreach(auto axisName, axisNames.BasicAxis)
+            {
+                if(axisName.first == axisNames.TcXUpDownL0)
+                    continue;
+                auto scriptFileTemp = scriptFile;
+                auto funscriptNoExtension = scriptFileTemp.remove(scriptFileTemp.lastIndexOf('.'), scriptFileTemp.length() -  1);
+                QFileInfo fileInfo(funscriptNoExtension + "." + axisName.second.trackName + ".funscript");
+                if(fileInfo.exists())
+                {
+                    FunscriptHandler* otherFunscript = new FunscriptHandler(axisName.first);
+                    otherFunscript->load(fileInfo.absoluteFilePath());
+                    funscriptHandlers.append(otherFunscript);
+                }
+            }
         }
         //QUrl url = QUrl::fromLocalFile(selectedFileListItem.path);
         videoHandler->play();
@@ -1309,7 +1325,7 @@ void MainWindow::on_media_start()
     }
     if (funscriptHandler->isLoaded())
     {
-        funscriptFuture = QtConcurrent::run(syncFunscript, videoHandler, _xSettings, tcodeHandler, funscriptHandler);
+        funscriptFuture = QtConcurrent::run(syncFunscript, videoHandler, _xSettings, tcodeHandler, funscriptHandler, funscriptHandlers);
     }
 }
 
@@ -1391,8 +1407,11 @@ void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDial
         xPlayer->stop();
         funscriptHandler->setLoaded(false);
     }
+    AxisNames axisNames;
     DeviceHandler* device = xSettings->getSelectedDeviceHandler();
+    QList<FunscriptHandler*> funscriptHandlers;
     std::shared_ptr<FunscriptAction> actionPosition;
+    QMap<QString, std::shared_ptr<FunscriptAction>> otherActions;
     DeoPacket currentDeoPacket = deoPlayer->getCurrentDeoPacket();
     QString currentVideo;
     qint64 timeTracker = 0;
@@ -1435,10 +1454,16 @@ void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDial
                 }
                 //LogHandler::Debug("funscriptHandler->getPosition: "+QString::number(currentTime));
                 actionPosition = funscriptHandler->getPosition(currentTime);
-                if (actionPosition != nullptr)
+                foreach(auto funscriptHandlerOther, funscriptHandlers)
                 {
-                    device->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
+                    auto otherAction = funscriptHandlerOther->getPosition(currentTime);
+                    if(otherAction != nullptr)
+                        otherActions.insert(funscriptHandlerOther->channel(), otherAction);
                 }
+                QString tcode = tcodeHandler->funscriptToTCode(actionPosition, otherActions);
+                if(tcode != nullptr)
+                    device->sendTCode(tcode);
+                otherActions.clear();
                 //LogHandler::Debug("timer "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
                 //timer.start();
             }
@@ -1452,6 +1477,20 @@ void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDial
                 QString funscriptPath = SettingsHandler::getDeoDnlaFunscript(currentDeoPacket.path);
                 currentVideo = currentDeoPacket.path;
                 funscriptHandler->load(funscriptPath);
+                foreach(auto axisName, axisNames.BasicAxis)
+                {
+                    if(axisName.first == axisNames.TcXUpDownL0)
+                        continue;
+                    QString funscriptPathTemp = funscriptPath;
+                    auto funscriptNoExtension = funscriptPathTemp.remove(funscriptPathTemp.lastIndexOf('.'), funscriptPathTemp.length() -  1);
+                    QFileInfo fileInfo(funscriptNoExtension + "." + axisName.second.trackName + ".funscript");
+                    if(fileInfo.exists())
+                    {
+                        FunscriptHandler* otherFunscript = new FunscriptHandler(axisName.first);
+                        otherFunscript->load(fileInfo.absoluteFilePath());
+                        funscriptHandlers.append(otherFunscript);
+                    }
+                }
             }
         }
 
@@ -1469,9 +1508,11 @@ void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDial
     LogHandler::Debug("exit syncDeoFunscript");
 }
 
-void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler)
+void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler, QList<FunscriptHandler*> funscriptHandlers)
 {
-    std::unique_ptr<FunscriptAction> actionPosition;
+    AxisNames axisNames;
+    std::shared_ptr<FunscriptAction> actionPosition;
+    QMap<QString, std::shared_ptr<FunscriptAction>> otherActions;
     DeviceHandler* device = xSettings->getSelectedDeviceHandler();
     QElapsedTimer mSecTimer;
     qint64 timer1 = 0;
@@ -1484,13 +1525,18 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
             timer1 = timer2;
             if(xSettings->isConnected())
             {
-                qint64 position = player->position();
-                actionPosition = funscriptHandler->getPosition(position);
-                if (actionPosition != nullptr)
+                qint64 currentTime = player->position();
+                actionPosition = funscriptHandler->getPosition(currentTime);
+                foreach(auto funscriptHandlerOther, funscriptHandlers)
                 {
-                    device->sendTCode(tcodeHandler->funscriptToTCode(actionPosition->pos, actionPosition->speed));
+                    auto otherAction = funscriptHandlerOther->getPosition(currentTime);
+                    if(otherAction != nullptr)
+                        otherActions.insert(funscriptHandlerOther->channel(), otherAction);
                 }
-                actionPosition = nullptr;
+                QString tcode = tcodeHandler->funscriptToTCode(actionPosition, otherActions);
+                if(tcode != nullptr)
+                    device->sendTCode(tcode);
+                otherActions.clear();
             }
         }
         timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));

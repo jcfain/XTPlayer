@@ -1,14 +1,18 @@
 #include "funscripthandler.h"
 
-
-Funscript* funscript = new Funscript();
-
-FunscriptHandler::FunscriptHandler()
+FunscriptHandler::FunscriptHandler(QString channel)
 {
+    _channel = channel;
 }
+
 FunscriptHandler::~FunscriptHandler()
 {
     delete(funscript);
+}
+
+QString FunscriptHandler::channel()
+{
+    return _channel;
 }
 
 void FunscriptHandler::load(QString funscriptString)
@@ -123,7 +127,7 @@ bool FunscriptHandler::exists(QString path)
     return fpath.exists();
 }
 
-std::unique_ptr<FunscriptAction> FunscriptHandler::getPosition(qint64 millis)
+std::shared_ptr<FunscriptAction> FunscriptHandler::getPosition(qint64 millis)
 {
     QMutexLocker locker(&mutex);
     millis += SettingsHandler::getoffSet();
@@ -149,9 +153,9 @@ std::unique_ptr<FunscriptAction> FunscriptHandler::getPosition(qint64 millis)
 //        LogHandler::Debug("nextMillis: "+ QString::number(nextMillis));
 //        LogHandler::Debug("lastActionIndex: "+ QString::number(lastActionIndex));
 //        LogHandler::Debug("nextActionIndex: "+ QString::number(nextActionIndex));
-//        LogHandler::Debug("nextActionPos: "+ QString::number(funscript->actions.value(nextMillis)));
+        //LogHandler::Debug("nextActionPos: "+ QString::number(funscript->actions.value(nextMillis)));
         qint64 executionMillis = lastActionIndex == -1 ? closestMillis : nextMillis;
-        std::unique_ptr<FunscriptAction> nextAction(new FunscriptAction { executionMillis, funscript->actions.value(executionMillis), speed });
+        std::shared_ptr<FunscriptAction> nextAction(new FunscriptAction { _channel, executionMillis, funscript->actions.value(executionMillis), speed });
         //LogHandler::Debug("nextAction.speed: "+ QString::number(nextAction->speed));
         lastActionIndex = nextActionIndex;
         return nextAction;
@@ -189,14 +193,14 @@ qint64 FunscriptHandler::findClosest(qint64 value, QList<qint64> a) {
 //static
 bool FunscriptHandler::getInverted()
 {
-    QMutexLocker locker(&mutex);
+    QMutexLocker locker(&mutexStat);
     return _inverted;
 }
 void FunscriptHandler::setInverted(bool value)
 {
-    QMutexLocker locker(&mutex);
+    QMutexLocker locker(&mutexStat);
     _inverted = value;
 }
 
 bool FunscriptHandler::_inverted = false;
-QMutex FunscriptHandler::mutex;
+QMutex FunscriptHandler::mutexStat;

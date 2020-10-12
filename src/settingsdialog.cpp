@@ -110,17 +110,21 @@ void SettingsDialog::setupUi()
 
         QFont font( "Sans Serif", 8);
         int sliderGridRow = 0;
-        foreach(QString axis, axisNames.BasicAxis.keys())
+        foreach(auto axisPair, axisNames.BasicAxis)
         {
-            int userMin = SettingsHandler::getAxis(axis).UserMin;
-            int userMax = SettingsHandler::getAxis(axis).UserMax;
+            if(axisPair.second.type != AxisType::Range)
+                continue;
+
+            ChannelModel axis = SettingsHandler::getAxis(axisPair.first);
+            int userMin = axis.UserMin;
+            int userMax = axis.UserMax;
             QLabel* rangeMinLabel = new QLabel(QString::number(userMin));
             rangeMinLabel->setFont(font);
             rangeMinLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
             ui.RangeSettingsGrid->addWidget(rangeMinLabel, sliderGridRow,0);
-            rangeMinLabels.insert(axis, rangeMinLabel);
+            rangeMinLabels.insert(axisPair.first, rangeMinLabel);
 
-            QLabel* rangeLabel = new QLabel(axisNames.BasicAxis.value(axis) + " Range");
+            QLabel* rangeLabel = new QLabel(axisPair.second.friendlyName + " Range");
             rangeLabel->setFont(font);
             rangeLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
             ui.RangeSettingsGrid->addWidget(rangeLabel, sliderGridRow,1);
@@ -129,16 +133,16 @@ void SettingsDialog::setupUi()
             rangeMaxLabel->setFont(font);
             rangeMaxLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
             ui.RangeSettingsGrid->addWidget(rangeMaxLabel, sliderGridRow,2);
-            rangeMaxLabels.insert(axis, rangeMaxLabel);
+            rangeMaxLabels.insert(axisPair.first, rangeMaxLabel);
 
             RangeSlider* rangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
-            rangeSlider->SetRange(1, 999);
+            rangeSlider->SetRange(axis.Min, axis.Max);
             rangeSlider->setLowerValue(userMin);
             rangeSlider->setUpperValue(userMax);
-            rangeSlider->setName(axis);
+            rangeSlider->setName(axisPair.first);
             sliderGridRow++;
             ui.RangeSettingsGrid->addWidget(rangeSlider, sliderGridRow,0,1,3);
-            rangeSliders.insert(axis, rangeSlider);
+            rangeSliders.insert(axisPair.first, rangeSlider);
             sliderGridRow++;
 
             connect(rangeSlider, QOverload<QString, int>::of(&RangeSlider::lowerValueChanged), this, &SettingsDialog::onRange_valueChanged);
@@ -582,8 +586,8 @@ void SettingsDialog::onRange_valueChanged(QString name, int value)
 void SettingsDialog::onRange_mouseRelease(QString name)
 {
     RangeSlider* slider = rangeSliders.value(name);
-    SettingsHandler::setChannelUserMin(axisNames.TcXUpDownL0, slider->GetLowerValue());
-    SettingsHandler::setChannelUserMax(axisNames.TcXUpDownL0, slider->GetUpperValue());
+    SettingsHandler::setChannelUserMin(name, slider->GetLowerValue());
+    SettingsHandler::setChannelUserMax(name, slider->GetUpperValue());
 }
 
 void SettingsDialog::onOffSet_valueChanged(int value)

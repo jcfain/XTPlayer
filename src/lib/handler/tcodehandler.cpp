@@ -5,33 +5,69 @@ TCodeHandler::TCodeHandler()
 }
 
 
-QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
+QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, QMap<QString, std::shared_ptr<FunscriptAction>> otherActions)
 {
     QMutexLocker locker(&mutex);
     QString tcode = "";
 
-    if (FunscriptHandler::getInverted())
+    if(action != nullptr)
     {
-        position = XMath::reverseNumber(position, 0, 100);
+        int position = action->pos;
+        int speed = action->speed;
+        if (FunscriptHandler::getInverted())
+        {
+            position = XMath::reverseNumber(position, 0, 100);
+        }
+        char tcodeValueString[4];
+        sprintf(tcodeValueString, "%03d", calculateRange(axisNames.TcXUpDownL0.toUtf8(), position));
+        tcode += axisNames.TcXUpDownL0;
+        tcode += tcodeValueString;
+        if (speed > 0)
+        {
+          tcode += "I";
+          tcode += QString::number(speed);
+        }
     }
-    char tcodeValueString[4];
-    sprintf(tcodeValueString, "%03d", calculateRange("L0", position));
-    tcode += "L0";
-    tcode += tcodeValueString;
-    if (speed != 0)
+    if(otherActions.keys().length() > 0)
     {
-      tcode += "I";
-      tcode += QString::number(speed);
+        foreach(auto axis, axisNames.BasicAxis)
+        {
+            if (axis.first == axisNames.TcXUpDownL0)
+                continue;
+            if (otherActions.contains(axis.first))
+            {
+                std::shared_ptr<FunscriptAction> axisAction = otherActions.value(axis.first);
+                char tcodeValueString[4];
+                sprintf(tcodeValueString, "%03d", calculateRange(axis.first.toUtf8(), axisAction->pos));
+                tcode += " ";
+                tcode += axis.first;
+                tcode += tcodeValueString;
+                if (axisAction->speed > 0)
+                {
+                  tcode += "I";
+                  tcode += QString::number(axisAction->speed);
+                }
+            }
+        }
     }
 
-    if(SettingsHandler::getLiveMultiplier())
+    if(action != nullptr && SettingsHandler::getLiveMultiplier())
     {
-        foreach(const QString axis, _multiplierAxis)
+        int position = action->pos;
+        int speed = action->speed;
+        if (FunscriptHandler::getInverted())
         {
-            float multiplierValue = SettingsHandler::getMultiplierValue(axis);
-            if (SettingsHandler::getMultiplierChecked(axis) && multiplierValue != 0)
+            position = XMath::reverseNumber(position, 0, 100);
+        }
+        foreach(auto axis, axisNames.BasicAxis)
+        {
+            if (axis.first == axisNames.TcXUpDownL0)
+                continue;
+            if (otherActions.contains(axis.first))
+                continue;
+            float multiplierValue = SettingsHandler::getMultiplierValue(axis.first);
+            if (SettingsHandler::getMultiplierChecked(axis.first) && multiplierValue != 0.0)
             {
-                char tcodeValueString[4];
                 int value = XMath::constrain(XMath::randSine(position * multiplierValue), 0, 100);
                 //lowMin + (highMin-lowMin)*level,lowMax + (highMax-lowMax)*level
                 //LogHandler::Debug("randSine: "+ QString::number(value));
@@ -40,9 +76,10 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
                     //LogHandler::Debug("inverted: "+ QString::number(value));
                     value = XMath::reverseNumber(value, 0, 100);
                 }
-                sprintf(tcodeValueString, "%03d", calculateRange(axis.toUtf8(), value));
+                char tcodeValueString[4];
+                sprintf(tcodeValueString, "%03d", calculateRange(axis.first.toUtf8(), value));
                 tcode += " ";
-                tcode += axis;
+                tcode += axis.first;
                 tcode += tcodeValueString;
                 if (speed > 0)
                 {
@@ -53,21 +90,25 @@ QString TCodeHandler::funscriptToTCode(qint64 position, int speed)
             else
             {
                 tcode += " ";
-                tcode += axis;
+                tcode += axis.first;
                 tcode += "500S1000";
             }
         }
     }
-    else if(!SettingsHandler::getLiveGamepadConnected())
-    {
-        foreach(const QString axis, _multiplierAxis)
-        {
-            tcode += " ";
-            tcode += axis;
-            tcode += "500S1000";
-        }
-    }
-    return tcode;
+
+//    if(action != nullptr && !SettingsHandler::getLiveGamepadConnected())
+//    {
+//        foreach(auto axis, axisNames.BasicAxis)
+//        {
+//            if(!tcode.contains(axis.first))
+//            {
+//                tcode += " ";
+//                tcode += axis.first;
+//                tcode += "500S1000";
+//            }
+//        }
+//    }
+    return tcode.isEmpty() ? nullptr : tcode;
 }
 int TCodeHandler::calculateRange(const char* channel, int rawValue)
 {

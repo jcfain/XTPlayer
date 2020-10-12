@@ -1,5 +1,9 @@
 #include "settingshandler.h"
 
+const QString SettingsHandler::TCodeVersion = "TCode v0.2";
+const QString SettingsHandler::XTPVersion = "0.17b";
+const float SettingsHandler::XTPVersionNum = 0.17f;
+
 SettingsHandler::SettingsHandler()
 {
 }
@@ -31,10 +35,6 @@ void SettingsHandler::Load()
 //            LogHandler::Dialog("Sorry, your settings have been set to default for a new data structure.", XLogLevel::Information);
         Default();
         defaultReset = false;
-    }
-    else if(currentVersion <= 0.17f)
-    {
-        MigrateTo17();
     }
     locker.relock();
     selectedTheme = settings->value("selectedTheme").toString();
@@ -97,6 +97,10 @@ void SettingsHandler::Load()
     _xRangeStep = settings->value("xRangeStep").toInt();
     _xRangeStep = _xRangeStep == 0 ? 50 : _xRangeStep;
     disableSpeechToText = settings->value("disableSpeechToText").toBool();
+    if(currentVersion != 0 && currentVersion < 0.17f)
+    {
+        MigrateTo17();
+    }
 //    SetupAvailableAxis();
 //    SetupGamepadButtonMap();
 }
@@ -752,26 +756,26 @@ void SettingsHandler::SetupAvailableAxis()
 {
     _availableAxis = {
         {axisNames.None, { "None", axisNames.None, axisNames.None, 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcXUpDownL0, { "X (Up/down L0)", axisNames.TcXUpDownL0, "L0", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcXDownL0, { "X (Down)", axisNames.TcXDownL0, "L0", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcXUpL0, { "X (Up)", axisNames.TcXUpL0, "L0", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcYLeftRightL1, { "Y (Left/Right L1)", axisNames.TcYLeftRightL1, "L1", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcYLeftL1, { "Y (Left)", axisNames.TcYLeftL1, "L1", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcYRightL1, { "Y (Right)", axisNames.TcYRightL1, "L1", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcZBackForwardL2, { "Z (Back/Forward L2)", axisNames.TcZBackForwardL2, "L2", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcZBackL2, { "Z (Back)", axisNames.TcZBackL2, "L2", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcZForwardL2, { "Z (Forward)", axisNames.TcZForwardL2, "L2", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcXRollR2, { "X (Roll R2)", axisNames.TcXRollR2, "R2", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcXRollForwardR2, { "X (Roll Forward)", axisNames.TcXRollForwardR2, "R2", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcXRollBackR2, { "X (Roll Back)", axisNames.TcXRollBackR2, "R2", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcYRollR1, { "Y (Roll R1)", axisNames.TcYRollR1, "R1", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcYRollLeftR1, { "Y (Roll Left)", axisNames.TcYRollLeftR1, "R1", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcYRollRightR1, { "Y (Roll Right)", axisNames.TcYRollRightR1, "R1", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcTwistR0, { "Twist R0", axisNames.TcTwistR0, "R0", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcXUpDownL0, { "X Up/down (L0)", axisNames.TcXUpDownL0, "L0", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcXDownL0, { "X Down", axisNames.TcXDownL0, "L0", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcXUpL0, { "X Up", axisNames.TcXUpL0, "L0", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcYLeftRightL1, { "Y Left/Right (L1)", axisNames.TcYLeftRightL1, "L1", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcYLeftL1, { "Y Left", axisNames.TcYLeftL1, "L1", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcYRightL1, { "Y Right", axisNames.TcYRightL1, "L1", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcZBackForwardL2, { "Z Back/Forward (L2)", axisNames.TcZBackForwardL2, "L2", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcZBackL2, { "Z Back", axisNames.TcZBackL2, "L2", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcZForwardL2, { "Z Forward", axisNames.TcZForwardL2, "L2", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcXRollR2, { "X Pitch (R2)", axisNames.TcXRollR2, "R2", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcXRollForwardR2, { "X Pitch Forward", axisNames.TcXRollForwardR2, "R2", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcXRollBackR2, { "X Pitch Back", axisNames.TcXRollBackR2, "R2", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcYRollR1, { "Y Roll (R1)", axisNames.TcYRollR1, "R1", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcYRollLeftR1, { "Y Roll Left", axisNames.TcYRollLeftR1, "R1", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcYRollRightR1, { "Y Roll Right", axisNames.TcYRollRightR1, "R1", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcTwistR0, { "Twist (R0)", axisNames.TcTwistR0, "R0", 1, 500, 999, 1, 500, 999 } },
         {axisNames.TcTwistCWR0, { "Twist (CW)", axisNames.TcTwistCWR0, "R0", 1, 500, 999, 1, 500, 999 } },
         {axisNames.TcTwistCCWR0, { "Twist (CCW)", axisNames.TcTwistCCWR0, "R0", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcVibV0, { "Vib V0", axisNames.TcVibV0, "V0", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcPumpV2, { "Pump V2", axisNames.TcPumpV2, "V2", 1, 500, 999, 1, 500, 999 } }
+        {axisNames.TcVibV0, { "Vib (V0)", axisNames.TcVibV0, "V0", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcPumpV2, { "Pump (V2)", axisNames.TcPumpV2, "V2", 1, 500, 999, 1, 500, 999 } }
     };
 }
 
@@ -803,9 +807,6 @@ void SettingsHandler::SetupGamepadButtonMap()
         { gamepadAxisNames.Guide, axisNames.None }
     };
 }
-const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.17b";
-const float SettingsHandler::XTPVersionNum = 0.17f;
 
 QSettings* SettingsHandler::settings;
 QMutex SettingsHandler::mutex;

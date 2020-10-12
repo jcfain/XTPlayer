@@ -9,18 +9,18 @@
 #include "funscripthandler.h"
 #include "loghandler.h"
 #include <QMap>
+#include <QPair>
 
 class TCodeHandler
 {
 public:
     TCodeHandler();
-    QString funscriptToTCode(qint64 position, int speed);
+    QString funscriptToTCode(std::shared_ptr<FunscriptAction> action, QMap<QString, std::shared_ptr<FunscriptAction>> otherActions);
 
     int calculateRange(const char* channel, int rawValue);
 
 private:
     QMutex mutex;
-    const QList<QString> _multiplierAxis = {"L1", "L2", "R0", "R1", "R2", "V0"};
     const AxisNames axisNames;
 };
 

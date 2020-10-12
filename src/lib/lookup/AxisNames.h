@@ -2,8 +2,25 @@
 #define AXISNAMES_H
 #include <QString>
 #include <QMap>
+enum AxisType
+{
+    Range,
+    Switch,
+    HalfRange
+};
+
+struct AxisModel
+{
+    AxisType type;
+    QString channel;
+    QString friendlyName;
+    QString trackName;
+};
+
 struct AxisNames
 {
+    const QString PositiveModifier = "+";
+    const QString NegativeModifier = "-";
     const QString None = "None";
     const QString TcXUpDownL0 = "L0";
     const QString TcXUpL0 = "L0+";
@@ -25,16 +42,16 @@ struct AxisNames
     const QString TcXRollBackR2 = "R2-";
     const QString TcVibV0 = "V0";
     const QString TcPumpV2 = "V2";
-    const QString PositiveModifier = "+";
-    const QString NegativeModifier = "-";
-    QMap<QString, QString> BasicAxis =
+    QList<QPair<QString, AxisModel>> BasicAxis =
     {
-        { TcXUpDownL0, "X" },
-        { TcYLeftRightL1, "Y" },
-        { TcZBackForwardL2, "Z" },
-        { TcXRollR2, "X Roll" },
-        { TcYRollR1, "Y Roll" },
-        { TcTwistR0, "Twist" }
+        { TcXUpDownL0, { AxisType::Range, TcXUpDownL0, "X Stroke", "" }},//Surge
+        { TcYLeftRightL1, { AxisType::Range, TcXUpDownL0, "Y Left/Right", "y" }},//heave
+        { TcZBackForwardL2, { AxisType::Range, TcXUpDownL0, "Z Forward/Back", "z" }},//sway
+        { TcXRollR2, { AxisType::Range, TcXUpDownL0, "X Pitch", "pitch" }},
+        { TcYRollR1, { AxisType::Range, TcXUpDownL0, "Y Roll", "roll" }},
+        { TcTwistR0, { AxisType::Range, TcXUpDownL0, "Z Twist", "twist" }},//yaw
+        { TcVibV0, { AxisType::Switch, TcVibV0, "Vib", "vib" }},
+        { TcPumpV2, { AxisType::Switch, TcPumpV2, "Pump", "vib" }}
     };
 };
 //enum Axis

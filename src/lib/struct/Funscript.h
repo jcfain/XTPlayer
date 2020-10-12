@@ -5,6 +5,7 @@
 #include <QHash>
 
 struct FunscriptAction {
+    QString channel;
     qint64 at;
     int pos;
     int speed;

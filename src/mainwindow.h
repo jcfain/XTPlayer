@@ -34,6 +34,7 @@
 #include "lib/struct/LibraryListItem.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/ConnectionChangedSignal.h"
+#include "lib/lookup/AxisNames.h"
 #include "lib/lookup/MediaActions.h"
 #include "lib/tool/xmath.h"
 #include "lib/lookup/enum.h"
@@ -44,7 +45,7 @@ namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 
-extern void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler);
+extern void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler, QList<FunscriptHandler*> funscriptHandlers);
 extern void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler);
 
 class MainWindow : public QMainWindow
@@ -133,6 +134,7 @@ protected:
 private:
     Ui::MainWindow *ui;
     SettingsDialog* _xSettings;
+    AxisNames _axisNames;
     QTextToSpeech* textToSpeech;
     VideoPreviewWidget* videoPreviewWidget;
     QFuture<void> funscriptFuture;
@@ -140,6 +142,7 @@ private:
     QProgressBar* bar;
     VideoHandler* videoHandler;
     FunscriptHandler* funscriptHandler;
+    QList<FunscriptHandler*> funscriptHandlers;
     TCodeHandler* tcodeHandler;
     bool _isMaximized = false;
     bool _isFullScreen = false;

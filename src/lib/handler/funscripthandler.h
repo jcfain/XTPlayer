@@ -22,7 +22,7 @@ signals:
     void errorOccurred(QString error);
 
 public:
-    FunscriptHandler();
+    FunscriptHandler(QString name);
     ~FunscriptHandler();
     void load(QString funscript);
     bool isLoaded();
@@ -31,18 +31,22 @@ public:
     Funscript* currentFunscript();
     static bool getInverted();
     static void setInverted(bool value);
-    std::unique_ptr<FunscriptAction> getPosition(qint64 at);
+    std::shared_ptr<FunscriptAction> getPosition(qint64 at);
+    QString channel();
 
 
 private:
-    static QMutex mutex;
-    bool _loaded = false;
+    static QMutex mutexStat;
     static bool _inverted;
+    QMutex mutex;
+    QString _channel;
+    bool _loaded = false;
     void JSonToFunscript(QJsonObject jsonDoc);
     qint64 findClosest(qint64 value, QList<qint64> a);
     qint64 lastActionIndex;
-    qint64  nextActionIndex;
+    qint64 nextActionIndex;
     QList<qint64> posList;
+    Funscript* funscript = new Funscript();
     int n;
 };
 
