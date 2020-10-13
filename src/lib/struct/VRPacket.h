@@ -1,9 +1,9 @@
-#ifndef DEOPACKET_H
-#define DEOPACKET_H
+#ifndef VRPACKET_H
+#define VRPACKET_H
 #include <QString>
 #include <QMetaType>
 
-struct DeoPacket
+struct VRPacket
 {
     QString path;
     qint64 duration;
@@ -12,5 +12,5 @@ struct DeoPacket
     bool playing;
 };
 
-Q_DECLARE_METATYPE(DeoPacket);
+Q_DECLARE_METATYPE(VRPacket);
 #endif // DEOPACKET_H

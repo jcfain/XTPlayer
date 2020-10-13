@@ -38,6 +38,13 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     ui->statusbar->addPermanentWidget(deoConnectionStatusLabel);
     ui->statusbar->addPermanentWidget(deoRetryConnectionButton);
 
+    whirligigConnectionStatusLabel = new QLabel(this);
+    whirligigRetryConnectionButton = new QPushButton(this);
+    whirligigRetryConnectionButton->hide();
+    whirligigRetryConnectionButton->setText("Whirligig Retry");
+    ui->statusbar->addPermanentWidget(whirligigConnectionStatusLabel);
+    ui->statusbar->addPermanentWidget(whirligigRetryConnectionButton);
+
     connectionStatusLabel = new QLabel(this);
     retryConnectionButton = new QPushButton(this);
     retryConnectionButton->hide();
@@ -47,7 +54,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     gamepadConnectionStatusLabel = new QLabel(this);
     ui->statusbar->addPermanentWidget(gamepadConnectionStatusLabel);
-
 
     videoHandler = new VideoHandler(this);
     ui->MediaGrid->addWidget(videoHandler);
@@ -116,9 +122,13 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     connect(_xSettings, &SettingsDialog::deoDeviceConnectionChange, this, &MainWindow::on_deo_device_connectionChanged);
     connect(_xSettings, &SettingsDialog::deoDeviceError, this, &MainWindow::on_deo_device_error);
+
+    connect(_xSettings, &SettingsDialog::whirligigDeviceConnectionChange, this, &MainWindow::on_whirligig_device_connectionChanged);
+    connect(_xSettings, &SettingsDialog::whirligigDeviceError, this, &MainWindow::on_whirligig_device_error);
     connect(_xSettings, &SettingsDialog::deviceConnectionChange, this, &MainWindow::on_device_connectionChanged);
     connect(_xSettings, &SettingsDialog::deviceError, this, &MainWindow::on_device_error);
     connect(_xSettings->getDeoHandler(), &DeoHandler::messageRecieved, this, &MainWindow::onDeoMessageRecieved);
+    connect(_xSettings->getWhirligigHandler(), &WhirligigHandler::messageRecieved, this, &MainWindow::onDeoMessageRecieved);
     connect(_xSettings, &SettingsDialog::gamepadConnectionChange, this, &MainWindow::on_gamepad_connectionChanged);
     connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitTCode, this, &MainWindow::on_gamepad_sendTCode);
     connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitAction, this, &MainWindow::on_gamepad_sendAction);
@@ -581,7 +591,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
 
 void MainWindow::changeDeoFunscript()
 {
-    DeoPacket playingPacket = _xSettings->getDeoHandler()->getCurrentDeoPacket();
+    VRPacket playingPacket = _xSettings->getDeoHandler()->getCurrentPacket();
     if (playingPacket.path != nullptr)
     {
         QFileInfo videoFile(playingPacket.path);
@@ -977,7 +987,6 @@ void MainWindow::toggleFullScreen()
         playerControlsPlaceHolder->setLayout(placeHolderControlsGrid);
         playerControlsPlaceHolder->setContentsMargins(0,0,0,0);
         playerControlsPlaceHolder->installEventFilter(this);
-        //playerControlsPlaceHolder->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint );
         playerControlsPlaceHolder->move(QPoint(0, screenSize.height() - ui->playerControlsFrame->height()));
         playerControlsPlaceHolder->setFixedWidth(screenSize.width());
         playerControlsPlaceHolder->setFixedHeight(ui->playerControlsFrame->height());
@@ -1016,7 +1025,6 @@ void MainWindow::toggleFullScreen()
         ui->playerControlsFrame->setProperty("cssClass", "windowedControls");
         ui->playerControlsFrame->style()->unpolish(ui->playerControlsFrame);
         ui->playerControlsFrame->style()->polish(ui->playerControlsFrame);
-        ui->playerControlsFrame->show();
         videoHandler->layout()->setMargin(9);
         QMainWindow::centralWidget()->layout()->setMargin(9);
 
@@ -1036,6 +1044,7 @@ void MainWindow::toggleFullScreen()
         _isFullScreen = false;
         ui->menubar->show();
         ui->statusbar->show();
+        ui->playerControlsFrame->show();
         delete placeHolderControlsGrid;
         delete playerControlsPlaceHolder;
     }
@@ -1310,12 +1319,7 @@ QString MainWindow::mSecondFormat(int mSecs)
 
 void MainWindow::on_media_start()
 {
-    ui->videoLoadingLabel->hide();
-    _movie->stop();
-    ui->SeekSlider->setDisabled(false);
-    ui->fullScreenBtn->setDisabled(false);
-    QIcon icon("://images/icons/pause.svg" );
-    ui->PlayBtn->setIcon(icon);
+    toggleMediaControlStatus();
     if(SettingsHandler::getDeoEnabled() && _xSettings->getDeoHandler()->isConnected())
         _xSettings->getDeoHandler()->dispose();
     if(funscriptFuture.isRunning())
@@ -1331,23 +1335,35 @@ void MainWindow::on_media_start()
 
 void MainWindow::on_media_stop()
 {
-    ui->videoLoadingLabel->hide();
-    _movie->stop();
-    ui->SeekSlider->setUpperValue(0);
-    ui->SeekSlider->setDisabled(true);
-    QIcon icon("://images/icons/play.svg" );
-    ui->PlayBtn->setIcon(icon);
-    ui->fullScreenBtn->setDisabled(true);
-    //funscriptHandler->setLoaded(false);
-    ui->lblCurrentDuration->setText("00:00:00/00:00:00");
-
+    toggleMediaControlStatus();
     if(funscriptFuture.isRunning())
     {
         funscriptFuture.cancel();
     }
 
 }
-void MainWindow::onDeoMessageRecieved(DeoPacket packet)
+void MainWindow::toggleMediaControlStatus()
+{
+    if(videoHandler->isPlaying())
+    {
+        ui->videoLoadingLabel->hide();
+        _movie->stop();
+        ui->SeekSlider->setDisabled(false);
+        QIcon icon("://images/icons/pause.svg" );
+        ui->PlayBtn->setIcon(icon);
+    }
+    else
+    {
+        ui->videoLoadingLabel->hide();
+        _movie->stop();
+        ui->SeekSlider->setUpperValue(0);
+        ui->SeekSlider->setDisabled(true);
+        QIcon icon("://images/icons/play.svg" );
+        ui->PlayBtn->setIcon(icon);
+        ui->lblCurrentDuration->setText("00:00:00/00:00:00");
+    }
+}
+void MainWindow::onDeoMessageRecieved(VRPacket packet)
 {
 //        LogHandler::Debug("Deo path: "+packet.path);
 //LogHandler::Debug("Deo duration: "+QString::number(packet.duration));
@@ -1400,7 +1416,7 @@ void MainWindow::onDeoMessageRecieved(DeoPacket packet)
     }
 }
 
-void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler)
+void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler)
 {
     if(xPlayer->isPlaying())
     {
@@ -1412,7 +1428,7 @@ void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDial
     QList<FunscriptHandler*> funscriptHandlers;
     std::shared_ptr<FunscriptAction> actionPosition;
     QMap<QString, std::shared_ptr<FunscriptAction>> otherActions;
-    DeoPacket currentDeoPacket = deoPlayer->getCurrentDeoPacket();
+    VRPacket currentVRPacket = vrPlayer->getCurrentPacket();
     QString currentVideo;
     qint64 timeTracker = 0;
     qint64 lastDeoTime = 0;
@@ -1423,10 +1439,10 @@ void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDial
     //QElapsedTimer timer;
     //timer.start();
     mSecTimer.start();
-    while (deoPlayer->isConnected() && !xPlayer->isPlaying())
+    while (vrPlayer->isConnected() && !xPlayer->isPlaying())
     {
         //timer.start();
-        if(xSettings->isConnected() && funscriptHandler->isLoaded() && !currentDeoPacket.path.isNull() && currentDeoPacket.duration > 0 && currentDeoPacket.playing)
+        if(xSettings->isConnected() && funscriptHandler->isLoaded() && !currentVRPacket.path.isNull() && currentVRPacket.duration > 0 && currentVRPacket.playing)
         {
             //execute once every millisecond
             if (timer2 - timer1 >= 1)
@@ -1437,7 +1453,7 @@ void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDial
 //                LogHandler::Debug("timer2 - timer1 "+QString::number(timer2-timer1));
 //                LogHandler::Debug("Out timeTracker: "+QString::number(timeTracker));
                 timer1 = timer2;
-                qint64 currentTime = currentDeoPacket.currentTime;
+                qint64 currentTime = currentVRPacket.currentTime;
                 //LogHandler::Debug("Deo time reset: "+QString::number(currentTime));
                 bool hasRewind = lastDeoTime > currentTime;
                 if (currentTime > timeTracker + 100 || hasRewind)
@@ -1470,12 +1486,12 @@ void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDial
             timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
             //LogHandler::Debug("timer nsecsElapsed: "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
         }
-        else if(xSettings->isConnected() && currentDeoPacket.duration > 0 && currentDeoPacket.playing)
+        else if(xSettings->isConnected() && currentVRPacket.duration > 0 && currentVRPacket.playing)
         {
-            if (!currentDeoPacket.path.isEmpty() && !currentDeoPacket.path.isNull())
+            if (!currentVRPacket.path.isEmpty() && !currentVRPacket.path.isNull())
             {
-                QString funscriptPath = SettingsHandler::getDeoDnlaFunscript(currentDeoPacket.path);
-                currentVideo = currentDeoPacket.path;
+                QString funscriptPath = SettingsHandler::getDeoDnlaFunscript(currentVRPacket.path);
+                currentVideo = currentVRPacket.path;
                 funscriptHandler->load(funscriptPath);
                 foreach(auto axisName, axisNames.BasicAxis)
                 {
@@ -1494,14 +1510,14 @@ void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDial
             }
         }
 
-        if(currentVideo != currentDeoPacket.path)
+        if(currentVideo != currentVRPacket.path)
         {
-            currentVideo = currentDeoPacket.path;
+            currentVideo = currentVRPacket.path;
             funscriptHandler->setLoaded(false);
         }
 
         //LogHandler::Debug("Get deo packet: "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
-        currentDeoPacket = deoPlayer->getCurrentDeoPacket();
+        currentVRPacket = vrPlayer->getCurrentPacket();
         //LogHandler::Debug("After get deo packet: "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
         //QThread::currentThread()->msleep(1);
     }
@@ -1761,7 +1777,7 @@ void MainWindow::on_deo_device_connectionChanged(ConnectionChangedSignal event)
             funscriptDeoFuture.cancel();
             funscriptDeoFuture.waitForFinished();
         }
-        funscriptDeoFuture = QtConcurrent::run(syncDeoFunscript, _xSettings->getDeoHandler(), videoHandler, _xSettings, tcodeHandler, funscriptHandler);
+        funscriptDeoFuture = QtConcurrent::run(syncVRFunscript, _xSettings->getDeoHandler(), videoHandler, _xSettings, tcodeHandler, funscriptHandler);
 
     }
     else
@@ -1776,6 +1792,46 @@ void MainWindow::on_deo_device_error(QString error)
     LogHandler::Dialog("Deo error: "+error, XLogLevel::Critical);
 }
 
+void MainWindow::on_whirligig_device_connectionChanged(ConnectionChangedSignal event)
+{
+    QString message = "";
+    message += "Whirligig: ";
+    message += " " + event.message;
+    whirligigConnectionStatusLabel->setText(message);
+    if(SettingsHandler::getWhirligigEnabled() && (event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected))
+    {
+        ui->actionChange_current_deo_script->setEnabled(false);
+        whirligigRetryConnectionButton->show();
+        if(funscriptDeoFuture.isRunning())
+        {
+            funscriptDeoFuture.cancel();
+            funscriptDeoFuture.waitForFinished();
+        }
+    }
+    else if(event.status == ConnectionStatus::Connected)
+    {
+        ui->actionChange_current_deo_script->setEnabled(true);
+        whirligigRetryConnectionButton->hide();
+        if(funscriptDeoFuture.isRunning())
+        {
+            funscriptDeoFuture.cancel();
+            funscriptDeoFuture.waitForFinished();
+        }
+        funscriptDeoFuture = QtConcurrent::run(syncVRFunscript, _xSettings->getWhirligigHandler(), videoHandler, _xSettings, tcodeHandler, funscriptHandler);
+
+    }
+    else
+    {
+        ui->actionChange_current_deo_script->setEnabled(false);
+        whirligigRetryConnectionButton->hide();
+    }
+}
+
+void MainWindow::on_whirligig_device_error(QString error)
+{
+    LogHandler::Dialog("Whirligig error: "+error, XLogLevel::Critical);
+}
+
 
 void MainWindow::on_actionAbout_triggered()
 {
@@ -1787,8 +1843,9 @@ void MainWindow::on_actionAbout_triggered()
     QLabel copyright;
     copyright.setText("<b>XTPlayer v"+SettingsHandler::XTPVersion + "</b><br>"
                        + SettingsHandler::TCodeVersion + "<br>"
-                                                                    "Copyright 2020 Jason C. Fain<br>"
-                                                                    "Donate: <a href='https://www.patreon.com/Khrull'>https://www.patreon.com/Khrull</a>");
+                                                "Copyright 2020 Jason C. Fain<br>"
+                                                "Donate: <a href='https://www.patreon.com/Khrull'>https://www.patreon.com/Khrull</a><br>"
+                                                "THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND.");
     copyright.setAlignment(Qt::AlignHCenter);
     layout.addWidget(&copyright);
     QLabel sources;

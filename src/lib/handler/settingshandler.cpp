@@ -52,6 +52,13 @@ void SettingsHandler::Load()
     deoPort = settings->value("deoPort").toString();
     deoPort = deoPort.isNull() ? "23554" : deoPort;
     deoEnabled = settings->value("deoEnabled").toBool();
+
+    whirligigAddress = settings->value("whirligigAddress").toString();
+    whirligigAddress = whirligigAddress.isNull() ? "127.0.0.1" : whirligigAddress;
+    whirligigPort = settings->value("whirligigPort").toString();
+    whirligigPort = whirligigPort.isNull() ? "2000" : whirligigPort;
+    whirligigEnabled = settings->value("whirligigEnabled").toBool();
+
     yRollMultiplierChecked = settings->value("yRollMultiplierChecked").toBool();
     yRollMultiplierValue = settings->value("yRollMultiplierValue").toFloat();
     xRollMultiplierChecked = settings->value("xRollMultiplierChecked").toBool();
@@ -123,6 +130,9 @@ void SettingsHandler::Save()
         settings->setValue("deoAddress", deoAddress);
         settings->setValue("deoPort", deoPort);
         settings->setValue("deoEnabled", deoEnabled);
+        settings->setValue("whirligigAddress", whirligigAddress);
+        settings->setValue("whirligigPort", whirligigPort);
+        settings->setValue("whirligigEnabled", whirligigEnabled);
         settings->setValue("yRollMultiplierChecked", yRollMultiplierChecked);
         settings->setValue("yRollMultiplierValue", yRollMultiplierValue);
         settings->setValue("xRollMultiplierChecked", xRollMultiplierChecked);
@@ -285,21 +295,6 @@ QString SettingsHandler::getServerPort()
 {
     QMutexLocker locker(&mutex);
     return serverPort;
-}
-QString SettingsHandler::getDeoAddress()
-{
-    QMutexLocker locker(&mutex);
-    return deoAddress;
-}
-QString SettingsHandler::getDeoPort()
-{
-    QMutexLocker locker(&mutex);
-    return deoPort;
-}
-bool SettingsHandler::getDeoEnabled()
-{
-    QMutexLocker locker(&mutex);
-    return deoEnabled;
 }
 int SettingsHandler::getPlayerVolume()
 {
@@ -471,6 +466,7 @@ int SettingsHandler::getVideoIncrement()
     QMutexLocker locker(&mutex);
     return videoIncrement;
 }
+
 QString SettingsHandler::getDeoDnlaFunscript(QString key)
 {
     QMutexLocker locker(&mutex);
@@ -666,6 +662,7 @@ void SettingsHandler::setServerPort(QString value)
     QMutexLocker locker(&mutex);
     serverPort = value;
 }
+
 void SettingsHandler::setDeoAddress(QString value)
 {
     QMutexLocker locker(&mutex);
@@ -681,6 +678,53 @@ void SettingsHandler::setDeoEnabled(bool value)
     QMutexLocker locker(&mutex);
     deoEnabled = value;
 }
+QString SettingsHandler::getDeoAddress()
+{
+    QMutexLocker locker(&mutex);
+    return deoAddress;
+}
+QString SettingsHandler::getDeoPort()
+{
+    QMutexLocker locker(&mutex);
+    return deoPort;
+}
+bool SettingsHandler::getDeoEnabled()
+{
+    QMutexLocker locker(&mutex);
+    return deoEnabled;
+}
+
+void SettingsHandler::setWhirligigAddress(QString value)
+{
+    QMutexLocker locker(&mutex);
+    whirligigAddress = value;
+}
+void SettingsHandler::setWhirligigPort(QString value)
+{
+    QMutexLocker locker(&mutex);
+    whirligigPort = value;
+}
+void SettingsHandler::setWhirligigEnabled(bool value)
+{
+    QMutexLocker locker(&mutex);
+    whirligigEnabled = value;
+}
+QString SettingsHandler::getWhirligigAddress()
+{
+    QMutexLocker locker(&mutex);
+    return whirligigAddress;
+}
+QString SettingsHandler::getWhirligigPort()
+{
+    QMutexLocker locker(&mutex);
+    return whirligigPort;
+}
+bool SettingsHandler::getWhirligigEnabled()
+{
+    QMutexLocker locker(&mutex);
+    return whirligigEnabled;
+}
+
 void SettingsHandler::setPlayerVolume(int value)
 {
     QMutexLocker locker(&mutex);
@@ -771,9 +815,9 @@ void SettingsHandler::SetupAvailableAxis()
         {axisNames.TcYRollR1, { "Y Roll (R1)", axisNames.TcYRollR1, "R1", 1, 500, 999, 1, 500, 999 } },
         {axisNames.TcYRollLeftR1, { "Y Roll Left", axisNames.TcYRollLeftR1, "R1", 1, 500, 999, 1, 500, 999 } },
         {axisNames.TcYRollRightR1, { "Y Roll Right", axisNames.TcYRollRightR1, "R1", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcTwistR0, { "Twist (R0)", axisNames.TcTwistR0, "R0", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcTwistCWR0, { "Twist (CW)", axisNames.TcTwistCWR0, "R0", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcTwistCCWR0, { "Twist (CCW)", axisNames.TcTwistCCWR0, "R0", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcTwistR0, { "Z Twist (R0)", axisNames.TcTwistR0, "R0", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcTwistCWR0, { "Z Twist (CW)", axisNames.TcTwistCWR0, "R0", 1, 500, 999, 1, 500, 999 } },
+        {axisNames.TcTwistCCWR0, { "Z Twist (CCW)", axisNames.TcTwistCCWR0, "R0", 1, 500, 999, 1, 500, 999 } },
         {axisNames.TcVibV0, { "Vib (V0)", axisNames.TcVibV0, "V0", 1, 500, 999, 1, 500, 999 } },
         {axisNames.TcPumpV2, { "Pump (V2)", axisNames.TcPumpV2, "V2", 1, 500, 999, 1, 500, 999 } }
     };
@@ -869,5 +913,8 @@ QString SettingsHandler::serverPort;
 QString SettingsHandler::deoAddress;
 QString SettingsHandler::deoPort;
 bool SettingsHandler::deoEnabled;
+QString SettingsHandler::whirligigAddress;
+QString SettingsHandler::whirligigPort;
+bool SettingsHandler::whirligigEnabled;
 bool SettingsHandler::defaultReset = false;
 bool SettingsHandler::disableSpeechToText;

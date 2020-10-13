@@ -14,6 +14,7 @@
 #include "lib/handler/videohandler.h"
 #include "lib/handler/udphandler.h"
 #include "lib/handler/deohandler.h"
+#include "lib/handler/whirligighandler.h"
 #include "lib/handler/gamepadhandler.h"
 #include "lib/handler/funscripthandler.h"
 
@@ -33,6 +34,7 @@ public:
     UdpHandler* getNetworkHandler();
     SerialHandler* getSerialHandler();
     DeoHandler* getDeoHandler();
+    WhirligigHandler* getWhirligigHandler();
     GamepadHandler* getGamepadHandler();
     void setSelectedDeviceHandler(DeviceHandler* device);
     DeviceHandler* getSelectedDeviceHandler();
@@ -43,9 +45,11 @@ public:
 
 signals:
     void deviceError(QString error);
-    void deoDeviceError(QString error);
     void deviceConnectionChange(ConnectionChangedSignal event);
+    void deoDeviceError(QString error);
     void deoDeviceConnectionChange(ConnectionChangedSignal event);
+    void whirligigDeviceError(QString error);
+    void whirligigDeviceConnectionChange(ConnectionChangedSignal event);
     void gamepadConnectionChange(ConnectionChangedSignal event);
 
 private slots:
@@ -62,6 +66,8 @@ private slots:
     void on_device_error(QString error);
     void on_deo_connectionChanged(ConnectionChangedSignal event);
     void on_deo_error(QString error);
+    void on_whirligig_connectionChanged(ConnectionChangedSignal event);
+    void on_whirligig_error(QString error);
     void on_gamepad_connectionChanged(ConnectionChangedSignal event);
 
     void on_SerialOutputCmb_currentIndexChanged(int index);
@@ -127,12 +133,17 @@ private slots:
 
     void on_zMuliplierSpinBox_valueChanged(double arg1);
 
+    void on_whirligigCheckBox_clicked(bool checked);
+
+    void on_whirligigConnectButton_clicked();
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();
     void initSerialEvent();
     void initNetworkEvent();
     void initDeoEvent();
+    void initWhirligigEvent();
     void setupUi();
     void setupGamepadMap();
 
@@ -148,9 +159,9 @@ private:
     SerialHandler* _serialHandler;
     UdpHandler* _udpHandler;
     DeoHandler* _deoHandler;
+    WhirligigHandler* _whirligigHandler;
     GamepadHandler* _gamepadHandler;
     QFuture<void> _initFuture;
-    QFuture<void> _initDeoFuture;
 
     QMap<QString, QLabel*> rangeMinLabels;
     QMap<QString, QLabel*> rangeMaxLabels;

@@ -38,6 +38,8 @@ SOURCES += \
     lib/handler/tcodehandler.cpp \
     lib/handler/udphandler.cpp \
     lib/handler/videohandler.cpp \
+    lib/handler/vrdevicehandler.cpp \
+    lib/handler/whirligighandler.cpp \
     lib/tool/tcodefactory.cpp \
     lib/tool/xmath.cpp \
     lib/tool/xtimer.cpp \
@@ -51,6 +53,8 @@ HEADERS += \
     lib/handler/devicehandler.h \
     lib/handler/gamepadhandler.h \
     lib/handler/videohandler.h \
+    lib/handler/vrdevicehandler.h \
+    lib/handler/whirligighandler.h \
     lib/lookup/AxisNames.h \
     lib/lookup/GamepadAxisNames.h \
     lib/lookup/MediaActions.h \
@@ -65,12 +69,12 @@ HEADERS += \
     lib/lookup/enum.h \
     lib/struct/ChannelModel.h \
     lib/struct/ConnectionChangedSignal.h \
-    lib/struct/DeoPacket.h \
     lib/struct/Funscript.h \
     lib/struct/GamepadState.h \
     lib/struct/LibraryListItem.h \
     lib/struct/NetworkAddress.h \
     lib/struct/SerialComboboxItem.h \
+    lib/struct/VRPacket.h \
     lib/tool/boolinq.h \
     lib/tool/tcodefactory.h \
     lib/tool/xmath.h \

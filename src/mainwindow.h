@@ -31,6 +31,7 @@
 #include "lib/handler/funscripthandler.h"
 #include "lib/handler/tcodehandler.h"
 #include "lib/handler/devicehandler.h"
+#include "lib/handler/vrdevicehandler.h"
 #include "lib/struct/LibraryListItem.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/ConnectionChangedSignal.h"
@@ -46,7 +47,7 @@ QT_END_NAMESPACE
 
 
 extern void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler, QList<FunscriptHandler*> funscriptHandlers);
-extern void syncDeoFunscript(DeoHandler* deoPlayer, VideoHandler* xPlayer, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler);
+extern void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler);
 
 class MainWindow : public QMainWindow
 {
@@ -80,7 +81,7 @@ private slots:
     void playFileWithCustomScript();
     void regenerateThumbNail();
     void setThumbNailFromCurrent();
-    void onDeoMessageRecieved(DeoPacket packet);
+    void onDeoMessageRecieved(VRPacket packet);
     void on_gamepad_sendTCode(QString tcode);
     void on_gamepad_sendAction(QString action);
     void on_gamepad_connectionChanged(ConnectionChangedSignal event);
@@ -157,10 +158,12 @@ private:
     bool deviceConnected;
     bool autoLoopOn = false;
     QLabel* connectionStatusLabel;
-    QLabel* deoConnectionStatusLabel;
     QLabel* gamepadConnectionStatusLabel;
     QPushButton* retryConnectionButton;
+    QLabel* deoConnectionStatusLabel;
     QPushButton* deoRetryConnectionButton;
+    QLabel* whirligigConnectionStatusLabel;
+    QPushButton* whirligigRetryConnectionButton;
     int voulumeBeforeMute;
     QActionGroup* libraryViewGroup;
     QActionGroup* libraryThumbSizeGroup;
@@ -189,6 +192,7 @@ private:
     void mediaAction(QString action);
     void toggleFullScreen();
     void toggleLoop();
+    void toggleMediaControlStatus();
     void hideControls();
     void showControls();
     void saveThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem, qint64 position = 0);
@@ -221,6 +225,8 @@ private:
     void on_device_error(QString error);
     void on_deo_device_connectionChanged(ConnectionChangedSignal event);
     void on_deo_device_error(QString error);
+    void on_whirligig_device_connectionChanged(ConnectionChangedSignal event);
+    void on_whirligig_device_error(QString error);
     void donate();
 };
 #endif // MAINWINDOW_H

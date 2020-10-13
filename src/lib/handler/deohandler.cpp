@@ -1,7 +1,7 @@
 #include "deohandler.h"
 
 DeoHandler::DeoHandler(QObject *parent) :
-    QObject(parent)
+    VRDeviceHandler(parent)
 {
 }
 
@@ -10,16 +10,16 @@ DeoHandler::~DeoHandler()
     _isConnected = false;
     if (tcpSocket != nullptr)
         delete tcpSocket;
-    if (keepAliveTimer != nullptr)
-        delete keepAliveTimer;
-    if (currentDeoPacket != nullptr)
-        delete currentDeoPacket;
+//    if (keepAliveTimer != nullptr)
+//        delete keepAliveTimer;
+    if (currentPacket != nullptr)
+        delete currentPacket;
 }
 
 void DeoHandler::init(NetworkAddress address, int waitTimeout)
 {
     qRegisterMetaType<ConnectionChangedSignal>();
-    qRegisterMetaType<DeoPacket>();
+    qRegisterMetaType<VRPacket>();
     emit connectionChange({DeviceType::Deo, ConnectionStatus::Connecting, "Connecting..."});
     _waitTimeout = waitTimeout;
     _address = address;
@@ -111,7 +111,7 @@ void DeoHandler::readData()
     //    LogHandler::Debug("Deo playbackSpeed: "+QString::number(playbackSpeed));
     //    LogHandler::Debug("Deo playing: "+QString::number(playing));
         _mutex.lock();
-        currentDeoPacket = new DeoPacket
+        currentPacket = new VRPacket
         {
             path,
             duration,
@@ -123,7 +123,7 @@ void DeoHandler::readData()
         _currentTime = currentTime;
         //LogHandler::Debug("Deo _isPlaying: "+QString::number(_isPlaying));
         _mutex.unlock();
-        emit messageRecieved(*currentDeoPacket);
+        emit messageRecieved(*currentPacket);
 
     }
 }
@@ -151,17 +151,17 @@ bool DeoHandler::isPlaying()
 //    QJsonDocument jsonResponse = QJsonDocument(pausePacket);
 //    send(QString::fromLatin1(jsonResponse.toJson()));
 //}
-DeoPacket DeoHandler::getCurrentDeoPacket()
+VRPacket DeoHandler::getCurrentPacket()
 {
     const QMutexLocker locker(&_mutex);
-    DeoPacket blankPacket = {
+    VRPacket blankPacket = {
         NULL,
         0,
         0,
         0,
         1
     };
-    return (currentDeoPacket == nullptr) ? blankPacket : *currentDeoPacket;
+    return (currentPacket == nullptr) ? blankPacket : *currentPacket;
 }
 
 void DeoHandler::onSocketStateChange (QAbstractSocket::SocketState state)

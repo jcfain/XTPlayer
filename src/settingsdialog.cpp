@@ -6,6 +6,7 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
     _serialHandler = new SerialHandler(this);
     _udpHandler = new UdpHandler(this);
     _deoHandler = new DeoHandler(this);
+    _whirligigHandler = new WhirligigHandler(this);
     _gamepadHandler = new GamepadHandler(this);
     if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
     {
@@ -22,6 +23,8 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
     connect(_udpHandler, &UdpHandler::errorOccurred, this, &SettingsDialog::on_device_error);
     connect(_deoHandler, &DeoHandler::connectionChange, this, &SettingsDialog::on_deo_connectionChanged);
     connect(_deoHandler, &DeoHandler::errorOccurred, this, &SettingsDialog::on_deo_error);
+    connect(_whirligigHandler, &WhirligigHandler::connectionChange, this, &SettingsDialog::on_whirligig_connectionChanged);
+    connect(_whirligigHandler, &WhirligigHandler::errorOccurred, this, &SettingsDialog::on_whirligig_error);
     connect(_gamepadHandler, &GamepadHandler::connectionChange, this, &SettingsDialog::on_gamepad_connectionChanged);
 }
 SettingsDialog::~SettingsDialog()
@@ -32,6 +35,7 @@ void SettingsDialog::dispose()
     _udpHandler->dispose();
     _serialHandler->dispose();
     _deoHandler->dispose();
+    _whirligigHandler->dispose();
     _gamepadHandler->dispose();
     if(_initFuture.isRunning())
     {
@@ -42,6 +46,7 @@ void SettingsDialog::dispose()
     delete _serialHandler;
     delete _udpHandler;
     delete _deoHandler;
+    delete _whirligigHandler;
     delete _gamepadHandler;
 }
 void SettingsDialog::init(VideoHandler* videoHandler)
@@ -60,6 +65,11 @@ void SettingsDialog::init(VideoHandler* videoHandler)
     {
         setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceType::Deo);
         initDeoEvent();
+    }
+    else if(SettingsHandler::getWhirligigEnabled())
+    {
+        setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceType::Whirligig);
+        initWhirligigEvent();
     }
     if(SettingsHandler::getGamepadEnabled())
     {
@@ -365,6 +375,10 @@ DeoHandler* SettingsDialog::getDeoHandler()
 {
     return _deoHandler;
 }
+WhirligigHandler* SettingsDialog::getWhirligigHandler()
+{
+    return _whirligigHandler;
+}
 GamepadHandler* SettingsDialog::getGamepadHandler()
 {
     return _gamepadHandler;
@@ -456,11 +470,6 @@ void SettingsDialog::initDeoEvent()
     if (!_deoHandler->isConnected())
     {
         setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceType::Deo);
-        if(_initDeoFuture.isRunning())
-        {
-            _initDeoFuture.cancel();
-            _initDeoFuture.waitForFinished();
-        }
         if(SettingsHandler::getDeoAddress() != "" && SettingsHandler::getDeoPort() != "" &&
             SettingsHandler::getDeoAddress() != "0" && SettingsHandler::getDeoPort() != "0")
         {
@@ -468,6 +477,21 @@ void SettingsDialog::initDeoEvent()
             NetworkAddress address { SettingsHandler::getDeoAddress(), SettingsHandler::getDeoPort().toInt() };
             _deoHandler->init(address);
             //_initDeoFuture = QtConcurrent::run(initDeo, _deoHandler, address);
+        }
+    }
+}
+
+void SettingsDialog::initWhirligigEvent()
+{
+    if (!_whirligigHandler->isConnected())
+    {
+        setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceType::Whirligig);
+        if(SettingsHandler::getWhirligigAddress() != "" && SettingsHandler::getWhirligigPort() != "" &&
+            SettingsHandler::getWhirligigAddress() != "0" && SettingsHandler::getWhirligigPort() != "0")
+        {
+            ui.whirligigConnectButton->setEnabled(false);
+            NetworkAddress address { SettingsHandler::getWhirligigAddress(), SettingsHandler::getWhirligigPort().toInt() };
+            _whirligigHandler->init(address);
         }
     }
 }
@@ -536,6 +560,12 @@ void SettingsDialog::setDeviceStatusStyle(ConnectionStatus status, DeviceType de
         ui.deoStatuslbl->setText(statusUnicode + " " + message);
         ui.deoStatuslbl->setFont(font);
         ui.deoStatuslbl->setStyleSheet("color: " + statusColor);
+    }
+    else if (deviceType == DeviceType::Whirligig)
+    {
+        ui.whirligigStatuslbl->setText(statusUnicode + " " + message);
+        ui.whirligigStatuslbl->setFont(font);
+        ui.whirligigStatuslbl->setStyleSheet("color: " + statusColor);
     }
     else if (deviceType == DeviceType::Gamepad)
     {
@@ -684,6 +714,33 @@ void SettingsDialog::on_device_connectionChanged(ConnectionChangedSignal event)
     emit deviceConnectionChange({event.deviceType, event.status, event.message});
 }
 
+void SettingsDialog::on_whirligig_connectionChanged(ConnectionChangedSignal event)
+{
+    _deoConnectionStatus = event.status;
+    if (event.status == ConnectionStatus::Error)
+    {
+        ui.whirligigConnectButton->setEnabled(true);
+        setDeviceStatusStyle(event.status, event.deviceType, event.message);
+    }
+    else
+    {
+        if (event.status == ConnectionStatus::Connected || event.status == ConnectionStatus::Connecting)
+        {
+            ui.whirligigConnectButton->setEnabled(false);
+        }
+        else if(SettingsHandler::getDeoEnabled())
+        {
+            ui.whirligigConnectButton->setEnabled(true);
+        }
+        setDeviceStatusStyle(event.status, event.deviceType);
+    }
+    emit whirligigDeviceConnectionChange({event.deviceType, event.status, event.message});
+}
+void SettingsDialog::on_whirligig_error(QString error)
+{
+    emit whirligigDeviceError(error);
+}
+
 void SettingsDialog::on_gamepad_connectionChanged(ConnectionChangedSignal event)
 {
     _gamepadConnectionStatus = event.status;
@@ -826,13 +883,18 @@ void SettingsDialog::on_deoConnectButton_clicked()
         }
         else
         {
-            LogHandler::Dialog("Invalid deo vr address!", XLogLevel::Critical);
+            LogHandler::Dialog("Invalid deo vr address!", XLogLevel::Warning);
         }
     }
 }
 
 void SettingsDialog::on_deoCheckbox_clicked(bool checked)
 {
+    if(checked && ui.whirligigCheckBox->isChecked())
+    {
+        ui.whirligigCheckBox->setChecked(!checked);
+        on_whirligigCheckBox_clicked(!checked);
+    }
     SettingsHandler::setDeoEnabled(checked);
     ui.deoAddressTxt->setEnabled(checked);
     ui.deoPortTxt->setEnabled(checked);
@@ -905,3 +967,31 @@ void SettingsDialog::on_invertFunscriptXCheckBox_clicked(bool checked)
     FunscriptHandler::setInverted(checked);
 }
 
+void SettingsDialog::on_whirligigCheckBox_clicked(bool checked)
+{
+    if(checked && ui.deoCheckbox->isChecked())
+    {
+        ui.deoCheckbox->setChecked(!checked);
+        on_deoCheckbox_clicked(!checked);
+    }
+    SettingsHandler::setWhirligigEnabled(checked);
+    ui.whirligigConnectButton->setEnabled(checked);
+    if (!checked)
+        _whirligigHandler->dispose();
+}
+
+void SettingsDialog::on_whirligigConnectButton_clicked()
+{
+    if(SettingsHandler::getWhirligigEnabled())
+    {
+        if(SettingsHandler::getWhirligigAddress() != "" && SettingsHandler::getWhirligigPort() != "" &&
+         SettingsHandler::getWhirligigAddress() != "0" && SettingsHandler::getWhirligigPort() != "0")
+        {
+            initWhirligigEvent();
+        }
+        else
+        {
+            LogHandler::Dialog("Invalid whirligig address!", XLogLevel::Warning);
+        }
+    }
+}

@@ -6,6 +6,7 @@ enum DeviceType
     Serial,
     Network,
     Deo,
+    Whirligig,
     Gamepad
 };
 

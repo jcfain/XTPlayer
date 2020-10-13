@@ -26,9 +26,6 @@ public:
     static QString getSerialPort();
     static QString getServerAddress();
     static QString getServerPort();
-    static QString getDeoAddress();
-    static QString getDeoPort();
-    static bool getDeoEnabled();
     static int getPlayerVolume();
     static int getoffSet();
 
@@ -65,9 +62,21 @@ public:
     static void setSerialPort(QString value);
     static void setServerAddress(QString value);
     static void setServerPort(QString value);
+
+    static QString getDeoAddress();
+    static QString getDeoPort();
+    static bool getDeoEnabled();
     static void setDeoAddress(QString value);
     static void setDeoPort(QString value);
     static void setDeoEnabled(bool value);
+
+    static QString getWhirligigAddress();
+    static QString getWhirligigPort();
+    static bool getWhirligigEnabled();
+    static void setWhirligigAddress(QString value);
+    static void setWhirligigPort(QString value);
+    static void setWhirligigEnabled(bool value);
+
     static void setPlayerVolume(int value);
     static void setoffSet(int value);
 
@@ -133,6 +142,9 @@ private:
     static QString deoAddress;
     static QString deoPort;
     static bool deoEnabled;
+    static QString whirligigAddress;
+    static QString whirligigPort;
+    static bool whirligigEnabled;
     static int playerVolume;
     static int offSet;
 

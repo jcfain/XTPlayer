@@ -42,56 +42,7 @@
       </attribute>
       <layout class="QFormLayout" name="formLayout">
        <item row="0" column="0" colspan="2">
-        <layout class="QGridLayout" name="ConnectionSettings" rowstretch="0,0,0,0" columnstretch="0,0,0,0,0,0,0,0,0,0,0">
-         <item row="2" column="9">
-          <widget class="QLabel" name="deoStatuslbl">
-           <property name="minimumSize">
-            <size>
-             <width>75</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Timed out</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="9">
-          <widget class="QLabel" name="networkStatuslbl">
-           <property name="minimumSize">
-            <size>
-             <width>75</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Timed out</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="10">
-          <widget class="QPushButton" name="serialConnectButton">
-           <property name="text">
-            <string>Connect</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2" colspan="6">
-          <widget class="QComboBox" name="SerialOutputCmb"/>
-         </item>
-         <item row="2" column="2" colspan="6">
-          <widget class="QLineEdit" name="deoAddressTxt"/>
-         </item>
-         <item row="2" column="0" colspan="2">
-          <widget class="QCheckBox" name="deoCheckbox">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="text">
-            <string>Deo VR</string>
-           </property>
-          </widget>
-         </item>
+        <layout class="QGridLayout" name="ConnectionSettings" rowstretch="0,0,0,0,0" columnstretch="0,0,0,0,0,0,0,0,0,0,0">
          <item row="0" column="8">
           <widget class="QPushButton" name="serialRefreshBtn">
            <property name="minimumSize">
@@ -121,8 +72,8 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="8">
-          <widget class="QLineEdit" name="networkPortTxt">
+         <item row="2" column="8">
+          <widget class="QLineEdit" name="deoPortTxt">
            <property name="maximumSize">
             <size>
              <width>100</width>
@@ -134,16 +85,30 @@
            </property>
           </widget>
          </item>
+         <item row="4" column="0" colspan="2">
+          <widget class="QCheckBox" name="gamePadCheckbox">
+           <property name="text">
+            <string>Gamepad</string>
+           </property>
+          </widget>
+         </item>
          <item row="1" column="2" colspan="6">
           <widget class="QLineEdit" name="networkAddressTxt"/>
          </item>
-         <item row="0" column="0" colspan="2">
-          <widget class="QRadioButton" name="serialOutputRdo">
+         <item row="2" column="10">
+          <widget class="QPushButton" name="deoConnectButton">
            <property name="text">
-            <string>Serial</string>
+            <string>Connect</string>
            </property>
-           <property name="checked">
+          </widget>
+         </item>
+         <item row="2" column="0" colspan="2">
+          <widget class="QCheckBox" name="deoCheckbox">
+           <property name="enabled">
             <bool>true</bool>
+           </property>
+           <property name="text">
+            <string>Deo VR</string>
            </property>
           </widget>
          </item>
@@ -160,12 +125,74 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="10">
-          <widget class="QPushButton" name="deoConnectButton">
+         <item row="4" column="2" colspan="2">
+          <widget class="QLabel" name="gamepadStatusLbl">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="9">
+          <widget class="QLabel" name="deoStatuslbl">
+           <property name="minimumSize">
+            <size>
+             <width>75</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Timed out</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="9">
+          <widget class="QLabel" name="networkStatuslbl">
+           <property name="minimumSize">
+            <size>
+             <width>75</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Timed out</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="8">
+          <widget class="QLineEdit" name="networkPortTxt">
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>100</height>
+            </size>
+           </property>
+           <property name="maxLength">
+            <number>5</number>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="10">
+          <widget class="QPushButton" name="serialConnectButton">
            <property name="text">
             <string>Connect</string>
            </property>
           </widget>
+         </item>
+         <item row="0" column="0" colspan="2">
+          <widget class="QRadioButton" name="serialOutputRdo">
+           <property name="text">
+            <string>Serial</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2" colspan="6">
+          <widget class="QLineEdit" name="deoAddressTxt"/>
+         </item>
+         <item row="0" column="2" colspan="6">
+          <widget class="QComboBox" name="SerialOutputCmb"/>
          </item>
          <item row="1" column="0" colspan="2">
           <widget class="QRadioButton" name="networkOutputRdo">
@@ -184,30 +211,24 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="8">
-          <widget class="QLineEdit" name="deoPortTxt">
-           <property name="maximumSize">
-            <size>
-             <width>100</width>
-             <height>100</height>
-            </size>
+         <item row="3" column="9">
+          <widget class="QLabel" name="whirligigStatuslbl">
+           <property name="text">
+            <string>Timed out</string>
            </property>
-           <property name="maxLength">
-            <number>5</number>
+          </widget>
+         </item>
+         <item row="3" column="10">
+          <widget class="QPushButton" name="whirligigConnectButton">
+           <property name="text">
+            <string>Connect</string>
            </property>
           </widget>
          </item>
          <item row="3" column="0" colspan="2">
-          <widget class="QCheckBox" name="gamePadCheckbox">
+          <widget class="QCheckBox" name="whirligigCheckBox">
            <property name="text">
-            <string>Gamepad</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="2" colspan="2">
-          <widget class="QLabel" name="gamepadStatusLbl">
-           <property name="text">
-            <string/>
+            <string>Whirligig</string>
            </property>
           </widget>
          </item>
