@@ -81,7 +81,7 @@ private slots:
     void playFileWithCustomScript();
     void regenerateThumbNail();
     void setThumbNailFromCurrent();
-    void onDeoMessageRecieved(VRPacket packet);
+    void onVRMessageRecieved(VRPacket packet);
     void on_gamepad_sendTCode(QString tcode);
     void on_gamepad_sendAction(QString action);
     void on_gamepad_connectionChanged(ConnectionChangedSignal event);
@@ -180,6 +180,8 @@ private:
     QGridLayout* placeHolderControlsGrid;
     bool funscriptFileSelectorOpen = false;
     bool stopThumbProcess = false;
+    bool vrScriptSelectorCanceled = false;
+    QString vrScriptSelectedCanceledPath;
 
 
     QList<QListWidgetItem*> libraryItems;

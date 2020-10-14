@@ -51,7 +51,7 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
         }
     }
 
-    if(action != nullptr && SettingsHandler::getLiveMultiplier())
+    if(action != nullptr && SettingsHandler::getMultiplierEnabled())
     {
         int position = action->pos;
         int speed = action->speed;

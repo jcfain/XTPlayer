@@ -10,8 +10,6 @@ WhirligigHandler::~WhirligigHandler()
     _isConnected = false;
     if (tcpSocket != nullptr)
         delete tcpSocket;
-    if (keepAliveTimer != nullptr)
-        delete keepAliveTimer;
     if (currentVRPacket != nullptr)
         delete currentVRPacket;
 }
@@ -29,18 +27,6 @@ void WhirligigHandler::init(NetworkAddress address, int waitTimeout)
     connect(tcpSocket, &QTcpSocket::stateChanged, this, &WhirligigHandler::onSocketStateChange);
     connect(tcpSocket, &QTcpSocket::errorOccurred, this, &WhirligigHandler::tcpErrorOccured);
     tcpSocket->connectToHost(addressObj, _address.port);
-}
-void WhirligigHandler::sendKeepAlive()
-{
-    if (_isConnected)
-    {
-        LogHandler::Debug("Sending keepalive: "+ QString::number(QTime::currentTime().msecsSinceStartOfDay()));
-        send(nullptr);
-    }
-    else
-    {
-        keepAliveTimer->stop();
-    }
 }
 
 void WhirligigHandler::send(const QString &command)
@@ -68,8 +54,6 @@ void WhirligigHandler::dispose()
     LogHandler::Debug("Whirligig: dispose");
     _isConnected = false;
     _isPlaying = false;
-    if (keepAliveTimer != nullptr && keepAliveTimer->isActive())
-        keepAliveTimer->stop();
     emit connectionChange({DeviceType::Whirligig, ConnectionStatus::Disconnected, "Disconnected"});
     if (tcpSocket != nullptr)
     {
@@ -80,51 +64,64 @@ void WhirligigHandler::dispose()
     }
 }
 
-qint64 currentTime = 0;
-QString path = nullptr;
 void WhirligigHandler::readData()
 {
     //LogHandler::Debug("Whirligig packet recieved");
-    QByteArray datagram = tcpSocket->readLine();
+    QByteArray datagram = tcpSocket->readAll();
+    //QByteArray timeDatagram = tcpSocket->readAll();
     QString line = QString::fromUtf8(datagram);
-        qint64 duration = 0;
-        bool playing = false;
-        if (line.startsWith("S"))
-        {
-            playing = false;
-        }
-        else if (line.startsWith("C"))
-        {
-            QString path = line.remove(0, 2).trimmed().remove('\n').remove('"');
-            LogHandler::Debug("Whirligig path: "+path);
-        }
-        else if (line.startsWith("P"))
-        {
-            playing = true;
-            QString timeStamp = line.remove(0, 2).trimmed();
-            double seconds = timeStamp.toDouble();
-            currentTime = seconds * 1000;
-            LogHandler::Debug("Whirligig current time: "+QString::number(currentTime));
-        }
+    //LogHandler::Debug("all: "+line);
+    bool playing = false;
+    qint64 currentTime = 0;
+    if (line.contains("S"))
+    {
+        playing = false;
+    }
+    if (line.startsWith("C"))
+    {
+        //LogHandler::Debug("C line: "+line);
+        duration = 1;
+        auto list = line.split('\n');
+        QString pathLine = list[0];
+        //QString type = list[1].section(list[1].lastIndexOf(' '), list[1].length()-1);
+        duration = list[2].split('=')[1].trimmed().toDouble() * 1000;
+        path = pathLine.remove(0, 2).remove(QRegularExpression("[\"\\n]+")).replace("\\\\", "\\").trimmed();
         //LogHandler::Debug("Whirligig path: "+path);
-        //LogHandler::Debug("Whirligig duration: "+QString::number(duration));
-        //LogHandler::Debug("Whirligig currentTime------------------------------------------------> "+QString::number(currentTime));
-    //    LogHandler::Debug("Whirligig playbackSpeed: "+QString::number(playbackSpeed));
-    //    LogHandler::Debug("Whirligig playing: "+QString::number(playing));
-        _mutex.lock();
-        currentVRPacket = new VRPacket
-        {
-            path,
-            duration,
-            currentTime,
-            0,
-            playing
-       };
-        _isPlaying = playing;
-        _currentTime = currentTime;
+    }
+    if (line.startsWith("P"))
+    {
+        //LogHandler::Debug("P line: "+line);
+        playing = true;
+        QString timeStamp = line.remove(0, 2).trimmed();
+        //LogHandler::Debug("Whirligig timeStamp: "+timeStamp);
+        double seconds = timeStamp.toDouble();
+        currentTime = seconds * 1000;
+        //LogHandler::Debug("Whirligig current time: "+QString::number(currentTime));
+    }
+    //LogHandler::Debug("Whirligig path: "+path);
+    //LogHandler::Debug("Whirligig duration: "+QString::number(duration));
+    //LogHandler::Debug("Whirligig currentTime------------------------------------------------> "+QString::number(currentTime));
+    //LogHandler::Debug("Whirligig playbackSpeed: "+QString::number(playbackSpeed));
+    //LogHandler::Debug("Whirligig playing: "+QString::number(playing));
+    _mutex.lock();
+    _isPlaying = playing;
+    //LogHandler::Debug("Whirligig current time: "+QString::number(currentTime));
+    currentVRPacket = new VRPacket
+    {
+        path,
+        duration,
+        currentTime,
+        0,
+        playing
+    };
+    _mutex.unlock();
+    if (time2 - time1 >= 1000)
+    {
+        time1 = time2;
         //LogHandler::Debug("Whirligig _isPlaying: "+QString::number(_isPlaying));
-        _mutex.unlock();
-        //emit messageRecieved(*currentVRPacket);
+        emit messageRecieved(*currentVRPacket);
+    }
+    time2 = (round(mSecTimer.nsecsElapsed() / 1000000));
 }
 
 bool WhirligigHandler::isConnected()
@@ -173,6 +170,7 @@ void WhirligigHandler::onSocketStateChange (QAbstractSocket::SocketState state)
             _isConnected = true;
             LogHandler::Debug("Whirligig connected");
             //send(nullptr);
+            mSecTimer.start();
             connect(tcpSocket, &QTcpSocket::readyRead, this, &WhirligigHandler::readData);
             //if (keepAliveTimer != nullptr && keepAliveTimer->isActive())
                 //keepAliveTimer->stop();
@@ -191,8 +189,18 @@ void WhirligigHandler::onSocketStateChange (QAbstractSocket::SocketState state)
             //_mutex.unlock();
             //if (keepAliveTimer != nullptr && keepAliveTimer->isActive())
                 //keepAliveTimer->stop();
-            LogHandler::Debug("Whirligig disconnected");
-            emit connectionChange({DeviceType::Whirligig, ConnectionStatus::Disconnected, "Disconnected"});
+            if(SettingsHandler::getWhirligigEnabled())
+            {
+                LogHandler::Debug("Whirligig retrying: " + _address.address);
+                LogHandler::Debug("port: " + QString::number(_address.port));
+                QHostAddress addressObj;
+                addressObj.setAddress(_address.address);
+                tcpSocket->connectToHost(addressObj, _address.port);
+            } else
+            {
+                LogHandler::Debug("Whirligig disconnected");
+                emit connectionChange({DeviceType::Whirligig, ConnectionStatus::Disconnected, "Disconnected"});
+            }
             break;
         }
         case QAbstractSocket::SocketState::ConnectingState:

@@ -109,8 +109,9 @@ public:
     static int getLiveXRangeMin();
     static int getLiveXRangeMax();
     static void resetLiveXRange();
-    static bool getLiveMultiplier();
-    static void setLiveMultiplier(bool value);
+    static bool getMultiplierEnabled();
+    static void setMultiplierEnabled(bool value);
+    static void setLiveMultiplierEnabled(bool value);
     static bool getLiveGamepadConnected();
     static void setLiveGamepadConnected(bool value);
 
@@ -175,7 +176,8 @@ private:
     static int _xRangeStep;
     static int _liveXRangeMax;
     static int _liveXRangeMin;
-    static bool _liveMultiplier;
+    static bool _liveMultiplierEnabled;
+    static bool _multiplierEnabled;
 
     static int libraryView;
     static int thumbSize;

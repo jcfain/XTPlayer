@@ -137,6 +137,8 @@ private slots:
 
     void on_whirligigConnectButton_clicked();
 
+    void on_enableMultiplierCheckbox_clicked(bool checked);
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();

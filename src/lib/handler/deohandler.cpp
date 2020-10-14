@@ -192,8 +192,18 @@ void DeoHandler::onSocketStateChange (QAbstractSocket::SocketState state)
             //_mutex.unlock();
             if (keepAliveTimer != nullptr && keepAliveTimer->isActive())
                 keepAliveTimer->stop();
-            LogHandler::Debug("Deo disconnected");
-            emit connectionChange({DeviceType::Deo, ConnectionStatus::Disconnected, "Disconnected"});
+            if(SettingsHandler::getDeoEnabled())
+            {
+                LogHandler::Debug("DeoVR retrying: " + _address.address);
+                LogHandler::Debug("port: " + QString::number(_address.port));
+                QHostAddress addressObj;
+                addressObj.setAddress(_address.address);
+                tcpSocket->connectToHost(addressObj, _address.port);
+            } else
+            {
+                LogHandler::Debug("Deo disconnected");
+                emit connectionChange({DeviceType::Deo, ConnectionStatus::Disconnected, "Disconnected"});
+            }
             break;
         }
         case QAbstractSocket::SocketState::ConnectingState:

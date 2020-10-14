@@ -127,8 +127,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_xSettings, &SettingsDialog::whirligigDeviceError, this, &MainWindow::on_whirligig_device_error);
     connect(_xSettings, &SettingsDialog::deviceConnectionChange, this, &MainWindow::on_device_connectionChanged);
     connect(_xSettings, &SettingsDialog::deviceError, this, &MainWindow::on_device_error);
-    connect(_xSettings->getDeoHandler(), &DeoHandler::messageRecieved, this, &MainWindow::onDeoMessageRecieved);
-    connect(_xSettings->getWhirligigHandler(), &WhirligigHandler::messageRecieved, this, &MainWindow::onDeoMessageRecieved);
+    connect(_xSettings->getDeoHandler(), &DeoHandler::messageRecieved, this, &MainWindow::onVRMessageRecieved);
+    connect(_xSettings->getWhirligigHandler(), &WhirligigHandler::messageRecieved, this, &MainWindow::onVRMessageRecieved);
     connect(_xSettings, &SettingsDialog::gamepadConnectionChange, this, &MainWindow::on_gamepad_connectionChanged);
     connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitTCode, this, &MainWindow::on_gamepad_sendTCode);
     connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitAction, this, &MainWindow::on_gamepad_sendAction);
@@ -560,9 +560,9 @@ void MainWindow::mediaAction(QString action)
     }
     else if (action == actions.ToggleAxisMultiplier)
     {
-        bool multiplier = SettingsHandler::getLiveMultiplier();
+        bool multiplier = SettingsHandler::getMultiplierEnabled();
         textToSpeech->say(multiplier ? "Disable multiplier" : "Enable multiplier");
-        SettingsHandler::setLiveMultiplier(!multiplier);
+        SettingsHandler::setLiveMultiplierEnabled(!multiplier);
     }
     else if (action == actions.ToggleFunscriptInvert)
     {
@@ -1363,15 +1363,18 @@ void MainWindow::toggleMediaControlStatus()
         ui->lblCurrentDuration->setText("00:00:00/00:00:00");
     }
 }
-void MainWindow::onDeoMessageRecieved(VRPacket packet)
+void MainWindow::onVRMessageRecieved(VRPacket packet)
 {
-//        LogHandler::Debug("Deo path: "+packet.path);
-//LogHandler::Debug("Deo duration: "+QString::number(packet.duration));
-//        LogHandler::Debug("Deo currentTime: "+QString::number(packet.currentTime));
-//        LogHandler::Debug("Deo playbackSpeed: "+QString::number(packet.playbackSpeed));
-//        LogHandler::Debug("Deo playing: "+QString::number(packet.playing));
+        //LogHandler::Debug("VR path: "+packet.path);
+//LogHandler::Debug("VR duration: "+QString::number(packet.duration));
+        //LogHandler::Debug("VR currentTime: "+QString::number(packet.currentTime));
+//        LogHandler::Debug("VR playbackSpeed: "+QString::number(packet.playbackSpeed));
+//        LogHandler::Debug("VR playing: "+QString::number(packet.playing));
 
-    if (!funscriptFileSelectorOpen && packet.duration > 0)
+    if(!packet.path.isEmpty() && packet.path != vrScriptSelectedCanceledPath)
+        vrScriptSelectorCanceled = false;
+
+    if (!vrScriptSelectorCanceled && !packet.path.isEmpty() && !funscriptFileSelectorOpen && packet.duration > 0)
     {
         QString videoPath = packet.path;
         QFileInfo videoFile(videoPath);
@@ -1382,7 +1385,8 @@ void MainWindow::onDeoMessageRecieved(VRPacket packet)
             funscriptHandler->setLoaded(false);
             //Check the deo device local video directory for funscript.
             int indexOfSuffix = packet.path.lastIndexOf(".");
-            QString localFunscriptPath = packet.path.replace(indexOfSuffix, packet.path.length() - indexOfSuffix, ".funscript");
+            QString packetPath = packet.path;
+            QString localFunscriptPath = packetPath.replace(indexOfSuffix, packet.path.length() - indexOfSuffix, ".funscript");
             QFile localFile(localFunscriptPath);
             LogHandler::Debug("Searching local path: "+localFunscriptPath);
             if(localFile.exists())
@@ -1409,6 +1413,13 @@ void MainWindow::onDeoMessageRecieved(VRPacket packet)
                     textToSpeech->say("Script for video playing in Deeo VR not found. Please check your computer to select a script.");
                 funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + videoFile.fileName(), SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
                 funscriptFileSelectorOpen = false;
+                //LogHandler::Debug("funscriptPath: "+funscriptPath);
+                if(funscriptPath.isEmpty())
+                {
+                    vrScriptSelectorCanceled = true;
+                    vrScriptSelectedCanceledPath = packet.path;
+                }
+
             }
             //Store the location of the file so the above check doesnt happen again.
             SettingsHandler::setDeoDnlaFunscript(videoPath, funscriptPath);
@@ -1454,7 +1465,7 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
 //                LogHandler::Debug("Out timeTracker: "+QString::number(timeTracker));
                 timer1 = timer2;
                 qint64 currentTime = currentVRPacket.currentTime;
-                //LogHandler::Debug("Deo time reset: "+QString::number(currentTime));
+                //LogHandler::Debug("VR time reset: "+QString::number(currentTime));
                 bool hasRewind = lastDeoTime > currentTime;
                 if (currentTime > timeTracker + 100 || hasRewind)
                 {

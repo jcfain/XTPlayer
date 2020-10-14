@@ -39,11 +39,9 @@ private:
     void readData();
     void onSocketStateChange (QAbstractSocket::SocketState state);
     void tcpErrorOccured(QAbstractSocket::SocketError);
-    void sendKeepAlive();
 
     VRPacket* currentVRPacket = nullptr;
     QTcpSocket* tcpSocket = nullptr;
-    QTimer* keepAliveTimer = nullptr;
     QMutex _mutex;
     NetworkAddress _address;
     QString _sendCommand;
@@ -51,7 +49,12 @@ private:
     bool _isConnected = false;
     bool _isPlaying = false;
     bool _isSelected = false;
-    quint64 _currentTime;
+
+    QString path = nullptr;
+    qint64 duration = 0;
+    QElapsedTimer mSecTimer;
+    qint64 time1 = 0;
+    qint64 time2 = 0;
 };
 
 #endif // WHIRLIGIGHANDLER_H

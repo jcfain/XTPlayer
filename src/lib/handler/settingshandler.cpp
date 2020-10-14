@@ -78,6 +78,8 @@ void SettingsHandler::Load()
     deoDnlaFunscriptLookup = settings->value("deoDnlaFunscriptLookup").toHash();
 
     _gamePadEnabled = settings->value("gamePadEnabled").toBool();
+    _multiplierEnabled = settings->value("multiplierEnabled").toBool();
+    _liveMultiplierEnabled = _multiplierEnabled;
 //    qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
 //    qRegisterMetaType<ChannelModel>();
     QVariantMap availableAxis = settings->value("availableAxis").toMap();
@@ -150,6 +152,7 @@ void SettingsHandler::Save()
         settings->setValue("deoDnlaFunscriptLookup", deoDnlaFunscriptLookup);
 
         settings->setValue("gamePadEnabled", _gamePadEnabled);
+        settings->setValue("multiplierEnabled", _multiplierEnabled);
 //        qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
 //        qRegisterMetaType<ChannelModel>();
         QVariantMap availableAxis;
@@ -247,6 +250,12 @@ void SettingsHandler::SetMapDefaults()
 
 void SettingsHandler::MigrateTo17()
 {
+    if(_availableAxis.contains("V2"))
+    {
+        _availableAxis["V2"].Channel = "V1";
+        _availableAxis["V1"] = _availableAxis["V2"];
+        _availableAxis.remove("V2");
+    }
     if(!_availableAxis.contains(axisNames.TcYLeftRightL1))
         _availableAxis.insert(axisNames.TcYLeftRightL1, { "Y (Left/Right L1)", axisNames.TcYLeftRightL1, "L1", 1, 500, 999, 1, 500, 999 } );
     if(!_availableAxis.contains(axisNames.TcYLeftL1))
@@ -585,16 +594,23 @@ void SettingsHandler::resetLiveXRange()
     _liveXRangeMin = _availableAxis.value(axisNames.TcXUpDownL0).UserMin;
 }
 
-bool SettingsHandler::getLiveMultiplier()
+void SettingsHandler::setLiveMultiplierEnabled(bool value)
 {
     QMutexLocker locker(&mutex);
-    return _liveMultiplier;
+    _liveMultiplierEnabled = value;
 }
 
-void SettingsHandler::setLiveMultiplier(bool value)
+bool SettingsHandler::getMultiplierEnabled()
 {
     QMutexLocker locker(&mutex);
-    _liveMultiplier = value;
+    return (_liveMultiplierEnabled && _multiplierEnabled) || _liveMultiplierEnabled;
+}
+
+void SettingsHandler::setMultiplierEnabled(bool value)
+{
+    QMutexLocker locker(&mutex);
+    _multiplierEnabled = value;
+    _liveMultiplierEnabled = value;
 }
 
 bool SettingsHandler::getDisableSpeechToText()
@@ -819,7 +835,7 @@ void SettingsHandler::SetupAvailableAxis()
         {axisNames.TcTwistCWR0, { "Z Twist (CW)", axisNames.TcTwistCWR0, "R0", 1, 500, 999, 1, 500, 999 } },
         {axisNames.TcTwistCCWR0, { "Z Twist (CCW)", axisNames.TcTwistCCWR0, "R0", 1, 500, 999, 1, 500, 999 } },
         {axisNames.TcVibV0, { "Vib (V0)", axisNames.TcVibV0, "V0", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcPumpV2, { "Pump (V2)", axisNames.TcPumpV2, "V2", 1, 500, 999, 1, 500, 999 } }
+        {axisNames.TcPumpV1, { "Pump (V1)", axisNames.TcPumpV1, "V1", 1, 500, 999, 1, 500, 999 } }
     };
 }
 
@@ -903,7 +919,8 @@ bool SettingsHandler::_liveGamepadConnected;
 int SettingsHandler::_xRangeStep;
 int SettingsHandler::_liveXRangeMax;
 int SettingsHandler::_liveXRangeMin;
-bool SettingsHandler::_liveMultiplier = false;
+bool SettingsHandler::_liveMultiplierEnabled = false;
+bool SettingsHandler::_multiplierEnabled;
 
 QString SettingsHandler::selectedFunscriptLibrary;
 QString SettingsHandler::selectedFile;

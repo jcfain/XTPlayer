@@ -41,7 +41,7 @@ struct AxisNames
     const QString TcXRollForwardR2 = "R2+";
     const QString TcXRollBackR2 = "R2-";
     const QString TcVibV0 = "V0";
-    const QString TcPumpV2 = "V2";
+    const QString TcPumpV1 = "V1";
     QList<QPair<QString, AxisModel>> BasicAxis =
     {
         { TcXUpDownL0, { AxisType::Range, TcXUpDownL0, "X Stroke", "" }},//Surge
@@ -51,7 +51,7 @@ struct AxisNames
         { TcYRollR1, { AxisType::Range, TcXUpDownL0, "Y Roll", "roll" }},
         { TcTwistR0, { AxisType::Range, TcXUpDownL0, "Z Twist", "twist" }},//yaw
         { TcVibV0, { AxisType::Switch, TcVibV0, "Vib", "vib" }},
-        { TcPumpV2, { AxisType::Switch, TcPumpV2, "Pump", "vib" }}
+        { TcPumpV1, { AxisType::Switch, TcPumpV1, "Pump", "vib" }}
     };
 };
 //enum Axis

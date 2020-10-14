@@ -81,6 +81,7 @@ void SettingsDialog::init(VideoHandler* videoHandler)
 void SettingsDialog::initLive()
 {
     ui.invertFunscriptXCheckBox->setChecked(FunscriptHandler::getInverted());
+    ui.enableMultiplierCheckbox->setChecked(SettingsHandler::getMultiplierEnabled());
 }
 
 void SettingsDialog::setupUi()
@@ -994,4 +995,9 @@ void SettingsDialog::on_whirligigConnectButton_clicked()
             LogHandler::Dialog("Invalid whirligig address!", XLogLevel::Warning);
         }
     }
+}
+
+void SettingsDialog::on_enableMultiplierCheckbox_clicked(bool checked)
+{
+    SettingsHandler::setMultiplierEnabled(checked);
 }
