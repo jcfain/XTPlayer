@@ -187,10 +187,10 @@ void MainWindow::dispose()
         funscriptFuture.cancel();
         funscriptFuture.waitForFinished();
     }
-    if(funscriptDeoFuture.isRunning())
+    if(funscriptVRSyncFuture.isRunning())
     {
-        funscriptDeoFuture.cancel();
-        funscriptDeoFuture.waitForFinished();
+        funscriptVRSyncFuture.cancel();
+        funscriptVRSyncFuture.waitForFinished();
     }
     qDeleteAll(funscriptHandlers);
     delete tcodeHandler;
@@ -1832,27 +1832,32 @@ void MainWindow::on_deo_device_connectionChanged(ConnectionChangedSignal event)
     {
         ui->actionChange_current_deo_script->setEnabled(false);
         deoRetryConnectionButton->show();
-        if(funscriptDeoFuture.isRunning())
+        if(funscriptVRSyncFuture.isRunning())
         {
-            funscriptDeoFuture.cancel();
-            funscriptDeoFuture.waitForFinished();
+            funscriptVRSyncFuture.cancel();
+            funscriptVRSyncFuture.waitForFinished();
         }
     }
     else if(event.status == ConnectionStatus::Connected)
     {
         ui->actionChange_current_deo_script->setEnabled(true);
         deoRetryConnectionButton->hide();
-        if(funscriptDeoFuture.isRunning())
+        if(funscriptVRSyncFuture.isRunning())
         {
-            funscriptDeoFuture.cancel();
-            funscriptDeoFuture.waitForFinished();
+            funscriptVRSyncFuture.cancel();
+            funscriptVRSyncFuture.waitForFinished();
         }
-        funscriptDeoFuture = QtConcurrent::run(syncVRFunscript, _xSettings->getDeoHandler(), videoHandler, _xSettings, tcodeHandler, funscriptHandler);
+        funscriptVRSyncFuture = QtConcurrent::run(syncVRFunscript, _xSettings->getDeoHandler(), videoHandler, _xSettings, tcodeHandler, funscriptHandler);
 
+    }
+    else if(event.status == ConnectionStatus::Connecting)
+    {
+        deoConnectionStatusLabel->show();
     }
     else
     {
         ui->actionChange_current_deo_script->setEnabled(false);
+        deoConnectionStatusLabel->hide();
         deoRetryConnectionButton->hide();
     }
 }
@@ -1872,27 +1877,32 @@ void MainWindow::on_whirligig_device_connectionChanged(ConnectionChangedSignal e
     {
         ui->actionChange_current_deo_script->setEnabled(false);
         whirligigRetryConnectionButton->show();
-        if(funscriptDeoFuture.isRunning())
+        if(funscriptVRSyncFuture.isRunning())
         {
-            funscriptDeoFuture.cancel();
-            funscriptDeoFuture.waitForFinished();
+            funscriptVRSyncFuture.cancel();
+            funscriptVRSyncFuture.waitForFinished();
         }
     }
     else if(event.status == ConnectionStatus::Connected)
     {
         ui->actionChange_current_deo_script->setEnabled(true);
         whirligigRetryConnectionButton->hide();
-        if(funscriptDeoFuture.isRunning())
+        if(funscriptVRSyncFuture.isRunning())
         {
-            funscriptDeoFuture.cancel();
-            funscriptDeoFuture.waitForFinished();
+            funscriptVRSyncFuture.cancel();
+            funscriptVRSyncFuture.waitForFinished();
         }
-        funscriptDeoFuture = QtConcurrent::run(syncVRFunscript, _xSettings->getWhirligigHandler(), videoHandler, _xSettings, tcodeHandler, funscriptHandler);
+        funscriptVRSyncFuture = QtConcurrent::run(syncVRFunscript, _xSettings->getWhirligigHandler(), videoHandler, _xSettings, tcodeHandler, funscriptHandler);
 
+    }
+    else if(event.status == ConnectionStatus::Connecting)
+    {
+        whirligigConnectionStatusLabel->show();
     }
     else
     {
         ui->actionChange_current_deo_script->setEnabled(false);
+        whirligigConnectionStatusLabel->hide();
         whirligigRetryConnectionButton->hide();
     }
 }

@@ -139,7 +139,7 @@ private:
     QTextToSpeech* textToSpeech;
     VideoPreviewWidget* videoPreviewWidget;
     QFuture<void> funscriptFuture;
-    QFuture<void> funscriptDeoFuture;
+    QFuture<void> funscriptVRSyncFuture;
     QProgressBar* bar;
     VideoHandler* videoHandler;
     FunscriptHandler* funscriptHandler;

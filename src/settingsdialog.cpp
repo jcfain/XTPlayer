@@ -216,6 +216,7 @@ void SettingsDialog::setupUi()
         ui.deoAddressTxt->setEnabled(deoEnabled);
         ui.deoPortTxt->setEnabled(deoEnabled);
         ui.deoConnectButton->setEnabled(deoEnabled);
+        ui.whirligigCheckBox->setChecked(SettingsHandler::getWhirligigEnabled());
         ui.gamePadCheckbox->setChecked(SettingsHandler::getGamepadEnabled());
         ui.gamePadMapGroupbox->setHidden(!SettingsHandler::getGamepadEnabled());
         ui.videoIncrementSpinBox->setValue(SettingsHandler::getVideoIncrement());
