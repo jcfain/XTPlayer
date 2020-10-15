@@ -192,10 +192,9 @@ void MainWindow::dispose()
         funscriptDeoFuture.cancel();
         funscriptDeoFuture.waitForFinished();
     }
+    qDeleteAll(funscriptHandlers);
     delete tcodeHandler;
     delete videoHandler;
-    foreach(auto funscriptHandler, funscriptHandlers)
-        delete funscriptHandler;
     delete connectionStatusLabel;
     delete retryConnectionButton;
     delete videoPreviewWidget;
@@ -667,6 +666,12 @@ void MainWindow::on_load_library(QString path)
                 {
                     scriptPath = nullptr;
                 }
+
+                //QFileInfo scriptZip(scriptNoExtension + ".zip");
+                QString zipFile;
+//                if(scriptZip.exists())
+//                    zipFile = scriptNoExtension + ".zip";
+
                 QString thumbFile =  thumbPath + fileName + ".jpg";
                 LibraryListItem item
                 {
@@ -675,7 +680,10 @@ void MainWindow::on_load_library(QString path)
                     fileNameNoExtension, //nameNoExtension
                     scriptPath, // script
                     scriptNoExtension,
-                    thumbFile
+                    thumbFile,
+                    zipFile,
+                    QDate::currentDate(),
+                    0
                 };
                 QVariant listItem;
                 listItem.setValue(item);
@@ -913,21 +921,65 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
             videoHandler->setFile(selectedFileListItem.path);
             videoPreviewWidget->setFile(selectedFileListItem.path);
             videoHandler->load();
-            QString scriptFile = customScript == nullptr ? selectedFileListItem.script : customScript;
-            funscriptHandler->load(scriptFile);
+            if(!selectedFileListItem.zipFile.isEmpty())
+            {
+//                asmZip zipFile(selectedFileListItem.zipFile);
+
+//                if ( zipFile.isValid() )
+//                {
+//                   zipFile.listFiles();
+//                   QByteArray  data;
+//                   AxisNames axisNames;
+//                   auto err = zipFile.extractFile( "x.funscript", data );
+
+//                   if (err != asmZip::NO_ERR)
+//                        funscriptHandler->load(data);
+//                }
+            }
+            else
+            {
+                QString scriptFile = customScript == nullptr ? selectedFileListItem.script : customScript;
+                funscriptHandler->load(scriptFile);
+            }
+
+            qDeleteAll(funscriptHandlers);
+            funscriptHandlers.clear();
+            _xSettings->getSelectedDeviceHandler()->sendTCode(tcodeHandler->getHome());
+
             AxisNames axisNames;
             foreach(auto axisName, axisNames.BasicAxis)
             {
                 if(axisName.first == axisNames.TcXUpDownL0)
                     continue;
-                auto scriptFileTemp = scriptFile;
-                auto funscriptNoExtension = scriptFileTemp.remove(scriptFileTemp.lastIndexOf('.'), scriptFileTemp.length() -  1);
-                QFileInfo fileInfo(funscriptNoExtension + "." + axisName.second.trackName + ".funscript");
-                if(fileInfo.exists())
+                if(!selectedFileListItem.zipFile.isEmpty())
                 {
-                    FunscriptHandler* otherFunscript = new FunscriptHandler(axisName.first);
-                    otherFunscript->load(fileInfo.absoluteFilePath());
-                    funscriptHandlers.append(otherFunscript);
+//                    asmZip zipFile(selectedFileListItem.zipFile);
+
+//                    if ( zipFile.isValid() )
+//                    {
+//                       zipFile.listFiles();
+//                       QByteArray  data;
+
+//                       auto err = zipFile.extractFile(axisName.second.trackName + ".funscript", data);
+//                       if (err != asmZip::NO_ERR)
+//                       {
+//                           FunscriptHandler* otherFunscript = new FunscriptHandler(axisName.first);
+//                           otherFunscript->load(data);
+//                           funscriptHandlers.append(otherFunscript);
+//                       }
+//                    }
+                }
+                else
+                {
+                    auto scriptFileTemp = customScript == nullptr ? selectedFileListItem.script : customScript;
+                    auto funscriptNoExtension = scriptFileTemp.remove(scriptFileTemp.lastIndexOf('.'), scriptFileTemp.length() -  1);
+                    QFileInfo fileInfo(funscriptNoExtension + "." + axisName.second.trackName + ".funscript");
+                    if(fileInfo.exists())
+                    {
+                        FunscriptHandler* otherFunscript = new FunscriptHandler(axisName.first);
+                        otherFunscript->load(fileInfo.absoluteFilePath());
+                        funscriptHandlers.append(otherFunscript);
+                    }
                 }
             }
         }
@@ -1320,8 +1372,10 @@ QString MainWindow::mSecondFormat(int mSecs)
 void MainWindow::on_media_start()
 {
     toggleMediaControlStatus();
-    if(SettingsHandler::getDeoEnabled() && _xSettings->getDeoHandler()->isConnected())
+    if(SettingsHandler::getDeoEnabled())
         _xSettings->getDeoHandler()->dispose();
+    if(SettingsHandler::getWhirligigEnabled())
+        _xSettings->getWhirligigHandler()->dispose();
     if(funscriptFuture.isRunning())
     {
         funscriptFuture.cancel();
@@ -1442,7 +1496,7 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
     VRPacket currentVRPacket = vrPlayer->getCurrentPacket();
     QString currentVideo;
     qint64 timeTracker = 0;
-    qint64 lastDeoTime = 0;
+    qint64 lastVRTime = 0;
     QElapsedTimer mSecTimer;
     qint64 timer1 = 0;
     qint64 timer2 = 0;
@@ -1466,10 +1520,10 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
                 timer1 = timer2;
                 qint64 currentTime = currentVRPacket.currentTime;
                 //LogHandler::Debug("VR time reset: "+QString::number(currentTime));
-                bool hasRewind = lastDeoTime > currentTime;
+                bool hasRewind = lastVRTime > currentTime;
                 if (currentTime > timeTracker + 100 || hasRewind)
                 {
-                    lastDeoTime = currentTime;
+                    lastVRTime = currentTime;
                     LogHandler::Debug("current time reset: " + QString::number(currentTime));
                     LogHandler::Debug("timeTracker: " + QString::number(timeTracker));
                     timeTracker = currentTime;
@@ -1504,6 +1558,11 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
                 QString funscriptPath = SettingsHandler::getDeoDnlaFunscript(currentVRPacket.path);
                 currentVideo = currentVRPacket.path;
                 funscriptHandler->load(funscriptPath);
+
+                qDeleteAll(funscriptHandlers);
+                funscriptHandlers.clear();
+                xSettings->getSelectedDeviceHandler()->sendTCode(tcodeHandler->getHome());
+
                 foreach(auto axisName, axisNames.BasicAxis)
                 {
                     if(axisName.first == axisNames.TcXUpDownL0)

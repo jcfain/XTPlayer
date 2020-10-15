@@ -18,6 +18,7 @@ public:
     QString funscriptToTCode(std::shared_ptr<FunscriptAction> action, QMap<QString, std::shared_ptr<FunscriptAction>> otherActions);
 
     int calculateRange(const char* channel, int rawValue);
+    QString getHome();
 
 private:
     QMutex mutex;

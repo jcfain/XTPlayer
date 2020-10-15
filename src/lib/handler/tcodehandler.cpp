@@ -123,3 +123,17 @@ int TCodeHandler::calculateRange(const char* channel, int rawValue)
     int xMid = qRound((xMax + xMin) / 2.0);
     return XMath::mapRange(rawValue, 50, 100, xMid, xMax);
 }
+
+QString TCodeHandler::getHome()
+{
+    QString tcode;
+    foreach(auto axis, axisNames.BasicAxis)
+    {
+        if(axis.first == axisNames.TcXUpDownL0)
+            continue;
+        tcode += " ";
+        tcode += axis.first;
+        tcode += "500S500";
+    }
+    return tcode;
+}

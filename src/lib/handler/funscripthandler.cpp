@@ -25,7 +25,6 @@ void FunscriptHandler::load(QString funscriptString)
     }
     LogHandler::Debug("Funscript load: "+funscriptString);
     QFile loadFile(funscriptString);
-
     lastActionIndex = -1;
     nextActionIndex = 1;
     if (!loadFile.open(QIODevice::ReadOnly)) {
@@ -36,8 +35,13 @@ void FunscriptHandler::load(QString funscriptString)
 
     //LogHandler::Debug("funscriptHandler->load "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
     QByteArray funData = loadFile.readAll();
+    load(funData);
+}
+
+void FunscriptHandler::load(QByteArray byteArray)
+{
     QJsonParseError* error = new QJsonParseError();
-    QJsonDocument doc = QJsonDocument::fromJson(funData, error);
+    QJsonDocument doc = QJsonDocument::fromJson(byteArray, error);
 
     if(doc.isNull()) {
         emit errorOccurred("loading funscript failed: " + error->errorString());
@@ -50,6 +54,7 @@ void FunscriptHandler::load(QString funscriptString)
 
     _loaded = true;
 }
+
 Funscript* FunscriptHandler::currentFunscript()
 {
     QMutexLocker locker(&mutex);
