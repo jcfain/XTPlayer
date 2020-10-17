@@ -69,6 +69,7 @@ void SettingsHandler::Load()
     twistMultiplierValue = settings->value("vibMultiplierValue").toFloat();
 
     libraryView = settings->value("libraryView").toInt();
+    selectedLibrarySortMode = settings->value("selectedLibrarySortMode").toInt();
     thumbSize = settings->value("thumbSize").toInt();
     thumbSize = thumbSize == 0 ? 150 : thumbSize;
     thumbSizeList = settings->value("thumbSizeList").toInt();
@@ -145,6 +146,8 @@ void SettingsHandler::Save()
         settings->setValue("vibMultiplierValue", twistMultiplierValue);
 
         settings->setValue("libraryView", libraryView);
+        settings->setValue("selectedLibrarySortMode", selectedLibrarySortMode);
+
         settings->setValue("thumbSize", thumbSize);
         settings->setValue("thumbSizeList", thumbSizeList);
         settings->setValue("videoIncrement", videoIncrement);
@@ -280,7 +283,7 @@ QString SettingsHandler::getSelectedLibrary()
     QMutexLocker locker(&mutex);
     return selectedLibrary;
 }
- QString SettingsHandler::getSelectedFunscriptLibrary()
+QString SettingsHandler::getSelectedFunscriptLibrary()
 {
      QMutexLocker locker(&mutex);
     return selectedFunscriptLibrary;
@@ -622,6 +625,17 @@ void SettingsHandler::setDisableSpeechToText(bool value)
     QMutexLocker locker(&mutex);
     disableSpeechToText = value;
 }
+
+
+void SettingsHandler::setSelectedLibrarySortMode(int value)
+{
+    selectedLibrarySortMode = value;
+}
+int SettingsHandler::getSelectedLibrarySortMode()
+{
+    return selectedLibrarySortMode;
+}
+
 ChannelModel SettingsHandler::getAxis(QString axis)
 {
     QMutexLocker locker(&mutex);
@@ -882,6 +896,7 @@ QHash<QString, QVariant> SettingsHandler::deoDnlaFunscriptLookup;
 QString SettingsHandler::selectedTheme;
 QString SettingsHandler::selectedLibrary;
 int SettingsHandler::selectedDevice;
+int SettingsHandler::selectedLibrarySortMode;
 int SettingsHandler::playerVolume;
 int SettingsHandler::offSet;
 //int SettingsHandler::xMin;

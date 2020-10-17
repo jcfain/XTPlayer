@@ -153,6 +153,7 @@ private:
     bool _interfaceInitialized = false;
     ConnectionStatus _outConnectionStatus = ConnectionStatus::Disconnected;
     ConnectionStatus _deoConnectionStatus = ConnectionStatus::Disconnected;
+    ConnectionStatus _whirligigConnectionStatus = ConnectionStatus::Disconnected;
     ConnectionStatus _gamepadConnectionStatus = ConnectionStatus::Disconnected;
     QList<SerialComboboxItem> serialPorts;
     SerialComboboxItem selectedSerialPort;

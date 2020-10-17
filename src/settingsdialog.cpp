@@ -91,6 +91,7 @@ void SettingsDialog::setupUi()
     setDeviceStatusStyle(_outConnectionStatus, DeviceType::Serial);
     setDeviceStatusStyle(_outConnectionStatus, DeviceType::Network);
     setDeviceStatusStyle(_deoConnectionStatus, DeviceType::Deo);
+    setDeviceStatusStyle(_whirligigConnectionStatus, DeviceType::Whirligig);
     setDeviceStatusStyle(_gamepadConnectionStatus, DeviceType::Gamepad);
     if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
     {
@@ -718,7 +719,7 @@ void SettingsDialog::on_device_connectionChanged(ConnectionChangedSignal event)
 
 void SettingsDialog::on_whirligig_connectionChanged(ConnectionChangedSignal event)
 {
-    _deoConnectionStatus = event.status;
+    _whirligigConnectionStatus = event.status;
     if (event.status == ConnectionStatus::Error)
     {
         ui.whirligigConnectButton->setEnabled(true);

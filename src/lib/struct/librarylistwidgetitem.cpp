@@ -26,10 +26,11 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data) :
     }
     QIcon thumb;
     QPixmap bgPixmap(thumbString);
-    QPixmap scaled = bgPixmap.scaled(SettingsHandler::getCurrentMaxThumbSize(), Qt::AspectRatioMode::KeepAspectRatio);
+    QSize size = {SettingsHandler::getThumbSize(), SettingsHandler::getThumbSize()};
+    QPixmap scaled = bgPixmap.scaled(size, Qt::AspectRatioMode::KeepAspectRatio);
     thumb.addPixmap(scaled);
     setIcon(thumb);
-    setSizeHint({SettingsHandler::getThumbSize(), SettingsHandler::getThumbSize()});
+    setSizeHint(size);
     setText(data.nameNoExtension);
     QVariant listItem;
     listItem.setValue(data);
@@ -50,36 +51,44 @@ bool LibraryListWidgetItem::operator< (const QListWidgetItem & other) const
     {
         case LibrarySortMode::RANDOM:
         {
-            qint64 randomValue = XMath::rand(0, 100);
-            return randomValue > 50;
+//            qint64 randomValue = XMath::rand(0, 100);
+//            if(randomValue > 50)
+//                return thisData.modifiedDate < otherData.modifiedDate;
+            return thisData.modifiedDate > otherData.modifiedDate;
         }
-        case LibrarySortMode::MODIFIED_ASC:
+        case LibrarySortMode::CREATED_ASC:
         {
-            auto d1 = thisData.modifiedDate;
-            auto d2 = otherData.modifiedDate;
-            if (d1.year() < d2.year())
-                return true;
-            if (d1.year() == d2.year() && d1.month() < d2.month())
-                return true;
-            if (d1.year() == d2.year() && d1.month() == d2.month() && d1.day() < d2.day())
-                return true;
+            return thisData.modifiedDate < otherData.modifiedDate;
+//            auto d1 = thisData.modifiedDate;
+//            auto d2 = otherData.modifiedDate;
+//            if (d1.year() < d2.year())
+//                return true;
+//            if (d1.year() == d2.year() && d1.month() < d2.month())
+//                return true;
+//            if (d1.year() == d2.year() && d1.month() == d2.month() && d1.day() < d2.day())
+//                return true;
 
-            return false;
+//            return false;
         }
-        case LibrarySortMode::MODIFIED_DESC:
+        case LibrarySortMode::CREATED_DESC:
         {
-            auto d1 = thisData.modifiedDate;
-            auto d2 = otherData.modifiedDate;
-            if (d1.year() > d2.year())
-                return true;
-            if (d1.year() == d2.year() && d1.month() > d2.month())
-                return true;
-            if (d1.year() == d2.year() && d1.month() == d2.month() && d1.day() > d2.day())
-                return true;
+            return thisData.modifiedDate > otherData.modifiedDate;
+//            auto d1 = thisData.modifiedDate;
+//            auto d2 = otherData.modifiedDate;
+//            if (d1.year() > d2.year())
+//                return true;
+//            if (d1.year() == d2.year() && d1.month() > d2.month())
+//                return true;
+//            if (d1.year() == d2.year() && d1.month() == d2.month() && d1.day() > d2.day())
+//                return true;
 
-            return false;
+//            return false;
         }
-        case LibrarySortMode::DEFAULT:
+        case LibrarySortMode::NAME_DESC:
+        {
+            return thisData.name.localeAwareCompare(otherData.name) > 0;
+        }
+        case LibrarySortMode::NAME_ASC:
         {
             break;
         }
@@ -93,4 +102,4 @@ void LibraryListWidgetItem::setSortMode(LibrarySortMode sortMode)
     _sortMode = sortMode;
 }
 
-LibrarySortMode LibraryListWidgetItem::_sortMode = LibrarySortMode::DEFAULT;
+LibrarySortMode LibraryListWidgetItem::_sortMode = LibrarySortMode::NAME_ASC;

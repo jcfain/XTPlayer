@@ -110,20 +110,22 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     QMenu* submenuSort = ui->menuView->addMenu( "Sort" );
     submenuSort->setObjectName("sortMenu");
     librarySortGroup = new QActionGroup(submenuSort);
-    actionDefault_Sort = submenuSort->addAction( "Default" );
-    actionDefault_Sort->setCheckable(true);
-    actionRandom_Sort = submenuSort->addAction( "Random" );
-    actionRandom_Sort->setCheckable(true);
-    actionModifiedAsc_Sort = submenuSort->addAction( "Modified (Asc)" );
-    actionModifiedAsc_Sort->setCheckable(true);
-    actionModifiedDesc_Sort = submenuSort->addAction( "Modified (Desc)" );
-    actionModifiedDesc_Sort->setCheckable(true);
-    librarySortGroup->addAction(actionDefault_Sort);
-    librarySortGroup->addAction(actionRandom_Sort);
-    librarySortGroup->addAction(actionModifiedAsc_Sort);
-    librarySortGroup->addAction(actionModifiedDesc_Sort);
+    actionNameAsc_Sort = submenuSort->addAction( "Name (Asc)" );
+    actionNameAsc_Sort->setCheckable(true);
+    actionNameDesc_Sort = submenuSort->addAction( "Name (Desc)" );
+    actionNameDesc_Sort->setCheckable(true);
+//    actionRandom_Sort = submenuSort->addAction( "Random" );
+//    actionRandom_Sort->setCheckable(true);
+    actionCreatedAsc_Sort = submenuSort->addAction( "Created (Asc)" );
+    actionCreatedAsc_Sort->setCheckable(true);
+    actionCreatedDesc_Sort = submenuSort->addAction( "Created (Desc)" );
+    actionCreatedDesc_Sort->setCheckable(true);
+    librarySortGroup->addAction(actionNameAsc_Sort);
+    librarySortGroup->addAction(actionNameDesc_Sort);
+    //librarySortGroup->addAction(actionRandom_Sort);
+    librarySortGroup->addAction(actionCreatedAsc_Sort);
+    librarySortGroup->addAction(actionCreatedDesc_Sort);
 
-    updateLibrarySortUI(LibrarySortMode::DEFAULT);
     if (SettingsHandler::getLibraryView() == LibraryView::List)
     {
         ui->actionList->setChecked(true);
@@ -161,10 +163,11 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(action150_Size, &QAction::triggered, this, &MainWindow::on_action150_triggered);
     connect(action175_Size, &QAction::triggered, this, &MainWindow::on_action175_triggered);
     connect(action200_Size, &QAction::triggered, this, &MainWindow::on_action200_triggered);
-    connect(actionDefault_Sort, &QAction::triggered, this, &MainWindow::on_actionDefault_triggered);
-    connect(actionRandom_Sort, &QAction::triggered, this, &MainWindow::on_actionRandom_triggered);
-    connect(actionModifiedAsc_Sort, &QAction::triggered, this, &MainWindow::on_actionModifiedAsc_triggered);
-    connect(actionModifiedDesc_Sort, &QAction::triggered, this, &MainWindow::on_actionModifiedDesc_triggered);
+    connect(actionNameAsc_Sort, &QAction::triggered, this, &MainWindow::on_actionNameAsc_triggered);
+    connect(actionNameDesc_Sort, &QAction::triggered, this, &MainWindow::on_actionNameDesc_triggered);
+    //connect(actionRandom_Sort, &QAction::triggered, this, &MainWindow::on_actionRandom_triggered);
+    connect(actionCreatedAsc_Sort, &QAction::triggered, this, &MainWindow::on_actionCreatedAsc_triggered);
+    connect(actionCreatedDesc_Sort, &QAction::triggered, this, &MainWindow::on_actionCreatedDesc_triggered);
 
     connect(videoHandler, &VideoHandler::positionChanged, this, &MainWindow::on_media_positionChanged);
     connect(videoHandler, &VideoHandler::mediaStatusChanged, this, &MainWindow::on_media_statusChanged);
@@ -714,6 +717,7 @@ void MainWindow::on_load_library(QString path)
                 ui->LibraryList->addItem(qListWidgetItem);
                 libraryItems.push_back(qListWidgetItem);
             }
+            updateLibrarySortUI((LibrarySortMode)SettingsHandler::getSelectedLibrarySortMode());
             stopThumbProcess = true;
             saveNewThumbs();
         }
@@ -728,7 +732,6 @@ void MainWindow::on_load_library(QString path)
         on_actionSelect_library_triggered();
     }
 }
-int thumbNailSearchIterator = 0;
 void MainWindow::saveNewThumbs()
 {
     if (stopThumbProcess)
@@ -738,8 +741,8 @@ void MainWindow::saveNewThumbs()
     }
     if (thumbNailSearchIterator < libraryItems.count())
     {
-        QListWidgetItem* listWidgetItem = libraryItems.at(thumbNailSearchIterator);
-        LibraryListItem item = ((LibraryListWidgetItem*)listWidgetItem)->getLibraryListItem();
+        LibraryListWidgetItem* listWidgetItem = libraryItems.at(thumbNailSearchIterator);
+        LibraryListItem item = listWidgetItem->getLibraryListItem();
         thumbNailSearchIterator++;
         QFileInfo thumbInfo(item.thumbFile);
         if (!thumbInfo.exists())
@@ -2083,13 +2086,21 @@ void MainWindow::updateLibrarySortUI(LibrarySortMode mode)
 {
     switch(mode)
     {
-        case LibrarySortMode::DEFAULT:
-            actionDefault_Sort->setChecked(true);
-            on_actionDefault_triggered();
+        case LibrarySortMode::NAME_ASC:
+            actionNameAsc_Sort->setChecked(true);
+            on_actionNameAsc_triggered();
         break;
-        case LibrarySortMode::MODIFIED_ASC:
-            actionModifiedAsc_Sort->setChecked(true);
-            on_actionModifiedAsc_triggered();
+        case LibrarySortMode::NAME_DESC:
+            actionNameDesc_Sort->setChecked(true);
+            on_actionNameDesc_triggered();
+        break;
+        case LibrarySortMode::CREATED_ASC:
+            actionCreatedAsc_Sort->setChecked(true);
+            on_actionCreatedAsc_triggered();
+        break;
+        case LibrarySortMode::CREATED_DESC:
+            actionCreatedDesc_Sort->setChecked(true);
+            on_actionCreatedDesc_triggered();
         break;
         case LibrarySortMode::RANDOM:
             actionRandom_Sort->setChecked(true);
@@ -2098,24 +2109,35 @@ void MainWindow::updateLibrarySortUI(LibrarySortMode mode)
     }
 }
 
-void MainWindow::on_actionDefault_triggered()
+void MainWindow::on_actionNameAsc_triggered()
 {
-    LibraryListWidgetItem::setSortMode(LibrarySortMode::DEFAULT);
+    LibraryListWidgetItem::setSortMode(LibrarySortMode::NAME_ASC);
+    SettingsHandler::setSelectedLibrarySortMode(LibrarySortMode::NAME_ASC);
+    ui->LibraryList->sortItems();
+}
+void MainWindow::on_actionNameDesc_triggered()
+{
+    LibraryListWidgetItem::setSortMode(LibrarySortMode::NAME_DESC);
+    SettingsHandler::setSelectedLibrarySortMode(LibrarySortMode::NAME_DESC);
     ui->LibraryList->sortItems();
 }
 void MainWindow::on_actionRandom_triggered()
 {
     LibraryListWidgetItem::setSortMode(LibrarySortMode::RANDOM);
+    SettingsHandler::setSelectedLibrarySortMode(LibrarySortMode::RANDOM);
+    ui->LibraryList->sortItems();
+
+}
+void MainWindow::on_actionCreatedAsc_triggered()
+{
+    LibraryListWidgetItem::setSortMode(LibrarySortMode::CREATED_ASC);
+    SettingsHandler::setSelectedLibrarySortMode(LibrarySortMode::CREATED_ASC);
     ui->LibraryList->sortItems();
 }
-void MainWindow::on_actionModifiedAsc_triggered()
+void MainWindow::on_actionCreatedDesc_triggered()
 {
-    LibraryListWidgetItem::setSortMode(LibrarySortMode::MODIFIED_ASC);
-    ui->LibraryList->sortItems();
-}
-void MainWindow::on_actionModifiedDesc_triggered()
-{
-    LibraryListWidgetItem::setSortMode(LibrarySortMode::MODIFIED_DESC);
+    LibraryListWidgetItem::setSortMode(LibrarySortMode::CREATED_DESC);
+    SettingsHandler::setSelectedLibrarySortMode(LibrarySortMode::CREATED_DESC);
     ui->LibraryList->sortItems();
 }
 
@@ -2123,6 +2145,10 @@ void MainWindow::on_actionModifiedDesc_triggered()
 void MainWindow::setThumbSize(int size)
 {
     _currentThumbSize = {size, size};
+    for(int i = 0; i < ui->LibraryList->count(); i++)
+    {
+        ui->LibraryList->item(i)->setSizeHint(_currentThumbSize);
+    }
     if (SettingsHandler::getLibraryView() == LibraryView::List)
     {
         SettingsHandler::setThumbSizeList(size);

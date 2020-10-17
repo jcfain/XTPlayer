@@ -93,10 +93,11 @@ private slots:
     void on_action150_triggered();
     void on_action175_triggered();
     void on_action200_triggered();
-    void on_actionDefault_triggered();
+    void on_actionNameAsc_triggered();
+    void on_actionNameDesc_triggered();
     void on_actionRandom_triggered();
-    void on_actionModifiedAsc_triggered();
-    void on_actionModifiedDesc_triggered();
+    void on_actionCreatedAsc_triggered();
+    void on_actionCreatedDesc_triggered();
     void dispose();
 
     void on_actionDonate_triggered();
@@ -179,10 +180,11 @@ private:
     QAction* action175_Size;
     QAction* action200_Size;
     QActionGroup* librarySortGroup;
-    QAction* actionDefault_Sort;
+    QAction* actionNameAsc_Sort;
+    QAction* actionNameDesc_Sort;
     QAction* actionRandom_Sort;
-    QAction* actionModifiedAsc_Sort;
-    QAction* actionModifiedDesc_Sort;
+    QAction* actionCreatedAsc_Sort;
+    QAction* actionCreatedDesc_Sort;
     qint64 thumbCaptureTime;
     QWidget *normalWindowWidget;
     QWidget *fullScreenWidget;
@@ -193,9 +195,10 @@ private:
     bool stopThumbProcess = false;
     bool vrScriptSelectorCanceled = false;
     QString vrScriptSelectedCanceledPath;
+    int thumbNailSearchIterator = 0;
 
 
-    QList<QListWidgetItem*> libraryItems;
+    QList<LibraryListWidgetItem*> libraryItems;
     void on_load_library(QString path);
     void on_libray_path_select(QString path);
     void media_double_click_event(QMouseEvent * event);

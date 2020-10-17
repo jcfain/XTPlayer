@@ -90,6 +90,9 @@ public:
     static void setThumbSizeList(int value);
     static void setVideoIncrement(int value);
 
+    static void setSelectedLibrarySortMode(int value);
+    static int getSelectedLibrarySortMode();
+
     static void setGamepadEnabled(bool value);
     static void setGamePadMapButton(QString gamePadButton, QString axis);
     static void setAxis(QString axis, ChannelModel channel);
@@ -182,6 +185,7 @@ private:
     static bool _multiplierEnabled;
 
     static int libraryView;
+    static int selectedLibrarySortMode;
     static int thumbSize;
     static int thumbSizeList;
     static int videoIncrement;

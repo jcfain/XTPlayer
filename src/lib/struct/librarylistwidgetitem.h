@@ -3,10 +3,11 @@
 #include <QListWidgetItem>
 #include "LibraryListItem.h"
 enum LibrarySortMode {
-    DEFAULT,
+    NAME_ASC,
+    NAME_DESC,
     RANDOM,
-    MODIFIED_ASC,
-    MODIFIED_DESC
+    CREATED_ASC,
+    CREATED_DESC
 };
 class LibraryListWidgetItem : public QListWidgetItem
 {
