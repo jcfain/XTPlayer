@@ -867,9 +867,14 @@ void SettingsHandler::SetupGamepadButtonMap()
         { gamepadAxisNames.Guide, axisNames.None }
     };
 }
-
+const QSize SettingsHandler::getCurrentMaxThumbSize()
+{
+    return _currentMaxThumbSize;
+}
 QSettings* SettingsHandler::settings;
 QMutex SettingsHandler::mutex;
+const QSize SettingsHandler::_currentMaxThumbSize = {200,200};;
+
 GamepadAxisNames SettingsHandler::gamepadAxisNames;
 AxisNames SettingsHandler::axisNames;
 MediaActions SettingsHandler::mediaActions;

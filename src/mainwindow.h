@@ -1,4 +1,4 @@
-#ifndef MAINWINDOW_H
+﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
@@ -35,6 +35,7 @@
 #include "lib/struct/LibraryListItem.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/ConnectionChangedSignal.h"
+#include "lib/struct/librarylistwidgetitem.h"
 #include "lib/lookup/AxisNames.h"
 #include "lib/lookup/MediaActions.h"
 #include "lib/tool/xmath.h"
@@ -91,6 +92,11 @@ private slots:
     void on_action125_triggered();
     void on_action150_triggered();
     void on_action175_triggered();
+    void on_action200_triggered();
+    void on_actionDefault_triggered();
+    void on_actionRandom_triggered();
+    void on_actionModifiedAsc_triggered();
+    void on_actionModifiedDesc_triggered();
     void dispose();
 
     void on_actionDonate_triggered();
@@ -151,7 +157,6 @@ private:
     QSize _appSize;
     QSize _defaultAppSize;
     QSize _currentThumbSize;
-    QSize _currentMaxThumbSize;
     QPoint _appPos;
     QMovie* _movie;
     int playingVideoListIndex;
@@ -172,6 +177,12 @@ private:
     QAction* action125_Size;
     QAction* action150_Size;
     QAction* action175_Size;
+    QAction* action200_Size;
+    QActionGroup* librarySortGroup;
+    QAction* actionDefault_Sort;
+    QAction* actionRandom_Sort;
+    QAction* actionModifiedAsc_Sort;
+    QAction* actionModifiedDesc_Sort;
     qint64 thumbCaptureTime;
     QWidget *normalWindowWidget;
     QWidget *fullScreenWidget;
@@ -200,8 +211,8 @@ private:
     void saveThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem, qint64 position = 0);
     void saveNewThumbs();
     void updateThumbSizeUI(int size);
+    void updateLibrarySortUI(LibrarySortMode mode);
     void setThumbSize(int size);
-    LibraryListItem getLibraryListItemFromQListItem(QListWidgetItem* qListWidgetItem);
     void changeDeoFunscript();
 
     void playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr);

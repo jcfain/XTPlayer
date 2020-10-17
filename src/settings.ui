@@ -308,7 +308,7 @@
         <item row="2" column="1">
          <widget class="QCheckBox" name="xRollMultiplierCheckBox">
           <property name="text">
-           <string>X roll multiplier</string>
+           <string>Pitch multiplier</string>
           </property>
          </widget>
         </item>
@@ -359,7 +359,7 @@
         <item row="4" column="1">
          <widget class="QCheckBox" name="yRollMultiplierCheckBox">
           <property name="text">
-           <string>Y roll multiplier</string>
+           <string>Roll multiplier</string>
           </property>
          </widget>
         </item>

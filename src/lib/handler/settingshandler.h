@@ -115,6 +115,8 @@ public:
     static bool getLiveGamepadConnected();
     static void setLiveGamepadConnected(bool value);
 
+    const static QSize getCurrentMaxThumbSize();
+
     static void Load();
     static void Save();
     static void Default();
@@ -187,6 +189,8 @@ private:
     static bool disableSpeechToText;
     static bool defaultReset;
 
+
+    const static QSize _currentMaxThumbSize;
     static QSettings* settings;
     static QMutex mutex;
 };

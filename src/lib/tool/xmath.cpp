@@ -35,6 +35,14 @@ qint64 XMath::rand(qint64 min, qint64 max)
     return dist(mt);
 }
 
+int XMath::rand(int min, int max)
+{
+    unsigned seed1 = std::chrono::system_clock::now().time_since_epoch().count();
+    std::mt19937 mt(seed1);
+    std::uniform_int_distribution<int> dist(min, max);
+    return dist(mt);
+}
+
 double XMath::rand(double min, double max)
 {
     unsigned seed1 = std::chrono::system_clock::now().time_since_epoch().count();
@@ -45,7 +53,7 @@ double XMath::rand(double min, double max)
 
 int XMath::randSine(double angle)
 {
-    int amplitude = rand(0, 100.0);
+    int amplitude = rand(0.0, 100.0);
     if(amplitude < 50)
         reverseNumber(angle, 0, 100);
 //    LogHandler::Debug("amplitude: "+ QString::number(amplitude));

@@ -40,6 +40,7 @@ SOURCES += \
     lib/handler/videohandler.cpp \
     lib/handler/vrdevicehandler.cpp \
     lib/handler/whirligighandler.cpp \
+    lib/struct/librarylistwidgetitem.cpp \
     lib/tool/tcodefactory.cpp \
     lib/tool/xmath.cpp \
     lib/tool/xtimer.cpp \
@@ -75,6 +76,7 @@ HEADERS += \
     lib/struct/NetworkAddress.h \
     lib/struct/SerialComboboxItem.h \
     lib/struct/VRPacket.h \
+    lib/struct/librarylistwidgetitem.h \
     lib/tool/boolinq.h \
     lib/tool/tcodefactory.h \
     lib/tool/xmath.h \

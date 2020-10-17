@@ -77,7 +77,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     ui->LibraryList->setContextMenuPolicy(Qt::CustomContextMenu);
 
     thumbCaptureTime = 35000;
-    _currentMaxThumbSize = {175,175};
     libraryViewGroup = new QActionGroup(this);
     libraryViewGroup->addAction(ui->actionList);
     libraryViewGroup->addAction(ui->actionThumbnail);
@@ -99,11 +98,32 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     action150_Size->setCheckable(true);
     action175_Size = submenuSize->addAction( "175" );
     action175_Size->setCheckable(true);
+    action200_Size = submenuSize->addAction( "200" );
+    action200_Size->setCheckable(true);
     libraryThumbSizeGroup->addAction(action75_Size);
     libraryThumbSizeGroup->addAction(action100_Size);
     libraryThumbSizeGroup->addAction(action125_Size);
     libraryThumbSizeGroup->addAction(action150_Size);
     libraryThumbSizeGroup->addAction(action175_Size);
+    libraryThumbSizeGroup->addAction(action200_Size);
+
+    QMenu* submenuSort = ui->menuView->addMenu( "Sort" );
+    submenuSort->setObjectName("sortMenu");
+    librarySortGroup = new QActionGroup(submenuSort);
+    actionDefault_Sort = submenuSort->addAction( "Default" );
+    actionDefault_Sort->setCheckable(true);
+    actionRandom_Sort = submenuSort->addAction( "Random" );
+    actionRandom_Sort->setCheckable(true);
+    actionModifiedAsc_Sort = submenuSort->addAction( "Modified (Asc)" );
+    actionModifiedAsc_Sort->setCheckable(true);
+    actionModifiedDesc_Sort = submenuSort->addAction( "Modified (Desc)" );
+    actionModifiedDesc_Sort->setCheckable(true);
+    librarySortGroup->addAction(actionDefault_Sort);
+    librarySortGroup->addAction(actionRandom_Sort);
+    librarySortGroup->addAction(actionModifiedAsc_Sort);
+    librarySortGroup->addAction(actionModifiedDesc_Sort);
+
+    updateLibrarySortUI(LibrarySortMode::DEFAULT);
     if (SettingsHandler::getLibraryView() == LibraryView::List)
     {
         ui->actionList->setChecked(true);
@@ -140,6 +160,11 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(action125_Size, &QAction::triggered, this, &MainWindow::on_action125_triggered);
     connect(action150_Size, &QAction::triggered, this, &MainWindow::on_action150_triggered);
     connect(action175_Size, &QAction::triggered, this, &MainWindow::on_action175_triggered);
+    connect(action200_Size, &QAction::triggered, this, &MainWindow::on_action200_triggered);
+    connect(actionDefault_Sort, &QAction::triggered, this, &MainWindow::on_actionDefault_triggered);
+    connect(actionRandom_Sort, &QAction::triggered, this, &MainWindow::on_actionRandom_triggered);
+    connect(actionModifiedAsc_Sort, &QAction::triggered, this, &MainWindow::on_actionModifiedAsc_triggered);
+    connect(actionModifiedDesc_Sort, &QAction::triggered, this, &MainWindow::on_actionModifiedDesc_triggered);
 
     connect(videoHandler, &VideoHandler::positionChanged, this, &MainWindow::on_media_positionChanged);
     connect(videoHandler, &VideoHandler::mediaStatusChanged, this, &MainWindow::on_media_statusChanged);
@@ -682,36 +707,10 @@ void MainWindow::on_load_library(QString path)
                     scriptNoExtension,
                     thumbFile,
                     zipFile,
-                    QDate::currentDate(),
+                    fileinfo.birthTime().date(),
                     0
                 };
-                QVariant listItem;
-                listItem.setValue(item);
-                QListWidgetItem* qListWidgetItem = new QListWidgetItem;
-                if (!funscriptHandler->exists(scriptPath))
-                {
-                    qListWidgetItem->setToolTip(videoPath + "\nNo script file of the same name found.\nRight click and Play with funscript.");
-                    qListWidgetItem->setForeground(QColorConstants::Gray);
-                }
-                else
-                {
-                    qListWidgetItem->setToolTip(videoPath);
-                }
-
-                QFileInfo thumbInfo(thumbFile);
-                QString thumbString = thumbFile;
-                if (!thumbInfo.exists())
-                {
-                    thumbString = QApplication::applicationDirPath() + "/themes/loading.png";
-                }
-                QIcon thumb;
-                QPixmap bgPixmap(thumbString);
-                QPixmap scaled = bgPixmap.scaled(_currentMaxThumbSize, Qt::AspectRatioMode::KeepAspectRatio);
-                thumb.addPixmap(scaled);
-                qListWidgetItem->setIcon(thumb);
-                qListWidgetItem->setSizeHint({SettingsHandler::getThumbSize(), SettingsHandler::getThumbSize()});
-                qListWidgetItem->setText(fileinfo.fileName());
-                qListWidgetItem->setData(Qt::UserRole, listItem);
+                LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item);
                 ui->LibraryList->addItem(qListWidgetItem);
                 libraryItems.push_back(qListWidgetItem);
             }
@@ -740,7 +739,7 @@ void MainWindow::saveNewThumbs()
     if (thumbNailSearchIterator < libraryItems.count())
     {
         QListWidgetItem* listWidgetItem = libraryItems.at(thumbNailSearchIterator);
-        LibraryListItem item = getLibraryListItemFromQListItem(listWidgetItem);
+        LibraryListItem item = ((LibraryListWidgetItem*)listWidgetItem)->getLibraryListItem();
         thumbNailSearchIterator++;
         QFileInfo thumbInfo(item.thumbFile);
         if (!thumbInfo.exists())
@@ -764,7 +763,7 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
 {
     QIcon thumb;
     QPixmap bgPixmap(QApplication::applicationDirPath() + "/themes/loading.png");
-    QPixmap scaled = bgPixmap.scaled(_currentMaxThumbSize, Qt::AspectRatioMode::KeepAspectRatio);
+    QPixmap scaled = bgPixmap.scaled(SettingsHandler::getCurrentMaxThumbSize(), Qt::AspectRatioMode::KeepAspectRatio);
     thumb.addPixmap(scaled);
     qListWidgetItem->setIcon(thumb);
     VideoFrameExtractor* extractor = new VideoFrameExtractor;
@@ -785,7 +784,7 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
                }
                QIcon thumb;
                QPixmap bgPixmap(thumbFileTemp);
-               QPixmap scaled = bgPixmap.scaled(_currentMaxThumbSize, Qt::AspectRatioMode::KeepAspectRatio);
+               QPixmap scaled = bgPixmap.scaled(SettingsHandler::getCurrentMaxThumbSize(), Qt::AspectRatioMode::KeepAspectRatio);
                thumb.addPixmap(scaled);
                qListWidgetItem->setIcon(thumb);
                if(thumbNailSearchIterator > 0)
@@ -804,7 +803,7 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
 
                QIcon thumb;
                QPixmap bgPixmap("://images/icons/error.png");
-               QPixmap scaled = bgPixmap.scaled(_currentMaxThumbSize);
+               QPixmap scaled = bgPixmap.scaled(SettingsHandler::getCurrentMaxThumbSize());
                thumb.addPixmap(scaled);
                qListWidgetItem->setIcon(thumb);
                if(thumbNailSearchIterator > 0)
@@ -828,7 +827,7 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
            [thumbNailPlayer, extractor, position]()
             {
                //LogHandler::Debug("Loaded video for thumb duration: "+ QString::number(thumbNailPlayer->duration()));
-               qint64 randomPosition = position > 0 ? position : XMath::rand(1, thumbNailPlayer->duration());
+               qint64 randomPosition = position > 0 ? position : XMath::rand((qint64)1, thumbNailPlayer->duration());
                //LogHandler::Debug("randomPosition: " + QString::number(randomPosition));
                extractor->setPosition(randomPosition);
                thumbNailPlayer->deleteLater();
@@ -841,7 +840,7 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
             {
 
                //LogHandler::Debug("Video load error");
-               qint64 randomPosition = XMath::rand(1, position > 0 ? position : thumbCaptureTime);
+               qint64 randomPosition = XMath::rand((qint64)1, position > 0 ? position : thumbCaptureTime);
                //LogHandler::Debug("randomPosition: " + QString::number(randomPosition));
                extractor->setPosition(randomPosition);
                thumbNailPlayer->deleteLater();
@@ -879,20 +878,20 @@ void MainWindow::on_LibraryList_itemDoubleClicked(QListWidgetItem *item)
 void MainWindow::regenerateThumbNail()
 {
     QListWidgetItem* selectedItem = ui->LibraryList->selectedItems().first();
-    LibraryListItem selectedFileListItem = getLibraryListItemFromQListItem(selectedItem);
+    LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
     saveThumb(selectedFileListItem.path, selectedFileListItem.thumbFile, selectedItem);
 }
 
 void MainWindow::setThumbNailFromCurrent()
 {
     QListWidgetItem* selectedItem = ui->LibraryList->selectedItems().first();
-    LibraryListItem selectedFileListItem = getLibraryListItemFromQListItem(selectedItem);
+    LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
     saveThumb(selectedFileListItem.path, selectedFileListItem.thumbFile, selectedItem, videoHandler->position());
 }
 
 void MainWindow::playFileFromContextMenu()
 {
-    LibraryListItem selectedFileListItem = getLibraryListItemFromQListItem(ui->LibraryList->selectedItems().first());
+    LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)ui->LibraryList->selectedItems().first())->getLibraryListItem();
     playVideo(selectedFileListItem);
 }
 
@@ -901,7 +900,7 @@ void MainWindow::playFileWithCustomScript()
     QString selectedScript = QFileDialog::getOpenFileName(this, tr("Choose script"), SettingsHandler::getSelectedLibrary(), tr("Script Files (*.funscript)"));
     if (selectedScript != Q_NULLPTR)
     {
-        LibraryListItem selectedFileListItem = getLibraryListItemFromQListItem(ui->LibraryList->selectedItems().first());
+        LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)ui->LibraryList->selectedItems().first())->getLibraryListItem();
         playVideo(selectedFileListItem, selectedScript);
     }
 }
@@ -1161,7 +1160,7 @@ void MainWindow::on_PlayBtn_clicked()
         {
             ui->LibraryList->setCurrentRow(0);
         }
-        LibraryListItem selectedFileListItem = getLibraryListItemFromQListItem(ui->LibraryList->selectedItems().first());
+        LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)ui->LibraryList->selectedItems().first())->getLibraryListItem();
         if(selectedFileListItem.path != videoHandler->file() || !videoHandler->isPlaying())
         {
             playVideo(selectedFileListItem);
@@ -1705,7 +1704,7 @@ void MainWindow::skipForward()
         if(playingVideoListIndex < ui->LibraryList->count())
         {
             ui->LibraryList->setCurrentRow(playingVideoListIndex);
-            LibraryListItem selectedFileListItem = getLibraryListItemFromQListItem(ui->LibraryList->selectedItems().first());
+            LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)ui->LibraryList->selectedItems().first())->getLibraryListItem();
             playVideo(selectedFileListItem);
         }
         else
@@ -1723,7 +1722,7 @@ void MainWindow::skipBack()
         if(playingVideoListIndex >= 0)
         {
             ui->LibraryList->setCurrentRow(playingVideoListIndex);
-            LibraryListItem selectedFileListItem = getLibraryListItemFromQListItem(ui->LibraryList->selectedItems().first());
+            LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)ui->LibraryList->selectedItems().first())->getLibraryListItem();
             playVideo(selectedFileListItem);
         }
         else
@@ -2037,6 +2036,10 @@ void MainWindow::updateThumbSizeUI(int size)
             action175_Size->setChecked(true);
             on_action175_triggered();
         break;
+        case 200:
+            action200_Size->setChecked(true);
+            on_action200_triggered();
+        break;
     }
 }
 
@@ -2070,6 +2073,53 @@ void MainWindow::on_action175_triggered()
     ui->LibraryList->setIconSize(_currentThumbSize);
 }
 
+void MainWindow::on_action200_triggered()
+{
+    setThumbSize(200);
+    ui->LibraryList->setIconSize(_currentThumbSize);
+}
+
+void MainWindow::updateLibrarySortUI(LibrarySortMode mode)
+{
+    switch(mode)
+    {
+        case LibrarySortMode::DEFAULT:
+            actionDefault_Sort->setChecked(true);
+            on_actionDefault_triggered();
+        break;
+        case LibrarySortMode::MODIFIED_ASC:
+            actionModifiedAsc_Sort->setChecked(true);
+            on_actionModifiedAsc_triggered();
+        break;
+        case LibrarySortMode::RANDOM:
+            actionRandom_Sort->setChecked(true);
+            on_actionRandom_triggered();
+        break;
+    }
+}
+
+void MainWindow::on_actionDefault_triggered()
+{
+    LibraryListWidgetItem::setSortMode(LibrarySortMode::DEFAULT);
+    ui->LibraryList->sortItems();
+}
+void MainWindow::on_actionRandom_triggered()
+{
+    LibraryListWidgetItem::setSortMode(LibrarySortMode::RANDOM);
+    ui->LibraryList->sortItems();
+}
+void MainWindow::on_actionModifiedAsc_triggered()
+{
+    LibraryListWidgetItem::setSortMode(LibrarySortMode::MODIFIED_ASC);
+    ui->LibraryList->sortItems();
+}
+void MainWindow::on_actionModifiedDesc_triggered()
+{
+    LibraryListWidgetItem::setSortMode(LibrarySortMode::MODIFIED_DESC);
+    ui->LibraryList->sortItems();
+}
+
+
 void MainWindow::setThumbSize(int size)
 {
     _currentThumbSize = {size, size};
@@ -2082,12 +2132,6 @@ void MainWindow::setThumbSize(int size)
         SettingsHandler::setThumbSize(size);
     }
 }
-
-LibraryListItem MainWindow::getLibraryListItemFromQListItem(QListWidgetItem* qListWidgetItem)
-{
-    return qListWidgetItem->data(Qt::UserRole).value<LibraryListItem>();
-}
-
 
 void MainWindow::on_actionChange_theme_triggered()
 {
