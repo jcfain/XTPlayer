@@ -114,15 +114,15 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     actionNameAsc_Sort->setCheckable(true);
     actionNameDesc_Sort = submenuSort->addAction( "Name (Desc)" );
     actionNameDesc_Sort->setCheckable(true);
-//    actionRandom_Sort = submenuSort->addAction( "Random" );
-//    actionRandom_Sort->setCheckable(true);
+    actionRandom_Sort = submenuSort->addAction( "Random" );
+    actionRandom_Sort->setCheckable(true);
     actionCreatedAsc_Sort = submenuSort->addAction( "Created (Asc)" );
     actionCreatedAsc_Sort->setCheckable(true);
     actionCreatedDesc_Sort = submenuSort->addAction( "Created (Desc)" );
     actionCreatedDesc_Sort->setCheckable(true);
     librarySortGroup->addAction(actionNameAsc_Sort);
     librarySortGroup->addAction(actionNameDesc_Sort);
-    //librarySortGroup->addAction(actionRandom_Sort);
+    librarySortGroup->addAction(actionRandom_Sort);
     librarySortGroup->addAction(actionCreatedAsc_Sort);
     librarySortGroup->addAction(actionCreatedDesc_Sort);
 
@@ -165,7 +165,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(action200_Size, &QAction::triggered, this, &MainWindow::on_action200_triggered);
     connect(actionNameAsc_Sort, &QAction::triggered, this, &MainWindow::on_actionNameAsc_triggered);
     connect(actionNameDesc_Sort, &QAction::triggered, this, &MainWindow::on_actionNameDesc_triggered);
-    //connect(actionRandom_Sort, &QAction::triggered, this, &MainWindow::on_actionRandom_triggered);
+    connect(actionRandom_Sort, &QAction::triggered, this, &MainWindow::on_actionRandom_triggered);
     connect(actionCreatedAsc_Sort, &QAction::triggered, this, &MainWindow::on_actionCreatedAsc_triggered);
     connect(actionCreatedDesc_Sort, &QAction::triggered, this, &MainWindow::on_actionCreatedDesc_triggered);
 
@@ -758,17 +758,18 @@ void MainWindow::saveNewThumbs()
     {
         stopThumbProcess = false;
         thumbNailSearchIterator = 0;
+        ui->LibraryList->setFocus();
     }
 
 
 }
 void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem, qint64 position)
 {
-    QIcon thumb;
-    QPixmap bgPixmap(QApplication::applicationDirPath() + "/themes/loading.png");
-    QPixmap scaled = bgPixmap.scaled(SettingsHandler::getCurrentMaxThumbSize(), Qt::AspectRatioMode::KeepAspectRatio);
-    thumb.addPixmap(scaled);
-    qListWidgetItem->setIcon(thumb);
+//    QIcon thumb;
+//    QPixmap bgPixmap(QApplication::applicationDirPath() + "/themes/loading.png");
+//    QPixmap scaled = bgPixmap.scaled(SettingsHandler::getThumbSize(), Qt::AspectRatioMode::KeepAspectRatio);
+//    thumb.addPixmap(scaled);
+//    qListWidgetItem->setIcon(thumb);
     VideoFrameExtractor* extractor = new VideoFrameExtractor;
 
     connect(extractor,
@@ -787,9 +788,11 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
                }
                QIcon thumb;
                QPixmap bgPixmap(thumbFileTemp);
-               QPixmap scaled = bgPixmap.scaled(SettingsHandler::getCurrentMaxThumbSize(), Qt::AspectRatioMode::KeepAspectRatio);
+               QSize size = {SettingsHandler::getThumbSize(), SettingsHandler::getThumbSize()};
+               QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
                thumb.addPixmap(scaled);
                qListWidgetItem->setIcon(thumb);
+               //qListWidgetItem->setSizeHint(size);
                if(thumbNailSearchIterator > 0)
                {
                    saveNewThumbs();
@@ -806,9 +809,11 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
 
                QIcon thumb;
                QPixmap bgPixmap("://images/icons/error.png");
-               QPixmap scaled = bgPixmap.scaled(SettingsHandler::getCurrentMaxThumbSize());
+               QSize size = {SettingsHandler::getThumbSize(), SettingsHandler::getThumbSize()};
+               QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
                thumb.addPixmap(scaled);
                qListWidgetItem->setIcon(thumb);
+               qListWidgetItem->setSizeHint(size);
                if(thumbNailSearchIterator > 0)
                {
                    saveNewThumbs();
@@ -2012,7 +2017,7 @@ void MainWindow::on_actionList_triggered()
     ui->LibraryList->setViewMode(QListView::ListMode);
     ui->LibraryList->setTextElideMode(Qt::ElideRight);
     ui->LibraryList->setSpacing(1);
-    updateThumbSizeUI(SettingsHandler::getThumbSizeList());
+    updateThumbSizeUI(SettingsHandler::getThumbSize());
 }
 
 void MainWindow::updateThumbSizeUI(int size)
@@ -2049,37 +2054,46 @@ void MainWindow::updateThumbSizeUI(int size)
 void MainWindow::on_action75_triggered()
 {
     setThumbSize(75);
-    ui->LibraryList->setIconSize(_currentThumbSize);
 }
 
 void MainWindow::on_action100_triggered()
 {
     setThumbSize(100);
-    ui->LibraryList->setIconSize(_currentThumbSize);
 }
 
 void MainWindow::on_action125_triggered()
 {
     setThumbSize(125);
-    ui->LibraryList->setIconSize(_currentThumbSize);
 }
 
 void MainWindow::on_action150_triggered()
 {
     setThumbSize(150);
-    ui->LibraryList->setIconSize(_currentThumbSize);
 }
 
 void MainWindow::on_action175_triggered()
 {
     setThumbSize(175);
-    ui->LibraryList->setIconSize(_currentThumbSize);
 }
 
 void MainWindow::on_action200_triggered()
 {
     setThumbSize(200);
-    ui->LibraryList->setIconSize(_currentThumbSize);
+}
+
+void MainWindow::setThumbSize(int size)
+{
+    SettingsHandler::setThumbSize(size);
+//    for(int i = 0; i < ui->LibraryList->count(); i++)
+//    {
+//        ui->LibraryList->item(i)->setSizeHint({-1, -1});
+//    }
+    ui->LibraryList->setIconSize({size, size});
+    if(SettingsHandler::getLibraryView() == LibraryView::List)
+        ui->LibraryList->setViewMode(QListView::ListMode);
+    else
+        ui->LibraryList->setViewMode(QListView::IconMode);
+
 }
 
 void MainWindow::updateLibrarySortUI(LibrarySortMode mode)
@@ -2125,8 +2139,35 @@ void MainWindow::on_actionRandom_triggered()
 {
     LibraryListWidgetItem::setSortMode(LibrarySortMode::RANDOM);
     SettingsHandler::setSelectedLibrarySortMode(LibrarySortMode::RANDOM);
-    ui->LibraryList->sortItems();
 
+    //Fisher and Yates algorithm
+    int n = ui->LibraryList->count();
+
+    QList<LibraryListWidgetItem*> arr, arr1;
+    int index_arr[n];
+    int index;
+
+    for (int i = 0; i < n; i++)
+        index_arr[i] = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+      do
+      {
+         index = rand() % n;
+      }
+      while (index_arr[index] != 0);
+      index_arr[index] = 1;
+      arr1.push_back(((LibraryListWidgetItem*)ui->LibraryList->item(index)));
+    }
+    while(ui->LibraryList->count()>0)
+    {
+      ui->LibraryList->takeItem(0);
+    }
+    foreach(auto item, arr1)
+    {
+        ui->LibraryList->addItem(item);
+    }
 }
 void MainWindow::on_actionCreatedAsc_triggered()
 {
@@ -2139,24 +2180,6 @@ void MainWindow::on_actionCreatedDesc_triggered()
     LibraryListWidgetItem::setSortMode(LibrarySortMode::CREATED_DESC);
     SettingsHandler::setSelectedLibrarySortMode(LibrarySortMode::CREATED_DESC);
     ui->LibraryList->sortItems();
-}
-
-
-void MainWindow::setThumbSize(int size)
-{
-    _currentThumbSize = {size, size};
-    for(int i = 0; i < ui->LibraryList->count(); i++)
-    {
-        ui->LibraryList->item(i)->setSizeHint(_currentThumbSize);
-    }
-    if (SettingsHandler::getLibraryView() == LibraryView::List)
-    {
-        SettingsHandler::setThumbSizeList(size);
-    }
-    else
-    {
-        SettingsHandler::setThumbSize(size);
-    }
 }
 
 void MainWindow::on_actionChange_theme_triggered()

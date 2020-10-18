@@ -157,7 +157,6 @@ private:
     QSize _videoSize;
     QSize _appSize;
     QSize _defaultAppSize;
-    QSize _currentThumbSize;
     QPoint _appPos;
     QMovie* _movie;
     int playingVideoListIndex;

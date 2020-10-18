@@ -27,10 +27,10 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data) :
     QIcon thumb;
     QPixmap bgPixmap(thumbString);
     QSize size = {SettingsHandler::getThumbSize(), SettingsHandler::getThumbSize()};
-    QPixmap scaled = bgPixmap.scaled(size, Qt::AspectRatioMode::KeepAspectRatio);
+    QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
     thumb.addPixmap(scaled);
     setIcon(thumb);
-    setSizeHint(size);
+    //setSizeHint(size);
     setText(data.nameNoExtension);
     QVariant listItem;
     listItem.setValue(data);
@@ -54,7 +54,7 @@ bool LibraryListWidgetItem::operator< (const QListWidgetItem & other) const
 //            qint64 randomValue = XMath::rand(0, 100);
 //            if(randomValue > 50)
 //                return thisData.modifiedDate < otherData.modifiedDate;
-            return thisData.modifiedDate > otherData.modifiedDate;
+            return false;
         }
         case LibrarySortMode::CREATED_ASC:
         {

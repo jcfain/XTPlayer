@@ -466,12 +466,28 @@ int SettingsHandler::getLibraryView()
 int SettingsHandler::getThumbSize()
 {
     QMutexLocker locker(&mutex);
+    if (libraryView == LibraryView::List)
+    {
+        return thumbSizeList;
+    }
     return thumbSize;
 }
-int SettingsHandler::getThumbSizeList()
+void SettingsHandler::setThumbSize(int value)
 {
     QMutexLocker locker(&mutex);
-    return thumbSizeList;
+    if (libraryView == LibraryView::List)
+    {
+        thumbSizeList = value;
+    }
+    else
+    {
+        thumbSize = value;
+    }
+}
+QSize SettingsHandler::getMaxThumbnailSize()
+{
+    QMutexLocker locker(&mutex);
+    return _maxThumbnailSize;
 }
 int SettingsHandler::getVideoIncrement()
 {
@@ -771,16 +787,6 @@ void SettingsHandler::setLibraryView(int value)
     QMutexLocker locker(&mutex);
     libraryView = value;
 }
-void SettingsHandler::setThumbSize(int value)
-{
-    QMutexLocker locker(&mutex);
-    thumbSize = value;
-}
-void SettingsHandler::setThumbSizeList(int value)
-{
-    QMutexLocker locker(&mutex);
-    thumbSizeList = value;
-}
 void SettingsHandler::setVideoIncrement(int value)
 {
     videoIncrement = value;
@@ -881,14 +887,10 @@ void SettingsHandler::SetupGamepadButtonMap()
         { gamepadAxisNames.Guide, axisNames.None }
     };
 }
-const QSize SettingsHandler::getCurrentMaxThumbSize()
-{
-    return _currentMaxThumbSize;
-}
 QSettings* SettingsHandler::settings;
 QMutex SettingsHandler::mutex;
-const QSize SettingsHandler::_currentMaxThumbSize = {200,200};;
 
+QSize SettingsHandler::_maxThumbnailSize = {200, 200};
 GamepadAxisNames SettingsHandler::gamepadAxisNames;
 AxisNames SettingsHandler::axisNames;
 MediaActions SettingsHandler::mediaActions;

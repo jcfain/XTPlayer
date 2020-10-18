@@ -35,8 +35,6 @@ public:
     static void setChannelUserMax(QString channel, int value);
 
     static int getLibraryView();
-    static int getThumbSize();
-    static int getThumbSizeList();
     static int getVideoIncrement();
 
     static bool getGamepadEnabled();
@@ -87,7 +85,7 @@ public:
 
     static void setLibraryView(int value);
     static void setThumbSize(int value);
-    static void setThumbSizeList(int value);
+    static int getThumbSize();
     static void setVideoIncrement(int value);
 
     static void setSelectedLibrarySortMode(int value);
@@ -118,8 +116,7 @@ public:
     static bool getLiveGamepadConnected();
     static void setLiveGamepadConnected(bool value);
 
-    const static QSize getCurrentMaxThumbSize();
-
+    static QSize getMaxThumbnailSize();
     static void Load();
     static void Save();
     static void Default();
@@ -135,6 +132,7 @@ private:
     static GamepadAxisNames gamepadAxisNames;
     static AxisNames axisNames;
     static MediaActions mediaActions;
+    static QSize _maxThumbnailSize;
 
     static QHash<QString, QVariant> deoDnlaFunscriptLookup;
     static QString selectedTheme;
@@ -193,8 +191,6 @@ private:
     static bool disableSpeechToText;
     static bool defaultReset;
 
-
-    const static QSize _currentMaxThumbSize;
     static QSettings* settings;
     static QMutex mutex;
 };
