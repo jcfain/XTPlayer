@@ -159,7 +159,6 @@ private:
     QSize _defaultAppSize;
     QPoint _appPos;
     QMovie* _movie;
-    int playingVideoListIndex;
     bool deviceConnected;
     bool autoLoopOn = false;
     QLabel* connectionStatusLabel;
@@ -198,6 +197,10 @@ private:
 
 
     QList<LibraryListWidgetItem*> libraryItems;
+    int playingLibraryListIndex;
+    LibraryListWidgetItem* playingLibraryListItem = nullptr;
+    int selectedLibraryListIndex;
+    LibraryListWidgetItem* selectedLibraryListItem = nullptr;
     void on_load_library(QString path);
     void on_libray_path_select(QString path);
     void media_double_click_event(QMouseEvent * event);
@@ -224,6 +227,7 @@ private:
     void skipBack();
     void rewind();
     void fastForward();
+    LibraryListWidgetItem* setCurrentLibraryRow(int row);
 
     bool eventFilter(QObject *obj, QEvent *event) override;
 

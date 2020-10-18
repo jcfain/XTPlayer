@@ -21,19 +21,19 @@ void SerialHandler::init(const QString &portName, int waitTimeout)
     }
     if(portName.isEmpty())
     {
-        LogHandler::Dialog("No portname specified", XLogLevel::Critical);
+        //LogHandler::Dialog("No portname specified", XLogLevel::Critical);
         emit connectionChange({DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"});
         return;
     }
     else if(available.length() == 0)
     {
-        LogHandler::Dialog("No ports on machine", XLogLevel::Critical);
+        //LogHandler::Dialog("No ports on machine", XLogLevel::Critical);
         emit connectionChange({DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"});
         return;
     }
     else if(!boolinq::from(available).any([portName](const SerialComboboxItem &x) { return x.portName == portName; }))
     {
-        LogHandler::Dialog("Port: "+ portName + " not found", XLogLevel::Critical);
+        //LogHandler::Dialog("Port: "+ portName + " not found", XLogLevel::Critical);
         emit connectionChange({DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"});
         return;
     }

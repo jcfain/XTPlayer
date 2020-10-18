@@ -2,7 +2,7 @@
 
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
 const QString SettingsHandler::XTPVersion = "0.17b2";
-const float SettingsHandler::XTPVersionNum = 0.17f;
+const float SettingsHandler::XTPVersionNum = 0.18f;
 
 SettingsHandler::SettingsHandler()
 {
@@ -11,7 +11,6 @@ SettingsHandler::~SettingsHandler()
 {
     delete settings;
 }
-bool resetRequired = false;
 void SettingsHandler::Load()
 {
     QMutexLocker locker(&mutex);
@@ -81,8 +80,6 @@ void SettingsHandler::Load()
     _gamePadEnabled = settings->value("gamePadEnabled").toBool();
     _multiplierEnabled = settings->value("multiplierEnabled").toBool();
     _liveMultiplierEnabled = _multiplierEnabled;
-//    qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
-//    qRegisterMetaType<ChannelModel>();
     QVariantMap availableAxis = settings->value("availableAxis").toMap();
     _availableAxis.clear();
     foreach(auto axis, availableAxis.keys())

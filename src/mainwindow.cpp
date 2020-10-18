@@ -879,6 +879,8 @@ void MainWindow::on_LibraryList_itemClicked(QListWidgetItem *item)
 //    {
 //        loadVideo(item->data(Qt::UserRole).value<LibraryListItem>());
 //    }
+    selectedLibraryListItem = (LibraryListWidgetItem*)item;
+    selectedLibraryListIndex = ui->LibraryList->currentRow();
 }
 
 void MainWindow::on_LibraryList_itemDoubleClicked(QListWidgetItem *item)
@@ -922,7 +924,6 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
     if (file.exists())
     {
         ui->loopToggleButton->setChecked(false);
-        //on_loopToggleButton_toggled(false);
         ui->videoLoadingLabel->show();
         _movie->start();
         videoHandler->stop();
@@ -933,18 +934,7 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
             videoHandler->load();
             if(!selectedFileListItem.zipFile.isEmpty())
             {
-//                asmZip zipFile(selectedFileListItem.zipFile);
 
-//                if ( zipFile.isValid() )
-//                {
-//                   zipFile.listFiles();
-//                   QByteArray  data;
-//                   AxisNames axisNames;
-//                   auto err = zipFile.extractFile( "x.funscript", data );
-
-//                   if (err != asmZip::NO_ERR)
-//                        funscriptHandler->load(data);
-//                }
             }
             else
             {
@@ -963,21 +953,7 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
                     continue;
                 if(!selectedFileListItem.zipFile.isEmpty())
                 {
-//                    asmZip zipFile(selectedFileListItem.zipFile);
 
-//                    if ( zipFile.isValid() )
-//                    {
-//                       zipFile.listFiles();
-//                       QByteArray  data;
-
-//                       auto err = zipFile.extractFile(axisName.second.trackName + ".funscript", data);
-//                       if (err != asmZip::NO_ERR)
-//                       {
-//                           FunscriptHandler* otherFunscript = new FunscriptHandler(axisName.first);
-//                           otherFunscript->load(data);
-//                           funscriptHandlers.append(otherFunscript);
-//                       }
-//                    }
                 }
                 else
                 {
@@ -995,7 +971,8 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
         }
         //QUrl url = QUrl::fromLocalFile(selectedFileListItem.path);
         videoHandler->play();
-        playingVideoListIndex = ui->LibraryList->currentRow();
+        playingLibraryListIndex = ui->LibraryList->currentRow();
+        playingLibraryListItem = (LibraryListWidgetItem*)ui->LibraryList->item(playingLibraryListIndex);
         if(!funscriptHandler->isLoaded())
         {
             LogHandler::Dialog("Error loading script " + customScript + "!\nTry right clicking on the video in the list\nand loading with another script.", XLogLevel::Warning);
@@ -1169,24 +1146,28 @@ void MainWindow::on_PlayBtn_clicked()
     {
         if(ui->LibraryList->selectedItems().length() == 0)
         {
-            ui->LibraryList->setCurrentRow(0);
+            LibraryListWidgetItem* selectedItem = setCurrentLibraryRow(0);
+            playVideo(selectedItem->getLibraryListItem());
+            return;
         }
-        LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)ui->LibraryList->selectedItems().first())->getLibraryListItem();
+        LibraryListWidgetItem* selectedItem = (LibraryListWidgetItem*)ui->LibraryList->selectedItems().first();
+        LibraryListItem selectedFileListItem = selectedItem->getLibraryListItem();
         if(selectedFileListItem.path != videoHandler->file() || !videoHandler->isPlaying())
         {
             playVideo(selectedFileListItem);
-        }
-        else if(ui->LibraryList->selectedItems().length() == 0)
-        {
-            playingVideoListIndex = 0;
-            ui->LibraryList->setCurrentRow(0);
-            playVideo(ui->LibraryList->selectedItems()[0]->data(Qt::UserRole).value<LibraryListItem>());
         }
         else if(videoHandler->isPaused() || videoHandler->isPlaying())
         {
             videoHandler->togglePause();
         }
     }
+}
+
+LibraryListWidgetItem* MainWindow::setCurrentLibraryRow(int row)
+{
+    ui->LibraryList->setCurrentRow(row);
+    on_LibraryList_itemClicked(ui->LibraryList->item(row));
+    return (LibraryListWidgetItem*)ui->LibraryList->item(row);
 }
 
 void MainWindow::on_StopBtn_clicked()
@@ -1255,7 +1236,7 @@ void MainWindow::on_seekslider_hover(int position, int sliderValue)
         }
         else
         {
-            gpos = mapToGlobal(ui->playerControlsFrame->pos() + ui->SeekSlider->pos() + QPoint(position, 0));
+            gpos = mapToGlobal(ui->medialAndControlsFrame->pos() + ui->playerControlsFrame->pos() + ui->SeekSlider->pos() + QPoint(position, 0));
         }
     //    LogHandler::Debug("gpos x: "+QString::number(gpos.x()));
     //    LogHandler::Debug("gpos y: "+QString::number(gpos.y()));
@@ -1711,17 +1692,18 @@ void MainWindow::skipForward()
 {
     if (ui->LibraryList->count() > 0)
     {
-        ++playingVideoListIndex;
-        if(playingVideoListIndex < ui->LibraryList->count())
+        LibraryListWidgetItem* item;
+        int index = ui->LibraryList->currentRow() + 1;
+        if(index < ui->LibraryList->count())
         {
-            ui->LibraryList->setCurrentRow(playingVideoListIndex);
-            LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)ui->LibraryList->selectedItems().first())->getLibraryListItem();
-            playVideo(selectedFileListItem);
+            item = setCurrentLibraryRow(index);
         }
         else
         {
-            playingVideoListIndex = ui->LibraryList->count() - 1;
+            item = setCurrentLibraryRow(0);
         }
+
+        playVideo(item->getLibraryListItem());
     }
 }
 
@@ -1729,17 +1711,18 @@ void MainWindow::skipBack()
 {
     if (ui->LibraryList->count() > 0)
     {
-        --playingVideoListIndex;
-        if(playingVideoListIndex >= 0)
+        LibraryListWidgetItem* item;
+        int index = ui->LibraryList->currentRow() - 1;
+        if(index >= 0)
         {
-            ui->LibraryList->setCurrentRow(playingVideoListIndex);
-            LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)ui->LibraryList->selectedItems().first())->getLibraryListItem();
-            playVideo(selectedFileListItem);
+            item = setCurrentLibraryRow(index);
         }
         else
         {
-            playingVideoListIndex = 0;
+            item = setCurrentLibraryRow(ui->LibraryList->count() - 1);
         }
+
+        playVideo(item->getLibraryListItem());
     }
 }
 
@@ -2124,6 +2107,11 @@ void MainWindow::updateLibrarySortUI(LibrarySortMode mode)
             on_actionRandom_triggered();
         break;
     }
+
+    if(playingLibraryListItem != nullptr)
+        ui->LibraryList->setCurrentItem(playingLibraryListItem);
+    else if(selectedLibraryListItem != nullptr)
+        ui->LibraryList->setCurrentItem(selectedLibraryListItem);
 }
 
 void MainWindow::on_actionNameAsc_triggered()
@@ -2157,7 +2145,7 @@ void MainWindow::on_actionRandom_triggered()
     {
       do
       {
-         index = rand() % n;
+         index = XMath::rand(0, n);
       }
       while (index_arr[index] != 0);
       index_arr[index] = 1;

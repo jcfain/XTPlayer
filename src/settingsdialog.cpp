@@ -859,6 +859,22 @@ void SettingsDialog::on_buttonBox_clicked(QAbstractButton *button)
 
 void SettingsDialog::on_serialConnectButton_clicked()
 {
+    auto portName = selectedSerialPort.portName;
+    if(portName.isEmpty())
+    {
+        LogHandler::Dialog("No portname specified", XLogLevel::Critical);
+        return;
+    }
+    else if(ui.SerialOutputCmb->count() == 0)
+    {
+        LogHandler::Dialog("No ports on machine", XLogLevel::Critical);
+        return;
+    }
+    else if(!boolinq::from(serialPorts).any([portName](const SerialComboboxItem &x) { return x.portName == portName; }))
+    {
+        LogHandler::Dialog("Port: "+ portName + " not found", XLogLevel::Critical);
+        return;
+    }
     initSerialEvent();
 }
 
