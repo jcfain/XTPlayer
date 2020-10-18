@@ -26,11 +26,13 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data) :
     }
     QIcon thumb;
     QPixmap bgPixmap(thumbString);
-    QSize size = {SettingsHandler::getThumbSize(), SettingsHandler::getThumbSize()};
+    int thumbSize = SettingsHandler::getThumbSize();
+    QSize size = {thumbSize, thumbSize};
     QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
     thumb.addPixmap(scaled);
     setIcon(thumb);
     //setSizeHint(size);
+    setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
     setText(data.nameNoExtension);
     QVariant listItem;
     listItem.setValue(data);

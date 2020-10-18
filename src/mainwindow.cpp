@@ -650,8 +650,8 @@ void MainWindow::on_load_library(QString path)
         QDir directory(path);
         if (directory.exists())
         {
-            ui->LibraryList->clear();
             libraryItems.clear();
+            ui->LibraryList->clear();
             QDirIterator library(path, QStringList()
                         << "*.mp4"
                         << "*.avi"
@@ -741,6 +741,7 @@ void MainWindow::saveNewThumbs()
     }
     if (thumbNailSearchIterator < libraryItems.count())
     {
+        //Use a non user modifiable list incase they sort random when getting thumbs.
         LibraryListWidgetItem* listWidgetItem = libraryItems.at(thumbNailSearchIterator);
         LibraryListItem item = listWidgetItem->getLibraryListItem();
         thumbNailSearchIterator++;
@@ -758,7 +759,6 @@ void MainWindow::saveNewThumbs()
     {
         stopThumbProcess = false;
         thumbNailSearchIterator = 0;
-        ui->LibraryList->setFocus();
     }
 
 
@@ -788,11 +788,12 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
                }
                QIcon thumb;
                QPixmap bgPixmap(thumbFileTemp);
-               QSize size = {SettingsHandler::getThumbSize(), SettingsHandler::getThumbSize()};
+               int thumbSize = SettingsHandler::getThumbSize();
+               QSize size = {thumbSize, thumbSize};
                QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
                thumb.addPixmap(scaled);
                qListWidgetItem->setIcon(thumb);
-               //qListWidgetItem->setSizeHint(size);
+               qListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
                if(thumbNailSearchIterator > 0)
                {
                    saveNewThumbs();
@@ -809,11 +810,13 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
 
                QIcon thumb;
                QPixmap bgPixmap("://images/icons/error.png");
-               QSize size = {SettingsHandler::getThumbSize(), SettingsHandler::getThumbSize()};
+               int thumbSize = SettingsHandler::getThumbSize();
+               QSize size = {thumbSize,thumbSize};
                QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
                thumb.addPixmap(scaled);
                qListWidgetItem->setIcon(thumb);
-               qListWidgetItem->setSizeHint(size);
+               qListWidgetItem->setToolTip(errorMessage);
+               qListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
                if(thumbNailSearchIterator > 0)
                {
                    saveNewThumbs();
@@ -2016,7 +2019,7 @@ void MainWindow::on_actionList_triggered()
     ui->LibraryList->setFlow(QListView::TopToBottom);
     ui->LibraryList->setViewMode(QListView::ListMode);
     ui->LibraryList->setTextElideMode(Qt::ElideRight);
-    ui->LibraryList->setSpacing(1);
+    ui->LibraryList->setSpacing(0);
     updateThumbSizeUI(SettingsHandler::getThumbSize());
 }
 
@@ -2084,15 +2087,15 @@ void MainWindow::on_action200_triggered()
 void MainWindow::setThumbSize(int size)
 {
     SettingsHandler::setThumbSize(size);
-//    for(int i = 0; i < ui->LibraryList->count(); i++)
-//    {
-//        ui->LibraryList->item(i)->setSizeHint({-1, -1});
-//    }
+    for(int i = 0; i < ui->LibraryList->count(); i++)
+    {
+        ui->LibraryList->item(i)->setSizeHint({size, size-(size/4)});
+    }
     ui->LibraryList->setIconSize({size, size});
-    if(SettingsHandler::getLibraryView() == LibraryView::List)
-        ui->LibraryList->setViewMode(QListView::ListMode);
-    else
-        ui->LibraryList->setViewMode(QListView::IconMode);
+//    if(SettingsHandler::getLibraryView() == LibraryView::List)
+//        ui->LibraryList->setViewMode(QListView::ListMode);
+//    else
+//        ui->LibraryList->setViewMode(QListView::IconMode);
 
 }
 
