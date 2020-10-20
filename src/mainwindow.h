@@ -24,6 +24,7 @@
 #include <QToolTip>
 #include <QTextToSpeech>
 #include "settingsdialog.h"
+#include "librarywindow.h"
 #include "lib/handler/videohandler.h"
 #include "CustomControls/rangeslider.h"
 #include "lib/handler/settingshandler.h"
@@ -75,8 +76,11 @@ private slots:
 
     void on_fullScreenBtn_clicked();
     void on_mainwindow_change(QEvent* event);
+    void on_mainwindow_splitterMove(int pos, int index);
 
     void onLibraryList_ContextMenuRequested(const QPoint &pos);
+    void onLibraryWindowed_Clicked();
+    void onLibraryWindowed_Closed();
     void onVideoHandler_togglePaused(bool paused);
     void playFileFromContextMenu();
     void playFileWithCustomScript();
@@ -142,6 +146,7 @@ protected:
 private:
     Ui::MainWindow *ui;
     SettingsDialog* _xSettings;
+    LibraryWindow* libraryWindow;
     AxisNames _axisNames;
     QTextToSpeech* textToSpeech;
     VideoPreviewWidget* videoPreviewWidget;
@@ -168,6 +173,9 @@ private:
     QPushButton* deoRetryConnectionButton;
     QLabel* whirligigConnectionStatusLabel;
     QPushButton* whirligigRetryConnectionButton;
+    QListWidget* libraryList;
+    QPushButton* randomizeLibraryButton;
+    QPushButton* windowedLibraryButton;
     int voulumeBeforeMute;
     QActionGroup* libraryViewGroup;
     QActionGroup* libraryThumbSizeGroup;

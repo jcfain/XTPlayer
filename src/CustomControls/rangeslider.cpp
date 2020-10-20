@@ -363,7 +363,7 @@ void RangeSlider::setUpperValue(int aUpperValue)
 
     mUpperValue = aUpperValue;
     emit upperValueChanged(_name, mUpperValue);
-    emit upperValueChanged(mUpperValue);
+    emit  upperValueChanged(mUpperValue);
 
     update();
 }

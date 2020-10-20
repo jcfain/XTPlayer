@@ -73,8 +73,24 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     ui->VolumeSlider->setUpperValue(SettingsHandler::getPlayerVolume());
     setVolumeIcon(SettingsHandler::getPlayerVolume());
 
-    ui->LibraryList->setUniformItemSizes(true);
-    ui->LibraryList->setContextMenuPolicy(Qt::CustomContextMenu);
+    libraryList = new QListWidget(this);
+    libraryList->setUniformItemSizes(true);
+    libraryList->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->libraryGrid->addWidget(libraryList, 0, 0, 20, 10);
+    ui->libraryGrid->setSpacing(5);
+
+    windowedLibraryButton = new QPushButton(this);
+    windowedLibraryButton->setProperty("id", "windowedLibraryButton");
+    QIcon windowedIcon("://images/icons/windowed.svg");
+    windowedLibraryButton->setIcon(windowedIcon);
+    ui->libraryGrid->addWidget(windowedLibraryButton, 0, 0);
+    libraryWindow = new LibraryWindow(this);
+
+    randomizeLibraryButton = new QPushButton(this);
+    randomizeLibraryButton->setProperty("id", "randomizeLibraryButton");
+    QIcon reloadIcon("://images/icons/reload.svg");
+    randomizeLibraryButton->setIcon(reloadIcon);
+    ui->libraryGrid->addWidget(randomizeLibraryButton, 0, 1);
 
     thumbCaptureTime = 35000;
     libraryViewGroup = new QActionGroup(this);
@@ -139,8 +155,16 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     on_load_library(SettingsHandler::getSelectedLibrary());
 
+    auto splitterSizes = SettingsHandler::getMainWindowSplitterPos();
+    if (splitterSizes.count() > 0)
+        ui->mainFrameSplitter->setSizes(splitterSizes);
     _xSettings = new SettingsDialog(this);
     tcodeHandler = new TCodeHandler();
+
+    connect(ui->mainFrameSplitter, &QSplitter::splitterMoved, this, &MainWindow::on_mainwindow_splitterMove);
+    connect(randomizeLibraryButton, &QPushButton::clicked, this, &MainWindow::on_actionRandom_triggered);
+    connect(windowedLibraryButton, &QPushButton::clicked, this, &MainWindow::onLibraryWindowed_Clicked);
+    connect(libraryWindow, &LibraryWindow::close, this, &MainWindow::onLibraryWindowed_Closed);
 
     connect(_xSettings, &SettingsDialog::deoDeviceConnectionChange, this, &MainWindow::on_deo_device_connectionChanged);
     connect(_xSettings, &SettingsDialog::deoDeviceError, this, &MainWindow::on_deo_device_error);
@@ -187,7 +211,9 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(this, &MainWindow::change, this, &MainWindow::on_mainwindow_change);
     //connect(videoHandler, &VideoHandler::mouseEnter, this, &MainWindow::on_video_mouse_enter);
 
-    connect(ui->LibraryList, &QListWidget::customContextMenuRequested, this, &MainWindow::onLibraryList_ContextMenuRequested);
+    connect(libraryList, &QListWidget::customContextMenuRequested, this, &MainWindow::onLibraryList_ContextMenuRequested);
+    connect(libraryList, &QListWidget::itemDoubleClicked, this, &MainWindow::on_LibraryList_itemDoubleClicked);
+    connect(libraryList, &QListWidget::itemClicked, this, &MainWindow::on_LibraryList_itemClicked);
 
 
     connect(retryConnectionButton, &QPushButton::clicked, _xSettings, &SettingsDialog::initDeviceRetry);
@@ -599,10 +625,36 @@ void MainWindow::mediaAction(QString action)
     }
 }
 
+void MainWindow::on_mainwindow_splitterMove(int pos, int index)
+{
+    SettingsHandler::setMainWindowSplitterPos(ui->mainFrameSplitter->sizes());
+}
+
+void MainWindow::onLibraryWindowed_Clicked()
+{
+    ui->libraryGrid->removeWidget(libraryList);
+    ui->libraryGrid->removeWidget(randomizeLibraryButton);
+    ui->libraryGrid->removeWidget(windowedLibraryButton);
+    ((QGridLayout*)libraryWindow->layout())->addWidget(libraryList, 0, 0, 20, 10);
+    ((QGridLayout*)libraryWindow->layout())->addWidget(randomizeLibraryButton, 0, 0);
+    ((QGridLayout*)libraryWindow->layout())->addWidget(windowedLibraryButton, 0, 1);
+    windowedLibraryButton->hide();
+    ui->libraryFrame->hide();
+    libraryWindow->show();
+}
+void MainWindow::onLibraryWindowed_Closed()
+{
+    libraryWindow->layout()->removeWidget(libraryList);
+    ui->libraryGrid->addWidget(libraryList, 0, 0, 40, 10);
+    ui->libraryGrid->addWidget(windowedLibraryButton, 0, 0);
+    ui->libraryGrid->addWidget(randomizeLibraryButton, 0, 1);
+    windowedLibraryButton->show();
+    ui->libraryFrame->show();
+}
 void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
 {
     // Handle global position
-    QPoint globalPos = ui->LibraryList->mapToGlobal(pos);
+    QPoint globalPos = libraryList->mapToGlobal(pos);
 
     // Create menu and insert some actions
     QMenu myMenu;
@@ -651,7 +703,7 @@ void MainWindow::on_load_library(QString path)
         if (directory.exists())
         {
             libraryItems.clear();
-            ui->LibraryList->clear();
+            libraryList->clear();
             QDirIterator library(path, QStringList()
                         << "*.mp4"
                         << "*.avi"
@@ -714,7 +766,7 @@ void MainWindow::on_load_library(QString path)
                     0
                 };
                 LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item);
-                ui->LibraryList->addItem(qListWidgetItem);
+                libraryList->addItem(qListWidgetItem);
                 libraryItems.push_back(qListWidgetItem);
             }
             updateLibrarySortUI((LibrarySortMode)SettingsHandler::getSelectedLibrarySortMode());
@@ -880,7 +932,7 @@ void MainWindow::on_LibraryList_itemClicked(QListWidgetItem *item)
 //        loadVideo(item->data(Qt::UserRole).value<LibraryListItem>());
 //    }
     selectedLibraryListItem = (LibraryListWidgetItem*)item;
-    selectedLibraryListIndex = ui->LibraryList->currentRow();
+    selectedLibraryListIndex = libraryList->currentRow();
 }
 
 void MainWindow::on_LibraryList_itemDoubleClicked(QListWidgetItem *item)
@@ -890,21 +942,21 @@ void MainWindow::on_LibraryList_itemDoubleClicked(QListWidgetItem *item)
 
 void MainWindow::regenerateThumbNail()
 {
-    QListWidgetItem* selectedItem = ui->LibraryList->selectedItems().first();
+    QListWidgetItem* selectedItem = libraryList->selectedItems().first();
     LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
     saveThumb(selectedFileListItem.path, selectedFileListItem.thumbFile, selectedItem);
 }
 
 void MainWindow::setThumbNailFromCurrent()
 {
-    QListWidgetItem* selectedItem = ui->LibraryList->selectedItems().first();
+    QListWidgetItem* selectedItem = libraryList->selectedItems().first();
     LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
     saveThumb(selectedFileListItem.path, selectedFileListItem.thumbFile, selectedItem, videoHandler->position());
 }
 
 void MainWindow::playFileFromContextMenu()
 {
-    LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)ui->LibraryList->selectedItems().first())->getLibraryListItem();
+    LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
     playVideo(selectedFileListItem);
 }
 
@@ -913,7 +965,7 @@ void MainWindow::playFileWithCustomScript()
     QString selectedScript = QFileDialog::getOpenFileName(this, tr("Choose script"), SettingsHandler::getSelectedLibrary(), tr("Script Files (*.funscript)"));
     if (selectedScript != Q_NULLPTR)
     {
-        LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)ui->LibraryList->selectedItems().first())->getLibraryListItem();
+        LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
         playVideo(selectedFileListItem, selectedScript);
     }
 }
@@ -971,8 +1023,8 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
         }
         //QUrl url = QUrl::fromLocalFile(selectedFileListItem.path);
         videoHandler->play();
-        playingLibraryListIndex = ui->LibraryList->currentRow();
-        playingLibraryListItem = (LibraryListWidgetItem*)ui->LibraryList->item(playingLibraryListIndex);
+        playingLibraryListIndex = libraryList->currentRow();
+        playingLibraryListItem = (LibraryListWidgetItem*)libraryList->item(playingLibraryListIndex);
         if(!funscriptHandler->isLoaded())
         {
             LogHandler::Dialog("Error loading script " + customScript + "!\nTry right clicking on the video in the list\nand loading with another script.", XLogLevel::Warning);
@@ -1142,15 +1194,15 @@ void MainWindow::on_VolumeSlider_valueChanged(int value)
 
 void MainWindow::on_PlayBtn_clicked()
 {
-    if (ui->LibraryList->count() > 0)
+    if (libraryList->count() > 0)
     {
-        if(ui->LibraryList->selectedItems().length() == 0)
+        if(libraryList->selectedItems().length() == 0)
         {
             LibraryListWidgetItem* selectedItem = setCurrentLibraryRow(0);
             playVideo(selectedItem->getLibraryListItem());
             return;
         }
-        LibraryListWidgetItem* selectedItem = (LibraryListWidgetItem*)ui->LibraryList->selectedItems().first();
+        LibraryListWidgetItem* selectedItem = (LibraryListWidgetItem*)libraryList->selectedItems().first();
         LibraryListItem selectedFileListItem = selectedItem->getLibraryListItem();
         if(selectedFileListItem.path != videoHandler->file() || !videoHandler->isPlaying())
         {
@@ -1165,9 +1217,9 @@ void MainWindow::on_PlayBtn_clicked()
 
 LibraryListWidgetItem* MainWindow::setCurrentLibraryRow(int row)
 {
-    ui->LibraryList->setCurrentRow(row);
-    on_LibraryList_itemClicked(ui->LibraryList->item(row));
-    return (LibraryListWidgetItem*)ui->LibraryList->item(row);
+    libraryList->setCurrentRow(row);
+    on_LibraryList_itemClicked(libraryList->item(row));
+    return (LibraryListWidgetItem*)libraryList->item(row);
 }
 
 void MainWindow::on_StopBtn_clicked()
@@ -1690,11 +1742,11 @@ void MainWindow::on_media_statusChanged(MediaStatus status)
 
 void MainWindow::skipForward()
 {
-    if (ui->LibraryList->count() > 0)
+    if (libraryList->count() > 0)
     {
         LibraryListWidgetItem* item;
-        int index = ui->LibraryList->currentRow() + 1;
-        if(index < ui->LibraryList->count())
+        int index = libraryList->currentRow() + 1;
+        if(index < libraryList->count())
         {
             item = setCurrentLibraryRow(index);
         }
@@ -1709,17 +1761,17 @@ void MainWindow::skipForward()
 
 void MainWindow::skipBack()
 {
-    if (ui->LibraryList->count() > 0)
+    if (libraryList->count() > 0)
     {
         LibraryListWidgetItem* item;
-        int index = ui->LibraryList->currentRow() - 1;
+        int index = libraryList->currentRow() - 1;
         if(index >= 0)
         {
             item = setCurrentLibraryRow(index);
         }
         else
         {
-            item = setCurrentLibraryRow(ui->LibraryList->count() - 1);
+            item = setCurrentLibraryRow(libraryList->count() - 1);
         }
 
         playVideo(item->getLibraryListItem());
@@ -1987,22 +2039,22 @@ void MainWindow::on_actionSettings_triggered()
 void MainWindow::on_actionThumbnail_triggered()
 {
     SettingsHandler::setLibraryView(LibraryView::Thumb);
-    ui->LibraryList->setResizeMode(QListView::Adjust);
-    ui->LibraryList->setFlow(QListView::LeftToRight);
-    ui->LibraryList->setViewMode(QListView::IconMode);
-    ui->LibraryList->setTextElideMode(Qt::ElideMiddle);
-    ui->LibraryList->setSpacing(2);
+    libraryList->setResizeMode(QListView::Adjust);
+    libraryList->setFlow(QListView::LeftToRight);
+    libraryList->setViewMode(QListView::IconMode);
+    libraryList->setTextElideMode(Qt::ElideMiddle);
+    libraryList->setSpacing(2);
     updateThumbSizeUI(SettingsHandler::getThumbSize());
 }
 
 void MainWindow::on_actionList_triggered()
 {
     SettingsHandler::setLibraryView(LibraryView::List);
-    ui->LibraryList->setResizeMode(QListView::Fixed);
-    ui->LibraryList->setFlow(QListView::TopToBottom);
-    ui->LibraryList->setViewMode(QListView::ListMode);
-    ui->LibraryList->setTextElideMode(Qt::ElideRight);
-    ui->LibraryList->setSpacing(0);
+    libraryList->setResizeMode(QListView::Fixed);
+    libraryList->setFlow(QListView::TopToBottom);
+    libraryList->setViewMode(QListView::ListMode);
+    libraryList->setTextElideMode(Qt::ElideRight);
+    libraryList->setSpacing(0);
     updateThumbSizeUI(SettingsHandler::getThumbSize());
 }
 
@@ -2070,15 +2122,15 @@ void MainWindow::on_action200_triggered()
 void MainWindow::setThumbSize(int size)
 {
     SettingsHandler::setThumbSize(size);
-    for(int i = 0; i < ui->LibraryList->count(); i++)
+    for(int i = 0; i < libraryList->count(); i++)
     {
-        ui->LibraryList->item(i)->setSizeHint({size, size-(size/4)});
+        libraryList->item(i)->setSizeHint({size, size-(size/4)});
     }
-    ui->LibraryList->setIconSize({size, size});
+    libraryList->setIconSize({size, size});
 //    if(SettingsHandler::getLibraryView() == LibraryView::List)
-//        ui->LibraryList->setViewMode(QListView::ListMode);
+//        libraryList->setViewMode(QListView::ListMode);
 //    else
-//        ui->LibraryList->setViewMode(QListView::IconMode);
+//        libraryList->setViewMode(QListView::IconMode);
 
 }
 
@@ -2109,22 +2161,24 @@ void MainWindow::updateLibrarySortUI(LibrarySortMode mode)
     }
 
     if(playingLibraryListItem != nullptr)
-        ui->LibraryList->setCurrentItem(playingLibraryListItem);
+        libraryList->setCurrentItem(playingLibraryListItem);
     else if(selectedLibraryListItem != nullptr)
-        ui->LibraryList->setCurrentItem(selectedLibraryListItem);
+        libraryList->setCurrentItem(selectedLibraryListItem);
 }
 
 void MainWindow::on_actionNameAsc_triggered()
 {
+    randomizeLibraryButton->hide();
     LibraryListWidgetItem::setSortMode(LibrarySortMode::NAME_ASC);
     SettingsHandler::setSelectedLibrarySortMode(LibrarySortMode::NAME_ASC);
-    ui->LibraryList->sortItems();
+    libraryList->sortItems();
 }
 void MainWindow::on_actionNameDesc_triggered()
 {
+    randomizeLibraryButton->hide();
     LibraryListWidgetItem::setSortMode(LibrarySortMode::NAME_DESC);
     SettingsHandler::setSelectedLibrarySortMode(LibrarySortMode::NAME_DESC);
-    ui->LibraryList->sortItems();
+    libraryList->sortItems();
 }
 void MainWindow::on_actionRandom_triggered()
 {
@@ -2132,7 +2186,7 @@ void MainWindow::on_actionRandom_triggered()
     SettingsHandler::setSelectedLibrarySortMode(LibrarySortMode::RANDOM);
 
     //Fisher and Yates algorithm
-    int n = ui->LibraryList->count();
+    int n = libraryList->count();
 
     QList<LibraryListWidgetItem*> arr, arr1;
     int index_arr[n];
@@ -2149,28 +2203,31 @@ void MainWindow::on_actionRandom_triggered()
       }
       while (index_arr[index] != 0);
       index_arr[index] = 1;
-      arr1.push_back(((LibraryListWidgetItem*)ui->LibraryList->item(index)));
+      arr1.push_back(((LibraryListWidgetItem*)libraryList->item(index)));
     }
-    while(ui->LibraryList->count()>0)
+    while(libraryList->count()>0)
     {
-      ui->LibraryList->takeItem(0);
+      libraryList->takeItem(0);
     }
     foreach(auto item, arr1)
     {
-        ui->LibraryList->addItem(item);
+        libraryList->addItem(item);
     }
+    randomizeLibraryButton->show();
 }
 void MainWindow::on_actionCreatedAsc_triggered()
 {
+    randomizeLibraryButton->hide();
     LibraryListWidgetItem::setSortMode(LibrarySortMode::CREATED_ASC);
     SettingsHandler::setSelectedLibrarySortMode(LibrarySortMode::CREATED_ASC);
-    ui->LibraryList->sortItems();
+    libraryList->sortItems();
 }
 void MainWindow::on_actionCreatedDesc_triggered()
 {
+    randomizeLibraryButton->hide();
     LibraryListWidgetItem::setSortMode(LibrarySortMode::CREATED_DESC);
     SettingsHandler::setSelectedLibrarySortMode(LibrarySortMode::CREATED_DESC);
-    ui->LibraryList->sortItems();
+    libraryList->sortItems();
 }
 
 void MainWindow::on_actionChange_theme_triggered()

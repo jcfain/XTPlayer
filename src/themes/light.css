@@ -92,4 +92,23 @@ QFrame[cssClass="windowedControls"] {
 QFrame[cssClass="fullScreenControls"] {
     background-color: rgba(255, 255, 255, 0.2);
     color: black;
+}
+QPushButton[id="windowedLibraryButton"] {
+	height: 25px;
+	width: 25px;
+    background-color: rgba(255, 255, 255, 0.5);
+	border-radius: 50%;
+}
+QPushButton[id="randomizeLibraryButton"] {
+	height: 25px;
+	width: 25px;
+    background-color: rgba(255, 255, 255, 0.5);
+	border-radius: 50%;
+}
+QPushButton[id="windowedLibraryButton"]:pressed {
+    background-color: rgba(100, 100, 100, 0.5);
+}
+QPushButton[id="randomizeLibraryButton"]:pressed {
+    background-color: rgba(100, 100, 100, 0.5);
 };
+

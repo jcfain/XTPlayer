@@ -104,6 +104,11 @@ void SettingsHandler::Load()
     _xRangeStep = settings->value("xRangeStep").toInt();
     _xRangeStep = _xRangeStep == 0 ? 50 : _xRangeStep;
     disableSpeechToText = settings->value("disableSpeechToText").toBool();
+    auto splitterSizes = settings->value("mainWindowPos").toList();
+    foreach (auto splitterPos, splitterSizes)
+    {
+        _mainWindowPos.append(splitterPos.value<int>());
+    }
     if(currentVersion != 0 && currentVersion < 0.17f)
     {
         MigrateTo17();
@@ -174,6 +179,13 @@ void SettingsHandler::Save()
         settings->setValue("gamepadSpeedStep", _gamepadSpeedStep);
         settings->setValue("xRangeStep", _xRangeStep);
         settings->setValue("disableSpeechToText", disableSpeechToText);
+        QList<QVariant> splitterPos;
+        foreach(auto pos, _mainWindowPos)
+        {
+            splitterPos.append(pos);
+        }
+        settings->setValue("mainWindowPos", splitterPos);
+
         settings->sync();
     }
 
@@ -828,6 +840,16 @@ void SettingsHandler::setInverseTcYRollR1(bool value)
     _inverseTcYRollR1  = value;
 }
 
+QList<int> SettingsHandler::getMainWindowSplitterPos()
+{
+    QMutexLocker locker(&mutex);
+    return _mainWindowPos;
+}
+void SettingsHandler::setMainWindowSplitterPos(QList<int> value)
+{
+    QMutexLocker locker(&mutex);
+    _mainWindowPos = value;
+}
 //private
 void SettingsHandler::SetupAvailableAxis()
 {
@@ -886,7 +908,7 @@ void SettingsHandler::SetupGamepadButtonMap()
 }
 QSettings* SettingsHandler::settings;
 QMutex SettingsHandler::mutex;
-
+QList<int> SettingsHandler::_mainWindowPos;
 QSize SettingsHandler::_maxThumbnailSize = {200, 200};
 GamepadAxisNames SettingsHandler::gamepadAxisNames;
 AxisNames SettingsHandler::axisNames;

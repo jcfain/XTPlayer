@@ -20,5 +20,7 @@
         <file>images/gamepad-icon-disconnected.png</file>
         <file>images/icons/loop.svg</file>
         <file>images/icons/settings.svg</file>
+        <file>images/icons/reload.svg</file>
+        <file>images/icons/windowed.svg</file>
     </qresource>
 </RCC>

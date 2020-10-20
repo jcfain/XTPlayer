@@ -49,6 +49,9 @@ public:
     static int getLiveGamepadSpeed();
     static int getGamepadSpeedIncrement();
 
+    static QList<int> getMainWindowSplitterPos();
+    static void setMainWindowSplitterPos(QList<int> value);
+
     static bool getDisableSpeechToText();
     static void setDisableSpeechToText(bool value);
 
@@ -151,6 +154,7 @@ private:
     static bool whirligigEnabled;
     static int playerVolume;
     static int offSet;
+    static QList<int> _mainWindowPos;
 
     static bool yMultiplierChecked;
     static float yMultiplierValue;

@@ -44,6 +44,7 @@ SOURCES += \
     lib/tool/tcodefactory.cpp \
     lib/tool/xmath.cpp \
     lib/tool/xtimer.cpp \
+    librarywindow.cpp \
     main.cpp \
     mainwindow.cpp \
     settingsdialog.cpp
@@ -81,6 +82,7 @@ HEADERS += \
     lib/tool/tcodefactory.h \
     lib/tool/xmath.h \
     lib/tool/xtimer.h \
+    librarywindow.h \
     mainwindow.h \
     settingsdialog.h
 
