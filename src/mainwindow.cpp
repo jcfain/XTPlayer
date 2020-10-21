@@ -1631,6 +1631,7 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
 
         //LogHandler::Debug("Get deo packet: "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
         currentVRPacket = vrPlayer->getCurrentPacket();
+        QThread::currentThread()->usleep(500);
         //LogHandler::Debug("After get deo packet: "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
         //QThread::currentThread()->msleep(1);
     }
@@ -1669,6 +1670,7 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
             }
         }
         timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
+        QThread::currentThread()->usleep(500);
     }
     LogHandler::Debug("exit syncFunscript");
 }
