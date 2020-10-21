@@ -2023,8 +2023,8 @@ void MainWindow::on_actionAbout_triggered()
     layout.addWidget(&libAVInfo);
     QLabel rangeSliderInfo;
     rangeSliderInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    rangeSliderInfo.setText("<b>Qt-RangeSlider (MIT)</b><br>"
-                      "Copyright (c) 2019 ThisIsClark<br>"
+    rangeSliderInfo.setText("<b>Qt-RangeSlider</b><br>"
+                      "Copyright (c) 2019 ThisIsClark (MIT)<br>"
                       "Modifications Copyright (c) 2020 Jason C. Fain<br>"
                       "<a href='https://github.com/ThisIsClark/Qt-RangeSlider'>https://github.com/ThisIsClark/Qt-RangeSlider</a>");
     rangeSliderInfo.setAlignment(Qt::AlignHCenter);
@@ -2036,6 +2036,13 @@ void MainWindow::on_actionAbout_triggered()
                       "<a href='https://github.com/k06a/boolinq'>https://github.com/k06a/boolinq</a>");
     boolinqInfo.setAlignment(Qt::AlignHCenter);
     layout.addWidget(&boolinqInfo);
+    QLabel qtcompressInfo;
+    qtcompressInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    qtcompressInfo.setText("<b>qtcompress</b><br>"
+                      "Copyright (C) 2013 Digia Plc (LGPL)<br>"
+                      "<a href='https://github.com/nezticle/qtcompress'>https://github.com/nezticle/qtcompress</a>");
+    qtcompressInfo.setAlignment(Qt::AlignHCenter);
+    layout.addWidget(&qtcompressInfo);
     aboutWindow.setLayout(&layout);
     aboutWindow.exec();
 }
