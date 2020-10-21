@@ -1,4 +1,4 @@
-QT += core gui serialport network gamepad texttospeech
+QT += core gui serialport network gamepad texttospeech compress
 
 greaterThan(QT_MAJOR_VERSION, 4) {
     QT += widgets avwidgets

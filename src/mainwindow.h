@@ -41,6 +41,8 @@
 #include "lib/lookup/MediaActions.h"
 #include "lib/tool/xmath.h"
 #include "lib/lookup/enum.h"
+#include <QtCompress/qzipwriter.h>
+#include <QtCompress/qzipreader.h>
 
 
 QT_BEGIN_NAMESPACE

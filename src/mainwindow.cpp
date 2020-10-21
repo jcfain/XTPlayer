@@ -747,10 +747,10 @@ void MainWindow::on_load_library(QString path)
                     scriptPath = nullptr;
                 }
 
-                //QFileInfo scriptZip(scriptNoExtension + ".zip");
+                QFileInfo scriptZip(scriptNoExtension + ".zip");
                 QString zipFile;
-//                if(scriptZip.exists())
-//                    zipFile = scriptNoExtension + ".zip";
+                if(scriptZip.exists())
+                    zipFile = scriptNoExtension + ".zip";
 
                 QString thumbFile =  thumbPath + fileName + ".jpg";
                 LibraryListItem item
@@ -984,9 +984,19 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
             videoHandler->setFile(selectedFileListItem.path);
             videoPreviewWidget->setFile(selectedFileListItem.path);
             videoHandler->load();
-            if(!selectedFileListItem.zipFile.isEmpty())
+            QZipReader zipFile(selectedFileListItem.zipFile, QIODevice::ReadOnly);
+            if(zipFile.isReadable())
             {
 
+//                if(!selectedFileListItem.zipFile.isEmpty())
+//                {
+                   //QList<QZipReader::FileInfo> files = zipFile.fileInfoList();
+                   QByteArray data = zipFile.fileData("x.funscript");
+                   if (!data.isEmpty())
+                   {
+                       funscriptHandler->load(data);
+                   }
+                //}
             }
             else
             {
@@ -994,7 +1004,6 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
                 funscriptHandler->load(scriptFile);
             }
 
-            qDeleteAll(funscriptHandlers);
             funscriptHandlers.clear();
             _xSettings->getSelectedDeviceHandler()->sendTCode(tcodeHandler->getHome());
 
@@ -1003,15 +1012,20 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
             {
                 if(axisName.first == axisNames.TcXUpDownL0)
                     continue;
-                if(!selectedFileListItem.zipFile.isEmpty())
+                if(zipFile.isReadable())
                 {
-
+                   //QList<QZipReader::FileInfo> files = zipFile.fileInfoList();
+                   QByteArray data = zipFile.fileData(axisName.second.trackName + ".funscript");
+                   if (!data.isEmpty())
+                   {
+                       FunscriptHandler* otherFunscript = new FunscriptHandler(axisName.first);
+                       otherFunscript->load(data);
+                       funscriptHandlers.append(otherFunscript);
+                   }
                 }
                 else
                 {
-                    auto scriptFileTemp = customScript == nullptr ? selectedFileListItem.script : customScript;
-                    auto funscriptNoExtension = scriptFileTemp.remove(scriptFileTemp.lastIndexOf('.'), scriptFileTemp.length() -  1);
-                    QFileInfo fileInfo(funscriptNoExtension + "." + axisName.second.trackName + ".funscript");
+                    QFileInfo fileInfo(selectedFileListItem.scriptNoExtension + "." + axisName.second.trackName + ".funscript");
                     if(fileInfo.exists())
                     {
                         FunscriptHandler* otherFunscript = new FunscriptHandler(axisName.first);
