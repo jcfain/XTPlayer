@@ -1,7 +1,10 @@
 
-QMainWindow, QDialog, QTabWidget > QWidget {
+QMainWindow, QDialog, QTabWidget > QWidget, LibraryWindow {
     background-image: url(./themes/sky.jpg) no-repeat center fixed;
     color: black;
+}
+QSplitter::handle {
+    background-color: lightgray;
 }
 QTabBar::tab {
   background: transparent; 

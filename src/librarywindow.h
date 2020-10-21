@@ -1,10 +1,10 @@
 #ifndef LIBRARYWINDOW_H
 #define LIBRARYWINDOW_H
-#include <QGLWidget>
+#include <QFrame>
 #include <QMainWindow>
 #include <QGridLayout>
 
-class LibraryWindow : public QWidget
+class LibraryWindow : public QFrame
 {
     Q_OBJECT
 signals:

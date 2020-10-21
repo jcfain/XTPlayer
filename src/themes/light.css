@@ -1,7 +1,10 @@
 
-QMainWindow, QDialog, QTabWidget > QWidget {
+QMainWindow, QDialog, QTabWidget > QWidget, LibraryWindow {
     background-color: #f2f3f4;
     color: black;
+}
+QSplitter::handle {
+    background-color: grey;
 }
 QTabBar::tab {
   background: silver; 

@@ -1,7 +1,7 @@
 #include "librarywindow.h"
 
 LibraryWindow::LibraryWindow(QMainWindow* parent) :
-    QWidget(parent)
+    QFrame(parent)
 {
     setWindowFlags(Qt::Window);
     setLayout(new QGridLayout(this));

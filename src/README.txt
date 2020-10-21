@@ -15,8 +15,10 @@ twist
 Note: the OSR2+ only has pitch, roll and maybe twist. OSR2 only has roll.
 y and z are reserved for future devices.
 
-Each script has a naming format
+Each script has a naming format if outside a zip file
 <videoname>.<axisname>.funscript
+if in a zip file the name scheme is as follows:
+<videoname>.zip / <axisname>.funscript
 
 These axis all are similar to the x axis where 50 = home position
 with rotate axis 49-0 rotate counter clockwise and 51-100 rotate clockwise.

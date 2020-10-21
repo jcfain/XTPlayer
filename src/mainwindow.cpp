@@ -18,10 +18,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
                 SettingsHandler::Default();
         }
     }
-    QFile file(SettingsHandler::getSelectedTheme());
-    file.open(QFile::ReadOnly);
-    QString styleSheet = QLatin1String(file.readAll());
-    setStyleSheet(styleSheet);
 
     funscriptHandler = new FunscriptHandler(_axisNames.TcXUpDownL0);
 
@@ -76,6 +72,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     libraryList = new QListWidget(this);
     libraryList->setUniformItemSizes(true);
     libraryList->setContextMenuPolicy(Qt::CustomContextMenu);
+    libraryList->setProperty("id", "libraryList");
     ui->libraryGrid->addWidget(libraryList, 0, 0, 20, 10);
     ui->libraryGrid->setSpacing(5);
 
@@ -84,13 +81,16 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     QIcon windowedIcon("://images/icons/windowed.svg");
     windowedLibraryButton->setIcon(windowedIcon);
     ui->libraryGrid->addWidget(windowedLibraryButton, 0, 0);
+
     libraryWindow = new LibraryWindow(this);
+    libraryWindow->setProperty("id", "libraryWindow");
 
     randomizeLibraryButton = new QPushButton(this);
     randomizeLibraryButton->setProperty("id", "randomizeLibraryButton");
     QIcon reloadIcon("://images/icons/reload.svg");
     randomizeLibraryButton->setIcon(reloadIcon);
     ui->libraryGrid->addWidget(randomizeLibraryButton, 0, 1);
+    ui->libraryFrame->setFrameShadow(QFrame::Sunken);
 
     thumbCaptureTime = 35000;
     libraryViewGroup = new QActionGroup(this);
@@ -219,6 +219,11 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(retryConnectionButton, &QPushButton::clicked, _xSettings, &SettingsDialog::initDeviceRetry);
     connect(deoRetryConnectionButton, &QPushButton::clicked, _xSettings, &SettingsDialog::initDeoRetry);
     connect(QApplication::instance(), &QCoreApplication::aboutToQuit, this, &MainWindow::dispose);
+
+    QFile file(SettingsHandler::getSelectedTheme());
+    file.open(QFile::ReadOnly);
+    QString styleSheet = QLatin1String(file.readAll());
+    setStyleSheet(styleSheet);
 
     setFocus();
     _defaultAppSize = this->size();
@@ -641,6 +646,9 @@ void MainWindow::onLibraryWindowed_Clicked()
     windowedLibraryButton->hide();
     ui->libraryFrame->hide();
     libraryWindow->show();
+
+//    libraryWindow->style()->unpolish(libraryWindow);
+//    libraryWindow->style()->polish(libraryWindow);
 }
 void MainWindow::onLibraryWindowed_Closed()
 {
