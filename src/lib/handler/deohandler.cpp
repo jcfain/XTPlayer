@@ -20,7 +20,7 @@ void DeoHandler::init(NetworkAddress address, int waitTimeout)
 {
     qRegisterMetaType<ConnectionChangedSignal>();
     qRegisterMetaType<VRPacket>();
-    emit connectionChange({DeviceType::Deo, ConnectionStatus::Connecting, "Connecting..."});
+    emit connectionChange({DeviceType::Deo, ConnectionStatus::Connecting, "Waiting..."});
     _waitTimeout = waitTimeout;
     _address = address;
 
@@ -209,7 +209,7 @@ void DeoHandler::onSocketStateChange (QAbstractSocket::SocketState state)
         case QAbstractSocket::SocketState::ConnectingState:
         {
             LogHandler::Debug("Deo connecting");
-            emit connectionChange({DeviceType::Deo, ConnectionStatus::Connecting, "Connecting..."});
+            emit connectionChange({DeviceType::Deo, ConnectionStatus::Connecting, "Waiting..."});
             break;
         }
         case QAbstractSocket::SocketState::BoundState:

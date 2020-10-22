@@ -8,7 +8,8 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data) :
     QListWidgetItem(data.nameNoExtension)
 {
     QFileInfo scriptInfo(data.script);
-    if (!scriptInfo.exists())
+    QFileInfo zipScriptInfo(data.zipFile);
+    if (!scriptInfo.exists() && !zipScriptInfo.exists())
     {
         setToolTip(data.path + "\nNo script file of the same name found.\nRight click and Play with funscript.");
         setForeground(QColorConstants::Gray);

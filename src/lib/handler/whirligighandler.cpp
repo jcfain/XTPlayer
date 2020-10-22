@@ -17,7 +17,7 @@ void WhirligigHandler::init(NetworkAddress address, int waitTimeout)
 {
     qRegisterMetaType<ConnectionChangedSignal>();
     qRegisterMetaType<VRPacket>();
-    emit connectionChange({DeviceType::Whirligig, ConnectionStatus::Connecting, "Connecting..."});
+    emit connectionChange({DeviceType::Whirligig, ConnectionStatus::Connecting, "Waiting..."});
     _waitTimeout = waitTimeout;
     _address = address;
 
@@ -196,7 +196,8 @@ void WhirligigHandler::onSocketStateChange (QAbstractSocket::SocketState state)
                 QHostAddress addressObj;
                 addressObj.setAddress(_address.address);
                 tcpSocket->connectToHost(addressObj, _address.port);
-            } else
+            }
+            else
             {
                 LogHandler::Debug("Whirligig disconnected");
                 emit connectionChange({DeviceType::Whirligig, ConnectionStatus::Disconnected, "Disconnected"});
@@ -206,7 +207,7 @@ void WhirligigHandler::onSocketStateChange (QAbstractSocket::SocketState state)
         case QAbstractSocket::SocketState::ConnectingState:
         {
             LogHandler::Debug("Whirligig connecting");
-            emit connectionChange({DeviceType::Whirligig, ConnectionStatus::Connecting, "Connecting..."});
+            emit connectionChange({DeviceType::Whirligig, ConnectionStatus::Connecting, "Waiting..."});
             break;
         }
         case QAbstractSocket::SocketState::BoundState:

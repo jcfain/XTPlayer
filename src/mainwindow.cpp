@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
+#include <QScroller>
 MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -18,6 +18,9 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
                 SettingsHandler::Default();
         }
     }
+
+    qRegisterMetaType<LibraryListItem>();
+    qRegisterMetaTypeStreamOperators<LibraryListItem>();
 
     funscriptHandler = new FunscriptHandler(_axisNames.TcXUpDownL0);
 
@@ -73,7 +76,17 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     libraryList->setUniformItemSizes(true);
     libraryList->setContextMenuPolicy(Qt::CustomContextMenu);
     libraryList->setProperty("id", "libraryList");
+    libraryList->setMovement(QListView::Static);
+
+    QScroller::grabGesture(libraryList, QScroller::LeftMouseButtonGesture);
+    auto scroller = QScroller::scroller(libraryList);
+    QScrollerProperties scrollerProperties;
+    QVariant overshootPolicy = QVariant::fromValue<QScrollerProperties::OvershootPolicy>(QScrollerProperties::OvershootAlwaysOff);
+    scrollerProperties.setScrollMetric(QScrollerProperties::VerticalOvershootPolicy, overshootPolicy);
+    QScroller::scroller(libraryList)->setScrollerProperties(scrollerProperties);
+    scroller->setScrollerProperties(scrollerProperties);
     ui->libraryGrid->addWidget(libraryList, 0, 0, 20, 10);
+
     ui->libraryGrid->setSpacing(5);
 
     windowedLibraryButton = new QPushButton(this);
@@ -875,7 +888,8 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
                QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
                thumb.addPixmap(scaled);
                qListWidgetItem->setIcon(thumb);
-               qListWidgetItem->setToolTip(errorMessage);
+               auto errorMsg = qListWidgetItem->toolTip() + "\n\nError: "+ errorMessage;
+               qListWidgetItem->setToolTip(errorMsg);
                qListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
                if(thumbNailSearchIterator > 0)
                {
@@ -935,10 +949,14 @@ void MainWindow::on_actionSelect_library_triggered()
 
 void MainWindow::on_LibraryList_itemClicked(QListWidgetItem *item)
 {
-//    if(!videoHandler->isPlaying())
-//    {
-//        loadVideo(item->data(Qt::UserRole).value<LibraryListItem>());
-//    }
+    auto selectedItem = item->data(Qt::UserRole).value<LibraryListItem>();
+    if(videoHandler->isPlaying() && !videoHandler->isPaused())
+    {
+        auto playingFile = videoHandler->file();
+        QIcon icon(playingFile != selectedItem.path ? "://images/icons/play.svg" : "://images/icons/pause.svg" );
+        ui->PlayBtn->setIcon(icon);
+    }
+    ui->statusbar->showMessage(selectedItem.nameNoExtension);
     selectedLibraryListItem = (LibraryListWidgetItem*)item;
     selectedLibraryListIndex = libraryList->currentRow();
 }
@@ -999,7 +1017,7 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
 //                if(!selectedFileListItem.zipFile.isEmpty())
 //                {
                    //QList<QZipReader::FileInfo> files = zipFile.fileInfoList();
-                   QByteArray data = zipFile.fileData("x.funscript");
+                   QByteArray data = zipFile.fileData(selectedFileListItem.nameNoExtension + ".funscript");
                    if (!data.isEmpty())
                    {
                        funscriptHandler->load(data);
@@ -1023,7 +1041,7 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
                 if(zipFile.isReadable())
                 {
                    //QList<QZipReader::FileInfo> files = zipFile.fileInfoList();
-                   QByteArray data = zipFile.fileData(axisName.second.trackName + ".funscript");
+                   QByteArray data = zipFile.fileData(selectedFileListItem.nameNoExtension + "." + axisName.second.trackName + ".funscript");
                    if (!data.isEmpty())
                    {
                        FunscriptHandler* otherFunscript = new FunscriptHandler(axisName.first);
