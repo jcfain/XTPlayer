@@ -170,6 +170,7 @@ private:
     bool autoLoopOn = false;
     QLabel* connectionStatusLabel;
     QLabel* gamepadConnectionStatusLabel;
+    QLabel* _videoLoadingLabel;
     QPushButton* retryConnectionButton;
     QLabel* deoConnectionStatusLabel;
     QPushButton* deoRetryConnectionButton;
@@ -217,6 +218,7 @@ private:
     QString mSecondFormat(int seconds);
     bool isPlayingFile(QString file);
 
+    void setLoading(bool loading);
     void mediaAction(QString action);
     void toggleFullScreen();
     void toggleLoop();

@@ -22,5 +22,6 @@
         <file>images/icons/settings.svg</file>
         <file>images/icons/reload.svg</file>
         <file>images/icons/windowed.svg</file>
+        <file>images/Eclipse-1s-loading-200px.gif</file>
     </qresource>
 </RCC>

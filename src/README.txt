@@ -26,3 +26,7 @@ Of course the stroke (x) axis is always <videoname>.funscript
 These axis all are similar to the x axis where 50 = home position
 with rotate axis 49-0 rotate counter clockwise and 51-100 rotate clockwise.
 (it seems pitch maybe the inverse of this but I need to confirm)
+
+Notes for playbacl:
+If there is an existing <videoname>.funscript (or you select play with funscript) or <videoname>.<axisname>.funscript outside of the zip file
+This will override the contents of the zip file.

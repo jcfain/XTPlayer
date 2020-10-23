@@ -86,9 +86,12 @@ QPushButton:disabled {
     background-color: lightgrey;
     color: grey;
 }
-
 QFrame[cssClass="windowedControls"] {
     background-color: transparent;
+    color: black;
+}
+QFrame[cssClass="fullScreenControls"] {
+    background-color: rgba(255, 255, 255, 0.2);
     color: black;
 }
 QPushButton[id="windowedLibraryButton"] {
