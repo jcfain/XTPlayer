@@ -131,7 +131,7 @@ private:
     static void SetMapDefaults();
     static void SetupAvailableAxis();
     static void SetupGamepadButtonMap();
-    static void MigrateTo17();
+    static void MigrateTo20();
     static GamepadAxisNames gamepadAxisNames;
     static AxisNames axisNames;
     static MediaActions mediaActions;

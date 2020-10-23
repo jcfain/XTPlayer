@@ -109,16 +109,16 @@ void SettingsDialog::setupUi()
         ui.networkPortTxt->setText(SettingsHandler::getServerPort());
         ui.deoAddressTxt->setText(SettingsHandler::getDeoAddress());
         ui.deoPortTxt->setText(SettingsHandler::getDeoPort());
-        ui.xRollMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.TcXRollR2));
-        ui.xRollMultiplierSpinBox->setValue(SettingsHandler::getMultiplierChecked(axisNames.TcXRollR2));
-        ui.yRollMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.TcYRollR1));
-        ui.yRollMultiplierSpinBox->setValue(SettingsHandler::getMultiplierChecked(axisNames.TcYRollR1));
+        ui.xRollMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.TcYRollR2));
+        ui.xRollMultiplierSpinBox->setValue(SettingsHandler::getMultiplierChecked(axisNames.TcYRollR2));
+        ui.yRollMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.TcXRollR1));
+        ui.yRollMultiplierSpinBox->setValue(SettingsHandler::getMultiplierChecked(axisNames.TcXRollR1));
         ui.twistMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.TcTwistR0));
         ui.twistMultiplierSpinBox->setValue(SettingsHandler::getMultiplierChecked(axisNames.TcTwistR0));
-        ui.yMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.TcYLeftRightL1));
-        ui.yMultiplierSpinBox->setValue(SettingsHandler::getMultiplierChecked(axisNames.TcYLeftRightL1));
-        ui.zMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.TcZBackForwardL2));
-        ui.zMuliplierSpinBox->setValue(SettingsHandler::getMultiplierChecked(axisNames.TcZBackForwardL2));
+        ui.yMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.TcXLeftRightL2));
+        ui.yMultiplierSpinBox->setValue(SettingsHandler::getMultiplierChecked(axisNames.TcXLeftRightL2));
+        ui.zMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.TcZBackForwardL1));
+        ui.zMuliplierSpinBox->setValue(SettingsHandler::getMultiplierChecked(axisNames.TcZBackForwardL1));
 
         QFont font( "Sans Serif", 8);
         int sliderGridRow = 0;
@@ -178,7 +178,7 @@ void SettingsDialog::setupUi()
         ui.RangeSettingsGrid->addWidget(offSetSpinBox, sliderGridRow,1,1,1);
 
         QLabel* xRangeStepLabel = new QLabel(this);
-        xRangeStepLabel->setText("X range change step");
+        xRangeStepLabel->setText("Stroke range change step");
         xRangeStepLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
         QSpinBox* xRangeStepInput = new QSpinBox(this);
         xRangeStepInput->setMinimum(1);
@@ -794,22 +794,22 @@ void SettingsDialog::on_deoPortTxt_editingFinished()
 
 void SettingsDialog::on_xRollMultiplierCheckBox_clicked()
 {
-    SettingsHandler::setMultiplierChecked(axisNames.TcXRollR2, ui.xRollMultiplierCheckBox->isChecked());
+    SettingsHandler::setMultiplierChecked(axisNames.TcYRollR2, ui.xRollMultiplierCheckBox->isChecked());
 }
 
 void SettingsDialog::on_xRollMultiplierSpinBox_valueChanged(double value)
 {
-    SettingsHandler::setMultiplierValue(axisNames.TcXRollR2, value);
+    SettingsHandler::setMultiplierValue(axisNames.TcYRollR2, value);
 }
 
 void SettingsDialog::on_yRollMultiplierCheckBox_clicked()
 {
-    SettingsHandler::setMultiplierChecked(axisNames.TcYRollR1, ui.yRollMultiplierCheckBox->isChecked());
+    SettingsHandler::setMultiplierChecked(axisNames.TcXRollR1, ui.yRollMultiplierCheckBox->isChecked());
 }
 
 void SettingsDialog::on_yRollMultiplierSpinBox_valueChanged(double value)
 {
-    SettingsHandler::setMultiplierValue(axisNames.TcYRollR1, value);
+    SettingsHandler::setMultiplierValue(axisNames.TcXRollR1, value);
 }
 
 void SettingsDialog::on_twistMultiplierCheckBox_clicked()
@@ -834,22 +834,22 @@ void SettingsDialog::on_vibMultiplierSpinBox_valueChanged(double value)
 
 void SettingsDialog::on_yMultiplierCheckBox_clicked(bool checked)
 {
-    SettingsHandler::setMultiplierChecked(axisNames.TcYLeftRightL1, checked);
+    SettingsHandler::setMultiplierChecked(axisNames.TcXLeftRightL2, checked);
 }
 
 void SettingsDialog::on_yMultiplierSpinBox_valueChanged(double value)
 {
-    SettingsHandler::setMultiplierValue(axisNames.TcYLeftRightL1, value);
+    SettingsHandler::setMultiplierValue(axisNames.TcXLeftRightL2, value);
 }
 
 void SettingsDialog::on_zCheckBox_clicked(bool checked)
 {
-    SettingsHandler::setMultiplierChecked(axisNames.TcZBackForwardL2, checked);
+    SettingsHandler::setMultiplierChecked(axisNames.TcZBackForwardL1, checked);
 }
 
 void SettingsDialog::on_zMuliplierSpinBox_valueChanged(double value)
 {
-    SettingsHandler::setMultiplierValue(axisNames.TcZBackForwardL2, value);
+    SettingsHandler::setMultiplierValue(axisNames.TcZBackForwardL1, value);
 }
 
 void SettingsDialog::on_buttonBox_clicked(QAbstractButton *button)

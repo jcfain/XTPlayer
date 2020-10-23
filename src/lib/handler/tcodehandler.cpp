@@ -19,8 +19,8 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
             position = XMath::reverseNumber(position, 0, 100);
         }
         char tcodeValueString[4];
-        sprintf(tcodeValueString, "%03d", calculateRange(axisNames.TcXUpDownL0.toUtf8(), position));
-        tcode += axisNames.TcXUpDownL0;
+        sprintf(tcodeValueString, "%03d", calculateRange(axisNames.TcYUpDownL0.toUtf8(), position));
+        tcode += axisNames.TcYUpDownL0;
         tcode += tcodeValueString;
         if (speed > 0)
         {
@@ -32,7 +32,7 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
     {
         foreach(auto axis, axisNames.BasicAxis)
         {
-            if (axis.first == axisNames.TcXUpDownL0)
+            if (axis.first == axisNames.TcYUpDownL0)
                 continue;
             if (otherActions.contains(axis.first))
             {
@@ -61,7 +61,7 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
         }
         foreach(auto axis, axisNames.BasicAxis)
         {
-            if (axis.first == axisNames.TcXUpDownL0)
+            if (axis.first == axisNames.TcYUpDownL0)
                 continue;
             if (otherActions.contains(axis.first))
                 continue;
@@ -115,7 +115,7 @@ int TCodeHandler::calculateRange(const char* channel, int rawValue)
     int xMax = SettingsHandler::getAxis(channel).UserMax;
     int xMin = SettingsHandler::getAxis(channel).UserMin;
     // Update for live x range switch
-    if(QString(channel) == axisNames.TcXUpDownL0)
+    if(QString(channel) == axisNames.TcYUpDownL0)
     {
         xMax = SettingsHandler::getLiveXRangeMax();
         xMin = SettingsHandler::getLiveXRangeMin();
@@ -129,7 +129,7 @@ QString TCodeHandler::getHome()
     QString tcode;
     foreach(auto axis, axisNames.BasicAxis)
     {
-        if(axis.first == axisNames.TcXUpDownL0)
+        if(axis.first == axisNames.TcYUpDownL0)
             continue;
         tcode += " ";
         tcode += axis.first;
