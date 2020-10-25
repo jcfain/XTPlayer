@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QScroller>
 MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -729,6 +728,7 @@ void MainWindow::on_load_library(QString path)
         QDir directory(path);
         if (directory.exists())
         {
+            stopThumbProcess();
             libraryItems.clear();
             libraryList->clear();
             QDirIterator library(path, QStringList()
@@ -797,8 +797,7 @@ void MainWindow::on_load_library(QString path)
                 libraryItems.push_back(qListWidgetItem);
             }
             updateLibrarySortUI((LibrarySortMode)SettingsHandler::getSelectedLibrarySortMode());
-            stopThumbProcess = true;
-            saveNewThumbs();
+            startThumbProcess();
         }
         else
         {
@@ -811,13 +810,35 @@ void MainWindow::on_load_library(QString path)
         on_actionSelect_library_triggered();
     }
 }
+
+void MainWindow::startThumbProcess()
+{
+    stopThumbProcess();
+    thumbProcessIsRunning = true;
+    extractor = new VideoFrameExtractor;
+    thumbNailPlayer = new AVPlayer;
+    thumbNailPlayer->setInterruptOnTimeout(true);
+    thumbNailPlayer->setInterruptTimeout(10000);
+    thumbNailPlayer->setAsyncLoad(true);
+    extractor->setAsync(true);
+    saveNewThumbs();
+}
+
+void MainWindow::stopThumbProcess()
+{
+    if(thumbProcessIsRunning)
+    {
+        disconnect(extractor, nullptr,  nullptr, nullptr);
+        disconnect(thumbNailPlayer, nullptr,  nullptr, nullptr);
+        thumbNailSearchIterator = 0;
+        thumbProcessIsRunning = false;
+        delete extractor;
+        delete thumbNailPlayer;
+    }
+}
+
 void MainWindow::saveNewThumbs()
 {
-    if (stopThumbProcess)
-    {
-        stopThumbProcess = false;
-        thumbNailSearchIterator = 0;
-    }
     if (thumbNailSearchIterator < libraryItems.count())
     {
         //Use a non user modifiable list incase they sort random when getting thumbs.
@@ -827,6 +848,8 @@ void MainWindow::saveNewThumbs()
         QFileInfo thumbInfo(item.thumbFile);
         if (!thumbInfo.exists())
         {
+            disconnect(extractor, nullptr,  nullptr, nullptr);
+            disconnect(thumbNailPlayer, nullptr,  nullptr, nullptr);
             saveThumb(item.path, item.thumbFile, listWidgetItem);
         }
         else
@@ -836,8 +859,7 @@ void MainWindow::saveNewThumbs()
     }
     else
     {
-        stopThumbProcess = false;
-        thumbNailSearchIterator = 0;
+        stopThumbProcess();
     }
 
 
@@ -849,12 +871,11 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
 //    QPixmap scaled = bgPixmap.scaled(SettingsHandler::getThumbSize(), Qt::AspectRatioMode::KeepAspectRatio);
 //    thumb.addPixmap(scaled);
 //    qListWidgetItem->setIcon(thumb);
-    VideoFrameExtractor* extractor = new VideoFrameExtractor;
 
     connect(extractor,
            &QtAV::VideoFrameExtractor::frameExtracted,
            extractor,
-           [this, extractor, videoFile, thumbFile, qListWidgetItem](const QtAV::VideoFrame& frame)
+           [this, videoFile, thumbFile, qListWidgetItem](const QtAV::VideoFrame& frame)
             {
 
                const auto& img = frame.toImage();
@@ -862,7 +883,7 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
 
                if (!img.save(thumbFile, nullptr, 15))
                {
-                   //LogHandler::Debug("Error saving thumbnail: " + thumbFile + " for video: " + videoFile);
+                   LogHandler::Debug("Error saving thumbnail: " + thumbFile + " for video: " + videoFile);
                    thumbFileTemp = "://images/icons/error.png";
                }
                QIcon thumb;
@@ -873,19 +894,15 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
                thumb.addPixmap(scaled);
                qListWidgetItem->setIcon(thumb);
                qListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
-               if(thumbNailSearchIterator > 0)
-               {
-                   saveNewThumbs();
-               }
-               extractor->deleteLater();
+               saveNewThumbs();
             });
     connect(extractor,
            &QtAV::VideoFrameExtractor::error,
            extractor,
-           [this, extractor, videoFile, qListWidgetItem](const QString &errorMessage)
+           [this, videoFile, qListWidgetItem](const QString &errorMessage)
             {
 
-               //LogHandler::Debug("Error accessing video file: " + videoFile + " Error: " + errorMessage);
+               LogHandler::Debug("Error extracting image from: " + videoFile + " Error: " + errorMessage);
 
                QIcon thumb;
                QPixmap bgPixmap("://images/icons/error.png");
@@ -893,48 +910,47 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
                QSize size = {thumbSize,thumbSize};
                QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
                thumb.addPixmap(scaled);
-               qListWidgetItem->setIcon(thumb);
                auto errorMsg = qListWidgetItem->toolTip() + "\n\nError: "+ errorMessage;
+               qListWidgetItem->setIcon(thumb);
                qListWidgetItem->setToolTip(errorMsg);
                qListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
-               if(thumbNailSearchIterator > 0)
-               {
-                   saveNewThumbs();
-               }
-               extractor->deleteLater();
+               saveNewThumbs();
             });
 
-    extractor->setAsync(true);
     extractor->setSource(videoFile);
 
-    AVPlayer* thumbNailPlayer = new AVPlayer;
-
-    thumbNailPlayer->setAsyncLoad(true);
     thumbNailPlayer->setFile(videoFile);
     thumbNailPlayer->load();
+
     connect(thumbNailPlayer,
            &AVPlayer::loaded,
            thumbNailPlayer,
-           [thumbNailPlayer, extractor, position]()
+           [this, position]()
             {
-               //LogHandler::Debug("Loaded video for thumb duration: "+ QString::number(thumbNailPlayer->duration()));
+               LogHandler::Debug("Loaded video for thumb duration: "+ QString::number(thumbNailPlayer->duration()));
                qint64 randomPosition = position > 0 ? position : XMath::rand((qint64)1, thumbNailPlayer->duration());
                //LogHandler::Debug("randomPosition: " + QString::number(randomPosition));
                extractor->setPosition(randomPosition);
-               thumbNailPlayer->deleteLater();
             });
 
     connect(thumbNailPlayer,
            &AVPlayer::error,
            thumbNailPlayer,
-           [this, thumbNailPlayer, extractor, position]()
+           [this, qListWidgetItem](QtAV::AVError er)
             {
-
-               //LogHandler::Debug("Video load error");
-               qint64 randomPosition = XMath::rand((qint64)1, position > 0 ? position : thumbCaptureTime);
-               //LogHandler::Debug("randomPosition: " + QString::number(randomPosition));
-               extractor->setPosition(randomPosition);
-               thumbNailPlayer->deleteLater();
+               LogHandler::Debug("Video load error");
+               QIcon thumb;
+               QPixmap bgPixmap("://images/icons/error.png");
+               int thumbSize = SettingsHandler::getThumbSize();
+               QSize size = {thumbSize,thumbSize};
+               QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
+               thumb.addPixmap(scaled);
+               auto errorMsg = qListWidgetItem->toolTip() + "\n\nError: "+ er.ffmpegErrorString();
+               qListWidgetItem->setIcon(thumb);
+               qListWidgetItem->setToolTip(errorMsg);
+               qListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
+               disconnect(extractor, nullptr,  nullptr, nullptr);
+               saveNewThumbs();
             });
 }
 
@@ -1647,8 +1663,8 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
     qint64 timer1 = 0;
     qint64 timer2 = 0;
     //qint64 elapsedTracker = 0;
-    //QElapsedTimer timer;
-    //timer.start();
+    QElapsedTimer timer;
+    timer.start();
     mSecTimer.start();
     while (vrPlayer->isConnected() && !xPlayer->isPlaying())
     {
@@ -1658,7 +1674,6 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
             //execute once every millisecond
             if (timer2 - timer1 >= 1)
             {
-//                LogHandler::Debug("timer "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
 //                LogHandler::Debug("timer1: "+QString::number(timer1));
 //                LogHandler::Debug("timer2: "+QString::number(timer2));
 //                LogHandler::Debug("timer2 - timer1 "+QString::number(timer2-timer1));
@@ -1691,11 +1706,11 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
                 if(tcode != nullptr)
                     device->sendTCode(tcode);
                 otherActions.clear();
-                //LogHandler::Debug("timer "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
-                //timer.start();
+                LogHandler::Debug("timer "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
+                timer.start();
             }
             timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
-            //LogHandler::Debug("timer nsecsElapsed: "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
+            //LogHandler::Debug("timer nsecsElapsed: "+QString::number(timer2));
         }
         else if(xSettings->isConnected() && currentVRPacket.duration > 0 && currentVRPacket.playing)
         {
@@ -1734,7 +1749,7 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
 
         //LogHandler::Debug("Get deo packet: "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
         currentVRPacket = vrPlayer->getCurrentPacket();
-        QThread::currentThread()->usleep(500);
+        //QThread::currentThread()->usleep(10);
         //LogHandler::Debug("After get deo packet: "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
         //QThread::currentThread()->msleep(1);
     }

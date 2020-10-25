@@ -63,7 +63,20 @@ void LogHandler::Dialog(QString message, XLogLevel level)
 {
     Debug(message);
     QMessageBox messageBox;
-    messageBox.critical(0, LogHandler::getLevel(level), message);
+    switch(level)
+    {
+        case XLogLevel::Debuging:
+        break;
+        case XLogLevel::Information:
+            messageBox.information(0, LogHandler::getLevel(level), message);
+        break;
+        case XLogLevel::Warning:
+            messageBox.warning(0, LogHandler::getLevel(level), message);
+        break;
+        case XLogLevel::Critical:
+            messageBox.critical(0, LogHandler::getLevel(level), message);
+        break;
+    }
     messageBox.setFixedSize(500,200);
 }
 

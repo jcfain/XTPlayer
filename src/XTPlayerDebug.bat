@@ -1,1 +1,1 @@
-./XTPlayer.exe -debug
+%~dp0XTPlayer.exe -debug

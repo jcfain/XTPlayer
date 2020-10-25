@@ -23,6 +23,7 @@
 #include <QActionGroup>
 #include <QToolTip>
 #include <QTextToSpeech>
+#include <QScroller>
 #include "settingsdialog.h"
 #include "librarywindow.h"
 #include "lib/handler/videohandler.h"
@@ -201,11 +202,14 @@ private:
     QFrame* playerControlsPlaceHolder;
     QGridLayout* placeHolderControlsGrid;
     bool funscriptFileSelectorOpen = false;
-    bool stopThumbProcess = false;
+    bool thumbProcessIsRunning = false;
     bool vrScriptSelectorCanceled = false;
     QString vrScriptSelectedCanceledPath;
     int thumbNailSearchIterator = 0;
-
+    VideoFrameExtractor* extractor;
+    AVPlayer* thumbNailPlayer;
+    void startThumbProcess();
+    void stopThumbProcess();
 
     QList<LibraryListWidgetItem*> libraryItems;
     int playingLibraryListIndex;
@@ -219,6 +223,7 @@ private:
     bool isPlayingFile(QString file);
 
     void setLoading(bool loading);
+    void saveNewThumbs();
     void mediaAction(QString action);
     void toggleFullScreen();
     void toggleLoop();
@@ -226,7 +231,6 @@ private:
     void hideControls();
     void showControls();
     void saveThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem, qint64 position = 0);
-    void saveNewThumbs();
     void updateThumbSizeUI(int size);
     void updateLibrarySortUI(LibrarySortMode mode);
     void setThumbSize(int size);
@@ -260,4 +264,5 @@ private:
     void on_whirligig_device_error(QString error);
     void donate();
 };
+extern void startThumbProcess(MainWindow* mainWindow);
 #endif // MAINWINDOW_H

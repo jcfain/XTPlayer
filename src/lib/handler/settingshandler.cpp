@@ -264,7 +264,7 @@ void SettingsHandler::MigrateTo20()
 {
     SetupAvailableAxis();
     SetupGamepadButtonMap();
-    LogHandler::Dialog("Sorry, due to a standards update your gamepad and range settings have been set to default for a new data structure.", XLogLevel::Information);
+    LogHandler::Dialog("Due to a standards update your gamepad and range settings\nhave been set to default for a new data structure.", XLogLevel::Information);
 }
 
 QString SettingsHandler::getSelectedTheme()
