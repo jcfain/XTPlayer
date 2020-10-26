@@ -208,6 +208,7 @@ private:
     int thumbNailSearchIterator = 0;
     VideoFrameExtractor* extractor;
     AVPlayer* thumbNailPlayer;
+    void saveSingleThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem, qint64 position = 0);
     void startThumbProcess();
     void stopThumbProcess();
 

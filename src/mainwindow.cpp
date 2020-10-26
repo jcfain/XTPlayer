@@ -836,10 +836,22 @@ void MainWindow::stopThumbProcess()
         delete thumbNailPlayer;
     }
 }
-
+void MainWindow::saveSingleThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem, qint64 position)
+{
+    if(!thumbProcessIsRunning)
+    {
+        extractor = new VideoFrameExtractor;
+        thumbNailPlayer = new AVPlayer;
+        thumbNailPlayer->setInterruptOnTimeout(true);
+        thumbNailPlayer->setInterruptTimeout(10000);
+        thumbNailPlayer->setAsyncLoad(true);
+        extractor->setAsync(true);
+    }
+    saveThumb(videoFile, thumbFile, qListWidgetItem, position);
+}
 void MainWindow::saveNewThumbs()
 {
-    if (thumbNailSearchIterator < libraryItems.count())
+    if (thumbProcessIsRunning && thumbNailSearchIterator < libraryItems.count())
     {
         //Use a non user modifiable list incase they sort random when getting thumbs.
         LibraryListWidgetItem* listWidgetItem = libraryItems.at(thumbNailSearchIterator);
@@ -861,8 +873,6 @@ void MainWindow::saveNewThumbs()
     {
         stopThumbProcess();
     }
-
-
 }
 void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem, qint64 position)
 {
@@ -992,14 +1002,14 @@ void MainWindow::regenerateThumbNail()
 {
     QListWidgetItem* selectedItem = libraryList->selectedItems().first();
     LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
-    saveThumb(selectedFileListItem.path, selectedFileListItem.thumbFile, selectedItem);
+    saveSingleThumb(selectedFileListItem.path, selectedFileListItem.thumbFile, selectedItem);
 }
 
 void MainWindow::setThumbNailFromCurrent()
 {
     QListWidgetItem* selectedItem = libraryList->selectedItems().first();
     LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
-    saveThumb(selectedFileListItem.path, selectedFileListItem.thumbFile, selectedItem, videoHandler->position());
+    saveSingleThumb(selectedFileListItem.path, selectedFileListItem.thumbFile, selectedItem, videoHandler->position());
 }
 
 void MainWindow::playFileFromContextMenu()
@@ -1218,6 +1228,9 @@ void MainWindow::toggleFullScreen()
 
         ui->mainStackedWidget->setCurrentIndex(0);
 
+        ui->menubar->show();
+        ui->statusbar->show();
+        ui->playerControlsFrame->show();
         QMainWindow::setWindowFlags(Qt::WindowFlags());
         if(_isMaximized)
         {
@@ -1230,9 +1243,6 @@ void MainWindow::toggleFullScreen()
             QMainWindow::showNormal();
         }
         _isFullScreen = false;
-        ui->menubar->show();
-        ui->statusbar->show();
-        ui->playerControlsFrame->show();
         delete placeHolderControlsGrid;
         delete playerControlsPlaceHolder;
     }
@@ -1663,8 +1673,8 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
     qint64 timer1 = 0;
     qint64 timer2 = 0;
     //qint64 elapsedTracker = 0;
-    QElapsedTimer timer;
-    timer.start();
+//    QElapsedTimer timer;
+//    timer.start();
     mSecTimer.start();
     while (vrPlayer->isConnected() && !xPlayer->isPlaying())
     {
@@ -1706,8 +1716,8 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
                 if(tcode != nullptr)
                     device->sendTCode(tcode);
                 otherActions.clear();
-                LogHandler::Debug("timer "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
-                timer.start();
+           /*     LogHandler::Debug("timer "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
+                timer.start()*/;
             }
             timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
             //LogHandler::Debug("timer nsecsElapsed: "+QString::number(timer2));

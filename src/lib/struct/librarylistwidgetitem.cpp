@@ -2,7 +2,7 @@
 #include <QApplication>
 #include <QFileInfo>
 #include "../handler/settingshandler.h"
-#include "xmath.h"
+#include "../tool/xmath.h"
 
 LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data) :
     QListWidgetItem(data.nameNoExtension)

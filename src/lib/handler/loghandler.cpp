@@ -49,14 +49,17 @@ void LogHandler::Warn(QString message)
 
 void LogHandler::Error(QString message)
 {
-    if(!_userDebugMode)
+    if (_debugMode && !_userDebugMode)
+    {
+        qCritical() << message;
+    }
+    else if(_userDebugMode)
     {
         QMutexLocker locker(&mutex);
         userDebugIndex++;
         _debugStore.insert(userDebugIndex, QDateTime::currentDateTime().toString("MM-dd-yyyy_hh-mm-ss-zzz") +" ERROR: " + message);
         return;
     }
-    qCritical() << message;
 }
 
 void LogHandler::Dialog(QString message, XLogLevel level)
