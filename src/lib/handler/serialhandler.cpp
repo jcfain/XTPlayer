@@ -126,7 +126,7 @@ void SerialHandler::run()
                 serial.setStopBits(QSerialPort::OneStop);
                 serial.setFlowControl(QSerialPort::NoFlowControl);
                 serial.setRequestToSend(true);
-                serial.setDataTerminalReady(true);
+                //serial.setDataTerminalReady(true);
             }
         }
         // write request

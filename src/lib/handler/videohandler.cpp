@@ -12,8 +12,19 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent)
         LogHandler::Dialog("QtAV Video renderer is not availabe on your platform!", XLogLevel::Critical);
         return;
     }
-
     _player = new AVPlayer(_videoRenderer->widget());
+    _player->setVideoDecoderPriority(QStringList() << "CUDA" << "D3D11" << "DXVA" << "VAAPI" << "VideoToolbox" << "FFmpeg");
+    QVariantHash cuda_opt;
+    cuda_opt["surfaces"] = 0; //key is property name, case sensitive
+    cuda_opt["copyMode"] = "ZeroCopy"; // default is "DirectCopy"
+    QVariantHash opt;
+    opt["CUDA"] = cuda_opt; //key is decoder name, case sensitive
+    QVariantHash va_opt;
+    va_opt["display"] = "X11"; //"GLX", "X11", "DRM"
+    va_opt["copyMode"] = "ZeroCopy"; // "ZeroCopy", "OptimizedCopy", "GenericCopy". Default is "ZeroCopy" if possible
+    opt["VAAPI"] = va_opt; //key is decoder name, case sensitive
+    _player->setOptionsForVideoCodec(opt);
+
     _player->setRenderer(_videoRenderer);
     _player->audio()->setVolume(SettingsHandler::getPlayerVolume());
     _widgetLayout->addWidget(_videoRenderer->widget());
