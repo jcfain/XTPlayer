@@ -19,10 +19,10 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent)
     cuda_opt["copyMode"] = "ZeroCopy"; // default is "DirectCopy"
     QVariantHash opt;
     opt["CUDA"] = cuda_opt; //key is decoder name, case sensitive
-    QVariantHash va_opt;
-    va_opt["display"] = "X11"; //"GLX", "X11", "DRM"
-    va_opt["copyMode"] = "ZeroCopy"; // "ZeroCopy", "OptimizedCopy", "GenericCopy". Default is "ZeroCopy" if possible
-    opt["VAAPI"] = va_opt; //key is decoder name, case sensitive
+    //QVariantHash va_opt;
+    //va_opt["display"] = "X11"; //"GLX", "X11", "DRM"
+    //va_opt["copyMode"] = "ZeroCopy"; // "ZeroCopy", "OptimizedCopy", "GenericCopy". Default is "ZeroCopy" if possible
+    //opt["VAAPI"] = va_opt; //key is decoder name, case sensitive
     _player->setOptionsForVideoCodec(opt);
 
     _player->setRenderer(_videoRenderer);
