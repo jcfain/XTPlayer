@@ -83,8 +83,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     libraryList->setProperty("id", "libraryList");
     libraryList->setMovement(QListView::Static);
 
-    QScroller::grabGesture(libraryList, QScroller::LeftMouseButtonGesture);
-    auto scroller = QScroller::scroller(libraryList);
+    QScroller::grabGesture(libraryList->viewport(), QScroller::LeftMouseButtonGesture);
+    auto scroller = QScroller::scroller(libraryList->viewport());
     QScrollerProperties scrollerProperties;
     QVariant overshootPolicy = QVariant::fromValue<QScrollerProperties::OvershootPolicy>(QScrollerProperties::OvershootAlwaysOff);
     scrollerProperties.setScrollMetric(QScrollerProperties::VerticalOvershootPolicy, overshootPolicy);
@@ -282,7 +282,6 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 {
     // This function repeatedly call for those QObjects
     // which have installed eventFilter (Step 2)
-
     if (obj == (QObject*)playerControlsPlaceHolder) {
         if (event->type() == QEvent::Enter)
         {
@@ -291,6 +290,17 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
         else if(event->type() == QEvent::Leave)
         {
             hideControls();
+        }
+        return true;
+    }
+    else if (obj == (QObject*)playerLibraryPlaceHolder) {
+        if (event->type() == QEvent::Enter)
+        {
+            showLibrary();
+        }
+        else if(event->type() == QEvent::Leave)
+        {
+            hideLibrary();
         }
         return true;
     }
@@ -671,7 +681,7 @@ void MainWindow::onLibraryWindowed_Clicked()
 void MainWindow::onLibraryWindowed_Closed()
 {
     libraryWindow->layout()->removeWidget(libraryList);
-    ui->libraryGrid->addWidget(libraryList, 0, 0, 40, 10);
+    ui->libraryGrid->addWidget(libraryList, 0, 0, 20, 10);
     ui->libraryGrid->addWidget(windowedLibraryButton, 0, 0);
     ui->libraryGrid->addWidget(randomizeLibraryButton, 0, 1);
     windowedLibraryButton->show();
@@ -1189,6 +1199,28 @@ void MainWindow::toggleFullScreen()
         ui->fullScreenGrid->addWidget(_videoLoadingLabel, (rows / 2) - 1, 2, 2, 1);
         ui->fullScreenGrid->addWidget(playerControlsPlaceHolder, rows - 1, 0, 1, 5);
 
+        if(libraryWindow == nullptr || libraryWindow->isHidden())
+        {
+            libraryOverlay = true;
+            placeHolderLibraryGrid = new QGridLayout(this);
+            placeHolderLibraryGrid->setContentsMargins(0,0,0,0);
+            placeHolderLibraryGrid->setSpacing(0);
+            placeHolderLibraryGrid->addWidget(libraryList);
+
+            playerLibraryPlaceHolder = new QFrame(this);
+            playerLibraryPlaceHolder->setLayout(placeHolderLibraryGrid);
+            playerLibraryPlaceHolder->setContentsMargins(0,0,0,0);
+            playerLibraryPlaceHolder->installEventFilter(this);
+            playerLibraryPlaceHolder->move(QPoint(0, screenSize.height()));
+            playerLibraryPlaceHolder->setFixedWidth(ui->libraryFrame->width());
+            playerLibraryPlaceHolder->setFixedHeight(screenSize.height() - ui->playerControlsFrame->height());
+            ui->fullScreenGrid->addWidget(playerLibraryPlaceHolder, 0, 0, rows - 1, 2);
+            libraryList->setProperty("cssClass", "fullScreenLibrary");
+            ui->playerControlsFrame->style()->unpolish(libraryList);
+            ui->playerControlsFrame->style()->polish(libraryList);
+            hideLibrary();
+        }
+
         _videoLoadingLabel->raise();
         ui->playerControlsFrame->setProperty("cssClass", "fullScreenControls");
         ui->playerControlsFrame->style()->unpolish(ui->playerControlsFrame);
@@ -1201,7 +1233,7 @@ void MainWindow::toggleFullScreen()
         ui->mainStackedWidget->move(QPoint(0, 0));
         //videoHandler->move(QPoint(0, 0));
         //videoHandler->resize(QSize(screenSize.width()+1, screenSize.height()+1));
-        ui->playerControlsFrame->hide();
+        hideControls();
         ui->menubar->hide();
         ui->statusbar->hide();
         videoHandler->resize(screenSize);
@@ -1223,6 +1255,24 @@ void MainWindow::toggleFullScreen()
         ui->playerControlsFrame->setProperty("cssClass", "windowedControls");
         ui->playerControlsFrame->style()->unpolish(ui->playerControlsFrame);
         ui->playerControlsFrame->style()->polish(ui->playerControlsFrame);
+        libraryList->setProperty("cssClass", "windowedLibrary");
+        ui->playerControlsFrame->style()->unpolish(libraryList);
+        ui->playerControlsFrame->style()->polish(libraryList);
+
+        if(libraryOverlay)
+        {
+            placeHolderLibraryGrid->removeWidget(libraryList);
+            ui->fullScreenGrid->removeWidget(playerLibraryPlaceHolder);
+            libraryList->setMinimumSize(QSize(0, 0));
+            libraryList->setMaximumSize(QSize(16777215, 16777215));
+            ui->libraryGrid->addWidget(libraryList, 0, 0, 40, 10);
+            windowedLibraryButton->raise();
+            randomizeLibraryButton->raise();
+            libraryOverlay = false;
+            delete placeHolderLibraryGrid;
+            delete playerLibraryPlaceHolder;
+        }
+
         videoHandler->layout()->setMargin(9);
         QMainWindow::centralWidget()->layout()->setMargin(9);
 
@@ -1231,6 +1281,7 @@ void MainWindow::toggleFullScreen()
         ui->menubar->show();
         ui->statusbar->show();
         ui->playerControlsFrame->show();
+        libraryList->show();
         QMainWindow::setWindowFlags(Qt::WindowFlags());
         if(_isMaximized)
         {
@@ -1284,6 +1335,22 @@ void MainWindow::showControls()
     if (_isFullScreen)
     {
         ui->playerControlsFrame->show();
+    }
+}
+
+void MainWindow::hideLibrary()
+{
+    if (_isFullScreen)
+    {
+        libraryList->hide();
+    }
+}
+
+void MainWindow::showLibrary()
+{
+    if (_isFullScreen)
+    {
+        libraryList->show();
     }
 }
 

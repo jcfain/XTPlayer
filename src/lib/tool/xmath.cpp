@@ -54,11 +54,13 @@ double XMath::rand(double min, double max)
 int XMath::randSine(double angle)
 {
     int amplitude = rand(0.0, 100.0);
+    //LogHandler::Debug("amplitude: "+ QString::number(amplitude));
+    //LogHandler::Debug("angle before: "+ QString::number(angle));
     if(amplitude < 50)
-        reverseNumber(angle, 0, 100);
-//    LogHandler::Debug("amplitude: "+ QString::number(amplitude));
-//    LogHandler::Debug("angle: "+ QString::number(angle));
+        angle = reverseNumber(angle, 0, 180);
+    //LogHandler::Debug("angle after:  "+ QString::number(angle));
     int value = int(amplitude * sin(angle));
+    //LogHandler::Debug("value: "+ QString::number(value));
     return value < 0 ? -value : value;
 }
 

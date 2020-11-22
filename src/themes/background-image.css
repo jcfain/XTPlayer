@@ -91,7 +91,15 @@ QFrame[cssClass="windowedControls"] {
     color: black;
 }
 QFrame[cssClass="fullScreenControls"] {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.3);
+    color: black;
+}
+QFrame[cssClass="windowedLibrary"] {
+    background-color: transparent;
+    color: white;
+}
+QFrame[cssClass="fullScreenLibrary"] {
+    background-color: rgba(255, 255, 255, 0.3);
     color: black;
 }
 QPushButton[id="windowedLibraryButton"] {

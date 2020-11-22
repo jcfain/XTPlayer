@@ -68,7 +68,7 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
             float multiplierValue = SettingsHandler::getMultiplierValue(axis.first);
             if (SettingsHandler::getMultiplierChecked(axis.first) && multiplierValue != 0.0)
             {
-                int value = XMath::constrain(XMath::randSine(position * multiplierValue), 0, 100);
+                int value = XMath::constrain(XMath::randSine(XMath::mapRange(position, 0, 100, 0, 180) * multiplierValue), 0, 100);
                 //lowMin + (highMin-lowMin)*level,lowMax + (highMax-lowMax)*level
                 //LogHandler::Debug("randSine: "+ QString::number(value));
                 if (FunscriptHandler::getInverted())

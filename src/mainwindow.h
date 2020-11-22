@@ -201,6 +201,9 @@ private:
     QGridLayout *fullScreenLayout;
     QFrame* playerControlsPlaceHolder;
     QGridLayout* placeHolderControlsGrid;
+    QFrame* playerLibraryPlaceHolder;
+    QGridLayout* placeHolderLibraryGrid;
+    bool libraryOverlay = false;
     bool funscriptFileSelectorOpen = false;
     bool thumbProcessIsRunning = false;
     bool vrScriptSelectorCanceled = false;
@@ -208,6 +211,8 @@ private:
     int thumbNailSearchIterator = 0;
     VideoFrameExtractor* extractor;
     AVPlayer* thumbNailPlayer;
+    QMutex _eventLocker;
+
     void saveSingleThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem, qint64 position = 0);
     void startThumbProcess();
     void stopThumbProcess();
@@ -231,6 +236,8 @@ private:
     void toggleMediaControlStatus();
     void hideControls();
     void showControls();
+    void hideLibrary();
+    void showLibrary();
     void saveThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem, qint64 position = 0);
     void updateThumbSizeUI(int size);
     void updateLibrarySortUI(LibrarySortMode mode);
