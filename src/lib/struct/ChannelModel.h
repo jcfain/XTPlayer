@@ -4,6 +4,7 @@
 #include <QString>
 #include <QMetaType>
 #include <QDataStream>
+#include "../lookup/AxisNames.h"
 
 
 struct ChannelValueModel
@@ -30,6 +31,9 @@ struct ChannelModel
     int UserMin;
     int UserMid;
     int UserMax;
+    AxisDimension Dimension;
+    AxisType Type;
+    QString TrackName;
 
     friend QDataStream & operator<<( QDataStream &dataStream, const ChannelModel &object )
     {
@@ -42,6 +46,9 @@ struct ChannelModel
         dataStream << object.UserMin;
         dataStream << object.UserMid;
         dataStream << object.UserMax;
+        dataStream << object.Dimension;
+        dataStream << object.Type;
+        dataStream << object.TrackName;
         return dataStream;
     }
 
@@ -56,6 +63,9 @@ struct ChannelModel
         dataStream >> object.UserMin;
         dataStream >> object.UserMid;
         dataStream >> object.UserMax;
+        dataStream >> object.Dimension;
+        dataStream >> object.Type;
+        dataStream >> object.TrackName;
         return dataStream;
     }
 };

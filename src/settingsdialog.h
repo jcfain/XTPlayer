@@ -8,6 +8,7 @@
 #include <QSpinBox>
 #include "CustomControls/rangeslider.h"
 #include "lib/struct/SerialComboboxItem.h"
+#include "lib/struct/channeltableviewmodel.h"
 #include "lib/lookup/MediaActions.h"
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/serialhandler.h"
@@ -92,8 +93,6 @@ private slots:
 
     void on_vibMultiplierSpinBox_valueChanged(double arg1);
 
-    void on_vibMultiplierCheckBox_clicked();
-
     void on_serialConnectButton_clicked();
 
     void on_networkConnectButton_clicked();
@@ -129,8 +128,6 @@ private slots:
 
     void on_yMultiplierSpinBox_valueChanged(double arg1);
 
-    void on_zCheckBox_clicked(bool checked);
-
     void on_zMuliplierSpinBox_valueChanged(double arg1);
 
     void on_whirligigCheckBox_clicked(bool checked);
@@ -138,6 +135,21 @@ private slots:
     void on_whirligigConnectButton_clicked();
 
     void on_enableMultiplierCheckbox_clicked(bool checked);
+    void on_dialogButtonboxClicked(QAbstractButton* button);
+
+    void on_channelAddButton_clicked();
+
+    void on_channelDeleteButton_clicked();
+
+    void on_axisDefaultButton_clicked();
+
+    void on_suckMultiplierCheckBox_clicked(bool checked);
+
+    void on_suckMultiplierSpinBox_valueChanged(double arg1);
+
+    void on_zMultiplierCheckBox_clicked(bool checked);
+
+    void on_vibMultiplierCheckBox_clicked(bool checked);
 
 private:
     Ui::SettingsDialog ui;
@@ -165,6 +177,7 @@ private:
     WhirligigHandler* _whirligigHandler;
     GamepadHandler* _gamepadHandler;
     QFuture<void> _initFuture;
+    ChannelTableViewModel* channelTableViewModel;
 
     QMap<QString, QLabel*> rangeMinLabels;
     QMap<QString, QLabel*> rangeMaxLabels;

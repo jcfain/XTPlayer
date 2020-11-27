@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>915</width>
-    <height>529</height>
+    <width>923</width>
+    <height>531</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,24 +17,27 @@
    <iconset resource="icons.qrc">
     <normaloff>:/images/icons/XTP-icon.png</normaloff>:/images/icons/XTP-icon.png</iconset>
   </property>
-  <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0,0,0">
+  <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0,0,0,0,0">
    <property name="sizeConstraint">
     <enum>QLayout::SetNoConstraint</enum>
    </property>
-   <item row="4" column="0">
+   <item row="5" column="1">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Close</set>
+      <set>QDialogButtonBox::Close|QDialogButtonBox::RestoreDefaults</set>
+     </property>
+     <property name="centerButtons">
+      <bool>false</bool>
      </property>
     </widget>
    </item>
-   <item row="0" column="0">
+   <item row="0" column="1">
     <widget class="QTabWidget" name="settingsTabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="connectionTab">
       <attribute name="title">
@@ -284,7 +287,7 @@
          <x>10</x>
          <y>30</y>
          <width>257</width>
-         <height>220</height>
+         <height>249</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="FunscriptSettingsGrid">
@@ -298,7 +301,7 @@
         <item row="2" column="2">
          <widget class="QDoubleSpinBox" name="xRollMultiplierSpinBox">
           <property name="maximum">
-           <double>1.000000000000000</double>
+           <double>99.000000000000000</double>
           </property>
           <property name="singleStep">
            <double>0.100000000000000</double>
@@ -313,7 +316,14 @@
          </widget>
         </item>
         <item row="3" column="2">
-         <widget class="QDoubleSpinBox" name="yMultiplierSpinBox"/>
+         <widget class="QDoubleSpinBox" name="yMultiplierSpinBox">
+          <property name="maximum">
+           <double>99.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
+         </widget>
         </item>
         <item row="10" column="1">
          <widget class="QCheckBox" name="invertFunscriptXCheckBox">
@@ -325,7 +335,7 @@
         <item row="4" column="2">
          <widget class="QDoubleSpinBox" name="yRollMultiplierSpinBox">
           <property name="maximum">
-           <double>1.000000000000000</double>
+           <double>99.000000000000000</double>
           </property>
           <property name="singleStep">
            <double>0.100000000000000</double>
@@ -333,7 +343,14 @@
          </widget>
         </item>
         <item row="6" column="2">
-         <widget class="QDoubleSpinBox" name="zMuliplierSpinBox"/>
+         <widget class="QDoubleSpinBox" name="zMuliplierSpinBox">
+          <property name="maximum">
+           <double>99.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
+         </widget>
         </item>
         <item row="3" column="1">
          <widget class="QCheckBox" name="yMultiplierCheckBox">
@@ -366,7 +383,7 @@
         <item row="7" column="2">
          <widget class="QDoubleSpinBox" name="vibMultiplierSpinBox">
           <property name="maximum">
-           <double>1.000000000000000</double>
+           <double>99.000000000000000</double>
           </property>
           <property name="singleStep">
            <double>0.100000000000000</double>
@@ -376,7 +393,7 @@
         <item row="5" column="2">
          <widget class="QDoubleSpinBox" name="twistMultiplierSpinBox">
           <property name="maximum">
-           <double>1.000000000000000</double>
+           <double>99.000000000000000</double>
           </property>
           <property name="singleStep">
            <double>0.100000000000000</double>
@@ -390,6 +407,23 @@
           </property>
          </widget>
         </item>
+        <item row="8" column="1">
+         <widget class="QCheckBox" name="suckMultiplierCheckBox">
+          <property name="text">
+           <string>Suck</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="2">
+         <widget class="QDoubleSpinBox" name="suckMultiplierSpinBox">
+          <property name="maximum">
+           <double>99.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
      </widget>
@@ -397,81 +431,82 @@
       <attribute name="title">
        <string>System</string>
       </attribute>
-      <widget class="QCheckBox" name="checkBox">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>20</y>
-         <width>80</width>
-         <height>19</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Debug</string>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="resetAllButton">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>50</y>
-         <width>80</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Reset ALL</string>
-       </property>
-      </widget>
-      <widget class="QSpinBox" name="videoIncrementSpinBox">
-       <property name="geometry">
-        <rect>
-         <x>190</x>
-         <y>90</y>
-         <width>71</width>
-         <height>22</height>
-        </rect>
-       </property>
-       <property name="toolTip">
-        <string>This sets the value the video will either skip forward or back via shortcuts.</string>
-       </property>
-       <property name="suffix">
-        <string>s</string>
-       </property>
-       <property name="maximum">
-        <number>5000</number>
-       </property>
-       <property name="singleStep">
-        <number>10</number>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_2">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>90</y>
-         <width>171</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="toolTip">
-        <string>This sets the value the video will either skip forward or back via shortcuts.</string>
-       </property>
-       <property name="text">
-        <string>Video time step in secs</string>
-       </property>
-      </widget>
-      <widget class="QTextEdit" name="textEdit">
-       <property name="geometry">
-        <rect>
-         <x>270</x>
-         <y>0</y>
-         <width>621</width>
-         <height>411</height>
-        </rect>
-       </property>
-       <property name="html">
-        <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="0" column="0" colspan="7">
+        <widget class="QTableView" name="channelTableView"/>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="toolTip">
+          <string>This sets the value the video will either skip forward or back via shortcuts.</string>
+         </property>
+         <property name="text">
+          <string>Video time step in secs</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QSpinBox" name="videoIncrementSpinBox">
+         <property name="toolTip">
+          <string>This sets the value the video will either skip forward or back via shortcuts.</string>
+         </property>
+         <property name="suffix">
+          <string>s</string>
+         </property>
+         <property name="maximum">
+          <number>5000</number>
+         </property>
+         <property name="singleStep">
+          <number>10</number>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QCheckBox" name="checkBox">
+         <property name="text">
+          <string>Debug</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QCheckBox" name="disableTextToSpeechCheckBox">
+         <property name="text">
+          <string>Disable text to speech</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="4">
+        <widget class="QPushButton" name="axisDefaultButton">
+         <property name="text">
+          <string>Default</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="5">
+        <widget class="QPushButton" name="channelDeleteButton">
+         <property name="text">
+          <string>Delete</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="6">
+        <widget class="QPushButton" name="channelAddButton">
+         <property name="text">
+          <string>Add</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="helpTab">
+      <attribute name="title">
+       <string>Help</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_5">
+       <item row="0" column="0">
+        <widget class="QTextEdit" name="textEdit">
+         <property name="html">
+          <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
@@ -610,21 +645,10 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Courier New'; font-size:8pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/td&gt;
 &lt;td&gt;&lt;/td&gt;
 &lt;td&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-      </widget>
-      <widget class="QCheckBox" name="disableTextToSpeechCheckBox">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>120</y>
-         <width>241</width>
-         <height>19</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Disable text to speech</string>
-       </property>
-      </widget>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </widget>
    </item>
@@ -634,22 +658,6 @@ p, li { white-space: pre-wrap; }
   <include location="icons.qrc"/>
  </resources>
  <connections>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>SettingsDialog</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>

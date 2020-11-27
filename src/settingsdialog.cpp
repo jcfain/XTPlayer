@@ -26,10 +26,12 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
     connect(_whirligigHandler, &WhirligigHandler::connectionChange, this, &SettingsDialog::on_whirligig_connectionChanged);
     connect(_whirligigHandler, &WhirligigHandler::errorOccurred, this, &SettingsDialog::on_whirligig_error);
     connect(_gamepadHandler, &GamepadHandler::connectionChange, this, &SettingsDialog::on_gamepad_connectionChanged);
+    connect(ui.buttonBox, & QDialogButtonBox::clicked, this, &SettingsDialog::on_dialogButtonboxClicked);
 }
 SettingsDialog::~SettingsDialog()
 {
 }
+
 void SettingsDialog::dispose()
 {
     _udpHandler->dispose();
@@ -104,39 +106,50 @@ void SettingsDialog::setupUi()
     if (!_interfaceInitialized)
     {
         _interfaceInitialized = true;
+
+        channelTableViewModel = new ChannelTableViewModel(this);
+        ui.channelTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+        ui.channelTableView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+        ui.channelTableView->setModel(channelTableViewModel);
+
         ui.SerialOutputCmb->setCurrentText(SettingsHandler::getSerialPort());
         ui.networkAddressTxt->setText(SettingsHandler::getServerAddress());
         ui.networkPortTxt->setText(SettingsHandler::getServerPort());
         ui.deoAddressTxt->setText(SettingsHandler::getDeoAddress());
         ui.deoPortTxt->setText(SettingsHandler::getDeoPort());
-        ui.xRollMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.TcYRollR2));
-        ui.xRollMultiplierSpinBox->setValue(SettingsHandler::getMultiplierChecked(axisNames.TcYRollR2));
-        ui.yRollMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.TcXRollR1));
-        ui.yRollMultiplierSpinBox->setValue(SettingsHandler::getMultiplierChecked(axisNames.TcXRollR1));
-        ui.twistMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.TcTwistR0));
-        ui.twistMultiplierSpinBox->setValue(SettingsHandler::getMultiplierChecked(axisNames.TcTwistR0));
-        ui.yMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.TcXLeftRightL2));
-        ui.yMultiplierSpinBox->setValue(SettingsHandler::getMultiplierChecked(axisNames.TcXLeftRightL2));
-        ui.zMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.TcZBackForwardL1));
-        ui.zMuliplierSpinBox->setValue(SettingsHandler::getMultiplierChecked(axisNames.TcZBackForwardL1));
+        ui.xRollMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.Pitch));
+        ui.xRollMultiplierSpinBox->setValue(SettingsHandler::getMultiplierValue(axisNames.Pitch));
+        ui.yRollMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.Roll));
+        ui.yRollMultiplierSpinBox->setValue(SettingsHandler::getMultiplierValue(axisNames.Roll));
+        ui.twistMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.Twist));
+        ui.twistMultiplierSpinBox->setValue(SettingsHandler::getMultiplierValue(axisNames.Twist));
+        ui.yMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.Sway));
+        ui.yMultiplierSpinBox->setValue(SettingsHandler::getMultiplierValue(axisNames.Sway));
+        ui.zMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.Surge));
+        ui.zMuliplierSpinBox->setValue(SettingsHandler::getMultiplierValue(axisNames.Surge));
+        ui.vibMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.Vib));
+        ui.vibMultiplierSpinBox->setValue(SettingsHandler::getMultiplierValue(axisNames.Vib));
+        ui.suckMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.Suck));
+        ui.suckMultiplierSpinBox->setValue(SettingsHandler::getMultiplierValue(axisNames.Suck));
 
         QFont font( "Sans Serif", 8);
         int sliderGridRow = 0;
-        foreach(auto axisPair, axisNames.BasicAxis)
+        auto availableAxis = SettingsHandler::getAvailableAxis();
+        foreach(auto channel, availableAxis->keys())
         {
-            if(axisPair.second.type != AxisType::Range)
+            if(availableAxis->value(channel).Type != AxisType::Range)
                 continue;
 
-            ChannelModel axis = SettingsHandler::getAxis(axisPair.first);
+            ChannelModel axis = SettingsHandler::getAxis(channel);
             int userMin = axis.UserMin;
             int userMax = axis.UserMax;
             QLabel* rangeMinLabel = new QLabel(QString::number(userMin));
             rangeMinLabel->setFont(font);
             rangeMinLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
             ui.RangeSettingsGrid->addWidget(rangeMinLabel, sliderGridRow,0);
-            rangeMinLabels.insert(axisPair.first, rangeMinLabel);
+            rangeMinLabels.insert(channel, rangeMinLabel);
 
-            QLabel* rangeLabel = new QLabel(axisPair.second.friendlyName + " Range");
+            QLabel* rangeLabel = new QLabel(availableAxis->value(channel).FriendlyName + " Range");
             rangeLabel->setFont(font);
             rangeLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
             ui.RangeSettingsGrid->addWidget(rangeLabel, sliderGridRow,1);
@@ -145,16 +158,16 @@ void SettingsDialog::setupUi()
             rangeMaxLabel->setFont(font);
             rangeMaxLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
             ui.RangeSettingsGrid->addWidget(rangeMaxLabel, sliderGridRow,2);
-            rangeMaxLabels.insert(axisPair.first, rangeMaxLabel);
+            rangeMaxLabels.insert(channel, rangeMaxLabel);
 
             RangeSlider* rangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
             rangeSlider->SetRange(axis.Min, axis.Max);
             rangeSlider->setLowerValue(userMin);
             rangeSlider->setUpperValue(userMax);
-            rangeSlider->setName(axisPair.first);
+            rangeSlider->setName(channel);
             sliderGridRow++;
             ui.RangeSettingsGrid->addWidget(rangeSlider, sliderGridRow,0,1,3);
-            rangeSliders.insert(axisPair.first, rangeSlider);
+            rangeSliders.insert(channel, rangeSlider);
             sliderGridRow++;
 
             connect(rangeSlider, QOverload<QString, int>::of(&RangeSlider::lowerValueChanged), this, &SettingsDialog::onRange_valueChanged);
@@ -233,16 +246,16 @@ void SettingsDialog::setupGamepadMap()
     int rowIterator = 0;
     int columnIterator = 0;
     int maxRows = 4;//6 total
-    foreach(auto button, gamepadMap.keys())
+    foreach(auto button, gamepadMap->keys())
     {
         if (button == "None")
             continue;
         QLabel* mapLabel = new QLabel(this);
         mapLabel->setText(button);
         QComboBox* mapComboBox = new QComboBox(this);
-        foreach(auto axis, availableAxis.keys())
+        foreach(auto axis, availableAxis->keys())
         {
-            auto channel = availableAxis.value(axis);
+            auto channel = availableAxis->value(axis);
             QVariant variant;
             variant.setValue(channel);
             mapComboBox->addItem(channel.FriendlyName, variant);
@@ -256,10 +269,10 @@ void SettingsDialog::setupGamepadMap()
             variant.setValue(channel);
             mapComboBox->addItem(channel.FriendlyName, variant);
         }
-        auto gameMap = gamepadMap.value(button);
+        auto gameMap = gamepadMap->value(button);
 
-        if (availableAxis.contains(gameMap))
-            mapComboBox->setCurrentText(availableAxis.value(gameMap).FriendlyName);
+        if (availableAxis->contains(gameMap))
+            mapComboBox->setCurrentText(availableAxis->value(gameMap).FriendlyName);
         else
             mapComboBox->setCurrentText(actions.Values.value(gameMap));
 
@@ -792,70 +805,81 @@ void SettingsDialog::on_deoPortTxt_editingFinished()
     SettingsHandler::setDeoPort(ui.deoPortTxt->text());
 }
 
+void SettingsDialog::on_enableMultiplierCheckbox_clicked(bool checked)
+{
+    SettingsHandler::setMultiplierEnabled(checked);
+}
+
 void SettingsDialog::on_xRollMultiplierCheckBox_clicked()
 {
-    SettingsHandler::setMultiplierChecked(axisNames.TcYRollR2, ui.xRollMultiplierCheckBox->isChecked());
+    SettingsHandler::setMultiplierChecked(axisNames.Pitch, ui.xRollMultiplierCheckBox->isChecked());
 }
 
 void SettingsDialog::on_xRollMultiplierSpinBox_valueChanged(double value)
 {
-    SettingsHandler::setMultiplierValue(axisNames.TcYRollR2, value);
+    SettingsHandler::setMultiplierValue(axisNames.Pitch, value);
 }
 
 void SettingsDialog::on_yRollMultiplierCheckBox_clicked()
 {
-    SettingsHandler::setMultiplierChecked(axisNames.TcXRollR1, ui.yRollMultiplierCheckBox->isChecked());
+    SettingsHandler::setMultiplierChecked(axisNames.Roll, ui.yRollMultiplierCheckBox->isChecked());
 }
 
 void SettingsDialog::on_yRollMultiplierSpinBox_valueChanged(double value)
 {
-    SettingsHandler::setMultiplierValue(axisNames.TcXRollR1, value);
+    SettingsHandler::setMultiplierValue(axisNames.Roll, value);
 }
 
 void SettingsDialog::on_twistMultiplierCheckBox_clicked()
 {
-    SettingsHandler::setMultiplierChecked(axisNames.TcTwistR0, ui.twistMultiplierCheckBox->isChecked());
+    SettingsHandler::setMultiplierChecked(axisNames.Twist, ui.twistMultiplierCheckBox->isChecked());
 }
 
 void SettingsDialog::on_twistMultiplierSpinBox_valueChanged(double value)
 {
-    SettingsHandler::setMultiplierValue(axisNames.TcTwistR0, value);
+    SettingsHandler::setMultiplierValue(axisNames.Twist, value);
 }
 
-void SettingsDialog::on_vibMultiplierCheckBox_clicked()
+void SettingsDialog::on_vibMultiplierCheckBox_clicked(bool checked)
 {
-    SettingsHandler::setMultiplierChecked(axisNames.TcVibV0, ui.vibMultiplierCheckBox->isChecked());
+    SettingsHandler::setMultiplierChecked(axisNames.Vib, checked);
 }
 
 void SettingsDialog::on_vibMultiplierSpinBox_valueChanged(double value)
 {
-    SettingsHandler::setMultiplierValue(axisNames.TcVibV0, value);
+    SettingsHandler::setMultiplierValue(axisNames.Vib, value);
 }
 
 void SettingsDialog::on_yMultiplierCheckBox_clicked(bool checked)
 {
-    SettingsHandler::setMultiplierChecked(axisNames.TcXLeftRightL2, checked);
+    SettingsHandler::setMultiplierChecked(axisNames.Sway, checked);
 }
 
 void SettingsDialog::on_yMultiplierSpinBox_valueChanged(double value)
 {
-    SettingsHandler::setMultiplierValue(axisNames.TcXLeftRightL2, value);
+    SettingsHandler::setMultiplierValue(axisNames.Sway, value);
 }
 
-void SettingsDialog::on_zCheckBox_clicked(bool checked)
+void SettingsDialog::on_zMultiplierCheckBox_clicked(bool checked)
 {
-    SettingsHandler::setMultiplierChecked(axisNames.TcZBackForwardL1, checked);
+    SettingsHandler::setMultiplierChecked(axisNames.Surge, checked);
 }
 
 void SettingsDialog::on_zMuliplierSpinBox_valueChanged(double value)
 {
-    SettingsHandler::setMultiplierValue(axisNames.TcZBackForwardL1, value);
+    SettingsHandler::setMultiplierValue(axisNames.Surge, value);
 }
 
-void SettingsDialog::on_buttonBox_clicked(QAbstractButton *button)
+void SettingsDialog::on_suckMultiplierCheckBox_clicked(bool checked)
 {
-    hide();
+    SettingsHandler::setMultiplierChecked(axisNames.Suck, checked);
 }
+
+void SettingsDialog::on_suckMultiplierSpinBox_valueChanged(double value)
+{
+    SettingsHandler::setMultiplierValue(axisNames.Suck, value);
+}
+
 
 void SettingsDialog::on_serialConnectButton_clicked()
 {
@@ -1015,7 +1039,75 @@ void SettingsDialog::on_whirligigConnectButton_clicked()
     }
 }
 
-void SettingsDialog::on_enableMultiplierCheckbox_clicked(bool checked)
+
+void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
 {
-    SettingsHandler::setMultiplierEnabled(checked);
+    if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::ResetRole)
+    {
+        on_resetAllButton_clicked();
+    }
+    else
+    {
+        hide();
+    }
 }
+void SettingsDialog::on_buttonBox_clicked(QAbstractButton *button)
+{
+
+}
+
+#include <QInputDialog>
+void SettingsDialog::on_channelAddButton_clicked()
+{
+    bool ok;
+    QString text = QInputDialog::getText(this, tr("Required info"),
+                                         tr("Axis name:"), QLineEdit::Normal,
+                                         "L0", &ok);
+    if (ok && !text.isEmpty())
+    {
+        if(SettingsHandler::getAvailableAxis()->contains(text))
+        {
+            LogHandler::Dialog(text + " already exists!", XLogLevel::Critical);
+            return;
+        }
+        SettingsHandler::addAxis(text);
+        channelTableViewModel->setMap();
+    }
+}
+
+void SettingsDialog::on_channelDeleteButton_clicked()
+{
+    QItemSelectionModel *select = ui.channelTableView->selectionModel();
+    if (select->hasSelection())
+    {
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to delete the selected items?",
+                                      QMessageBox::Yes|QMessageBox::No);
+        if (reply == QMessageBox::Yes)
+        {
+            foreach(auto row, select->selectedRows())
+            {
+                const auto model = row.model();
+                const auto channelData = ((ChannelTableViewModel*)model)->getRowData(row.row());
+                if (channelData == nullptr || channelData->AxisName == axisNames.None)
+                    continue;
+                SettingsHandler::deleteAxis(channelData->AxisName);
+                channelTableViewModel->setMap();
+            }
+        }
+    }
+}
+
+void SettingsDialog::on_axisDefaultButton_clicked()
+{
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset Axis map?",
+                                  QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes)
+    {
+        SettingsHandler::SetupAvailableAxis();
+        channelTableViewModel->setMap();
+    }
+}
+
+

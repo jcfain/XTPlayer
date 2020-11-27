@@ -38,9 +38,9 @@ public:
     static int getVideoIncrement();
 
     static bool getGamepadEnabled();
-    static QMap<QString, QString> getGamePadMap();
+    static QMap<QString, QString>* getGamePadMap();
     static QString getGamePadMapButton(QString gamepadButton);
-    static QMap<QString, ChannelModel> getAvailableAxis();
+    static QMap<QString, ChannelModel>* getAvailableAxis();
     static ChannelModel getAxis(QString axis);
     static bool getInverseTcXL0();
     static bool getInverseTcXRollR2();
@@ -97,6 +97,8 @@ public:
     static void setGamepadEnabled(bool value);
     static void setGamePadMapButton(QString gamePadButton, QString axis);
     static void setAxis(QString axis, ChannelModel channel);
+    static void addAxis(QString axis);
+    static void deleteAxis(QString axis);
     static void setInverseTcXL0(bool value);
     static void setInverseTcXRollR2(bool value);
     static void setInverseTcYRollR1(bool value);
@@ -120,6 +122,7 @@ public:
     static void setLiveGamepadConnected(bool value);
 
     static QSize getMaxThumbnailSize();
+    static void SetupAvailableAxis();
     static void Load();
     static void Save();
     static void Default();
@@ -129,9 +132,8 @@ private:
     SettingsHandler();
     ~SettingsHandler();
     static void SetMapDefaults();
-    static void SetupAvailableAxis();
     static void SetupGamepadButtonMap();
-    static void MigrateTo20();
+    static void MigrateTo23();
     static GamepadAxisNames gamepadAxisNames;
     static AxisNames axisNames;
     static MediaActions mediaActions;
@@ -168,6 +170,8 @@ private:
     static float twistMultiplierValue;
     static bool vibMultiplierChecked;
     static float vibMultiplierValue;
+    static bool suckMultiplierChecked;
+    static float suckMultiplierValue;
 
     static bool _gamePadEnabled;
     static QMap<QString, QString> _gamepadButtonMap;

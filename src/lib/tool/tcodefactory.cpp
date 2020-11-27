@@ -32,9 +32,9 @@ void TCodeFactory::calculate(QString axisName, double value, QVector<ChannelValu
                 calculatedValue = -(value);
             }
             if (value != 0 &&
-                (((tcodeAxis.AxisName == axisNames.TcYUpDownL0 || tcodeAxis.AxisName == axisNames.TcXUpL0 || tcodeAxis.AxisName == axisNames.TcXDownL0) && SettingsHandler::getInverseTcXL0()) ||
-                ((tcodeAxis.AxisName == axisNames.TcYRollR2 || tcodeAxis.AxisName == axisNames.TcXRollForwardR2 || tcodeAxis.AxisName == axisNames.TcXRollBackR2) && SettingsHandler::getInverseTcXRollR2()) ||
-                ((tcodeAxis.AxisName == axisNames.TcXRollR1 || tcodeAxis.AxisName == axisNames.TcYRollLeftR1 || tcodeAxis.AxisName == axisNames.TcYRollRightR1) && SettingsHandler::getInverseTcYRollR1())))
+                (((tcodeAxis.AxisName == axisNames.Stroke || tcodeAxis.AxisName == axisNames.StrokeUp || tcodeAxis.AxisName == axisNames.StrokeDown) && SettingsHandler::getInverseTcXL0()) ||
+                ((tcodeAxis.AxisName == axisNames.Pitch || tcodeAxis.AxisName == axisNames.PitchForward || tcodeAxis.AxisName == axisNames.PitchBack) && SettingsHandler::getInverseTcXRollR2()) ||
+                ((tcodeAxis.AxisName == axisNames.Roll || tcodeAxis.AxisName == axisNames.RollLeft || tcodeAxis.AxisName == axisNames.RollRight) && SettingsHandler::getInverseTcYRollR1())))
             {
                 calculatedValue = -(value);
             }
@@ -66,7 +66,7 @@ int TCodeFactory::calculateTcodeRange(double value, QString channel)
     int min = SettingsHandler::getAxis(channel).UserMin;
     // Update for live x range switch
     AxisNames axisNames;
-    if(channel == axisNames.TcYUpDownL0)
+    if(channel == axisNames.Stroke)
     {
         output_end = SettingsHandler::getLiveXRangeMax();
         min = SettingsHandler::getLiveXRangeMin();

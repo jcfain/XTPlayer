@@ -2,19 +2,23 @@
 #define AXISNAMES_H
 #include <QString>
 #include <QMap>
-enum AxisType
+enum class AxisType
 {
+    None,
     Range,
     Switch,
     HalfRange
 };
 
-struct AxisModel
+enum class AxisDimension
 {
-    AxisType type;
-    QString channel;
-    QString friendlyName;
-    QString trackName;
+    None,
+    Heave,
+    Surge,
+    Sway,
+    Pitch,
+    Roll,
+    Yaw
 };
 
 struct AxisNames
@@ -22,37 +26,27 @@ struct AxisNames
     const QString PositiveModifier = "+";
     const QString NegativeModifier = "-";
     const QString None = "None";
-    const QString TcYUpDownL0 = "L0";
-    const QString TcXUpL0 = "L0+";
-    const QString TcXDownL0 = "L0-";
-    const QString TcXLeftRightL2 = "L2";
-    const QString TcYLeftL1 = "L2+";
-    const QString TcYRightL1 = "L2-";
-    const QString TcZBackForwardL1 = "L1";
-    const QString TcZBackL2 = "L1+";
-    const QString TcZForwardL2 = "L1-";
-    const QString TcTwistR0 = "R0";
-    const QString TcTwistCWR0 = "R0+";
-    const QString TcTwistCCWR0 = "R0-";
-    const QString TcXRollR1 = "R1";
-    const QString TcYRollLeftR1 = "R1+";
-    const QString TcYRollRightR1 = "R1-";
-    const QString TcYRollR2 = "R2";
-    const QString TcXRollForwardR2 = "R2+";
-    const QString TcXRollBackR2 = "R2-";
-    const QString TcVibV0 = "V0";
-    const QString TcPumpV1 = "V1";
-    QList<QPair<QString, AxisModel>> BasicAxis =
-    {
-        { TcYUpDownL0, { AxisType::Range, TcYUpDownL0, "Stroke", "" }},//heave
-        { TcXLeftRightL2, { AxisType::Range, TcXLeftRightL2, "Sway", "sway" }},//sway
-        { TcZBackForwardL1, { AxisType::Range, TcZBackForwardL1, "Surge", "surge" }},//surge
-        { TcYRollR2, { AxisType::Range, TcYRollR2, "Pitch", "pitch" }},
-        { TcXRollR1, { AxisType::Range, TcXRollR1, "Roll", "roll" }},
-        { TcTwistR0, { AxisType::Range, TcTwistR0, "Twist", "twist" }},//yaw
-        { TcVibV0, { AxisType::Switch, TcVibV0, "Vib", "vib" }},
-        { TcPumpV1, { AxisType::Switch, TcPumpV1, "Pump", "pump" }}
-    };
+    const QString Stroke = "L0";
+    const QString StrokeUp = "L0+";
+    const QString StrokeDown = "L0-";
+    const QString Sway = "L2";
+    const QString SwayLeft = "L2+";
+    const QString SwayRight = "L2-";
+    const QString Surge = "L1";
+    const QString SurgeBack = "L1+";
+    const QString SurgeForward = "L1-";
+    const QString Twist = "R0";
+    const QString TwistClockwise = "R0+";
+    const QString TwistCounterClockwise = "R0-";
+    const QString Roll = "R1";
+    const QString RollLeft = "R1+";
+    const QString RollRight = "R1-";
+    const QString Pitch = "R2";
+    const QString PitchForward = "R2+";
+    const QString PitchBack = "R2-";
+    const QString Vib = "V0";
+    const QString Lube = "V1";
+    const QString Suck = "L3";
 };
 //enum Axis
 //{

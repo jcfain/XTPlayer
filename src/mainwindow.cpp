@@ -21,7 +21,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     qRegisterMetaType<LibraryListItem>();
     qRegisterMetaTypeStreamOperators<LibraryListItem>();
 
-    funscriptHandler = new FunscriptHandler(_axisNames.TcYUpDownL0);
+    funscriptHandler = new FunscriptHandler(_axisNames.Stroke);
 
     textToSpeech = new QTextToSpeech(this);
     auto availableVoices = textToSpeech->availableVoices();
@@ -501,7 +501,7 @@ void MainWindow::mediaAction(QString action)
     {
         AxisNames axisNames;
         int newLiveRange = SettingsHandler::getLiveXRangeMin() - SettingsHandler::getXRangeStep();
-        int axisMin = SettingsHandler::getAxis(axisNames.TcYUpDownL0).Min;
+        int axisMin = SettingsHandler::getAxis(axisNames.Stroke).Min;
         if(newLiveRange > axisMin)
         {
             SettingsHandler::setLiveXRangeMin(newLiveRange);
@@ -519,7 +519,7 @@ void MainWindow::mediaAction(QString action)
     {
         AxisNames axisNames;
         int newLiveRange = SettingsHandler::getLiveXRangeMax() + SettingsHandler::getXRangeStep();
-        int axisMax = SettingsHandler::getAxis(axisNames.TcYUpDownL0).Max;
+        int axisMax = SettingsHandler::getAxis(axisNames.Stroke).Max;
         if(newLiveRange < axisMax)
         {
             SettingsHandler::setLiveXRangeMax(newLiveRange);
@@ -560,7 +560,7 @@ void MainWindow::mediaAction(QString action)
         int xRangeStep = SettingsHandler::getXRangeStep();
         int newLiveMaxRange = xRangeMax + xRangeStep;
         int limitXMax = 0;
-        int axisMax = SettingsHandler::getAxis(axisNames.TcYUpDownL0).Max;
+        int axisMax = SettingsHandler::getAxis(axisNames.Stroke).Max;
         if(newLiveMaxRange < axisMax)
         {
             SettingsHandler::setLiveXRangeMax(newLiveMaxRange);
@@ -572,7 +572,7 @@ void MainWindow::mediaAction(QString action)
         }
 
         int newLiveMinRange = xRangeMin - xRangeStep;
-        int axisMin = SettingsHandler::getAxis(axisNames.TcYUpDownL0).Min;
+        int axisMin = SettingsHandler::getAxis(axisNames.Stroke).Min;
         int limitXMin = 0;
         if(newLiveMinRange > axisMin)
         {
@@ -1098,34 +1098,39 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
             _xSettings->getSelectedDeviceHandler()->sendTCode(tcodeHandler->getHome());
 
             AxisNames axisNames;
-            foreach(auto axisName, axisNames.BasicAxis)
+            auto availibleAxis = SettingsHandler::getAvailableAxis();
+            foreach(auto axisName, availibleAxis->keys())
             {
-                if(axisName.first == axisNames.TcYUpDownL0)
+                auto trackName = availibleAxis->value(axisName).TrackName;
+                if(axisName == axisNames.Stroke || trackName.isEmpty())
                     continue;
 
-                QFileInfo fileInfo(scriptFileNoExtension + "." + axisName.second.trackName + ".funscript");
+                QFileInfo fileInfo(scriptFileNoExtension + "." + trackName + ".funscript");
                 if(scriptFile.endsWith(".zip") && customZipFile.isReadable())
                 {
-                   QByteArray data = customZipFile.fileData(scriptNameNoextension + "." + axisName.second.trackName  + ".funscript");
+                   QByteArray data = customZipFile.fileData(scriptNameNoextension + "." + availibleAxis->value(axisName).TrackName  + ".funscript");
                    if (!data.isEmpty())
                    {
-                       FunscriptHandler* otherFunscript = new FunscriptHandler(axisName.first);
+                       FunscriptHandler* otherFunscript = new FunscriptHandler(axisName);
                        otherFunscript->load(data);
                        funscriptHandlers.append(otherFunscript);
                    }
                 }
                 else if(fileInfo.exists())
                 {
-                    FunscriptHandler* otherFunscript = new FunscriptHandler(axisName.first);
+                    FunscriptHandler* otherFunscript = new FunscriptHandler(axisName);
                     otherFunscript->load(fileInfo.absoluteFilePath());
                     funscriptHandlers.append(otherFunscript);
                 }
                 else if(zipFile.isReadable())
                 {
-                   QByteArray data = zipFile.fileData(selectedFileListItem.nameNoExtension + "." + axisName.second.trackName + ".funscript");
+                   auto trackName = availibleAxis->value(axisName).TrackName;
+                   if(trackName.isEmpty())
+                       continue;
+                   QByteArray data = zipFile.fileData(selectedFileListItem.nameNoExtension + "." + trackName + ".funscript");
                    if (!data.isEmpty())
                    {
-                       FunscriptHandler* otherFunscript = new FunscriptHandler(axisName.first);
+                       FunscriptHandler* otherFunscript = new FunscriptHandler(axisName);
                        otherFunscript->load(data);
                        funscriptHandlers.append(otherFunscript);
                    }
@@ -1801,16 +1806,18 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
                 funscriptHandlers.clear();
                 xSettings->getSelectedDeviceHandler()->sendTCode(tcodeHandler->getHome());
 
-                foreach(auto axisName, axisNames.BasicAxis)
+                auto availibleAxis = SettingsHandler::getAvailableAxis();
+                foreach(auto axisName, availibleAxis->keys())
                 {
-                    if(axisName.first == axisNames.TcYUpDownL0)
+                    auto trackName = availibleAxis->value(axisName).TrackName;
+                    if(axisName == axisNames.Stroke || trackName.isEmpty())
                         continue;
                     QString funscriptPathTemp = funscriptPath;
                     auto funscriptNoExtension = funscriptPathTemp.remove(funscriptPathTemp.lastIndexOf('.'), funscriptPathTemp.length() -  1);
-                    QFileInfo fileInfo(funscriptNoExtension + "." + axisName.second.trackName + ".funscript");
+                    QFileInfo fileInfo(funscriptNoExtension + "." + trackName + ".funscript");
                     if(fileInfo.exists())
                     {
-                        FunscriptHandler* otherFunscript = new FunscriptHandler(axisName.first);
+                        FunscriptHandler* otherFunscript = new FunscriptHandler(axisName);
                         otherFunscript->load(fileInfo.absoluteFilePath());
                         funscriptHandlers.append(otherFunscript);
                     }

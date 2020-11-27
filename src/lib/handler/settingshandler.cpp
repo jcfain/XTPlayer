@@ -1,8 +1,8 @@
 #include "settingshandler.h"
 
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.22";
-const float SettingsHandler::XTPVersionNum = 0.22f;
+const QString SettingsHandler::XTPVersion = "0.23";
+const float SettingsHandler::XTPVersionNum = 0.23f;
 
 SettingsHandler::SettingsHandler()
 {
@@ -58,14 +58,20 @@ void SettingsHandler::Load()
     whirligigPort = whirligigPort.isNull() ? "2000" : whirligigPort;
     whirligigEnabled = settings->value("whirligigEnabled").toBool();
 
-    yRollMultiplierChecked = settings->value("yRollMultiplierChecked").toBool();
-    yRollMultiplierValue = settings->value("yRollMultiplierValue").toFloat();
-    xRollMultiplierChecked = settings->value("xRollMultiplierChecked").toBool();
-    xRollMultiplierValue = settings->value("xRollMultiplierValue").toFloat();
+    yRollMultiplierChecked = settings->value("rollMultiplierChecked").toBool();
+    yRollMultiplierValue = settings->value("rollMultiplierValue").toFloat();
+    xRollMultiplierChecked = settings->value("pitchMultiplierChecked").toBool();
+    xRollMultiplierValue = settings->value("pitchMultiplierValue").toFloat();
+    zMultiplierChecked = settings->value("surgeMultiplierChecked").toBool();
+    zMultiplierValue = settings->value("surgeMultiplierValue").toFloat();
+    yMultiplierChecked = settings->value("swayMultiplierChecked").toBool();
+    yMultiplierValue = settings->value("swayMultiplierValue").toFloat();
     twistMultiplierChecked = settings->value("twistMultiplierChecked").toBool();
     twistMultiplierValue = settings->value("twistMultiplierValue").toFloat();
-    twistMultiplierChecked = settings->value("vibMultiplierChecked").toBool();
-    twistMultiplierValue = settings->value("vibMultiplierValue").toFloat();
+    vibMultiplierChecked = settings->value("vibMultiplierChecked").toBool();
+    vibMultiplierValue = settings->value("vibMultiplierValue").toFloat();
+    suckMultiplierChecked = settings->value("suckMultiplierChecked").toBool();
+    suckMultiplierValue = settings->value("suckMultiplierValue").toFloat();
 
     libraryView = settings->value("libraryView").toInt();
     selectedLibrarySortMode = settings->value("selectedLibrarySortMode").toInt();
@@ -86,8 +92,8 @@ void SettingsHandler::Load()
     {
         _availableAxis.insert(axis, availableAxis[axis].value<ChannelModel>());
     }
-    _liveXRangeMax = _availableAxis[axisNames.TcYUpDownL0].UserMax;
-    _liveXRangeMin = _availableAxis[axisNames.TcYUpDownL0].UserMin;
+    _liveXRangeMax = _availableAxis[axisNames.Stroke].UserMax;
+    _liveXRangeMin = _availableAxis[axisNames.Stroke].UserMin;
     QVariantMap gamepadButtonMap = settings->value("gamepadButtonMap").toMap();
     foreach(auto button, gamepadButtonMap.keys())
     {
@@ -111,7 +117,12 @@ void SettingsHandler::Load()
     }
     if(currentVersion != 0 && currentVersion < 0.2f)
     {
-        MigrateTo20();
+        SetupGamepadButtonMap();
+    }
+    if(currentVersion != 0 && currentVersion < 0.23f)
+    {
+        locker.unlock();
+        MigrateTo23();
     }
 //    SetupAvailableAxis();
 //    SetupGamepadButtonMap();
@@ -138,14 +149,21 @@ void SettingsHandler::Save()
         settings->setValue("whirligigAddress", whirligigAddress);
         settings->setValue("whirligigPort", whirligigPort);
         settings->setValue("whirligigEnabled", whirligigEnabled);
-        settings->setValue("yRollMultiplierChecked", yRollMultiplierChecked);
-        settings->setValue("yRollMultiplierValue", yRollMultiplierValue);
-        settings->setValue("xRollMultiplierChecked", xRollMultiplierChecked);
-        settings->setValue("xRollMultiplierValue", xRollMultiplierValue);
+
+        settings->setValue("rollMultiplierChecked", yRollMultiplierChecked);
+        settings->setValue("rollMultiplierValue", yRollMultiplierValue);
+        settings->setValue("pitchMultiplierChecked", xRollMultiplierChecked);
+        settings->setValue("pitchMultiplierValue", xRollMultiplierValue);
+        settings->setValue("surgeMultiplierChecked", zMultiplierChecked);
+        settings->setValue("surgeMultiplierValue", zMultiplierValue);
+        settings->setValue("swayMultiplierChecked", yMultiplierChecked);
+        settings->setValue("swayMultiplierValue", yMultiplierValue);
         settings->setValue("twistMultiplierChecked", twistMultiplierChecked);
         settings->setValue("twistMultiplierValue", twistMultiplierValue);
-        settings->setValue("vibMultiplierChecked", twistMultiplierChecked);
-        settings->setValue("vibMultiplierValue", twistMultiplierValue);
+        settings->setValue("vibMultiplierChecked", vibMultiplierChecked);
+        settings->setValue("vibMultiplierValue", vibMultiplierValue);
+        settings->setValue("suckMultiplierChecked", suckMultiplierChecked);
+        settings->setValue("suckMultiplierValue", suckMultiplierValue);
 
         settings->setValue("libraryView", libraryView);
         settings->setValue("selectedLibrarySortMode", selectedLibrarySortMode);
@@ -260,11 +278,31 @@ void SettingsHandler::SetMapDefaults()
     settings->setValue("gamepadButtonMap", gamepadMap);
 }
 
-void SettingsHandler::MigrateTo20()
+void SettingsHandler::MigrateTo23()
 {
+    settings->setValue("version", XTPVersionNum);
     SetupAvailableAxis();
-    SetupGamepadButtonMap();
-    LogHandler::Dialog("Due to a standards update your gamepad and range settings\nhave been set to default for a new data structure.", XLogLevel::Information);
+    yRollMultiplierChecked = settings->value("yRollMultiplierChecked").toBool();
+    yRollMultiplierValue = settings->value("yRollMultiplierValue").toFloat();
+    xRollMultiplierChecked = settings->value("xRollMultiplierChecked").toBool();
+    xRollMultiplierValue = settings->value("xRollMultiplierValue").toFloat();
+    settings->setValue("rollMultiplierChecked", yRollMultiplierChecked);
+    settings->setValue("rollMultiplierValue", yRollMultiplierValue);
+    settings->setValue("pitchMultiplierChecked", xRollMultiplierChecked);
+    settings->setValue("pitchMultiplierValue", xRollMultiplierValue);
+    settings->setValue("surgeMultiplierChecked", zMultiplierChecked);
+    settings->setValue("surgeMultiplierValue", zMultiplierValue);
+    settings->setValue("swayMultiplierChecked", yMultiplierChecked);
+    settings->setValue("swayMultiplierValue", yMultiplierValue);
+    settings->setValue("twistMultiplierChecked", twistMultiplierChecked);
+    settings->setValue("twistMultiplierValue", twistMultiplierValue);
+    settings->setValue("vibMultiplierChecked", vibMultiplierChecked);
+    settings->setValue("vibMultiplierValue", vibMultiplierValue);
+    settings->setValue("suckMultiplierChecked", suckMultiplierChecked);
+    settings->setValue("suckMultiplierValue", suckMultiplierValue);
+    Save();
+    Load();
+    LogHandler::Dialog("Due to a standards update your range settings\nhave been set to default for a new data structure.", XLogLevel::Information);
 }
 
 QString SettingsHandler::getSelectedTheme()
@@ -327,128 +365,144 @@ void SettingsHandler::setChannelUserMin(QString channel, int value)
 {
     QMutexLocker locker(&mutex);
     _availableAxis[channel].UserMin = value;
-    if(channel == axisNames.TcYUpDownL0)
+    if(channel == axisNames.Stroke)
         _liveXRangeMin = value;
 }
 void SettingsHandler::setChannelUserMax(QString channel, int value)
 {
     QMutexLocker locker(&mutex);
     _availableAxis[channel].UserMax = value;
-    if(channel == axisNames.TcYUpDownL0)
+    if(channel == axisNames.Stroke)
         _liveXRangeMax = value;
 }
 
 float SettingsHandler::getMultiplierValue(QString channel)
 {
-    if(channel == "R0")
+    if(channel == axisNames.Twist)
     {
         return twistMultiplierValue;
     }
-    else if(channel == "L1")
+    else if(channel == axisNames.Sway)
     {
         return yMultiplierValue;
     }
-    else if(channel == "L2")
+    else if(channel == axisNames.Surge)
     {
         return zMultiplierValue;
     }
-    else if(channel == "R1")
+    else if(channel == axisNames.Roll)
     {
         return yRollMultiplierValue;
     }
-    else if(channel == "R2")
+    else if(channel == axisNames.Pitch)
     {
         return xRollMultiplierValue;
     }
-    else if(channel == "V0")
+    else if(channel == axisNames.Vib)
     {
         return vibMultiplierValue;
+    }
+    else if(channel == axisNames.Suck)
+    {
+        return suckMultiplierValue;
     }
     return 0.0;
 }
 
 bool SettingsHandler::getMultiplierChecked(QString channel)
 {
-    if(channel == "R0")
+    if(channel == axisNames.Twist)
     {
         return twistMultiplierChecked;
     }
-    else if(channel == "L1")
+    else if(channel == axisNames.Sway)
     {
         return yMultiplierChecked;
     }
-    else if(channel == "L2")
+    else if(channel == axisNames.Surge)
     {
         return zMultiplierChecked;
     }
-    else if(channel == "R1")
+    else if(channel == axisNames.Roll)
     {
         return yRollMultiplierChecked;
     }
-    else if(channel == "R2")
+    else if(channel == axisNames.Pitch)
     {
         return xRollMultiplierChecked;
     }
-    else if(channel == "V0")
+    else if(channel == axisNames.Vib)
     {
         return vibMultiplierChecked;
+    }
+    else if(channel == axisNames.Suck)
+    {
+        return suckMultiplierChecked;
     }
     return false;
 }
 
 void SettingsHandler::setMultiplierValue(QString channel, float value)
 {
-    if(channel == "R0")
+    if(channel == axisNames.Twist)
     {
         twistMultiplierValue = value;
     }
-    else if(channel == "L1")
+    else if(channel == axisNames.Sway)
     {
         yMultiplierValue = value;
     }
-    else if(channel == "L2")
+    else if(channel == axisNames.Surge)
     {
         zMultiplierValue = value;
     }
-    else if(channel == "R1")
+    else if(channel == axisNames.Roll)
     {
         yRollMultiplierValue = value;
     }
-    else if(channel == "R2")
+    else if(channel == axisNames.Pitch)
     {
         xRollMultiplierValue = value;
     }
-    else if(channel == "V0")
+    else if(channel == axisNames.Vib)
     {
         vibMultiplierValue = value;
+    }
+    else if(channel == axisNames.Suck)
+    {
+        suckMultiplierValue = value;
     }
 }
 
 void SettingsHandler::setMultiplierChecked(QString channel, bool value)
 {
-    if(channel == "R0")
+    if(channel == axisNames.Twist)
     {
         twistMultiplierChecked = value;
     }
-    else if(channel == "L1")
+    else if(channel == axisNames.Sway)
     {
         yMultiplierChecked = value;
     }
-    else if(channel == "L2")
+    else if(channel == axisNames.Surge)
     {
         zMultiplierChecked = value;
     }
-    else if(channel == "R1")
+    else if(channel == axisNames.Roll)
     {
         yRollMultiplierChecked = value;
     }
-    else if(channel == "R2")
+    else if(channel == axisNames.Pitch)
     {
         xRollMultiplierChecked = value;
     }
-    else if(channel == "V0")
+    else if(channel == axisNames.Vib)
     {
         vibMultiplierChecked = value;
+    }
+    else if(channel == axisNames.Suck)
+    {
+        suckMultiplierChecked = value;
     }
 }
 
@@ -603,8 +657,8 @@ void SettingsHandler::resetLiveXRange()
 {
     QMutexLocker locker(&mutex);
     AxisNames axisNames;
-    _liveXRangeMax = _availableAxis.value(axisNames.TcYUpDownL0).UserMax;
-    _liveXRangeMin = _availableAxis.value(axisNames.TcYUpDownL0).UserMin;
+    _liveXRangeMax = _availableAxis.value(axisNames.Stroke).UserMax;
+    _liveXRangeMin = _availableAxis.value(axisNames.Stroke).UserMin;
 }
 
 void SettingsHandler::setLiveMultiplierEnabled(bool value)
@@ -651,13 +705,13 @@ ChannelModel SettingsHandler::getAxis(QString axis)
     QMutexLocker locker(&mutex);
     return _availableAxis[axis];
 }
-QMap<QString, QString>  SettingsHandler::getGamePadMap()
+QMap<QString, QString>*  SettingsHandler::getGamePadMap()
 {
-    return _gamepadButtonMap;
+    return &_gamepadButtonMap;
 }
-QMap<QString, ChannelModel>  SettingsHandler::getAvailableAxis()
+QMap<QString, ChannelModel>*  SettingsHandler::getAvailableAxis()
 {
-    return _availableAxis;
+    return &_availableAxis;
 }
 QString SettingsHandler::getGamePadMapButton(QString gamepadAxis)
 {
@@ -803,6 +857,29 @@ void SettingsHandler::setAxis(QString axis, ChannelModel channel)
     _availableAxis[axis] = channel;
 }
 
+void SettingsHandler::addAxis(QString axis)
+{
+    QMutexLocker locker(&mutex);
+    ChannelModel channel;
+    auto axisTemp = axis;
+    channel.Channel = axisTemp.replace("+", "").replace("-", "");
+    channel.AxisName = axis;
+    channel.Min = 1;
+    channel.Mid = 500;
+    channel.Max = 999;
+    channel.FriendlyName = "New axis " + axis;
+    channel.UserMin = 1;
+    channel.UserMid = 500;
+    channel.UserMax = 999;
+    _availableAxis.insert(axis, channel);
+}
+
+void SettingsHandler::deleteAxis(QString axis)
+{
+    QMutexLocker locker(&mutex);
+    _availableAxis.remove(axis);
+}
+
 void SettingsHandler::setGamePadMapButton(QString gamePadButton, QString axis)
 {
     QMutexLocker locker(&mutex);
@@ -835,42 +912,43 @@ void SettingsHandler::setMainWindowSplitterPos(QList<int> value)
     QMutexLocker locker(&mutex);
     _mainWindowPos = value;
 }
-//private
 void SettingsHandler::SetupAvailableAxis()
 {
     _availableAxis = {
-        {axisNames.None, { "None", axisNames.None, axisNames.None, 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcYUpDownL0, { "Stroke (L0)", axisNames.TcYUpDownL0, "L0", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcXDownL0, { "Stroke Down", axisNames.TcXDownL0, "L0", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcXUpL0, { "Stroke Up", axisNames.TcXUpL0, "L0", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcXLeftRightL2, { "Sway (L2)", axisNames.TcXLeftRightL2, "L2", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcYLeftL1, { "Sway Left", axisNames.TcYLeftL1, "L2", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcYRightL1, { "Sway Right", axisNames.TcYRightL1, "L2", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcZBackForwardL1, { "Surge (L1)", axisNames.TcZBackForwardL1, "L1", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcZBackL2, { "Surge Back", axisNames.TcZBackL2, "L1", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcZForwardL2, { "Surge Forward", axisNames.TcZForwardL2, "L1", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcYRollR2, { "Pitch (R2)", axisNames.TcYRollR2, "R2", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcXRollForwardR2, { "Pitch Forward", axisNames.TcXRollForwardR2, "R2", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcXRollBackR2, { "Pitch Back", axisNames.TcXRollBackR2, "R2", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcXRollR1, { "Roll (R1)", axisNames.TcXRollR1, "R1", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcYRollLeftR1, { "Roll Left", axisNames.TcYRollLeftR1, "R1", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcYRollRightR1, { "Roll Right", axisNames.TcYRollRightR1, "R1", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcTwistR0, { "Twist (R0)", axisNames.TcTwistR0, "R0", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcTwistCWR0, { "Twist (CW)", axisNames.TcTwistCWR0, "R0", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcTwistCCWR0, { "Twist (CCW)", axisNames.TcTwistCCWR0, "R0", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcVibV0, { "Vib (V0)", axisNames.TcVibV0, "V0", 1, 500, 999, 1, 500, 999 } },
-        {axisNames.TcPumpV1, { "Pump (V1)", axisNames.TcPumpV1, "V1", 1, 500, 999, 1, 500, 999 } }
+        {axisNames.None, { "None", axisNames.None, axisNames.None, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "" } },
+        {axisNames.Stroke, { "Stroke", axisNames.Stroke, axisNames.Stroke, 1, 500, 999, 1, 500, 999, AxisDimension::Heave, AxisType::Range, "" } },
+        {axisNames.StrokeDown, { "Stroke Down", axisNames.StrokeDown, axisNames.Stroke, 1, 500, 999, 1, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "" } },
+        {axisNames.StrokeUp, { "Stroke Up", axisNames.StrokeUp, axisNames.Stroke, 1, 500, 999, 1, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "" } },
+        {axisNames.Sway, { "Sway", axisNames.Sway, axisNames.Sway, 1, 500, 999, 1, 500, 999, AxisDimension::Sway, AxisType::Range, "sway" } },
+        {axisNames.SwayLeft, { "Sway Left", axisNames.SwayLeft, axisNames.Sway, 1, 500, 999, 1, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "" } },
+        {axisNames.SwayRight, { "Sway Right", axisNames.SwayRight, axisNames.Sway, 1, 500, 999, 1, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "" } },
+        {axisNames.Surge, { "Surge", axisNames.Surge, axisNames.Surge, 1, 500, 999, 1, 500, 999, AxisDimension::Surge, AxisType::Range, "surge" } },
+        {axisNames.SurgeBack, { "Surge Back", axisNames.SurgeBack, axisNames.Surge, 1, 500, 999, 1, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "" } },
+        {axisNames.SurgeForward, { "Surge Forward", axisNames.SurgeForward, axisNames.Surge, 1, 500, 999, 1, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "" } },
+        {axisNames.Pitch, { "Pitch", axisNames.Pitch, axisNames.Pitch, 1, 500, 999, 1, 500, 999, AxisDimension::Pitch, AxisType::Range, "pitch" } },
+        {axisNames.PitchForward, { "Pitch Forward", axisNames.PitchForward, axisNames.Pitch, 1, 500, 999, 1, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "" } },
+        {axisNames.PitchBack, { "Pitch Back", axisNames.PitchBack, axisNames.Pitch, 1, 500, 999, 1, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "" } },
+        {axisNames.Roll, { "Roll", axisNames.Roll, axisNames.Roll, 1, 500, 999, 1, 500, 999, AxisDimension::Roll, AxisType::Range, "roll" } },
+        {axisNames.RollLeft, { "Roll Left", axisNames.RollLeft, axisNames.Roll, 1, 500, 999, 1, 500, 999, AxisDimension::Roll, AxisType::HalfRange, "" } },
+        {axisNames.RollRight, { "Roll Right", axisNames.RollRight, axisNames.Roll, 1, 500, 999, 1, 500, 999, AxisDimension::Roll, AxisType::HalfRange, "" } },
+        {axisNames.Twist, { "Twist", axisNames.Twist, axisNames.Twist, 1, 500, 999, 1, 500, 999, AxisDimension::Yaw, AxisType::Range, "twist" } },
+        {axisNames.TwistClockwise, { "Twist (CW)", axisNames.TwistClockwise, axisNames.Twist, 1, 500, 999, 1, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "" } },
+        {axisNames.TwistCounterClockwise, { "Twist (CCW)", axisNames.TwistCounterClockwise, axisNames.Twist, 1, 500, 999, 1, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "" } },
+        {axisNames.Vib, { "Vib", axisNames.Vib, axisNames.Vib, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "vib" } },
+        {axisNames.Lube, { "Lube", axisNames.Lube, axisNames.Lube, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "lube" } },
+        {axisNames.Suck, { "Suck", axisNames.Suck, axisNames.Suck, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "suck" } }
     };
 }
 
+//private
 void SettingsHandler::SetupGamepadButtonMap()
 {
     _gamepadButtonMap = {
         { "None", axisNames.None },
-        { gamepadAxisNames.LeftXAxis, axisNames.TcTwistR0 },
-        { gamepadAxisNames.LeftYAxis,  axisNames.TcYUpDownL0 },
-        { gamepadAxisNames.RightYAxis ,  axisNames.TcYRollR2  },
-        { gamepadAxisNames.RightXAxis, axisNames.TcXRollR1  },
+        { gamepadAxisNames.LeftXAxis, axisNames.Twist },
+        { gamepadAxisNames.LeftYAxis,  axisNames.Stroke },
+        { gamepadAxisNames.RightYAxis ,  axisNames.Pitch  },
+        { gamepadAxisNames.RightXAxis, axisNames.Roll  },
         { gamepadAxisNames.RightTrigger, mediaActions.IncreaseXRange },
         { gamepadAxisNames.LeftTrigger, mediaActions.DecreaseXRange },
         { gamepadAxisNames.RightBumper, mediaActions.FastForward },
@@ -905,14 +983,6 @@ int SettingsHandler::selectedDevice;
 int SettingsHandler::selectedLibrarySortMode;
 int SettingsHandler::playerVolume;
 int SettingsHandler::offSet;
-//int SettingsHandler::xMin;
-//int SettingsHandler::yRollMin;
-//int SettingsHandler::xRollMin;
-//int SettingsHandler::xMax;
-//int SettingsHandler::yRollMax;
-//int SettingsHandler::xRollMax;
-//int SettingsHandler::twistMin;
-//int SettingsHandler::twistMax;
 bool SettingsHandler::yRollMultiplierChecked;
 float SettingsHandler::yRollMultiplierValue;
 bool SettingsHandler::zMultiplierChecked;
@@ -925,6 +995,8 @@ bool SettingsHandler::twistMultiplierChecked;
 float SettingsHandler::twistMultiplierValue;
 bool SettingsHandler::vibMultiplierChecked;
 float SettingsHandler::vibMultiplierValue;
+bool SettingsHandler::suckMultiplierChecked;
+float SettingsHandler::suckMultiplierValue;
 
 int SettingsHandler::libraryView = LibraryView::Thumb;
 int SettingsHandler::thumbSize = 175;
