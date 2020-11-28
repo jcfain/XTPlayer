@@ -13,7 +13,8 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent)
         return;
     }
     _player = new AVPlayer(_videoRenderer->widget());
-    _player->setVideoDecoderPriority(QStringList() << "CUDA" << "D3D11" << "DXVA" << "VAAPI" << "VideoToolbox" << "FFmpeg");
+    setDecoderPriority();
+    //_player->setVideoDecoderPriority(QStringList() << "CUDA" << "D3D11" << "DXVA" << "VAAPI" << "VideoToolbox" << "FFmpeg");
     QVariantHash cuda_opt;
     cuda_opt["surfaces"] = 0; //key is property name, case sensitive
     cuda_opt["copyMode"] = "ZeroCopy"; // default is "DirectCopy"
@@ -198,4 +199,16 @@ qint64 VideoHandler::duration()
 QHBoxLayout* VideoHandler::layout()
 {
     return _widgetLayout;
+}
+
+void VideoHandler::setDecoderPriority()
+{
+    if(isPlaying())
+        stop();
+    QStringList stringList;
+    QList<DecoderModel> models = SettingsHandler::getDecoderPriority();
+    foreach (auto model, models)
+        if(model.Enabled)
+            stringList.append(model.Name);
+    _player->setVideoDecoderPriority(stringList);
 }

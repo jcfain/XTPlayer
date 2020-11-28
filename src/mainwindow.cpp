@@ -2240,7 +2240,7 @@ void MainWindow::on_actionDonate_triggered()
 void MainWindow::on_actionSettings_triggered()
 {
     _xSettings->initLive();
-    _xSettings->exec();
+    _xSettings->show();
 }
 
 void MainWindow::on_actionThumbnail_triggered()

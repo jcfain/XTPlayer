@@ -9,6 +9,7 @@
 #include "../lookup/MediaActions.h"
 #include "../tool/xmath.h"
 #include "../struct/ChannelModel.h"
+#include "../struct/DecoderModel.h"
 #include "loghandler.h"
 #include "devicehandler.h"
 
@@ -97,7 +98,7 @@ public:
     static void setGamepadEnabled(bool value);
     static void setGamePadMapButton(QString gamePadButton, QString axis);
     static void setAxis(QString axis, ChannelModel channel);
-    static void addAxis(QString axis);
+    static void addAxis(ChannelModel channel);
     static void deleteAxis(QString axis);
     static void setInverseTcXL0(bool value);
     static void setInverseTcXRollR2(bool value);
@@ -121,8 +122,12 @@ public:
     static bool getLiveGamepadConnected();
     static void setLiveGamepadConnected(bool value);
 
+    static void setDecoderPriority(QList<DecoderModel> value);
+    static QList<DecoderModel> getDecoderPriority();
+
     static QSize getMaxThumbnailSize();
     static void SetupAvailableAxis();
+    static void SetupDecoderPriority();
     static void Load();
     static void Save();
     static void Default();
@@ -195,6 +200,8 @@ private:
     static int thumbSize;
     static int thumbSizeList;
     static int videoIncrement;
+
+    static QList<DecoderModel> decoderPriority;
 
     static bool disableSpeechToText;
     static bool defaultReset;

@@ -123,9 +123,8 @@ bool ChannelTableViewModel::setData(const QModelIndex &index, const QVariant &va
         }
         else if (index.column() == 1)
         {
-            return false;
-//            valueModel.AxisName = value.toString();
-//            SettingsHandler::setAxis(key, valueModel);
+            valueModel.AxisName = value.toString();
+            SettingsHandler::setAxis(key, valueModel);
         }
         else if (index.column() == 2)
         {
@@ -172,7 +171,7 @@ bool ChannelTableViewModel::setData(const QModelIndex &index, const QVariant &va
 Qt::ItemFlags ChannelTableViewModel::flags(const QModelIndex &index) const
 {
     QString key = (_map->constBegin() + index.row()).key();
-    if (index.column() == 0 || index.column() == 2 || key == axisNames.None)
+    if (index.column() == 1 || index.column() == 2 || key == axisNames.None)
         return Qt::ItemIsSelectable | QAbstractTableModel::flags(index);
     return Qt::ItemIsEditable | QAbstractTableModel::flags(index);
 }

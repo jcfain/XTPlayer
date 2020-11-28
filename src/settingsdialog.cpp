@@ -16,7 +16,7 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
     {
         setSelectedDeviceHandler(_udpHandler);
     }
-
+    setModal(false);
     connect(_serialHandler, &SerialHandler::connectionChange, this, &SettingsDialog::on_device_connectionChanged);
     connect(_serialHandler, &SerialHandler::errorOccurred, this, &SettingsDialog::on_device_error);
     connect(_udpHandler, &UdpHandler::connectionChange, this, &SettingsDialog::on_device_connectionChanged);
@@ -235,6 +235,8 @@ void SettingsDialog::setupUi()
         ui.gamePadMapGroupbox->setHidden(!SettingsHandler::getGamepadEnabled());
         ui.videoIncrementSpinBox->setValue(SettingsHandler::getVideoIncrement());
         ui.disableTextToSpeechCheckBox->setChecked(SettingsHandler::getDisableSpeechToText());
+        //Load user decoder priority. (Too lazy to make a new function sue me...)
+        on_cancelPriorityButton_clicked();
         setupGamepadMap();
     }
 }
@@ -1060,17 +1062,10 @@ void SettingsDialog::on_buttonBox_clicked(QAbstractButton *button)
 void SettingsDialog::on_channelAddButton_clicked()
 {
     bool ok;
-    QString text = QInputDialog::getText(this, tr("Required info"),
-                                         tr("Axis name:"), QLineEdit::Normal,
-                                         "L0", &ok);
-    if (ok && !text.isEmpty())
+    ChannelModel channel = AddChannelDialog::getNewChannel(this, &ok);
+    if (ok)
     {
-        if(SettingsHandler::getAvailableAxis()->contains(text))
-        {
-            LogHandler::Dialog(text + " already exists!", XLogLevel::Critical);
-            return;
-        }
-        SettingsHandler::addAxis(text);
+        SettingsHandler::addAxis(channel);
         channelTableViewModel->setMap();
     }
 }
@@ -1085,15 +1080,19 @@ void SettingsDialog::on_channelDeleteButton_clicked()
                                       QMessageBox::Yes|QMessageBox::No);
         if (reply == QMessageBox::Yes)
         {
-            foreach(auto row, select->selectedRows())
+            auto selectedRows = select->selectedRows();
+            QStringList channelsToDelete;
+            foreach(auto row, selectedRows)
             {
                 const auto model = row.model();
                 const auto channelData = ((ChannelTableViewModel*)model)->getRowData(row.row());
                 if (channelData == nullptr || channelData->AxisName == axisNames.None)
                     continue;
-                SettingsHandler::deleteAxis(channelData->AxisName);
-                channelTableViewModel->setMap();
+                channelsToDelete << channelData->AxisName;
             }
+            foreach(auto channel, channelsToDelete)
+                SettingsHandler::deleteAxis(channel);
+            channelTableViewModel->setMap();
         }
     }
 }
@@ -1110,4 +1109,44 @@ void SettingsDialog::on_axisDefaultButton_clicked()
     }
 }
 
+void SettingsDialog::on_savePriorityButton_clicked()
+{
+    QStringList stringList;
+    QList<DecoderModel> models;
+    bool atLeastOneChecked = false;
+    for (int i = 0; i < ui.decoderListWidget->count(); ++i)
+    {
+        bool checked = ui.decoderListWidget->item(i)->checkState() == Qt::CheckState::Checked;
+        if(checked)
+            atLeastOneChecked = true;
+        models.append({ui.decoderListWidget->item(i)->text(), checked});
+        stringList.append(ui.decoderListWidget->item(i)->text());
+    }
+    if(atLeastOneChecked)
+    {
+        SettingsHandler::setDecoderPriority(models);
+        _videoHandler->setDecoderPriority();
+    }
+    else
+    {
+        LogHandler::Dialog("At least one decoder must be checked!", XLogLevel::Critical);
+    }
+}
 
+void SettingsDialog::on_cancelPriorityButton_clicked()
+{
+    ui.decoderListWidget->clear();
+    QStringList stringList;
+    QList<DecoderModel> models = SettingsHandler::getDecoderPriority();
+    foreach (auto model, models)
+        stringList.append(model.Name);
+    ui.decoderListWidget->addItems(stringList);
+    for (int i = 0; i < ui.decoderListWidget->count(); ++i)
+        ui.decoderListWidget->item(i)->setCheckState(models[i].Enabled ? Qt::CheckState::Checked : Qt::CheckState::Unchecked);
+}
+
+void SettingsDialog::on_defaultPriorityButton_clicked()
+{
+    SettingsHandler::SetupDecoderPriority();
+    on_cancelPriorityButton_clicked();
+}

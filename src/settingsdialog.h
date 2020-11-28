@@ -9,6 +9,7 @@
 #include "CustomControls/rangeslider.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/channeltableviewmodel.h"
+#include "lib/struct/DecoderModel.h"
 #include "lib/lookup/MediaActions.h"
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/serialhandler.h"
@@ -18,6 +19,7 @@
 #include "lib/handler/whirligighandler.h"
 #include "lib/handler/gamepadhandler.h"
 #include "lib/handler/funscripthandler.h"
+#include "addchanneldialog.h"
 
 extern void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo);
 extern void initNetwork(UdpHandler* serialHandler, NetworkAddress address);
@@ -150,6 +152,12 @@ private slots:
     void on_zMultiplierCheckBox_clicked(bool checked);
 
     void on_vibMultiplierCheckBox_clicked(bool checked);
+
+    void on_savePriorityButton_clicked();
+
+    void on_cancelPriorityButton_clicked();
+
+    void on_defaultPriorityButton_clicked();
 
 private:
     Ui::SettingsDialog ui;

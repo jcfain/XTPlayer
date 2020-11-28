@@ -33,6 +33,14 @@ void SettingsHandler::Load()
 //        if((currentVersion < XTPVersionNum && resetRequired))
 //            LogHandler::Dialog("Sorry, your settings have been set to default for a new data structure.", XLogLevel::Information);
         Default();
+        SetMapDefaults();
+        SetupDecoderPriority();
+        QList<QVariant> decoderVarient;
+        foreach(auto decoder, decoderPriority)
+        {
+            decoderVarient.append(QVariant::fromValue(decoder));
+        }
+        settings->setValue("decoderPriority", decoderVarient);
         defaultReset = false;
     }
     locker.relock();
@@ -46,6 +54,7 @@ void SettingsHandler::Load()
     serialPort = settings->value("serialPort").toString();
     serverAddress = settings->value("serverAddress").toString();
     serverPort = settings->value("serverPort").toString();
+    serverPort = serverPort.isNull() ? "8000" : serverPort;
     deoAddress = settings->value("deoAddress").toString();
     deoAddress = deoAddress.isNull() ? "127.0.0.1" : deoAddress;
     deoPort = settings->value("deoPort").toString();
@@ -59,19 +68,19 @@ void SettingsHandler::Load()
     whirligigEnabled = settings->value("whirligigEnabled").toBool();
 
     yRollMultiplierChecked = settings->value("rollMultiplierChecked").toBool();
-    yRollMultiplierValue = settings->value("rollMultiplierValue").toFloat();
+    yRollMultiplierValue = settings->value("rollMultiplierValue").toFloat() ?: 0.01f;
     xRollMultiplierChecked = settings->value("pitchMultiplierChecked").toBool();
-    xRollMultiplierValue = settings->value("pitchMultiplierValue").toFloat();
+    xRollMultiplierValue = settings->value("pitchMultiplierValue").toFloat() ?: 0.01f;
     zMultiplierChecked = settings->value("surgeMultiplierChecked").toBool();
-    zMultiplierValue = settings->value("surgeMultiplierValue").toFloat();
+    zMultiplierValue = settings->value("surgeMultiplierValue").toFloat() ?: 0.01f;
     yMultiplierChecked = settings->value("swayMultiplierChecked").toBool();
-    yMultiplierValue = settings->value("swayMultiplierValue").toFloat();
+    yMultiplierValue = settings->value("swayMultiplierValue").toFloat() ?: 0.01f;
     twistMultiplierChecked = settings->value("twistMultiplierChecked").toBool();
-    twistMultiplierValue = settings->value("twistMultiplierValue").toFloat();
+    twistMultiplierValue = settings->value("twistMultiplierValue").toFloat() ?: 0.01f;
     vibMultiplierChecked = settings->value("vibMultiplierChecked").toBool();
-    vibMultiplierValue = settings->value("vibMultiplierValue").toFloat();
+    vibMultiplierValue = settings->value("vibMultiplierValue").toFloat() ?: 0.01f;
     suckMultiplierChecked = settings->value("suckMultiplierChecked").toBool();
-    suckMultiplierValue = settings->value("suckMultiplierValue").toFloat();
+    suckMultiplierValue = settings->value("suckMultiplierValue").toFloat() ?: 0.01f;
 
     libraryView = settings->value("libraryView").toInt();
     selectedLibrarySortMode = settings->value("selectedLibrarySortMode").toInt();
@@ -87,7 +96,6 @@ void SettingsHandler::Load()
     _multiplierEnabled = settings->value("multiplierEnabled").toBool();
     _liveMultiplierEnabled = _multiplierEnabled;
     QVariantMap availableAxis = settings->value("availableAxis").toMap();
-    _availableAxis.clear();
     foreach(auto axis, availableAxis.keys())
     {
         _availableAxis.insert(axis, availableAxis[axis].value<ChannelModel>());
@@ -110,6 +118,12 @@ void SettingsHandler::Load()
     _xRangeStep = settings->value("xRangeStep").toInt();
     _xRangeStep = _xRangeStep == 0 ? 50 : _xRangeStep;
     disableSpeechToText = settings->value("disableSpeechToText").toBool();
+    QList<QVariant> decoderPriorityvarient = settings->value("decoderPriority").toList();
+    decoderPriority.clear();
+    foreach(auto varient, decoderPriorityvarient)
+    {
+        decoderPriority.append(varient.value<DecoderModel>());
+    }
     auto splitterSizes = settings->value("mainWindowPos").toList();
     foreach (auto splitterPos, splitterSizes)
     {
@@ -176,6 +190,13 @@ void SettingsHandler::Save()
 
         settings->setValue("gamePadEnabled", _gamePadEnabled);
         settings->setValue("multiplierEnabled", _multiplierEnabled);
+
+        QList<QVariant> decoderVarient;
+        foreach(auto decoder, decoderPriority)
+        {
+            decoderVarient.append(QVariant::fromValue(decoder));
+        }
+        settings->setValue("decoderPriority", decoderVarient);
 //        qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
 //        qRegisterMetaType<ChannelModel>();
         QVariantMap availableAxis;
@@ -219,8 +240,6 @@ void SettingsHandler::Default()
     QMutexLocker locker(&mutex);
     defaultReset = true;
     settings->clear();
-    SetMapDefaults();
-    settings->setValue("version", XTPVersionNum);
 //    settings->setValue("selectedTheme", QApplication::applicationDirPath() + "/themes/black-silver.css");
 //    settings->setValue("selectedLibrary", QVariant::String);
 //    settings->setValue("selectedDevice", DeviceType::Serial);
@@ -282,6 +301,7 @@ void SettingsHandler::MigrateTo23()
 {
     settings->setValue("version", XTPVersionNum);
     SetupAvailableAxis();
+    SetupDecoderPriority();
     yRollMultiplierChecked = settings->value("yRollMultiplierChecked").toBool();
     yRollMultiplierValue = settings->value("yRollMultiplierValue").toFloat();
     xRollMultiplierChecked = settings->value("xRollMultiplierChecked").toBool();
@@ -857,21 +877,19 @@ void SettingsHandler::setAxis(QString axis, ChannelModel channel)
     _availableAxis[axis] = channel;
 }
 
-void SettingsHandler::addAxis(QString axis)
+void SettingsHandler::addAxis(ChannelModel channel)
 {
     QMutexLocker locker(&mutex);
-    ChannelModel channel;
-    auto axisTemp = axis;
-    channel.Channel = axisTemp.replace("+", "").replace("-", "");
-    channel.AxisName = axis;
-    channel.Min = 1;
-    channel.Mid = 500;
-    channel.Max = 999;
-    channel.FriendlyName = "New axis " + axis;
-    channel.UserMin = 1;
-    channel.UserMid = 500;
-    channel.UserMax = 999;
-    _availableAxis.insert(axis, channel);
+    _availableAxis.insert(channel.AxisName, channel);
+}
+
+void SettingsHandler::setDecoderPriority(QList<DecoderModel> value)
+{
+    decoderPriority = value;
+}
+QList<DecoderModel> SettingsHandler::getDecoderPriority()
+{
+    return decoderPriority;
 }
 
 void SettingsHandler::deleteAxis(QString axis)
@@ -969,6 +987,18 @@ void SettingsHandler::SetupGamepadButtonMap()
         { gamepadAxisNames.Guide, axisNames.None }
     };
 }
+void SettingsHandler::SetupDecoderPriority()
+{
+    decoderPriority =
+    {
+        { "CUDA", true },
+        { "D3D11", true },
+        { "DXVA", true },
+        { "FFmpeg", true },
+        { "VAAPI", true },
+        { "VideoToolbox", true }
+    };
+}
 QSettings* SettingsHandler::settings;
 QMutex SettingsHandler::mutex;
 QList<int> SettingsHandler::_mainWindowPos;
@@ -1033,3 +1063,5 @@ QString SettingsHandler::whirligigPort;
 bool SettingsHandler::whirligigEnabled;
 bool SettingsHandler::defaultReset = false;
 bool SettingsHandler::disableSpeechToText;
+
+QList<DecoderModel> SettingsHandler::decoderPriority;

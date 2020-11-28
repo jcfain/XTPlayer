@@ -17,6 +17,9 @@
    <iconset resource="icons.qrc">
     <normaloff>:/images/icons/XTP-icon.png</normaloff>:/images/icons/XTP-icon.png</iconset>
   </property>
+  <property name="modal">
+   <bool>true</bool>
+  </property>
   <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0,0,0,0,0">
    <property name="sizeConstraint">
     <enum>QLayout::SetNoConstraint</enum>
@@ -300,6 +303,9 @@
         </item>
         <item row="2" column="2">
          <widget class="QDoubleSpinBox" name="xRollMultiplierSpinBox">
+          <property name="minimum">
+           <double>-99.000000000000000</double>
+          </property>
           <property name="maximum">
            <double>99.000000000000000</double>
           </property>
@@ -317,6 +323,9 @@
         </item>
         <item row="3" column="2">
          <widget class="QDoubleSpinBox" name="yMultiplierSpinBox">
+          <property name="minimum">
+           <double>-99.000000000000000</double>
+          </property>
           <property name="maximum">
            <double>99.000000000000000</double>
           </property>
@@ -334,6 +343,9 @@
         </item>
         <item row="4" column="2">
          <widget class="QDoubleSpinBox" name="yRollMultiplierSpinBox">
+          <property name="minimum">
+           <double>-99.000000000000000</double>
+          </property>
           <property name="maximum">
            <double>99.000000000000000</double>
           </property>
@@ -344,6 +356,9 @@
         </item>
         <item row="6" column="2">
          <widget class="QDoubleSpinBox" name="zMuliplierSpinBox">
+          <property name="minimum">
+           <double>-99.000000000000000</double>
+          </property>
           <property name="maximum">
            <double>99.000000000000000</double>
           </property>
@@ -382,6 +397,9 @@
         </item>
         <item row="7" column="2">
          <widget class="QDoubleSpinBox" name="vibMultiplierSpinBox">
+          <property name="minimum">
+           <double>-99.000000000000000</double>
+          </property>
           <property name="maximum">
            <double>99.000000000000000</double>
           </property>
@@ -392,6 +410,9 @@
         </item>
         <item row="5" column="2">
          <widget class="QDoubleSpinBox" name="twistMultiplierSpinBox">
+          <property name="minimum">
+           <double>-99.000000000000000</double>
+          </property>
           <property name="maximum">
            <double>99.000000000000000</double>
           </property>
@@ -416,6 +437,9 @@
         </item>
         <item row="8" column="2">
          <widget class="QDoubleSpinBox" name="suckMultiplierSpinBox">
+          <property name="minimum">
+           <double>-99.000000000000000</double>
+          </property>
           <property name="maximum">
            <double>99.000000000000000</double>
           </property>
@@ -432,20 +456,7 @@
        <string>System</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="0" colspan="7">
-        <widget class="QTableView" name="channelTableView"/>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_2">
-         <property name="toolTip">
-          <string>This sets the value the video will either skip forward or back via shortcuts.</string>
-         </property>
-         <property name="text">
-          <string>Video time step in secs</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
+       <item row="0" column="1">
         <widget class="QSpinBox" name="videoIncrementSpinBox">
          <property name="toolTip">
           <string>This sets the value the video will either skip forward or back via shortcuts.</string>
@@ -461,38 +472,114 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="2">
-        <widget class="QCheckBox" name="checkBox">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="toolTip">
+          <string>This sets the value the video will either skip forward or back via shortcuts.</string>
+         </property>
          <property name="text">
-          <string>Debug</string>
+          <string>Video time step in secs</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="3">
-        <widget class="QCheckBox" name="disableTextToSpeechCheckBox">
+       <item row="6" column="11">
+        <widget class="QPushButton" name="savePriorityButton">
          <property name="text">
-          <string>Disable text to speech</string>
+          <string>Save</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="4">
+       <item row="5" column="8" colspan="5">
+        <widget class="QListWidget" name="decoderListWidget">
+         <property name="dragEnabled">
+          <bool>true</bool>
+         </property>
+         <property name="dragDropMode">
+          <enum>QAbstractItemView::InternalMove</enum>
+         </property>
+         <property name="defaultDropAction">
+          <enum>Qt::MoveAction</enum>
+         </property>
+         <property name="alternatingRowColors">
+          <bool>false</bool>
+         </property>
+         <property name="spacing">
+          <number>10</number>
+         </property>
+         <property name="gridSize">
+          <size>
+           <width>0</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="selectionRectVisible">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0" colspan="6">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Tcode Tracks (Be careful here! May affect gamepad map. May require restart to take effect)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
         <widget class="QPushButton" name="axisDefaultButton">
          <property name="text">
           <string>Default</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="5">
+       <item row="6" column="12">
+        <widget class="QPushButton" name="cancelPriorityButton">
+         <property name="text">
+          <string>Cancel</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="8">
+        <widget class="QTableView" name="channelTableView"/>
+       </item>
+       <item row="6" column="7">
         <widget class="QPushButton" name="channelDeleteButton">
          <property name="text">
           <string>Delete</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="6">
+       <item row="4" column="8" colspan="5">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Decoder priority</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="6">
         <widget class="QPushButton" name="channelAddButton">
          <property name="text">
           <string>Add</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="8">
+        <widget class="QPushButton" name="defaultPriorityButton">
+         <property name="text">
+          <string>Default</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="QCheckBox" name="disableTextToSpeechCheckBox">
+         <property name="text">
+          <string>Disable text to speech</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="5">
+        <widget class="QCheckBox" name="checkBox">
+         <property name="text">
+          <string>Debug</string>
          </property>
         </widget>
        </item>

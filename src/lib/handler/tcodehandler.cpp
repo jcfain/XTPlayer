@@ -10,6 +10,7 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
     QMutexLocker locker(&mutex);
     QString tcode = "";
     auto availibleAxis = SettingsHandler::getAvailableAxis();
+    auto axisKeys = availibleAxis->keys();
     if(action != nullptr)
     {
         int position = action->pos;
@@ -30,7 +31,7 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
     }
     if(otherActions.keys().length() > 0)
     {
-        foreach(auto axis, availibleAxis->keys())
+        foreach(auto axis, axisKeys)
         {
             auto axisModel = availibleAxis->value(axis);
             if (axisModel.Channel == axisNames.Stroke || axisModel.TrackName.isEmpty())
@@ -60,14 +61,17 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
         {
             position = XMath::reverseNumber(position, 0, 100);
         }
-        foreach(auto axis, availibleAxis->keys())
+        foreach(auto axis, axisKeys)
         {
-            if (axis == axisNames.Stroke)
+            ChannelModel channel = availibleAxis->value(axis);
+            if (channel.Dimension == AxisDimension::Heave || channel.Type == AxisType::HalfRange)
                 continue;
             if (otherActions.contains(axis))
                 continue;
             float multiplierValue = SettingsHandler::getMultiplierValue(axis);
-            if (SettingsHandler::getMultiplierChecked(axis) && multiplierValue != 0.0)
+            if (multiplierValue == 0.0)
+                continue;
+            if (SettingsHandler::getMultiplierChecked(axis))
             {
                 int value = XMath::constrain(XMath::randSine(XMath::mapRange(position, 0, 100, 0, 180) * multiplierValue), 0, 100);
                 //lowMin + (highMin-lowMin)*level,lowMax + (highMax-lowMax)*level
@@ -96,19 +100,6 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
             }
         }
     }
-
-//    if(action != nullptr && !SettingsHandler::getLiveGamepadConnected())
-//    {
-//        foreach(auto axis, axisNames.BasicAxis)
-//        {
-//            if(!tcode.contains(axis.first))
-//            {
-//                tcode += " ";
-//                tcode += axis.first;
-//                tcode += "500S1000";
-//            }
-//        }
-//    }
     return tcode.isEmpty() ? nullptr : tcode;
 }
 int TCodeHandler::calculateRange(const char* channel, int rawValue)
@@ -129,10 +120,11 @@ QString TCodeHandler::getHome()
 {
     QString tcode;
     auto availibleAxis = SettingsHandler::getAvailableAxis();
-    foreach(auto axis, availibleAxis->keys())
+    auto axisKeys = availibleAxis->keys();
+    foreach(auto axis, axisKeys)
     {
-        auto axisModel = availibleAxis->value(axis);
-        if(axis == axisNames.Stroke || axisModel.Type != AxisType::Range)
+        auto channel = availibleAxis->value(axis);
+        if(channel.Dimension == AxisDimension::Heave ||  channel.Type != AxisType::Range)
             continue;
         tcode += " ";
         tcode += axis;

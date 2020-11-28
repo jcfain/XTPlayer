@@ -10,6 +10,14 @@ enum class AxisType
     HalfRange
 };
 
+const QMap<QString, AxisType> AxisTypes =
+{
+    {"None", AxisType::None},
+    {"Range", AxisType::Range},
+    {"Switch", AxisType::Switch},
+    {"Half range", AxisType::HalfRange}
+};
+
 enum class AxisDimension
 {
     None,
@@ -19,6 +27,17 @@ enum class AxisDimension
     Pitch,
     Roll,
     Yaw
+};
+
+const QMap<QString, AxisDimension> AxisDimensions =
+{
+    {"None", AxisDimension::None},
+    {"Heave", AxisDimension::Heave},
+    {"Surge", AxisDimension::Surge},
+    {"Sway", AxisDimension::Sway},
+    {"Pitch", AxisDimension::Pitch},
+    {"Roll", AxisDimension::Roll},
+    {"Yaw", AxisDimension::Yaw}
 };
 
 struct AxisNames

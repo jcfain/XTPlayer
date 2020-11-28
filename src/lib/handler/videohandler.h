@@ -53,6 +53,7 @@ public:;
     qint64 position();
     qint64 duration();
     QHBoxLayout* layout();
+    void setDecoderPriority();
     void showPreview(int position, qint64 time);
 
 
