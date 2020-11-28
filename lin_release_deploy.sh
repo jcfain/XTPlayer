@@ -4,9 +4,9 @@ cqtdeployer -confFile cqt-deb.conf
 #-libDir /home/jay/Qt/5.15.0/gcc_64/lib
 #-targetDir ./XTPlayer-release noOverwrite deploySystem extractPlugins
 #-deployVersion 0.13b -releaseDate $(date) +'%m/%d/%Y' -icon ./src/images/icons/XTP-icon.png
-cp -R src/themes ./XTPlayer-v0.2b_Linux_x86_64/bin
-cp -R lib/* ./XTPlayer-v0.2b_Linux_x86_64/lib
-cp src/rename_me_for_local_settings.ini ./XTPlayer-v0.2b_Linux_x86_64/bin
+cp -R src/themes ./XTPlayer-v0.23b_Linux_x86_64/bin
+cp -R lib/* ./XTPlayer-v0.23b_Linux_x86_64/lib
+cp src/rename_me_for_local_settings.ini ./XTPlayer-v0.23b_Linux_x86_64/bin
 read -p "Press enter to resume ..."
 
 
