@@ -116,7 +116,7 @@ int TCodeHandler::calculateRange(const char* channel, int rawValue)
     return XMath::mapRange(rawValue, 50, 100, xMid, xMax);
 }
 
-QString TCodeHandler::getHome()
+QString TCodeHandler::getRunningHome()
 {
     QString tcode;
     auto availibleAxis = SettingsHandler::getAvailableAxis();
@@ -125,6 +125,23 @@ QString TCodeHandler::getHome()
     {
         auto channel = availibleAxis->value(axis);
         if(channel.Dimension == AxisDimension::Heave ||  channel.Type != AxisType::Range)
+            continue;
+        tcode += " ";
+        tcode += axis;
+        tcode += "500S500";
+    }
+    return tcode;
+}
+
+QString TCodeHandler::getAllHome()
+{
+    QString tcode;
+    auto availibleAxis = SettingsHandler::getAvailableAxis();
+    auto axisKeys = availibleAxis->keys();
+    foreach(auto axis, axisKeys)
+    {
+        auto channel = availibleAxis->value(axis);
+        if(channel.Type == AxisType::HalfRange || channel.Type == AxisType::None )
             continue;
         tcode += " ";
         tcode += axis;

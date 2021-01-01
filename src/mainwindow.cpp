@@ -191,6 +191,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_xSettings, &SettingsDialog::whirligigDeviceError, this, &MainWindow::on_whirligig_device_error);
     connect(_xSettings, &SettingsDialog::deviceConnectionChange, this, &MainWindow::on_device_connectionChanged);
     connect(_xSettings, &SettingsDialog::deviceError, this, &MainWindow::on_device_error);
+    connect(_xSettings, &SettingsDialog::TCodeHomeClicked, this, &MainWindow::deviceHome);
     connect(_xSettings->getDeoHandler(), &DeoHandler::messageRecieved, this, &MainWindow::onVRMessageRecieved);
     connect(_xSettings->getWhirligigHandler(), &WhirligigHandler::messageRecieved, this, &MainWindow::onVRMessageRecieved);
     connect(_xSettings, &SettingsDialog::gamepadConnectionChange, this, &MainWindow::on_gamepad_connectionChanged);
@@ -658,6 +659,11 @@ void MainWindow::mediaAction(QString action)
     }
 }
 
+void MainWindow::deviceHome()
+{
+    _xSettings->getSelectedDeviceHandler()->sendTCode(tcodeHandler->getAllHome());
+}
+
 void MainWindow::on_mainwindow_splitterMove(int pos, int index)
 {
     SettingsHandler::setMainWindowSplitterPos(ui->mainFrameSplitter->sizes());
@@ -1095,7 +1101,7 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
             }
 
             funscriptHandlers.clear();
-            _xSettings->getSelectedDeviceHandler()->sendTCode(tcodeHandler->getHome());
+            deviceHome();
 
             AxisNames axisNames;
             auto availibleAxis = SettingsHandler::getAvailableAxis();
@@ -1804,7 +1810,7 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
 
                 qDeleteAll(funscriptHandlers);
                 funscriptHandlers.clear();
-                xSettings->getSelectedDeviceHandler()->sendTCode(tcodeHandler->getHome());
+                xSettings->getSelectedDeviceHandler()->sendTCode(tcodeHandler->getRunningHome());
 
                 auto availibleAxis = SettingsHandler::getAvailableAxis();
                 foreach(auto axisName, availibleAxis->keys())

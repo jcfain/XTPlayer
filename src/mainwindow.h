@@ -228,6 +228,7 @@ private:
     QString mSecondFormat(int seconds);
     bool isPlayingFile(QString file);
 
+    void deviceHome();
     void setLoading(bool loading);
     void saveNewThumbs();
     void mediaAction(QString action);

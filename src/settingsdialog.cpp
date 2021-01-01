@@ -176,6 +176,12 @@ void SettingsDialog::setupUi()
             connect(rangeSlider, QOverload<QString>::of(&RangeSlider::mouseRelease), this, &SettingsDialog::onRange_mouseRelease);
         }
 
+        QPushButton* zeroOutButton = new QPushButton(this);
+        zeroOutButton->setText("All axis home");
+        connect(zeroOutButton, & QPushButton::clicked, this, &SettingsDialog::on_tCodeHome_clicked);
+        ui.RangeSettingsGrid->addWidget(zeroOutButton, sliderGridRow,1);
+        sliderGridRow++;
+
         offSetLabel = new QLabel("Sync offset");
         offSetLabel->setFont(font);
         offSetLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
@@ -1143,6 +1149,11 @@ void SettingsDialog::on_cancelPriorityButton_clicked()
     ui.decoderListWidget->addItems(stringList);
     for (int i = 0; i < ui.decoderListWidget->count(); ++i)
         ui.decoderListWidget->item(i)->setCheckState(models[i].Enabled ? Qt::CheckState::Checked : Qt::CheckState::Unchecked);
+}
+
+void SettingsDialog::on_tCodeHome_clicked()
+{
+    emit TCodeHomeClicked();
 }
 
 void SettingsDialog::on_defaultPriorityButton_clicked()

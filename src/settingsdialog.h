@@ -54,6 +54,7 @@ signals:
     void whirligigDeviceError(QString error);
     void whirligigDeviceConnectionChange(ConnectionChangedSignal event);
     void gamepadConnectionChange(ConnectionChangedSignal event);
+    void TCodeHomeClicked();
 
 private slots:
     void on_serialOutputRdo_clicked();
@@ -158,6 +159,7 @@ private slots:
     void on_cancelPriorityButton_clicked();
 
     void on_defaultPriorityButton_clicked();
+    void on_tCodeHome_clicked();
 
 private:
     Ui::SettingsDialog ui;
