@@ -6,6 +6,9 @@ QMainWindow, QDialog, QTabWidget > QWidget, LibraryWindow  {
 QSplitter::handle {
     background-color: white;
 }
+QProgressBar {
+	color: white;
+}
 QTabBar::tab {
   background: silver; 
   border: 1px solid lightgray; 

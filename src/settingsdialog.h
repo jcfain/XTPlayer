@@ -20,6 +20,7 @@
 #include "lib/handler/gamepadhandler.h"
 #include "lib/handler/funscripthandler.h"
 #include "addchanneldialog.h"
+#include <QProgressBar>
 
 extern void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo);
 extern void initNetwork(UdpHandler* serialHandler, NetworkAddress address);
@@ -45,6 +46,8 @@ public:
     void initDeviceRetry();
     void initDeoRetry();
     void dispose();
+    void setAxisProgressBar(QString axis, int value);
+    void resetAxisProgressBars();
 
 signals:
     void deviceError(QString error);
@@ -55,6 +58,8 @@ signals:
     void whirligigDeviceConnectionChange(ConnectionChangedSignal event);
     void gamepadConnectionChange(ConnectionChangedSignal event);
     void TCodeHomeClicked();
+    void onAxisValueChange(QString axis, int value);
+    void onAxisValueReset();
 
 private slots:
     void on_serialOutputRdo_clicked();
@@ -161,6 +166,9 @@ private slots:
     void on_defaultPriorityButton_clicked();
     void on_tCodeHome_clicked();
 
+    void on_axis_valueChange(QString axis, int value);
+    void on_axis_valueReset();
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();
@@ -192,6 +200,7 @@ private:
     QMap<QString, QLabel*> rangeMinLabels;
     QMap<QString, QLabel*> rangeMaxLabels;
     QMap<QString, RangeSlider*> rangeSliders;
+    QMap<QString, QProgressBar*> axisProgressbars;
 
     QLabel* offSetLabel;
     QSpinBox* offSetSpinBox;

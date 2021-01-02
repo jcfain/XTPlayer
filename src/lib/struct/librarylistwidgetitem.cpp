@@ -7,6 +7,7 @@
 LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data) :
     QListWidgetItem(data.nameNoExtension)
 {
+    bool mfs = false;
     QFileInfo scriptInfo(data.script);
     QFileInfo zipScriptInfo(data.zipFile);
     if (!scriptInfo.exists() && !zipScriptInfo.exists())
@@ -16,6 +17,29 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data) :
     }
     else
     {
+
+        if(zipScriptInfo.exists())
+        {
+            mfs = true;
+        }
+        else
+        {
+            AxisNames axisNames;
+            auto availibleAxis = SettingsHandler::getAvailableAxis();
+            foreach(auto axisName, availibleAxis->keys())
+            {
+                auto trackName = availibleAxis->value(axisName).TrackName;
+                if(axisName == axisNames.Stroke || trackName.isEmpty())
+                    continue;
+
+                QFileInfo fileInfo(data.scriptNoExtension + "." + trackName + ".funscript");
+                if (fileInfo.exists())
+                {
+                    mfs = true;
+                    break;
+                }
+            }
+        }
         setToolTip(data.path);
     }
 
@@ -34,7 +58,13 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data) :
     setIcon(thumb);
     //setSizeHint(size);
     setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
-    setText(data.nameNoExtension);
+    if (mfs)
+    {
+        setForeground(QColorConstants::Green);
+        setText("(MFS) " + data.nameNoExtension);
+    }
+    else
+        setText(data.nameNoExtension);
     QVariant listItem;
     listItem.setValue(data);
     setData(Qt::UserRole, listItem);

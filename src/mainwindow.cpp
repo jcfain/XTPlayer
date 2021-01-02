@@ -1784,11 +1784,16 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
                 }
                 //LogHandler::Debug("funscriptHandler->getPosition: "+QString::number(currentTime));
                 actionPosition = funscriptHandler->getPosition(currentTime);
+                if(actionPosition != nullptr)
+                    xSettings->setAxisProgressBar(axisNames.Stroke, actionPosition->pos);
                 foreach(auto funscriptHandlerOther, funscriptHandlers)
                 {
                     auto otherAction = funscriptHandlerOther->getPosition(currentTime);
                     if(otherAction != nullptr)
+                    {
                         otherActions.insert(funscriptHandlerOther->channel(), otherAction);
+                        xSettings->setAxisProgressBar(funscriptHandlerOther->channel(), otherAction->pos);
+                    }
                 }
                 QString tcode = tcodeHandler->funscriptToTCode(actionPosition, otherActions);
                 if(tcode != nullptr)
@@ -1843,6 +1848,7 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
         //LogHandler::Debug("After get deo packet: "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
         //QThread::currentThread()->msleep(1);
     }
+    xSettings->resetAxisProgressBars();
     LogHandler::Debug("exit syncDeoFunscript");
 }
 
@@ -1865,11 +1871,16 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
             {
                 qint64 currentTime = player->position();
                 actionPosition = funscriptHandler->getPosition(currentTime);
+                if(actionPosition != nullptr)
+                    xSettings->setAxisProgressBar(axisNames.Stroke, actionPosition->pos);
                 foreach(auto funscriptHandlerOther, funscriptHandlers)
                 {
                     auto otherAction = funscriptHandlerOther->getPosition(currentTime);
                     if(otherAction != nullptr)
+                    {
                         otherActions.insert(funscriptHandlerOther->channel(), otherAction);
+                        xSettings->setAxisProgressBar(funscriptHandlerOther->channel(), otherAction->pos);
+                    }
                 }
                 QString tcode = tcodeHandler->funscriptToTCode(actionPosition, otherActions);
                 if(tcode != nullptr)
@@ -1880,6 +1891,7 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
         timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
         QThread::currentThread()->usleep(500);
     }
+    xSettings->resetAxisProgressBars();
     LogHandler::Debug("exit syncFunscript");
 }
 

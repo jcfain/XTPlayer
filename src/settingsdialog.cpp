@@ -51,6 +51,7 @@ void SettingsDialog::dispose()
     delete _whirligigHandler;
     delete _gamepadHandler;
 }
+
 void SettingsDialog::init(VideoHandler* videoHandler)
 {
     _videoHandler = videoHandler;
@@ -170,6 +171,16 @@ void SettingsDialog::setupUi()
             rangeSliders.insert(channel, rangeSlider);
             sliderGridRow++;
 
+            QProgressBar* progressbar = new QProgressBar(this);
+            progressbar->setMinimum(0);
+            progressbar->setMaximum(100);
+            progressbar->setMaximumHeight(20);
+            ui.RangeSettingsGrid->addWidget(progressbar, sliderGridRow,0,1,3);
+            axisProgressbars.insert(channel, progressbar);
+            sliderGridRow++;
+
+            connect(this, &SettingsDialog::onAxisValueChange, this, &SettingsDialog::on_axis_valueChange);
+            connect(this, &SettingsDialog::onAxisValueReset, this, &SettingsDialog::on_axis_valueReset);
             connect(rangeSlider, QOverload<QString, int>::of(&RangeSlider::lowerValueChanged), this, &SettingsDialog::onRange_valueChanged);
             connect(rangeSlider, QOverload<QString, int>::of(&RangeSlider::upperValueChanged), this, &SettingsDialog::onRange_valueChanged);
             // mouse release work around for gamepad recalculation reseting on every valueChange event.
@@ -352,6 +363,32 @@ void SettingsDialog::setupGamepadMap()
     inverseGrid->addWidget(inverseXRoll, 4, 2, Qt::AlignCenter);
 
 
+}
+
+void SettingsDialog::setAxisProgressBar(QString axis, int value)
+{
+    emit onAxisValueChange(axis, value);
+}
+
+void SettingsDialog::on_axis_valueChange(QString axis, int value)
+{
+    if (ui.settingsTabWidget->currentWidget() == ui.tcodeTab)
+    {
+        auto bar = axisProgressbars.value(axis);
+        if(bar != nullptr)
+            bar->setValue(value);
+    }
+}
+
+void SettingsDialog::resetAxisProgressBars()
+{
+    emit onAxisValueReset();
+}
+
+void SettingsDialog::on_axis_valueReset()
+{
+    foreach(auto axisProgressBar, axisProgressbars)
+        axisProgressBar->reset();
 }
 
 void SettingsDialog::on_inverseTcXL0_valueChanged(bool checked)
