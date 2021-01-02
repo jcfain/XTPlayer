@@ -387,6 +387,9 @@ void MainWindow::on_key_press(QKeyEvent * event)
         case Qt::Key_V:
             mediaAction(actions.ToggleAxisMultiplier);
             break;
+         case Qt::Key_P:
+             mediaAction(actions.ToggleAllDeviceActions);
+             break;
     }
 }
 void MainWindow::mediaAction(QString action)
@@ -657,6 +660,12 @@ void MainWindow::mediaAction(QString action)
         textToSpeech->say(inverted ? "Funscript normal" : "Funscript inverted");
         FunscriptHandler::setInverted(!inverted);
     }
+     else if(action == actions.ToggleAllDeviceActions)
+     {
+         bool paused = SettingsHandler::getLiveActionPaused();
+         textToSpeech->say(paused ? "Resume action" : "Pause action");
+         SettingsHandler::setLiveActionPaused(!paused);
+     }
 }
 
 void MainWindow::deviceHome()
@@ -1757,7 +1766,7 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
     while (vrPlayer->isConnected() && !xPlayer->isPlaying())
     {
         //timer.start();
-        if(xSettings->isConnected() && funscriptHandler->isLoaded() && !currentVRPacket.path.isNull() && currentVRPacket.duration > 0 && currentVRPacket.playing)
+        if(!SettingsHandler::getLiveActionPaused() && xSettings->isConnected() && funscriptHandler->isLoaded() && !currentVRPacket.path.isNull() && currentVRPacket.duration > 0 && currentVRPacket.playing)
         {
             //execute once every millisecond
             if (timer2 - timer1 >= 1)
@@ -1867,7 +1876,7 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
         if (timer2 - timer1 >= 1)
         {
             timer1 = timer2;
-            if(xSettings->isConnected())
+            if(!SettingsHandler::getLiveActionPaused() && xSettings->isConnected())
             {
                 qint64 currentTime = player->position();
                 actionPosition = funscriptHandler->getPosition(currentTime);

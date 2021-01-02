@@ -121,6 +121,8 @@ public:
     static void setLiveMultiplierEnabled(bool value);
     static bool getLiveGamepadConnected();
     static void setLiveGamepadConnected(bool value);
+    static bool getLiveActionPaused();
+    static void setLiveActionPaused(bool value);
 
     static void setDecoderPriority(QList<DecoderModel> value);
     static QList<DecoderModel> getDecoderPriority();
@@ -188,6 +190,7 @@ private:
     static int _gamepadSpeedStep;
     static int _liveGamepadSpeed;
     static bool _liveGamepadConnected;
+    static bool _liveActionPaused;
 
     static int _xRangeStep;
     static int _liveXRangeMax;

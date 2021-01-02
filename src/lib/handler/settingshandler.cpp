@@ -638,6 +638,14 @@ bool SettingsHandler::getLiveGamepadConnected()
 {
     return _liveGamepadConnected;
 }
+void SettingsHandler::setLiveActionPaused(bool value)
+{
+    _liveActionPaused = value;
+}
+bool SettingsHandler::getLiveActionPaused()
+{
+    return _liveActionPaused;
+}
 void SettingsHandler::setXRangeStep(int value)
 {
     QMutexLocker locker(&mutex);
@@ -1043,6 +1051,7 @@ int SettingsHandler::_gamepadSpeed;
 int SettingsHandler::_gamepadSpeedStep;
 int SettingsHandler::_liveGamepadSpeed;
 bool SettingsHandler::_liveGamepadConnected;
+bool SettingsHandler::_liveActionPaused;
 
 int SettingsHandler::_xRangeStep;
 int SettingsHandler::_liveXRangeMax;
