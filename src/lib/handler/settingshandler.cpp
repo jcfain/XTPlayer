@@ -1,8 +1,8 @@
 #include "settingshandler.h"
 
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.24";
-const float SettingsHandler::XTPVersionNum = 0.24f;
+const QString SettingsHandler::XTPVersion = "0.25";
+const float SettingsHandler::XTPVersionNum = 0.25f;
 
 SettingsHandler::SettingsHandler()
 {
@@ -962,7 +962,7 @@ void SettingsHandler::SetupAvailableAxis()
         {axisNames.TwistCounterClockwise, { "Twist (CCW)", axisNames.TwistCounterClockwise, axisNames.Twist, 1, 500, 999, 1, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "" } },
         {axisNames.Vib, { "Vib", axisNames.Vib, axisNames.Vib, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "vib" } },
         {axisNames.Lube, { "Lube", axisNames.Lube, axisNames.Lube, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "lube" } },
-        {axisNames.Suck, { "Suck", axisNames.Suck, axisNames.Suck, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "suck" } }
+        {axisNames.Suck, { "Suck", axisNames.Suck, axisNames.Suck, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::Range, "suck" } }
     };
 }
 
@@ -981,7 +981,7 @@ void SettingsHandler::SetupGamepadButtonMap()
         { gamepadAxisNames.LeftBumper, mediaActions.Rewind },
         { gamepadAxisNames.Select, mediaActions.FullScreen },
         { gamepadAxisNames.Start, mediaActions.TogglePause },
-        { gamepadAxisNames.X, axisNames.None },
+        { gamepadAxisNames.X, mediaActions.TogglePauseAllDeviceActions },
         { gamepadAxisNames.Y, mediaActions.Loop },
         { gamepadAxisNames.B, mediaActions.Stop },
         { gamepadAxisNames.A, mediaActions.Mute },

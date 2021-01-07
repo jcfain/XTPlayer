@@ -388,7 +388,7 @@ void MainWindow::on_key_press(QKeyEvent * event)
             mediaAction(actions.ToggleAxisMultiplier);
             break;
          case Qt::Key_P:
-             mediaAction(actions.ToggleAllDeviceActions);
+             mediaAction(actions.TogglePauseAllDeviceActions);
              break;
     }
 }
@@ -660,7 +660,7 @@ void MainWindow::mediaAction(QString action)
         textToSpeech->say(inverted ? "Funscript normal" : "Funscript inverted");
         FunscriptHandler::setInverted(!inverted);
     }
-     else if(action == actions.ToggleAllDeviceActions)
+     else if(action == actions.TogglePauseAllDeviceActions)
      {
          bool paused = SettingsHandler::getLiveActionPaused();
          textToSpeech->say(paused ? "Resume action" : "Pause action");
@@ -756,24 +756,36 @@ void MainWindow::on_load_library(QString path)
             stopThumbProcess();
             libraryItems.clear();
             libraryList->clear();
-            QDirIterator library(path, QStringList()
-                        << "*.mp4"
-                        << "*.avi"
-                        << "*.mpg"
-                        << "*.wmv"
-                        << "*.mkv"
-                        << "*.webm"
-                        << "*.mp2"
-                        << "*.mpeg"
-                        << "*.mpv"
-                        << "*.ogg"
-                        << "*.m4p"
-                        << "*.m4v"
-                        << "*.mov"
-                        << "*.qt"
-                        << "*.flv"
-                        << "*.swf"
-                        << "*.avchd", QDir::Files, QDirIterator::Subdirectories);
+            QStringList videoTypes = QStringList()
+                    << "*.mp4"
+                    << "*.avi"
+                    << "*.mpg"
+                    << "*.wmv"
+                    << "*.mkv"
+                    << "*.webm"
+                    << "*.mp2"
+                    << "*.mpeg"
+                    << "*.mpv"
+                    << "*.ogg"
+                    << "*.m4p"
+                    << "*.m4v"
+                    << "*.mov"
+                    << "*.qt"
+                    << "*.flv"
+                    << "*.swf"
+                    << "*.avchd";
+
+            QStringList audioTypes = QStringList()
+                    << "*.m4a"
+                    << "*.mp3"
+                    << "*.aac"
+                    << "*.flac"
+                    << "*.wav"
+                    << "*.wma";
+            QStringList mediaTypes;
+            mediaTypes.append(videoTypes);
+            mediaTypes.append(audioTypes);
+            QDirIterator library(path, mediaTypes, QDir::Files, QDirIterator::Subdirectories);
             while (library.hasNext())
             {
                 QFileInfo fileinfo(library.next());
@@ -784,7 +796,10 @@ void MainWindow::on_load_library(QString path)
                 QString fileNameNoExtension = fileNameTemp.remove(fileNameTemp.lastIndexOf('.'), fileNameTemp.length() -  1);
                 QString scriptFile = fileNameNoExtension + ".funscript";
                 QString scriptPath;
-                QString scriptNoExtension = videoPathTemp.remove(videoPathTemp.lastIndexOf('.'), videoPathTemp.length() -  1);
+                QString scriptNoExtension = videoPathTemp.remove(videoPathTemp.lastIndexOf('.'), videoPathTemp.length() - 1);
+                fileNameTemp = fileinfo.fileName();
+                QString mediaExtension = "*" + fileNameTemp.remove(0, fileNameTemp.length() - (fileNameTemp.length() - fileNameTemp.lastIndexOf('.')));
+
                 if (SettingsHandler::getSelectedFunscriptLibrary() == Q_NULLPTR)
                 {
                     scriptPath = scriptNoExtension + ".funscript";
@@ -803,8 +818,17 @@ void MainWindow::on_load_library(QString path)
                 QString zipFile;
                 if(scriptZip.exists())
                     zipFile = scriptNoExtension + ".zip";
-
-                QString thumbFile =  thumbPath + fileName + ".jpg";
+                QString thumbFile;
+                bool audioOnly = false;
+                if(videoPath.contains("m4a"))
+                    LogHandler::Debug("ya");
+                if(audioTypes.contains(mediaExtension))
+                {
+                    thumbFile = "://images/icons/audio.png";
+                    audioOnly = true;
+                }
+                else
+                    thumbFile = thumbPath + fileName + ".jpg";
                 LibraryListItem item
                 {
                     videoPath, // path
@@ -812,10 +836,12 @@ void MainWindow::on_load_library(QString path)
                     fileNameNoExtension, //nameNoExtension
                     scriptPath, // script
                     scriptNoExtension,
+                    mediaExtension,
                     thumbFile,
                     zipFile,
                     fileinfo.birthTime().date(),
-                    0
+                    0,
+                    audioOnly
                 };
                 LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item);
                 libraryList->addItem(qListWidgetItem);
@@ -861,7 +887,7 @@ void MainWindow::stopThumbProcess()
         delete thumbNailPlayer;
     }
 }
-void MainWindow::saveSingleThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem, qint64 position)
+void MainWindow::saveSingleThumb(const QString& videoFile, const QString& thumbFile, LibraryListWidgetItem* qListWidgetItem, qint64 position)
 {
     if(!thumbProcessIsRunning)
     {
@@ -883,7 +909,7 @@ void MainWindow::saveNewThumbs()
         LibraryListItem item = listWidgetItem->getLibraryListItem();
         thumbNailSearchIterator++;
         QFileInfo thumbInfo(item.thumbFile);
-        if (!thumbInfo.exists())
+        if (!item.audioOnly && !thumbInfo.exists())
         {
             disconnect(extractor, nullptr,  nullptr, nullptr);
             disconnect(thumbNailPlayer, nullptr,  nullptr, nullptr);
@@ -891,6 +917,7 @@ void MainWindow::saveNewThumbs()
         }
         else
         {
+
             saveNewThumbs();
         }
     }
@@ -899,15 +926,29 @@ void MainWindow::saveNewThumbs()
         stopThumbProcess();
     }
 }
-void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem, qint64 position)
+void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, LibraryListWidgetItem* qListWidgetItem, qint64 position)
 {
 //    QIcon thumb;
 //    QPixmap bgPixmap(QApplication::applicationDirPath() + "/themes/loading.png");
 //    QPixmap scaled = bgPixmap.scaled(SettingsHandler::getThumbSize(), Qt::AspectRatioMode::KeepAspectRatio);
 //    thumb.addPixmap(scaled);
 //    qListWidgetItem->setIcon(thumb);
-
-    connect(extractor,
+    LibraryListItem item = qListWidgetItem->getLibraryListItem();
+    if(item.audioOnly)
+    {
+        QIcon thumb;
+        QPixmap bgPixmap(item.thumbFile);
+        int thumbSize = SettingsHandler::getThumbSize();
+        QSize size = {thumbSize, thumbSize};
+        QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
+        thumb.addPixmap(scaled);
+        qListWidgetItem->setIcon(thumb);
+        qListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
+        saveNewThumbs();
+    }
+    else
+    {
+        connect(extractor,
            &QtAV::VideoFrameExtractor::frameExtracted,
            extractor,
            [this, videoFile, thumbFile, qListWidgetItem](const QtAV::VideoFrame& frame)
@@ -931,7 +972,7 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
                qListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
                saveNewThumbs();
             });
-    connect(extractor,
+        connect(extractor,
            &QtAV::VideoFrameExtractor::error,
            extractor,
            [this, videoFile, qListWidgetItem](const QString &errorMessage)
@@ -952,12 +993,12 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
                saveNewThumbs();
             });
 
-    extractor->setSource(videoFile);
+        extractor->setSource(videoFile);
 
-    thumbNailPlayer->setFile(videoFile);
-    thumbNailPlayer->load();
+        thumbNailPlayer->setFile(videoFile);
+        thumbNailPlayer->load();
 
-    connect(thumbNailPlayer,
+        connect(thumbNailPlayer,
            &AVPlayer::loaded,
            thumbNailPlayer,
            [this, position]()
@@ -968,7 +1009,7 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
                extractor->setPosition(randomPosition);
             });
 
-    connect(thumbNailPlayer,
+        connect(thumbNailPlayer,
            &AVPlayer::error,
            thumbNailPlayer,
            [this, qListWidgetItem](QtAV::AVError er)
@@ -987,6 +1028,7 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, Q
                disconnect(extractor, nullptr,  nullptr, nullptr);
                saveNewThumbs();
             });
+    }
 }
 
 void MainWindow::on_libray_path_select(QString path)
@@ -1027,14 +1069,14 @@ void MainWindow::regenerateThumbNail()
 {
     QListWidgetItem* selectedItem = libraryList->selectedItems().first();
     LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
-    saveSingleThumb(selectedFileListItem.path, selectedFileListItem.thumbFile, selectedItem);
+    saveSingleThumb(selectedFileListItem.path, selectedFileListItem.thumbFile, (LibraryListWidgetItem*)selectedItem);
 }
 
 void MainWindow::setThumbNailFromCurrent()
 {
     QListWidgetItem* selectedItem = libraryList->selectedItems().first();
     LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
-    saveSingleThumb(selectedFileListItem.path, selectedFileListItem.thumbFile, selectedItem, videoHandler->position());
+    saveSingleThumb(selectedFileListItem.path, selectedFileListItem.thumbFile, (LibraryListWidgetItem*)selectedItem, videoHandler->position());
 }
 
 void MainWindow::playFileFromContextMenu()

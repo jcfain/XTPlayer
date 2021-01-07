@@ -11,10 +11,12 @@ struct LibraryListItem
     QString nameNoExtension;
     QString script;
     QString scriptNoExtension;
+    QString mediaExtension;
     QString thumbFile;
     QString zipFile;
     QDate modifiedDate;
     quint64 duration;
+    bool audioOnly;
     friend QDataStream & operator<<( QDataStream &dataStream, const LibraryListItem &object )
     {
         dataStream << object.path;
@@ -22,10 +24,12 @@ struct LibraryListItem
         dataStream << object.nameNoExtension;
         dataStream << object.script;
         dataStream << object.scriptNoExtension;
+        dataStream << object.mediaExtension;
         dataStream << object.thumbFile;
         dataStream << object.zipFile;
         dataStream << object.modifiedDate;
         //dataStream << object.duration;
+        //dataStream << object.audioOnly;
         return dataStream;
     }
 
@@ -36,10 +40,12 @@ struct LibraryListItem
         dataStream >> object.nameNoExtension;
         dataStream >> object.script;
         dataStream >> object.scriptNoExtension;
+        dataStream >> object.mediaExtension;
         dataStream >> object.thumbFile;
         dataStream >> object.zipFile;
         dataStream >> object.modifiedDate;
         //dataStream >> object.duration;
+        //dataStream >> object.audioOnly;
         return dataStream;
     }
 

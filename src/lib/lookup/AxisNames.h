@@ -4,10 +4,10 @@
 #include <QMap>
 enum class AxisType
 {
-    None,
-    Range,
-    Switch,
-    HalfRange
+    None, // 0
+    Range, // 1
+    Switch, // 2
+    HalfRange // 3
 };
 
 const QMap<QString, AxisType> AxisTypes =
@@ -20,13 +20,13 @@ const QMap<QString, AxisType> AxisTypes =
 
 enum class AxisDimension
 {
-    None,
-    Heave,
-    Surge,
-    Sway,
-    Pitch,
-    Roll,
-    Yaw
+    None, // 0
+    Heave, // 1
+    Surge, // 2
+    Sway, // 3
+    Pitch, // 4
+    Roll, // 5
+    Yaw // 6
 };
 
 const QMap<QString, AxisDimension> AxisDimensions =

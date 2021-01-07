@@ -213,7 +213,7 @@ private:
     AVPlayer* thumbNailPlayer;
     QMutex _eventLocker;
 
-    void saveSingleThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem, qint64 position = 0);
+    void saveSingleThumb(const QString& videoFile, const QString& thumbFile, LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
     void startThumbProcess();
     void stopThumbProcess();
 
@@ -222,6 +222,7 @@ private:
     LibraryListWidgetItem* playingLibraryListItem = nullptr;
     int selectedLibraryListIndex;
     LibraryListWidgetItem* selectedLibraryListItem = nullptr;
+
     void on_load_library(QString path);
     void on_libray_path_select(QString path);
     void media_double_click_event(QMouseEvent * event);
@@ -239,7 +240,7 @@ private:
     void showControls();
     void hideLibrary();
     void showLibrary();
-    void saveThumb(const QString& videoFile, const QString& thumbFile, QListWidgetItem* qListWidgetItem, qint64 position = 0);
+    void saveThumb(const QString& videoFile, const QString& thumbFile, LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
     void updateThumbSizeUI(int size);
     void updateLibrarySortUI(LibrarySortMode mode);
     void setThumbSize(int size);

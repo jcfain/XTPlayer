@@ -41,7 +41,8 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
                 std::shared_ptr<FunscriptAction> axisAction = otherActions.value(axis);
                 char tcodeValueString[4];
                 sprintf(tcodeValueString, "%03d", calculateRange(axis.toUtf8(), axisAction->pos));
-                tcode += " ";
+                if(!tcode.isEmpty())
+                    tcode += " ";
                 tcode += axis;
                 tcode += tcodeValueString;
                 if (axisAction->speed > 0)
@@ -124,7 +125,7 @@ QString TCodeHandler::getRunningHome()
     foreach(auto axis, axisKeys)
     {
         auto channel = availibleAxis->value(axis);
-        if(channel.Dimension == AxisDimension::Heave ||  channel.Type != AxisType::Range)
+        if(channel.Dimension == AxisDimension::Heave || channel.Type != AxisType::Range)
             continue;
         tcode += " ";
         tcode += axis;

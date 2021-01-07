@@ -666,7 +666,7 @@ void SettingsDialog::onRange_valueChanged(QString name, int value)
     RangeSlider* slider = rangeSliders.value(name);
     rangeMinLabels.value(name)->setText(QString::number(slider->GetLowerValue()));
     rangeMaxLabels.value(name)->setText(QString::number(slider->GetUpperValue()));
-    if (!_videoHandler->isPlaying() && !_deoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
+    if ((!_videoHandler->isPlaying() || _videoHandler->isPaused() || SettingsHandler::getLiveActionPaused()) && !_deoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
     {
         char tcodeValueString[4];
         sprintf(tcodeValueString, "%03d", value);
