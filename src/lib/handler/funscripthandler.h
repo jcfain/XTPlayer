@@ -46,6 +46,8 @@ private:
     qint64 findClosest(qint64 value, QList<qint64> a);
     qint64 lastActionIndex;
     qint64 nextActionIndex;
+    int lastActionPos;
+    int lastActionSpeed;
     QList<qint64> posList;
     Funscript* funscript = new Funscript();
     int n;

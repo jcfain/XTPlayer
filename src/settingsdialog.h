@@ -9,6 +9,7 @@
 #include "CustomControls/rangeslider.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/channeltableviewmodel.h"
+#include "lib/struct/channeltablecomboboxdelegate.h"
 #include "lib/struct/DecoderModel.h"
 #include "lib/lookup/MediaActions.h"
 #include "lib/handler/settingshandler.h"
@@ -87,20 +88,6 @@ private slots:
 
     void on_buttonBox_clicked(QAbstractButton *button);
 
-    void on_xRollMultiplierCheckBox_clicked();
-
-    void on_xRollMultiplierSpinBox_valueChanged(double arg1);
-
-    void on_yRollMultiplierCheckBox_clicked();
-
-    void on_yRollMultiplierSpinBox_valueChanged(double arg1);
-
-    void on_twistMultiplierCheckBox_clicked();
-
-    void on_twistMultiplierSpinBox_valueChanged(double arg1);
-
-    void on_vibMultiplierSpinBox_valueChanged(double arg1);
-
     void on_serialConnectButton_clicked();
 
     void on_networkConnectButton_clicked();
@@ -132,12 +119,6 @@ private slots:
 
     void on_invertFunscriptXCheckBox_clicked(bool checked);
 
-    void on_yMultiplierCheckBox_clicked(bool checked);
-
-    void on_yMultiplierSpinBox_valueChanged(double arg1);
-
-    void on_zMuliplierSpinBox_valueChanged(double arg1);
-
     void on_whirligigCheckBox_clicked(bool checked);
 
     void on_whirligigConnectButton_clicked();
@@ -150,14 +131,6 @@ private slots:
     void on_channelDeleteButton_clicked();
 
     void on_axisDefaultButton_clicked();
-
-    void on_suckMultiplierCheckBox_clicked(bool checked);
-
-    void on_suckMultiplierSpinBox_valueChanged(double arg1);
-
-    void on_zMultiplierCheckBox_clicked(bool checked);
-
-    void on_vibMultiplierCheckBox_clicked(bool checked);
 
     void on_savePriorityButton_clicked();
 

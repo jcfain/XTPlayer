@@ -15,7 +15,7 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
     {
         int position = action->pos;
         int speed = action->speed;
-        if (FunscriptHandler::getInverted())
+        if (FunscriptHandler::getInverted() || SettingsHandler::getChannelInverseChecked(axisNames.Stroke))
         {
             position = XMath::reverseNumber(position, 0, 100);
         }
@@ -39,8 +39,13 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
             if (otherActions.contains(axis))
             {
                 std::shared_ptr<FunscriptAction> axisAction = otherActions.value(axis);
+                int position = axisAction->pos;
+                if (SettingsHandler::getChannelInverseChecked(axis))
+                {
+                    position = XMath::reverseNumber(position, 0, 100);
+                }
                 char tcodeValueString[4];
-                sprintf(tcodeValueString, "%03d", calculateRange(axis.toUtf8(), axisAction->pos));
+                sprintf(tcodeValueString, "%03d", calculateRange(axis.toUtf8(), position));
                 if(!tcode.isEmpty())
                     tcode += " ";
                 tcode += axis;
@@ -65,7 +70,7 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
         foreach(auto axis, axisKeys)
         {
             ChannelModel channel = availibleAxis->value(axis);
-            if (channel.Dimension == AxisDimension::Heave || channel.Type == AxisType::HalfRange)
+            if (channel.Dimension == AxisDimension::Heave || channel.Type == AxisType::HalfRange || channel.Type == AxisType::None)
                 continue;
             if (otherActions.contains(axis))
                 continue;
@@ -74,23 +79,37 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
                 continue;
             if (SettingsHandler::getMultiplierChecked(axis))
             {
-                int value = XMath::constrain(XMath::randSine(XMath::mapRange(position, 0, 100, 0, 180) * multiplierValue), 0, 100);
-                //lowMin + (highMin-lowMin)*level,lowMax + (highMax-lowMax)*level
-                //LogHandler::Debug("randSine: "+ QString::number(value));
-                if (FunscriptHandler::getInverted())
+                int distance = action->pos >= action->lastPos ? action->pos - action->lastPos : action->lastPos - action->pos;
+                if(distance > 0)
                 {
-                    //LogHandler::Debug("inverted: "+ QString::number(value));
-                    value = XMath::reverseNumber(value, 0, 100);
-                }
-                char tcodeValueString[4];
-                sprintf(tcodeValueString, "%03d", calculateRange(axis.toUtf8(), value));
-                tcode += " ";
-                tcode += axis;
-                tcode += tcodeValueString;
-                if (speed > 0)
-                {
-                  tcode += "S";
-                  tcode += QString::number(speed);
+                    int value = XMath::constrain(XMath::randSine(XMath::mapRange(position, 0, 100, 0, 180) * multiplierValue), 0, 100);
+                    //lowMin + (highMin-lowMin)*level,lowMax + (highMax-lowMax)*level
+                    //LogHandler::Debug("randSine: "+ QString::number(value));
+                    if (FunscriptHandler::getInverted())
+                    {
+                        //LogHandler::Debug("inverted: "+ QString::number(value));
+                        value = XMath::reverseNumber(value, 0, 100);
+                    }
+                    char tcodeValueString[4];
+                    sprintf(tcodeValueString, "%03d", calculateRange(axis.toUtf8(), value));
+                    tcode += " ";
+                    tcode += axis;
+                    tcode += tcodeValueString;
+                    tcode += "S";
+                    LogHandler::Debug("Channel: "+ axis);
+                    LogHandler::Debug("Distance: "+ QString::number(distance));
+                    LogHandler::Debug("action->lastPos: "+ QString::number(action->lastPos));
+                    LogHandler::Debug("action->pos: "+ QString::number(action->pos));
+                    LogHandler::Debug("Speed: "+ QString::number(speed));
+                    float speedModifierValue = SettingsHandler::getDamperValue(axis);
+                    if ( SettingsHandler::getDamperChecked(axis) && speedModifierValue > 0.0 && speed > 1000 && distance > 50)
+                    {
+                        tcode += QString::number(qRound(speed * speedModifierValue));
+                    }
+                    else
+                    {
+                        tcode += QString::number(speed > 0 ? speed : 1000);
+                    }
                 }
             }
             else

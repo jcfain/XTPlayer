@@ -37,7 +37,7 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="1">
+   <item row="1" column="1">
     <widget class="QTabWidget" name="settingsTabWidget">
      <property name="currentIndex">
       <number>0</number>
@@ -284,171 +284,64 @@
       <attribute name="title">
        <string>Funscript</string>
       </attribute>
-      <widget class="QWidget" name="gridLayoutWidget">
+      <widget class="QGroupBox" name="groupBox">
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>30</y>
-         <width>257</width>
-         <height>278</height>
+         <y>20</y>
+         <width>371</width>
+         <height>311</height>
         </rect>
        </property>
-       <layout class="QGridLayout" name="FunscriptSettingsGrid">
-        <item row="5" column="1">
-         <widget class="QCheckBox" name="twistMultiplierCheckBox">
-          <property name="text">
-           <string>Twist</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="2">
-         <widget class="QDoubleSpinBox" name="xRollMultiplierSpinBox">
-          <property name="minimum">
-           <double>-99.000000000000000</double>
-          </property>
-          <property name="maximum">
-           <double>99.000000000000000</double>
-          </property>
-          <property name="singleStep">
-           <double>0.100000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QCheckBox" name="xRollMultiplierCheckBox">
-          <property name="text">
-           <string>Pitch</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="2">
-         <widget class="QDoubleSpinBox" name="yMultiplierSpinBox">
-          <property name="minimum">
-           <double>-99.000000000000000</double>
-          </property>
-          <property name="maximum">
-           <double>99.000000000000000</double>
-          </property>
-          <property name="singleStep">
-           <double>0.100000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="10" column="1">
-         <widget class="QCheckBox" name="invertFunscriptXCheckBox">
-          <property name="text">
-           <string>Invert Stroke</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="2">
-         <widget class="QDoubleSpinBox" name="yRollMultiplierSpinBox">
-          <property name="minimum">
-           <double>-99.000000000000000</double>
-          </property>
-          <property name="maximum">
-           <double>99.000000000000000</double>
-          </property>
-          <property name="singleStep">
-           <double>0.100000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="2">
-         <widget class="QDoubleSpinBox" name="zMuliplierSpinBox">
-          <property name="minimum">
-           <double>-99.000000000000000</double>
-          </property>
-          <property name="maximum">
-           <double>99.000000000000000</double>
-          </property>
-          <property name="singleStep">
-           <double>0.100000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="1">
-         <widget class="QCheckBox" name="yMultiplierCheckBox">
-          <property name="text">
-           <string>Sway</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="1">
-         <widget class="QCheckBox" name="zMultiplierCheckBox">
-          <property name="text">
-           <string>Surge</string>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="1">
-         <widget class="QCheckBox" name="vibMultiplierCheckBox">
-          <property name="text">
-           <string>Vib</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="1">
-         <widget class="QCheckBox" name="yRollMultiplierCheckBox">
-          <property name="text">
-           <string>Roll</string>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="2">
-         <widget class="QDoubleSpinBox" name="vibMultiplierSpinBox">
-          <property name="minimum">
-           <double>-99.000000000000000</double>
-          </property>
-          <property name="maximum">
-           <double>99.000000000000000</double>
-          </property>
-          <property name="singleStep">
-           <double>0.100000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="2">
-         <widget class="QDoubleSpinBox" name="twistMultiplierSpinBox">
-          <property name="minimum">
-           <double>-99.000000000000000</double>
-          </property>
-          <property name="maximum">
-           <double>99.000000000000000</double>
-          </property>
-          <property name="singleStep">
-           <double>0.100000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QCheckBox" name="enableMultiplierCheckbox">
-          <property name="text">
-           <string>Enable multiplier </string>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="1">
-         <widget class="QCheckBox" name="suckMultiplierCheckBox">
-          <property name="text">
-           <string>Suck</string>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="2">
-         <widget class="QDoubleSpinBox" name="suckMultiplierSpinBox">
-          <property name="minimum">
-           <double>-99.000000000000000</double>
-          </property>
-          <property name="maximum">
-           <double>99.000000000000000</double>
-          </property>
-          <property name="singleStep">
-           <double>0.100000000000000</double>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <property name="title">
+        <string>Multipliers</string>
+       </property>
+       <widget class="QWidget" name="gridLayoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>351</width>
+          <height>271</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="MultiplierSettingsGrid" rowstretch="0,0">
+         <property name="sizeConstraint">
+          <enum>QLayout::SetDefaultConstraint</enum>
+         </property>
+         <item row="0" column="0">
+          <widget class="QCheckBox" name="enableMultiplierCheckbox">
+           <property name="text">
+            <string>Enable multiplier </string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="groupBox_2">
+       <property name="geometry">
+        <rect>
+         <x>390</x>
+         <y>20</y>
+         <width>131</width>
+         <height>311</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Inversion</string>
+       </property>
+       <widget class="QWidget" name="gridLayoutWidget_2">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>111</width>
+          <height>271</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="FunscriptSettingsGrid"/>
+       </widget>
       </widget>
      </widget>
      <widget class="QWidget" name="systemtab">

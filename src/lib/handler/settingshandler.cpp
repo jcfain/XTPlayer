@@ -138,6 +138,11 @@ void SettingsHandler::Load()
         locker.unlock();
         MigrateTo23();
     }
+    if(currentVersion != 0 && currentVersion < 0.25f)
+    {
+        locker.unlock();
+        MigrateTo25();
+    }
 //    SetupAvailableAxis();
 //    SetupGamepadButtonMap();
 }
@@ -164,20 +169,20 @@ void SettingsHandler::Save()
         settings->setValue("whirligigPort", whirligigPort);
         settings->setValue("whirligigEnabled", whirligigEnabled);
 
-        settings->setValue("rollMultiplierChecked", yRollMultiplierChecked);
-        settings->setValue("rollMultiplierValue", yRollMultiplierValue);
-        settings->setValue("pitchMultiplierChecked", xRollMultiplierChecked);
-        settings->setValue("pitchMultiplierValue", xRollMultiplierValue);
-        settings->setValue("surgeMultiplierChecked", zMultiplierChecked);
-        settings->setValue("surgeMultiplierValue", zMultiplierValue);
-        settings->setValue("swayMultiplierChecked", yMultiplierChecked);
-        settings->setValue("swayMultiplierValue", yMultiplierValue);
-        settings->setValue("twistMultiplierChecked", twistMultiplierChecked);
-        settings->setValue("twistMultiplierValue", twistMultiplierValue);
-        settings->setValue("vibMultiplierChecked", vibMultiplierChecked);
-        settings->setValue("vibMultiplierValue", vibMultiplierValue);
-        settings->setValue("suckMultiplierChecked", suckMultiplierChecked);
-        settings->setValue("suckMultiplierValue", suckMultiplierValue);
+//        settings->setValue("rollMultiplierChecked", yRollMultiplierChecked);
+//        settings->setValue("rollMultiplierValue", yRollMultiplierValue);
+//        settings->setValue("pitchMultiplierChecked", xRollMultiplierChecked);
+//        settings->setValue("pitchMultiplierValue", xRollMultiplierValue);
+//        settings->setValue("surgeMultiplierChecked", zMultiplierChecked);
+//        settings->setValue("surgeMultiplierValue", zMultiplierValue);
+//        settings->setValue("swayMultiplierChecked", yMultiplierChecked);
+//        settings->setValue("swayMultiplierValue", yMultiplierValue);
+//        settings->setValue("twistMultiplierChecked", twistMultiplierChecked);
+//        settings->setValue("twistMultiplierValue", twistMultiplierValue);
+//        settings->setValue("vibMultiplierChecked", vibMultiplierChecked);
+//        settings->setValue("vibMultiplierValue", vibMultiplierValue);
+//        settings->setValue("suckMultiplierChecked", suckMultiplierChecked);
+//        settings->setValue("suckMultiplierValue", suckMultiplierValue);
 
         settings->setValue("libraryView", libraryView);
         settings->setValue("selectedLibrarySortMode", selectedLibrarySortMode);
@@ -322,7 +327,22 @@ void SettingsHandler::MigrateTo23()
     settings->setValue("suckMultiplierValue", suckMultiplierValue);
     Save();
     Load();
-    LogHandler::Dialog("Due to a standards update your range settings\nhave been set to default for a new data structure.", XLogLevel::Information);
+    LogHandler::Dialog("Due to a standards update your RANGE settings\nhave been set to default for a new data structure.", XLogLevel::Information);
+}
+
+void SettingsHandler::MigrateTo25()
+{
+    settings->setValue("version", XTPVersionNum);
+    foreach(auto key, _availableAxis.keys())
+    {
+        _availableAxis[key].MultiplierEnabled = false;
+        _availableAxis[key].MultiplierValue = 0.01f;
+        _availableAxis[key].DamperEnabled = false;
+        _availableAxis[key].DamperValue = 0.2f;
+    }
+    Save();
+    Load();
+    LogHandler::Dialog("Due to a standards update your MULTIPLIER settings\nhave been set to default for a new data structure.", XLogLevel::Information);
 }
 
 QString SettingsHandler::getSelectedTheme()
@@ -398,132 +418,57 @@ void SettingsHandler::setChannelUserMax(QString channel, int value)
 
 float SettingsHandler::getMultiplierValue(QString channel)
 {
-    if(channel == axisNames.Twist)
-    {
-        return twistMultiplierValue;
-    }
-    else if(channel == axisNames.Sway)
-    {
-        return yMultiplierValue;
-    }
-    else if(channel == axisNames.Surge)
-    {
-        return zMultiplierValue;
-    }
-    else if(channel == axisNames.Roll)
-    {
-        return yRollMultiplierValue;
-    }
-    else if(channel == axisNames.Pitch)
-    {
-        return xRollMultiplierValue;
-    }
-    else if(channel == axisNames.Vib)
-    {
-        return vibMultiplierValue;
-    }
-    else if(channel == axisNames.Suck)
-    {
-        return suckMultiplierValue;
-    }
+    if(_availableAxis.contains(channel))
+        return _availableAxis.value(channel).MultiplierValue;
     return 0.0;
+}
+void SettingsHandler::setMultiplierValue(QString channel, float value)
+{
+    _availableAxis[channel].MultiplierValue = value;
 }
 
 bool SettingsHandler::getMultiplierChecked(QString channel)
 {
-    if(channel == axisNames.Twist)
-    {
-        return twistMultiplierChecked;
-    }
-    else if(channel == axisNames.Sway)
-    {
-        return yMultiplierChecked;
-    }
-    else if(channel == axisNames.Surge)
-    {
-        return zMultiplierChecked;
-    }
-    else if(channel == axisNames.Roll)
-    {
-        return yRollMultiplierChecked;
-    }
-    else if(channel == axisNames.Pitch)
-    {
-        return xRollMultiplierChecked;
-    }
-    else if(channel == axisNames.Vib)
-    {
-        return vibMultiplierChecked;
-    }
-    else if(channel == axisNames.Suck)
-    {
-        return suckMultiplierChecked;
-    }
+    if(_availableAxis.contains(channel))
+        return _availableAxis.value(channel).MultiplierEnabled;
     return false;
 }
-
-void SettingsHandler::setMultiplierValue(QString channel, float value)
-{
-    if(channel == axisNames.Twist)
-    {
-        twistMultiplierValue = value;
-    }
-    else if(channel == axisNames.Sway)
-    {
-        yMultiplierValue = value;
-    }
-    else if(channel == axisNames.Surge)
-    {
-        zMultiplierValue = value;
-    }
-    else if(channel == axisNames.Roll)
-    {
-        yRollMultiplierValue = value;
-    }
-    else if(channel == axisNames.Pitch)
-    {
-        xRollMultiplierValue = value;
-    }
-    else if(channel == axisNames.Vib)
-    {
-        vibMultiplierValue = value;
-    }
-    else if(channel == axisNames.Suck)
-    {
-        suckMultiplierValue = value;
-    }
-}
-
 void SettingsHandler::setMultiplierChecked(QString channel, bool value)
 {
-    if(channel == axisNames.Twist)
-    {
-        twistMultiplierChecked = value;
-    }
-    else if(channel == axisNames.Sway)
-    {
-        yMultiplierChecked = value;
-    }
-    else if(channel == axisNames.Surge)
-    {
-        zMultiplierChecked = value;
-    }
-    else if(channel == axisNames.Roll)
-    {
-        yRollMultiplierChecked = value;
-    }
-    else if(channel == axisNames.Pitch)
-    {
-        xRollMultiplierChecked = value;
-    }
-    else if(channel == axisNames.Vib)
-    {
-        vibMultiplierChecked = value;
-    }
-    else if(channel == axisNames.Suck)
-    {
-        suckMultiplierChecked = value;
-    }
+    _availableAxis[channel].MultiplierEnabled = value;
+}
+
+bool SettingsHandler::getChannelInverseChecked(QString channel)
+{
+    if(_availableAxis.contains(channel))
+        return _availableAxis.value(channel).Inverted;
+    return false;
+}
+void SettingsHandler::setChannelInverseChecked(QString channel, bool value)
+{
+    _availableAxis[channel].Inverted = value;
+}
+
+float SettingsHandler::getDamperValue(QString channel)
+{
+    if(_availableAxis.contains(channel))
+        return _availableAxis.value(channel).DamperValue;
+    return 0.0;
+}
+void SettingsHandler::setDamperValue(QString channel, float value)
+{
+    _availableAxis[channel].DamperValue = value;
+}
+
+bool SettingsHandler::getDamperChecked(QString channel)
+{
+    if(_availableAxis.contains(channel))
+        return _availableAxis.value(channel).DamperEnabled;
+    return false;
+}
+void SettingsHandler::setDamperChecked(QString channel, bool value)
+{
+    _availableAxis[channel].DamperEnabled = value;
 }
 
 int SettingsHandler::getLibraryView()
@@ -941,28 +886,28 @@ void SettingsHandler::setMainWindowSplitterPos(QList<int> value)
 void SettingsHandler::SetupAvailableAxis()
 {
     _availableAxis = {
-        {axisNames.None, { "None", axisNames.None, axisNames.None, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "" } },
-        {axisNames.Stroke, { "Stroke", axisNames.Stroke, axisNames.Stroke, 1, 500, 999, 1, 500, 999, AxisDimension::Heave, AxisType::Range, "" } },
-        {axisNames.StrokeDown, { "Stroke Down", axisNames.StrokeDown, axisNames.Stroke, 1, 500, 999, 1, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "" } },
-        {axisNames.StrokeUp, { "Stroke Up", axisNames.StrokeUp, axisNames.Stroke, 1, 500, 999, 1, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "" } },
-        {axisNames.Sway, { "Sway", axisNames.Sway, axisNames.Sway, 1, 500, 999, 1, 500, 999, AxisDimension::Sway, AxisType::Range, "sway" } },
-        {axisNames.SwayLeft, { "Sway Left", axisNames.SwayLeft, axisNames.Sway, 1, 500, 999, 1, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "" } },
-        {axisNames.SwayRight, { "Sway Right", axisNames.SwayRight, axisNames.Sway, 1, 500, 999, 1, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "" } },
-        {axisNames.Surge, { "Surge", axisNames.Surge, axisNames.Surge, 1, 500, 999, 1, 500, 999, AxisDimension::Surge, AxisType::Range, "surge" } },
-        {axisNames.SurgeBack, { "Surge Back", axisNames.SurgeBack, axisNames.Surge, 1, 500, 999, 1, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "" } },
-        {axisNames.SurgeForward, { "Surge Forward", axisNames.SurgeForward, axisNames.Surge, 1, 500, 999, 1, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "" } },
-        {axisNames.Pitch, { "Pitch", axisNames.Pitch, axisNames.Pitch, 1, 500, 999, 1, 500, 999, AxisDimension::Pitch, AxisType::Range, "pitch" } },
-        {axisNames.PitchForward, { "Pitch Forward", axisNames.PitchForward, axisNames.Pitch, 1, 500, 999, 1, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "" } },
-        {axisNames.PitchBack, { "Pitch Back", axisNames.PitchBack, axisNames.Pitch, 1, 500, 999, 1, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "" } },
-        {axisNames.Roll, { "Roll", axisNames.Roll, axisNames.Roll, 1, 500, 999, 1, 500, 999, AxisDimension::Roll, AxisType::Range, "roll" } },
-        {axisNames.RollLeft, { "Roll Left", axisNames.RollLeft, axisNames.Roll, 1, 500, 999, 1, 500, 999, AxisDimension::Roll, AxisType::HalfRange, "" } },
-        {axisNames.RollRight, { "Roll Right", axisNames.RollRight, axisNames.Roll, 1, 500, 999, 1, 500, 999, AxisDimension::Roll, AxisType::HalfRange, "" } },
-        {axisNames.Twist, { "Twist", axisNames.Twist, axisNames.Twist, 1, 500, 999, 1, 500, 999, AxisDimension::Yaw, AxisType::Range, "twist" } },
-        {axisNames.TwistClockwise, { "Twist (CW)", axisNames.TwistClockwise, axisNames.Twist, 1, 500, 999, 1, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "" } },
-        {axisNames.TwistCounterClockwise, { "Twist (CCW)", axisNames.TwistCounterClockwise, axisNames.Twist, 1, 500, 999, 1, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "" } },
-        {axisNames.Vib, { "Vib", axisNames.Vib, axisNames.Vib, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "vib" } },
-        {axisNames.Lube, { "Lube", axisNames.Lube, axisNames.Lube, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "lube" } },
-        {axisNames.Suck, { "Suck", axisNames.Suck, axisNames.Suck, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::Range, "suck" } }
+        {axisNames.None, { "None", axisNames.None, axisNames.None, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "", false, 0.01f, false, 0.2f, false } },
+        {axisNames.Stroke, { "Stroke", axisNames.Stroke, axisNames.Stroke, 1, 500, 999, 1, 500, 999, AxisDimension::Heave, AxisType::Range, "", false, 0.01f, false, 0.2f, false } },
+        {axisNames.StrokeDown, { "Stroke Down", axisNames.StrokeDown, axisNames.Stroke, 1, 500, 999, 1, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
+        {axisNames.StrokeUp, { "Stroke Up", axisNames.StrokeUp, axisNames.Stroke, 1, 500, 999, 1, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
+        {axisNames.Sway, { "Sway", axisNames.Sway, axisNames.Sway, 1, 500, 999, 1, 500, 999, AxisDimension::Sway, AxisType::Range, "sway", false, 0.01f, false, 0.2f, false } },
+        {axisNames.SwayLeft, { "Sway Left", axisNames.SwayLeft, axisNames.Sway, 1, 500, 999, 1, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
+        {axisNames.SwayRight, { "Sway Right", axisNames.SwayRight, axisNames.Sway, 1, 500, 999, 1, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
+        {axisNames.Surge, { "Surge", axisNames.Surge, axisNames.Surge, 1, 500, 999, 1, 500, 999, AxisDimension::Surge, AxisType::Range, "surge", false, 0.01f, false, 0.2f, false } },
+        {axisNames.SurgeBack, { "Surge Back", axisNames.SurgeBack, axisNames.Surge, 1, 500, 999, 1, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
+        {axisNames.SurgeForward, { "Surge Forward", axisNames.SurgeForward, axisNames.Surge, 1, 500, 999, 1, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
+        {axisNames.Pitch, { "Pitch", axisNames.Pitch, axisNames.Pitch, 1, 500, 999, 1, 500, 999, AxisDimension::Pitch, AxisType::Range, "pitch", false, 0.01f, false, 0.2f, false } },
+        {axisNames.PitchForward, { "Pitch Forward", axisNames.PitchForward, axisNames.Pitch, 1, 500, 999, 1, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
+        {axisNames.PitchBack, { "Pitch Back", axisNames.PitchBack, axisNames.Pitch, 1, 500, 999, 1, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
+        {axisNames.Roll, { "Roll", axisNames.Roll, axisNames.Roll, 1, 500, 999, 1, 500, 999, AxisDimension::Roll, AxisType::Range, "roll", false, 0.01f, false, 0.2f, false } },
+        {axisNames.RollLeft, { "Roll Left", axisNames.RollLeft, axisNames.Roll, 1, 500, 999, 1, 500, 999, AxisDimension::Roll, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
+        {axisNames.RollRight, { "Roll Right", axisNames.RollRight, axisNames.Roll, 1, 500, 999, 1, 500, 999, AxisDimension::Roll, AxisType::HalfRange, "", false, 0.01f, false, 0.2f , false} },
+        {axisNames.Twist, { "Twist", axisNames.Twist, axisNames.Twist, 1, 500, 999, 1, 500, 999, AxisDimension::Yaw, AxisType::Range, "twist", false, 0.01f, false, 0.2f, false } },
+        {axisNames.TwistClockwise, { "Twist (CW)", axisNames.TwistClockwise, axisNames.Twist, 1, 500, 999, 1, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
+        {axisNames.TwistCounterClockwise, { "Twist (CCW)", axisNames.TwistCounterClockwise, axisNames.Twist, 1, 500, 999, 1, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
+        {axisNames.Vib, { "Vib", axisNames.Vib, axisNames.Vib, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "vib", false, 0.01f, false, 0.2f, false } },
+        {axisNames.Lube, { "Lube", axisNames.Lube, axisNames.Lube, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "lube", false, 0.01f, false, 0.2f, false } },
+        {axisNames.Suck, { "Suck", axisNames.Suck, axisNames.Suck, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::Range, "suck", false, 0.01f, false, 0.2f, false } }
     };
 }
 

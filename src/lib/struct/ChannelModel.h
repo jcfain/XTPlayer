@@ -34,6 +34,11 @@ struct ChannelModel
     AxisDimension Dimension;
     AxisType Type;
     QString TrackName;
+    bool MultiplierEnabled;
+    float MultiplierValue;
+    bool DamperEnabled;
+    float DamperValue;
+    bool Inverted;
 
     friend QDataStream & operator<<( QDataStream &dataStream, const ChannelModel &object )
     {
@@ -49,6 +54,11 @@ struct ChannelModel
         dataStream << object.Dimension;
         dataStream << object.Type;
         dataStream << object.TrackName;
+        dataStream << object.MultiplierEnabled;
+        dataStream << object.MultiplierValue;
+        dataStream << object.DamperEnabled;
+        dataStream << object.DamperValue;
+        dataStream << object.Inverted;
         return dataStream;
     }
 
@@ -66,6 +76,11 @@ struct ChannelModel
         dataStream >> object.Dimension;
         dataStream >> object.Type;
         dataStream >> object.TrackName;
+        dataStream >> object.MultiplierEnabled;
+        dataStream >> object.MultiplierValue;
+        dataStream >> object.DamperEnabled;
+        dataStream >> object.DamperValue;
+        dataStream >> object.Inverted;
         return dataStream;
     }
 };

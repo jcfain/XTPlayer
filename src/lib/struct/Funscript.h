@@ -9,6 +9,8 @@ struct FunscriptAction {
     qint64 at;
     int pos;
     int speed;
+    int lastPos;
+    int lastSpeed;
 };
 
 struct FunscriptMetadata {

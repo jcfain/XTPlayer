@@ -160,9 +160,11 @@ std::shared_ptr<FunscriptAction> FunscriptHandler::getPosition(qint64 millis)
 //        LogHandler::Debug("nextActionIndex: "+ QString::number(nextActionIndex));
         //LogHandler::Debug("nextActionPos: "+ QString::number(funscript->actions.value(nextMillis)));
         qint64 executionMillis = lastActionIndex == -1 ? closestMillis : nextMillis;
-        std::shared_ptr<FunscriptAction> nextAction(new FunscriptAction { _channel, executionMillis, funscript->actions.value(executionMillis), speed });
+        std::shared_ptr<FunscriptAction> nextAction(new FunscriptAction { _channel, executionMillis, funscript->actions.value(executionMillis), speed, lastActionPos, lastActionSpeed });
         //LogHandler::Debug("nextAction.speed: "+ QString::number(nextAction->speed));
         lastActionIndex = nextActionIndex;
+        lastActionPos = funscript->actions.value(executionMillis);
+        lastActionSpeed = speed;
         return nextAction;
     }
     return nullptr;

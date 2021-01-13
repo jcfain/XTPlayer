@@ -14,6 +14,7 @@ ChannelTableViewModel::ChannelTableViewModel(QObject *parent) :
     setHeaderData(6, Qt::Horizontal, QObject::tr("Dimension"));
     setHeaderData(7, Qt::Horizontal, QObject::tr("Type"));
     setHeaderData(8, Qt::Horizontal, QObject::tr("Track"));
+
 }
 
 int ChannelTableViewModel::rowCount(const QModelIndex& parent) const
@@ -105,7 +106,7 @@ bool ChannelTableViewModel::setData(const QModelIndex &index, const QVariant &va
             return false;
         if (value.isNull())
             return false;
-        if ((value.userType() == QMetaType::QString && value.toString().isEmpty()) || (value.userType() == QMetaType::Int && value.toInt() == 0))
+        if ((value.userType() == QMetaType::QString && value.toString().isEmpty()))
             return false;
         //save value from editor to member m_gridData
         QString key = (_map->constBegin() + index.row()).key();

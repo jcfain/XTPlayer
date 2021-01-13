@@ -83,9 +83,17 @@ public:
     static void setoffSet(int value);
 
     static float getMultiplierValue(QString channel);
+    static void setMultiplierValue(QString channel, float value);
     static bool getMultiplierChecked(QString channel);
     static void setMultiplierChecked(QString channel, bool value);
-    static void setMultiplierValue(QString channel, float value);
+
+    static bool getChannelInverseChecked(QString channel);
+    static void setChannelInverseChecked(QString channel, bool value);
+
+    static float getDamperValue(QString channel);
+    static void setDamperValue(QString channel, float value);
+    static bool getDamperChecked(QString channel);
+    static void setDamperChecked(QString channel, bool value);
 
     static void setLibraryView(int value);
     static void setThumbSize(int value);
@@ -141,6 +149,7 @@ private:
     static void SetMapDefaults();
     static void SetupGamepadButtonMap();
     static void MigrateTo23();
+    static void MigrateTo25();
     static GamepadAxisNames gamepadAxisNames;
     static AxisNames axisNames;
     static MediaActions mediaActions;

@@ -83,7 +83,6 @@ void SettingsDialog::init(VideoHandler* videoHandler)
 
 void SettingsDialog::initLive()
 {
-    ui.invertFunscriptXCheckBox->setChecked(FunscriptHandler::getInverted());
     ui.enableMultiplierCheckbox->setChecked(SettingsHandler::getMultiplierEnabled());
 }
 
@@ -111,6 +110,18 @@ void SettingsDialog::setupUi()
         channelTableViewModel = new ChannelTableViewModel(this);
         ui.channelTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
         ui.channelTableView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+        ChannelTableComboboxDelegate* channelTypeCombobox = new ChannelTableComboboxDelegate(ui.channelTableView);
+        QMap<QString, int> axisTypes;
+        foreach(auto key, AxisTypes.keys())
+            axisTypes.insert(key, (int)AxisTypes.value(key));
+        channelTypeCombobox->setData(axisTypes);
+        ChannelTableComboboxDelegate* channelDimensionCombobox = new ChannelTableComboboxDelegate(ui.channelTableView);
+        QMap<QString, int> axisDimensions;
+        foreach(auto key, AxisDimensions.keys())
+            axisDimensions.insert(key, (int)AxisDimensions.value(key));
+        channelDimensionCombobox->setData(axisDimensions);
+        ui.channelTableView->setItemDelegateForColumn(7, channelTypeCombobox);
+        ui.channelTableView->setItemDelegateForColumn(6, channelDimensionCombobox);
         ui.channelTableView->setModel(channelTableViewModel);
 
         ui.SerialOutputCmb->setCurrentText(SettingsHandler::getSerialPort());
@@ -118,23 +129,11 @@ void SettingsDialog::setupUi()
         ui.networkPortTxt->setText(SettingsHandler::getServerPort());
         ui.deoAddressTxt->setText(SettingsHandler::getDeoAddress());
         ui.deoPortTxt->setText(SettingsHandler::getDeoPort());
-        ui.xRollMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.Pitch));
-        ui.xRollMultiplierSpinBox->setValue(SettingsHandler::getMultiplierValue(axisNames.Pitch));
-        ui.yRollMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.Roll));
-        ui.yRollMultiplierSpinBox->setValue(SettingsHandler::getMultiplierValue(axisNames.Roll));
-        ui.twistMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.Twist));
-        ui.twistMultiplierSpinBox->setValue(SettingsHandler::getMultiplierValue(axisNames.Twist));
-        ui.yMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.Sway));
-        ui.yMultiplierSpinBox->setValue(SettingsHandler::getMultiplierValue(axisNames.Sway));
-        ui.zMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.Surge));
-        ui.zMuliplierSpinBox->setValue(SettingsHandler::getMultiplierValue(axisNames.Surge));
-        ui.vibMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.Vib));
-        ui.vibMultiplierSpinBox->setValue(SettingsHandler::getMultiplierValue(axisNames.Vib));
-        ui.suckMultiplierCheckBox->setChecked(SettingsHandler::getMultiplierChecked(axisNames.Suck));
-        ui.suckMultiplierSpinBox->setValue(SettingsHandler::getMultiplierValue(axisNames.Suck));
 
         QFont font( "Sans Serif", 8);
         int sliderGridRow = 0;
+        int multiplierGridRow = 1;
+        int funscriptSettingsGridRow = 0;
         auto availableAxis = SettingsHandler::getAvailableAxis();
         foreach(auto channel, availableAxis->keys())
         {
@@ -185,6 +184,64 @@ void SettingsDialog::setupUi()
             connect(rangeSlider, QOverload<QString, int>::of(&RangeSlider::upperValueChanged), this, &SettingsDialog::onRange_valueChanged);
             // mouse release work around for gamepad recalculation reseting on every valueChange event.
             connect(rangeSlider, QOverload<QString>::of(&RangeSlider::mouseRelease), this, &SettingsDialog::onRange_mouseRelease);
+
+            // Multipliers
+            if(availableAxis->value(channel).Dimension != AxisDimension::Heave)
+            {
+                QCheckBox* multiplierCheckbox = new QCheckBox(this);
+                multiplierCheckbox->setText(availableAxis->value(channel).FriendlyName);
+                multiplierCheckbox->setChecked(SettingsHandler::getMultiplierChecked(channel));
+                QDoubleSpinBox* multiplierInput = new QDoubleSpinBox(this);
+                multiplierInput->setDecimals(3);
+                multiplierInput->setSingleStep(0.1f);
+                multiplierInput->setMinimum(std::numeric_limits<int>::lowest());
+                multiplierInput->setMaximum(std::numeric_limits<int>::max());
+                multiplierInput->setValue(SettingsHandler::getMultiplierValue(channel));
+                connect(multiplierInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+                        [channel](float value)
+                          {
+                            SettingsHandler::setMultiplierValue(channel, value);
+                          });
+                connect(multiplierCheckbox, &QCheckBox::clicked, this,
+                        [channel](bool checked)
+                          {
+                            SettingsHandler::setMultiplierChecked(channel, checked);
+                          });
+                QCheckBox* damperCheckbox = new QCheckBox(this);
+                damperCheckbox->setText("Speed");
+                damperCheckbox->setChecked(SettingsHandler::getDamperChecked(channel));
+                QDoubleSpinBox* damperInput = new QDoubleSpinBox(this);
+                damperInput->setDecimals(1);
+                damperInput->setSingleStep(0.1f);
+                damperInput->setMinimum(0.1f);
+                damperInput->setMaximum(std::numeric_limits<int>::max());
+                damperInput->setValue(SettingsHandler::getDamperValue(channel));
+                connect(damperInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+                        [channel](float value)
+                          {
+                            SettingsHandler::setDamperValue(channel, value);
+                          });
+                connect(damperCheckbox, &QCheckBox::clicked, this,
+                        [channel](bool checked)
+                          {
+                            SettingsHandler::setDamperChecked(channel, checked);
+                          });
+                ui.MultiplierSettingsGrid->addWidget(multiplierCheckbox, multiplierGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+                ui.MultiplierSettingsGrid->addWidget(multiplierInput, multiplierGridRow, 1, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+                ui.MultiplierSettingsGrid->addWidget(damperCheckbox, multiplierGridRow, 2, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
+                ui.MultiplierSettingsGrid->addWidget(damperInput, multiplierGridRow, 3, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+                multiplierGridRow++;
+            }
+            QCheckBox* invertedCheckbox = new QCheckBox(this);
+            invertedCheckbox->setText(availableAxis->value(channel).FriendlyName);
+            invertedCheckbox->setChecked(SettingsHandler::getChannelInverseChecked(channel));
+            connect(invertedCheckbox, &QCheckBox::clicked, this,
+                    [channel](bool checked)
+                      {
+                        SettingsHandler::setChannelInverseChecked(channel, checked);
+                      });
+            ui.FunscriptSettingsGrid->addWidget(invertedCheckbox, funscriptSettingsGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+            funscriptSettingsGridRow++;
         }
 
         QPushButton* zeroOutButton = new QPushButton(this);
@@ -222,15 +279,6 @@ void SettingsDialog::setupUi()
         ui.RangeSettingsGrid->addWidget(xRangeStepLabel, sliderGridRow, 1, 1, 1);
         sliderGridRow++;
         ui.RangeSettingsGrid->addWidget(xRangeStepInput, sliderGridRow, 1, 1, 1);
-
-        ui.vibMultiplierSpinBox->setMinimum(std::numeric_limits<int>::lowest());
-        ui.vibMultiplierSpinBox->setMaximum(std::numeric_limits<int>::max());
-        ui.xRollMultiplierSpinBox->setMinimum(std::numeric_limits<int>::lowest());
-        ui.xRollMultiplierSpinBox->setMaximum(std::numeric_limits<int>::max());
-        ui.yRollMultiplierSpinBox->setMinimum(std::numeric_limits<int>::lowest());
-        ui.yRollMultiplierSpinBox->setMaximum(std::numeric_limits<int>::max());
-        ui.twistMultiplierSpinBox->setMinimum(std::numeric_limits<int>::lowest());
-        ui.twistMultiplierSpinBox->setMaximum(std::numeric_limits<int>::max());
 
         connect(offSetSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onOffSet_valueChanged);
 
@@ -855,77 +903,6 @@ void SettingsDialog::on_enableMultiplierCheckbox_clicked(bool checked)
     SettingsHandler::setMultiplierEnabled(checked);
 }
 
-void SettingsDialog::on_xRollMultiplierCheckBox_clicked()
-{
-    SettingsHandler::setMultiplierChecked(axisNames.Pitch, ui.xRollMultiplierCheckBox->isChecked());
-}
-
-void SettingsDialog::on_xRollMultiplierSpinBox_valueChanged(double value)
-{
-    SettingsHandler::setMultiplierValue(axisNames.Pitch, value);
-}
-
-void SettingsDialog::on_yRollMultiplierCheckBox_clicked()
-{
-    SettingsHandler::setMultiplierChecked(axisNames.Roll, ui.yRollMultiplierCheckBox->isChecked());
-}
-
-void SettingsDialog::on_yRollMultiplierSpinBox_valueChanged(double value)
-{
-    SettingsHandler::setMultiplierValue(axisNames.Roll, value);
-}
-
-void SettingsDialog::on_twistMultiplierCheckBox_clicked()
-{
-    SettingsHandler::setMultiplierChecked(axisNames.Twist, ui.twistMultiplierCheckBox->isChecked());
-}
-
-void SettingsDialog::on_twistMultiplierSpinBox_valueChanged(double value)
-{
-    SettingsHandler::setMultiplierValue(axisNames.Twist, value);
-}
-
-void SettingsDialog::on_vibMultiplierCheckBox_clicked(bool checked)
-{
-    SettingsHandler::setMultiplierChecked(axisNames.Vib, checked);
-}
-
-void SettingsDialog::on_vibMultiplierSpinBox_valueChanged(double value)
-{
-    SettingsHandler::setMultiplierValue(axisNames.Vib, value);
-}
-
-void SettingsDialog::on_yMultiplierCheckBox_clicked(bool checked)
-{
-    SettingsHandler::setMultiplierChecked(axisNames.Sway, checked);
-}
-
-void SettingsDialog::on_yMultiplierSpinBox_valueChanged(double value)
-{
-    SettingsHandler::setMultiplierValue(axisNames.Sway, value);
-}
-
-void SettingsDialog::on_zMultiplierCheckBox_clicked(bool checked)
-{
-    SettingsHandler::setMultiplierChecked(axisNames.Surge, checked);
-}
-
-void SettingsDialog::on_zMuliplierSpinBox_valueChanged(double value)
-{
-    SettingsHandler::setMultiplierValue(axisNames.Surge, value);
-}
-
-void SettingsDialog::on_suckMultiplierCheckBox_clicked(bool checked)
-{
-    SettingsHandler::setMultiplierChecked(axisNames.Suck, checked);
-}
-
-void SettingsDialog::on_suckMultiplierSpinBox_valueChanged(double value)
-{
-    SettingsHandler::setMultiplierValue(axisNames.Suck, value);
-}
-
-
 void SettingsDialog::on_serialConnectButton_clicked()
 {
     auto portName = selectedSerialPort.portName;
@@ -1143,12 +1120,14 @@ void SettingsDialog::on_channelDeleteButton_clicked()
 void SettingsDialog::on_axisDefaultButton_clicked()
 {
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset Axis map?",
+    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset Axis map?\nThis will reset ALL range and multiplier settings!\nApp will restart on yes.",
                                   QMessageBox::Yes|QMessageBox::No);
     if (reply == QMessageBox::Yes)
     {
         SettingsHandler::SetupAvailableAxis();
         channelTableViewModel->setMap();
+        QApplication::quit();
+        QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
     }
 }
 

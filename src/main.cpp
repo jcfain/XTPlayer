@@ -4,6 +4,7 @@
 
 int main(int argc, char *argv[])
 {
+    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
     qRegisterMetaTypeStreamOperators<DecoderModel>("DecoderModel");
     QApplication a(argc, argv);
