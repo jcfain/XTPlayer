@@ -24,7 +24,7 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data) :
         }
         else
         {
-            AxisNames axisNames;
+            TCodeChannels axisNames;
             auto availibleAxis = SettingsHandler::getAvailableAxis();
             foreach(auto axisName, availibleAxis->keys())
             {

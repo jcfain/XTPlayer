@@ -28,6 +28,8 @@ signals:
     void mediaStatusChanged(MediaStatus status);
     void started();
     void stopped();
+    void playing();
+    void stopping();
     void togglePaused(bool paused);
 
 public:;

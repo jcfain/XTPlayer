@@ -32,7 +32,7 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent)
 
     _player->setSeekType(AccurateSeek);
 
-    connect(_player, &AVPlayer::positionChanged, this, &VideoHandler::on_media_positionChanged);
+    connect(_player, &AVPlayer::positionChanged, this, &VideoHandler::on_media_positionChanged, Qt::QueuedConnection);
     connect(_player, &AVPlayer::mediaStatusChanged, this, &VideoHandler::on_media_statusChanged);
     connect(_player, &AVPlayer::started, this, &VideoHandler::on_media_start);
     connect(_player, &AVPlayer::stopped, this, &VideoHandler::on_media_stop);
@@ -100,11 +100,14 @@ bool VideoHandler::isPlaying()
 void VideoHandler::play()
 {
     _player->play();
+    emit playing();
 }
 
 void VideoHandler::stop()
 {
     _player->stop();
+    _player->updateClock(0);
+    emit stopping();
 }
 
 void VideoHandler::togglePause()
@@ -173,7 +176,7 @@ void VideoHandler::setPosition(qint64 position)
     //const QMutexLocker locker(&_mutex);
     disconnect(_player, &AVPlayer::positionChanged, this, &VideoHandler::on_media_positionChanged);
     _player->setPosition(position);
-    connect(_player, &AVPlayer::positionChanged, this, &VideoHandler::on_media_positionChanged);
+    connect(_player, &AVPlayer::positionChanged, this, &VideoHandler::on_media_positionChanged, Qt::QueuedConnection);
 }
 
 void VideoHandler::seek(qint64 position)

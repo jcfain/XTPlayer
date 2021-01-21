@@ -23,7 +23,7 @@ public:
 
 private:
     QMutex mutex;
-    const AxisNames axisNames;
+    const TCodeChannels axisNames;
 };
 
 #endif // TCODEHANDLER_H

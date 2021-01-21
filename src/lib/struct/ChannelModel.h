@@ -39,6 +39,8 @@ struct ChannelModel
     bool DamperEnabled;
     float DamperValue;
     bool Inverted;
+    bool LinkToRelatedMFS;
+    QString RelatedChannel;
 
     friend QDataStream & operator<<( QDataStream &dataStream, const ChannelModel &object )
     {
@@ -59,6 +61,8 @@ struct ChannelModel
         dataStream << object.DamperEnabled;
         dataStream << object.DamperValue;
         dataStream << object.Inverted;
+        dataStream << object.LinkToRelatedMFS;
+        dataStream << object.RelatedChannel;
         return dataStream;
     }
 
@@ -81,6 +85,8 @@ struct ChannelModel
         dataStream >> object.DamperEnabled;
         dataStream >> object.DamperValue;
         dataStream >> object.Inverted;
+        dataStream >> object.LinkToRelatedMFS;
+        dataStream >> object.RelatedChannel;
         return dataStream;
     }
 };

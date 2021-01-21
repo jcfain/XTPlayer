@@ -70,7 +70,7 @@ void GamepadHandler::run()
     TCodeFactory* tcodeFactory = new TCodeFactory(0.0, 1.0);
     QVector<ChannelValueModel> axisValues;
     GamepadAxisNames gamepadAxisNames;
-    AxisNames axisNames;
+    TCodeChannels axisNames;
     MediaActions mediaActions;
     XTimer leftXAxisTimer;
     XTimer leftYAxisTimer;

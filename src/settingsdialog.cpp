@@ -137,10 +137,10 @@ void SettingsDialog::setupUi()
         auto availableAxis = SettingsHandler::getAvailableAxis();
         foreach(auto channel, availableAxis->keys())
         {
-            if(availableAxis->value(channel).Type != AxisType::Range)
+            ChannelModel axis = SettingsHandler::getAxis(channel);
+            if(axis.Type != AxisType::Range)
                 continue;
 
-            ChannelModel axis = SettingsHandler::getAxis(channel);
             int userMin = axis.UserMin;
             int userMax = axis.UserMax;
             QLabel* rangeMinLabel = new QLabel(QString::number(userMin));
@@ -149,7 +149,7 @@ void SettingsDialog::setupUi()
             ui.RangeSettingsGrid->addWidget(rangeMinLabel, sliderGridRow,0);
             rangeMinLabels.insert(channel, rangeMinLabel);
 
-            QLabel* rangeLabel = new QLabel(availableAxis->value(channel).FriendlyName + " Range");
+            QLabel* rangeLabel = new QLabel(axis.FriendlyName + " Range");
             rangeLabel->setFont(font);
             rangeLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
             ui.RangeSettingsGrid->addWidget(rangeLabel, sliderGridRow,1);
@@ -186,10 +186,10 @@ void SettingsDialog::setupUi()
             connect(rangeSlider, QOverload<QString>::of(&RangeSlider::mouseRelease), this, &SettingsDialog::onRange_mouseRelease);
 
             // Multipliers
-            if(availableAxis->value(channel).Dimension != AxisDimension::Heave)
+            if(axis.Dimension != AxisDimension::Heave)
             {
                 QCheckBox* multiplierCheckbox = new QCheckBox(this);
-                multiplierCheckbox->setText(availableAxis->value(channel).FriendlyName);
+                multiplierCheckbox->setText(axis.FriendlyName);
                 multiplierCheckbox->setChecked(SettingsHandler::getMultiplierChecked(channel));
                 QDoubleSpinBox* multiplierInput = new QDoubleSpinBox(this);
                 multiplierInput->setDecimals(3);
@@ -211,6 +211,7 @@ void SettingsDialog::setupUi()
                 damperCheckbox->setText("Speed");
                 damperCheckbox->setChecked(SettingsHandler::getDamperChecked(channel));
                 QDoubleSpinBox* damperInput = new QDoubleSpinBox(this);
+                damperInput->setToolTip("If the funscript travel distance is greater than half(50) and the speed is greater than 1000,\nmultiply the speed by the inputed value.\n4000 * 0.05 = 2000");
                 damperInput->setDecimals(1);
                 damperInput->setSingleStep(0.1f);
                 damperInput->setMinimum(0.1f);
@@ -226,14 +227,26 @@ void SettingsDialog::setupUi()
                           {
                             SettingsHandler::setDamperChecked(channel, checked);
                           });
+
+
                 ui.MultiplierSettingsGrid->addWidget(multiplierCheckbox, multiplierGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
                 ui.MultiplierSettingsGrid->addWidget(multiplierInput, multiplierGridRow, 1, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-                ui.MultiplierSettingsGrid->addWidget(damperCheckbox, multiplierGridRow, 2, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
-                ui.MultiplierSettingsGrid->addWidget(damperInput, multiplierGridRow, 3, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+                QCheckBox* linkCheckbox = new QCheckBox(this);
+                linkCheckbox->setToolTip("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS " + ChannelNames.value(axis.RelatedChannel) + " funscript value.\nIf there is no " + ChannelNames.value(axis.RelatedChannel) + " funscript then it will default to random motion.");
+                linkCheckbox->setText("Link to MFS " + ChannelNames.value(axis.RelatedChannel));
+                linkCheckbox->setChecked(SettingsHandler::getLinkToRelatedAxisChecked(channel));
+                connect(linkCheckbox, &QCheckBox::clicked, this,
+                        [channel](bool checked)
+                          {
+                            SettingsHandler::setLinkToRelatedAxisChecked(channel, checked);
+                          });
+                ui.MultiplierSettingsGrid->addWidget(linkCheckbox, multiplierGridRow, 2, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+                ui.MultiplierSettingsGrid->addWidget(damperCheckbox, multiplierGridRow, 3, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
+                ui.MultiplierSettingsGrid->addWidget(damperInput, multiplierGridRow, 4, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
                 multiplierGridRow++;
             }
             QCheckBox* invertedCheckbox = new QCheckBox(this);
-            invertedCheckbox->setText(availableAxis->value(channel).FriendlyName);
+            invertedCheckbox->setText(axis.FriendlyName);
             invertedCheckbox->setChecked(SettingsHandler::getChannelInverseChecked(channel));
             connect(invertedCheckbox, &QCheckBox::clicked, this,
                     [channel](bool checked)
@@ -241,6 +254,7 @@ void SettingsDialog::setupUi()
                         SettingsHandler::setChannelInverseChecked(channel, checked);
                       });
             ui.FunscriptSettingsGrid->addWidget(invertedCheckbox, funscriptSettingsGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+
             funscriptSettingsGridRow++;
         }
 
@@ -1120,7 +1134,7 @@ void SettingsDialog::on_channelDeleteButton_clicked()
 void SettingsDialog::on_axisDefaultButton_clicked()
 {
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset Axis map?\nThis will reset ALL range and multiplier settings!\nApp will restart on yes.",
+    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset the channel map?\nThis will reset ALL range and multiplier settings!\nApp will restart on yes.",
                                   QMessageBox::Yes|QMessageBox::No);
     if (reply == QMessageBox::Yes)
     {
@@ -1176,4 +1190,10 @@ void SettingsDialog::on_defaultPriorityButton_clicked()
 {
     SettingsHandler::SetupDecoderPriority();
     on_cancelPriorityButton_clicked();
+}
+
+void SettingsDialog::on_libraryExclusionsBtn_clicked()
+{
+    _libraryExclusions = new LibraryExclusions(this);
+    _libraryExclusions->show();
 }

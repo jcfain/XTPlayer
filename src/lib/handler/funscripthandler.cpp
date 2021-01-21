@@ -8,6 +8,8 @@ FunscriptHandler::FunscriptHandler(QString channel)
 FunscriptHandler::~FunscriptHandler()
 {
     delete(funscript);
+    _loaded = false;
+    SettingsHandler::setFunscriptLoaded(_channel, false);
 }
 
 QString FunscriptHandler::channel()
@@ -21,6 +23,7 @@ void FunscriptHandler::load(QString funscriptString)
     if (funscriptString == nullptr)
     {
         _loaded = false;
+        SettingsHandler::setFunscriptLoaded(_channel, _loaded);
         return;
     }
     LogHandler::Debug("Funscript load: "+funscriptString);
@@ -30,6 +33,7 @@ void FunscriptHandler::load(QString funscriptString)
     if (!loadFile.open(QIODevice::ReadOnly)) {
         qWarning("Couldn't open funscript file.");
         _loaded = false;
+        SettingsHandler::setFunscriptLoaded(_channel, _loaded);
         return;
     }
 
@@ -47,12 +51,14 @@ void FunscriptHandler::load(QByteArray byteArray)
         emit errorOccurred("loading funscript failed: " + error->errorString());
         delete error;
         _loaded = false;
+        SettingsHandler::setFunscriptLoaded(_channel, _loaded);
         return;
     }
     delete error;
     JSonToFunscript(doc.object());
 
     _loaded = true;
+    SettingsHandler::setFunscriptLoaded(_channel, _loaded);
 }
 
 Funscript* FunscriptHandler::currentFunscript()
@@ -69,6 +75,7 @@ bool FunscriptHandler::isLoaded()
 void FunscriptHandler::setLoaded(bool value)
 {
     QMutexLocker locker(&mutex);
+    SettingsHandler::setFunscriptLoaded(_channel, _loaded);
     _loaded = value;
 }
 void FunscriptHandler::JSonToFunscript(QJsonObject json)

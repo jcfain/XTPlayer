@@ -3,6 +3,7 @@
 #include <QString>
 #include <QMetaType>
 #include <QDate>
+#include <QVariant>
 
 struct LibraryListItem
 {
@@ -28,7 +29,7 @@ struct LibraryListItem
         dataStream << object.thumbFile;
         dataStream << object.zipFile;
         dataStream << object.modifiedDate;
-        //dataStream << object.duration;
+        //dataStream << QVariant::fromValue(object.duration);
         //dataStream << object.audioOnly;
         return dataStream;
     }

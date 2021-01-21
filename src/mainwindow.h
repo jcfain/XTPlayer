@@ -150,7 +150,7 @@ private:
     Ui::MainWindow *ui;
     SettingsDialog* _xSettings;
     LibraryWindow* libraryWindow;
-    AxisNames _axisNames;
+    TCodeChannels _axisNames;
     QTextToSpeech* textToSpeech;
     VideoPreviewWidget* videoPreviewWidget;
     QFuture<void> funscriptFuture;
@@ -235,7 +235,7 @@ private:
     void mediaAction(QString action);
     void toggleFullScreen();
     void toggleLoop();
-    void toggleMediaControlStatus();
+    void toggleMediaControlStatus(bool playing);
     void hideControls();
     void showControls();
     void hideLibrary();

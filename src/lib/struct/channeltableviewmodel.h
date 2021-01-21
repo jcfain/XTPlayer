@@ -34,7 +34,7 @@ public:
 
 private:
     QMap<QString, ChannelModel>* _map;
-    AxisNames axisNames;
+    TCodeChannels axisNames;
 };
 
 #endif // CHANNELTABLEVIEWMODEL_H

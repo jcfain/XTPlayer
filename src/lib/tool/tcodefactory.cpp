@@ -12,7 +12,7 @@ void TCodeFactory::init()
 
 void TCodeFactory::calculate(QString axisName, double value, QVector<ChannelValueModel> &axisValues)
 {
-    AxisNames axisNames;
+    TCodeChannels axisNames;
     if (axisName != axisNames.None)
     {
         auto tcodeAxis = SettingsHandler::getAxis(axisName);
@@ -65,7 +65,7 @@ int TCodeFactory::calculateTcodeRange(double value, QString channel)
     int output_end = SettingsHandler::getAxis(channel).UserMax;
     int min = SettingsHandler::getAxis(channel).UserMin;
     // Update for live x range switch
-    AxisNames axisNames;
+    TCodeChannels axisNames;
     if(channel == axisNames.Stroke)
     {
         output_end = SettingsHandler::getLiveXRangeMax();

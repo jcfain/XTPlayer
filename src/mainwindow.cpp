@@ -212,10 +212,10 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(actionCreatedAsc_Sort, &QAction::triggered, this, &MainWindow::on_actionCreatedAsc_triggered);
     connect(actionCreatedDesc_Sort, &QAction::triggered, this, &MainWindow::on_actionCreatedDesc_triggered);
 
-    connect(videoHandler, &VideoHandler::positionChanged, this, &MainWindow::on_media_positionChanged);
+    connect(videoHandler, &VideoHandler::positionChanged, this, &MainWindow::on_media_positionChanged, Qt::QueuedConnection);
     connect(videoHandler, &VideoHandler::mediaStatusChanged, this, &MainWindow::on_media_statusChanged);
-    connect(videoHandler, &VideoHandler::started, this, &MainWindow::on_media_start);
-    connect(videoHandler, &VideoHandler::stopped, this, &MainWindow::on_media_stop);
+    connect(videoHandler, &VideoHandler::playing, this, &MainWindow::on_media_start);
+    connect(videoHandler, &VideoHandler::stopping, this, &MainWindow::on_media_stop);
     connect(videoHandler, &VideoHandler::togglePaused, this, &MainWindow::onVideoHandler_togglePaused);
 
     connect(ui->SeekSlider, &RangeSlider::upperValueMove, this, &MainWindow::on_seekSlider_sliderMoved);
@@ -484,7 +484,7 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.IncreaseXLowerRange)
     {
-        AxisNames axisNames;
+        TCodeChannels axisNames;
         int xRangeStep = SettingsHandler::getXRangeStep();
         int newLiveRange = SettingsHandler::getLiveXRangeMin() + SettingsHandler::getXRangeStep();
         int xRangeMax = SettingsHandler::getLiveXRangeMax();
@@ -503,7 +503,7 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.DecreaseXLowerRange)
     {
-        AxisNames axisNames;
+        TCodeChannels axisNames;
         int newLiveRange = SettingsHandler::getLiveXRangeMin() - SettingsHandler::getXRangeStep();
         int axisMin = SettingsHandler::getAxis(axisNames.Stroke).Min;
         if(newLiveRange > axisMin)
@@ -521,7 +521,7 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.IncreaseXUpperRange)
     {
-        AxisNames axisNames;
+        TCodeChannels axisNames;
         int newLiveRange = SettingsHandler::getLiveXRangeMax() + SettingsHandler::getXRangeStep();
         int axisMax = SettingsHandler::getAxis(axisNames.Stroke).Max;
         if(newLiveRange < axisMax)
@@ -539,7 +539,7 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.DecreaseXUpperRange)
     {
-        AxisNames axisNames;
+        TCodeChannels axisNames;
         int xRangeStep = SettingsHandler::getXRangeStep();
         int newLiveRange = SettingsHandler::getLiveXRangeMax() - xRangeStep;
         int xRangeMin = SettingsHandler::getLiveXRangeMin();
@@ -558,7 +558,7 @@ void MainWindow::mediaAction(QString action)
     }
     else if (action == actions.IncreaseXRange)
     {
-        AxisNames axisNames;
+        TCodeChannels axisNames;
         int xRangeMax = SettingsHandler::getLiveXRangeMax();
         int xRangeMin = SettingsHandler::getLiveXRangeMin();
         int xRangeStep = SettingsHandler::getXRangeStep();
@@ -603,7 +603,7 @@ void MainWindow::mediaAction(QString action)
     }
     else if (action == actions.DecreaseXRange)
     {
-        AxisNames axisNames;
+        TCodeChannels axisNames;
         int xRangeMax = SettingsHandler::getLiveXRangeMax();
         int xRangeMin = SettingsHandler::getLiveXRangeMin();
         int xRangeStep = SettingsHandler::getXRangeStep();
@@ -782,6 +782,9 @@ void MainWindow::on_load_library(QString path)
                     << "*.flac"
                     << "*.wav"
                     << "*.wma";
+            QStringList playlistTypes = QStringList()
+                    << "*.m3u";
+
             QStringList mediaTypes;
             mediaTypes.append(videoTypes);
             mediaTypes.append(audioTypes);
@@ -789,6 +792,16 @@ void MainWindow::on_load_library(QString path)
             while (library.hasNext())
             {
                 QFileInfo fileinfo(library.next());
+                QString fileDir = fileinfo.dir().path();
+                QList<QString> excludedLibraryPaths = SettingsHandler::getLibraryExclusions();
+                bool isExcluded = false;
+                foreach(QString dir, excludedLibraryPaths)
+                {
+                    if(dir != path && (fileDir.startsWith(dir, Qt::CaseInsensitive)))
+                        isExcluded = true;
+                }
+                if (isExcluded)
+                    continue;
                 QString videoPath = fileinfo.filePath();
                 QString videoPathTemp = fileinfo.filePath();
                 QString fileName = fileinfo.fileName();
@@ -1033,15 +1046,15 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, L
 
 void MainWindow::on_libray_path_select(QString path)
 {
-    this->on_load_library(path);
+    on_load_library(path);
 }
 
 void MainWindow::on_actionSelect_library_triggered()
 {
     QString selectedLibrary = QFileDialog::getExistingDirectory(this, tr("Choose media library"), ".", QFileDialog::ReadOnly);
-    if (selectedLibrary != Q_NULLPTR) {
+    if (selectedLibrary != Q_NULLPTR)
+    {
         on_libray_path_select(selectedLibrary);
-
         SettingsHandler::setSelectedLibrary(selectedLibrary);
     }
 }
@@ -1100,11 +1113,12 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
     QFile file(selectedFileListItem.path);
     if (file.exists())
     {
-        ui->loopToggleButton->setChecked(false);
-        setLoading(true);
-        videoHandler->stop();
+        //on_media_stop();
         if (videoHandler->file() != selectedFileListItem.path || !customScript.isEmpty())
         {
+            ui->loopToggleButton->setChecked(false);
+            setLoading(true);
+            videoHandler->stop();
             videoHandler->setFile(selectedFileListItem.path);
             videoPreviewWidget->setFile(selectedFileListItem.path);
             videoHandler->load();
@@ -1151,10 +1165,14 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
                 }
             }
 
-            funscriptHandlers.clear();
+            if(funscriptHandlers.length() > 0)
+            {
+                qDeleteAll(funscriptHandlers);
+                funscriptHandlers.clear();
+            }
             deviceHome();
 
-            AxisNames axisNames;
+            TCodeChannels axisNames;
             auto availibleAxis = SettingsHandler::getAvailableAxis();
             foreach(auto axisName, availibleAxis->keys())
             {
@@ -1634,6 +1652,20 @@ void MainWindow::on_media_positionChanged(qint64 position)
             if (videoHandler->position() != startLoopVideoPosition)
                 videoHandler->setPosition(startLoopVideoPosition);
         }
+        QPoint gpos;
+        qint64 videoToSliderPosition = XMath::mapRange(position,  (qint64)0, duration, (qint64)0, (qint64)100);
+        int hoverposition = XMath::mapRange((int)videoToSliderPosition,  (int)0, (int)100, (int)0, (int)ui->SeekSlider->width()) - 15;
+        if(_isFullScreen)
+        {
+            gpos = mapToGlobal(playerControlsPlaceHolder->pos() + ui->SeekSlider->pos() + QPoint(hoverposition, 0));
+            QToolTip::showText(gpos, QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")), this);
+        }
+        else
+        {
+            auto tootipPos = mapToGlobal(QPoint(ui->medialAndControlsFrame->pos().x(), 0) + ui->controlsHomePlaceHolder->pos() + ui->SeekSlider->pos() + QPoint(hoverposition, 0));
+            QToolTip::showText(tootipPos, QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")), this);
+            gpos = QPoint(ui->medialAndControlsFrame->pos().x(), 0) + ui->controlsHomePlaceHolder->pos() + ui->SeekSlider->pos() + QPoint(hoverposition, 0);
+        }
     }
     ui->lblCurrentDuration->setText(mSecondFormat(position).append("/").append(mSecondFormat(duration)));
     //    QString timeCurrent = QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss"));
@@ -1661,7 +1693,7 @@ QString MainWindow::mSecondFormat(int mSecs)
 
 void MainWindow::on_media_start()
 {
-    toggleMediaControlStatus();
+    LogHandler::Debug("Enter on_media_start");
     if(SettingsHandler::getDeoEnabled())
         _xSettings->getDeoHandler()->dispose();
     if(SettingsHandler::getWhirligigEnabled())
@@ -1675,11 +1707,13 @@ void MainWindow::on_media_start()
     {
         funscriptFuture = QtConcurrent::run(syncFunscript, videoHandler, _xSettings, tcodeHandler, funscriptHandler, funscriptHandlers);
     }
+    toggleMediaControlStatus(true);
 }
 
 void MainWindow::on_media_stop()
 {
-    toggleMediaControlStatus();
+    LogHandler::Debug("Enter on_media_stop");
+    toggleMediaControlStatus(false);
     if(funscriptFuture.isRunning())
     {
         funscriptFuture.cancel();
@@ -1699,11 +1733,13 @@ void MainWindow::setLoading(bool loading)
         _movie->stop();
     }
 }
-void MainWindow::toggleMediaControlStatus()
+void MainWindow::toggleMediaControlStatus(bool playing)
 {
-    if(videoHandler->isPlaying())
+    LogHandler::Debug("Enter toggleMediaControlStatus: "+QString::number(playing));
+    if(playing)
     {
         setLoading(false);
+        ui->SeekSlider->setUpperValue(0);
         ui->SeekSlider->setDisabled(false);
         QIcon icon("://images/icons/pause.svg" );
         ui->PlayBtn->setIcon(icon);
@@ -1789,7 +1825,7 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
         xPlayer->stop();
         funscriptHandler->setLoaded(false);
     }
-    AxisNames axisNames;
+    TCodeChannels axisNames;
     DeviceHandler* device = xSettings->getSelectedDeviceHandler();
     QList<FunscriptHandler*> funscriptHandlers;
     std::shared_ptr<FunscriptAction> actionPosition;
@@ -1905,7 +1941,7 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
 
 void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler, QList<FunscriptHandler*> funscriptHandlers)
 {
-    AxisNames axisNames;
+    TCodeChannels axisNames;
     std::shared_ptr<FunscriptAction> actionPosition;
     QMap<QString, std::shared_ptr<FunscriptAction>> otherActions;
     DeviceHandler* device = xSettings->getSelectedDeviceHandler();
@@ -2539,10 +2575,14 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
         connect(ui->SeekSlider, QOverload<int>::of(&RangeSlider::lowerValueChanged), this, &MainWindow::onLoopRange_valueChanged);
         connect(ui->SeekSlider, QOverload<int>::of(&RangeSlider::upperValueChanged), this, &MainWindow::onLoopRange_valueChanged);
         videoHandler->setRepeat(-1);
+        ui->SeekSlider->updateColor();
+        qint64 videoToSliderPosition = XMath::mapRange(videoHandler->position(),  (qint64)0, videoHandler->duration(), (qint64)0, (qint64)100);
+        ui->SeekSlider->setLowerValue(videoToSliderPosition);
     }
     else
     {
         ui->SeekSlider->setOption(RangeSlider::Option::RightHandle);
+        ui->SeekSlider->SetRange(0, 100);
         on_media_positionChanged(videoHandler->position());
         ui->SeekSlider->updateColor();
         disconnect(ui->SeekSlider, QOverload<int>::of(&RangeSlider::lowerValueChanged), this, &MainWindow::onLoopRange_valueChanged);

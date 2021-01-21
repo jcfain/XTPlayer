@@ -40,7 +40,7 @@
    <item row="1" column="1">
     <widget class="QTabWidget" name="settingsTabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="connectionTab">
       <attribute name="title">
@@ -289,7 +289,7 @@
         <rect>
          <x>10</x>
          <y>20</y>
-         <width>371</width>
+         <width>501</width>
          <height>311</height>
         </rect>
        </property>
@@ -301,11 +301,11 @@
          <rect>
           <x>10</x>
           <y>30</y>
-          <width>351</width>
+          <width>481</width>
           <height>271</height>
          </rect>
         </property>
-        <layout class="QGridLayout" name="MultiplierSettingsGrid" rowstretch="0,0">
+        <layout class="QGridLayout" name="MultiplierSettingsGrid" rowstretch="0">
          <property name="sizeConstraint">
           <enum>QLayout::SetDefaultConstraint</enum>
          </property>
@@ -322,7 +322,7 @@
       <widget class="QGroupBox" name="groupBox_2">
        <property name="geometry">
         <rect>
-         <x>390</x>
+         <x>520</x>
          <y>20</y>
          <width>131</width>
          <height>311</height>
@@ -473,6 +473,13 @@
         <widget class="QCheckBox" name="checkBox">
          <property name="text">
           <string>Debug</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="6">
+        <widget class="QPushButton" name="libraryExclusionsBtn">
+         <property name="text">
+          <string>Library exclusions</string>
          </property>
         </widget>
        </item>

@@ -47,6 +47,7 @@ SOURCES += \
     lib/tool/tcodefactory.cpp \
     lib/tool/xmath.cpp \
     lib/tool/xtimer.cpp \
+    libraryexclusions.cpp \
     librarywindow.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -89,11 +90,13 @@ HEADERS += \
     lib/tool/tcodefactory.h \
     lib/tool/xmath.h \
     lib/tool/xtimer.h \
+    libraryexclusions.h \
     librarywindow.h \
     mainwindow.h \
     settingsdialog.h
 
 FORMS += \
+    libraryexclusions.ui \
     mainwindow.ui \
     settings.ui
 

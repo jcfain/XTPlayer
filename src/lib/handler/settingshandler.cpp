@@ -67,21 +67,6 @@ void SettingsHandler::Load()
     whirligigPort = whirligigPort.isNull() ? "2000" : whirligigPort;
     whirligigEnabled = settings->value("whirligigEnabled").toBool();
 
-    yRollMultiplierChecked = settings->value("rollMultiplierChecked").toBool();
-    yRollMultiplierValue = settings->value("rollMultiplierValue").toFloat() ?: 0.01f;
-    xRollMultiplierChecked = settings->value("pitchMultiplierChecked").toBool();
-    xRollMultiplierValue = settings->value("pitchMultiplierValue").toFloat() ?: 0.01f;
-    zMultiplierChecked = settings->value("surgeMultiplierChecked").toBool();
-    zMultiplierValue = settings->value("surgeMultiplierValue").toFloat() ?: 0.01f;
-    yMultiplierChecked = settings->value("swayMultiplierChecked").toBool();
-    yMultiplierValue = settings->value("swayMultiplierValue").toFloat() ?: 0.01f;
-    twistMultiplierChecked = settings->value("twistMultiplierChecked").toBool();
-    twistMultiplierValue = settings->value("twistMultiplierValue").toFloat() ?: 0.01f;
-    vibMultiplierChecked = settings->value("vibMultiplierChecked").toBool();
-    vibMultiplierValue = settings->value("vibMultiplierValue").toFloat() ?: 0.01f;
-    suckMultiplierChecked = settings->value("suckMultiplierChecked").toBool();
-    suckMultiplierValue = settings->value("suckMultiplierValue").toFloat() ?: 0.01f;
-
     libraryView = settings->value("libraryView").toInt();
     selectedLibrarySortMode = settings->value("selectedLibrarySortMode").toInt();
     thumbSize = settings->value("thumbSize").toInt();
@@ -99,9 +84,10 @@ void SettingsHandler::Load()
     foreach(auto axis, availableAxis.keys())
     {
         _availableAxis.insert(axis, availableAxis[axis].value<ChannelModel>());
+        _funscriptLoaded.insert(axis, false);
     }
-    _liveXRangeMax = _availableAxis[axisNames.Stroke].UserMax;
-    _liveXRangeMin = _availableAxis[axisNames.Stroke].UserMin;
+    _liveXRangeMax = _availableAxis[channelNames.Stroke].UserMax;
+    _liveXRangeMin = _availableAxis[channelNames.Stroke].UserMin;
     QVariantMap gamepadButtonMap = settings->value("gamepadButtonMap").toMap();
     foreach(auto button, gamepadButtonMap.keys())
     {
@@ -129,6 +115,9 @@ void SettingsHandler::Load()
     {
         _mainWindowPos.append(splitterPos.value<int>());
     }
+    qRegisterMetaTypeStreamOperators<QList<QString>>("QList<QString>");
+    _libraryExclusions = settings->value("libraryExclusions").value<QList<QString>>();
+
     if(currentVersion != 0 && currentVersion < 0.2f)
     {
         SetupGamepadButtonMap();
@@ -229,6 +218,9 @@ void SettingsHandler::Save()
             splitterPos.append(pos);
         }
         settings->setValue("mainWindowPos", splitterPos);
+
+        qRegisterMetaTypeStreamOperators<QList<QString>>("QList<QString>");
+        settings->setValue("libraryExclusions", QVariant::fromValue(_libraryExclusions));
 
         settings->sync();
     }
@@ -339,6 +331,80 @@ void SettingsHandler::MigrateTo25()
         _availableAxis[key].MultiplierValue = 0.01f;
         _availableAxis[key].DamperEnabled = false;
         _availableAxis[key].DamperValue = 0.2f;
+        _availableAxis[key].LinkToRelatedMFS = false;
+        auto channel = _availableAxis[key];
+        if(key == channelNames.Stroke)
+        {
+            _availableAxis[key].RelatedChannel = channelNames.Twist;
+        }
+        else if(key == channelNames.StrokeDown)
+        {
+            _availableAxis[key].RelatedChannel = channelNames.TwistCounterClockwise;
+        }
+        else if(key == channelNames.StrokeUp)
+        {
+            _availableAxis[key].RelatedChannel = channelNames.TwistClockwise;
+        }
+        else if(key == channelNames.Pitch)
+        {
+            _availableAxis[key].RelatedChannel = channelNames.Surge;
+        }
+        else if(key == channelNames.PitchForward)
+        {
+            _availableAxis[key].RelatedChannel = channelNames.SurgeForward;
+        }
+        else if(key == channelNames.PitchBack)
+        {
+            _availableAxis[key].RelatedChannel = channelNames.SurgeBack;
+        }
+        else if(key == channelNames.Roll)
+        {
+            _availableAxis[key].RelatedChannel = channelNames.Sway;
+        }
+        else if(key == channelNames.RollLeft)
+        {
+            _availableAxis[key].RelatedChannel = channelNames.SwayLeft;
+        }
+        else if(key == channelNames.RollRight)
+        {
+            _availableAxis[key].RelatedChannel = channelNames.SwayRight;
+        }
+        else if(key == channelNames.Sway)
+        {
+            _availableAxis[key].RelatedChannel = channelNames.Roll;
+        }
+        else if(key == channelNames.SwayLeft)
+        {
+            _availableAxis[key].RelatedChannel = channelNames.RollLeft;
+        }
+        else if(key == channelNames.SwayRight)
+        {
+            _availableAxis[key].RelatedChannel = channelNames.RollRight;
+        }
+        else if(key == channelNames.Surge)
+        {
+            _availableAxis[key].RelatedChannel = channelNames.Pitch;
+        }
+        else if(key == channelNames.SurgeForward)
+        {
+            _availableAxis[key].RelatedChannel = channelNames.PitchForward;
+        }
+        else if(key == channelNames.SurgeBack)
+        {
+            _availableAxis[key].RelatedChannel = channelNames.PitchBack;
+        }
+        else if(key == channelNames.Twist)
+        {
+            _availableAxis[key].RelatedChannel = channelNames.Stroke;
+        }
+        else if(key == channelNames.TwistClockwise)
+        {
+            _availableAxis[key].RelatedChannel = channelNames.StrokeUp;
+        }
+        else if(key == channelNames.TwistCounterClockwise)
+        {
+            _availableAxis[key].RelatedChannel = channelNames.StrokeDown;
+        }
     }
     Save();
     Load();
@@ -405,70 +471,99 @@ void SettingsHandler::setChannelUserMin(QString channel, int value)
 {
     QMutexLocker locker(&mutex);
     _availableAxis[channel].UserMin = value;
-    if(channel == axisNames.Stroke)
+    if(channel == channelNames.Stroke)
         _liveXRangeMin = value;
 }
 void SettingsHandler::setChannelUserMax(QString channel, int value)
 {
     QMutexLocker locker(&mutex);
     _availableAxis[channel].UserMax = value;
-    if(channel == axisNames.Stroke)
+    if(channel == channelNames.Stroke)
         _liveXRangeMax = value;
 }
 
 float SettingsHandler::getMultiplierValue(QString channel)
 {
+    QMutexLocker locker(&mutex);
     if(_availableAxis.contains(channel))
         return _availableAxis.value(channel).MultiplierValue;
     return 0.0;
 }
 void SettingsHandler::setMultiplierValue(QString channel, float value)
 {
-    _availableAxis[channel].MultiplierValue = value;
+    QMutexLocker locker(&mutex);
+    if(_availableAxis.contains(channel))
+        _availableAxis[channel].MultiplierValue = value;
 }
 
 bool SettingsHandler::getMultiplierChecked(QString channel)
 {
+    QMutexLocker locker(&mutex);
     if(_availableAxis.contains(channel))
         return _availableAxis.value(channel).MultiplierEnabled;
     return false;
 }
 void SettingsHandler::setMultiplierChecked(QString channel, bool value)
 {
-    _availableAxis[channel].MultiplierEnabled = value;
+    QMutexLocker locker(&mutex);
+    if(_availableAxis.contains(channel))
+        _availableAxis[channel].MultiplierEnabled = value;
 }
 
 bool SettingsHandler::getChannelInverseChecked(QString channel)
 {
+    QMutexLocker locker(&mutex);
     if(_availableAxis.contains(channel))
         return _availableAxis.value(channel).Inverted;
     return false;
 }
 void SettingsHandler::setChannelInverseChecked(QString channel, bool value)
 {
-    _availableAxis[channel].Inverted = value;
+    QMutexLocker locker(&mutex);
+    if(_availableAxis.contains(channel))
+        _availableAxis[channel].Inverted = value;
 }
 
 float SettingsHandler::getDamperValue(QString channel)
 {
+    QMutexLocker locker(&mutex);
     if(_availableAxis.contains(channel))
         return _availableAxis.value(channel).DamperValue;
     return 0.0;
 }
 void SettingsHandler::setDamperValue(QString channel, float value)
 {
-    _availableAxis[channel].DamperValue = value;
+    QMutexLocker locker(&mutex);
+    if(_availableAxis.contains(channel))
+        _availableAxis[channel].DamperValue = value;
 }
 
 bool SettingsHandler::getDamperChecked(QString channel)
 {
+    QMutexLocker locker(&mutex);
     if(_availableAxis.contains(channel))
         return _availableAxis.value(channel).DamperEnabled;
     return false;
 }
 void SettingsHandler::setDamperChecked(QString channel, bool value)
 {
-    _availableAxis[channel].DamperEnabled = value;
+    QMutexLocker locker(&mutex);
+    if(_availableAxis.contains(channel))
+        _availableAxis[channel].DamperEnabled = value;
+}
+
+bool SettingsHandler::getLinkToRelatedAxisChecked(QString channel)
+{
+    QMutexLocker locker(&mutex);
+    if(_availableAxis.contains(channel))
+        return _availableAxis.value(channel).LinkToRelatedMFS;
+    return false;
+}
+void SettingsHandler::setLinkToRelatedAxisChecked(QString channel, bool value)
+{
+    QMutexLocker locker(&mutex);
+    if(_availableAxis.contains(channel))
+        _availableAxis[channel].LinkToRelatedMFS = value;
 }
 
 int SettingsHandler::getLibraryView()
@@ -629,7 +724,7 @@ int SettingsHandler::getLiveXRangeMax()
 void SettingsHandler::resetLiveXRange()
 {
     QMutexLocker locker(&mutex);
-    AxisNames axisNames;
+    TCodeChannels axisNames;
     _liveXRangeMax = _availableAxis.value(axisNames.Stroke).UserMax;
     _liveXRangeMin = _availableAxis.value(axisNames.Stroke).UserMin;
 }
@@ -689,9 +784,7 @@ QMap<QString, ChannelModel>*  SettingsHandler::getAvailableAxis()
 QString SettingsHandler::getGamePadMapButton(QString gamepadAxis)
 {
     if (_gamepadButtonMap.contains(gamepadAxis))
-    {
         return _gamepadButtonMap[gamepadAxis];
-    }
     return nullptr;
 }
 void SettingsHandler::setSelectedTheme(QString value)
@@ -883,31 +976,46 @@ void SettingsHandler::setMainWindowSplitterPos(QList<int> value)
     QMutexLocker locker(&mutex);
     _mainWindowPos = value;
 }
+
+void SettingsHandler::addToLibraryExclusions(QString values)
+{
+    _libraryExclusions.append(values);
+}
+void SettingsHandler::removeFromLibraryExclusions(QList<int> indexes)
+{
+    foreach(auto index, indexes)
+        _libraryExclusions.removeAt(index);
+}
+QList<QString> SettingsHandler::getLibraryExclusions()
+{
+    return _libraryExclusions;
+}
+
 void SettingsHandler::SetupAvailableAxis()
 {
     _availableAxis = {
-        {axisNames.None, { "None", axisNames.None, axisNames.None, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "", false, 0.01f, false, 0.2f, false } },
-        {axisNames.Stroke, { "Stroke", axisNames.Stroke, axisNames.Stroke, 1, 500, 999, 1, 500, 999, AxisDimension::Heave, AxisType::Range, "", false, 0.01f, false, 0.2f, false } },
-        {axisNames.StrokeDown, { "Stroke Down", axisNames.StrokeDown, axisNames.Stroke, 1, 500, 999, 1, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
-        {axisNames.StrokeUp, { "Stroke Up", axisNames.StrokeUp, axisNames.Stroke, 1, 500, 999, 1, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
-        {axisNames.Sway, { "Sway", axisNames.Sway, axisNames.Sway, 1, 500, 999, 1, 500, 999, AxisDimension::Sway, AxisType::Range, "sway", false, 0.01f, false, 0.2f, false } },
-        {axisNames.SwayLeft, { "Sway Left", axisNames.SwayLeft, axisNames.Sway, 1, 500, 999, 1, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
-        {axisNames.SwayRight, { "Sway Right", axisNames.SwayRight, axisNames.Sway, 1, 500, 999, 1, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
-        {axisNames.Surge, { "Surge", axisNames.Surge, axisNames.Surge, 1, 500, 999, 1, 500, 999, AxisDimension::Surge, AxisType::Range, "surge", false, 0.01f, false, 0.2f, false } },
-        {axisNames.SurgeBack, { "Surge Back", axisNames.SurgeBack, axisNames.Surge, 1, 500, 999, 1, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
-        {axisNames.SurgeForward, { "Surge Forward", axisNames.SurgeForward, axisNames.Surge, 1, 500, 999, 1, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
-        {axisNames.Pitch, { "Pitch", axisNames.Pitch, axisNames.Pitch, 1, 500, 999, 1, 500, 999, AxisDimension::Pitch, AxisType::Range, "pitch", false, 0.01f, false, 0.2f, false } },
-        {axisNames.PitchForward, { "Pitch Forward", axisNames.PitchForward, axisNames.Pitch, 1, 500, 999, 1, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
-        {axisNames.PitchBack, { "Pitch Back", axisNames.PitchBack, axisNames.Pitch, 1, 500, 999, 1, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
-        {axisNames.Roll, { "Roll", axisNames.Roll, axisNames.Roll, 1, 500, 999, 1, 500, 999, AxisDimension::Roll, AxisType::Range, "roll", false, 0.01f, false, 0.2f, false } },
-        {axisNames.RollLeft, { "Roll Left", axisNames.RollLeft, axisNames.Roll, 1, 500, 999, 1, 500, 999, AxisDimension::Roll, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
-        {axisNames.RollRight, { "Roll Right", axisNames.RollRight, axisNames.Roll, 1, 500, 999, 1, 500, 999, AxisDimension::Roll, AxisType::HalfRange, "", false, 0.01f, false, 0.2f , false} },
-        {axisNames.Twist, { "Twist", axisNames.Twist, axisNames.Twist, 1, 500, 999, 1, 500, 999, AxisDimension::Yaw, AxisType::Range, "twist", false, 0.01f, false, 0.2f, false } },
-        {axisNames.TwistClockwise, { "Twist (CW)", axisNames.TwistClockwise, axisNames.Twist, 1, 500, 999, 1, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
-        {axisNames.TwistCounterClockwise, { "Twist (CCW)", axisNames.TwistCounterClockwise, axisNames.Twist, 1, 500, 999, 1, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false } },
-        {axisNames.Vib, { "Vib", axisNames.Vib, axisNames.Vib, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "vib", false, 0.01f, false, 0.2f, false } },
-        {axisNames.Lube, { "Lube", axisNames.Lube, axisNames.Lube, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "lube", false, 0.01f, false, 0.2f, false } },
-        {axisNames.Suck, { "Suck", axisNames.Suck, axisNames.Suck, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::Range, "suck", false, 0.01f, false, 0.2f, false } }
+        {channelNames.None, { "None", channelNames.None, channelNames.None, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "", false, 0.01f, false, 0.2f, false, false, "" } },
+        {channelNames.Stroke, { "Stroke", channelNames.Stroke, channelNames.Stroke, 1, 500, 999, 1, 500, 999, AxisDimension::Heave, AxisType::Range, "", false, 0.01f, false, 0.2f, false, false, channelNames.Twist } },
+        {channelNames.StrokeDown, { "Stroke Down", channelNames.StrokeDown, channelNames.Stroke, 1, 500, 999, 1, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.TwistCounterClockwise } },
+        {channelNames.StrokeUp, { "Stroke Up", channelNames.StrokeUp, channelNames.Stroke, 1, 500, 999, 1, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.TwistClockwise } },
+        {channelNames.Sway, { "Sway", channelNames.Sway, channelNames.Sway, 1, 500, 999, 1, 500, 999, AxisDimension::Sway, AxisType::Range, "sway", false, 0.01f, false, 0.2f, false, false, channelNames.Roll } },
+        {channelNames.SwayLeft, { "Sway Left", channelNames.SwayLeft, channelNames.Sway, 1, 500, 999, 1, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.RollLeft } },
+        {channelNames.SwayRight, { "Sway Right", channelNames.SwayRight, channelNames.Sway, 1, 500, 999, 1, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.RollRight } },
+        {channelNames.Surge, { "Surge", channelNames.Surge, channelNames.Surge, 1, 500, 999, 1, 500, 999, AxisDimension::Surge, AxisType::Range, "surge", false, 0.01f, false, 0.2f, false, false, channelNames.Pitch } },
+        {channelNames.SurgeBack, { "Surge Back", channelNames.SurgeBack, channelNames.Surge, 1, 500, 999, 1, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.PitchBack } },
+        {channelNames.SurgeForward, { "Surge Forward", channelNames.SurgeForward, channelNames.Surge, 1, 500, 999, 1, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.PitchForward } },
+        {channelNames.Pitch, { "Pitch", channelNames.Pitch, channelNames.Pitch, 1, 500, 999, 1, 500, 999, AxisDimension::Pitch, AxisType::Range, "pitch", false, 0.01f, false, 0.2f, false, false, channelNames.Surge } },
+        {channelNames.PitchForward, { "Pitch Forward", channelNames.PitchForward, channelNames.Pitch, 1, 500, 999, 1, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.SurgeForward } },
+        {channelNames.PitchBack, { "Pitch Back", channelNames.PitchBack, channelNames.Pitch, 1, 500, 999, 1, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.SurgeBack } },
+        {channelNames.Roll, { "Roll", channelNames.Roll, channelNames.Roll, 1, 500, 999, 1, 500, 999, AxisDimension::Roll, AxisType::Range, "roll", false, 0.01f, false, 0.2f, false, false, channelNames.Sway } },
+        {channelNames.RollLeft, { "Roll Left", channelNames.RollLeft, channelNames.Roll, 1, 500, 999, 1, 500, 999, AxisDimension::Roll, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.SwayLeft } },
+        {channelNames.RollRight, { "Roll Right", channelNames.RollRight, channelNames.Roll, 1, 500, 999, 1, 500, 999, AxisDimension::Roll, AxisType::HalfRange, "", false, 0.01f, false, 0.2f , false, false, channelNames.SwayRight } },
+        {channelNames.Twist, { "Twist", channelNames.Twist, channelNames.Twist, 1, 500, 999, 1, 500, 999, AxisDimension::Yaw, AxisType::Range, "twist", false, 0.01f, false, 0.2f, false, false, channelNames.Stroke } },
+        {channelNames.TwistClockwise, { "Twist (CW)", channelNames.TwistClockwise, channelNames.Twist, 1, 500, 999, 1, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.StrokeUp } },
+        {channelNames.TwistCounterClockwise, { "Twist (CCW)", channelNames.TwistCounterClockwise, channelNames.Twist, 1, 500, 999, 1, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.StrokeDown } },
+        {channelNames.Vib, { "Vib", channelNames.Vib, channelNames.Vib, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "vib", false, 0.01f, false, 0.2f, false, false, channelNames.Stroke } },
+        {channelNames.Lube, { "Lube", channelNames.Lube, channelNames.Lube, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "lube", false, 0.01f, false, 0.2f, false, false, channelNames.Stroke } },
+        {channelNames.Suck, { "Suck", channelNames.Suck, channelNames.Suck, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::Range, "suck", false, 0.01f, false, 0.2f, false, false, channelNames.Stroke } }
     };
 }
 
@@ -915,11 +1023,11 @@ void SettingsHandler::SetupAvailableAxis()
 void SettingsHandler::SetupGamepadButtonMap()
 {
     _gamepadButtonMap = {
-        { "None", axisNames.None },
-        { gamepadAxisNames.LeftXAxis, axisNames.Twist },
-        { gamepadAxisNames.LeftYAxis,  axisNames.Stroke },
-        { gamepadAxisNames.RightYAxis ,  axisNames.Pitch  },
-        { gamepadAxisNames.RightXAxis, axisNames.Roll  },
+        { "None", channelNames.None },
+        { gamepadAxisNames.LeftXAxis, channelNames.Twist },
+        { gamepadAxisNames.LeftYAxis,  channelNames.Stroke },
+        { gamepadAxisNames.RightYAxis ,  channelNames.Pitch  },
+        { gamepadAxisNames.RightXAxis, channelNames.Roll  },
         { gamepadAxisNames.RightTrigger, mediaActions.IncreaseXRange },
         { gamepadAxisNames.LeftTrigger, mediaActions.DecreaseXRange },
         { gamepadAxisNames.RightBumper, mediaActions.FastForward },
@@ -935,9 +1043,9 @@ void SettingsHandler::SetupGamepadButtonMap()
         { gamepadAxisNames.DPadLeft, mediaActions.TCodeSpeedDown },
         { gamepadAxisNames.DPadRight, mediaActions.TCodeSpeedUp },
         { gamepadAxisNames.RightAxisButton, mediaActions.ToggleAxisMultiplier },
-        { gamepadAxisNames.LeftAxisButton, axisNames.None },
-        { gamepadAxisNames.Center, axisNames.None },
-        { gamepadAxisNames.Guide, axisNames.None }
+        { gamepadAxisNames.LeftAxisButton, channelNames.None },
+        { gamepadAxisNames.Center, channelNames.None },
+        { gamepadAxisNames.Guide, channelNames.None }
     };
 }
 void SettingsHandler::SetupDecoderPriority()
@@ -952,12 +1060,26 @@ void SettingsHandler::SetupDecoderPriority()
         { "VideoToolbox", true }
     };
 }
+
+void SettingsHandler::setFunscriptLoaded(QString key, bool loaded)
+{
+    if (_funscriptLoaded.contains(key))
+        _funscriptLoaded[key] = loaded;
+}
+bool SettingsHandler::getFunscriptLoaded(QString key)
+{
+    if (_funscriptLoaded.contains(key))
+        return _funscriptLoaded[key];
+    return false;
+}
+
 QSettings* SettingsHandler::settings;
 QMutex SettingsHandler::mutex;
+QHash<QString, bool> SettingsHandler::_funscriptLoaded;
 QList<int> SettingsHandler::_mainWindowPos;
 QSize SettingsHandler::_maxThumbnailSize = {200, 200};
 GamepadAxisNames SettingsHandler::gamepadAxisNames;
-AxisNames SettingsHandler::axisNames;
+TCodeChannels SettingsHandler::channelNames;
 MediaActions SettingsHandler::mediaActions;
 QHash<QString, QVariant> SettingsHandler::deoDnlaFunscriptLookup;
 QString SettingsHandler::selectedTheme;
@@ -1019,3 +1141,4 @@ bool SettingsHandler::defaultReset = false;
 bool SettingsHandler::disableSpeechToText;
 
 QList<DecoderModel> SettingsHandler::decoderPriority;
+QList<QString> SettingsHandler::_libraryExclusions;

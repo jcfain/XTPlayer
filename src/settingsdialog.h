@@ -20,6 +20,7 @@
 #include "lib/handler/whirligighandler.h"
 #include "lib/handler/gamepadhandler.h"
 #include "lib/handler/funscripthandler.h"
+#include "libraryexclusions.h"
 #include "addchanneldialog.h"
 #include <QProgressBar>
 
@@ -142,6 +143,8 @@ private slots:
     void on_axis_valueChange(QString axis, int value);
     void on_axis_valueReset();
 
+    void on_libraryExclusionsBtn_clicked();
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();
@@ -152,7 +155,8 @@ private:
     void setupUi();
     void setupGamepadMap();
 
-    AxisNames axisNames;
+    LibraryExclusions* _libraryExclusions;
+    TCodeChannels axisNames;
     bool _interfaceInitialized = false;
     ConnectionStatus _outConnectionStatus = ConnectionStatus::Disconnected;
     ConnectionStatus _deoConnectionStatus = ConnectionStatus::Disconnected;

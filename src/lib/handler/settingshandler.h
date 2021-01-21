@@ -94,6 +94,8 @@ public:
     static void setDamperValue(QString channel, float value);
     static bool getDamperChecked(QString channel);
     static void setDamperChecked(QString channel, bool value);
+    static bool getLinkToRelatedAxisChecked(QString channel);
+    static void setLinkToRelatedAxisChecked(QString channel, bool value);
 
     static void setLibraryView(int value);
     static void setThumbSize(int value);
@@ -135,6 +137,12 @@ public:
     static void setDecoderPriority(QList<DecoderModel> value);
     static QList<DecoderModel> getDecoderPriority();
 
+    static void addToLibraryExclusions(QString values);
+    static void removeFromLibraryExclusions(QList<int> indexes);
+    static QList<QString> getLibraryExclusions();
+
+    static void setFunscriptLoaded(QString key, bool loaded);
+    static bool getFunscriptLoaded(QString key);
     static QSize getMaxThumbnailSize();
     static void SetupAvailableAxis();
     static void SetupDecoderPriority();
@@ -151,7 +159,7 @@ private:
     static void MigrateTo23();
     static void MigrateTo25();
     static GamepadAxisNames gamepadAxisNames;
-    static AxisNames axisNames;
+    static TCodeChannels channelNames;
     static MediaActions mediaActions;
     static QSize _maxThumbnailSize;
 
@@ -214,10 +222,12 @@ private:
     static int videoIncrement;
 
     static QList<DecoderModel> decoderPriority;
+    static QList<QString> _libraryExclusions;
 
     static bool disableSpeechToText;
     static bool defaultReset;
 
+    static QHash<QString, bool> _funscriptLoaded;
     static QSettings* settings;
     static QMutex mutex;
 };
