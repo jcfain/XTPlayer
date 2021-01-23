@@ -409,22 +409,20 @@ void SettingsDialog::setupGamepadMap()
     inverseGrid->addWidget(speedIncrmentInput, 1, 2, Qt::AlignCenter);
 
     QCheckBox* inverseX = new QCheckBox(this);
-    inverseX->setText("Inverse X (L0)");
+    inverseX->setText("Inverse Stroke");
     inverseX->setChecked(SettingsHandler::getInverseTcXL0());
     connect(inverseX, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcXL0_valueChanged);
     inverseGrid->addWidget(inverseX, 4, 0, Qt::AlignCenter);
     QCheckBox* inverseYRoll = new QCheckBox(this);
-    inverseYRoll->setText("Inverse Y Roll (R1)");
+    inverseYRoll->setText("Inverse Roll");
     inverseYRoll->setChecked(SettingsHandler::getInverseTcYRollR1());
     connect(inverseYRoll, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcYRollR1_valueChanged);
     inverseGrid->addWidget(inverseYRoll, 4, 1, Qt::AlignCenter);
     QCheckBox* inverseXRoll = new QCheckBox(this);
-    inverseXRoll->setText("Inverse X Roll (R2)");
+    inverseXRoll->setText("Inverse Pitch");
     inverseXRoll->setChecked(SettingsHandler::getInverseTcXRollR2());
     connect(inverseXRoll, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcXRollR2_valueChanged);
     inverseGrid->addWidget(inverseXRoll, 4, 2, Qt::AlignCenter);
-
-
 }
 
 void SettingsDialog::setAxisProgressBar(QString axis, int value)

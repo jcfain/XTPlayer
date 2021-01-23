@@ -4,9 +4,17 @@
 #include <QMetaType>
 #include <QDate>
 #include <QVariant>
+#include <QDataStream>
+
+enum LibraryListItemType {
+    PlaylistInternal,
+    Video,
+    Audio
+};
 
 struct LibraryListItem
 {
+    LibraryListItemType type;
     QString path;
     QString name;
     QString nameNoExtension;
@@ -17,9 +25,9 @@ struct LibraryListItem
     QString zipFile;
     QDate modifiedDate;
     quint64 duration;
-    bool audioOnly;
     friend QDataStream & operator<<( QDataStream &dataStream, const LibraryListItem &object )
     {
+        dataStream << object.type;
         dataStream << object.path;
         dataStream << object.name;
         dataStream << object.nameNoExtension;
@@ -29,13 +37,13 @@ struct LibraryListItem
         dataStream << object.thumbFile;
         dataStream << object.zipFile;
         dataStream << object.modifiedDate;
-        //dataStream << QVariant::fromValue(object.duration);
-        //dataStream << object.audioOnly;
+        dataStream << object.duration;
         return dataStream;
     }
 
     friend QDataStream & operator>>(QDataStream &dataStream, LibraryListItem &object)
     {
+        dataStream >> object.type;
         dataStream >> object.path;
         dataStream >> object.name;
         dataStream >> object.nameNoExtension;
@@ -45,9 +53,12 @@ struct LibraryListItem
         dataStream >> object.thumbFile;
         dataStream >> object.zipFile;
         dataStream >> object.modifiedDate;
-        //dataStream >> object.duration;
-        //dataStream >> object.audioOnly;
+        dataStream >> object.duration;
         return dataStream;
+    }
+    friend bool operator==(const LibraryListItem &p1, const LibraryListItem &p2)
+    {
+       return p1.name == p2.name;
     }
 
 };

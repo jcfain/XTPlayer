@@ -4,44 +4,12 @@
 #include "../handler/settingshandler.h"
 #include "../tool/xmath.h"
 
-LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data) :
+LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data, LibraryListItemType type) :
     QListWidgetItem(data.nameNoExtension)
 {
-    bool mfs = false;
-    QFileInfo scriptInfo(data.script);
-    QFileInfo zipScriptInfo(data.zipFile);
-    if (!scriptInfo.exists() && !zipScriptInfo.exists())
-    {
-        setToolTip(data.path + "\nNo script file of the same name found.\nRight click and Play with funscript.");
-        setForeground(QColorConstants::Gray);
-    }
-    else
-    {
-
-        if(zipScriptInfo.exists())
-        {
-            mfs = true;
-        }
-        else
-        {
-            TCodeChannels axisNames;
-            auto availibleAxis = SettingsHandler::getAvailableAxis();
-            foreach(auto axisName, availibleAxis->keys())
-            {
-                auto trackName = availibleAxis->value(axisName).TrackName;
-                if(axisName == axisNames.Stroke || trackName.isEmpty())
-                    continue;
-
-                QFileInfo fileInfo(data.scriptNoExtension + "." + trackName + ".funscript");
-                if (fileInfo.exists())
-                {
-                    mfs = true;
-                    break;
-                }
-            }
-        }
-        setToolTip(data.path);
-    }
+    _type = type;
+    _data = data;
+    updateToolTip();
 
     QFileInfo thumbInfo(data.thumbFile);
     QString thumbString = data.thumbFile;
@@ -58,7 +26,7 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data) :
     setIcon(thumb);
     //setSizeHint(size);
     setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
-    if (mfs)
+    if (_mfs)
     {
         setForeground(QColorConstants::Green);
         setText("(MFS) " + data.nameNoExtension);
@@ -70,10 +38,72 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data) :
     setData(Qt::UserRole, listItem);
 }
 
+void LibraryListWidgetItem::updateToolTip()
+{
+    _mfs = false;
+    QFileInfo scriptInfo(_data.script);
+    QFileInfo zipScriptInfo(_data.zipFile);
+    QString toolTip = "Media:\n";
+    if (_type != LibraryListItemType::PlaylistInternal && !scriptInfo.exists() && !zipScriptInfo.exists())
+    {
+        toolTip = _data.path + "\nNo script file of the same name found.\nRight click and Play with funscript.";
+        setForeground(QColorConstants::Gray);
+    }
+    else if (_type != LibraryListItemType::PlaylistInternal)
+    {
+        toolTip += _data.path;
+        toolTip += "\n";
+        toolTip += "Scripts:\n";
+        if(zipScriptInfo.exists())
+        {
+            toolTip += _data.zipFile;
+            _mfs = true;
+        }
+        else
+        {
+            toolTip += _data.script;
+        }
+        TCodeChannels axisNames;
+        auto availibleAxis = SettingsHandler::getAvailableAxis();
+        foreach(auto axisName, availibleAxis->keys())
+        {
+            auto trackName = availibleAxis->value(axisName).TrackName;
+            if(axisName == axisNames.Stroke || trackName.isEmpty())
+                continue;
+
+            QString script = _data.scriptNoExtension + "." + trackName + ".funscript";
+            QFileInfo fileInfo(script);
+            if (fileInfo.exists())
+            {
+                _mfs = true;
+                toolTip += script;
+                toolTip += "\n";
+            }
+        }
+    }
+    else if (_type == LibraryListItemType::PlaylistInternal)
+    {
+        auto playlists = SettingsHandler::getPlaylists();
+        auto playlist = playlists.value(_data.nameNoExtension);
+        for(auto i = 0; i < playlist.length(); i++)
+        {
+            toolTip += QString::number(i + 1);
+            toolTip += ": ";
+            toolTip += playlist[i].nameNoExtension;
+            toolTip += "\n";
+        }
+    }
+    setToolTip(toolTip);
+}
 
 LibraryListItem LibraryListWidgetItem::getLibraryListItem()
 {
     return data(Qt::UserRole).value<LibraryListItem>();
+}
+
+LibraryListItemType LibraryListWidgetItem::getType()
+{
+    return _type;
 }
 
 bool LibraryListWidgetItem::operator< (const QListWidgetItem & other) const
@@ -124,6 +154,14 @@ bool LibraryListWidgetItem::operator< (const QListWidgetItem & other) const
         case LibrarySortMode::NAME_ASC:
         {
             break;
+        }
+        case LibrarySortMode::TYPE_ASC:
+        {
+            return thisData.type < otherData.type;
+        }
+        case LibrarySortMode::TYPE_DESC:
+        {
+            return thisData.type < otherData.type;
         }
     }
     // otherwise just return the comparison result from the base class

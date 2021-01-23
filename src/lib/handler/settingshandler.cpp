@@ -93,9 +93,9 @@ void SettingsHandler::Load()
     {
         _gamepadButtonMap.insert(button, gamepadButtonMap[button].toString());
     }
-    _inverseTcXL0 = settings->value("inverseTcXL0").toBool();
-    _inverseTcXRollR2 = settings->value("inverseTcXRollR2").toBool();
-    _inverseTcYRollR1 = settings->value("inverseTcYRollR1").toBool();
+    _inverseStroke = settings->value("inverseTcXL0").toBool();
+    _inversePitch = settings->value("inverseTcXRollR2").toBool();
+    _inverseRoll = settings->value("inverseTcYRollR1").toBool();
     _gamepadSpeed = settings->value("gamepadSpeed").toInt();
     _gamepadSpeed = _gamepadSpeed == 0 ? 1000 : _gamepadSpeed;
     _gamepadSpeedStep = settings->value("gamepadSpeedStep").toInt();
@@ -117,6 +117,15 @@ void SettingsHandler::Load()
     }
     qRegisterMetaTypeStreamOperators<QList<QString>>("QList<QString>");
     _libraryExclusions = settings->value("libraryExclusions").value<QList<QString>>();
+
+    qRegisterMetaTypeStreamOperators<QMap<QString, QList<LibraryListItem>>>("QMap<QString, QList<LibraryListItem>>");
+    qRegisterMetaTypeStreamOperators<QList<LibraryListItem>>("QList<LibraryListItem>");
+    qRegisterMetaTypeStreamOperators<LibraryListItem>("LibraryListItem");
+    QVariantMap playlists = settings->value("playlists").toMap();
+    foreach(auto playlist, playlists.keys())
+    {
+        _playlists.insert(playlist, playlists[playlist].value<QList<LibraryListItem>>());
+    }
 
     if(currentVersion != 0 && currentVersion < 0.2f)
     {
@@ -205,9 +214,9 @@ void SettingsHandler::Save()
             gamepadMap.insert(button, QVariant::fromValue(_gamepadButtonMap[button]));
         }
         settings->setValue("gamepadButtonMap", gamepadMap);
-        settings->setValue("inverseTcXL0", _inverseTcXL0);
-        settings->setValue("inverseTcXRollR2", _inverseTcXRollR2);
-        settings->setValue("inverseTcYRollR1", _inverseTcYRollR1);
+        settings->setValue("inverseTcXL0", _inverseStroke);
+        settings->setValue("inverseTcXRollR2", _inversePitch);
+        settings->setValue("inverseTcYRollR1", _inverseRoll);
         settings->setValue("gamepadSpeed", _gamepadSpeed);
         settings->setValue("gamepadSpeedStep", _gamepadSpeedStep);
         settings->setValue("xRangeStep", _xRangeStep);
@@ -221,6 +230,16 @@ void SettingsHandler::Save()
 
         qRegisterMetaTypeStreamOperators<QList<QString>>("QList<QString>");
         settings->setValue("libraryExclusions", QVariant::fromValue(_libraryExclusions));
+
+        qRegisterMetaTypeStreamOperators<QMap<QString, QList<LibraryListItem>>>("QMap<QString, QList<LibraryListItem>>");
+        qRegisterMetaTypeStreamOperators<QList<LibraryListItem>>("QList<LibraryListItem>");
+        qRegisterMetaTypeStreamOperators<LibraryListItem>("LibraryListItem");
+        QVariantMap playlists;
+        foreach(auto playlist, _playlists.keys())
+        {
+            playlists.insert(playlist, QVariant::fromValue(_playlists[playlist]));
+        }
+        settings->setValue("playlists", playlists);
 
         settings->sync();
     }
@@ -299,24 +318,6 @@ void SettingsHandler::MigrateTo23()
     settings->setValue("version", XTPVersionNum);
     SetupAvailableAxis();
     SetupDecoderPriority();
-    yRollMultiplierChecked = settings->value("yRollMultiplierChecked").toBool();
-    yRollMultiplierValue = settings->value("yRollMultiplierValue").toFloat();
-    xRollMultiplierChecked = settings->value("xRollMultiplierChecked").toBool();
-    xRollMultiplierValue = settings->value("xRollMultiplierValue").toFloat();
-    settings->setValue("rollMultiplierChecked", yRollMultiplierChecked);
-    settings->setValue("rollMultiplierValue", yRollMultiplierValue);
-    settings->setValue("pitchMultiplierChecked", xRollMultiplierChecked);
-    settings->setValue("pitchMultiplierValue", xRollMultiplierValue);
-    settings->setValue("surgeMultiplierChecked", zMultiplierChecked);
-    settings->setValue("surgeMultiplierValue", zMultiplierValue);
-    settings->setValue("swayMultiplierChecked", yMultiplierChecked);
-    settings->setValue("swayMultiplierValue", yMultiplierValue);
-    settings->setValue("twistMultiplierChecked", twistMultiplierChecked);
-    settings->setValue("twistMultiplierValue", twistMultiplierValue);
-    settings->setValue("vibMultiplierChecked", vibMultiplierChecked);
-    settings->setValue("vibMultiplierValue", vibMultiplierValue);
-    settings->setValue("suckMultiplierChecked", suckMultiplierChecked);
-    settings->setValue("suckMultiplierValue", suckMultiplierValue);
     Save();
     Load();
     LogHandler::Dialog("Due to a standards update your RANGE settings\nhave been set to default for a new data structure.", XLogLevel::Information);
@@ -622,17 +623,17 @@ bool SettingsHandler::getGamepadEnabled()
 bool SettingsHandler::getInverseTcXL0()
 {
     QMutexLocker locker(&mutex);
-    return _inverseTcXL0;
+    return _inverseStroke;
 }
 bool SettingsHandler::getInverseTcXRollR2()
 {
     QMutexLocker locker(&mutex);
-    return _inverseTcXRollR2;
+    return _inversePitch;
 }
 bool SettingsHandler::getInverseTcYRollR1()
 {
     QMutexLocker locker(&mutex);
-    return _inverseTcYRollR1;
+    return _inverseRoll;
 }
 
 int SettingsHandler::getGamepadSpeed()
@@ -953,17 +954,17 @@ void SettingsHandler::setGamePadMapButton(QString gamePadButton, QString axis)
 void SettingsHandler::setInverseTcXL0(bool value)
 {
     QMutexLocker locker(&mutex);
-    _inverseTcXL0 = value;
+    _inverseStroke = value;
 }
 void SettingsHandler::setInverseTcXRollR2(bool value)
 {
     QMutexLocker locker(&mutex);
-    _inverseTcXRollR2 = value;
+    _inversePitch = value;
 }
 void SettingsHandler::setInverseTcYRollR1(bool value)
 {
     QMutexLocker locker(&mutex);
-    _inverseTcYRollR1  = value;
+    _inverseRoll  = value;
 }
 
 QList<int> SettingsHandler::getMainWindowSplitterPos()
@@ -989,6 +990,30 @@ void SettingsHandler::removeFromLibraryExclusions(QList<int> indexes)
 QList<QString> SettingsHandler::getLibraryExclusions()
 {
     return _libraryExclusions;
+}
+
+QMap<QString, QList<LibraryListItem>> SettingsHandler::getPlaylists()
+{
+    return _playlists;
+}
+void SettingsHandler::setPlaylists(QMap<QString, QList<LibraryListItem>> value)
+{
+    _playlists = value;
+}
+void SettingsHandler::addToPlaylist(QString name, LibraryListItem value)
+{
+    auto playlist = _playlists.value(name);
+    playlist.append(value);
+    _playlists.insert(name, playlist);
+}
+void SettingsHandler::addNewPlaylist(QString name)
+{
+    QList<LibraryListItem> playlist;
+    _playlists.insert(name, playlist);
+}
+void SettingsHandler::deletePlaylist(QString name)
+{
+    _playlists.remove(name);
 }
 
 void SettingsHandler::SetupAvailableAxis()
@@ -1088,20 +1113,6 @@ int SettingsHandler::selectedDevice;
 int SettingsHandler::selectedLibrarySortMode;
 int SettingsHandler::playerVolume;
 int SettingsHandler::offSet;
-bool SettingsHandler::yRollMultiplierChecked;
-float SettingsHandler::yRollMultiplierValue;
-bool SettingsHandler::zMultiplierChecked;
-float SettingsHandler::zMultiplierValue;
-bool SettingsHandler::yMultiplierChecked;
-float SettingsHandler::yMultiplierValue;
-bool SettingsHandler::xRollMultiplierChecked;
-float SettingsHandler::xRollMultiplierValue;
-bool SettingsHandler::twistMultiplierChecked;
-float SettingsHandler::twistMultiplierValue;
-bool SettingsHandler::vibMultiplierChecked;
-float SettingsHandler::vibMultiplierValue;
-bool SettingsHandler::suckMultiplierChecked;
-float SettingsHandler::suckMultiplierValue;
 
 int SettingsHandler::libraryView = LibraryView::Thumb;
 int SettingsHandler::thumbSize = 175;
@@ -1111,9 +1122,9 @@ int SettingsHandler::videoIncrement = 10;
 bool SettingsHandler::_gamePadEnabled;
 QMap<QString, QString> SettingsHandler::_gamepadButtonMap;
 QMap<QString, ChannelModel> SettingsHandler::_availableAxis;
-bool SettingsHandler::_inverseTcXL0;
-bool SettingsHandler::_inverseTcXRollR2;
-bool SettingsHandler::_inverseTcYRollR1;
+bool SettingsHandler::_inverseStroke;
+bool SettingsHandler::_inversePitch;
+bool SettingsHandler::_inverseRoll;
 int SettingsHandler::_gamepadSpeed;
 int SettingsHandler::_gamepadSpeedStep;
 int SettingsHandler::_liveGamepadSpeed;
@@ -1142,3 +1153,4 @@ bool SettingsHandler::disableSpeechToText;
 
 QList<DecoderModel> SettingsHandler::decoderPriority;
 QList<QString> SettingsHandler::_libraryExclusions;
+QMap<QString, QList<LibraryListItem>> SettingsHandler::_playlists;

@@ -40,7 +40,7 @@
    <item row="1" column="1">
     <widget class="QTabWidget" name="settingsTabWidget">
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="connectionTab">
       <attribute name="title">

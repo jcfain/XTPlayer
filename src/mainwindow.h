@@ -26,6 +26,7 @@
 #include <QScroller>
 #include "settingsdialog.h"
 #include "librarywindow.h"
+#include "addplaylistdialog.h"
 #include "lib/handler/videohandler.h"
 #include "CustomControls/rangeslider.h"
 #include "lib/handler/settingshandler.h"
@@ -105,6 +106,8 @@ private slots:
     void on_actionRandom_triggered();
     void on_actionCreatedAsc_triggered();
     void on_actionCreatedDesc_triggered();
+    void on_actionTypeAsc_triggered();
+    void on_actionTypeDesc_triggered();
     void dispose();
 
     void on_actionDonate_triggered();
@@ -131,6 +134,8 @@ private slots:
     void on_settingsButton_clicked();
 
     void on_loopToggleButton_toggled(bool checked);
+
+    QString on_actionNew_playlist_triggered();
 
 signals:
     void keyPressed(QKeyEvent * event);
@@ -195,6 +200,8 @@ private:
     QAction* actionRandom_Sort;
     QAction* actionCreatedAsc_Sort;
     QAction* actionCreatedDesc_Sort;
+    QAction* actionTypeAsc_Sort;
+    QAction* actionTypeDesc_Sort;
     qint64 thumbCaptureTime;
     QWidget *normalWindowWidget;
     QWidget *fullScreenWidget;
@@ -257,6 +264,8 @@ private:
 
     bool eventFilter(QObject *obj, QEvent *event) override;
 
+    void setupPlaylistItem(QString name);
+    void addSelectedLibraryItemToPlaylist(QString playlistName);
     void setVolumeIcon(int volume);
     void on_seekSlider_sliderMoved(int position);
     void on_key_press(QKeyEvent* event);

@@ -12,6 +12,7 @@
 #include "../struct/DecoderModel.h"
 #include "loghandler.h"
 #include "devicehandler.h"
+#include "../struct/LibraryListItem.h"
 
 class SettingsHandler
 {
@@ -141,6 +142,12 @@ public:
     static void removeFromLibraryExclusions(QList<int> indexes);
     static QList<QString> getLibraryExclusions();
 
+    static QMap<QString, QList<LibraryListItem>> getPlaylists();
+    static void setPlaylists(QMap<QString, QList<LibraryListItem>> value);
+    static void addToPlaylist(QString name, LibraryListItem value);
+    static void addNewPlaylist(QString name);
+    static void deletePlaylist(QString name);
+
     static void setFunscriptLoaded(QString key, bool loaded);
     static bool getFunscriptLoaded(QString key);
     static QSize getMaxThumbnailSize();
@@ -182,27 +189,12 @@ private:
     static int offSet;
     static QList<int> _mainWindowPos;
 
-    static bool yMultiplierChecked;
-    static float yMultiplierValue;
-    static bool yRollMultiplierChecked;
-    static float yRollMultiplierValue;
-    static bool xRollMultiplierChecked;
-    static float xRollMultiplierValue;
-    static bool zMultiplierChecked;
-    static float zMultiplierValue;
-    static bool twistMultiplierChecked;
-    static float twistMultiplierValue;
-    static bool vibMultiplierChecked;
-    static float vibMultiplierValue;
-    static bool suckMultiplierChecked;
-    static float suckMultiplierValue;
-
     static bool _gamePadEnabled;
     static QMap<QString, QString> _gamepadButtonMap;
     static QMap<QString, ChannelModel> _availableAxis;
-    static bool _inverseTcXL0;
-    static bool _inverseTcXRollR2;
-    static bool _inverseTcYRollR1;
+    static bool _inverseStroke;
+    static bool _inversePitch;
+    static bool _inverseRoll;
     static int _gamepadSpeed;
     static int _gamepadSpeedStep;
     static int _liveGamepadSpeed;
@@ -223,6 +215,7 @@ private:
 
     static QList<DecoderModel> decoderPriority;
     static QList<QString> _libraryExclusions;
+    static QMap<QString, QList<LibraryListItem>> _playlists;
 
     static bool disableSpeechToText;
     static bool defaultReset;

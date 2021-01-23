@@ -24,5 +24,6 @@
         <file>images/icons/windowed.svg</file>
         <file>images/Eclipse-1s-loading-200px.gif</file>
         <file>images/icons/audio.png</file>
+        <file>images/icons/playlist.png</file>
     </qresource>
 </RCC>

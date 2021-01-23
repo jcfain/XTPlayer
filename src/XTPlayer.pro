@@ -29,6 +29,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     CustomControls/rangeslider.cpp \
     addchanneldialog.cpp \
+    addplaylistdialog.cpp \
     lib/handler/deohandler.cpp \
     lib/handler/devicehandler.cpp \
     lib/handler/funscripthandler.cpp \
@@ -56,6 +57,7 @@ SOURCES += \
 HEADERS += \
     CustomControls/rangeslider.h \
     addchanneldialog.h \
+    addplaylistdialog.h \
     lib/handler/deohandler.h \
     lib/handler/devicehandler.h \
     lib/handler/gamepadhandler.h \
