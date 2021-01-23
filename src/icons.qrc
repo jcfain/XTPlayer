@@ -25,5 +25,6 @@
         <file>images/Eclipse-1s-loading-200px.gif</file>
         <file>images/icons/audio.png</file>
         <file>images/icons/playlist.png</file>
+        <file>images/icons/back.svg</file>
     </qresource>
 </RCC>

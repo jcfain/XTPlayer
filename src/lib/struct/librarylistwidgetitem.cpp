@@ -4,10 +4,9 @@
 #include "../handler/settingshandler.h"
 #include "../tool/xmath.h"
 
-LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data, LibraryListItemType type) :
+LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data) :
     QListWidgetItem(data.nameNoExtension)
 {
-    _type = type;
     _data = data;
     updateToolTip();
 
@@ -44,12 +43,12 @@ void LibraryListWidgetItem::updateToolTip()
     QFileInfo scriptInfo(_data.script);
     QFileInfo zipScriptInfo(_data.zipFile);
     QString toolTip = "Media:\n";
-    if (_type != LibraryListItemType::PlaylistInternal && !scriptInfo.exists() && !zipScriptInfo.exists())
+    if (_data.type != LibraryListItemType::PlaylistInternal && !scriptInfo.exists() && !zipScriptInfo.exists())
     {
         toolTip = _data.path + "\nNo script file of the same name found.\nRight click and Play with funscript.";
         setForeground(QColorConstants::Gray);
     }
-    else if (_type != LibraryListItemType::PlaylistInternal)
+    else if (_data.type != LibraryListItemType::PlaylistInternal)
     {
         toolTip += _data.path;
         toolTip += "\n";
@@ -81,7 +80,7 @@ void LibraryListWidgetItem::updateToolTip()
             }
         }
     }
-    else if (_type == LibraryListItemType::PlaylistInternal)
+    else if (_data.type == LibraryListItemType::PlaylistInternal)
     {
         auto playlists = SettingsHandler::getPlaylists();
         auto playlist = playlists.value(_data.nameNoExtension);
@@ -103,7 +102,7 @@ LibraryListItem LibraryListWidgetItem::getLibraryListItem()
 
 LibraryListItemType LibraryListWidgetItem::getType()
 {
-    return _type;
+    return _data.type;
 }
 
 bool LibraryListWidgetItem::operator< (const QListWidgetItem & other) const

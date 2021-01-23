@@ -14,7 +14,7 @@ enum LibrarySortMode {
 class LibraryListWidgetItem : public QListWidgetItem
 {
 public:
-    LibraryListWidgetItem(LibraryListItem data, LibraryListItemType type);
+    LibraryListWidgetItem(LibraryListItem data);
     LibraryListItem getLibraryListItem();
     LibraryListItemType getType();
     void updateToolTip();
@@ -23,7 +23,6 @@ public:
 private:
     static LibrarySortMode _sortMode;
     LibraryListItem _data;
-    LibraryListItemType _type;
     bool _mfs;
 };
 

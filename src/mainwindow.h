@@ -183,6 +183,7 @@ private:
     QLabel* whirligigConnectionStatusLabel;
     QPushButton* whirligigRetryConnectionButton;
     QListWidget* libraryList;
+    QPushButton* backLibraryButton;
     QPushButton* randomizeLibraryButton;
     QPushButton* windowedLibraryButton;
     int voulumeBeforeMute;
@@ -224,7 +225,8 @@ private:
     void startThumbProcess();
     void stopThumbProcess();
 
-    QList<LibraryListWidgetItem*> libraryItems;
+    QList<LibraryListWidgetItem*> cachedLibraryItems;
+    QList<LibraryListWidgetItem*> selectedPlaylistItems;
     int playingLibraryListIndex;
     LibraryListWidgetItem* playingLibraryListItem = nullptr;
     int selectedLibraryListIndex;
@@ -232,6 +234,8 @@ private:
 
     void on_load_library(QString path);
     void on_libray_path_select(QString path);
+    void backToMainLibrary();
+    void loadPlaylistIntoLibrary(QString playlistName);
     void media_double_click_event(QMouseEvent * event);
     QString mSecondFormat(int seconds);
     bool isPlayingFile(QString file);
