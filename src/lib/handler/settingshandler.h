@@ -12,6 +12,7 @@
 #include "../struct/DecoderModel.h"
 #include "loghandler.h"
 #include "devicehandler.h"
+#include "../struct/librarylistwidgetitem.h"
 #include "../struct/LibraryListItem.h"
 
 class SettingsHandler
@@ -103,8 +104,8 @@ public:
     static int getThumbSize();
     static void setVideoIncrement(int value);
 
-    static void setSelectedLibrarySortMode(int value);
-    static int getSelectedLibrarySortMode();
+    static void setLibrarySortMode(int value);
+    static LibrarySortMode getLibrarySortMode();
 
     static void setGamepadEnabled(bool value);
     static void setGamePadMapButton(QString gamePadButton, QString axis);
@@ -145,6 +146,7 @@ public:
     static QMap<QString, QList<LibraryListItem>> getPlaylists();
     static void setPlaylists(QMap<QString, QList<LibraryListItem>> value);
     static void addToPlaylist(QString name, LibraryListItem value);
+    static void updatePlaylist(QString name, QList<LibraryListItem> value);
     static void addNewPlaylist(QString name);
     static void deletePlaylist(QString name);
 
@@ -208,7 +210,7 @@ private:
     static bool _multiplierEnabled;
 
     static int libraryView;
-    static int selectedLibrarySortMode;
+    static int _librarySortMode;
     static int thumbSize;
     static int thumbSizeList;
     static int videoIncrement;

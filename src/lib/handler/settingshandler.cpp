@@ -68,7 +68,7 @@ void SettingsHandler::Load()
     whirligigEnabled = settings->value("whirligigEnabled").toBool();
 
     libraryView = settings->value("libraryView").toInt();
-    selectedLibrarySortMode = settings->value("selectedLibrarySortMode").toInt();
+    _librarySortMode = settings->value("selectedLibrarySortMode").toInt();
     thumbSize = settings->value("thumbSize").toInt();
     thumbSize = thumbSize == 0 ? 150 : thumbSize;
     thumbSizeList = settings->value("thumbSizeList").toInt();
@@ -183,7 +183,7 @@ void SettingsHandler::Save()
 //        settings->setValue("suckMultiplierValue", suckMultiplierValue);
 
         settings->setValue("libraryView", libraryView);
-        settings->setValue("selectedLibrarySortMode", selectedLibrarySortMode);
+        settings->setValue("selectedLibrarySortMode", _librarySortMode);
 
         settings->setValue("thumbSize", thumbSize);
         settings->setValue("thumbSizeList", thumbSizeList);
@@ -760,13 +760,13 @@ void SettingsHandler::setDisableSpeechToText(bool value)
 }
 
 
-void SettingsHandler::setSelectedLibrarySortMode(int value)
+void SettingsHandler::setLibrarySortMode(int value)
 {
-    selectedLibrarySortMode = value;
+    _librarySortMode = value;
 }
-int SettingsHandler::getSelectedLibrarySortMode()
+LibrarySortMode SettingsHandler::getLibrarySortMode()
 {
-    return selectedLibrarySortMode;
+    return (LibrarySortMode)_librarySortMode;
 }
 
 ChannelModel SettingsHandler::getAxis(QString axis)
@@ -1000,6 +1000,10 @@ void SettingsHandler::setPlaylists(QMap<QString, QList<LibraryListItem>> value)
 {
     _playlists = value;
 }
+void SettingsHandler::updatePlaylist(QString name, QList<LibraryListItem> value)
+{
+    _playlists.insert(name, value);
+}
 void SettingsHandler::addToPlaylist(QString name, LibraryListItem value)
 {
     auto playlist = _playlists.value(name);
@@ -1110,7 +1114,7 @@ QHash<QString, QVariant> SettingsHandler::deoDnlaFunscriptLookup;
 QString SettingsHandler::selectedTheme;
 QString SettingsHandler::selectedLibrary;
 int SettingsHandler::selectedDevice;
-int SettingsHandler::selectedLibrarySortMode;
+int SettingsHandler::_librarySortMode;
 int SettingsHandler::playerVolume;
 int SettingsHandler::offSet;
 

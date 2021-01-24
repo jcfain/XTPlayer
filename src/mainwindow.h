@@ -186,6 +186,7 @@ private:
     QPushButton* backLibraryButton;
     QPushButton* randomizeLibraryButton;
     QPushButton* windowedLibraryButton;
+    QPushButton* savePlaylistButton;
     int voulumeBeforeMute;
     QActionGroup* libraryViewGroup;
     QActionGroup* libraryThumbSizeGroup;
@@ -227,6 +228,7 @@ private:
 
     QList<LibraryListWidgetItem*> cachedLibraryItems;
     QList<LibraryListWidgetItem*> selectedPlaylistItems;
+    QString selectedPlaylistName;
     int playingLibraryListIndex;
     LibraryListWidgetItem* playingLibraryListItem = nullptr;
     int selectedLibraryListIndex;
@@ -239,6 +241,8 @@ private:
     void media_double_click_event(QMouseEvent * event);
     QString mSecondFormat(int seconds);
     bool isPlayingFile(QString file);
+    void playListChanged();
+    void removeFromPlaylist();
 
     void deviceHome();
     void setLoading(bool loading);
@@ -253,6 +257,7 @@ private:
     void showLibrary();
     void saveThumb(const QString& videoFile, const QString& thumbFile, LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
     void updateThumbSizeUI(int size);
+    void updateLibrarySortUI();
     void updateLibrarySortUI(LibrarySortMode mode);
     void setThumbSize(int size);
     void changeDeoFunscript();

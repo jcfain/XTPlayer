@@ -7,8 +7,7 @@
 LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data) :
     QListWidgetItem(data.nameNoExtension)
 {
-    _data = data;
-    updateToolTip();
+    auto mfs = updateToolTip();
 
     QFileInfo thumbInfo(data.thumbFile);
     QString thumbString = data.thumbFile;
@@ -25,7 +24,7 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data) :
     setIcon(thumb);
     //setSizeHint(size);
     setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
-    if (_mfs)
+    if (mfs)
     {
         setForeground(QColorConstants::Green);
         setText("(MFS) " + data.nameNoExtension);
@@ -37,30 +36,31 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data) :
     setData(Qt::UserRole, listItem);
 }
 
-void LibraryListWidgetItem::updateToolTip()
+bool LibraryListWidgetItem::updateToolTip()
 {
-    _mfs = false;
-    QFileInfo scriptInfo(_data.script);
-    QFileInfo zipScriptInfo(_data.zipFile);
+    bool mfs = false;
+    LibraryListItem data = getLibraryListItem();
+    QFileInfo scriptInfo(data.script);
+    QFileInfo zipScriptInfo(data.zipFile);
     QString toolTip = "Media:\n";
-    if (_data.type != LibraryListItemType::PlaylistInternal && !scriptInfo.exists() && !zipScriptInfo.exists())
+    if (data.type != LibraryListItemType::PlaylistInternal && !scriptInfo.exists() && !zipScriptInfo.exists())
     {
-        toolTip = _data.path + "\nNo script file of the same name found.\nRight click and Play with funscript.";
+        toolTip = data.path + "\nNo script file of the same name found.\nRight click and Play with funscript.";
         setForeground(QColorConstants::Gray);
     }
-    else if (_data.type != LibraryListItemType::PlaylistInternal)
+    else if (data.type != LibraryListItemType::PlaylistInternal)
     {
-        toolTip += _data.path;
+        toolTip += data.path;
         toolTip += "\n";
         toolTip += "Scripts:\n";
         if(zipScriptInfo.exists())
         {
-            toolTip += _data.zipFile;
-            _mfs = true;
+            toolTip += data.zipFile;
+            mfs = true;
         }
         else
         {
-            toolTip += _data.script;
+            toolTip += data.script;
         }
         TCodeChannels axisNames;
         auto availibleAxis = SettingsHandler::getAvailableAxis();
@@ -70,20 +70,20 @@ void LibraryListWidgetItem::updateToolTip()
             if(axisName == axisNames.Stroke || trackName.isEmpty())
                 continue;
 
-            QString script = _data.scriptNoExtension + "." + trackName + ".funscript";
+            QString script = data.scriptNoExtension + "." + trackName + ".funscript";
             QFileInfo fileInfo(script);
             if (fileInfo.exists())
             {
-                _mfs = true;
+                mfs = true;
                 toolTip += script;
                 toolTip += "\n";
             }
         }
     }
-    else if (_data.type == LibraryListItemType::PlaylistInternal)
+    else if (data.type == LibraryListItemType::PlaylistInternal)
     {
         auto playlists = SettingsHandler::getPlaylists();
-        auto playlist = playlists.value(_data.nameNoExtension);
+        auto playlist = playlists.value(data.nameNoExtension);
         for(auto i = 0; i < playlist.length(); i++)
         {
             toolTip += QString::number(i + 1);
@@ -93,6 +93,7 @@ void LibraryListWidgetItem::updateToolTip()
         }
     }
     setToolTip(toolTip);
+    return mfs;
 }
 
 LibraryListItem LibraryListWidgetItem::getLibraryListItem()
@@ -102,7 +103,7 @@ LibraryListItem LibraryListWidgetItem::getLibraryListItem()
 
 LibraryListItemType LibraryListWidgetItem::getType()
 {
-    return _data.type;
+    return getLibraryListItem().type;
 }
 
 bool LibraryListWidgetItem::operator< (const QListWidgetItem & other) const
@@ -160,7 +161,7 @@ bool LibraryListWidgetItem::operator< (const QListWidgetItem & other) const
         }
         case LibrarySortMode::TYPE_DESC:
         {
-            return thisData.type < otherData.type;
+            return thisData.type > otherData.type;
         }
     }
     // otherwise just return the comparison result from the base class

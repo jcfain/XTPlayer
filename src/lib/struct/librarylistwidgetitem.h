@@ -17,13 +17,12 @@ public:
     LibraryListWidgetItem(LibraryListItem data);
     LibraryListItem getLibraryListItem();
     LibraryListItemType getType();
-    void updateToolTip();
+    bool updateToolTip();
     static void setSortMode(LibrarySortMode sortMode);
     virtual bool operator< (const QListWidgetItem & other) const override;
+    void dropEvent(QDropEvent* event);
 private:
     static LibrarySortMode _sortMode;
-    LibraryListItem _data;
-    bool _mfs;
 };
 
 #endif // LIBRARYLISTWIDGETITEM_H
