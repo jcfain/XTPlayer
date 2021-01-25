@@ -122,5 +122,42 @@ QPushButton[id="windowedLibraryButton"]:pressed {
 }
 QPushButton[id="randomizeLibraryButton"]:pressed {
     background-color: rgba(100, 100, 100, 0.5);
-};
+}
+QPushButton[id="backLibraryButton"] {
+	height: 25px;
+	width: 25px;
+    background-color: rgba(255, 255, 255, 0.5);
+	border-radius: 50%;
+}
+QPushButton[id="backLibraryButton"]:pressed {
+    background-color: rgba(100, 100, 100, 0.5);
+}
+QPushButton[id="savePlaylistButton"] {
+	height: 25px;
+	width: 25px;
+    background-color: rgba(0, 255, 0, 0.5);
+	border-radius: 50%;
+}
+QPushButton[id="savePlaylistButton"]:pressed {
+    background-color: rgba(100, 100, 100, 0.5);
+}
+QPushButton[id="editPlaylistButton"] {
+	height: 25px;
+	width: 25px;
+    background-color: rgba(255, 255, 255, 0.5);
+	border-radius: 50%;
+}
+QPushButton[id="editPlaylistButton"]:pressed {
+    background-color: rgba(100, 100, 100, 0.5);
+}
+QPushButton[id="cancelEditPlaylistButton"] {
+	height: 25px;
+	width: 25px;
+    background-color: rgba(255, 0, 0, 0.5);
+	border-radius: 50%;
+}
+QPushButton[id="cancelEditPlaylistButton"]:pressed {
+    background-color: rgba(100, 100, 100, 0.5);
+}
+;
 

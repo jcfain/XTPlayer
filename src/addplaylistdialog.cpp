@@ -4,7 +4,7 @@
 #include <QGridLayout>
 #include "lib/handler/loghandler.h"
 
-AddPlaylistDialog::AddPlaylistDialog(QWidget *parent) : QDialog(parent)
+PlaylistDialog::PlaylistDialog(QWidget *parent) : QDialog(parent)
 {
     nameLabel = new QLabel(this);
     nameLabel->setText("Name");
@@ -20,17 +20,30 @@ AddPlaylistDialog::AddPlaylistDialog(QWidget *parent) : QDialog(parent)
     layout->addWidget(buttonBox, 1, 0, 1, 2);
 
     bool conn = connect(buttonBox, &QDialogButtonBox::accepted,
-                   this, &AddPlaylistDialog::accept);
+                   this, &PlaylistDialog::accept);
     Q_ASSERT(conn);
     conn = connect(buttonBox, &QDialogButtonBox::rejected,
-                   this, &AddPlaylistDialog::reject);
+                   this, &PlaylistDialog::reject);
     Q_ASSERT(conn);
     setLayout(layout);
 }
 
-QString AddPlaylistDialog::getNewPlaylist(QWidget *parent, bool *ok)
+QString PlaylistDialog::getNewPlaylist(QWidget *parent, bool *ok)
 {
-    AddPlaylistDialog *dialog = new AddPlaylistDialog(parent);
+    PlaylistDialog *dialog = new PlaylistDialog(parent);
+    return getPlaylistNAme(dialog, ok);
+}
+
+
+QString PlaylistDialog::renamePlaylist(QWidget *parent, QString playlistName, bool *ok)
+{
+    PlaylistDialog *dialog = new PlaylistDialog(parent);
+    dialog->nameEdit->setText(playlistName);
+    return getPlaylistNAme(dialog, ok);
+}
+
+QString PlaylistDialog::getPlaylistNAme(PlaylistDialog *dialog, bool *ok)
+{
     const int ret = dialog->exec();
     if (ok)
         *ok = !!ret;

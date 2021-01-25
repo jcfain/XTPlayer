@@ -4,13 +4,13 @@
 #include "../handler/settingshandler.h"
 #include "../tool/xmath.h"
 
-LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data) :
-    QListWidgetItem(data.nameNoExtension)
+LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem localData) :
+    QListWidgetItem(localData.nameNoExtension)
 {
-    auto mfs = updateToolTip();
+    auto mfs = updateToolTip(localData);
 
-    QFileInfo thumbInfo(data.thumbFile);
-    QString thumbString = data.thumbFile;
+    QFileInfo thumbInfo(localData.thumbFile);
+    QString thumbString = localData.thumbFile;
     if (!thumbInfo.exists())
     {
         thumbString = QApplication::applicationDirPath() + "/themes/loading.png";
@@ -27,40 +27,40 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem data) :
     if (mfs)
     {
         setForeground(QColorConstants::Green);
-        setText("(MFS) " + data.nameNoExtension);
+        setText("(MFS) " + localData.nameNoExtension);
     }
     else
-        setText(data.nameNoExtension);
+        setText(localData.nameNoExtension);
     QVariant listItem;
-    listItem.setValue(data);
+    listItem.setValue(localData);
     setData(Qt::UserRole, listItem);
 }
 
-bool LibraryListWidgetItem::updateToolTip()
+bool LibraryListWidgetItem::updateToolTip(LibraryListItem localData)
 {
     bool mfs = false;
-    LibraryListItem data = getLibraryListItem();
-    QFileInfo scriptInfo(data.script);
-    QFileInfo zipScriptInfo(data.zipFile);
-    QString toolTip = "Media:\n";
-    if (data.type != LibraryListItemType::PlaylistInternal && !scriptInfo.exists() && !zipScriptInfo.exists())
+    QFileInfo scriptInfo(localData.script);
+    QFileInfo zipScriptInfo(localData.zipFile);
+    QString toolTip = "Media:";
+    if (localData.type != LibraryListItemType::PlaylistInternal && !scriptInfo.exists() && !zipScriptInfo.exists())
     {
-        toolTip = data.path + "\nNo script file of the same name found.\nRight click and Play with funscript.";
+        toolTip = localData.path + "\nNo script file of the same name found.\nRight click and Play with funscript.";
         setForeground(QColorConstants::Gray);
     }
-    else if (data.type != LibraryListItemType::PlaylistInternal)
+    else if (localData.type != LibraryListItemType::PlaylistInternal)
     {
-        toolTip += data.path;
+        toolTip += "\n";
+        toolTip += localData.path;
         toolTip += "\n";
         toolTip += "Scripts:\n";
         if(zipScriptInfo.exists())
         {
-            toolTip += data.zipFile;
+            toolTip += localData.zipFile;
             mfs = true;
         }
         else
         {
-            toolTip += data.script;
+            toolTip += localData.script;
         }
         TCodeChannels axisNames;
         auto availibleAxis = SettingsHandler::getAvailableAxis();
@@ -70,26 +70,26 @@ bool LibraryListWidgetItem::updateToolTip()
             if(axisName == axisNames.Stroke || trackName.isEmpty())
                 continue;
 
-            QString script = data.scriptNoExtension + "." + trackName + ".funscript";
+            QString script = localData.scriptNoExtension + "." + trackName + ".funscript";
             QFileInfo fileInfo(script);
             if (fileInfo.exists())
             {
                 mfs = true;
-                toolTip += script;
                 toolTip += "\n";
+                toolTip += script;
             }
         }
     }
-    else if (data.type == LibraryListItemType::PlaylistInternal)
+    else if (localData.type == LibraryListItemType::PlaylistInternal)
     {
         auto playlists = SettingsHandler::getPlaylists();
-        auto playlist = playlists.value(data.nameNoExtension);
+        auto playlist = playlists.value(localData.nameNoExtension);
         for(auto i = 0; i < playlist.length(); i++)
         {
+            toolTip += "\n";
             toolTip += QString::number(i + 1);
             toolTip += ": ";
             toolTip += playlist[i].nameNoExtension;
-            toolTip += "\n";
         }
     }
     setToolTip(toolTip);
@@ -157,10 +157,14 @@ bool LibraryListWidgetItem::operator< (const QListWidgetItem & other) const
         }
         case LibrarySortMode::TYPE_ASC:
         {
+            if (thisData.type == otherData.type)
+              break;
             return thisData.type < otherData.type;
         }
         case LibrarySortMode::TYPE_DESC:
         {
+            if (thisData.type == otherData.type)
+              return thisData.name.localeAwareCompare(otherData.name) > 0;
             return thisData.type > otherData.type;
         }
     }
@@ -168,9 +172,18 @@ bool LibraryListWidgetItem::operator< (const QListWidgetItem & other) const
     return QListWidgetItem::operator < (other);
 }
 
+bool LibraryListWidgetItem::operator == (const LibraryListWidgetItem & other) const
+{
+    return other.text() == text();
+}
 void LibraryListWidgetItem::setSortMode(LibrarySortMode sortMode)
 {
     _sortMode = sortMode;
+}
+
+LibraryListWidgetItem* LibraryListWidgetItem::clone() const
+{
+   return new LibraryListWidgetItem(*this);
 }
 
 LibrarySortMode LibraryListWidgetItem::_sortMode = LibrarySortMode::NAME_ASC;

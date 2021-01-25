@@ -6,16 +6,19 @@
 #include <QLineEdit>
 #include "lib/struct/LibraryListItem.h"
 
-class AddPlaylistDialog : public QDialog
+class PlaylistDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit AddPlaylistDialog(QWidget *parent = nullptr);
+    explicit PlaylistDialog(QWidget *parent = nullptr);
     static QString getNewPlaylist(QWidget *parent, bool *ok = nullptr);
+    static QString renamePlaylist(QWidget *parent, QString playlistName, bool *ok = nullptr);
 
 private:
     QLabel* nameLabel;
     QLineEdit* nameEdit;
+
+    static QString getPlaylistNAme(PlaylistDialog *dialog, bool *ok = nullptr);
 
 signals:
 

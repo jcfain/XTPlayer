@@ -90,7 +90,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     scrollerProperties.setScrollMetric(QScrollerProperties::VerticalOvershootPolicy, overshootPolicy);
     QScroller::scroller(libraryList)->setScrollerProperties(scrollerProperties);
     scroller->setScrollerProperties(scrollerProperties);
-    ui->libraryGrid->addWidget(libraryList, 0, 0, 20, 10);
+    ui->libraryGrid->addWidget(libraryList, 1, 0, 20, 10);
 
     ui->libraryGrid->setSpacing(5);
     ui->libraryGrid->setColumnMinimumWidth(0, 0);
@@ -107,7 +107,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     windowedLibraryButton->setProperty("id", "windowedLibraryButton");
     QIcon windowedIcon("://images/icons/windowed.svg");
     windowedLibraryButton->setIcon(windowedIcon);
-    ui->libraryGrid->addWidget(windowedLibraryButton, 0, 1);
+    ui->libraryGrid->addWidget(windowedLibraryButton, 0, ui->libraryGrid->columnCount() - 1);
 
     libraryWindow = new LibraryWindow(this);
     libraryWindow->setProperty("id", "libraryWindow");
@@ -116,15 +116,28 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     randomizeLibraryButton->setProperty("id", "randomizeLibraryButton");
     QIcon reloadIcon("://images/icons/reload.svg");
     randomizeLibraryButton->setIcon(reloadIcon);
-    ui->libraryGrid->addWidget(randomizeLibraryButton, 0, 2);
+    ui->libraryGrid->addWidget(randomizeLibraryButton, 0, 1);
+
+    editPlaylistButton = new QPushButton(this);
+    editPlaylistButton->setProperty("id", "editPlaylistButton");
+    QIcon editIcon("://images/icons/edit.svg");
+    editPlaylistButton->setIcon(editIcon);
+    ui->libraryGrid->addWidget(editPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
+    editPlaylistButton->hide();
 
     savePlaylistButton = new QPushButton(this);
     savePlaylistButton->setProperty("id", "savePlaylistButton");
-    savePlaylistButton->setText("SAVE");
-    //QIcon reloadIcon("://images/icons/reload.svg");
-    //randomizeLibraryButton->setIcon(reloadIcon);
-    ui->libraryGrid->addWidget(savePlaylistButton, 0, 3);
+    QIcon saveIcon("://images/icons/save.svg");
+    savePlaylistButton->setIcon(saveIcon);
+    ui->libraryGrid->addWidget(savePlaylistButton, 0, ui->libraryGrid->columnCount() - 3);
     savePlaylistButton->hide();
+
+    cancelEditPlaylistButton = new QPushButton(this);
+    cancelEditPlaylistButton->setProperty("id", "cancelEditPlaylistButton");
+    QIcon xIcon("://images/icons/x.svg");
+    cancelEditPlaylistButton->setIcon(xIcon);
+    ui->libraryGrid->addWidget(cancelEditPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
+    cancelEditPlaylistButton->hide();
 
     ui->libraryFrame->setFrameShadow(QFrame::Sunken);
 
@@ -208,7 +221,10 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(backLibraryButton, &QPushButton::clicked, this, &MainWindow::backToMainLibrary);
     connect(randomizeLibraryButton, &QPushButton::clicked, this, &MainWindow::on_actionRandom_triggered);
     connect(windowedLibraryButton, &QPushButton::clicked, this, &MainWindow::onLibraryWindowed_Clicked);
-    connect(savePlaylistButton, &QPushButton::clicked, this, &MainWindow::playListChanged);
+    connect(savePlaylistButton, &QPushButton::clicked, this, &MainWindow::savePlaylist);
+    connect(editPlaylistButton, &QPushButton::clicked, this, &MainWindow::editPlaylist);
+    connect(cancelEditPlaylistButton, &QPushButton::clicked, this, &MainWindow::cancelEditPlaylist);
+
 
     connect(libraryWindow, &LibraryWindow::close, this, &MainWindow::onLibraryWindowed_Closed);
 
@@ -714,10 +730,16 @@ void MainWindow::onLibraryWindowed_Clicked()
     ui->libraryGrid->removeWidget(randomizeLibraryButton);
     ui->libraryGrid->removeWidget(windowedLibraryButton);
     ui->libraryGrid->removeWidget(backLibraryButton);
-    ((QGridLayout*)libraryWindow->layout())->addWidget(libraryList, 0, 0, 20, 10);
+    ui->libraryGrid->removeWidget(cancelEditPlaylistButton);
+    ui->libraryGrid->removeWidget(editPlaylistButton);
+    ui->libraryGrid->removeWidget(savePlaylistButton);
+    ((QGridLayout*)libraryWindow->layout())->addWidget(libraryList, 1, 0, 20, 10);
     ((QGridLayout*)libraryWindow->layout())->addWidget(backLibraryButton, 0, 0);
-    ((QGridLayout*)libraryWindow->layout())->addWidget(randomizeLibraryButton, 0, 0);
-    ((QGridLayout*)libraryWindow->layout())->addWidget(windowedLibraryButton, 0, 2);
+    ((QGridLayout*)libraryWindow->layout())->addWidget(randomizeLibraryButton, 0, 1);
+    ((QGridLayout*)libraryWindow->layout())->addWidget(windowedLibraryButton, 0, ui->libraryGrid->columnCount() - 1);
+    ((QGridLayout*)libraryWindow->layout())->addWidget(cancelEditPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
+    ((QGridLayout*)libraryWindow->layout())->addWidget(editPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
+    ((QGridLayout*)libraryWindow->layout())->addWidget(savePlaylistButton, 0, ui->libraryGrid->columnCount() - 3);
     windowedLibraryButton->hide();
     ui->libraryFrame->hide();
     libraryWindow->show();
@@ -725,19 +747,41 @@ void MainWindow::onLibraryWindowed_Clicked()
         randomizeLibraryButton->hide();
     else
         randomizeLibraryButton->show();
+
     if(selectedPlaylistItems.length() > 0)
+    {
         backLibraryButton->show();
+        if(_editPlaylistMode)
+        {
+            savePlaylistButton->show();
+            editPlaylistButton->hide();
+            cancelEditPlaylistButton->show();
+        }
+        else
+        {
+            savePlaylistButton->hide();
+            editPlaylistButton->show();
+            cancelEditPlaylistButton->hide();
+        }
+    }
     else
+    {
         backLibraryButton->hide();
+        savePlaylistButton->hide();
+        editPlaylistButton->hide();
+    }
 }
 
 void MainWindow::onLibraryWindowed_Closed()
 {
     libraryWindow->layout()->removeWidget(libraryList);
-    ui->libraryGrid->addWidget(libraryList, 0, 0, 20, 10);
+    ui->libraryGrid->addWidget(libraryList, 1, 0, 20, 10);
     ((QGridLayout*)libraryWindow->layout())->addWidget(backLibraryButton, 0, 0);
-    ui->libraryGrid->addWidget(windowedLibraryButton, 0, 1);
-    ui->libraryGrid->addWidget(randomizeLibraryButton, 0, 2);
+    ui->libraryGrid->addWidget(randomizeLibraryButton, 0, 1);
+    ui->libraryGrid->addWidget(windowedLibraryButton, 0, ui->libraryGrid->columnCount() - 1);
+    ui->libraryGrid->addWidget(cancelEditPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
+    ui->libraryGrid->addWidget(editPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
+    ui->libraryGrid->addWidget(savePlaylistButton, 0, ui->libraryGrid->columnCount() - 3);
     windowedLibraryButton->show();
     ui->libraryFrame->show();
     if(SettingsHandler::getLibrarySortMode() != LibrarySortMode::RANDOM)
@@ -746,7 +790,21 @@ void MainWindow::onLibraryWindowed_Closed()
         randomizeLibraryButton->show();
 
     if(selectedPlaylistItems.length() > 0)
+    {
         backLibraryButton->show();
+        if(_editPlaylistMode)
+        {
+            savePlaylistButton->show();
+            editPlaylistButton->hide();
+            cancelEditPlaylistButton->show();
+        }
+        else
+        {
+            savePlaylistButton->hide();
+            editPlaylistButton->show();
+            cancelEditPlaylistButton->hide();
+        }
+    }
     else
         backLibraryButton->hide();
 }
@@ -771,19 +829,15 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
             loadPlaylistIntoLibrary(selectedFileListItem.nameNoExtension);
         });
-        myMenu.addAction("Delete...", this, [this]()
-        {
-            QListWidgetItem* selectedItem = libraryList->selectedItems().first();
-            LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
+        myMenu.addAction("Rename...", this, &MainWindow::renamePlaylist);
+        myMenu.addAction("Delete...", this, [this, selectedFileListItem]() {
+
             QMessageBox::StandardButton reply;
             reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to delete the playlist: " + selectedFileListItem.nameNoExtension,
                                           QMessageBox::Yes|QMessageBox::No);
             if (reply == QMessageBox::Yes)
             {
-                SettingsHandler::deletePlaylist(selectedFileListItem.nameNoExtension);
-                libraryList->removeItemWidget(selectedItem);
-                cachedLibraryItems.removeOne((LibraryListWidgetItem*)selectedItem);
-                delete selectedItem;
+                deleteSelectedPlaylist();
             }
         });
     }
@@ -799,7 +853,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             QMenu* subMenu = myMenu.addMenu(tr("Add to playlist"));
             subMenu->addAction("New playlist...", this, [this]()
             {
-                QString playlist = on_actionNew_playlist_triggered();
+                QString playlist = getPlaylistName();
                 if(!playlist.isEmpty())
                     addSelectedLibraryItemToPlaylist(playlist);
             });
@@ -945,8 +999,6 @@ void MainWindow::on_load_library(QString path)
                     zipFile = scriptNoExtension + ".zip";
                 QString thumbFile;
                 bool audioOnly = false;
-                if(videoPath.contains("m4a"))
-                    LogHandler::Debug("ya");
                 if(audioTypes.contains(mediaExtension))
                 {
                     thumbFile = "://images/icons/audio.png";
@@ -2194,7 +2246,13 @@ void MainWindow::skipForward()
             item = setCurrentLibraryRow(0);
         }
 
-        playVideo(item->getLibraryListItem());
+        auto libraryListItem = item->getLibraryListItem();
+        if(libraryListItem.type == LibraryListItemType::PlaylistInternal)
+        {
+            skipForward();
+        }
+        else
+            playVideo(libraryListItem);
     }
 }
 
@@ -2213,7 +2271,13 @@ void MainWindow::skipBack()
             item = setCurrentLibraryRow(libraryList->count() - 1);
         }
 
-        playVideo(item->getLibraryListItem());
+        auto libraryListItem = item->getLibraryListItem();
+        if(libraryListItem.type == LibraryListItemType::PlaylistInternal)
+        {
+            skipBack();
+        }
+        else
+            playVideo(libraryListItem);
     }
 }
 
@@ -2485,29 +2549,34 @@ void MainWindow::on_actionSettings_triggered()
 void MainWindow::on_actionThumbnail_triggered()
 {
     SettingsHandler::setLibraryView(LibraryView::Thumb);
-    libraryList->setResizeMode(QListView::Adjust);
-    libraryList->setFlow(QListView::LeftToRight);
-    libraryList->setViewMode(QListView::IconMode);
-    libraryList->setTextElideMode(Qt::ElideMiddle);
-    libraryList->setSpacing(2);
-    if(selectedPlaylistItems.length() > 0)
-    {
-        libraryList->setDragEnabled(true);
-        libraryList->setDragDropMode(QAbstractItemView::DragDrop);
-        libraryList->setDefaultDropAction(Qt::MoveAction);
-        libraryList->setMovement(QListView::Movement::Snap);
-    }
-    updateThumbSizeUI(SettingsHandler::getThumbSize());
+    changelibraryDisplayMode(LibraryView::Thumb);
 }
 
 void MainWindow::on_actionList_triggered()
 {
     SettingsHandler::setLibraryView(LibraryView::List);
-    libraryList->setResizeMode(QListView::Fixed);
-    libraryList->setFlow(QListView::TopToBottom);
-    libraryList->setViewMode(QListView::ListMode);
-    libraryList->setTextElideMode(Qt::ElideRight);
-    libraryList->setSpacing(0);
+    changelibraryDisplayMode(LibraryView::List);
+}
+
+void MainWindow::changelibraryDisplayMode(LibraryView value)
+{
+    switch(value)
+    {
+        case LibraryView::List:
+            libraryList->setResizeMode(QListView::Fixed);
+            libraryList->setFlow(QListView::TopToBottom);
+            libraryList->setViewMode(QListView::ListMode);
+            libraryList->setTextElideMode(Qt::ElideRight);
+            libraryList->setSpacing(0);
+        break;
+        case LibraryView::Thumb:
+            libraryList->setResizeMode(QListView::Adjust);
+            libraryList->setFlow(QListView::LeftToRight);
+            libraryList->setViewMode(QListView::IconMode);
+            libraryList->setTextElideMode(Qt::ElideMiddle);
+            libraryList->setSpacing(2);
+        break;
+    }
     if(selectedPlaylistItems.length() > 0)
     {
         libraryList->setDragEnabled(true);
@@ -2582,16 +2651,21 @@ void MainWindow::on_action200_triggered()
 void MainWindow::setThumbSize(int size)
 {
     SettingsHandler::setThumbSize(size);
-    for(int i = 0; i < libraryList->count(); i++)
-    {
-        libraryList->item(i)->setSizeHint({size, size-(size/4)});
-    }
-    libraryList->setIconSize({size, size});
+    resizeThumbs(size);
 //    if(SettingsHandler::getLibraryView() == LibraryView::List)
 //        libraryList->setViewMode(QListView::ListMode);
 //    else
 //        libraryList->setViewMode(QListView::IconMode);
 
+}
+
+void MainWindow::resizeThumbs(int size)
+{
+    for(int i = 0; i < libraryList->count(); i++)
+    {
+        libraryList->item(i)->setSizeHint({size, size-(size/4)});
+    }
+    libraryList->setIconSize({size, size});
 }
 
 void MainWindow::updateLibrarySortUI()
@@ -2768,11 +2842,19 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
     }
 }
 
-QString MainWindow::on_actionNew_playlist_triggered()
+QString MainWindow::getPlaylistName(bool newPlaylist)
 {
     bool ok;
-    QString playlistName = AddPlaylistDialog::getNewPlaylist(this, &ok);
-    if(ok)
+    QString playlistName;
+    if(newPlaylist)
+        playlistName = PlaylistDialog::getNewPlaylist(this, &ok);
+    else
+    {
+        QListWidgetItem* selectedItem = libraryList->selectedItems().first();
+        LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
+        playlistName = PlaylistDialog::renamePlaylist(this, selectedFileListItem.nameNoExtension, &ok);
+    }
+    if(newPlaylist && ok)
     {
         SettingsHandler::addNewPlaylist(playlistName);
         setupPlaylistItem(playlistName);
@@ -2807,11 +2889,34 @@ void MainWindow::addSelectedLibraryItemToPlaylist(QString playlistName)
     QListWidgetItem* selectedItem = libraryList->selectedItems().first();
     LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
     SettingsHandler::addToPlaylist(playlistName, selectedFileListItem);
-    qListWidgetItem->updateToolTip();
+    qListWidgetItem->updateToolTip(selectedFileListItem);
+}
+
+void MainWindow::loadPlaylistIntoLibrary(QString playlistName)
+{
+//    if(!thumbProcessIsRunning)
+//    {
+    selectedPlaylistName = playlistName;
+    libraryList->clear();
+    auto playlists = SettingsHandler::getPlaylists();
+    auto playlist = playlists.value(playlistName);
+    foreach(auto item, playlist)
+    {
+        LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item);
+        libraryList->addItem(qListWidgetItem);
+        selectedPlaylistItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
+    }
+    backLibraryButton->show();
+    editPlaylistButton->show();
+    librarySortGroup->setEnabled(false);
+//    }
+//    else
+//        LogHandler::Dialog("Please wait for thumbnails to fully load!", XLogLevel::Warning);
 }
 
 void MainWindow::backToMainLibrary()
 {
+    librarySortGroup->setEnabled(true);
     selectedPlaylistName = nullptr;
     selectedPlaylistItems.clear();
     if(cachedLibraryItems.length() == 0)
@@ -2825,40 +2930,18 @@ void MainWindow::backToMainLibrary()
         }
     }
     backLibraryButton->hide();
+    editPlaylistButton->hide();
+    savePlaylistButton->hide();
+    cancelEditPlaylistButton->hide();
     libraryList->setDragEnabled(false);
-    disconnect(libraryList->model(), &QAbstractItemModel::dataChanged, this, &MainWindow::playListChanged);
+    disconnect(libraryList, &QListWidget::itemChanged, 0, 0);
+
+    changelibraryDisplayMode(SettingsHandler::getLibraryView());
+    resizeThumbs(SettingsHandler::getThumbSize());
+    updateLibrarySortUI();
 }
 
-void MainWindow::loadPlaylistIntoLibrary(QString playlistName)
-{
-//    if(!thumbProcessIsRunning)
-//    {
-    selectedPlaylistName = playlistName;
-        libraryList->clear();
-        auto playlists = SettingsHandler::getPlaylists();
-        auto playlist = playlists.value(playlistName);
-        foreach(auto item, playlist)
-        {
-            LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item);
-            libraryList->addItem(qListWidgetItem);
-            selectedPlaylistItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
-        }
-        backLibraryButton->show();
-        libraryList->setDragEnabled(true);
-        libraryList->setDragDropMode(QAbstractItemView::InternalMove);
-        libraryList->setDefaultDropAction(Qt::MoveAction);
-        libraryList->setMovement(QListWidget::Movement::Snap);
-        libraryList->setDragDropOverwriteMode(false);
-        libraryList->setDropIndicatorShown(true);
-        connect(libraryList->model(), &QAbstractItemModel::dataChanged, this, [this]() {
-            savePlaylistButton->show();
-        });
-//    }
-//    else
-//        LogHandler::Dialog("Please wait for thumbnails to fully load!", XLogLevel::Warning);
-}
-
-void MainWindow::playListChanged()
+void MainWindow::savePlaylist()
 {
     QList<LibraryListItem> libraryItems;
     for(int i=0;i<libraryList->count();i++)
@@ -2869,11 +2952,74 @@ void MainWindow::playListChanged()
     }
     SettingsHandler::updatePlaylist(selectedPlaylistName, libraryItems);
     savePlaylistButton->hide();
+    editPlaylistButton->show();
+    cancelEditPlaylistButton->hide();
+    _editPlaylistMode = false;
+    changelibraryDisplayMode(SettingsHandler::getLibraryView());
+    resizeThumbs(SettingsHandler::getThumbSize());
 }
+void MainWindow::editPlaylist()
+{
+    _editPlaylistMode = true;
+    savePlaylistButton->show();
+    cancelEditPlaylistButton->show();
+    editPlaylistButton->hide();
+    changelibraryDisplayMode(LibraryView::List);
+    resizeThumbs(75);
+    libraryList->setDragEnabled(true);
+    libraryList->setDragDropMode(QAbstractItemView::InternalMove);
+    libraryList->setDefaultDropAction(Qt::MoveAction);
+    libraryList->setMovement(QListWidget::Movement::Snap);
+    libraryList->setDragDropOverwriteMode(false);
+    libraryList->setDropIndicatorShown(true);
 
+}
+void MainWindow::cancelEditPlaylist()
+{
+    savePlaylistButton->hide();
+    cancelEditPlaylistButton->hide();
+    editPlaylistButton->show();
+    loadPlaylistIntoLibrary(selectedPlaylistName);
+    libraryList->setDragEnabled(false);
+    changelibraryDisplayMode(SettingsHandler::getLibraryView());
+    resizeThumbs(SettingsHandler::getThumbSize());
+}
 void MainWindow::removeFromPlaylist()
 {
     QListWidgetItem* selectedItem = libraryList->selectedItems().first();
     delete selectedItem;
     savePlaylistButton->show();
+    editPlaylistButton->hide();
+    cancelEditPlaylistButton->show();
+}
+void MainWindow::renamePlaylist()
+{
+    QString renamedPlaylistName = getPlaylistName(false);
+    if(renamedPlaylistName != nullptr)
+    {
+        LibraryListItem playlist = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
+        auto playlists = SettingsHandler::getPlaylists();
+        auto storedPlaylist = playlists.value(playlist.nameNoExtension);
+        deleteSelectedPlaylist();
+        SettingsHandler::updatePlaylist(renamedPlaylistName, storedPlaylist);
+        setupPlaylistItem(renamedPlaylistName);
+    }
+
+}
+void MainWindow::deleteSelectedPlaylist()
+{
+    QListWidgetItem* selectedItem = libraryList->selectedItems().first();
+    LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
+    SettingsHandler::deletePlaylist(selectedFileListItem.nameNoExtension);
+    libraryList->removeItemWidget(selectedItem);
+    bool index = cachedLibraryItems.indexOf((LibraryListWidgetItem*)selectedItem);
+    delete cachedLibraryItems[index];
+    delete selectedItem;
+}
+
+
+LibraryListItem MainWindow::getSelectedLibraryListItem()
+{
+    QListWidgetItem* selectedItem = libraryList->selectedItems().first();
+    return ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
 }

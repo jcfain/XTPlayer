@@ -17,10 +17,12 @@ public:
     LibraryListWidgetItem(LibraryListItem data);
     LibraryListItem getLibraryListItem();
     LibraryListItemType getType();
-    bool updateToolTip();
+    bool updateToolTip(LibraryListItem localData);
     static void setSortMode(LibrarySortMode sortMode);
     virtual bool operator< (const QListWidgetItem & other) const override;
+    bool operator== (const LibraryListWidgetItem & other) const;
     void dropEvent(QDropEvent* event);
+    virtual LibraryListWidgetItem* clone() const override;
 private:
     static LibrarySortMode _sortMode;
 };

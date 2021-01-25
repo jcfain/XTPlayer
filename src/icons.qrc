@@ -26,5 +26,8 @@
         <file>images/icons/audio.png</file>
         <file>images/icons/playlist.png</file>
         <file>images/icons/back.svg</file>
+        <file>images/icons/edit.svg</file>
+        <file>images/icons/save.svg</file>
+        <file>images/icons/x.svg</file>
     </qresource>
 </RCC>

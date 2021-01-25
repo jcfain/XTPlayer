@@ -996,12 +996,20 @@ void SettingsDialog::on_resetAllButton_clicked()
     {
         SettingsHandler::Default();
         int reply;
+        auto playlists = SettingsHandler::getPlaylists();
+        if(playlists.count() > 0)
+        {
+            reply = QMessageBox::question(this, "WARNING!", "You have one or more playlists.\nDo you wish to keep these?",
+                                          QMessageBox::Yes|QMessageBox::No);
+            if (reply == QMessageBox::Yes)
+            {
+                SettingsHandler::PersistSelectSettings();
+            }
+        }
         reply = QMessageBox::question(this, "Restart Application?", "Changes will take effect on application restart.\n\n"
                                                                     "Restart this application now?\n\n"
-                                                                    "Close XTP will remove all settings from this PC and close the application\n"
-                                                                    "Return will return you to XTP. Settings will be reset on restart.\n"
-                                                                    "No settings that are changed this session will be saved.",
-                                      "Restart", "Close XTP", "Return", 0, 2);
+                                                                    "Uninstall will remove ALL settings\nINCLUDING PLAYLISTS\nfrom this PC and close the application\n",
+                                      "Restart", "Uninstall", "Quit", 0, 2);
         if (reply == 0)
         {
             QApplication::quit();
@@ -1010,6 +1018,10 @@ void SettingsDialog::on_resetAllButton_clicked()
         else if (reply == 1)
         {
             SettingsHandler::Clear();
+            QApplication::quit();
+        }
+        else if (reply == 2)
+        {
             QApplication::quit();
         }
     }

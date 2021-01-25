@@ -135,7 +135,6 @@ private slots:
 
     void on_loopToggleButton_toggled(bool checked);
 
-    QString on_actionNew_playlist_triggered();
 
 signals:
     void keyPressed(QKeyEvent * event);
@@ -187,6 +186,8 @@ private:
     QPushButton* randomizeLibraryButton;
     QPushButton* windowedLibraryButton;
     QPushButton* savePlaylistButton;
+    QPushButton* editPlaylistButton;
+    QPushButton* cancelEditPlaylistButton;
     int voulumeBeforeMute;
     QActionGroup* libraryViewGroup;
     QActionGroup* libraryThumbSizeGroup;
@@ -221,6 +222,7 @@ private:
     VideoFrameExtractor* extractor;
     AVPlayer* thumbNailPlayer;
     QMutex _eventLocker;
+    bool _editPlaylistMode = false;
 
     void saveSingleThumb(const QString& videoFile, const QString& thumbFile, LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
     void startThumbProcess();
@@ -234,6 +236,7 @@ private:
     int selectedLibraryListIndex;
     LibraryListWidgetItem* selectedLibraryListItem = nullptr;
 
+    LibraryListItem getSelectedLibraryListItem();
     void on_load_library(QString path);
     void on_libray_path_select(QString path);
     void backToMainLibrary();
@@ -241,8 +244,15 @@ private:
     void media_double_click_event(QMouseEvent * event);
     QString mSecondFormat(int seconds);
     bool isPlayingFile(QString file);
-    void playListChanged();
+    void savePlaylist();
+    void editPlaylist();
+    void renamePlaylist();
+    void cancelEditPlaylist();
     void removeFromPlaylist();
+    void deleteSelectedPlaylist();
+    QString getPlaylistName(bool newPlaylist = true);
+
+    void changelibraryDisplayMode(LibraryView value);
 
     void deviceHome();
     void setLoading(bool loading);
@@ -255,11 +265,13 @@ private:
     void showControls();
     void hideLibrary();
     void showLibrary();
+    void setLibraryToolBar();
     void saveThumb(const QString& videoFile, const QString& thumbFile, LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
     void updateThumbSizeUI(int size);
     void updateLibrarySortUI();
     void updateLibrarySortUI(LibrarySortMode mode);
     void setThumbSize(int size);
+    void resizeThumbs(int size);
     void changeDeoFunscript();
 
     void playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr);

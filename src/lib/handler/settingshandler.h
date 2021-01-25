@@ -37,7 +37,7 @@ public:
     static void setChannelUserMin(QString channel, int value);
     static void setChannelUserMax(QString channel, int value);
 
-    static int getLibraryView();
+    static LibraryView getLibraryView();
     static int getVideoIncrement();
 
     static bool getGamepadEnabled();
@@ -157,6 +157,7 @@ public:
     static void SetupDecoderPriority();
     static void Load();
     static void Save();
+    static void PersistSelectSettings();
     static void Default();
     static void Clear();
 

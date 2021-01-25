@@ -32,7 +32,6 @@ void SettingsHandler::Load()
         locker.unlock();
 //        if((currentVersion < XTPVersionNum && resetRequired))
 //            LogHandler::Dialog("Sorry, your settings have been set to default for a new data structure.", XLogLevel::Information);
-        Default();
         SetMapDefaults();
         SetupDecoderPriority();
         QList<QVariant> decoderVarient;
@@ -41,7 +40,6 @@ void SettingsHandler::Load()
             decoderVarient.append(QVariant::fromValue(decoder));
         }
         settings->setValue("decoderPriority", decoderVarient);
-        defaultReset = false;
     }
     locker.relock();
     selectedTheme = settings->value("selectedTheme").toString();
@@ -115,12 +113,8 @@ void SettingsHandler::Load()
     {
         _mainWindowPos.append(splitterPos.value<int>());
     }
-    qRegisterMetaTypeStreamOperators<QList<QString>>("QList<QString>");
     _libraryExclusions = settings->value("libraryExclusions").value<QList<QString>>();
 
-    qRegisterMetaTypeStreamOperators<QMap<QString, QList<LibraryListItem>>>("QMap<QString, QList<LibraryListItem>>");
-    qRegisterMetaTypeStreamOperators<QList<LibraryListItem>>("QList<LibraryListItem>");
-    qRegisterMetaTypeStreamOperators<LibraryListItem>("LibraryListItem");
     QVariantMap playlists = settings->value("playlists").toMap();
     foreach(auto playlist, playlists.keys())
     {
@@ -228,12 +222,8 @@ void SettingsHandler::Save()
         }
         settings->setValue("mainWindowPos", splitterPos);
 
-        qRegisterMetaTypeStreamOperators<QList<QString>>("QList<QString>");
         settings->setValue("libraryExclusions", QVariant::fromValue(_libraryExclusions));
 
-        qRegisterMetaTypeStreamOperators<QMap<QString, QList<LibraryListItem>>>("QMap<QString, QList<LibraryListItem>>");
-        qRegisterMetaTypeStreamOperators<QList<LibraryListItem>>("QList<LibraryListItem>");
-        qRegisterMetaTypeStreamOperators<LibraryListItem>("LibraryListItem");
         QVariantMap playlists;
         foreach(auto playlist, _playlists.keys())
         {
@@ -251,11 +241,23 @@ void SettingsHandler::Clear()
     defaultReset = true;
     settings->clear();
 }
+void SettingsHandler::PersistSelectSettings()
+{
+    QVariantMap playlists;
+    foreach(auto playlist, _playlists.keys())
+    {
+        playlists.insert(playlist, QVariant::fromValue(_playlists[playlist]));
+    }
+    settings->setValue("playlists", playlists);
+
+    if(deoDnlaFunscriptLookup.count() > 0)
+        settings->setValue("deoDnlaFunscriptLookup", deoDnlaFunscriptLookup);
+
+    settings->sync();
+}
 void SettingsHandler::Default()
 {
-    QMutexLocker locker(&mutex);
-    defaultReset = true;
-    settings->clear();
+    Clear();
 //    settings->setValue("selectedTheme", QApplication::applicationDirPath() + "/themes/black-silver.css");
 //    settings->setValue("selectedLibrary", QVariant::String);
 //    settings->setValue("selectedDevice", DeviceType::Serial);
@@ -567,42 +569,6 @@ void SettingsHandler::setLinkToRelatedAxisChecked(QString channel, bool value)
         _availableAxis[channel].LinkToRelatedMFS = value;
 }
 
-int SettingsHandler::getLibraryView()
-{
-    QMutexLocker locker(&mutex);
-    return libraryView;
-}
-int SettingsHandler::getThumbSize()
-{
-    QMutexLocker locker(&mutex);
-    if (libraryView == LibraryView::List)
-    {
-        return thumbSizeList;
-    }
-    return thumbSize;
-}
-void SettingsHandler::setThumbSize(int value)
-{
-    QMutexLocker locker(&mutex);
-    if (libraryView == LibraryView::List)
-    {
-        thumbSizeList = value;
-    }
-    else
-    {
-        thumbSize = value;
-    }
-}
-QSize SettingsHandler::getMaxThumbnailSize()
-{
-    QMutexLocker locker(&mutex);
-    return _maxThumbnailSize;
-}
-int SettingsHandler::getVideoIncrement()
-{
-    QMutexLocker locker(&mutex);
-    return videoIncrement;
-}
 
 QString SettingsHandler::getDeoDnlaFunscript(QString key)
 {
@@ -902,10 +868,50 @@ void SettingsHandler::setLibraryView(int value)
     QMutexLocker locker(&mutex);
     libraryView = value;
 }
+LibraryView SettingsHandler::getLibraryView()
+{
+    QMutexLocker locker(&mutex);
+    return (LibraryView)libraryView;
+}
+
+int SettingsHandler::getThumbSize()
+{
+    QMutexLocker locker(&mutex);
+    if (libraryView == LibraryView::List)
+    {
+        return thumbSizeList;
+    }
+    return thumbSize;
+}
+void SettingsHandler::setThumbSize(int value)
+{
+    QMutexLocker locker(&mutex);
+    if (libraryView == LibraryView::List)
+    {
+        thumbSizeList = value;
+    }
+    else
+    {
+        thumbSize = value;
+    }
+}
+
+QSize SettingsHandler::getMaxThumbnailSize()
+{
+    QMutexLocker locker(&mutex);
+    return _maxThumbnailSize;
+}
+
+int SettingsHandler::getVideoIncrement()
+{
+    QMutexLocker locker(&mutex);
+    return videoIncrement;
+}
 void SettingsHandler::setVideoIncrement(int value)
 {
     videoIncrement = value;
 }
+
 void SettingsHandler::setDeoDnlaFunscript(QString key, QString value)
 {
     QMutexLocker locker(&mutex);
