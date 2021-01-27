@@ -259,9 +259,9 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(actionTypeDesc_Sort, &QAction::triggered, this, &MainWindow::on_actionTypeDesc_triggered);
 
     connect(videoHandler, &VideoHandler::positionChanged, this, &MainWindow::on_media_positionChanged, Qt::QueuedConnection);
-    connect(videoHandler, &VideoHandler::mediaStatusChanged, this, &MainWindow::on_media_statusChanged);
-    connect(videoHandler, &VideoHandler::playing, this, &MainWindow::on_media_start);
-    connect(videoHandler, &VideoHandler::stopping, this, &MainWindow::on_media_stop);
+    connect(videoHandler, &VideoHandler::mediaStatusChanged, this, &MainWindow::on_media_statusChanged, Qt::QueuedConnection);
+    connect(videoHandler, &VideoHandler::started, this, &MainWindow::on_media_start, Qt::QueuedConnection);
+    connect(videoHandler, &VideoHandler::stopped, this, &MainWindow::on_media_stop, Qt::QueuedConnection);
     connect(videoHandler, &VideoHandler::togglePaused, this, &MainWindow::onVideoHandler_togglePaused);
 
     connect(ui->SeekSlider, &RangeSlider::upperValueMove, this, &MainWindow::on_seekSlider_sliderMoved);
@@ -1258,7 +1258,7 @@ void MainWindow::on_LibraryList_itemDoubleClicked(QListWidgetItem *item)
     auto libraryListItem = item->data(Qt::UserRole).value<LibraryListItem>();
     if(libraryListItem.type == LibraryListItemType::Audio || libraryListItem.type == LibraryListItemType::Video)
     {
-        playVideo(item->data(Qt::UserRole).value<LibraryListItem>());
+        stopAndPlayVideo(item->data(Qt::UserRole).value<LibraryListItem>());
     }
     else if(libraryListItem.type == LibraryListItemType::PlaylistInternal)
     {
@@ -1271,7 +1271,7 @@ void MainWindow::playFileFromContextMenu()
     LibraryListItem libraryListItem = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
     if(libraryListItem.type == LibraryListItemType::Audio || libraryListItem.type == LibraryListItemType::Video)
     {
-        playVideo(libraryListItem);
+        stopAndPlayVideo(libraryListItem);
     }
     else if(libraryListItem.type == LibraryListItemType::PlaylistInternal)
     {
@@ -1279,7 +1279,7 @@ void MainWindow::playFileFromContextMenu()
         if(selectedPlaylistItems.length() > 0)
         {
             LibraryListItem libraryListItem = setCurrentLibraryRow(0)->getLibraryListItem();
-            playVideo(libraryListItem);
+            stopAndPlayVideo(libraryListItem);
         }
     }
 }
@@ -1290,8 +1290,41 @@ void MainWindow::playFileWithCustomScript()
     if (selectedScript != Q_NULLPTR)
     {
         LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
-        playVideo(selectedFileListItem, selectedScript);
+        stopAndPlayVideo(selectedFileListItem, selectedScript);
     }
+}
+
+//Hack because QTAV calls stopped and start out of order
+void MainWindow::stopAndPlayVideo(LibraryListItem selectedFileListItem, QString customScript)
+{
+
+    QFile file(selectedFileListItem.path);
+    if (file.exists())
+    {
+        if (videoHandler->file() != selectedFileListItem.path || !customScript.isEmpty())
+        {
+            ui->loopToggleButton->setChecked(false);
+            setLoading(true);
+            if(videoHandler->isPlaying())
+            {
+                videoHandler->stop();
+                auto waitForStopFuture = QtConcurrent::run([this, selectedFileListItem, customScript]()
+                {
+                    while(!_mediaStopped)
+                    {
+                        LogHandler::Debug("Waiting for media stop...");
+                        QThread::msleep(500);
+                    }
+                    playVideo(selectedFileListItem, customScript);
+                });
+            }
+            else
+            {
+                playVideo(selectedFileListItem, customScript);
+            }
+        }
+    }
+
 }
 
 void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customScript)
@@ -1299,12 +1332,10 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
     QFile file(selectedFileListItem.path);
     if (file.exists())
     {
-        //on_media_stop();
         if (videoHandler->file() != selectedFileListItem.path || !customScript.isEmpty())
         {
             ui->loopToggleButton->setChecked(false);
             setLoading(true);
-            videoHandler->stop();
             videoHandler->setFile(selectedFileListItem.path);
             videoPreviewWidget->setFile(selectedFileListItem.path);
             videoHandler->load();
@@ -1398,7 +1429,7 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
                 }
             }
         }
-        //QUrl url = QUrl::fromLocalFile(selectedFileListItem.path);
+
         videoHandler->play();
         playingLibraryListIndex = libraryList->currentRow();
         playingLibraryListItem = (LibraryListWidgetItem*)libraryList->item(playingLibraryListIndex);
@@ -1639,14 +1670,14 @@ void MainWindow::on_PlayBtn_clicked()
         if(libraryList->selectedItems().length() == 0)
         {
             LibraryListWidgetItem* selectedItem = setCurrentLibraryRow(0);
-            playVideo(selectedItem->getLibraryListItem());
+            stopAndPlayVideo(selectedItem->getLibraryListItem());
             return;
         }
         LibraryListWidgetItem* selectedItem = (LibraryListWidgetItem*)libraryList->selectedItems().first();
         LibraryListItem selectedFileListItem = selectedItem->getLibraryListItem();
         if(selectedFileListItem.path != videoHandler->file() || !videoHandler->isPlaying())
         {
-            playVideo(selectedFileListItem);
+            stopAndPlayVideo(selectedFileListItem);
         }
         else if(videoHandler->isPaused() || videoHandler->isPlaying())
         {
@@ -1894,17 +1925,18 @@ void MainWindow::on_media_start()
         funscriptFuture = QtConcurrent::run(syncFunscript, videoHandler, _xSettings, tcodeHandler, funscriptHandler, funscriptHandlers);
     }
     toggleMediaControlStatus(true);
+    _mediaStopped = false;
 }
 
 void MainWindow::on_media_stop()
 {
     LogHandler::Debug("Enter on_media_stop");
+    _mediaStopped = true;
     toggleMediaControlStatus(false);
     if(funscriptFuture.isRunning())
     {
         funscriptFuture.cancel();
     }
-
 }
 void MainWindow::setLoading(bool loading)
 {
@@ -2252,7 +2284,7 @@ void MainWindow::skipForward()
             skipForward();
         }
         else
-            playVideo(libraryListItem);
+            stopAndPlayVideo(libraryListItem);
     }
 }
 
@@ -2277,7 +2309,7 @@ void MainWindow::skipBack()
             skipBack();
         }
         else
-            playVideo(libraryListItem);
+            stopAndPlayVideo(libraryListItem);
     }
 }
 

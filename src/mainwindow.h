@@ -151,6 +151,9 @@ protected:
     }
 
 private:
+    //Hack because QTAV calls stopped and start out of order
+    bool _mediaStopped = true;
+
     Ui::MainWindow *ui;
     SettingsDialog* _xSettings;
     LibraryWindow* libraryWindow;
@@ -275,6 +278,7 @@ private:
     void changeDeoFunscript();
 
     void playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr);
+    void stopAndPlayVideo(LibraryListItem selectedFileListItem, QString customScript = nullptr);
     void initNetworkEvent();
     void initSerialEvent();
     void skipForward();

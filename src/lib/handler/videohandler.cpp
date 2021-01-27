@@ -33,9 +33,9 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent)
     _player->setSeekType(AccurateSeek);
 
     connect(_player, &AVPlayer::positionChanged, this, &VideoHandler::on_media_positionChanged, Qt::QueuedConnection);
-    connect(_player, &AVPlayer::mediaStatusChanged, this, &VideoHandler::on_media_statusChanged);
-    connect(_player, &AVPlayer::started, this, &VideoHandler::on_media_start);
-    connect(_player, &AVPlayer::stopped, this, &VideoHandler::on_media_stop);
+    connect(_player, &AVPlayer::mediaStatusChanged, this, &VideoHandler::on_media_statusChanged, Qt::QueuedConnection);
+    connect(_player, &AVPlayer::started, this, &VideoHandler::on_media_start, Qt::QueuedConnection);
+    connect(_player, &AVPlayer::stopped, this, &VideoHandler::on_media_stop, Qt::QueuedConnection);
 
     setLayout(_widgetLayout);
 }
@@ -106,7 +106,6 @@ void VideoHandler::play()
 void VideoHandler::stop()
 {
     _player->stop();
-    _player->updateClock(0);
     emit stopping();
 }
 
