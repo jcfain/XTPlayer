@@ -13,7 +13,7 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem localData) :
     QString thumbString = localData.thumbFile;
     if (!thumbInfo.exists())
     {
-        thumbString = QApplication::applicationDirPath() + "/themes/loading.png";
+        thumbString = "://images/icons/loading.png";
     }
     QIcon thumb;
     QPixmap bgPixmap(thumbString);

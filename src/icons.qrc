@@ -29,5 +29,7 @@
         <file>images/icons/edit.svg</file>
         <file>images/icons/save.svg</file>
         <file>images/icons/x.svg</file>
+        <file>images/icons/loading.png</file>
+        <file>images/icons/loading_current.png</file>
     </qresource>
 </RCC>

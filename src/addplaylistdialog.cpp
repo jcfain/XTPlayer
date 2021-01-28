@@ -47,7 +47,7 @@ QString PlaylistDialog::getPlaylistNAme(PlaylistDialog *dialog, bool *ok)
     const int ret = dialog->exec();
     if (ok)
         *ok = !!ret;
-    if (*ok)
+    if (ok)
     {
         bool isValid = true;
         if(dialog->nameEdit->text().isEmpty())
@@ -61,5 +61,5 @@ QString PlaylistDialog::getPlaylistNAme(PlaylistDialog *dialog, bool *ok)
 
     dialog->deleteLater();
 
-    return dialog->nameEdit->text();
+    return ok ? dialog->nameEdit->text() : nullptr;
 }

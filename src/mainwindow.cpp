@@ -776,7 +776,7 @@ void MainWindow::onLibraryWindowed_Closed()
 {
     libraryWindow->layout()->removeWidget(libraryList);
     ui->libraryGrid->addWidget(libraryList, 1, 0, 20, 10);
-    ((QGridLayout*)libraryWindow->layout())->addWidget(backLibraryButton, 0, 0);
+    ui->libraryGrid->addWidget(backLibraryButton, 0, 0);
     ui->libraryGrid->addWidget(randomizeLibraryButton, 0, 1);
     ui->libraryGrid->addWidget(windowedLibraryButton, 0, ui->libraryGrid->columnCount() - 1);
     ui->libraryGrid->addWidget(cancelEditPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
@@ -1105,24 +1105,46 @@ void MainWindow::saveNewThumbs()
         stopThumbProcess();
     }
 }
-void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, LibraryListWidgetItem* qListWidgetItem, qint64 position)
+void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, LibraryListWidgetItem* cachedListWidgetItem, qint64 position)
 {
 //    QIcon thumb;
 //    QPixmap bgPixmap(QApplication::applicationDirPath() + "/themes/loading.png");
 //    QPixmap scaled = bgPixmap.scaled(SettingsHandler::getThumbSize(), Qt::AspectRatioMode::KeepAspectRatio);
 //    thumb.addPixmap(scaled);
 //    qListWidgetItem->setIcon(thumb);
-    LibraryListItem item = qListWidgetItem->getLibraryListItem();
-    if(item.type == LibraryListItemType::Audio)
+    LibraryListItem cachedListItem = cachedListWidgetItem->getLibraryListItem();
+    auto text = cachedListWidgetItem->text();
+    auto cachedLibraryListWidgetItem = cachedListWidgetItem->getLibraryListItem();
+    auto libraryListItems = libraryList->findItems(cachedLibraryListWidgetItem.nameNoExtension, Qt::MatchFlag::MatchEndsWith);
+    auto libraryListWidgetItem = ((LibraryListWidgetItem*)libraryListItems.first());
+    QIcon thumb;
+    QPixmap bgPixmap("://images/icons/loading_current.png");
+    int thumbSize = SettingsHandler::getThumbSize();
+    QSize size = {thumbSize, thumbSize};
+    QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
+    thumb.addPixmap(scaled);
+    libraryListWidgetItem->setIcon(thumb);
+
+
+    auto libraryListItem = libraryListWidgetItem->getLibraryListItem();
+
+    //://images/icons/loading_current.png
+    if(cachedListItem.type == LibraryListItemType::Audio)
     {
         QIcon thumb;
-        QPixmap bgPixmap(item.thumbFile);
+        QPixmap bgPixmap(cachedListItem.thumbFile);
         int thumbSize = SettingsHandler::getThumbSize();
         QSize size = {thumbSize, thumbSize};
         QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
         thumb.addPixmap(scaled);
-        qListWidgetItem->setIcon(thumb);
-        qListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
+
+        cachedListWidgetItem->setIcon(thumb);
+        cachedListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
+
+        libraryList->removeItemWidget(libraryListWidgetItem);
+        libraryListWidgetItem->setIcon(thumb);
+        libraryListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
+
         saveNewThumbs();
     }
     else
@@ -1130,7 +1152,7 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, L
         connect(extractor,
            &QtAV::VideoFrameExtractor::frameExtracted,
            extractor,
-           [this, videoFile, thumbFile, qListWidgetItem](const QtAV::VideoFrame& frame)
+           [this, videoFile, thumbFile, cachedListWidgetItem, libraryListWidgetItem](const QtAV::VideoFrame& frame)
             {
 
                const auto& img = frame.toImage();
@@ -1147,14 +1169,19 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, L
                QSize size = {thumbSize, thumbSize};
                QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
                thumb.addPixmap(scaled);
-               qListWidgetItem->setIcon(thumb);
-               qListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
+
+               cachedListWidgetItem->setIcon(thumb);
+               cachedListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
+
+               libraryList->removeItemWidget(libraryListWidgetItem);
+               libraryListWidgetItem->setIcon(thumb);
+               libraryListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
                saveNewThumbs();
             });
         connect(extractor,
            &QtAV::VideoFrameExtractor::error,
            extractor,
-           [this, videoFile, qListWidgetItem](const QString &errorMessage)
+           [this, videoFile, cachedListWidgetItem, libraryListWidgetItem](const QString &errorMessage)
             {
 
                LogHandler::Debug("Error extracting image from: " + videoFile + " Error: " + errorMessage);
@@ -1165,10 +1192,15 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, L
                QSize size = {thumbSize,thumbSize};
                QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
                thumb.addPixmap(scaled);
-               auto errorMsg = qListWidgetItem->toolTip() + "\n\nError: "+ errorMessage;
-               qListWidgetItem->setIcon(thumb);
-               qListWidgetItem->setToolTip(errorMsg);
-               qListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
+               auto errorMsg = cachedListWidgetItem->toolTip() + "\n\nError: "+ errorMessage;
+               cachedListWidgetItem->setIcon(thumb);
+               cachedListWidgetItem->setToolTip(errorMsg);
+               cachedListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
+
+               libraryList->removeItemWidget(libraryListWidgetItem);
+               libraryListWidgetItem->setIcon(thumb);
+               libraryListWidgetItem->setToolTip(errorMsg);
+               libraryListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
                saveNewThumbs();
             });
 
@@ -1191,7 +1223,7 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, L
         connect(thumbNailPlayer,
            &AVPlayer::error,
            thumbNailPlayer,
-           [this, qListWidgetItem](QtAV::AVError er)
+           [this, cachedListWidgetItem, libraryListWidgetItem](QtAV::AVError er)
             {
                LogHandler::Debug("Video load error");
                QIcon thumb;
@@ -1200,10 +1232,16 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, L
                QSize size = {thumbSize,thumbSize};
                QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
                thumb.addPixmap(scaled);
-               auto errorMsg = qListWidgetItem->toolTip() + "\n\nError: "+ er.ffmpegErrorString();
-               qListWidgetItem->setIcon(thumb);
-               qListWidgetItem->setToolTip(errorMsg);
-               qListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
+               auto errorMsg = cachedListWidgetItem->toolTip() + "\n\nError: "+ er.ffmpegErrorString();
+               cachedListWidgetItem->setIcon(thumb);
+               cachedListWidgetItem->setToolTip(errorMsg);
+               cachedListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
+
+               libraryList->removeItemWidget(libraryListWidgetItem);
+               libraryListWidgetItem->setIcon(thumb);
+               libraryListWidgetItem->setToolTip(errorMsg);
+               libraryListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
+
                disconnect(extractor, nullptr,  nullptr, nullptr);
                saveNewThumbs();
             });
@@ -2739,10 +2777,7 @@ void MainWindow::updateLibrarySortUI(LibrarySortMode mode)
         break;
     }
 
-    if(playingLibraryListItem != nullptr)
-        libraryList->setCurrentItem(playingLibraryListItem);
-    else if(selectedLibraryListItem != nullptr)
-        libraryList->setCurrentItem(selectedLibraryListItem);
+    libraryList->setCurrentRow(0);
 }
 
 void MainWindow::on_actionNameAsc_triggered()
@@ -2877,7 +2912,7 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
 QString MainWindow::getPlaylistName(bool newPlaylist)
 {
     bool ok;
-    QString playlistName;
+    QString playlistName = nullptr;
     if(newPlaylist)
         playlistName = PlaylistDialog::getNewPlaylist(this, &ok);
     else
@@ -2886,15 +2921,24 @@ QString MainWindow::getPlaylistName(bool newPlaylist)
         LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
         playlistName = PlaylistDialog::renamePlaylist(this, selectedFileListItem.nameNoExtension, &ok);
     }
+
     if(newPlaylist && ok)
     {
-        SettingsHandler::addNewPlaylist(playlistName);
-        setupPlaylistItem(playlistName);
+        auto items = libraryList->findItems(playlistName, Qt::MatchFixedString);
+        if(items.empty())
+        {
+            SettingsHandler::addNewPlaylist(playlistName);
+            setupPlaylistItem(playlistName);
+        }
+        else
+        {
+            LogHandler::Dialog(("Playlist '" + playlistName + "' already exists.\nPlease choose another name."), XLogLevel::Critical);
+        }
     }
-    return playlistName;
+    return ok ? playlistName : nullptr;
 }
 
-void MainWindow::setupPlaylistItem(QString playlistName)
+LibraryListItem MainWindow::setupPlaylistItem(QString playlistName)
 {
     LibraryListItem item
     {
@@ -2912,7 +2956,8 @@ void MainWindow::setupPlaylistItem(QString playlistName)
     };
     LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item);
     libraryList->insertItem(0, qListWidgetItem);
-    cachedLibraryItems.push_front((LibraryListWidgetItem*)qListWidgetItem->clone());
+    cachedLibraryItems.push_front(new LibraryListWidgetItem(item));
+    return item;
 }
 
 void MainWindow::addSelectedLibraryItemToPlaylist(QString playlistName)
@@ -2926,24 +2971,24 @@ void MainWindow::addSelectedLibraryItemToPlaylist(QString playlistName)
 
 void MainWindow::loadPlaylistIntoLibrary(QString playlistName)
 {
-//    if(!thumbProcessIsRunning)
-//    {
-    selectedPlaylistName = playlistName;
-    libraryList->clear();
-    auto playlists = SettingsHandler::getPlaylists();
-    auto playlist = playlists.value(playlistName);
-    foreach(auto item, playlist)
+    if(!thumbProcessIsRunning)
     {
-        LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item);
-        libraryList->addItem(qListWidgetItem);
-        selectedPlaylistItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
+        selectedPlaylistName = playlistName;
+        libraryList->clear();
+        auto playlists = SettingsHandler::getPlaylists();
+        auto playlist = playlists.value(playlistName);
+        foreach(auto item, playlist)
+        {
+            LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item);
+            libraryList->addItem(qListWidgetItem);
+            selectedPlaylistItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
+        }
+        backLibraryButton->show();
+        editPlaylistButton->show();
+        librarySortGroup->setEnabled(false);
     }
-    backLibraryButton->show();
-    editPlaylistButton->show();
-    librarySortGroup->setEnabled(false);
-//    }
-//    else
-//        LogHandler::Dialog("Please wait for thumbnails to fully load!", XLogLevel::Warning);
+    else
+        LogHandler::Dialog("Please wait for thumbnails to fully load!", XLogLevel::Warning);
 }
 
 void MainWindow::backToMainLibrary()
@@ -2958,7 +3003,8 @@ void MainWindow::backToMainLibrary()
         libraryList->clear();
         foreach(auto item, cachedLibraryItems)
         {
-            libraryList->addItem((LibraryListWidgetItem*)item->clone());
+            auto name = item->text();
+            libraryList->addItem(item->clone());
         }
     }
     backLibraryButton->hide();
@@ -2975,6 +3021,7 @@ void MainWindow::backToMainLibrary()
 
 void MainWindow::savePlaylist()
 {
+    QScroller::grabGesture(libraryList->viewport(), QScroller::LeftMouseButtonGesture);
     QList<LibraryListItem> libraryItems;
     for(int i=0;i<libraryList->count();i++)
     {
@@ -2992,6 +3039,8 @@ void MainWindow::savePlaylist()
 }
 void MainWindow::editPlaylist()
 {
+
+    QScroller::grabGesture(libraryList->viewport(), QScroller::MiddleMouseButtonGesture);
     _editPlaylistMode = true;
     savePlaylistButton->show();
     cancelEditPlaylistButton->show();
@@ -3008,6 +3057,7 @@ void MainWindow::editPlaylist()
 }
 void MainWindow::cancelEditPlaylist()
 {
+    QScroller::grabGesture(libraryList->viewport(), QScroller::LeftMouseButtonGesture);
     savePlaylistButton->hide();
     cancelEditPlaylistButton->hide();
     editPlaylistButton->show();
@@ -3029,23 +3079,32 @@ void MainWindow::renamePlaylist()
     QString renamedPlaylistName = getPlaylistName(false);
     if(renamedPlaylistName != nullptr)
     {
+        auto items = libraryList->findItems(renamedPlaylistName, Qt::MatchFixedString);
         LibraryListItem playlist = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
-        auto playlists = SettingsHandler::getPlaylists();
-        auto storedPlaylist = playlists.value(playlist.nameNoExtension);
-        deleteSelectedPlaylist();
-        SettingsHandler::updatePlaylist(renamedPlaylistName, storedPlaylist);
-        setupPlaylistItem(renamedPlaylistName);
+        if(items.empty())
+        {
+            auto playlists = SettingsHandler::getPlaylists();
+            auto storedPlaylist = playlists.value(playlist.nameNoExtension);
+            deleteSelectedPlaylist();
+            SettingsHandler::updatePlaylist(renamedPlaylistName, storedPlaylist);
+            setupPlaylistItem(renamedPlaylistName);
+        }
+        else if(playlist.nameNoExtension != renamedPlaylistName)
+        {
+            LogHandler::Dialog(("Playlist '" + renamedPlaylistName + "' already exists.\nPlease choose another name."), XLogLevel::Critical);
+        }
     }
 
 }
 void MainWindow::deleteSelectedPlaylist()
 {
-    QListWidgetItem* selectedItem = libraryList->selectedItems().first();
-    LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
+    LibraryListWidgetItem* selectedItem = (LibraryListWidgetItem*)libraryList->selectedItems().first();
+    LibraryListItem selectedFileListItem = selectedItem->getLibraryListItem();
     SettingsHandler::deletePlaylist(selectedFileListItem.nameNoExtension);
     libraryList->removeItemWidget(selectedItem);
-    bool index = cachedLibraryItems.indexOf((LibraryListWidgetItem*)selectedItem);
-    delete cachedLibraryItems[index];
+    LibraryListWidgetItem* deleteCache = boolinq::from(cachedLibraryItems).firstOrDefault([selectedItem](const LibraryListWidgetItem* x) { return x->text() == selectedItem->text(); });
+    cachedLibraryItems.removeOne(deleteCache);
+    delete deleteCache;
     delete selectedItem;
 }
 

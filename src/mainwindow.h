@@ -289,7 +289,7 @@ private:
 
     bool eventFilter(QObject *obj, QEvent *event) override;
 
-    void setupPlaylistItem(QString name);
+    LibraryListItem setupPlaylistItem(QString name);
     void addSelectedLibraryItemToPlaylist(QString playlistName);
     void setVolumeIcon(int volume);
     void on_seekSlider_sliderMoved(int position);

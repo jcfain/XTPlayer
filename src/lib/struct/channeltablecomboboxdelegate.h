@@ -1,7 +1,7 @@
 #ifndef CHANNELTABLECOMBOBOXDELEGATE_H
 #define CHANNELTABLECOMBOBOXDELEGATE_H
 
-#include <QStyledItemDelegate >
+#include <QStyledItemDelegate>
 #include <QObject>
 #include <QComboBox>
 #include <QMap>
