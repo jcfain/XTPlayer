@@ -31,5 +31,6 @@
         <file>images/icons/x.svg</file>
         <file>images/icons/loading.png</file>
         <file>images/icons/loading_current.png</file>
+        <file>images/XTP_Splash.png</file>
     </qresource>
 </RCC>

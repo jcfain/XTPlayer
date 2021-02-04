@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
     qRegisterMetaTypeStreamOperators<QMap<QString, QList<LibraryListItem>>>("QMap<QString, QList<LibraryListItem>>");
     qRegisterMetaTypeStreamOperators<QList<LibraryListItem>>("QList<LibraryListItem>");
     QApplication a(argc, argv);
+
     MainWindow w(a.arguments());
     w.show();
     return a.exec();

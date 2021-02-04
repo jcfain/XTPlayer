@@ -1,8 +1,8 @@
 #include "settingshandler.h"
 
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.25";
-const float SettingsHandler::XTPVersionNum = 0.25f;
+const QString SettingsHandler::XTPVersion = "0.252";
+const float SettingsHandler::XTPVersionNum = 0.252f;
 
 SettingsHandler::SettingsHandler()
 {
@@ -30,8 +30,6 @@ void SettingsHandler::Load()
     if (currentVersion == 0)
     {
         locker.unlock();
-//        if((currentVersion < XTPVersionNum && resetRequired))
-//            LogHandler::Dialog("Sorry, your settings have been set to default for a new data structure.", XLogLevel::Information);
         SetMapDefaults();
         SetupDecoderPriority();
         QList<QVariant> decoderVarient;
@@ -135,8 +133,11 @@ void SettingsHandler::Load()
         locker.unlock();
         MigrateTo25();
     }
-//    SetupAvailableAxis();
-//    SetupGamepadButtonMap();
+    if(currentVersion != 0 && currentVersion < 0.252f)
+    {
+        locker.unlock();
+        MigrateTo252();
+    }
 }
 
 void SettingsHandler::Save()
@@ -161,21 +162,6 @@ void SettingsHandler::Save()
         settings->setValue("whirligigPort", whirligigPort);
         settings->setValue("whirligigEnabled", whirligigEnabled);
 
-//        settings->setValue("rollMultiplierChecked", yRollMultiplierChecked);
-//        settings->setValue("rollMultiplierValue", yRollMultiplierValue);
-//        settings->setValue("pitchMultiplierChecked", xRollMultiplierChecked);
-//        settings->setValue("pitchMultiplierValue", xRollMultiplierValue);
-//        settings->setValue("surgeMultiplierChecked", zMultiplierChecked);
-//        settings->setValue("surgeMultiplierValue", zMultiplierValue);
-//        settings->setValue("swayMultiplierChecked", yMultiplierChecked);
-//        settings->setValue("swayMultiplierValue", yMultiplierValue);
-//        settings->setValue("twistMultiplierChecked", twistMultiplierChecked);
-//        settings->setValue("twistMultiplierValue", twistMultiplierValue);
-//        settings->setValue("vibMultiplierChecked", vibMultiplierChecked);
-//        settings->setValue("vibMultiplierValue", vibMultiplierValue);
-//        settings->setValue("suckMultiplierChecked", suckMultiplierChecked);
-//        settings->setValue("suckMultiplierValue", suckMultiplierValue);
-
         settings->setValue("libraryView", libraryView);
         settings->setValue("selectedLibrarySortMode", _librarySortMode);
 
@@ -194,8 +180,6 @@ void SettingsHandler::Save()
             decoderVarient.append(QVariant::fromValue(decoder));
         }
         settings->setValue("decoderPriority", decoderVarient);
-//        qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
-//        qRegisterMetaType<ChannelModel>();
         QVariantMap availableAxis;
         foreach(auto axis, _availableAxis.keys())
         {
@@ -258,45 +242,12 @@ void SettingsHandler::PersistSelectSettings()
 void SettingsHandler::Default()
 {
     Clear();
-//    settings->setValue("selectedTheme", QApplication::applicationDirPath() + "/themes/black-silver.css");
-//    settings->setValue("selectedLibrary", QVariant::String);
-//    settings->setValue("selectedDevice", DeviceType::Serial);
-//    settings->setValue("playerVolume", 0);
-//    settings->setValue("offSet", 0);
-//    settings->setValue("speed", 1000);
-//    settings->setValue("selectedFunscriptLibrary", QVariant::String);
-//    settings->setValue("serialPort", QVariant::String);
-//    settings->setValue("serverAddress", QVariant::String);
-//    settings->setValue("serverPort", "0");
-//    settings->setValue("deoAddress", "127.0.0.1");
-//    settings->setValue("deoPort", "23554");
-//    settings->setValue("deoEnabled", false);
-//    settings->setValue("yRollMultiplierChecked", false);
-//    settings->setValue("yRollMultiplierValue", 0);
-//    settings->setValue("xRollMultiplierChecked", false);
-//    settings->setValue("xRollMultiplierValue", 0);
-//    settings->setValue("twistMultiplierChecked", false);
-//    settings->setValue("twistMultiplierValue", 0);
-//    settings->setValue("vibMultiplierChecked", false);
-//    settings->setValue("vibMultiplierValue", 0);
-
-//    settings->setValue("libraryView", 0);
-//    settings->setValue("thumbSize", 150);
-//    settings->setValue("thumbSizeList", 50);
-
-//    settings->setValue("gamePadEnabled", false);
-//    settings->setValue("inverseTcXL0", false);
-//    settings->setValue("inverseTcXRollR2", false);
-//    settings->setValue("inverseTcYRollR1", false);
-//    SetMapDefaults();
 }
 
 void SettingsHandler::SetMapDefaults()
 {
     SetupAvailableAxis();
     SetupGamepadButtonMap();
-//    qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
-//    qRegisterMetaType<ChannelModel>();
     QVariantHash availableAxis;
     foreach(auto axis, _availableAxis.keys())
     {
@@ -328,90 +279,17 @@ void SettingsHandler::MigrateTo23()
 void SettingsHandler::MigrateTo25()
 {
     settings->setValue("version", XTPVersionNum);
-    foreach(auto key, _availableAxis.keys())
-    {
-        _availableAxis[key].MultiplierEnabled = false;
-        _availableAxis[key].MultiplierValue = 0.01f;
-        _availableAxis[key].DamperEnabled = false;
-        _availableAxis[key].DamperValue = 0.2f;
-        _availableAxis[key].LinkToRelatedMFS = false;
-        auto channel = _availableAxis[key];
-        if(key == channelNames.Stroke)
-        {
-            _availableAxis[key].RelatedChannel = channelNames.Twist;
-        }
-        else if(key == channelNames.StrokeDown)
-        {
-            _availableAxis[key].RelatedChannel = channelNames.TwistCounterClockwise;
-        }
-        else if(key == channelNames.StrokeUp)
-        {
-            _availableAxis[key].RelatedChannel = channelNames.TwistClockwise;
-        }
-        else if(key == channelNames.Pitch)
-        {
-            _availableAxis[key].RelatedChannel = channelNames.Surge;
-        }
-        else if(key == channelNames.PitchForward)
-        {
-            _availableAxis[key].RelatedChannel = channelNames.SurgeForward;
-        }
-        else if(key == channelNames.PitchBack)
-        {
-            _availableAxis[key].RelatedChannel = channelNames.SurgeBack;
-        }
-        else if(key == channelNames.Roll)
-        {
-            _availableAxis[key].RelatedChannel = channelNames.Sway;
-        }
-        else if(key == channelNames.RollLeft)
-        {
-            _availableAxis[key].RelatedChannel = channelNames.SwayLeft;
-        }
-        else if(key == channelNames.RollRight)
-        {
-            _availableAxis[key].RelatedChannel = channelNames.SwayRight;
-        }
-        else if(key == channelNames.Sway)
-        {
-            _availableAxis[key].RelatedChannel = channelNames.Roll;
-        }
-        else if(key == channelNames.SwayLeft)
-        {
-            _availableAxis[key].RelatedChannel = channelNames.RollLeft;
-        }
-        else if(key == channelNames.SwayRight)
-        {
-            _availableAxis[key].RelatedChannel = channelNames.RollRight;
-        }
-        else if(key == channelNames.Surge)
-        {
-            _availableAxis[key].RelatedChannel = channelNames.Pitch;
-        }
-        else if(key == channelNames.SurgeForward)
-        {
-            _availableAxis[key].RelatedChannel = channelNames.PitchForward;
-        }
-        else if(key == channelNames.SurgeBack)
-        {
-            _availableAxis[key].RelatedChannel = channelNames.PitchBack;
-        }
-        else if(key == channelNames.Twist)
-        {
-            _availableAxis[key].RelatedChannel = channelNames.Stroke;
-        }
-        else if(key == channelNames.TwistClockwise)
-        {
-            _availableAxis[key].RelatedChannel = channelNames.StrokeUp;
-        }
-        else if(key == channelNames.TwistCounterClockwise)
-        {
-            _availableAxis[key].RelatedChannel = channelNames.StrokeDown;
-        }
-    }
     Save();
     Load();
-    LogHandler::Dialog("Due to a standards update your MULTIPLIER settings\nhave been set to default for a new data structure.", XLogLevel::Information);
+}
+
+void SettingsHandler::MigrateTo252()
+{
+    settings->setValue("version", XTPVersionNum);
+    SetupAvailableAxis();
+    Save();
+    Load();
+    LogHandler::Dialog("Due to a standards update your CHANNELS\nhave been set to default for a new data structure.\nPlease reset your Multiplier/Range settings before using.", XLogLevel::Information);
 }
 
 QString SettingsHandler::getSelectedTheme()
@@ -1112,7 +990,7 @@ QSettings* SettingsHandler::settings;
 QMutex SettingsHandler::mutex;
 QHash<QString, bool> SettingsHandler::_funscriptLoaded;
 QList<int> SettingsHandler::_mainWindowPos;
-QSize SettingsHandler::_maxThumbnailSize = {200, 200};
+QSize SettingsHandler::_maxThumbnailSize = {500, 500};
 GamepadAxisNames SettingsHandler::gamepadAxisNames;
 TCodeChannels SettingsHandler::channelNames;
 MediaActions SettingsHandler::mediaActions;

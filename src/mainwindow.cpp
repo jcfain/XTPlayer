@@ -4,9 +4,16 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
+
+    QPixmap pixmap("://images/XTP_Splash.png");
+    loadingSplash = new QSplashScreen(pixmap);
+    loadingSplash->show();
+
     ui->setupUi(this);
 
+    loadingSplash->showMessage("Loading Settings...");
     SettingsHandler::Load();
+
     if(arguments.length() > 0)
     {
         foreach(QString arg, arguments)
@@ -17,6 +24,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
                 SettingsHandler::Default();
         }
     }
+
+    loadingSplash->showMessage("Loading UI...");
 
     qRegisterMetaType<LibraryListItem>();
     qRegisterMetaTypeStreamOperators<LibraryListItem>();
@@ -165,12 +174,15 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     action175_Size->setCheckable(true);
     action200_Size = submenuSize->addAction( "200" );
     action200_Size->setCheckable(true);
+    actionCustom_Size = submenuSize->addAction( "Custom" );
+    actionCustom_Size->setCheckable(true);
     libraryThumbSizeGroup->addAction(action75_Size);
     libraryThumbSizeGroup->addAction(action100_Size);
     libraryThumbSizeGroup->addAction(action125_Size);
     libraryThumbSizeGroup->addAction(action150_Size);
     libraryThumbSizeGroup->addAction(action175_Size);
     libraryThumbSizeGroup->addAction(action200_Size);
+    libraryThumbSizeGroup->addAction(actionCustom_Size);
 
     QMenu* submenuSort = ui->menuView->addMenu( "Sort" );
     submenuSort->setObjectName("sortMenu");
@@ -209,7 +221,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
         on_actionThumbnail_triggered();
     }
 
-    on_load_library(SettingsHandler::getSelectedLibrary());
 
     auto splitterSizes = SettingsHandler::getMainWindowSplitterPos();
     if (splitterSizes.count() > 0)
@@ -250,6 +261,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(action150_Size, &QAction::triggered, this, &MainWindow::on_action150_triggered);
     connect(action175_Size, &QAction::triggered, this, &MainWindow::on_action175_triggered);
     connect(action200_Size, &QAction::triggered, this, &MainWindow::on_action200_triggered);
+    connect(actionCustom_Size, &QAction::triggered, this, &MainWindow::on_actionCustom_triggered);
+
     connect(actionNameAsc_Sort, &QAction::triggered, this, &MainWindow::on_actionNameAsc_triggered);
     connect(actionNameDesc_Sort, &QAction::triggered, this, &MainWindow::on_actionNameDesc_triggered);
     connect(actionRandom_Sort, &QAction::triggered, this, &MainWindow::on_actionRandom_triggered);
@@ -285,6 +298,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(deoRetryConnectionButton, &QPushButton::clicked, _xSettings, &SettingsDialog::initDeoRetry);
     connect(QApplication::instance(), &QCoreApplication::aboutToQuit, this, &MainWindow::dispose);
 
+    loadingSplash->showMessage("Setting user styles...");
     QFile file(SettingsHandler::getSelectedTheme());
     file.open(QFile::ReadOnly);
     QString styleSheet = QLatin1String(file.readAll());
@@ -292,6 +306,20 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     setFocus();
     _defaultAppSize = this->size();
+
+    loadingSplash->showMessage("Loading Library...");
+    on_load_library(SettingsHandler::getSelectedLibrary());
+
+    QScreen *screen = this->screen();
+    QSize screenSize = screen->size();
+    auto minHeight = round(screenSize.height() * .06f);
+    ui->playerControlsFrame->setMinimumHeight(minHeight);
+    ui->controlsHomePlaceHolder->setMinimumHeight(minHeight);
+    ui->playerControlsFrame->setMaximumHeight(minHeight);
+    ui->controlsHomePlaceHolder->setMaximumHeight(minHeight);
+
+    loadingSplash->showMessage("Starting Application...");
+    loadingSplash->finish(this);
 
 }
 MainWindow::~MainWindow()
@@ -1584,8 +1612,6 @@ void MainWindow::toggleFullScreen()
         ui->fullScreenGrid->removeWidget(playerControlsPlaceHolder);
         _videoLoadingLabel->raise();
         ui->playerControlsFrame->setWindowFlags(Qt::Widget);
-        ui->playerControlsFrame->setMinimumSize(QSize(700, 65));
-        ui->playerControlsFrame->setMaximumSize(QSize(16777215, 65));
         ui->ControlsGrid->addWidget(ui->playerControlsFrame);
         ui->playerControlsFrame->setProperty("cssClass", "windowedControls");
         ui->playerControlsFrame->style()->unpolish(ui->playerControlsFrame);
@@ -2685,6 +2711,10 @@ void MainWindow::updateThumbSizeUI(int size)
             action200_Size->setChecked(true);
             on_action200_triggered();
         break;
+        default:
+            actionCustom_Size->setChecked(true);
+            setThumbSize(size);
+        break;
     }
 }
 
@@ -2716,6 +2746,15 @@ void MainWindow::on_action175_triggered()
 void MainWindow::on_action200_triggered()
 {
     setThumbSize(200);
+}
+
+void MainWindow::on_actionCustom_triggered()
+{
+    bool ok;
+    int size = QInputDialog::getInt(this, tr("Custom size"), "Size (Max:"+QString::number(SettingsHandler::getMaxThumbnailSize().height()) + ")",
+                                         SettingsHandler::getThumbSize(), 1, SettingsHandler::getMaxThumbnailSize().height(), 50, &ok);
+    if (ok && size > 0)
+        setThumbSize(size);
 }
 
 void MainWindow::setThumbSize(int size)
@@ -3046,7 +3085,8 @@ void MainWindow::editPlaylist()
     cancelEditPlaylistButton->show();
     editPlaylistButton->hide();
     changelibraryDisplayMode(LibraryView::List);
-    resizeThumbs(75);
+    if(SettingsHandler::getThumbSize() > 75)
+        resizeThumbs(75);
     libraryList->setDragEnabled(true);
     libraryList->setDragDropMode(QAbstractItemView::InternalMove);
     libraryList->setDefaultDropAction(Qt::MoveAction);
@@ -3064,7 +3104,8 @@ void MainWindow::cancelEditPlaylist()
     loadPlaylistIntoLibrary(selectedPlaylistName);
     libraryList->setDragEnabled(false);
     changelibraryDisplayMode(SettingsHandler::getLibraryView());
-    resizeThumbs(SettingsHandler::getThumbSize());
+    if(SettingsHandler::getThumbSize() > 75)
+        resizeThumbs(SettingsHandler::getThumbSize());
 }
 void MainWindow::removeFromPlaylist()
 {

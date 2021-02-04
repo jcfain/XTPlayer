@@ -24,6 +24,8 @@
 #include <QToolTip>
 #include <QTextToSpeech>
 #include <QScroller>
+#include <QInputDialog>
+#include <QSplashScreen>
 #include "settingsdialog.h"
 #include "librarywindow.h"
 #include "addplaylistdialog.h"
@@ -101,6 +103,7 @@ private slots:
     void on_action150_triggered();
     void on_action175_triggered();
     void on_action200_triggered();
+    void on_actionCustom_triggered();
     void on_actionNameAsc_triggered();
     void on_actionNameDesc_triggered();
     void on_actionRandom_triggered();
@@ -158,6 +161,7 @@ private:
     SettingsDialog* _xSettings;
     LibraryWindow* libraryWindow;
     TCodeChannels _axisNames;
+    QSplashScreen* loadingSplash;
     QTextToSpeech* textToSpeech;
     VideoPreviewWidget* videoPreviewWidget;
     QFuture<void> funscriptFuture;
@@ -200,6 +204,7 @@ private:
     QAction* action150_Size;
     QAction* action175_Size;
     QAction* action200_Size;
+    QAction* actionCustom_Size;
     QActionGroup* librarySortGroup;
     QAction* actionNameAsc_Sort;
     QAction* actionNameDesc_Sort;

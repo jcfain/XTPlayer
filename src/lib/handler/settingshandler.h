@@ -168,6 +168,7 @@ private:
     static void SetupGamepadButtonMap();
     static void MigrateTo23();
     static void MigrateTo25();
+    static void MigrateTo252();
     static GamepadAxisNames gamepadAxisNames;
     static TCodeChannels channelNames;
     static MediaActions mediaActions;
