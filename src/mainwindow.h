@@ -29,6 +29,7 @@
 #include "settingsdialog.h"
 #include "librarywindow.h"
 #include "addplaylistdialog.h"
+#include "playercontrols.h"
 #include "lib/handler/videohandler.h"
 #include "CustomControls/rangeslider.h"
 #include "lib/handler/settingshandler.h"
@@ -127,8 +128,7 @@ private slots:
     void on_seekslider_hover(int position, int time);
     void on_seekslider_leave();
 
-    void on_SeekSlider_valueChanged(int value);
-    void onLoopRange_valueChanged(int value);
+    void onLoopRange_valueChanged(int position, int startLoop, int endLoop);
 
     void on_actionChange_theme_triggered();
 
@@ -137,7 +137,6 @@ private slots:
     void on_settingsButton_clicked();
 
     void on_loopToggleButton_toggled(bool checked);
-
 
 signals:
     void keyPressed(QKeyEvent * event);
@@ -159,6 +158,11 @@ private:
 
     Ui::MainWindow *ui;
     SettingsDialog* _xSettings;
+    QFrame* _controlsHomePlaceHolderFrame;
+    QGridLayout* _controlsHomePlaceHolderGrid;
+    QFrame* _mediaFrame;
+    QGridLayout* _mediaGrid;
+    PlayerControls* _playerControlsFrame;
     LibraryWindow* libraryWindow;
     TCodeChannels _axisNames;
     QSplashScreen* loadingSplash;
@@ -179,7 +183,6 @@ private:
     QPoint _appPos;
     QMovie* _movie;
     bool deviceConnected;
-    bool autoLoopOn = false;
     QLabel* connectionStatusLabel;
     QLabel* gamepadConnectionStatusLabel;
     QLabel* _videoLoadingLabel;
@@ -195,7 +198,6 @@ private:
     QPushButton* savePlaylistButton;
     QPushButton* editPlaylistButton;
     QPushButton* cancelEditPlaylistButton;
-    int voulumeBeforeMute;
     QActionGroup* libraryViewGroup;
     QActionGroup* libraryThumbSizeGroup;
     QAction* action75_Size;
@@ -268,7 +270,6 @@ private:
     void mediaAction(QString action);
     void toggleFullScreen();
     void toggleLoop();
-    void toggleMediaControlStatus(bool playing);
     void hideControls();
     void showControls();
     void hideLibrary();

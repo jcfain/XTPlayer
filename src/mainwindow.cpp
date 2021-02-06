@@ -62,8 +62,22 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     gamepadConnectionStatusLabel = new QLabel(this);
     ui->statusbar->addPermanentWidget(gamepadConnectionStatusLabel);
 
+    _mediaFrame = new QFrame(this);
+    _mediaGrid = new QGridLayout(_mediaFrame);
+    _mediaFrame->setLayout(_mediaGrid);
+
     videoHandler = new VideoHandler(this);
-    ui->MediaGrid->addWidget(videoHandler, 0, 0, 3, 5);
+    _mediaGrid->addWidget(videoHandler, 0, 0, 3, 5);
+
+    _controlsHomePlaceHolderFrame = new QFrame(this);
+    _controlsHomePlaceHolderGrid = new QGridLayout(_controlsHomePlaceHolderFrame);
+    _controlsHomePlaceHolderFrame->setLayout(_controlsHomePlaceHolderGrid);
+
+    _playerControlsFrame = new PlayerControls(this);
+    _controlsHomePlaceHolderGrid->addWidget(_playerControlsFrame, 0, 0);
+
+    ui->mediaAndControlsGrid->addWidget(_mediaFrame, 0, 0, 20, 3);
+    ui->mediaAndControlsGrid->addWidget(_controlsHomePlaceHolderFrame, 20, 0, 2, 3);
 
     _movie = new QMovie("://images/Eclipse-1s-loading-200px.gif");
     _videoLoadingLabel = new QLabel(this);
@@ -72,19 +86,10 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     _videoLoadingLabel->setMaximumSize(200,200);
     _videoLoadingLabel->setStyleSheet("* {background: transparent}");
     _videoLoadingLabel->setAlignment(Qt::AlignCenter);
-    ui->MediaGrid->addWidget(_videoLoadingLabel, 1, 2);
+    _mediaGrid->addWidget(_videoLoadingLabel, 1, 2);
     setLoading(false);
 
-    ui->SeekSlider->setDisabled(true);
-    ui->SeekSlider->SetRange(0, 100);
-    ui->SeekSlider->setOption(RangeSlider::Option::RightHandle);
-    ui->SeekSlider->setUpperValue(0);
-
-    ui->VolumeSlider->setDisabled(false);
-    ui->VolumeSlider->SetRange(0, 30);
-    ui->VolumeSlider->setOption(RangeSlider::Option::RightHandle);
-    ui->VolumeSlider->setUpperValue(SettingsHandler::getPlayerVolume());
-    setVolumeIcon(SettingsHandler::getPlayerVolume());
+    _playerControlsFrame->setVolume(SettingsHandler::getPlayerVolume());
 
     libraryList = new QListWidget(this);
     libraryList->setUniformItemSizes(true);
@@ -277,10 +282,17 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(videoHandler, &VideoHandler::stopped, this, &MainWindow::on_media_stop, Qt::QueuedConnection);
     connect(videoHandler, &VideoHandler::togglePaused, this, &MainWindow::onVideoHandler_togglePaused);
 
-    connect(ui->SeekSlider, &RangeSlider::upperValueMove, this, &MainWindow::on_seekSlider_sliderMoved);
-    connect(ui->SeekSlider, &RangeSlider::onHover, this, &MainWindow::on_seekslider_hover );
-    connect(ui->SeekSlider, &RangeSlider::onLeave, this, &MainWindow::on_seekslider_leave );
-    connect(ui->VolumeSlider, &RangeSlider::upperValueMove, this, &MainWindow::on_VolumeSlider_valueChanged);
+    connect(_playerControlsFrame, &PlayerControls::seekSliderMoved, this, &MainWindow::on_seekSlider_sliderMoved);
+    connect(_playerControlsFrame, &PlayerControls::seekSliderHover, this, &MainWindow::on_seekslider_hover );
+    connect(_playerControlsFrame, &PlayerControls::seekSliderLeave, this, &MainWindow::on_seekslider_leave );
+    connect(_playerControlsFrame, &PlayerControls::volumeChanged, this, &MainWindow::on_VolumeSlider_valueChanged);
+    connect(_playerControlsFrame, &PlayerControls::loopButtonToggled, this, &MainWindow::on_loopToggleButton_toggled);
+    connect(_playerControlsFrame, &PlayerControls::muteChanged, this, &MainWindow::on_MuteBtn_toggled);
+    connect(_playerControlsFrame, &PlayerControls::fullscreenToggled, this, &MainWindow::on_fullScreenBtn_clicked);
+    connect(_playerControlsFrame, &PlayerControls::settingsClicked, this, &MainWindow::on_settingsButton_clicked);
+    connect(_playerControlsFrame, &PlayerControls::playClicked, this, &MainWindow::on_PlayBtn_clicked);
+    connect(_playerControlsFrame, &PlayerControls::skipForward, this, &MainWindow::on_skipForwardButton_clicked);
+    connect(_playerControlsFrame, &PlayerControls::skipBack, this, &MainWindow::on_skipBackButton_clicked);
     //connect(player, static_cast<void(AVPlayer::*)(AVPlayer::Error )>(&AVPlayer::error), this, &MainWindow::on_media_error);
 
     connect(videoHandler, &VideoHandler::doubleClicked, this, &MainWindow::media_double_click_event);
@@ -292,7 +304,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(libraryList, &QListWidget::customContextMenuRequested, this, &MainWindow::onLibraryList_ContextMenuRequested);
     connect(libraryList, &QListWidget::itemDoubleClicked, this, &MainWindow::on_LibraryList_itemDoubleClicked);
     connect(libraryList, &QListWidget::itemClicked, this, &MainWindow::on_LibraryList_itemClicked);
-
 
     connect(retryConnectionButton, &QPushButton::clicked, _xSettings, &SettingsDialog::initDeviceRetry);
     connect(deoRetryConnectionButton, &QPushButton::clicked, _xSettings, &SettingsDialog::initDeoRetry);
@@ -310,13 +321,13 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     loadingSplash->showMessage("Loading Library...");
     on_load_library(SettingsHandler::getSelectedLibrary());
 
-    QScreen *screen = this->screen();
-    QSize screenSize = screen->size();
-    auto minHeight = round(screenSize.height() * .06f);
-    ui->playerControlsFrame->setMinimumHeight(minHeight);
-    ui->controlsHomePlaceHolder->setMinimumHeight(minHeight);
-    ui->playerControlsFrame->setMaximumHeight(minHeight);
-    ui->controlsHomePlaceHolder->setMaximumHeight(minHeight);
+//    QScreen *screen = this->screen();
+//    QSize screenSize = screen->size();
+//    auto minHeight = round(screenSize.height() * .06f);
+//    _playerControlsFrame->setMinimumHeight(minHeight);
+//    _controlsHomePlaceHolderFrame->setMinimumHeight(minHeight);
+//    _playerControlsFrame->setMaximumHeight(minHeight);
+//    _controlsHomePlaceHolderFrame->setMaximumHeight(minHeight);
 
     loadingSplash->showMessage("Starting Application...");
     loadingSplash->finish(this);
@@ -506,23 +517,15 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.VolumeUp)
     {
-        int currentVolume = ui->VolumeSlider->GetUpperValue();
-        int maxVolume = ui->VolumeSlider->GetMaximum();
-        int newVolume = currentVolume - maxVolume <= 5 ? currentVolume + 5 : maxVolume;
-        ui->VolumeSlider->setUpperValue(newVolume);
-        on_VolumeSlider_valueChanged(newVolume);
+        _playerControlsFrame->IncreaseVolume();
     }
     else if(action == actions.VolumeDown)
     {
-        int currentVolume = ui->VolumeSlider->GetUpperValue();
-        int minVolume = ui->VolumeSlider->GetMinimum();
-        int newVolume = currentVolume - minVolume  >= 5 ? currentVolume - 5 : minVolume;
-        ui->VolumeSlider->setUpperValue(newVolume);
-        on_VolumeSlider_valueChanged(newVolume);
+        _playerControlsFrame->DecreaseVolume();
     }
     else if(action == actions.Loop)
     {
-        toggleLoop();
+        _playerControlsFrame->toggleLoop(videoHandler->duration(), videoHandler->position());
     }
     else if(action == actions.Rewind)
     {
@@ -1297,8 +1300,7 @@ void MainWindow::on_LibraryList_itemClicked(QListWidgetItem *item)
     if(videoHandler->isPlaying() && !videoHandler->isPaused())
     {
         auto playingFile = videoHandler->file();
-        QIcon icon(playingFile != selectedItem.path ? "://images/icons/play.svg" : "://images/icons/pause.svg" );
-        ui->PlayBtn->setIcon(icon);
+        _playerControlsFrame->setPlayIcon(playingFile != selectedItem.path);
     }
     ui->statusbar->showMessage(selectedItem.nameNoExtension);
     selectedLibraryListItem = (LibraryListWidgetItem*)item;
@@ -1369,7 +1371,7 @@ void MainWindow::stopAndPlayVideo(LibraryListItem selectedFileListItem, QString 
     {
         if (videoHandler->file() != selectedFileListItem.path || !customScript.isEmpty())
         {
-            ui->loopToggleButton->setChecked(false);
+            _playerControlsFrame->SetLoop(false);
             setLoading(true);
             if(videoHandler->isPlaying())
             {
@@ -1400,7 +1402,7 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
     {
         if (videoHandler->file() != selectedFileListItem.path || !customScript.isEmpty())
         {
-            ui->loopToggleButton->setChecked(false);
+            _playerControlsFrame->SetLoop(false);
             setLoading(true);
             videoHandler->setFile(selectedFileListItem.path);
             videoPreviewWidget->setFile(selectedFileListItem.path);
@@ -1540,24 +1542,24 @@ void MainWindow::toggleFullScreen()
         _isMaximized = this->isMaximized();
         _isFullScreen = true;
         QMainWindow::setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
-        ui->MediaGrid->removeWidget(videoHandler);
-        ui->MediaGrid->removeWidget(_videoLoadingLabel);
-        ui->ControlsGrid->removeWidget(ui->playerControlsFrame);
+        _mediaGrid->removeWidget(videoHandler);
+        _mediaGrid->removeWidget(_videoLoadingLabel);
+        _controlsHomePlaceHolderGrid->removeWidget(_playerControlsFrame);
 
         placeHolderControlsGrid = new QGridLayout(this);
         placeHolderControlsGrid->setContentsMargins(0,0,0,0);
         placeHolderControlsGrid->setSpacing(0);
-        placeHolderControlsGrid->addWidget(ui->playerControlsFrame);
+        placeHolderControlsGrid->addWidget(_playerControlsFrame);
 
         playerControlsPlaceHolder = new QFrame(this);
         playerControlsPlaceHolder->setLayout(placeHolderControlsGrid);
         playerControlsPlaceHolder->setContentsMargins(0,0,0,0);
         playerControlsPlaceHolder->installEventFilter(this);
-        playerControlsPlaceHolder->move(QPoint(0, screenSize.height() - ui->playerControlsFrame->height()));
+        playerControlsPlaceHolder->move(QPoint(0, screenSize.height() - _playerControlsFrame->height()));
         playerControlsPlaceHolder->setFixedWidth(screenSize.width());
-        playerControlsPlaceHolder->setFixedHeight(ui->playerControlsFrame->height());
+        playerControlsPlaceHolder->setFixedHeight(_playerControlsFrame->height());
 
-        int rows = screenSize.height() / ui->playerControlsFrame->height();
+        int rows = screenSize.height() / _playerControlsFrame->height();
         ui->fullScreenGrid->addWidget(videoHandler, 0, 0, rows, 5);
         ui->fullScreenGrid->addWidget(_videoLoadingLabel, (rows / 2) - 1, 2, 2, 1);
         ui->fullScreenGrid->addWidget(playerControlsPlaceHolder, rows - 1, 0, 1, 5);
@@ -1576,18 +1578,18 @@ void MainWindow::toggleFullScreen()
             playerLibraryPlaceHolder->installEventFilter(this);
             playerLibraryPlaceHolder->move(QPoint(0, screenSize.height()));
             playerLibraryPlaceHolder->setFixedWidth(ui->libraryFrame->width());
-            playerLibraryPlaceHolder->setFixedHeight(screenSize.height() - ui->playerControlsFrame->height());
+            playerLibraryPlaceHolder->setFixedHeight(screenSize.height() - _playerControlsFrame->height());
             ui->fullScreenGrid->addWidget(playerLibraryPlaceHolder, 0, 0, rows - 1, 2);
             libraryList->setProperty("cssClass", "fullScreenLibrary");
-            ui->playerControlsFrame->style()->unpolish(libraryList);
-            ui->playerControlsFrame->style()->polish(libraryList);
+            _playerControlsFrame->style()->unpolish(libraryList);
+            _playerControlsFrame->style()->polish(libraryList);
             hideLibrary();
         }
 
         _videoLoadingLabel->raise();
-        ui->playerControlsFrame->setProperty("cssClass", "fullScreenControls");
-        ui->playerControlsFrame->style()->unpolish(ui->playerControlsFrame);
-        ui->playerControlsFrame->style()->polish(ui->playerControlsFrame);
+        _playerControlsFrame->setProperty("cssClass", "fullScreenControls");
+        _playerControlsFrame->style()->unpolish(_playerControlsFrame);
+        _playerControlsFrame->style()->polish(_playerControlsFrame);
         ui->mainStackedWidget->setCurrentIndex(1);
         QMainWindow::resize(screenSize);
         QMainWindow::centralWidget()->layout()->setMargin(0);
@@ -1605,20 +1607,20 @@ void MainWindow::toggleFullScreen()
     else
     {
         ui->fullScreenGrid->removeWidget(videoHandler);
-        playerControlsPlaceHolder->layout()->removeWidget(ui->playerControlsFrame);
+        playerControlsPlaceHolder->layout()->removeWidget(_playerControlsFrame);
         videoHandler->resize(_videoSize);
-        ui->MediaGrid->addWidget(videoHandler, 0, 0, 3, 5);
-        ui->MediaGrid->addWidget(_videoLoadingLabel, 1, 2);
+        _mediaGrid->addWidget(videoHandler, 0, 0, 3, 5);
+        _mediaGrid->addWidget(_videoLoadingLabel, 1, 2);
         ui->fullScreenGrid->removeWidget(playerControlsPlaceHolder);
         _videoLoadingLabel->raise();
-        ui->playerControlsFrame->setWindowFlags(Qt::Widget);
-        ui->ControlsGrid->addWidget(ui->playerControlsFrame);
-        ui->playerControlsFrame->setProperty("cssClass", "windowedControls");
-        ui->playerControlsFrame->style()->unpolish(ui->playerControlsFrame);
-        ui->playerControlsFrame->style()->polish(ui->playerControlsFrame);
+        _playerControlsFrame->setWindowFlags(Qt::Widget);
+        _controlsHomePlaceHolderGrid->addWidget(_playerControlsFrame);
+        _playerControlsFrame->setProperty("cssClass", "windowedControls");
+        _playerControlsFrame->style()->unpolish(_playerControlsFrame);
+        _playerControlsFrame->style()->polish(_playerControlsFrame);
         libraryList->setProperty("cssClass", "windowedLibrary");
-        ui->playerControlsFrame->style()->unpolish(libraryList);
-        ui->playerControlsFrame->style()->polish(libraryList);
+        _playerControlsFrame->style()->unpolish(libraryList);
+        _playerControlsFrame->style()->polish(libraryList);
 
         if(libraryOverlay)
         {
@@ -1641,7 +1643,7 @@ void MainWindow::toggleFullScreen()
 
         ui->menubar->show();
         ui->statusbar->show();
-        ui->playerControlsFrame->show();
+        _playerControlsFrame->show();
         libraryList->show();
         QMainWindow::setWindowFlags(Qt::WindowFlags());
         if(_isMaximized)
@@ -1660,34 +1662,11 @@ void MainWindow::toggleFullScreen()
     }
 }
 
-void MainWindow::toggleLoop()
-{
-    if(!ui->loopToggleButton->isChecked() && !autoLoopOn)
-    {
-        autoLoopOn = true;
-        ui->loopToggleButton->setChecked(true);
-        qint64 currentVideoPositionPercentage = XMath::mapRange(videoHandler->position(),  (qint64)0, videoHandler->duration(), (qint64)0, (qint64)100);
-        ui->SeekSlider->setLowerValue(currentVideoPositionPercentage);
-    }
-    else if (ui->loopToggleButton->isChecked() && autoLoopOn)
-    {
-        autoLoopOn = false;
-        int lowerValue = ui->SeekSlider->GetLowerValue();
-        qint64 currentVideoPositionPercentage = XMath::mapRange(videoHandler->position(),  (qint64)0, videoHandler->duration(), (qint64)0, (qint64)100);
-        ui->SeekSlider->setUpperValue(currentVideoPositionPercentage > lowerValue + ui->SeekSlider->GetMinimumRange()
-                                      ? currentVideoPositionPercentage : currentVideoPositionPercentage + lowerValue + ui->SeekSlider->GetMinimumRange());
-    }
-    else
-    {
-        ui->loopToggleButton->setChecked(false);
-    }
-}
-
 void MainWindow::hideControls()
 {
     if (_isFullScreen)
     {
-        ui->playerControlsFrame->hide();
+        _playerControlsFrame->hide();
     }
 }
 
@@ -1695,7 +1674,7 @@ void MainWindow::showControls()
 {
     if (_isFullScreen)
     {
-        ui->playerControlsFrame->show();
+        _playerControlsFrame->show();
     }
 }
 
@@ -1715,7 +1694,6 @@ void MainWindow::showLibrary()
     }
 }
 
-
 void MainWindow::on_VolumeSlider_valueChanged(int value)
 {
     if(!videoHandler->isMute())
@@ -1723,8 +1701,6 @@ void MainWindow::on_VolumeSlider_valueChanged(int value)
         videoHandler->setVolume(value);
         SettingsHandler::setPlayerVolume(value);
     }
-    setVolumeIcon(value);
-    ui->VolumeSlider->setToolTip(QString::number(value));
 }
 
 void MainWindow::on_PlayBtn_clicked()
@@ -1757,46 +1733,22 @@ LibraryListWidgetItem* MainWindow::setCurrentLibraryRow(int row)
     return (LibraryListWidgetItem*)libraryList->item(row);
 }
 
+void MainWindow::onVideoHandler_togglePaused(bool paused)
+{
+    _playerControlsFrame->setPlayIcon(!paused);
+}
+
 void MainWindow::on_StopBtn_clicked()
 {
     if(videoHandler->isPlaying())
     {
         videoHandler->stop();
     }
-    QIcon icon("://images/icons/play.svg");
-    ui->PlayBtn->setIcon(icon);
-}
-
-void MainWindow::onVideoHandler_togglePaused(bool paused)
-{
-    QIcon icon(paused ? "://images/icons/play.svg" : "://images/icons/pause.svg" );
-    ui->PlayBtn->setIcon(icon);
 }
 
 void MainWindow::on_MuteBtn_toggled(bool checked)
 {
-    if (checked)
-    {
-        voulumeBeforeMute = ui->VolumeSlider->GetUpperValue();
-        setVolumeIcon(0);
-        ui->VolumeSlider->setUpperValue(0);
-    }
-    else
-    {
-        setVolumeIcon(voulumeBeforeMute);
-        ui->VolumeSlider->setUpperValue(voulumeBeforeMute);
-    }
     videoHandler->toggleMute();
-}
-
-void MainWindow::setVolumeIcon(int volume)
-{
-    if (volume > 15)
-        ui->MuteBtn->setIcon(QIcon(":/images/icons/speakerLoud.svg"));
-    else if (volume > 0)
-        ui->MuteBtn->setIcon(QIcon(":/images/icons/speakerMid.svg"));
-    else
-        ui->MuteBtn->setIcon(QIcon(":/images/icons/speakerMute.svg"));
 }
 
 void MainWindow::on_fullScreenBtn_clicked()
@@ -1819,14 +1771,14 @@ void MainWindow::on_seekslider_hover(int position, int sliderValue)
         QPoint gpos;
         if(_isFullScreen)
         {
-            gpos = mapToGlobal(playerControlsPlaceHolder->pos() + ui->SeekSlider->pos() + QPoint(position, 0));
+            gpos = mapToGlobal(playerControlsPlaceHolder->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(position, 0));
             QToolTip::showText(gpos, QTime(0, 0, 0).addMSecs(sliderValueTime).toString(QString::fromLatin1("HH:mm:ss")));
         }
         else
         {
-            auto tootipPos = mapToGlobal(QPoint(ui->medialAndControlsFrame->pos().x(), 0) + ui->controlsHomePlaceHolder->pos() + ui->SeekSlider->pos() + QPoint(position, 0));
+            auto tootipPos = mapToGlobal(QPoint(ui->medialAndControlsFrame->pos().x(), 0) + _controlsHomePlaceHolderFrame->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(position, 0));
             QToolTip::showText(tootipPos, QTime(0, 0, 0).addMSecs(sliderValueTime).toString(QString::fromLatin1("HH:mm:ss")));
-            gpos = QPoint(ui->medialAndControlsFrame->pos().x(), 0) + ui->controlsHomePlaceHolder->pos() + ui->SeekSlider->pos() + QPoint(position, 0);
+            gpos = QPoint(ui->medialAndControlsFrame->pos().x(), 0) + _controlsHomePlaceHolderFrame->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(position, 0);
         }
 
 //        LogHandler::Debug("medialAndControlsFrame x: " + QString::number(ui->medialAndControlsFrame->pos().x()));
@@ -1869,31 +1821,23 @@ void MainWindow::on_seekslider_leave()
 
 void MainWindow::on_seekSlider_sliderMoved(int position)
 {
-    if (!ui->loopToggleButton->isChecked())
+    if (!_playerControlsFrame->getAutoLoop())
     {
         qint64 playerPosition = XMath::mapRange(static_cast<qint64>(position), (qint64)0, (qint64)100, (qint64)0, videoHandler->duration());
-        ui->SeekSlider->setToolTip(QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")));
         videoHandler->setPosition(playerPosition);
     }
 }
 
 
-void MainWindow::on_SeekSlider_valueChanged(int position)
+void MainWindow::onLoopRange_valueChanged(int position, int startLoop, int endLoop)
 {
-
-}
-
-void MainWindow::onLoopRange_valueChanged(int position)
-{
-    int endLoop = ui->SeekSlider->GetUpperValue();
-    int startLoop = ui->SeekSlider->GetLowerValue();
     qint64 duration = videoHandler->duration();
 
     qint64 currentVideoPositionPercentage = XMath::mapRange(videoHandler->position(),  (qint64)0, duration, (qint64)0, (qint64)100);
     qint64 destinationVideoPosition = XMath::mapRange((qint64)position, (qint64)0, (qint64)100,  (qint64)0, duration);
 
     QString timeCurrent = mSecondFormat(destinationVideoPosition);
-    ui->SeekSlider->setToolTip(timeCurrent);
+    _playerControlsFrame->setSeekSliderToolTip(timeCurrent);
 
     if(currentVideoPositionPercentage < startLoop)
     {
@@ -1913,20 +1857,20 @@ void MainWindow::on_media_positionChanged(qint64 position)
 {
     qint64 duration = videoHandler->duration();
     qint64 videoToSliderPosition = XMath::mapRange(position,  (qint64)0, duration, (qint64)0, (qint64)100);
-    if (!ui->loopToggleButton->isChecked())
+    if (!_playerControlsFrame->getAutoLoop())
     {
         if (duration > 0)
         {
-            ui->SeekSlider->setUpperValue(static_cast<int>(videoToSliderPosition));
+            _playerControlsFrame->setSeekSliderUpperValue(static_cast<int>(videoToSliderPosition));
         }
     }
     else
     {
-        int endLoop = ui->SeekSlider->GetUpperValue();
+        int endLoop = _playerControlsFrame->getSeekSliderUpperValue();
         qint64 endLoopToVideoPosition = XMath::mapRange((qint64)endLoop, (qint64)0, (qint64)100,  (qint64)0, duration);
         if (position >= endLoopToVideoPosition)
         {
-            int startLoop = ui->SeekSlider->GetLowerValue();
+            int startLoop = _playerControlsFrame->getSeekSliderLowerValue();
             qint64 startLoopVideoPosition = XMath::mapRange((qint64)startLoop, (qint64)0, (qint64)100,  (qint64)0, duration);
             if(startLoopVideoPosition <= 0)
                 startLoopVideoPosition = 50;
@@ -1935,20 +1879,20 @@ void MainWindow::on_media_positionChanged(qint64 position)
         }
         QPoint gpos;
         qint64 videoToSliderPosition = XMath::mapRange(position,  (qint64)0, duration, (qint64)0, (qint64)100);
-        int hoverposition = XMath::mapRange((int)videoToSliderPosition,  (int)0, (int)100, (int)0, (int)ui->SeekSlider->width()) - 15;
+        int hoverposition = XMath::mapRange((int)videoToSliderPosition,  (int)0, (int)100, (int)0, _playerControlsFrame->getSeekSliderWidth()) - 15;
         if(_isFullScreen)
         {
-            gpos = mapToGlobal(playerControlsPlaceHolder->pos() + ui->SeekSlider->pos() + QPoint(hoverposition, 0));
+            gpos = mapToGlobal(playerControlsPlaceHolder->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(hoverposition, 0));
             QToolTip::showText(gpos, QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")), this);
         }
         else
         {
-            auto tootipPos = mapToGlobal(QPoint(ui->medialAndControlsFrame->pos().x(), 0) + ui->controlsHomePlaceHolder->pos() + ui->SeekSlider->pos() + QPoint(hoverposition, 0));
+            auto tootipPos = mapToGlobal(QPoint(ui->medialAndControlsFrame->pos().x(), 0) + _controlsHomePlaceHolderFrame->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(hoverposition, 0));
             QToolTip::showText(tootipPos, QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")), this);
-            gpos = QPoint(ui->medialAndControlsFrame->pos().x(), 0) + ui->controlsHomePlaceHolder->pos() + ui->SeekSlider->pos() + QPoint(hoverposition, 0);
+            gpos = QPoint(ui->medialAndControlsFrame->pos().x(), 0) + _controlsHomePlaceHolderFrame->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(hoverposition, 0);
         }
     }
-    ui->lblCurrentDuration->setText(mSecondFormat(position).append("/").append(mSecondFormat(duration)));
+    _playerControlsFrame->setTimeDuration(mSecondFormat(position).append("/").append(mSecondFormat(duration)));
     //    QString timeCurrent = QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss"));
     //    QString timeDuration = QTime(0, 0, 0).addMSecs(duration).toString(QString::fromLatin1("HH:mm:ss"));
     //    QString timeStamp = timeCurrent.append("/").append(timeDuration);
@@ -1988,7 +1932,8 @@ void MainWindow::on_media_start()
     {
         funscriptFuture = QtConcurrent::run(syncFunscript, videoHandler, _xSettings, tcodeHandler, funscriptHandler, funscriptHandlers);
     }
-    toggleMediaControlStatus(true);
+    setLoading(false);
+    _playerControlsFrame->resetMediaControlStatus(true);
     _mediaStopped = false;
 }
 
@@ -1996,7 +1941,8 @@ void MainWindow::on_media_stop()
 {
     LogHandler::Debug("Enter on_media_stop");
     _mediaStopped = true;
-    toggleMediaControlStatus(false);
+    setLoading(false);
+    _playerControlsFrame->resetMediaControlStatus(false);
     if(funscriptFuture.isRunning())
     {
         funscriptFuture.cancel();
@@ -2015,27 +1961,7 @@ void MainWindow::setLoading(bool loading)
         _movie->stop();
     }
 }
-void MainWindow::toggleMediaControlStatus(bool playing)
-{
-    LogHandler::Debug("Enter toggleMediaControlStatus: "+QString::number(playing));
-    if(playing)
-    {
-        setLoading(false);
-        ui->SeekSlider->setUpperValue(0);
-        ui->SeekSlider->setDisabled(false);
-        QIcon icon("://images/icons/pause.svg" );
-        ui->PlayBtn->setIcon(icon);
-    }
-    else
-    {
-        setLoading(false);
-        ui->SeekSlider->setUpperValue(0);
-        ui->SeekSlider->setDisabled(true);
-        QIcon icon("://images/icons/play.svg" );
-        ui->PlayBtn->setIcon(icon);
-        ui->lblCurrentDuration->setText("00:00:00/00:00:00");
-    }
-}
+
 void MainWindow::onVRMessageRecieved(VRPacket packet)
 {
         //LogHandler::Debug("VR path: "+packet.path);
@@ -2296,7 +2222,7 @@ void MainWindow::on_media_statusChanged(MediaStatus status)
 {
     switch (status) {
     case EndOfMedia:
-        if (!ui->loopToggleButton->isChecked())
+        if (!_playerControlsFrame->getAutoLoop())
             skipForward();
     break;
     case NoMedia:
@@ -2925,23 +2851,15 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
 {
     if (checked)
     {
-        ui->SeekSlider->setOption(RangeSlider::Option::DoubleHandles);
-        ui->SeekSlider->SetRange(0, 100);
-        connect(ui->SeekSlider, QOverload<int>::of(&RangeSlider::lowerValueChanged), this, &MainWindow::onLoopRange_valueChanged);
-        connect(ui->SeekSlider, QOverload<int>::of(&RangeSlider::upperValueChanged), this, &MainWindow::onLoopRange_valueChanged);
+        connect(_playerControlsFrame, &PlayerControls::loopRangeChanged, this, &MainWindow::onLoopRange_valueChanged);
         videoHandler->setRepeat(-1);
-        ui->SeekSlider->updateColor();
         qint64 videoToSliderPosition = XMath::mapRange(videoHandler->position(),  (qint64)0, videoHandler->duration(), (qint64)0, (qint64)100);
-        ui->SeekSlider->setLowerValue(videoToSliderPosition);
+        _playerControlsFrame->setSeekSliderLowerValue(videoToSliderPosition);
     }
     else
     {
-        ui->SeekSlider->setOption(RangeSlider::Option::RightHandle);
-        ui->SeekSlider->SetRange(0, 100);
         on_media_positionChanged(videoHandler->position());
-        ui->SeekSlider->updateColor();
-        disconnect(ui->SeekSlider, QOverload<int>::of(&RangeSlider::lowerValueChanged), this, &MainWindow::onLoopRange_valueChanged);
-        disconnect(ui->SeekSlider, QOverload<int>::of(&RangeSlider::upperValueChanged), this, &MainWindow::onLoopRange_valueChanged);
+        disconnect(_playerControlsFrame, &PlayerControls::loopRangeChanged, this, &MainWindow::onLoopRange_valueChanged);
         qint64 position = videoHandler->position();
         videoHandler->setRepeat();
         videoHandler->setPosition(position);

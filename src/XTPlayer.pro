@@ -52,6 +52,7 @@ SOURCES += \
     librarywindow.cpp \
     main.cpp \
     mainwindow.cpp \
+    playercontrols.cpp \
     settingsdialog.cpp
 
 HEADERS += \
@@ -95,6 +96,7 @@ HEADERS += \
     libraryexclusions.h \
     librarywindow.h \
     mainwindow.h \
+    playercontrols.h \
     settingsdialog.h
 
 FORMS += \
