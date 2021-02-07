@@ -38,6 +38,7 @@
 #include "lib/handler/tcodehandler.h"
 #include "lib/handler/devicehandler.h"
 #include "lib/handler/vrdevicehandler.h"
+#include "lib/handler/audiosyncfilter.h"
 #include "lib/struct/LibraryListItem.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/ConnectionChangedSignal.h"
@@ -138,6 +139,8 @@ private slots:
 
     void on_loopToggleButton_toggled(bool checked);
 
+    void on_actionReload_library_triggered();
+
 signals:
     void keyPressed(QKeyEvent * event);
     void change(QEvent * event);
@@ -170,6 +173,7 @@ private:
     VideoPreviewWidget* videoPreviewWidget;
     QFuture<void> funscriptFuture;
     QFuture<void> funscriptVRSyncFuture;
+    QFuture<void> loadingLibraryFuture;
     QProgressBar* bar;
     VideoHandler* videoHandler;
     FunscriptHandler* funscriptHandler;
@@ -181,11 +185,13 @@ private:
     QSize _appSize;
     QSize _defaultAppSize;
     QPoint _appPos;
-    QMovie* _movie;
     bool deviceConnected;
     QLabel* connectionStatusLabel;
     QLabel* gamepadConnectionStatusLabel;
     QLabel* _videoLoadingLabel;
+    QMovie* _videoLoadingMovie;
+    QLabel* libraryLoadingLabel;
+    QMovie* libraryLoadingMovie;
     QPushButton* retryConnectionButton;
     QLabel* deoConnectionStatusLabel;
     QPushButton* deoRetryConnectionButton;
@@ -233,6 +239,8 @@ private:
     AVPlayer* thumbNailPlayer;
     QMutex _eventLocker;
     bool _editPlaylistMode = false;
+    bool _libraryDockMode = false;
+    AudioSyncFilter* audioSyncFilter;
 
     void saveSingleThumb(const QString& videoFile, const QString& thumbFile, LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
     void startThumbProcess();
@@ -266,6 +274,7 @@ private:
 
     void deviceHome();
     void setLoading(bool loading);
+    void setLibraryLoading(bool loading);
     void saveNewThumbs();
     void mediaAction(QString action);
     void toggleFullScreen();

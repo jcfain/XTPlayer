@@ -57,6 +57,8 @@ public:;
     QHBoxLayout* layout();
     void setDecoderPriority();
     void showPreview(int position, qint64 time);
+    void installFilter(AudioFilter* filter);
+    void clearFilters();
 
 
 private:

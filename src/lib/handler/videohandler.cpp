@@ -37,6 +37,8 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent)
     connect(_player, &AVPlayer::started, this, &VideoHandler::on_media_start, Qt::QueuedConnection);
     connect(_player, &AVPlayer::stopped, this, &VideoHandler::on_media_stop, Qt::QueuedConnection);
 
+    setMinimumHeight(SettingsHandler::getThumbSize());
+    setMinimumWidth(SettingsHandler::getThumbSize());
     setLayout(_widgetLayout);
 }
 
@@ -213,4 +215,13 @@ void VideoHandler::setDecoderPriority()
         if(model.Enabled)
             stringList.append(model.Name);
     _player->setVideoDecoderPriority(stringList);
+}
+void VideoHandler::installFilter(AudioFilter* filter)
+{
+    _player->installFilter(filter);
+}
+
+void VideoHandler::clearFilters()
+{
+    qDeleteAll(_player->videoFilters());
 }

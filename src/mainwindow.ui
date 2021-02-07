@@ -180,6 +180,7 @@
      <string>File</string>
     </property>
     <addaction name="actionSelect_library"/>
+    <addaction name="actionReload_library"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
     <addaction name="actionDonate"/>
@@ -256,6 +257,11 @@
    </property>
    <property name="text">
     <string>Change current deo script...</string>
+   </property>
+  </action>
+  <action name="actionReload_library">
+   <property name="text">
+    <string>Reload library</string>
    </property>
   </action>
  </widget>

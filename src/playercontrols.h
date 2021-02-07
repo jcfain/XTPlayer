@@ -64,6 +64,7 @@ private:
     QPushButton *PlayBtn;
 
     int voulumeBeforeMute;
+    bool _autoLoopOn = false;
 
     void setVolumeIcon(int volume);
 

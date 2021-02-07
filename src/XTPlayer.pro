@@ -30,6 +30,7 @@ SOURCES += \
     CustomControls/rangeslider.cpp \
     addchanneldialog.cpp \
     addplaylistdialog.cpp \
+    lib/handler/audiosyncfilter.cpp \
     lib/handler/deohandler.cpp \
     lib/handler/devicehandler.cpp \
     lib/handler/funscripthandler.cpp \
@@ -59,6 +60,7 @@ HEADERS += \
     CustomControls/rangeslider.h \
     addchanneldialog.h \
     addplaylistdialog.h \
+    lib/handler/audiosyncfilter.h \
     lib/handler/deohandler.h \
     lib/handler/devicehandler.h \
     lib/handler/gamepadhandler.h \

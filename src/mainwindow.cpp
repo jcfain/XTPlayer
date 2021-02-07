@@ -11,7 +11,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     ui->setupUi(this);
 
-    loadingSplash->showMessage("Loading Settings...");
+    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading Settings...");
     SettingsHandler::Load();
 
     if(arguments.length() > 0)
@@ -25,7 +25,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
         }
     }
 
-    loadingSplash->showMessage("Loading UI...");
+    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading UI...");
 
     qRegisterMetaType<LibraryListItem>();
     qRegisterMetaTypeStreamOperators<LibraryListItem>();
@@ -76,12 +76,15 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     _playerControlsFrame = new PlayerControls(this);
     _controlsHomePlaceHolderGrid->addWidget(_playerControlsFrame, 0, 0);
 
-    ui->mediaAndControlsGrid->addWidget(_mediaFrame, 0, 0, 20, 3);
-    ui->mediaAndControlsGrid->addWidget(_controlsHomePlaceHolderFrame, 20, 0, 2, 3);
+    ui->mediaAndControlsGrid->addWidget(_mediaFrame, 0, 0, 19, 3);
+    ui->mediaAndControlsGrid->addWidget(_controlsHomePlaceHolderFrame, 20, 0, 1, 3);
 
-    _movie = new QMovie("://images/Eclipse-1s-loading-200px.gif");
+    audioSyncFilter = new AudioSyncFilter(this);
+    videoHandler->installFilter(audioSyncFilter);
+
+    _videoLoadingMovie = new QMovie("://images/Eclipse-1s-loading-200px.gif");
     _videoLoadingLabel = new QLabel(this);
-    _videoLoadingLabel->setMovie(_movie);
+    _videoLoadingLabel->setMovie(_videoLoadingMovie);
     _videoLoadingLabel->setAttribute(Qt::WA_TransparentForMouseEvents );
     _videoLoadingLabel->setMaximumSize(200,200);
     _videoLoadingLabel->setStyleSheet("* {background: transparent}");
@@ -104,7 +107,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     scrollerProperties.setScrollMetric(QScrollerProperties::VerticalOvershootPolicy, overshootPolicy);
     QScroller::scroller(libraryList)->setScrollerProperties(scrollerProperties);
     scroller->setScrollerProperties(scrollerProperties);
-    ui->libraryGrid->addWidget(libraryList, 1, 0, 20, 10);
+    ui->libraryGrid->addWidget(libraryList, 1, 0, 20, 12);
 
     ui->libraryGrid->setSpacing(5);
     ui->libraryGrid->setColumnMinimumWidth(0, 0);
@@ -154,6 +157,15 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     cancelEditPlaylistButton->hide();
 
     ui->libraryFrame->setFrameShadow(QFrame::Sunken);
+
+    libraryLoadingMovie = new QMovie("://images/Eclipse-1s-loading-200px.gif");
+    libraryLoadingMovie->setScaledSize({200,200});
+    libraryLoadingLabel = new QLabel(this);
+    libraryLoadingLabel->setMovie(libraryLoadingMovie);
+    libraryLoadingLabel->setStyleSheet("* {background-color: rgba(128,128,128, 0.5)}");
+    libraryLoadingLabel->setAlignment(Qt::AlignCenter);
+    ui->libraryGrid->addWidget(libraryLoadingLabel, 0, 0, 21, 12);
+    libraryLoadingLabel->hide();
 
     thumbCaptureTime = 35000;
     libraryViewGroup = new QActionGroup(this);
@@ -301,6 +313,12 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(this, &MainWindow::change, this, &MainWindow::on_mainwindow_change);
     //connect(videoHandler, &VideoHandler::mouseEnter, this, &MainWindow::on_video_mouse_enter);
 
+    connect(audioSyncFilter, &AudioSyncFilter::leftLevelChanged, [this](int value){
+        //LogHandler::Debug("leftLevelChanged: "+QString::number(value));
+    });
+    connect(audioSyncFilter, &AudioSyncFilter::rightLevelChanged, [this](int value){
+        //LogHandler::Debug("rightLevelChanged: "+QString::number(value));
+    });
     connect(libraryList, &QListWidget::customContextMenuRequested, this, &MainWindow::onLibraryList_ContextMenuRequested);
     connect(libraryList, &QListWidget::itemDoubleClicked, this, &MainWindow::on_LibraryList_itemDoubleClicked);
     connect(libraryList, &QListWidget::itemClicked, this, &MainWindow::on_LibraryList_itemClicked);
@@ -309,7 +327,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(deoRetryConnectionButton, &QPushButton::clicked, _xSettings, &SettingsDialog::initDeoRetry);
     connect(QApplication::instance(), &QCoreApplication::aboutToQuit, this, &MainWindow::dispose);
 
-    loadingSplash->showMessage("Setting user styles...");
+    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nSetting user styles...");
     QFile file(SettingsHandler::getSelectedTheme());
     file.open(QFile::ReadOnly);
     QString styleSheet = QLatin1String(file.readAll());
@@ -318,7 +336,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     setFocus();
     _defaultAppSize = this->size();
 
-    loadingSplash->showMessage("Loading Library...");
+    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading Library...");
     on_load_library(SettingsHandler::getSelectedLibrary());
 
 //    QScreen *screen = this->screen();
@@ -329,7 +347,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 //    _playerControlsFrame->setMaximumHeight(minHeight);
 //    _controlsHomePlaceHolderFrame->setMaximumHeight(minHeight);
 
-    loadingSplash->showMessage("Starting Application...");
+    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nStarting Application...");
     loadingSplash->finish(this);
 
 }
@@ -354,6 +372,11 @@ void MainWindow::dispose()
     {
         funscriptVRSyncFuture.cancel();
         funscriptVRSyncFuture.waitForFinished();
+    }
+    if(loadingLibraryFuture.isRunning())
+    {
+        loadingLibraryFuture.cancel();
+        loadingLibraryFuture.waitForFinished();
     }
     qDeleteAll(funscriptHandlers);
     delete tcodeHandler;
@@ -757,6 +780,7 @@ void MainWindow::on_mainwindow_splitterMove(int pos, int index)
 
 void MainWindow::onLibraryWindowed_Clicked()
 {
+    _libraryDockMode = true;
     ui->libraryGrid->removeWidget(libraryList);
     ui->libraryGrid->removeWidget(randomizeLibraryButton);
     ui->libraryGrid->removeWidget(windowedLibraryButton);
@@ -764,13 +788,15 @@ void MainWindow::onLibraryWindowed_Clicked()
     ui->libraryGrid->removeWidget(cancelEditPlaylistButton);
     ui->libraryGrid->removeWidget(editPlaylistButton);
     ui->libraryGrid->removeWidget(savePlaylistButton);
-    ((QGridLayout*)libraryWindow->layout())->addWidget(libraryList, 1, 0, 20, 10);
+    ui->libraryGrid->removeWidget(libraryLoadingLabel);
+    ((QGridLayout*)libraryWindow->layout())->addWidget(libraryList, 1, 0, 20, 12);
     ((QGridLayout*)libraryWindow->layout())->addWidget(backLibraryButton, 0, 0);
     ((QGridLayout*)libraryWindow->layout())->addWidget(randomizeLibraryButton, 0, 1);
     ((QGridLayout*)libraryWindow->layout())->addWidget(windowedLibraryButton, 0, ui->libraryGrid->columnCount() - 1);
     ((QGridLayout*)libraryWindow->layout())->addWidget(cancelEditPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
     ((QGridLayout*)libraryWindow->layout())->addWidget(editPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
     ((QGridLayout*)libraryWindow->layout())->addWidget(savePlaylistButton, 0, ui->libraryGrid->columnCount() - 3);
+    ((QGridLayout*)libraryWindow->layout())->addWidget(libraryLoadingLabel, 0, 0, 21, 12);
     windowedLibraryButton->hide();
     ui->libraryFrame->hide();
     libraryWindow->show();
@@ -805,14 +831,16 @@ void MainWindow::onLibraryWindowed_Clicked()
 
 void MainWindow::onLibraryWindowed_Closed()
 {
+    _libraryDockMode = false;
     libraryWindow->layout()->removeWidget(libraryList);
-    ui->libraryGrid->addWidget(libraryList, 1, 0, 20, 10);
+    ui->libraryGrid->addWidget(libraryList, 1, 0, 20, 12);
     ui->libraryGrid->addWidget(backLibraryButton, 0, 0);
     ui->libraryGrid->addWidget(randomizeLibraryButton, 0, 1);
     ui->libraryGrid->addWidget(windowedLibraryButton, 0, ui->libraryGrid->columnCount() - 1);
     ui->libraryGrid->addWidget(cancelEditPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
     ui->libraryGrid->addWidget(editPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
     ui->libraryGrid->addWidget(savePlaylistButton, 0, ui->libraryGrid->columnCount() - 3);
+    ui->libraryGrid->addWidget(libraryLoadingLabel, 0, 0, 21, 12);
     windowedLibraryButton->show();
     ui->libraryFrame->show();
     if(SettingsHandler::getLibrarySortMode() != LibrarySortMode::RANDOM)
@@ -879,6 +907,9 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             myMenu.addAction("Remove from playlist", this, &MainWindow::removeFromPlaylist);
         }
         myMenu.addAction("Play with funscript...", this, &MainWindow::playFileWithCustomScript);
+//        myMenu.addAction("Sync TCode to audio", this, [this]() {
+
+//        });
         if(selectedPlaylistItems.length() == 0)
         {
             QMenu* subMenu = myMenu.addMenu(tr("Add to playlist"));
@@ -1628,7 +1659,7 @@ void MainWindow::toggleFullScreen()
             ui->fullScreenGrid->removeWidget(playerLibraryPlaceHolder);
             libraryList->setMinimumSize(QSize(0, 0));
             libraryList->setMaximumSize(QSize(16777215, 16777215));
-            ui->libraryGrid->addWidget(libraryList, 0, 0, 40, 10);
+            ui->libraryGrid->addWidget(libraryList, 0, 0, 20, 12);
             windowedLibraryButton->raise();
             randomizeLibraryButton->raise();
             libraryOverlay = false;
@@ -1821,11 +1852,17 @@ void MainWindow::on_seekslider_leave()
 
 void MainWindow::on_seekSlider_sliderMoved(int position)
 {
+    LogHandler::Debug("position: "+ QString::number(position));
     if (!_playerControlsFrame->getAutoLoop())
     {
         qint64 playerPosition = XMath::mapRange(static_cast<qint64>(position), (qint64)0, (qint64)100, (qint64)0, videoHandler->duration());
-        videoHandler->setPosition(playerPosition);
+
+        LogHandler::Debug("playerPosition: "+ QString::number(playerPosition));
+        if(playerPosition <= 0)
+            playerPosition = 50;
+        videoHandler->seek(playerPosition);
     }
+
 }
 
 
@@ -1953,13 +1990,36 @@ void MainWindow::setLoading(bool loading)
     if(loading)
     {
         _videoLoadingLabel->show();
-        _movie->start();
+        _videoLoadingMovie->start();
     }
     else
     {
         _videoLoadingLabel->hide();
-        _movie->stop();
+        _videoLoadingMovie->stop();
     }
+}
+
+void MainWindow::setLibraryLoading(bool loading)
+{
+    if(loading)
+    {
+        //libraryList->hide();
+        libraryLoadingLabel->show();
+        libraryLoadingMovie->start();
+    }
+    else
+    {
+        libraryLoadingLabel->hide();
+        libraryLoadingMovie->stop();
+        //libraryList->show();
+    }
+    randomizeLibraryButton->setDisabled(loading);
+    savePlaylistButton->setDisabled(loading);
+    editPlaylistButton->setDisabled(loading);
+    cancelEditPlaylistButton->setDisabled(loading);
+    windowedLibraryButton->setDisabled(loading);
+    ui->actionSelect_library->setDisabled(loading);
+    ui->actionReload_library->setDisabled(loading);
 }
 
 void MainWindow::onVRMessageRecieved(VRPacket packet)
@@ -2687,6 +2747,9 @@ void MainWindow::setThumbSize(int size)
 {
     SettingsHandler::setThumbSize(size);
     resizeThumbs(size);
+
+    videoHandler->setMinimumHeight(SettingsHandler::getThumbSize());
+    videoHandler->setMinimumWidth(SettingsHandler::getThumbSize());
 //    if(SettingsHandler::getLibraryView() == LibraryView::List)
 //        libraryList->setViewMode(QListView::ListMode);
 //    else
@@ -2761,38 +2824,45 @@ void MainWindow::on_actionNameDesc_triggered()
 }
 void MainWindow::on_actionRandom_triggered()
 {
-    LibraryListWidgetItem::setSortMode(LibrarySortMode::RANDOM);
-    SettingsHandler::setLibrarySortMode(LibrarySortMode::RANDOM);
-
-    //Fisher and Yates algorithm
-    int n = libraryList->count();
-
-    QList<LibraryListWidgetItem*> arr, arr1;
-    int index_arr[n];
-    int index;
-
-    for (int i = 0; i < n; i++)
-        index_arr[i] = 0;
-
-    for (int i = 0; i < n; i++)
+    if(!loadingLibraryFuture.isRunning())
     {
-      do
-      {
-         index = XMath::rand(0, n);
-      }
-      while (index_arr[index] != 0);
-      index_arr[index] = 1;
-      arr1.push_back(((LibraryListWidgetItem*)libraryList->item(index)));
+        setLibraryLoading(true);
+        LibraryListWidgetItem::setSortMode(LibrarySortMode::RANDOM);
+        SettingsHandler::setLibrarySortMode(LibrarySortMode::RANDOM);
+
+        loadingLibraryFuture = QtConcurrent::run([this]() {
+            //Fisher and Yates algorithm
+            int n = libraryList->count();
+
+            QList<LibraryListWidgetItem*> arr, arr1;
+            int index_arr[n];
+            int index;
+
+            for (int i = 0; i < n; i++)
+                index_arr[i] = 0;
+
+            for (int i = 0; i < n; i++)
+            {
+              do
+              {
+                 index = XMath::rand(0, n);
+              }
+              while (index_arr[index] != 0);
+              index_arr[index] = 1;
+              arr1.push_back(((LibraryListWidgetItem*)libraryList->item(index)));
+            }
+            while(libraryList->count()>0)
+            {
+              libraryList->takeItem(0);
+            }
+            foreach(auto item, arr1)
+            {
+                libraryList->addItem(item);
+            }
+            randomizeLibraryButton->show();
+            setLibraryLoading(false);
+        });
     }
-    while(libraryList->count()>0)
-    {
-      libraryList->takeItem(0);
-    }
-    foreach(auto item, arr1)
-    {
-        libraryList->addItem(item);
-    }
-    randomizeLibraryButton->show();
 }
 void MainWindow::on_actionCreatedAsc_triggered()
 {
@@ -3072,4 +3142,16 @@ LibraryListItem MainWindow::getSelectedLibraryListItem()
 {
     QListWidgetItem* selectedItem = libraryList->selectedItems().first();
     return ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
+}
+
+void MainWindow::on_actionReload_library_triggered()
+{
+    if(!loadingLibraryFuture.isRunning())
+    {
+        setLibraryLoading(true);
+        loadingLibraryFuture = QtConcurrent::run([this]() {
+            on_load_library(SettingsHandler::getSelectedLibrary());
+            setLibraryLoading(false);
+        });
+    }
 }

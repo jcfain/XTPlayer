@@ -219,14 +219,16 @@ void PlayerControls::SetLoop(bool loop)
 
 void PlayerControls::toggleLoop(qint64 currentDuration, qint64 currentPosition)
 {
-    if(!loopToggleButton->isChecked())
+    if(!loopToggleButton->isChecked() && !_autoLoopOn)
     {
+        _autoLoopOn = true;
         loopToggleButton->setChecked(true);
         qint64 currentVideoPositionPercentage = XMath::mapRange(currentPosition,  (qint64)0, currentDuration, (qint64)0, (qint64)100);
         SeekSlider->setLowerValue(currentVideoPositionPercentage);
     }
-    else if (loopToggleButton->isChecked())
+    else if (loopToggleButton->isChecked() && _autoLoopOn)
     {
+        _autoLoopOn = false;
         int lowerValue = SeekSlider->GetLowerValue();
         qint64 currentVideoPositionPercentage = XMath::mapRange(currentPosition,  (qint64)0, currentDuration, (qint64)0, (qint64)100);
         SeekSlider->setUpperValue(currentVideoPositionPercentage > lowerValue + SeekSlider->GetMinimumRange()

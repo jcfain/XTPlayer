@@ -89,7 +89,7 @@ private:
 
     int mMinimum;
     int mMaximum;
-    int _aMinimumRange = 1;
+    int _aMinimumRange = 0;
     int mLowerValue;
     int mUpperValue;
     bool mFirstHandlePressed;
