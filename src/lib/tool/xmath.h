@@ -16,6 +16,7 @@ public:
     static qint64 rand(qint64 min, qint64 max);
     static double rand(double min, double max);
     static int randSine(double base);
+    static int randSine(double base, double amplitude);
     static int reverseNumber(int num, int min, int max);
 };
 

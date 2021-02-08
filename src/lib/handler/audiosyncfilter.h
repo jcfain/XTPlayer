@@ -11,8 +11,7 @@ class AudioSyncFilter : public AudioFilter
 {
     Q_OBJECT
 signals:
-    void leftLevelChanged(int value);
-    void rightLevelChanged(int value);
+    void levelChanged(int decibelL, int decibelR);
 public:
     AudioSyncFilter(QObject *parent = NULL);
 protected:

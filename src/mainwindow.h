@@ -92,6 +92,7 @@ private slots:
     void onVideoHandler_togglePaused(bool paused);
     void playFileFromContextMenu();
     void playFileWithCustomScript();
+    void playFileWithAudioSync();
     void regenerateThumbNail();
     void setThumbNailFromCurrent();
     void onVRMessageRecieved(VRPacket packet);
@@ -141,6 +142,8 @@ private slots:
 
     void on_actionReload_library_triggered();
 
+    void on_audioLevel_Change(int decibelL, int decibelR);
+
 signals:
     void keyPressed(QKeyEvent * event);
     void change(QEvent * event);
@@ -160,6 +163,7 @@ private:
     bool _mediaStopped = true;
 
     Ui::MainWindow *ui;
+    QMutex mutex;
     SettingsDialog* _xSettings;
     QFrame* _controlsHomePlaceHolderFrame;
     QGridLayout* _controlsHomePlaceHolderGrid;
@@ -291,9 +295,10 @@ private:
     void setThumbSize(int size);
     void resizeThumbs(int size);
     void changeDeoFunscript();
+    void turnOffAudioSync();
 
-    void playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr);
-    void stopAndPlayVideo(LibraryListItem selectedFileListItem, QString customScript = nullptr);
+    void playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
+    void stopAndPlayVideo(LibraryListItem selectedFileListItem, QString customScript = nullptr, bool audioSync = false);
     void initNetworkEvent();
     void initSerialEvent();
     void skipForward();

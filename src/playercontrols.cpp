@@ -75,10 +75,8 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     VolumeSlider->setMinimumSize(QSize(0, 20));
     VolumeSlider->setOrientation(Qt::Horizontal);
     VolumeSlider->setDisabled(false);
-    VolumeSlider->SetRange(0, 30);
+    VolumeSlider->SetRange(0, 1000);
     VolumeSlider->setOption(RangeSlider::Option::RightHandle);
-    voulumeBeforeMute = SettingsHandler::getPlayerVolume();
-    VolumeSlider->setUpperValue(voulumeBeforeMute);
 
     playerControlsGrid->addWidget(VolumeSlider, 2, 9, 1, 2);
 
@@ -134,6 +132,11 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     connect(settingsButton, &QPushButton::clicked, this, [this]() {emit settingsClicked();});
     connect(loopToggleButton, &QPushButton::toggled, this, &PlayerControls::on_loopToggleButton_toggled);
     connect(MuteBtn, &QPushButton::toggled, this, &PlayerControls::on_MuteBtn_toggled);
+
+    voulumeBeforeMute = SettingsHandler::getPlayerVolume();
+    setVolume(voulumeBeforeMute);
+    on_VolumeSlider_valueChanged(voulumeBeforeMute);
+    setTimeDuration("00:00:00/00:00:00");
 }
 
 PlayerControls::~PlayerControls()
@@ -160,19 +163,15 @@ void PlayerControls::setPlayIcon(bool playing)
 }
 void PlayerControls::setVolumeIcon(int volume)
 {
-    if (volume > 15)
+    if (volume > VolumeSlider->GetMaximum() / 2)
         MuteBtn->setIcon(QIcon(":/images/icons/speakerLoud.svg"));
     else if (volume > 0)
     {
         MuteBtn->setIcon(QIcon(":/images/icons/speakerMid.svg"));
-        if(MuteBtn->isChecked())
-            MuteBtn->setChecked(false);
     }
     else
     {
         MuteBtn->setIcon(QIcon(":/images/icons/speakerMute.svg"));
-        if(!MuteBtn->isChecked())
-            MuteBtn->setChecked(true);
     }
 }
 void PlayerControls::resetMediaControlStatus(bool playing)
@@ -276,6 +275,13 @@ void PlayerControls::on_VolumeSlider_valueChanged(int value)
 {
     setVolumeIcon(value);
     VolumeSlider->setToolTip(QString::number(value));
+
+    disconnect(MuteBtn, &QPushButton::toggled, this, &PlayerControls::on_MuteBtn_toggled);
+    if(value > 0)
+        MuteBtn->setChecked(false);
+    else
+        MuteBtn->setChecked(true);
+    connect(MuteBtn, &QPushButton::toggled, this, &PlayerControls::on_MuteBtn_toggled);
     emit volumeChanged(value);
 }
 
@@ -309,6 +315,8 @@ void PlayerControls::on_MuteBtn_toggled(bool checked)
     }
     else
     {
+        if(voulumeBeforeMute < 1)
+            voulumeBeforeMute = 1;
         setVolumeIcon(voulumeBeforeMute);
         VolumeSlider->setUpperValue(voulumeBeforeMute);
     }

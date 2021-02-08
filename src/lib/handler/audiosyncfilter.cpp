@@ -63,12 +63,11 @@ void AudioSyncFilter::process(Statistics *statistics, AudioFrame *frame)
     if (!qFuzzyCompare(level[0], mLeft))
     {
         mLeft = level[0];
-        emit leftLevelChanged(mLeft);
     }
     if (!qFuzzyCompare(level[1], mRight))
     {
         mRight = level[1];
-        emit rightLevelChanged(mRight);
     }
-    LogHandler::Debug("db: " + QString::number(mLeft) +"--"+ QString::number(mRight));
+    emit levelChanged(mLeft, mRight);
+    //LogHandler::Debug("db: " + QString::number(mLeft) +"--"+ QString::number(mRight));
 }

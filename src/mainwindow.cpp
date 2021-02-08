@@ -253,7 +253,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(editPlaylistButton, &QPushButton::clicked, this, &MainWindow::editPlaylist);
     connect(cancelEditPlaylistButton, &QPushButton::clicked, this, &MainWindow::cancelEditPlaylist);
 
-
     connect(libraryWindow, &LibraryWindow::close, this, &MainWindow::onLibraryWindowed_Closed);
 
     connect(_xSettings, &SettingsDialog::deoDeviceConnectionChange, this, &MainWindow::on_deo_device_connectionChanged);
@@ -313,12 +312,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(this, &MainWindow::change, this, &MainWindow::on_mainwindow_change);
     //connect(videoHandler, &VideoHandler::mouseEnter, this, &MainWindow::on_video_mouse_enter);
 
-    connect(audioSyncFilter, &AudioSyncFilter::leftLevelChanged, [this](int value){
-        //LogHandler::Debug("leftLevelChanged: "+QString::number(value));
-    });
-    connect(audioSyncFilter, &AudioSyncFilter::rightLevelChanged, [this](int value){
-        //LogHandler::Debug("rightLevelChanged: "+QString::number(value));
-    });
     connect(libraryList, &QListWidget::customContextMenuRequested, this, &MainWindow::onLibraryList_ContextMenuRequested);
     connect(libraryList, &QListWidget::itemDoubleClicked, this, &MainWindow::on_LibraryList_itemDoubleClicked);
     connect(libraryList, &QListWidget::itemClicked, this, &MainWindow::on_LibraryList_itemClicked);
@@ -778,6 +771,95 @@ void MainWindow::on_mainwindow_splitterMove(int pos, int index)
     SettingsHandler::setMainWindowSplitterPos(ui->mainFrameSplitter->sizes());
 }
 
+//qint64 strokerUpdateMillis = 50;
+qint64 strokerLastUpdate;
+int lastAction = 500;
+int minAmplitude = 0;
+int maxAmplitude = 0;
+void MainWindow::on_audioLevel_Change(int decibelL,int decibelR)
+{
+//    auto time = QTime::currentTime().msecsSinceStartOfDay();
+//    if(_xSettings->isConnected() && time >= strokerLastUpdate + strokerUpdateMillis)
+//    {
+    if(_xSettings->isConnected())
+    {
+//        strokerLastUpdate = time;
+        auto availibleAxis = SettingsHandler::getAvailableAxis();
+        auto decibelLInverse = -decibelL;
+        auto decibelRInverse = -decibelR;
+        auto difference = decibelLInverse > decibelRInverse ? decibelLInverse - decibelRInverse : decibelRInverse - decibelLInverse;
+        int average = round(difference / 2);
+        auto amplitude = decibelLInverse > decibelRInverse ? decibelLInverse - average : decibelRInverse - average;
+        if(amplitude > minAmplitude || minAmplitude - amplitude > 25)
+            minAmplitude = amplitude;
+//        if(amplitude > 0 && amplitude > maxAmplitude)
+//            maxAmplitude = amplitude;
+        //auto delta = decibelLInverse > decibelRInverse ? amplitude / average : decibelRInverse - average;
+        QString tcode;
+        foreach(auto axis, availibleAxis->keys())
+        {
+            ChannelModel channel = availibleAxis->value(axis);
+            if (channel.AxisName == _axisNames.Stroke  || SettingsHandler::getMultiplierChecked(axis))
+            {
+                if (channel.Type == AxisType::HalfRange || channel.Type == AxisType::None)
+                    continue;
+                auto multiplierValue = SettingsHandler::getMultiplierValue(axis);
+                if (channel.AxisName == _axisNames.Stroke)
+                    multiplierValue = 1.0f;
+                auto angle = XMath::mapRange(amplitude, minAmplitude, maxAmplitude, 0, 180);
+                auto magnifiedAmplitude = XMath::mapRange(amplitude, minAmplitude, maxAmplitude, 0, 100);
+                auto value = XMath::constrain(XMath::randSine(angle * multiplierValue, magnifiedAmplitude), 0, 100);
+                //auto value = int(XMath::mapRange(amplitude, minAmplitude, maxAmplitude, 1, 100) * multiplierValue);
+
+                int distance = value >= lastAction ? value - lastAction : lastAction - value;
+                if(distance > 25)
+                {
+                    lastAction = value;
+//                    LogHandler::Debug("value: "+QString::number(value));
+//                    LogHandler::Debug("distance: "+QString::number(distance));
+//                    LogHandler::Debug("amplitude: "+QString::number(amplitude));
+//                    LogHandler::Debug("minAmplitude: "+QString::number(minAmplitude));
+//                    LogHandler::Debug("decibelLInverse: "+QString::number(decibelLInverse));
+//                    LogHandler::Debug("decibelRInverse: "+QString::number(decibelRInverse));
+//                    LogHandler::Debug("difference: "+QString::number(difference));
+                    auto time = QTime::currentTime().msecsSinceStartOfDay();
+                    int speed = round(distance / time - strokerLastUpdate);
+                    strokerLastUpdate = time;
+                    //LogHandler::Debug("speed: "+QString::number(speed));
+
+                    char tcodeValueString[4];
+                    sprintf(tcodeValueString, "%03d", tcodeHandler->calculateRange(axis.toUtf8(), value));
+                    tcode += " ";
+                    tcode += axis;
+                    tcode += tcodeValueString;
+                    tcode += "S";
+                    float speedModifierValue = SettingsHandler::getDamperValue(axis);
+                    if (SettingsHandler::getDamperChecked(axis) && speedModifierValue > 0.0 && speed > 1000 && distance > 50)
+                    {
+                        tcode += QString::number(round(speed * speedModifierValue));
+                    }
+                    else
+                    {
+                        tcode += QString::number(speed > 0 ? speed : 1000);
+                    }
+                }
+            }
+        }
+        if(!tcode.isEmpty())
+            _xSettings->getSelectedDeviceHandler()->sendTCode(tcode);
+    }
+}
+
+
+void MainWindow::turnOffAudioSync()
+{
+    disconnect(audioSyncFilter, &AudioSyncFilter::levelChanged, this, &MainWindow::on_audioLevel_Change);
+    minAmplitude = 0;
+    maxAmplitude = 0;
+//    strokerUpdateMillis = 1000;
+    strokerLastUpdate = 500;
+}
+
 void MainWindow::onLibraryWindowed_Clicked()
 {
     _libraryDockMode = true;
@@ -907,9 +989,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             myMenu.addAction("Remove from playlist", this, &MainWindow::removeFromPlaylist);
         }
         myMenu.addAction("Play with funscript...", this, &MainWindow::playFileWithCustomScript);
-//        myMenu.addAction("Sync TCode to audio", this, [this]() {
-
-//        });
+        myMenu.addAction("Play with audio sync", this, &MainWindow::playFileWithAudioSync);
         if(selectedPlaylistItems.length() == 0)
         {
             QMenu* subMenu = myMenu.addMenu(tr("Add to playlist"));
@@ -1383,6 +1463,12 @@ void MainWindow::playFileFromContextMenu()
     }
 }
 
+void MainWindow::playFileWithAudioSync()
+{
+    LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
+    stopAndPlayVideo(selectedFileListItem, nullptr, true);
+}
+
 void MainWindow::playFileWithCustomScript()
 {
     QString selectedScript = QFileDialog::getOpenFileName(this, tr("Choose script"), SettingsHandler::getSelectedLibrary(), tr("Scripts (*.funscript *.zip)"));
@@ -1394,39 +1480,38 @@ void MainWindow::playFileWithCustomScript()
 }
 
 //Hack because QTAV calls stopped and start out of order
-void MainWindow::stopAndPlayVideo(LibraryListItem selectedFileListItem, QString customScript)
+void MainWindow::stopAndPlayVideo(LibraryListItem selectedFileListItem, QString customScript, bool audioSync)
 {
-
     QFile file(selectedFileListItem.path);
     if (file.exists())
     {
-        if (videoHandler->file() != selectedFileListItem.path || !customScript.isEmpty())
+        if (videoHandler->file() != selectedFileListItem.path || !customScript.isEmpty() || audioSync)
         {
             _playerControlsFrame->SetLoop(false);
             setLoading(true);
             if(videoHandler->isPlaying())
             {
                 videoHandler->stop();
-                auto waitForStopFuture = QtConcurrent::run([this, selectedFileListItem, customScript]()
+                auto waitForStopFuture = QtConcurrent::run([this, selectedFileListItem, customScript, audioSync]()
                 {
                     while(!_mediaStopped)
                     {
                         LogHandler::Debug("Waiting for media stop...");
                         QThread::msleep(500);
                     }
-                    playVideo(selectedFileListItem, customScript);
+                    playVideo(selectedFileListItem, customScript, audioSync);
                 });
             }
             else
             {
-                playVideo(selectedFileListItem, customScript);
+                playVideo(selectedFileListItem, customScript, audioSync);
             }
         }
     }
 
 }
 
-void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customScript)
+void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customScript, bool audioSync)
 {
     QFile file(selectedFileListItem.path);
     if (file.exists())
@@ -1438,105 +1523,114 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
             videoHandler->setFile(selectedFileListItem.path);
             videoPreviewWidget->setFile(selectedFileListItem.path);
             videoHandler->load();
-            QString customScriptNoextension = nullptr;
-            if (!customScript.isEmpty())
+            if(!audioSync)
             {
-                QString customScriptTemp = customScript;
-                customScriptNoextension = customScriptTemp.remove(customScriptTemp.lastIndexOf('.'), customScriptTemp.length() -  1);
-            }
-            QString scriptFile = customScript.isEmpty() ? selectedFileListItem.script : customScript;
-            QString scriptFileNoExtension = customScript.isEmpty() ? selectedFileListItem.scriptNoExtension : customScriptNoextension;
-            QFileInfo scriptFileNoExtensionInfo(scriptFileNoExtension);
-            QString scriptNameNoextension = nullptr;
-            scriptNameNoextension = scriptFileNoExtensionInfo.fileName();
-            QZipReader zipFile(selectedFileListItem.zipFile, QIODevice::ReadOnly);
-            QZipReader customZipFile(scriptFile, QIODevice::ReadOnly);
-            QFileInfo scriptFileInfo(scriptFile);
-            if(scriptFile.endsWith(".funscript") && scriptFileInfo.exists())
-            {
-                funscriptHandler->load(scriptFile);
-            }
-            else if(scriptFile.endsWith(".zip") && customZipFile.isReadable())
-            {
-               QByteArray data = customZipFile.fileData(scriptNameNoextension + ".funscript");
-               if (!data.isEmpty())
-               {
-                   funscriptHandler->load(data);
-               }
-               else
-               {
-                   LogHandler::Dialog("Custom zip file missing main funscript.", XLogLevel::Warning);
-               }
-            }
-            else if(zipFile.isReadable())
-            {
-                QByteArray data = zipFile.fileData(selectedFileListItem.nameNoExtension + ".funscript");
-                if (!data.isEmpty())
+                turnOffAudioSync();
+                QString customScriptNoextension = nullptr;
+                if (!customScript.isEmpty())
                 {
-                    funscriptHandler->load(data);
+                    QString customScriptTemp = customScript;
+                    customScriptNoextension = customScriptTemp.remove(customScriptTemp.lastIndexOf('.'), customScriptTemp.length() -  1);
                 }
-                else
+                QString scriptFile = customScript.isEmpty() ? selectedFileListItem.script : customScript;
+                QString scriptFileNoExtension = customScript.isEmpty() ? selectedFileListItem.scriptNoExtension : customScriptNoextension;
+                QFileInfo scriptFileNoExtensionInfo(scriptFileNoExtension);
+                QString scriptNameNoextension = nullptr;
+                scriptNameNoextension = scriptFileNoExtensionInfo.fileName();
+                QZipReader zipFile(selectedFileListItem.zipFile, QIODevice::ReadOnly);
+                QZipReader customZipFile(scriptFile, QIODevice::ReadOnly);
+                QFileInfo scriptFileInfo(scriptFile);
+                if(scriptFile.endsWith(".funscript") && scriptFileInfo.exists())
                 {
-                    LogHandler::Dialog("Zip file missing main funscript.", XLogLevel::Warning);
+                    funscriptHandler->load(scriptFile);
                 }
-            }
-
-            if(funscriptHandlers.length() > 0)
-            {
-                qDeleteAll(funscriptHandlers);
-                funscriptHandlers.clear();
-            }
-            deviceHome();
-
-            TCodeChannels axisNames;
-            auto availibleAxis = SettingsHandler::getAvailableAxis();
-            foreach(auto axisName, availibleAxis->keys())
-            {
-                auto trackName = availibleAxis->value(axisName).TrackName;
-                if(axisName == axisNames.Stroke || trackName.isEmpty())
-                    continue;
-
-                QFileInfo fileInfo(scriptFileNoExtension + "." + trackName + ".funscript");
-                if(scriptFile.endsWith(".zip") && customZipFile.isReadable())
+                else if(scriptFile.endsWith(".zip") && customZipFile.isReadable())
                 {
-                   QByteArray data = customZipFile.fileData(scriptNameNoextension + "." + availibleAxis->value(axisName).TrackName  + ".funscript");
+                   QByteArray data = customZipFile.fileData(scriptNameNoextension + ".funscript");
                    if (!data.isEmpty())
                    {
-                       FunscriptHandler* otherFunscript = new FunscriptHandler(axisName);
-                       otherFunscript->load(data);
-                       funscriptHandlers.append(otherFunscript);
+                       funscriptHandler->load(data);
                    }
-                }
-                else if(fileInfo.exists())
-                {
-                    FunscriptHandler* otherFunscript = new FunscriptHandler(axisName);
-                    otherFunscript->load(fileInfo.absoluteFilePath());
-                    funscriptHandlers.append(otherFunscript);
+                   else
+                   {
+                       LogHandler::Dialog("Custom zip file missing main funscript.", XLogLevel::Warning);
+                   }
                 }
                 else if(zipFile.isReadable())
                 {
-                   auto trackName = availibleAxis->value(axisName).TrackName;
-                   if(trackName.isEmpty())
-                       continue;
-                   QByteArray data = zipFile.fileData(selectedFileListItem.nameNoExtension + "." + trackName + ".funscript");
-                   if (!data.isEmpty())
-                   {
-                       FunscriptHandler* otherFunscript = new FunscriptHandler(axisName);
-                       otherFunscript->load(data);
-                       funscriptHandlers.append(otherFunscript);
-                   }
+                    QByteArray data = zipFile.fileData(selectedFileListItem.nameNoExtension + ".funscript");
+                    if (!data.isEmpty())
+                    {
+                        funscriptHandler->load(data);
+                    }
+                    else
+                    {
+                        LogHandler::Dialog("Zip file missing main funscript.", XLogLevel::Warning);
+                    }
                 }
+
+                if(funscriptHandlers.length() > 0)
+                {
+                    qDeleteAll(funscriptHandlers);
+                    funscriptHandlers.clear();
+                }
+                deviceHome();
+
+                TCodeChannels axisNames;
+                auto availibleAxis = SettingsHandler::getAvailableAxis();
+                foreach(auto axisName, availibleAxis->keys())
+                {
+                    auto trackName = availibleAxis->value(axisName).TrackName;
+                    if(axisName == axisNames.Stroke || trackName.isEmpty())
+                        continue;
+
+                    QFileInfo fileInfo(scriptFileNoExtension + "." + trackName + ".funscript");
+                    if(scriptFile.endsWith(".zip") && customZipFile.isReadable())
+                    {
+                       QByteArray data = customZipFile.fileData(scriptNameNoextension + "." + availibleAxis->value(axisName).TrackName  + ".funscript");
+                       if (!data.isEmpty())
+                       {
+                           FunscriptHandler* otherFunscript = new FunscriptHandler(axisName);
+                           otherFunscript->load(data);
+                           funscriptHandlers.append(otherFunscript);
+                       }
+                    }
+                    else if(fileInfo.exists())
+                    {
+                        FunscriptHandler* otherFunscript = new FunscriptHandler(axisName);
+                        otherFunscript->load(fileInfo.absoluteFilePath());
+                        funscriptHandlers.append(otherFunscript);
+                    }
+                    else if(zipFile.isReadable())
+                    {
+                       auto trackName = availibleAxis->value(axisName).TrackName;
+                       if(trackName.isEmpty())
+                           continue;
+                       QByteArray data = zipFile.fileData(selectedFileListItem.nameNoExtension + "." + trackName + ".funscript");
+                       if (!data.isEmpty())
+                       {
+                           FunscriptHandler* otherFunscript = new FunscriptHandler(axisName);
+                           otherFunscript->load(data);
+                           funscriptHandlers.append(otherFunscript);
+                       }
+                    }
+                }
+            }
+            else
+            {
+                turnOffAudioSync();
+                strokerLastUpdate = QTime::currentTime().msecsSinceStartOfDay();
+                connect(audioSyncFilter, &AudioSyncFilter::levelChanged, this, &MainWindow::on_audioLevel_Change);
+            }
+            videoHandler->play();
+            playingLibraryListIndex = libraryList->currentRow();
+            playingLibraryListItem = (LibraryListWidgetItem*)libraryList->item(playingLibraryListIndex);
+            if(!audioSync && !funscriptHandler->isLoaded())
+            {
+                LogHandler::Dialog("Error loading script " + customScript + "!\nTry right clicking on the video in the list\nand loading with another script.", XLogLevel::Warning);
             }
         }
 
-        videoHandler->play();
-        playingLibraryListIndex = libraryList->currentRow();
-        playingLibraryListItem = (LibraryListWidgetItem*)libraryList->item(playingLibraryListIndex);
-        if(!funscriptHandler->isLoaded())
-        {
-            LogHandler::Dialog("Error loading script " + customScript + "!\nTry right clicking on the video in the list\nand loading with another script.", XLogLevel::Warning);
-
-        }
     }
     else
     {
@@ -1727,11 +1821,8 @@ void MainWindow::showLibrary()
 
 void MainWindow::on_VolumeSlider_valueChanged(int value)
 {
-    if(!videoHandler->isMute())
-    {
-        videoHandler->setVolume(value);
-        SettingsHandler::setPlayerVolume(value);
-    }
+    videoHandler->setVolume(value);
+    SettingsHandler::setPlayerVolume(value);
 }
 
 void MainWindow::on_PlayBtn_clicked()
@@ -2254,7 +2345,7 @@ void MainWindow::on_gamepad_sendTCode(QString value)
 {
     if(_xSettings->isConnected())
     {
-        if(funscriptHandler->isLoaded() && (videoHandler->isPlaying() || _xSettings->getDeoHandler()->isPlaying()))
+        if(SettingsHandler::getFunscriptLoaded(_axisNames.Stroke) && (videoHandler->isPlaying() || _xSettings->getDeoHandler()->isPlaying()))
         {
             QRegularExpression rx("L0[^\\s]*\\s?");
             value = value.remove(rx);

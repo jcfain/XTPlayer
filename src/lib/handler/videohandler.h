@@ -68,6 +68,7 @@ private:
     VideoPreviewWidget* _videoPreviewWidget;
     QString _currentFile;
     QMutex _mutex;
+    qreal volumeBeforeMute;
 
     void mouseDoubleClickEvent(QMouseEvent * e) override;
     void mousePressEvent(QMouseEvent * e) override;

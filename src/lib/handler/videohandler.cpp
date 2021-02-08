@@ -27,7 +27,7 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent)
     _player->setOptionsForVideoCodec(opt);
 
     _player->setRenderer(_videoRenderer);
-    _player->audio()->setVolume(SettingsHandler::getPlayerVolume());
+    _player->audio()->setVolume(SettingsHandler::getPlayerVolume() * 0.001f);
     _widgetLayout->addWidget(_videoRenderer->widget());
 
     _player->setSeekType(AccurateSeek);
@@ -144,10 +144,9 @@ bool VideoHandler::isMute()
     return _player->audio()->isMute();
 }
 
-qreal volumeBeforeMute;
 void VideoHandler::toggleMute()
 {
-    if (!_player->audio()->isMute())
+    if (!isMute())
     {
         volumeBeforeMute = _player->audio()->volume();
         _player->audio()->setMute(true);
@@ -161,7 +160,7 @@ void VideoHandler::toggleMute()
 
 void VideoHandler::setVolume(int value)
 {
-    _player->audio()->setVolume(value);
+    _player->audio()->setVolume(value * 0.001f);
 }
 void VideoHandler::setRepeat(int max)
 {
