@@ -18,6 +18,7 @@ public:
     static int randSine(double base);
     static int randSine(double base, double amplitude);
     static int reverseNumber(int num, int min, int max);
+    static int lerp(int a, int b, float f);
 };
 
 #endif // XMATH_H

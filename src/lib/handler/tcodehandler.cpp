@@ -112,26 +112,28 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
                     tcode += tcodeValueString;
                     tcode += "S";
                     float speedModifierValue = SettingsHandler::getDamperValue(axis);
+                    char tcodeSpeedString[4];
                     if (SettingsHandler::getDamperChecked(axis) && speedModifierValue > 0.0 && currentAction->speed > 1000 && distance > 50)
                     {
-                        tcode += QString::number(qRound(currentAction->speed * speedModifierValue));
+                        sprintf(tcodeSpeedString, "%03d", qRound(currentAction->speed * speedModifierValue));
+                        tcode += tcodeValueString;
                     }
                     else
                     {
-                        tcode += QString::number(currentAction->speed > 0 ? currentAction->speed : 1000);
+                        sprintf(tcodeSpeedString, "%03d", currentAction->speed > 0 ? currentAction->speed : 1000);
+                        tcode += tcodeValueString;
                     }
                 }
             }
             else
             {
-                tcode += " ";
-                tcode += axis;
-                tcode += "500S1000";
+                getChannelHome(channel, tcode);
             }
         }
     }
     return tcode.isEmpty() ? nullptr : tcode;
 }
+
 int TCodeHandler::calculateRange(const char* channel, int rawValue)
 {
     int xMax = SettingsHandler::getAxis(channel).UserMax;
@@ -156,9 +158,7 @@ QString TCodeHandler::getRunningHome()
         auto channel = availibleAxis->value(axis);
         if(channel.Dimension == AxisDimension::Heave || channel.Type != AxisType::Range)
             continue;
-        tcode += " ";
-        tcode += axis;
-        tcode += "500S500";
+        getChannelHome(channel, tcode);
     }
     return tcode;
 }
@@ -173,9 +173,33 @@ QString TCodeHandler::getAllHome()
         auto channel = availibleAxis->value(axis);
         if(channel.Type == AxisType::HalfRange || channel.Type == AxisType::None )
             continue;
-        tcode += " ";
-        tcode += axis;
-        tcode += "500S500";
+        getChannelHome(channel, tcode);
     }
     return tcode;
+}
+
+QString TCodeHandler::getSwitchedHome()
+{
+    QString tcode;
+    auto availibleAxis = SettingsHandler::getAvailableAxis();
+    auto axisKeys = availibleAxis->keys();
+    foreach(auto axis, axisKeys)
+    {
+        auto channel = availibleAxis->value(axis);
+        if(channel.Type != AxisType::Switch )
+            continue;
+        getChannelHome(channel, tcode);
+    }
+    return tcode;
+}
+
+void TCodeHandler::getChannelHome(ChannelModel channel, QString &tcode)
+{
+    char tcodeValueString[4];
+    sprintf(tcodeValueString, "%03d", channel.Mid);
+    if(!tcode.isEmpty())
+        tcode += " ";
+    tcode += channel.Channel;
+    tcode += tcodeValueString;
+    tcode += "S500";
 }

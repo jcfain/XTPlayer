@@ -1,8 +1,8 @@
 #include "settingshandler.h"
 
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.252";
-const float SettingsHandler::XTPVersionNum = 0.252f;
+const QString SettingsHandler::XTPVersion = "0.253";
+const float SettingsHandler::XTPVersionNum = 0.253f;
 
 SettingsHandler::SettingsHandler()
 {
@@ -907,28 +907,28 @@ void SettingsHandler::deletePlaylist(QString name)
 void SettingsHandler::SetupAvailableAxis()
 {
     _availableAxis = {
-        {channelNames.None, { "None", channelNames.None, channelNames.None, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "", false, 0.01f, false, 0.2f, false, false, "" } },
-        {channelNames.Stroke, { "Stroke", channelNames.Stroke, channelNames.Stroke, 1, 500, 999, 1, 500, 999, AxisDimension::Heave, AxisType::Range, "", false, 0.01f, false, 0.2f, false, false, channelNames.Twist } },
-        {channelNames.StrokeDown, { "Stroke Down", channelNames.StrokeDown, channelNames.Stroke, 1, 500, 999, 1, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.TwistCounterClockwise } },
-        {channelNames.StrokeUp, { "Stroke Up", channelNames.StrokeUp, channelNames.Stroke, 1, 500, 999, 1, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.TwistClockwise } },
-        {channelNames.Sway, { "Sway", channelNames.Sway, channelNames.Sway, 1, 500, 999, 1, 500, 999, AxisDimension::Sway, AxisType::Range, "sway", false, 0.01f, false, 0.2f, false, false, channelNames.Roll } },
-        {channelNames.SwayLeft, { "Sway Left", channelNames.SwayLeft, channelNames.Sway, 1, 500, 999, 1, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.RollLeft } },
-        {channelNames.SwayRight, { "Sway Right", channelNames.SwayRight, channelNames.Sway, 1, 500, 999, 1, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.RollRight } },
-        {channelNames.Surge, { "Surge", channelNames.Surge, channelNames.Surge, 1, 500, 999, 1, 500, 999, AxisDimension::Surge, AxisType::Range, "surge", false, 0.01f, false, 0.2f, false, false, channelNames.Pitch } },
-        {channelNames.SurgeBack, { "Surge Back", channelNames.SurgeBack, channelNames.Surge, 1, 500, 999, 1, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.PitchBack } },
-        {channelNames.SurgeForward, { "Surge Forward", channelNames.SurgeForward, channelNames.Surge, 1, 500, 999, 1, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.PitchForward } },
-        {channelNames.Pitch, { "Pitch", channelNames.Pitch, channelNames.Pitch, 1, 500, 999, 1, 500, 999, AxisDimension::Pitch, AxisType::Range, "pitch", false, 0.01f, false, 0.2f, false, false, channelNames.Surge } },
-        {channelNames.PitchForward, { "Pitch Forward", channelNames.PitchForward, channelNames.Pitch, 1, 500, 999, 1, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.SurgeForward } },
-        {channelNames.PitchBack, { "Pitch Back", channelNames.PitchBack, channelNames.Pitch, 1, 500, 999, 1, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.SurgeBack } },
-        {channelNames.Roll, { "Roll", channelNames.Roll, channelNames.Roll, 1, 500, 999, 1, 500, 999, AxisDimension::Roll, AxisType::Range, "roll", false, 0.01f, false, 0.2f, false, false, channelNames.Sway } },
-        {channelNames.RollLeft, { "Roll Left", channelNames.RollLeft, channelNames.Roll, 1, 500, 999, 1, 500, 999, AxisDimension::Roll, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.SwayLeft } },
-        {channelNames.RollRight, { "Roll Right", channelNames.RollRight, channelNames.Roll, 1, 500, 999, 1, 500, 999, AxisDimension::Roll, AxisType::HalfRange, "", false, 0.01f, false, 0.2f , false, false, channelNames.SwayRight } },
-        {channelNames.Twist, { "Twist", channelNames.Twist, channelNames.Twist, 1, 500, 999, 1, 500, 999, AxisDimension::Yaw, AxisType::Range, "twist", false, 0.01f, false, 0.2f, false, false, channelNames.Stroke } },
-        {channelNames.TwistClockwise, { "Twist (CW)", channelNames.TwistClockwise, channelNames.Twist, 1, 500, 999, 1, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.StrokeUp } },
-        {channelNames.TwistCounterClockwise, { "Twist (CCW)", channelNames.TwistCounterClockwise, channelNames.Twist, 1, 500, 999, 1, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.StrokeDown } },
-        {channelNames.Vib, { "Vib", channelNames.Vib, channelNames.Vib, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "vib", false, 0.01f, false, 0.2f, false, false, channelNames.Stroke } },
-        {channelNames.Lube, { "Lube", channelNames.Lube, channelNames.Lube, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::None, "lube", false, 0.01f, false, 0.2f, false, false, channelNames.Stroke } },
-        {channelNames.Suck, { "Suck", channelNames.Suck, channelNames.Suck, 1, 500, 999, 1, 500, 999, AxisDimension::None, AxisType::Range, "suck", false, 0.01f, false, 0.2f, false, false, channelNames.Stroke } }
+        {channelNames.None, { "None", channelNames.None, channelNames.None, 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::None, "", false, 0.01f, false, 0.2f, false, false, "" } },
+        {channelNames.Stroke, { "Stroke", channelNames.Stroke, channelNames.Stroke, 0, 500, 999, 0, 500, 999, AxisDimension::Heave, AxisType::Range, "", false, 0.01f, false, 0.2f, false, false, channelNames.Twist } },
+        {channelNames.StrokeDown, { "Stroke Down", channelNames.StrokeDown, channelNames.Stroke, 0, 500, 999, 0, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.TwistCounterClockwise } },
+        {channelNames.StrokeUp, { "Stroke Up", channelNames.StrokeUp, channelNames.Stroke, 0, 500, 999, 0, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.TwistClockwise } },
+        {channelNames.Sway, { "Sway", channelNames.Sway, channelNames.Sway, 0, 500, 999, 0, 500, 999, AxisDimension::Sway, AxisType::Range, "sway", false, 0.01f, false, 0.2f, false, false, channelNames.Roll } },
+        {channelNames.SwayLeft, { "Sway Left", channelNames.SwayLeft, channelNames.Sway, 0, 500, 999, 0, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.RollLeft } },
+        {channelNames.SwayRight, { "Sway Right", channelNames.SwayRight, channelNames.Sway, 0, 500, 999, 0, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.RollRight } },
+        {channelNames.Surge, { "Surge", channelNames.Surge, channelNames.Surge, 0, 500, 999, 0, 500, 999, AxisDimension::Surge, AxisType::Range, "surge", false, 0.01f, false, 0.2f, false, false, channelNames.Pitch } },
+        {channelNames.SurgeBack, { "Surge Back", channelNames.SurgeBack, channelNames.Surge, 0, 500, 999, 0, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.PitchBack } },
+        {channelNames.SurgeForward, { "Surge Forward", channelNames.SurgeForward, channelNames.Surge, 0, 500, 999, 0, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.PitchForward } },
+        {channelNames.Pitch, { "Pitch", channelNames.Pitch, channelNames.Pitch, 0, 500, 999, 0, 500, 999, AxisDimension::Pitch, AxisType::Range, "pitch", false, 0.01f, false, 0.2f, false, false, channelNames.Surge } },
+        {channelNames.PitchForward, { "Pitch Forward", channelNames.PitchForward, channelNames.Pitch, 0, 500, 999, 0, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.SurgeForward } },
+        {channelNames.PitchBack, { "Pitch Back", channelNames.PitchBack, channelNames.Pitch, 0, 500, 999, 0, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.SurgeBack } },
+        {channelNames.Roll, { "Roll", channelNames.Roll, channelNames.Roll, 0, 500, 999, 0, 500, 999, AxisDimension::Roll, AxisType::Range, "roll", false, 0.01f, false, 0.2f, false, false, channelNames.Sway } },
+        {channelNames.RollLeft, { "Roll Left", channelNames.RollLeft, channelNames.Roll, 0, 500, 999, 0, 500, 999, AxisDimension::Roll, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.SwayLeft } },
+        {channelNames.RollRight, { "Roll Right", channelNames.RollRight, channelNames.Roll, 0, 500, 999, 0, 500, 999, AxisDimension::Roll, AxisType::HalfRange, "", false, 0.01f, false, 0.2f , false, false, channelNames.SwayRight } },
+        {channelNames.Twist, { "Twist", channelNames.Twist, channelNames.Twist, 0, 500, 999, 0, 500, 999, AxisDimension::Yaw, AxisType::Range, "twist", false, 0.01f, false, 0.2f, false, false, channelNames.Stroke } },
+        {channelNames.TwistClockwise, { "Twist (CW)", channelNames.TwistClockwise, channelNames.Twist, 0, 500, 999, 0, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.StrokeUp } },
+        {channelNames.TwistCounterClockwise, { "Twist (CCW)", channelNames.TwistCounterClockwise, channelNames.Twist, 0, 500, 999, 0, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, channelNames.StrokeDown } },
+        {channelNames.Vib, { "Vib", channelNames.Vib, channelNames.Vib, 0, 0, 999, 0, 0, 999, AxisDimension::None, AxisType::Switch, "vib", false, 0.01f, false, 0.2f, false, false, channelNames.Stroke } },
+        {channelNames.Lube, { "Lube", channelNames.Lube, channelNames.Lube, 0, 0, 999, 0, 0, 999, AxisDimension::None, AxisType::Switch, "lube", false, 0.01f, false, 0.2f, false, false, channelNames.Stroke } },
+        {channelNames.Suck, { "Suck", channelNames.Suck, channelNames.Suck, 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::Range, "suck", false, 0.01f, false, 0.2f, false, false, channelNames.Stroke } }
     };
 }
 

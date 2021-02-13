@@ -350,6 +350,7 @@ MainWindow::~MainWindow()
 }
 void MainWindow::dispose()
 {
+    deviceHome();
     SettingsHandler::Save();
     _xSettings->dispose();
     if (videoHandler->isPlaying())
@@ -513,23 +514,23 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.FullScreen)
     {
-        MainWindow::toggleFullScreen();
+        toggleFullScreen();
     }
     else if(action == actions.Mute)
     {
-        MainWindow::on_MuteBtn_toggled(!videoHandler->isMute());
+        on_MuteBtn_toggled(!videoHandler->isMute());
     }
     else if(action == actions.Stop)
     {
-        MainWindow::on_StopBtn_clicked();
+        stopMedia();
     }
      else if(action == actions.Next)
     {
-        MainWindow::skipForward();
+        skipForward();
     }
     else if(action == actions.Back)
     {
-        MainWindow::skipBack();
+        skipBack();
     }
     else if(action == actions.VolumeUp)
     {
@@ -763,7 +764,9 @@ void MainWindow::mediaAction(QString action)
 
 void MainWindow::deviceHome()
 {
-    _xSettings->getSelectedDeviceHandler()->sendTCode(tcodeHandler->getAllHome());
+    auto deviceHandler = _xSettings->getSelectedDeviceHandler();
+    if(deviceHandler != nullptr && _xSettings->isConnected())
+        deviceHandler->sendTCode(tcodeHandler->getAllHome());
 }
 
 void MainWindow::on_mainwindow_splitterMove(int pos, int index)
@@ -776,78 +779,83 @@ qint64 strokerLastUpdate;
 int lastAction = 500;
 int minAmplitude = 0;
 int maxAmplitude = 0;
+//QElapsedTimer mSecTimer;
+//qint64 timer1 = 0;
+//qint64 timer2 = 0;
 void MainWindow::on_audioLevel_Change(int decibelL,int decibelR)
 {
-//    auto time = QTime::currentTime().msecsSinceStartOfDay();
-//    if(_xSettings->isConnected() && time >= strokerLastUpdate + strokerUpdateMillis)
+//    if (timer2 - timer1 >= 1)
 //    {
-    if(_xSettings->isConnected())
-    {
-//        strokerLastUpdate = time;
-        auto availibleAxis = SettingsHandler::getAvailableAxis();
-        auto decibelLInverse = -decibelL;
-        auto decibelRInverse = -decibelR;
-        auto difference = decibelLInverse > decibelRInverse ? decibelLInverse - decibelRInverse : decibelRInverse - decibelLInverse;
-        int average = round(difference / 2);
-        auto amplitude = decibelLInverse > decibelRInverse ? decibelLInverse - average : decibelRInverse - average;
-        if(amplitude > minAmplitude || minAmplitude - amplitude > 25)
-            minAmplitude = amplitude;
-//        if(amplitude > 0 && amplitude > maxAmplitude)
-//            maxAmplitude = amplitude;
-        //auto delta = decibelLInverse > decibelRInverse ? amplitude / average : decibelRInverse - average;
-        QString tcode;
-        foreach(auto axis, availibleAxis->keys())
+//    timer1 = timer2;
+        if(_xSettings->isConnected())
         {
-            ChannelModel channel = availibleAxis->value(axis);
-            if (channel.AxisName == _axisNames.Stroke  || SettingsHandler::getMultiplierChecked(axis))
+    //        strokerLastUpdate = time;
+            auto availibleAxis = SettingsHandler::getAvailableAxis();
+            auto decibelLInverse = -decibelL;
+            auto decibelRInverse = -decibelR;
+            auto difference = decibelLInverse > decibelRInverse ? decibelLInverse - decibelRInverse : decibelRInverse - decibelLInverse;
+            int average = round(difference / 2);
+            auto amplitude = decibelLInverse > decibelRInverse ? decibelLInverse - average : decibelRInverse - average;
+            if(amplitude > minAmplitude || minAmplitude - amplitude > 25)
+                minAmplitude = amplitude;
+    //        if(amplitude > 0 && amplitude > maxAmplitude)
+    //            maxAmplitude = amplitude;
+            //auto delta = decibelLInverse > decibelRInverse ? amplitude / average : decibelRInverse - average;
+            QString tcode;
+            foreach(auto axis, availibleAxis->keys())
             {
-                if (channel.Type == AxisType::HalfRange || channel.Type == AxisType::None)
-                    continue;
-                auto multiplierValue = SettingsHandler::getMultiplierValue(axis);
-                if (channel.AxisName == _axisNames.Stroke)
-                    multiplierValue = 1.0f;
-                auto angle = XMath::mapRange(amplitude, minAmplitude, maxAmplitude, 0, 180);
-                auto magnifiedAmplitude = XMath::mapRange(amplitude, minAmplitude, maxAmplitude, 0, 100);
-                auto value = XMath::constrain(XMath::randSine(angle * multiplierValue, magnifiedAmplitude), 0, 100);
-                //auto value = int(XMath::mapRange(amplitude, minAmplitude, maxAmplitude, 1, 100) * multiplierValue);
-
-                int distance = value >= lastAction ? value - lastAction : lastAction - value;
-                if(distance > 25)
+                ChannelModel channel = availibleAxis->value(axis);
+                if (channel.AxisName == _axisNames.Stroke  || SettingsHandler::getMultiplierChecked(axis))
                 {
-                    lastAction = value;
-//                    LogHandler::Debug("value: "+QString::number(value));
-//                    LogHandler::Debug("distance: "+QString::number(distance));
-//                    LogHandler::Debug("amplitude: "+QString::number(amplitude));
-//                    LogHandler::Debug("minAmplitude: "+QString::number(minAmplitude));
-//                    LogHandler::Debug("decibelLInverse: "+QString::number(decibelLInverse));
-//                    LogHandler::Debug("decibelRInverse: "+QString::number(decibelRInverse));
-//                    LogHandler::Debug("difference: "+QString::number(difference));
-                    auto time = QTime::currentTime().msecsSinceStartOfDay();
-                    int speed = round(distance / time - strokerLastUpdate);
-                    strokerLastUpdate = time;
-                    //LogHandler::Debug("speed: "+QString::number(speed));
+                    if (channel.Type == AxisType::HalfRange || channel.Type == AxisType::None)
+                        continue;
+                    auto multiplierValue = SettingsHandler::getMultiplierValue(axis);
+                    if (channel.AxisName == _axisNames.Stroke)
+                        multiplierValue = 1.0f;
+                    auto angle = XMath::mapRange(amplitude * 2, minAmplitude, maxAmplitude, 0, 180);
+                    auto magnifiedAmplitude = XMath::mapRange(amplitude * 2, minAmplitude, maxAmplitude, 0, 100);
+                    auto value = XMath::constrain(XMath::randSine(angle * multiplierValue, magnifiedAmplitude), 0, 100);
+                    //auto value = int(XMath::mapRange(amplitude, minAmplitude, maxAmplitude, 1, 100) * multiplierValue);
 
-                    char tcodeValueString[4];
-                    sprintf(tcodeValueString, "%03d", tcodeHandler->calculateRange(axis.toUtf8(), value));
-                    tcode += " ";
-                    tcode += axis;
-                    tcode += tcodeValueString;
-                    tcode += "S";
-                    float speedModifierValue = SettingsHandler::getDamperValue(axis);
-                    if (SettingsHandler::getDamperChecked(axis) && speedModifierValue > 0.0 && speed > 1000 && distance > 50)
+                    int distance = value >= lastAction ? value - lastAction : lastAction - value;
+                    if(distance > 25)
                     {
-                        tcode += QString::number(round(speed * speedModifierValue));
-                    }
-                    else
-                    {
-                        tcode += QString::number(speed > 0 ? speed : 1000);
+                        lastAction = value;
+    //                    LogHandler::Debug("value: "+QString::number(value));
+    //                    LogHandler::Debug("distance: "+QString::number(distance));
+    //                    LogHandler::Debug("amplitude: "+QString::number(amplitude));
+    //                    LogHandler::Debug("minAmplitude: "+QString::number(minAmplitude));
+    //                    LogHandler::Debug("decibelLInverse: "+QString::number(decibelLInverse));
+    //                    LogHandler::Debug("decibelRInverse: "+QString::number(decibelRInverse));
+    //                    LogHandler::Debug("difference: "+QString::number(difference));
+                        auto time = QTime::currentTime().msecsSinceStartOfDay();
+                        int speed = time - strokerLastUpdate;
+                        strokerLastUpdate = time;
+                        //LogHandler::Debug("speed: "+QString::number(speed));
+
+                        char tcodeValueString[4];
+                        sprintf(tcodeValueString, "%03d", tcodeHandler->calculateRange(axis.toUtf8(), value));
+                        tcode += " ";
+                        tcode += axis;
+                        tcode += tcodeValueString;
+                        tcode += "I";
+                        float speedModifierValue = SettingsHandler::getDamperValue(axis);
+                        if (SettingsHandler::getDamperChecked(axis) && speedModifierValue > 0.0 && speed > 1000 && distance > 50)
+                        {
+                            tcode += QString::number(round(speed * speedModifierValue));
+                        }
+                        else
+                        {
+                            tcode += QString::number(speed > 0 ? speed : 1000);
+                        }
                     }
                 }
             }
+            if(!tcode.isEmpty())
+                _xSettings->getSelectedDeviceHandler()->sendTCode(tcode);
         }
-        if(!tcode.isEmpty())
-            _xSettings->getSelectedDeviceHandler()->sendTCode(tcode);
-    }
+        //timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
+    //}
 }
 
 
@@ -857,7 +865,7 @@ void MainWindow::turnOffAudioSync()
     minAmplitude = 0;
     maxAmplitude = 0;
 //    strokerUpdateMillis = 1000;
-    strokerLastUpdate = 500;
+//    strokerLastUpdate = 500;
 }
 
 void MainWindow::onLibraryWindowed_Clicked()
@@ -989,7 +997,8 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             myMenu.addAction("Remove from playlist", this, &MainWindow::removeFromPlaylist);
         }
         myMenu.addAction("Play with funscript...", this, &MainWindow::playFileWithCustomScript);
-        myMenu.addAction("Play with audio sync", this, &MainWindow::playFileWithAudioSync);
+        // Experimental
+        //myMenu.addAction("Play with audio sync (Experimental)", this, &MainWindow::playFileWithAudioSync);
         if(selectedPlaylistItems.length() == 0)
         {
             QMenu* subMenu = myMenu.addMenu(tr("Add to playlist"));
@@ -1491,7 +1500,7 @@ void MainWindow::stopAndPlayVideo(LibraryListItem selectedFileListItem, QString 
             setLoading(true);
             if(videoHandler->isPlaying())
             {
-                videoHandler->stop();
+                stopMedia();
                 auto waitForStopFuture = QtConcurrent::run([this, selectedFileListItem, customScript, audioSync]()
                 {
                     while(!_mediaStopped)
@@ -1858,12 +1867,16 @@ LibraryListWidgetItem* MainWindow::setCurrentLibraryRow(int row)
 void MainWindow::onVideoHandler_togglePaused(bool paused)
 {
     _playerControlsFrame->setPlayIcon(!paused);
+    if(paused)
+        if(_xSettings->isConnected())
+            _xSettings->getSelectedDeviceHandler()->sendTCode(tcodeHandler->getSwitchedHome());
 }
 
-void MainWindow::on_StopBtn_clicked()
+void MainWindow::stopMedia()
 {
     if(videoHandler->isPlaying())
     {
+        deviceHome();
         videoHandler->stop();
     }
 }
@@ -3016,6 +3029,7 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
         videoHandler->setRepeat(-1);
         qint64 videoToSliderPosition = XMath::mapRange(videoHandler->position(),  (qint64)0, videoHandler->duration(), (qint64)0, (qint64)100);
         _playerControlsFrame->setSeekSliderLowerValue(videoToSliderPosition);
+        _playerControlsFrame->setSeekSliderMinimumRange(1);
     }
     else
     {
@@ -3024,6 +3038,7 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
         qint64 position = videoHandler->position();
         videoHandler->setRepeat();
         videoHandler->setPosition(position);
+        _playerControlsFrame->setSeekSliderMinimumRange(0);
     }
 }
 

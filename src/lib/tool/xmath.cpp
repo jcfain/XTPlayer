@@ -71,4 +71,7 @@ int XMath::randSine(double angle, double amplitude)
 int XMath::reverseNumber(int num, int min, int max) {
     return (max + min) - num;
 }
-
+//https://stackoverflow.com/questions/4353525/floating-point-linear-interpolation
+int XMath::lerp(int a, int b, float f) {
+    return a + (int)(f * (float)(b-a));
+}

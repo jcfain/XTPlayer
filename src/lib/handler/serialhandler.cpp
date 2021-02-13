@@ -72,7 +72,7 @@ void SerialHandler::sendTCode(const QString &tcode)
 {
     const QMutexLocker locker(&_mutex);
     _tcode = tcode + "\n";
-    LogHandler::Debug("Sending tcode serial: "+ _tcode);
+    LogHandler::Debug("Sending TCode serial: "+ _tcode);
     if (!isRunning())
         start();
     else

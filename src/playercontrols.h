@@ -45,6 +45,7 @@ public:
     int getSeekSliderUpperValue();
     void setSeekSliderLowerValue(int value);
     int getSeekSliderLowerValue();
+    void setSeekSliderMinimumRange(int value);
     void setSeekSliderDisabled(bool value);
     void setTimeDuration(QString value);
     void resetMediaControlStatus(bool playing);

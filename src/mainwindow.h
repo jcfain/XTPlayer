@@ -78,7 +78,7 @@ private slots:
 
     void on_PlayBtn_clicked();
 
-    void on_StopBtn_clicked();
+    void stopMedia();
 
     void on_MuteBtn_toggled(bool checked);
 

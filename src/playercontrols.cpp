@@ -261,6 +261,10 @@ int PlayerControls::getSeekSliderLowerValue()
 {
     return SeekSlider->GetLowerValue();
 }
+void PlayerControls::setSeekSliderMinimumRange(int value)
+{
+    return SeekSlider->SetMinimumRange(value);
+}
 void PlayerControls::setSeekSliderDisabled(bool disabled)
 {
     SeekSlider->setDisabled(disabled);

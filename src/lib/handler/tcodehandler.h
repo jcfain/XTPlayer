@@ -20,9 +20,11 @@ public:
     int calculateRange(const char* channel, int rawValue);
     QString getRunningHome();
     QString getAllHome();
+    QString getSwitchedHome();
 
 private:
     QMutex mutex;
+    void getChannelHome(ChannelModel channel, QString &tcode);
     const TCodeChannels axisNames;
 };
 

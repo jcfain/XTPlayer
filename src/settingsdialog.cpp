@@ -130,6 +130,7 @@ void SettingsDialog::setupUi()
         ui.deoAddressTxt->setText(SettingsHandler::getDeoAddress());
         ui.deoPortTxt->setText(SettingsHandler::getDeoPort());
 
+        ui.RangeSettingsGrid->setSpacing(5);
         QFont font( "Sans Serif", 8);
         int sliderGridRow = 0;
         int multiplierGridRow = 1;
@@ -138,7 +139,7 @@ void SettingsDialog::setupUi()
         foreach(auto channel, availableAxis->keys())
         {
             ChannelModel axis = SettingsHandler::getAxis(channel);
-            if(axis.Type != AxisType::Range)
+            if(axis.Type == AxisType::None || axis.Type == AxisType::HalfRange)
                 continue;
 
             int userMin = axis.UserMin;
@@ -146,44 +147,45 @@ void SettingsDialog::setupUi()
             QLabel* rangeMinLabel = new QLabel(QString::number(userMin));
             rangeMinLabel->setFont(font);
             rangeMinLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-            ui.RangeSettingsGrid->addWidget(rangeMinLabel, sliderGridRow,0);
+            ui.RangeSettingsGrid->addWidget(rangeMinLabel, sliderGridRow, 0);
             rangeMinLabels.insert(channel, rangeMinLabel);
 
             QLabel* rangeLabel = new QLabel(axis.FriendlyName + " Range");
             rangeLabel->setFont(font);
             rangeLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-            ui.RangeSettingsGrid->addWidget(rangeLabel, sliderGridRow,1);
+            ui.RangeSettingsGrid->addWidget(rangeLabel, sliderGridRow, 1);
 
             QLabel* rangeMaxLabel = new QLabel(QString::number(userMax));
             rangeMaxLabel->setFont(font);
             rangeMaxLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-            ui.RangeSettingsGrid->addWidget(rangeMaxLabel, sliderGridRow,2);
+            ui.RangeSettingsGrid->addWidget(rangeMaxLabel, sliderGridRow, 2);
             rangeMaxLabels.insert(channel, rangeMaxLabel);
 
-            RangeSlider* rangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
-            rangeSlider->SetRange(axis.Min, axis.Max);
-            rangeSlider->setLowerValue(userMin);
-            rangeSlider->setUpperValue(userMax);
-            rangeSlider->setName(channel);
+            RangeSlider* axisRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
+            axisRangeSlider->SetRange(axis.Min, axis.Max);
+            axisRangeSlider->setLowerValue(userMin);
+            axisRangeSlider->setUpperValue(userMax);
+            axisRangeSlider->setName(channel);
+            axisRangeSlider->SetMinimumRange(1);
             sliderGridRow++;
-            ui.RangeSettingsGrid->addWidget(rangeSlider, sliderGridRow,0,1,3);
-            rangeSliders.insert(channel, rangeSlider);
+            ui.RangeSettingsGrid->addWidget(axisRangeSlider, sliderGridRow,0,1,3);
+            rangeSliders.insert(channel, axisRangeSlider);
             sliderGridRow++;
 
-            QProgressBar* progressbar = new QProgressBar(this);
-            progressbar->setMinimum(0);
-            progressbar->setMaximum(100);
-            progressbar->setMaximumHeight(20);
-            ui.RangeSettingsGrid->addWidget(progressbar, sliderGridRow,0,1,3);
-            axisProgressbars.insert(channel, progressbar);
+            QProgressBar* funscriptProgressbar = new QProgressBar(this);
+            funscriptProgressbar->setMinimum(0);
+            funscriptProgressbar->setMaximum(100);
+            funscriptProgressbar->setMaximumHeight(5);
+            ui.RangeSettingsGrid->addWidget(funscriptProgressbar, sliderGridRow,0,1,3);
+            axisProgressbars.insert(channel, funscriptProgressbar);
             sliderGridRow++;
 
             connect(this, &SettingsDialog::onAxisValueChange, this, &SettingsDialog::on_axis_valueChange);
             connect(this, &SettingsDialog::onAxisValueReset, this, &SettingsDialog::on_axis_valueReset);
-            connect(rangeSlider, QOverload<QString, int>::of(&RangeSlider::lowerValueChanged), this, &SettingsDialog::onRange_valueChanged);
-            connect(rangeSlider, QOverload<QString, int>::of(&RangeSlider::upperValueChanged), this, &SettingsDialog::onRange_valueChanged);
+            connect(axisRangeSlider, QOverload<QString, int>::of(&RangeSlider::lowerValueChanged), this, &SettingsDialog::onRange_valueChanged);
+            connect(axisRangeSlider, QOverload<QString, int>::of(&RangeSlider::upperValueChanged), this, &SettingsDialog::onRange_valueChanged);
             // mouse release work around for gamepad recalculation reseting on every valueChange event.
-            connect(rangeSlider, QOverload<QString>::of(&RangeSlider::mouseRelease), this, &SettingsDialog::onRange_mouseRelease);
+            connect(axisRangeSlider, QOverload<QString>::of(&RangeSlider::mouseRelease), this, &SettingsDialog::onRange_mouseRelease);
 
             // Multipliers
             if(axis.Dimension != AxisDimension::Heave)
@@ -258,16 +260,9 @@ void SettingsDialog::setupUi()
             funscriptSettingsGridRow++;
         }
 
-        QPushButton* zeroOutButton = new QPushButton(this);
-        zeroOutButton->setText("All axis home");
-        connect(zeroOutButton, & QPushButton::clicked, this, &SettingsDialog::on_tCodeHome_clicked);
-        ui.RangeSettingsGrid->addWidget(zeroOutButton, sliderGridRow,1);
-        sliderGridRow++;
-
         offSetLabel = new QLabel("Sync offset");
         offSetLabel->setFont(font);
         offSetLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-        ui.RangeSettingsGrid->addWidget(offSetLabel, sliderGridRow,1);
         offSetSpinBox = new QSpinBox(this);
         offSetSpinBox->setSuffix("ms");
         offSetSpinBox->setSingleStep(1);
@@ -275,8 +270,13 @@ void SettingsDialog::setupUi()
         offSetSpinBox->setMinimum(std::numeric_limits<int>::lowest());
         offSetSpinBox->setMaximum(std::numeric_limits<int>::max());
         offSetSpinBox->setValue(SettingsHandler::getoffSet());
-        sliderGridRow++;
-        ui.RangeSettingsGrid->addWidget(offSetSpinBox, sliderGridRow,1,1,1);
+        ui.RangeSettingsGrid->addWidget(offSetLabel, sliderGridRow, 0);
+        ui.RangeSettingsGrid->addWidget(offSetSpinBox, sliderGridRow + 1,0);
+
+        QPushButton* zeroOutButton = new QPushButton(this);
+        zeroOutButton->setText("All axis home");
+        connect(zeroOutButton, & QPushButton::clicked, this, &SettingsDialog::on_tCodeHome_clicked);
+        ui.RangeSettingsGrid->addWidget(zeroOutButton, sliderGridRow + 1, 1);
 
         QLabel* xRangeStepLabel = new QLabel(this);
         xRangeStepLabel->setText("Stroke range change step");
@@ -289,10 +289,8 @@ void SettingsDialog::setupUi()
         xRangeStepInput->setValue(SettingsHandler::getGamepadSpeedIncrement());
         xRangeStepInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
         connect(xRangeStepInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::xRangeStepInput_valueChanged);
-        sliderGridRow++;
-        ui.RangeSettingsGrid->addWidget(xRangeStepLabel, sliderGridRow, 1, 1, 1);
-        sliderGridRow++;
-        ui.RangeSettingsGrid->addWidget(xRangeStepInput, sliderGridRow, 1, 1, 1);
+        ui.RangeSettingsGrid->addWidget(xRangeStepLabel, sliderGridRow, 2);
+        ui.RangeSettingsGrid->addWidget(xRangeStepInput, sliderGridRow + 1, 2);
 
         connect(offSetSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onOffSet_valueChanged);
 

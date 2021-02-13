@@ -6,12 +6,15 @@
 #include <cmath>
 #include "loghandler.h"
 
+
 using namespace QtAV;
 class AudioSyncFilter : public AudioFilter
 {
     Q_OBJECT
 signals:
     void levelChanged(int decibelL, int decibelR);
+    void leftLevelChanged(int mLeft);
+    void rightLevelChanged(int mRight);
 public:
     AudioSyncFilter(QObject *parent = NULL);
 protected:
