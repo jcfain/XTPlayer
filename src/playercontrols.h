@@ -47,7 +47,9 @@ public:
     int getSeekSliderLowerValue();
     void setSeekSliderMinimumRange(int value);
     void setSeekSliderDisabled(bool value);
-    void setTimeDuration(QString value);
+    void setTimeDuration(QString time, QString duration);
+    void setTime(QString time);
+    void setDuration(QString duration);
     void resetMediaControlStatus(bool playing);
 
 
@@ -60,7 +62,8 @@ private:
     QPushButton *settingsButton;
     RangeSlider *VolumeSlider;
     RangeSlider *SeekSlider;
-    QLabel *lblCurrentDuration;
+    QLabel *lblCurrentTime;
+    QLabel *lblDuration;
     QPushButton *skipBackButton;
     QPushButton *PlayBtn;
 

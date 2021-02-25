@@ -7,11 +7,12 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     QPixmap pixmap("://images/XTP_Splash.png");
     loadingSplash = new QSplashScreen(pixmap);
+    loadingSplash->setStyleSheet("color: white");
     loadingSplash->show();
 
     ui->setupUi(this);
 
-    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading Settings...");
+    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading Settings...", Qt::AlignBottom, Qt::white);
     SettingsHandler::Load();
 
     if(arguments.length() > 0)
@@ -25,7 +26,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
         }
     }
 
-    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading UI...");
+    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading UI...", Qt::AlignBottom, Qt::white);
 
     qRegisterMetaType<LibraryListItem>();
     qRegisterMetaTypeStreamOperators<LibraryListItem>();
@@ -320,7 +321,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(deoRetryConnectionButton, &QPushButton::clicked, _xSettings, &SettingsDialog::initDeoRetry);
     connect(QApplication::instance(), &QCoreApplication::aboutToQuit, this, &MainWindow::dispose);
 
-    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nSetting user styles...");
+    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nSetting user styles...", Qt::AlignBottom, Qt::white);
     QFile file(SettingsHandler::getSelectedTheme());
     file.open(QFile::ReadOnly);
     QString styleSheet = QLatin1String(file.readAll());
@@ -329,7 +330,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     setFocus();
     _defaultAppSize = this->size();
 
-    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading Library...");
+    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading Library...", Qt::AlignBottom, Qt::white);
     on_load_library(SettingsHandler::getSelectedLibrary());
 
 //    QScreen *screen = this->screen();
@@ -340,7 +341,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 //    _playerControlsFrame->setMaximumHeight(minHeight);
 //    _controlsHomePlaceHolderFrame->setMaximumHeight(minHeight);
 
-    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nStarting Application...");
+    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nStarting Application...", Qt::AlignBottom, Qt::white);
     loadingSplash->finish(this);
 
 }
@@ -1675,7 +1676,7 @@ void MainWindow::toggleFullScreen()
         _appPos = this->pos();
         _isMaximized = this->isMaximized();
         _isFullScreen = true;
-        QMainWindow::setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+        //QMainWindow::setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
         _mediaGrid->removeWidget(videoHandler);
         _mediaGrid->removeWidget(_videoLoadingLabel);
         _controlsHomePlaceHolderGrid->removeWidget(_playerControlsFrame);
@@ -1692,7 +1693,7 @@ void MainWindow::toggleFullScreen()
         playerControlsPlaceHolder->move(QPoint(0, screenSize.height() - _playerControlsFrame->height()));
         playerControlsPlaceHolder->setFixedWidth(screenSize.width());
         playerControlsPlaceHolder->setFixedHeight(_playerControlsFrame->height());
-
+    playerControlsPlaceHolder->setFocusPolicy(Qt::StrongFocus);
         int rows = screenSize.height() / _playerControlsFrame->height();
         ui->fullScreenGrid->addWidget(videoHandler, 0, 0, rows, 5);
         ui->fullScreenGrid->addWidget(_videoLoadingLabel, (rows / 2) - 1, 2, 2, 1);
@@ -2033,7 +2034,7 @@ void MainWindow::on_media_positionChanged(qint64 position)
             gpos = QPoint(ui->medialAndControlsFrame->pos().x(), 0) + _controlsHomePlaceHolderFrame->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(hoverposition, 0);
         }
     }
-    _playerControlsFrame->setTimeDuration(mSecondFormat(position).append("/").append(mSecondFormat(duration)));
+    _playerControlsFrame->setTimeDuration(mSecondFormat(position), mSecondFormat(duration));
     //    QString timeCurrent = QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss"));
     //    QString timeDuration = QTime(0, 0, 0).addMSecs(duration).toString(QString::fromLatin1("HH:mm:ss"));
     //    QString timeStamp = timeCurrent.append("/").append(timeDuration);

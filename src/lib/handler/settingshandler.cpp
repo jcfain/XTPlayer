@@ -968,9 +968,7 @@ void SettingsHandler::SetupDecoderPriority()
         { "CUDA", true },
         { "D3D11", true },
         { "DXVA", true },
-        { "FFmpeg", true },
-        { "VAAPI", true },
-        { "VideoToolbox", true }
+        { "FFmpeg", true }
     };
 }
 

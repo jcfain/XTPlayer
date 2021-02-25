@@ -3,7 +3,7 @@
 PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(parent, f)
 {
     setObjectName(QString::fromUtf8("playerControlsFrame"));
-    setMinimumSize(QSize(700, 75));
+    setMinimumSize(QSize(240, 75));
     setMaximumSize(QSize(16777215, 16777215));
     setFrameShape(QFrame::StyledPanel);
     setFrameShadow(QFrame::Raised);
@@ -21,7 +21,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipForwardButton->setIconSize(QSize(20, 20));
     skipForwardButton->setFlat(true);
 
-    playerControlsGrid->addWidget(skipForwardButton, 2, 7, 1, 1);
+    playerControlsGrid->addWidget(skipForwardButton, 2, 6, 1, 1);
 
     MuteBtn = new QPushButton(this);
     MuteBtn->setObjectName(QString::fromUtf8("MuteBtn"));
@@ -33,7 +33,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     MuteBtn->setCheckable(true);
     MuteBtn->setFlat(true);
 
-    playerControlsGrid->addWidget(MuteBtn, 2, 11, 1, 1);
+    playerControlsGrid->addWidget(MuteBtn, 2, 10, 1, 1);
 
     loopToggleButton = new QPushButton(this);
     loopToggleButton->setObjectName(QString::fromUtf8("loopToggleButton"));
@@ -45,7 +45,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     loopToggleButton->setCheckable(true);
     loopToggleButton->setFlat(true);
 
-    playerControlsGrid->addWidget(loopToggleButton, 2, 8, 1, 1);
+    playerControlsGrid->addWidget(loopToggleButton, 2, 7, 1, 1);
 
     fullScreenBtn = new QPushButton(this);
     fullScreenBtn->setObjectName(QString::fromUtf8("fullScreenBtn"));
@@ -78,7 +78,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     VolumeSlider->SetRange(0, 1000);
     VolumeSlider->setOption(RangeSlider::Option::RightHandle);
 
-    playerControlsGrid->addWidget(VolumeSlider, 2, 9, 1, 2);
+    playerControlsGrid->addWidget(VolumeSlider, 2, 8, 1, 2);
 
     SeekSlider = new RangeSlider(this);
     SeekSlider->setObjectName(QString::fromUtf8("SeekSlider"));
@@ -91,13 +91,19 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     SeekSlider->setOption(RangeSlider::Option::RightHandle);
     SeekSlider->setUpperValue(0);
 
-    playerControlsGrid->addWidget(SeekSlider, 0, 0, 1, 11);
+    playerControlsGrid->addWidget(SeekSlider, 1, 0, 1, 11);
 
-    lblCurrentDuration = new QLabel(this);
-    lblCurrentDuration->setObjectName(QString::fromUtf8("lblCurrentDuration"));
-    lblCurrentDuration->setAlignment(Qt::AlignHCenter|Qt::AlignTop);
+    lblCurrentTime = new QLabel(this);
+    lblCurrentTime->setObjectName(QString::fromUtf8("lblCurrentTime"));
+    lblCurrentTime->setAlignment(Qt::AlignLeft|Qt::AlignBottom);
 
-    playerControlsGrid->addWidget(lblCurrentDuration, 0, 11, 1, 1);
+    playerControlsGrid->addWidget(lblCurrentTime, 0, 0, 1, 1);
+
+    lblDuration = new QLabel(this);
+    lblDuration->setObjectName(QString::fromUtf8("lblDuration"));
+    lblDuration->setAlignment(Qt::AlignRight|Qt::AlignBottom);
+
+    playerControlsGrid->addWidget(lblDuration, 0, 10, 1, 1);
 
     skipBackButton = new QPushButton(this);
     skipBackButton->setObjectName(QString::fromUtf8("skipBackButton"));
@@ -119,7 +125,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     PlayBtn->setIconSize(QSize(20, 20));
     PlayBtn->setFlat(true);
 
-    playerControlsGrid->addWidget(PlayBtn, 2, 5, 1, 2);
+    playerControlsGrid->addWidget(PlayBtn, 2, 5, 1, 1);
 
     connect(SeekSlider, &RangeSlider::upperValueMove, this, &PlayerControls::on_seekSlider_sliderMoved);
     connect(SeekSlider, &RangeSlider::onHover, this, &PlayerControls::on_seekslider_hover);
@@ -136,7 +142,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     voulumeBeforeMute = SettingsHandler::getPlayerVolume();
     setVolume(voulumeBeforeMute);
     on_VolumeSlider_valueChanged(voulumeBeforeMute);
-    setTimeDuration("00:00:00/00:00:00");
+    setTimeDuration("00:00:00", "00:00:00");
 }
 
 PlayerControls::~PlayerControls()
@@ -182,7 +188,7 @@ void PlayerControls::resetMediaControlStatus(bool playing)
     setPlayIcon(playing);
     if(!playing)
     {
-        setTimeDuration("00:00:00/00:00:00");
+        setTimeDuration("00:00:00", "00:00:00");
     }
 }
 
@@ -269,10 +275,20 @@ void PlayerControls::setSeekSliderDisabled(bool disabled)
 {
     SeekSlider->setDisabled(disabled);
 }
-void PlayerControls::setTimeDuration(QString value)
+void PlayerControls::setTimeDuration(QString time, QString duration)
 {
-    lblCurrentDuration->setText(value);
+    lblCurrentTime->setText(time);
+    lblDuration->setText(duration);
 }
+void PlayerControls::setTime(QString time)
+{
+    lblCurrentTime->setText(time);
+}
+void PlayerControls::setDuration(QString duration)
+{
+    lblDuration->setText(duration);
+}
+
 
 //Slots
 void PlayerControls::on_VolumeSlider_valueChanged(int value)
