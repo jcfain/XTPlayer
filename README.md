@@ -15,16 +15,16 @@ Features:
     
     
 Building
-     Download and install QT Creator
-          https://www.qt.io/download
-     Required libraries needed:
-          https://github.com/wang-bin/QtAV
-               As the time of this writing the project has not had any commits for awhile
-               So its safe to get the latest master branch.
-          https://libav.org/download/
-               I used prebuilts I found here: http://builds.libav.org/windows/release-lgpl/libav-x86_64-w64-mingw32-11.7z
-          https://github.com/nezticle/qtcompress
-               Built from source
+     1. Download and install QT Creator
+          - https://www.qt.io/download
+     2. Required libraries needed:
+          - https://github.com/wang-bin/QtAV
+               --As the time of this writing the project has not had any commits for awhile
+               --So its safe to get the latest master branch.
+          -https://libav.org/download/
+               --I used prebuilts I found here: http://builds.libav.org/windows/release-lgpl/libav-x86_64-w64-mingw32-11.7z
+          -https://github.com/nezticle/qtcompress
+               --Built from source
           
           
     
