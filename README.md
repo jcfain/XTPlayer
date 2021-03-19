@@ -28,13 +28,13 @@ XTPlayer is a cross platform TCode media player.
                         * CPATH path/To/Extracted/include
                         * LD_LIBRARY_PATH path/to/extracted/lib
                         * LIBRARY_PATH path/to/extracted/lib
+                        * Copy the contents of libav-x86_64-w64-mingw32-11.7\usr\bin to C:\Qt\5.15.2\mingw81_64\bin
           * If the compile completes with out error, execute the generated sdk_install.bat in build-QtAV-Desktop_Qt_5_15_2_MinGW_64_bit-Debug
           ###Other
           * https://github.com/nezticle/qtcompress
-               * Built from source
                * Build from QT Creator
                * Install make and do make install from the output build dir.
-                  Note: see QMake install qtcompress.bat for details
+                  Note: see "QMake install qtcompress.bat" for details
       3. Clone/download XTP source
       4. Open the project and build
           
