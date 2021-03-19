@@ -1,8 +1,8 @@
 #include "settingshandler.h"
 
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.253";
-const float SettingsHandler::XTPVersionNum = 0.253f;
+const QString SettingsHandler::XTPVersion = "0.255";
+const float SettingsHandler::XTPVersionNum = 0.255f;
 
 SettingsHandler::SettingsHandler()
 {
@@ -119,6 +119,8 @@ void SettingsHandler::Load()
         _playlists.insert(playlist, playlists[playlist].value<QList<LibraryListItem>>());
     }
 
+    _hashedPass = settings->value("userData").toString();
+
     if(currentVersion != 0 && currentVersion < 0.2f)
     {
         SetupGamepadButtonMap();
@@ -214,6 +216,8 @@ void SettingsHandler::Save()
             playlists.insert(playlist, QVariant::fromValue(_playlists[playlist]));
         }
         settings->setValue("playlists", playlists);
+        settings->setValue("userData", _hashedPass);
+
 
         settings->sync();
     }
@@ -904,6 +908,15 @@ void SettingsHandler::deletePlaylist(QString name)
     _playlists.remove(name);
 }
 
+QString SettingsHandler::GetHashedPass()
+{
+    return _hashedPass;
+}
+void SettingsHandler::SetHashedPass(QString value)
+{
+    _hashedPass = value;
+}
+
 void SettingsHandler::SetupAvailableAxis()
 {
     _availableAxis = {
@@ -1036,6 +1049,8 @@ QString SettingsHandler::whirligigPort;
 bool SettingsHandler::whirligigEnabled;
 bool SettingsHandler::defaultReset = false;
 bool SettingsHandler::disableSpeechToText;
+
+QString SettingsHandler::_hashedPass;
 
 QList<DecoderModel> SettingsHandler::decoderPriority;
 QList<QString> SettingsHandler::_libraryExclusions;

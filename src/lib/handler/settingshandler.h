@@ -3,6 +3,8 @@
 #include <QSettings>
 #include <QMutex>
 #include <QHash>
+#include "loghandler.h"
+#include "devicehandler.h"
 #include "../lookup/enum.h"
 #include "../lookup/AxisNames.h"
 #include "../lookup/GamepadAxisNames.h"
@@ -10,8 +12,6 @@
 #include "../tool/xmath.h"
 #include "../struct/ChannelModel.h"
 #include "../struct/DecoderModel.h"
-#include "loghandler.h"
-#include "devicehandler.h"
 #include "../struct/librarylistwidgetitem.h"
 #include "../struct/LibraryListItem.h"
 
@@ -152,6 +152,10 @@ public:
 
     static void setFunscriptLoaded(QString key, bool loaded);
     static bool getFunscriptLoaded(QString key);
+
+    static QString GetHashedPass();
+    static void SetHashedPass(QString value);
+
     static QSize getMaxThumbnailSize();
     static void SetupAvailableAxis();
     static void SetupDecoderPriority();
@@ -223,6 +227,7 @@ private:
 
     static bool disableSpeechToText;
     static bool defaultReset;
+    static QString _hashedPass;
 
     static QHash<QString, bool> _funscriptLoaded;
     static QSettings* settings;

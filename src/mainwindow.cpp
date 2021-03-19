@@ -14,6 +14,16 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading Settings...", Qt::AlignBottom, Qt::white);
     SettingsHandler::Load();
+    _xSettings = new SettingsDialog(this);
+    tcodeHandler = new TCodeHandler();
+    if(_xSettings->HasLaunchPass())
+        _isPasswordIncorrect = !_xSettings->GetLaunchPass();
+    if(_isPasswordIncorrect)
+    {
+        LogHandler::Dialog("Incorrect password!", XLogLevel::Critical);
+        QTimer::singleShot(0, this, SLOT(onEventLoopStarted()));
+        return;
+    }
 
     if(arguments.length() > 0)
     {
@@ -243,8 +253,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     auto splitterSizes = SettingsHandler::getMainWindowSplitterPos();
     if (splitterSizes.count() > 0)
         ui->mainFrameSplitter->setSizes(splitterSizes);
-    _xSettings = new SettingsDialog(this);
-    tcodeHandler = new TCodeHandler();
 
     connect(ui->mainFrameSplitter, &QSplitter::splitterMoved, this, &MainWindow::on_mainwindow_splitterMove);
     connect(backLibraryButton, &QPushButton::clicked, this, &MainWindow::backToMainLibrary);
@@ -349,9 +357,15 @@ MainWindow::~MainWindow()
 {
 
 }
+
+void MainWindow::onEventLoopStarted()
+{
+    if(_isPasswordIncorrect)
+        QApplication::quit();
+}
 void MainWindow::dispose()
 {
-    deviceHome();
+    deviceSwitchedHome();
     SettingsHandler::Save();
     _xSettings->dispose();
     if (videoHandler->isPlaying())
@@ -768,6 +782,12 @@ void MainWindow::deviceHome()
     auto deviceHandler = _xSettings->getSelectedDeviceHandler();
     if(deviceHandler != nullptr && _xSettings->isConnected())
         deviceHandler->sendTCode(tcodeHandler->getAllHome());
+}
+void MainWindow::deviceSwitchedHome()
+{
+    auto deviceHandler = _xSettings->getSelectedDeviceHandler();
+    if(deviceHandler != nullptr && _xSettings->isConnected())
+        deviceHandler->sendTCode(tcodeHandler->getSwitchedHome());
 }
 
 void MainWindow::on_mainwindow_splitterMove(int pos, int index)
@@ -1407,7 +1427,10 @@ void MainWindow::on_libray_path_select(QString path)
 
 void MainWindow::on_actionSelect_library_triggered()
 {
-    QString selectedLibrary = QFileDialog::getExistingDirectory(this, tr("Choose media library"), ".", QFileDialog::ReadOnly);
+    QString currentPath = SettingsHandler::getSelectedLibrary();
+    QDir currentDir(currentPath);
+    QString defaultPath = !currentPath.isEmpty() && currentDir.exists() ? currentPath : ".";
+    QString selectedLibrary = QFileDialog::getExistingDirectory(this, tr("Choose media library"), defaultPath, QFileDialog::ReadOnly);
     if (selectedLibrary != Q_NULLPTR)
     {
         on_libray_path_select(selectedLibrary);
@@ -1528,6 +1551,7 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
     {
         if (videoHandler->file() != selectedFileListItem.path || !customScript.isEmpty())
         {
+            deviceHome();
             _playerControlsFrame->SetLoop(false);
             setLoading(true);
             videoHandler->setFile(selectedFileListItem.path);
@@ -1584,7 +1608,6 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
                     qDeleteAll(funscriptHandlers);
                     funscriptHandlers.clear();
                 }
-                deviceHome();
 
                 TCodeChannels axisNames;
                 auto availibleAxis = SettingsHandler::getAvailableAxis();
@@ -1869,8 +1892,7 @@ void MainWindow::onVideoHandler_togglePaused(bool paused)
 {
     _playerControlsFrame->setPlayIcon(!paused);
     if(paused)
-        if(_xSettings->isConnected())
-            _xSettings->getSelectedDeviceHandler()->sendTCode(tcodeHandler->getSwitchedHome());
+        deviceSwitchedHome();
 }
 
 void MainWindow::stopMedia()

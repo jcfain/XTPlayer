@@ -12,6 +12,7 @@
 #include "lib/struct/channeltablecomboboxdelegate.h"
 #include "lib/struct/DecoderModel.h"
 #include "lib/lookup/MediaActions.h"
+#include "lib/tool/simplecrypt.h"
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/serialhandler.h"
 #include "lib/handler/videohandler.h"
@@ -23,6 +24,7 @@
 #include "libraryexclusions.h"
 #include "addchanneldialog.h"
 #include <QProgressBar>
+#include <QCryptographicHash>
 
 extern void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo);
 extern void initNetwork(UdpHandler* serialHandler, NetworkAddress address);
@@ -50,6 +52,10 @@ public:
     void dispose();
     void setAxisProgressBar(QString axis, int value);
     void resetAxisProgressBars();
+    void latestYoutubeDownloaded();
+    boolean CheckPass(QString pass);
+    boolean GetLaunchPass();
+    boolean HasLaunchPass();
 
 signals:
     void deviceError(QString error);
@@ -145,6 +151,8 @@ private slots:
 
     void on_libraryExclusionsBtn_clicked();
 
+    void on_passwordButton_clicked();
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();
@@ -155,6 +163,8 @@ private:
     void setupUi();
     void setupGamepadMap();
 
+    QString encryptPass(QString pass);
+    QString decryptPass(QString pass);
     LibraryExclusions* _libraryExclusions;
     TCodeChannels axisNames;
     bool _interfaceInitialized = false;
@@ -169,6 +179,7 @@ private:
     SerialHandler* _serialHandler;
     UdpHandler* _udpHandler;
     DeoHandler* _deoHandler;
+
     WhirligigHandler* _whirligigHandler;
     GamepadHandler* _gamepadHandler;
     QFuture<void> _initFuture;

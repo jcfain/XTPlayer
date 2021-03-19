@@ -264,6 +264,11 @@
     <string>Reload library</string>
    </property>
   </action>
+  <action name="actionDownload_URL">
+   <property name="text">
+    <string>Download URL...</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="icons.qrc"/>

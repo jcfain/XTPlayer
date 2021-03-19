@@ -84,6 +84,8 @@ void SettingsDialog::init(VideoHandler* videoHandler)
 void SettingsDialog::initLive()
 {
     ui.enableMultiplierCheckbox->setChecked(SettingsHandler::getMultiplierEnabled());
+    if(HasLaunchPass())
+        ui.passwordButton->setText("Change password");
 }
 
 void SettingsDialog::setupUi()
@@ -1204,4 +1206,98 @@ void SettingsDialog::on_libraryExclusionsBtn_clicked()
 {
     _libraryExclusions = new LibraryExclusions(this);
     _libraryExclusions->show();
+}
+
+void SettingsDialog::on_passwordButton_clicked()
+{
+    QString hashedPass = SettingsHandler::GetHashedPass();
+    if(hashedPass.isEmpty())
+    {
+         bool ok;
+         QString text = QInputDialog::getText(this, tr("Set password"),
+                                              tr("Launch password:"), QLineEdit::PasswordEchoOnEdit,
+                                              "", &ok);
+         if (ok && !text.isEmpty())
+         {
+             SettingsHandler::SetHashedPass(encryptPass(text));
+             LogHandler::Dialog("Password set.", XLogLevel::Information);
+             ui.passwordButton->setText("Change password");
+         }
+    }
+    else
+    {
+         bool ok;
+         QString text = QInputDialog::getText(this, tr("Current password"),
+                                              tr("Current password:"), QLineEdit::Password,
+                                              "", &ok);
+         if (ok && !text.isEmpty())
+         {
+             if(CheckPass(text))
+             {
+                 QString text = QInputDialog::getText(this, tr("Change password"),
+                                                      tr("New password (Leave blank to remove protection):"), QLineEdit::PasswordEchoOnEdit,
+                                                      "", &ok);
+                 if (ok)
+                 {
+                     if(text.isEmpty())
+                     {
+                         SettingsHandler::SetHashedPass(nullptr);
+                        ui.passwordButton->setText("Set password");
+                     }
+                     else
+                     {
+                        SettingsHandler::SetHashedPass(encryptPass(text));
+                        ui.passwordButton->setText("Change password");
+                     }
+                     LogHandler::Dialog("Password changed!", XLogLevel::Information);
+                 }
+             }
+             else
+             {
+                 LogHandler::Dialog("Password incorrect!", XLogLevel::Warning);
+             }
+         }
+    }
+}
+
+boolean SettingsDialog::GetLaunchPass()
+{
+     bool ok;
+     QString text = QInputDialog::getText(this, tr("Enter password to continue"),
+                                          tr("Password:"), QLineEdit::Password,
+                                          "", &ok);
+     if (ok && !text.isEmpty())
+     {
+         return CheckPass(text);
+     }
+     return false;
+
+}
+
+boolean SettingsDialog::HasLaunchPass()
+{
+    return !SettingsHandler::GetHashedPass().isEmpty();
+}
+
+boolean SettingsDialog::CheckPass(QString pass)
+{
+    //QString encrypted = encryptPass(pass);
+    QString stored = decryptPass(SettingsHandler::GetHashedPass());
+    return pass == stored;
+}
+
+QString SettingsDialog::encryptPass(QString pass)
+{
+    SimpleCrypt crypto(Q_UINT64_C(0xcafbb6143ff01257)); //some random number
+
+    //Encryption
+    return crypto.encryptToString(pass);
+}
+
+QString SettingsDialog::decryptPass(QString pass)
+{
+    SimpleCrypt crypto(Q_UINT64_C(0xcafbb6143ff01257)); //some random number
+
+    //Encryption
+    return crypto.decryptToString(pass);
 }

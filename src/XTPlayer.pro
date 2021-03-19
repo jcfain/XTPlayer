@@ -46,6 +46,7 @@ SOURCES += \
     lib/struct/channeltablecomboboxdelegate.cpp \
     lib/struct/channeltableviewmodel.cpp \
     lib/struct/librarylistwidgetitem.cpp \
+    lib/tool/simplecrypt.cpp \
     lib/tool/tcodefactory.cpp \
     lib/tool/xmath.cpp \
     lib/tool/xtimer.cpp \
@@ -92,6 +93,7 @@ HEADERS += \
     lib/struct/channeltableviewmodel.h \
     lib/struct/librarylistwidgetitem.h \
     lib/tool/boolinq.h \
+    lib/tool/simplecrypt.h \
     lib/tool/tcodefactory.h \
     lib/tool/xmath.h \
     lib/tool/xtimer.h \

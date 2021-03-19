@@ -144,6 +144,8 @@ private slots:
 
     void on_audioLevel_Change(int decibelL, int decibelR);
 
+    void onEventLoopStarted();
+
 signals:
     void keyPressed(QKeyEvent * event);
     void change(QEvent * event);
@@ -161,6 +163,7 @@ protected:
 private:
     //Hack because QTAV calls stopped and start out of order
     bool _mediaStopped = true;
+    bool _isPasswordIncorrect = false;
 
     Ui::MainWindow *ui;
     QMutex mutex;
@@ -277,6 +280,7 @@ private:
     void changelibraryDisplayMode(LibraryView value);
 
     void deviceHome();
+    void deviceSwitchedHome();
     void setLoading(bool loading);
     void setLibraryLoading(bool loading);
     void saveNewThumbs();
