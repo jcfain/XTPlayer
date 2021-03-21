@@ -17,7 +17,7 @@ XTPlayer is a cross platform TCode media player.
      1. Download and install QT Creator
           * https://www.qt.io/download
      2. Required libraries needed:
-          ###Qtav
+          ### QtAV
           * https://github.com/wang-bin/QtAV
                * As the time of this writing the project has not had any commits for awhile
                * So its safe to get the latest master branch.
@@ -30,7 +30,7 @@ XTPlayer is a cross platform TCode media player.
                         * LIBRARY_PATH path/to/extracted/lib
                         * Copy the contents of libav-x86_64-w64-mingw32-11.7\usr\bin to C:\Qt\5.15.2\mingw81_64\bin
           * If the compile completes with out error, execute the generated sdk_install.bat in build-QtAV-Desktop_Qt_5_15_2_MinGW_64_bit-Debug
-          ###Other
+          ### Other
           * https://github.com/nezticle/qtcompress
                * Build from QT Creator
                * Install make and do make install from the output build dir.
