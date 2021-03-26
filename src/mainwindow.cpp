@@ -1045,6 +1045,10 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             myMenu.addAction("Regenerate thumbnail", this, &MainWindow::regenerateThumbNail);
             myMenu.addAction("Set thumbnail from current", this, &MainWindow::setThumbNailFromCurrent);
         }
+        myMenu.addAction("Reveal in directory", this, [this, selectedFileListItem] () {
+                showInGraphicalShell(selectedFileListItem.path);
+        });
+
     }
 
     // Show context menu at handling position
@@ -2232,6 +2236,7 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
     QElapsedTimer mSecTimer;
     qint64 timer1 = 0;
     qint64 timer2 = 0;
+    bool deviceHomed = false;
     //qint64 elapsedTracker = 0;
 //    QElapsedTimer timer;
 //    timer.start();
@@ -2287,7 +2292,7 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
             timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
             //LogHandler::Debug("timer nsecsElapsed: "+QString::number(timer2));
         }
-        else if(xSettings->isConnected() && currentVRPacket.duration > 0 && currentVRPacket.playing)
+        else if(!funscriptHandler->isLoaded() && xSettings->isConnected() && currentVRPacket.duration > 0 && currentVRPacket.playing)
         {
             if (!currentVRPacket.path.isEmpty() && !currentVRPacket.path.isNull())
             {
@@ -2297,7 +2302,11 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
 
                 qDeleteAll(funscriptHandlers);
                 funscriptHandlers.clear();
-                xSettings->getSelectedDeviceHandler()->sendTCode(tcodeHandler->getRunningHome());
+                if(!deviceHomed)
+                {
+                    deviceHomed = true;
+                    xSettings->getSelectedDeviceHandler()->sendTCode(tcodeHandler->getRunningHome());
+                }
 
                 auto availibleAxis = SettingsHandler::getAvailableAxis();
                 foreach(auto axisName, availibleAxis->keys())
@@ -3283,4 +3292,39 @@ void MainWindow::on_actionReload_library_triggered()
             setLibraryLoading(false);
         });
     }
+}
+
+void MainWindow::showInGraphicalShell(QString path)
+{
+    const QFileInfo fileInfo(path);
+    // Mac, Window, linux support folder or file.
+#if defined(Q_OS_WIN)
+    QStringList args;
+    if (!fileInfo.isDir())
+        args << "/select,";
+    args << QDir::toNativeSeparators(path);
+    if (QProcess::startDetached("explorer", args))
+        return;
+#elif defined(Q_OS_MAC)
+    QStringList scriptArgs;
+    scriptArgs << QLatin1String("-e")
+               << QString::fromLatin1("tell application \"Finder\" to reveal POSIX file \"%1\"")
+                                     .arg(fileInfo.canonicalFilePath());
+    QProcess::execute(QLatin1String("/usr/bin/osascript"), scriptArgs);
+    scriptArgs.clear();
+    scriptArgs << QLatin1String("-e")
+               << QLatin1String("tell application \"Finder\" to activate");
+    QProcess::execute(QLatin1String("/usr/bin/osascript"), scriptArgs);
+#elif defined(Q_OS_LINUX)
+    // we cannot select a file here, because no file browser really supports it...
+    const QString folder = fileInfo.isDir() ? fileInfo.absoluteFilePath() : fileInfo.filePath();
+    const QString app = UnixUtils::fileBrowser(ICore::settings());
+    QProcess browserProc;
+    const QString browserArgs = UnixUtils::substituteFileBrowserParameters(app, folder);
+    bool success = browserProc.startDetached(browserArgs);
+    const QString error = QString::fromLocal8Bit(browserProc.readAllStandardError());
+    success = success && error.isEmpty();
+    if (!success)
+        showGraphicalShellError(parent, app, error);
+#endif
 }

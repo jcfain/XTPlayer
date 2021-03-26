@@ -331,6 +331,7 @@ private:
     void on_whirligig_device_connectionChanged(ConnectionChangedSignal event);
     void on_whirligig_device_error(QString error);
     void donate();
+    void showInGraphicalShell(QString path);
 };
 extern void startThumbProcess(MainWindow* mainWindow);
 #endif // MAINWINDOW_H
