@@ -22,8 +22,8 @@ XTPlayer is a cross platform TCode media player.
                * As the time of this writing the project has not had any commits for awhile
                * So its safe to get the latest master branch.
             * https://libav.org/download/ (requaired to build QtAV)
-               * I on windows I used prebuilts I found here: 
-                    * http://builds.libav.org/windows/release-gpl/libav-x86_64-w64-mingw32-11.7.7z
+               * I on windows I used ffmpeg prebuilts of v4.3 I found here: 
+                    * https://sourceforge.net/projects/avbuild/files/windows-desktop/ (In you use a different version you may need to modify the deploy bat)
                     * Add the extracted folder path to the lib and include to the QTAV projects Build environment (Release/Debug)
                         * CPATH path/To/Extracted/include
                         * LD_LIBRARY_PATH path/to/extracted/lib
