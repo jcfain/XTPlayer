@@ -1260,7 +1260,7 @@ void SettingsDialog::on_passwordButton_clicked()
     }
 }
 
-boolean SettingsDialog::GetLaunchPass()
+bool SettingsDialog::GetLaunchPass()
 {
      bool ok;
      QString text = QInputDialog::getText(this, tr("Enter password to continue"),
@@ -1274,12 +1274,12 @@ boolean SettingsDialog::GetLaunchPass()
 
 }
 
-boolean SettingsDialog::HasLaunchPass()
+bool SettingsDialog::HasLaunchPass()
 {
     return !SettingsHandler::GetHashedPass().isEmpty();
 }
 
-boolean SettingsDialog::CheckPass(QString pass)
+bool SettingsDialog::CheckPass(QString pass)
 {
     //QString encrypted = encryptPass(pass);
     QString stored = decryptPass(SettingsHandler::GetHashedPass());
