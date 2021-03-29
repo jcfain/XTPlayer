@@ -7,13 +7,14 @@ xcopy %buildDir%release\XTPlayer.exe %deployDir%
 xcopy %buildDir%release\themes %deployDir%themes /s /i
 xcopy %QtDir%QtAV1.dll %deployDir%
 xcopy %QtDir%QtAVWidgets1.dll %deployDir%
-xcopy %QtDir%avcodec-56.dll %deployDir%
-xcopy %QtDir%avdevice-55.dll %deployDir%
-xcopy %QtDir%avfilter-5.dll %deployDir%
-xcopy %QtDir%avformat-56.dll %deployDir%
-xcopy %QtDir%avresample-2.dll %deployDir%
-xcopy %QtDir%avutil-54.dll %deployDir%
-xcopy %QtDir%swscale-3.dll %deployDir%
+xcopy %QtDir%avcodec-58.dll %deployDir%
+xcopy %QtDir%avdevice-58.dll %deployDir%
+xcopy %QtDir%avfilter-7.dll %deployDir%
+xcopy %QtDir%avformat-58.dll %deployDir%
+xcopy %QtDir%avresample-4.dll %deployDir%
+xcopy %QtDir%avutil-56.dll %deployDir%
+xcopy %QtDir%swscale-5.dll %deployDir%
+xcopy %QtDir%swresample-3.dll %deployDir%
 xcopy %QtDir%zlib1.dll %deployDir%
 xcopy %QtDir%libvo-aacenc-0.dll %deployDir%
 xcopy %QtDir%libmp3lame-0.dll %deployDir%
