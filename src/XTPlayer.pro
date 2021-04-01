@@ -106,30 +106,31 @@ unix:!mac {
     QMAKE_RPATHDIR += ../lib
 }
 unix:mac {
+
     INCLUDEPATH += $$QT.core.libs/QtAV.framework/Headers
     INCLUDEPATH += $$QT.core.libs/QtAVWidgets.framework/Headers
-    #INCLUDEPATH += $$QT.core.libs/QtCompress.framework/Versions/5/Headers
-    QMAKE_LFLAGS += -F$$QT.core.libs
-#    RPATHDIR *= @loader_path/../Frameworks
-#    QMAKE_RPATHDIR += @executable_path/../lib /usr/lib
-#    QMAKE_RPATHDIR += @loader_path/../Frameworks
+#    #INCLUDEPATH += $$QT.core.libs/QtCompress.framework/Versions/5/Headers
+#    QMAKE_LFLAGS += -F$$QT.core.libs
+##    RPATHDIR *= @loader_path/../Frameworks
+##    QMAKE_RPATHDIR += @executable_path/../lib /usr/lib
+##    QMAKE_RPATHDIR += @loader_path/../Frameworks
     LIBS += -framework QtAV
     LIBS += -framework QtAVWidgets
-    themes.files = $$PWD/themes
-    themes.path = Contents/MacOS
-    QMAKE_BUNDLE_DATA += themes;
-    images.files = $$PWD/images
-    images.path = Contents/MacOS
-    QMAKE_BUNDLE_DATA += images;
-    #LIBS += -framework QtCompress
+#    themes.files = $$PWD/themes
+#    themes.path = Contents/MacOS
+#    QMAKE_BUNDLE_DATA += themes;
+#    images.files = $$PWD/images
+#    images.path = Contents/MacOS
+#    QMAKE_BUNDLE_DATA += images;
+#    #LIBS += -framework QtCompress
 
-#    RPATHDIR *= @loader_path/../Frameworks @executable_path/../Frameworks
-##rpath for apple
-#    isEmpty(QMAKE_LFLAGS_RPATH): QMAKE_LFLAGS_RPATH=-Wl,-rpath,
-#    for(R,RPATHDIR) {
-#        QMAKE_LFLAGS *= \'$${QMAKE_LFLAGS_RPATH}$$R\'
-#    }
-
+    RPATHDIR *= @loader_path/../Frameworks @executable_path/../Frameworks
+    QMAKE_LFLAGS_SONAME = -W1,-install_name,@rpath,
+    isEmpty(QMAKE_LFLAGS_RPATH): QMAKE_LFLAGS_RPATH=-Wl,-rpath,
+    for(R,RPATHDIR) {
+        QMAKE_LFLAGS *= \'$${QMAKE_LFLAGS_RPATH}$$R\'
+    }
+    ICON = $$PWD/images/icons/XTP-icon.icns
 }
 unix {
     DESTDIR = $$shell_path($$OUT_PWD)

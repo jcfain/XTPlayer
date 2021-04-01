@@ -3,9 +3,11 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent)
 {
     //QtAV::setLogLevel(QtAV::LogLevel::LogAll);
     //new QOpenGLWidget(this);
+    LogHandler::Debug("Create QHBoxLayout");
     _widgetLayout = new QHBoxLayout;
-    //QtAV::Widgets::registerRenderers();
+    QtAV::Widgets::registerRenderers();
     //_videoRenderer = new VideoOutput(this);
+    LogHandler::Debug("Create OpenGLWidget");
     _videoRenderer = new VideoOutput(QtAV::VideoRendererId_OpenGLWidget, this);
     if (!_videoRenderer || !_videoRenderer->isAvailable() || !_videoRenderer->widget())
     {
@@ -17,6 +19,7 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent)
             return;
         }
     }
+    LogHandler::Debug("Create player");
     _player = new AVPlayer(_videoRenderer->widget());
     setDecoderPriority();
     //_player->setVideoDecoderPriority(QStringList() << "CUDA" << "D3D11" << "DXVA" << "VAAPI" << "VideoToolbox" << "FFmpeg");
