@@ -976,13 +976,31 @@ void SettingsHandler::SetupGamepadButtonMap()
 }
 void SettingsHandler::SetupDecoderPriority()
 {
+#if defined(Q_OS_WIN)
     decoderPriority =
     {
         { "CUDA", true },
         { "D3D11", true },
         { "DXVA", true },
-        { "FFmpeg", true }
+        { "FFmpeg", true },
+        { "VAAPI", true }
     };
+#elif defined(Q_OS_MAC)
+    decoderPriority =
+    {
+        { "VideoToolbox", true },
+        { "FFmpeg", true },
+        { "VAAPI", true },
+        { "CUDA", true }
+    };
+#elif defined(Q_OS_LINUX)
+    decoderPriority =
+    {
+        { "CUDA", true },
+        { "FFmpeg", true },
+        { "VAAPI", true }
+    };
+#endif
 }
 
 void SettingsHandler::setFunscriptLoaded(QString key, bool loaded)
