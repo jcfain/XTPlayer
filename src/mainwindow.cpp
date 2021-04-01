@@ -3318,13 +3318,12 @@ void MainWindow::showInGraphicalShell(QString path)
 #elif defined(Q_OS_LINUX)
     // we cannot select a file here, because no file browser really supports it...
     const QString folder = fileInfo.isDir() ? fileInfo.absoluteFilePath() : fileInfo.filePath();
-    const QString app = UnixUtils::fileBrowser(ICore::settings());
-    QProcess browserProc;
-    const QString browserArgs = UnixUtils::substituteFileBrowserParameters(app, folder);
-    bool success = browserProc.startDetached(browserArgs);
-    const QString error = QString::fromLocal8Bit(browserProc.readAllStandardError());
-    success = success && error.isEmpty();
-    if (!success)
-        showGraphicalShellError(parent, app, error);
+     QDesktopServices::openUrl(fileInfo.path());
+//    QProcess browserProc;
+//    bool success = browserProc.startDetached("gtk-launch \"$(xdg-mime query default inode/directory)\"", QStringList() << folder );
+//    const QString error = QString::fromLocal8Bit(browserProc.readAllStandardError());
+//    success = success && error.isEmpty();
+//    if (!success)
+//        LogHandler::Dialog(error, XLogLevel::Critical);
 #endif
 }
