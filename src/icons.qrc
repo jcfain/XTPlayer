@@ -32,5 +32,6 @@
         <file>images/icons/loading.png</file>
         <file>images/icons/loading_current.png</file>
         <file>images/XTP_Splash.png</file>
+        <file>images/icons/skipToMoneyShot.svg</file>
     </qresource>
 </RCC>

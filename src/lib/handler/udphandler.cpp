@@ -88,7 +88,7 @@ void UdpHandler::run()
     {
         if (currentAddressChanged)
         {
-            udpSocketSend->connectToHost(addressObj, currentPort);
+            udpSocketSend->connectToHost(currentAddress, currentPort);
             if(!udpSocketSend->waitForConnected(_waitTimeout))
             {
                 emit connectionChange({DeviceType::Network, ConnectionStatus::Error, "Can't connect"});

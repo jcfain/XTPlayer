@@ -306,6 +306,7 @@ private:
     void initNetworkEvent();
     void initSerialEvent();
     void skipForward();
+    void skipToMoneyShot();
     void skipBack();
     void rewind();
     void fastForward();
@@ -332,6 +333,10 @@ private:
     void on_whirligig_device_error(QString error);
     void donate();
     void showInGraphicalShell(QString path);
+    void onSetMoneyShot(LibraryListItem selectedLibraryListItem, qint64 currentPosition);
+    void onAddBookmark(LibraryListItem libraryListItem, QString name, qint64 currentPosition);
+    void processMetaData(LibraryListItem libraryListItem);
+    void updateMetaData(LibraryListItem libraryListItem);
 };
 extern void startThumbProcess(MainWindow* mainWindow);
 #endif // MAINWINDOW_H

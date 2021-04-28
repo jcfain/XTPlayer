@@ -24,4 +24,14 @@ enum LibraryView
     List
 };
 
+enum LibrarySortMode {
+    NAME_ASC,
+    NAME_DESC,
+    RANDOM,
+    CREATED_ASC,
+    CREATED_DESC,
+    TYPE_ASC,
+    TYPE_DESC
+};
+
 #endif // ENUM_H

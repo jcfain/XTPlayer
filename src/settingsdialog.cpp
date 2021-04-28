@@ -539,94 +539,96 @@ void SettingsDialog::initDeoRetry()
 
 void SettingsDialog::initSerialEvent()
 {
-    if (!_serialHandler->isRunning())
+    if (_serialHandler->isRunning())
     {
-        ui.serialConnectButton->setEnabled(false);
-        //ui.networkConnectButton->setEnabled(false);
-        setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceType::Serial);
-        if (getSelectedDeviceHandler()->isRunning())
-        {
-            getSelectedDeviceHandler()->dispose();
-        }
-        if(_initFuture.isRunning())
-        {
-            _initFuture.cancel();
-            _initFuture.waitForFinished();
-        }
-        setSelectedDeviceHandler(_serialHandler);
-        SettingsHandler::setSelectedDevice(DeviceType::Serial);
-        _initFuture = QtConcurrent::run(initSerial, _serialHandler, selectedSerialPort);
+        _serialHandler->dispose();
     }
+    ui.serialConnectButton->setEnabled(false);
+    //ui.networkConnectButton->setEnabled(false);
+    setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceType::Serial);
+    if (getSelectedDeviceHandler()->isRunning())
+    {
+        getSelectedDeviceHandler()->dispose();
+    }
+    if(_initFuture.isRunning())
+    {
+        _initFuture.cancel();
+        _initFuture.waitForFinished();
+    }
+    setSelectedDeviceHandler(_serialHandler);
+    SettingsHandler::setSelectedDevice(DeviceType::Serial);
+    _initFuture = QtConcurrent::run(initSerial, _serialHandler, selectedSerialPort);
 }
 
 void SettingsDialog::initNetworkEvent()
 {
-    if (!_udpHandler->isRunning())
+    if (_udpHandler->isRunning())
     {
-        //ui.serialConnectButton->setEnabled(false);
-        if (getSelectedDeviceHandler()->isRunning())
-        {
-            getSelectedDeviceHandler()->dispose();
-        }
-        if(_initFuture.isRunning())
-        {
-            _initFuture.cancel();
-            _initFuture.waitForFinished();
-        }
-        setSelectedDeviceHandler(_udpHandler);
-        if(SettingsHandler::getServerAddress() != "" && SettingsHandler::getServerPort() != "" &&
-            SettingsHandler::getServerAddress() != "0" && SettingsHandler::getServerPort() != "0")
-        {
-            SettingsHandler::setSelectedDevice(DeviceType::Network);
-            setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceType::Network);
-            ui.networkConnectButton->setEnabled(false);
-            NetworkAddress address { SettingsHandler::getServerAddress(), SettingsHandler::getServerPort().toInt() };
-            _initFuture = QtConcurrent::run(initNetwork, _udpHandler, address);
-        }
+        _udpHandler->dispose();
+    }
+    //ui.serialConnectButton->setEnabled(false);
+    if (getSelectedDeviceHandler()->isRunning())
+    {
+        getSelectedDeviceHandler()->dispose();
+    }
+    if(_initFuture.isRunning())
+    {
+        _initFuture.cancel();
+        _initFuture.waitForFinished();
+    }
+    setSelectedDeviceHandler(_udpHandler);
+    if(!SettingsHandler::getServerAddress().isEmpty() && !SettingsHandler::getServerPort().isEmpty() &&
+        SettingsHandler::getServerAddress() != "0" && SettingsHandler::getServerPort() != "0")
+    {
+        SettingsHandler::setSelectedDevice(DeviceType::Network);
+        setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceType::Network);
+        ui.networkConnectButton->setEnabled(false);
+        NetworkAddress address { SettingsHandler::getServerAddress(), SettingsHandler::getServerPort().toInt() };
+        _initFuture = QtConcurrent::run(initNetwork, _udpHandler, address);
     }
 }
 
 void SettingsDialog::initDeoEvent()
 {
-    if (!_deoHandler->isConnected())
+    if (_deoHandler->isConnected())
     {
-        setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceType::Deo);
-        if(SettingsHandler::getDeoAddress() != "" && SettingsHandler::getDeoPort() != "" &&
-            SettingsHandler::getDeoAddress() != "0" && SettingsHandler::getDeoPort() != "0")
-        {
-            ui.deoConnectButton->setEnabled(false);
-            NetworkAddress address { SettingsHandler::getDeoAddress(), SettingsHandler::getDeoPort().toInt() };
-            _deoHandler->init(address);
-            //_initDeoFuture = QtConcurrent::run(initDeo, _deoHandler, address);
-        }
+        _deoHandler->dispose();
+    }
+    setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceType::Deo);
+    if(!SettingsHandler::getDeoAddress().isEmpty() && !SettingsHandler::getDeoPort().isEmpty() &&
+        SettingsHandler::getDeoAddress() != "0" && SettingsHandler::getDeoPort() != "0")
+    {
+        ui.deoConnectButton->setEnabled(false);
+        NetworkAddress address { SettingsHandler::getDeoAddress(), SettingsHandler::getDeoPort().toInt() };
+        _deoHandler->init(address);
+        //_initDeoFuture = QtConcurrent::run(initDeo, _deoHandler, address);
     }
 }
 
 void SettingsDialog::initWhirligigEvent()
 {
-    if (!_whirligigHandler->isConnected())
+    if (_whirligigHandler->isConnected())
     {
-        setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceType::Whirligig);
-        if(SettingsHandler::getWhirligigAddress() != "" && SettingsHandler::getWhirligigPort() != "" &&
-            SettingsHandler::getWhirligigAddress() != "0" && SettingsHandler::getWhirligigPort() != "0")
-        {
-            ui.whirligigConnectButton->setEnabled(false);
-            NetworkAddress address { SettingsHandler::getWhirligigAddress(), SettingsHandler::getWhirligigPort().toInt() };
-            _whirligigHandler->init(address);
-        }
+        _whirligigHandler->dispose();
+    }
+    setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceType::Whirligig);
+    if(!SettingsHandler::getWhirligigAddress().isEmpty() && !SettingsHandler::getWhirligigPort().isEmpty() &&
+        SettingsHandler::getWhirligigAddress() != "0" && SettingsHandler::getWhirligigPort() != "0")
+    {
+        ui.whirligigConnectButton->setEnabled(false);
+        NetworkAddress address { SettingsHandler::getWhirligigAddress(), SettingsHandler::getWhirligigPort().toInt() };
+        _whirligigHandler->init(address);
     }
 }
 
 void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo)
 {
-    if(!serialHandler->isRunning())
-        serialHandler->init(serialInfo.portName);
+    serialHandler->init(serialInfo.portName);
 }
 
 void initNetwork(UdpHandler* udpHandler, NetworkAddress address)
 {
-    if(!udpHandler->isRunning())
-        udpHandler->init(address);
+    udpHandler->init(address);
 }
 
 //void initDeo(DeoHandler* deoHandler, NetworkAddress address)
@@ -892,21 +894,25 @@ void SettingsDialog::on_SerialOutputCmb_currentIndexChanged(int index)
 
 void SettingsDialog::on_networkAddressTxt_editingFinished()
 {
+    ui.networkConnectButton->setEnabled(true);
     SettingsHandler::setServerAddress(ui.networkAddressTxt->text());
 }
 
 void SettingsDialog::on_networkPortTxt_editingFinished()
 {
+    ui.networkConnectButton->setEnabled(true);
     SettingsHandler::setServerPort(ui.networkPortTxt->text());
 }
 
 void SettingsDialog::on_deoAddressTxt_editingFinished()
 {
+    ui.deoConnectButton->setEnabled(true);
     SettingsHandler::setDeoAddress(ui.deoAddressTxt->text());
 }
 
 void SettingsDialog::on_deoPortTxt_editingFinished()
 {
+    ui.deoConnectButton->setEnabled(true);
     SettingsHandler::setDeoPort(ui.deoPortTxt->text());
 }
 

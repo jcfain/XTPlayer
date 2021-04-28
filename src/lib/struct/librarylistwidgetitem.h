@@ -2,19 +2,14 @@
 #define LIBRARYLISTWIDGETITEM_H
 #include <QListWidgetItem>
 #include "LibraryListItem.h"
-enum LibrarySortMode {
-    NAME_ASC,
-    NAME_DESC,
-    RANDOM,
-    CREATED_ASC,
-    CREATED_DESC,
-    TYPE_ASC,
-    TYPE_DESC
-};
+#include <QApplication>
+#include <QFileInfo>
+#include "../handler/settingshandler.h"
+#include "../tool/xmath.h"
 class LibraryListWidgetItem : public QListWidgetItem
 {
 public:
-    LibraryListWidgetItem(LibraryListItem data);
+    LibraryListWidgetItem(LibraryListItem &data);
     LibraryListItem getLibraryListItem();
     LibraryListItemType getType();
     bool updateToolTip(LibraryListItem localData);

@@ -1,8 +1,8 @@
 #include "settingshandler.h"
 
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.255";
-const float SettingsHandler::XTPVersionNum = 0.255f;
+const QString SettingsHandler::XTPVersion = "0.256";
+const float SettingsHandler::XTPVersionNum = 0.256f;
 
 SettingsHandler::SettingsHandler()
 {
@@ -49,6 +49,7 @@ void SettingsHandler::Load()
     selectedFunscriptLibrary = settings->value("selectedFunscriptLibrary").toString();
     serialPort = settings->value("serialPort").toString();
     serverAddress = settings->value("serverAddress").toString();
+    serverAddress = serverAddress.isNull() ? "tcode.local" : serverAddress;
     serverPort = settings->value("serverPort").toString();
     serverPort = serverPort.isNull() ? "8000" : serverPort;
     deoAddress = settings->value("deoAddress").toString();
@@ -117,6 +118,16 @@ void SettingsHandler::Load()
     foreach(auto playlist, playlists.keys())
     {
         _playlists.insert(playlist, playlists[playlist].value<QList<LibraryListItem>>());
+    }
+
+    QVariantHash libraryListItemMetaDatas = settings->value("libraryListItemMetaDatas").toHash();
+    foreach(auto key, libraryListItemMetaDatas.keys())
+    {
+        _libraryListItemMetaDatas.insert(key, libraryListItemMetaDatas[key].value<LibraryListItemMetaData>());
+        foreach(auto bookmark, libraryListItemMetaDatas[key].value<LibraryListItemMetaData>().bookmarks)
+            _libraryListItemMetaDatas[key].bookmarks.append(bookmark);
+        foreach(auto funscript, libraryListItemMetaDatas[key].value<LibraryListItemMetaData>().funscripts)
+            _libraryListItemMetaDatas[key].funscripts.append(funscript);
     }
 
     _hashedPass = settings->value("userData").toString();
@@ -217,6 +228,18 @@ void SettingsHandler::Save()
         }
         settings->setValue("playlists", playlists);
         settings->setValue("userData", _hashedPass);
+
+        QVariantHash libraryListItemMetaDatas;
+        foreach(auto libraryListItemMetaData, _libraryListItemMetaDatas.keys())
+        {
+            libraryListItemMetaDatas.insert(libraryListItemMetaData, QVariant::fromValue(_libraryListItemMetaDatas[libraryListItemMetaData]));
+            foreach(auto bookmark, _libraryListItemMetaDatas[libraryListItemMetaData].bookmarks)
+                libraryListItemMetaDatas[libraryListItemMetaData].value<LibraryListItemMetaData>().bookmarks.append(bookmark);
+            foreach(auto funscript, _libraryListItemMetaDatas[libraryListItemMetaData].funscripts)
+                libraryListItemMetaDatas[libraryListItemMetaData].value<LibraryListItemMetaData>().funscripts.append(funscript);
+        }
+        settings->setValue("libraryListItemMetaDatas", libraryListItemMetaDatas);
+
 
 
         settings->sync();
@@ -997,6 +1020,24 @@ bool SettingsHandler::getFunscriptLoaded(QString key)
     return false;
 }
 
+LibraryListItemMetaData SettingsHandler::getLibraryListItemMetaData(QString path)
+{
+    QMutexLocker locker(&mutex);
+    if(_libraryListItemMetaDatas.contains(path))
+    {
+        return _libraryListItemMetaDatas.value(path);
+    }
+    //Default meta data
+    _libraryListItemMetaDatas.insert(path, {path, -1,false,-1,-1,-1, {}});
+    return _libraryListItemMetaDatas.value(path);
+}
+
+void SettingsHandler::updateLibraryListItemMetaData(LibraryListItemMetaData libraryListItemMetaData)
+{
+    QMutexLocker locker(&mutex);
+    _libraryListItemMetaDatas.insert(libraryListItemMetaData.libraryItemPath, libraryListItemMetaData);
+}
+
 QSettings* SettingsHandler::settings;
 QMutex SettingsHandler::mutex;
 QHash<QString, bool> SettingsHandler::_funscriptLoaded;
@@ -1055,3 +1096,4 @@ QString SettingsHandler::_hashedPass;
 QList<DecoderModel> SettingsHandler::decoderPriority;
 QList<QString> SettingsHandler::_libraryExclusions;
 QMap<QString, QList<LibraryListItem>> SettingsHandler::_playlists;
+QHash<QString, LibraryListItemMetaData> SettingsHandler::_libraryListItemMetaDatas;

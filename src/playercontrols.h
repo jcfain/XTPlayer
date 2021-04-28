@@ -19,6 +19,7 @@ signals:
     void stopClicked();
     void volumeChanged(int value);
     void skipForward();
+    void skipToMoneyShot();
     void skipBack();
     void fullscreenToggled();
     void settingsClicked();
@@ -51,11 +52,13 @@ public:
     void setTime(QString time);
     void setDuration(QString duration);
     void resetMediaControlStatus(bool playing);
+    void setSkipToMoneyShotEnabled(bool enabled);
 
 
 private:
     QGridLayout *playerControlsGrid;
     QPushButton *skipForwardButton;
+    QPushButton *skipToMoneyShotButton;
     QPushButton *MuteBtn;
     QPushButton *loopToggleButton;
     QPushButton *fullScreenBtn;

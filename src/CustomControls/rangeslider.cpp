@@ -157,7 +157,7 @@ void RangeSlider::mousePressEvent(QMouseEvent* aEvent)
             if(posValue < firstHandleRectPosValue)
             {
                 setLowerValue(destinationValue);
-                emit lowerValueMove(destinationValue);
+                emit lowerValueMove(mLowerValue);
             }
 
             //Click inside of range
@@ -172,34 +172,34 @@ void RangeSlider::mousePressEvent(QMouseEvent* aEvent)
                         //int value = (mLowerValue + slidervalue < mUpperValue) ? mLowerValue + slidervalue : mUpperValue;
                         int value = (destinationValue > mUpperValue - _aMinimumRange) ? mUpperValue - _aMinimumRange : destinationValue;
                         setLowerValue(value);
-                        emit lowerValueMove(value);
+                        emit lowerValueMove(mLowerValue);
                     }
                     else
                     {
                         //int value = (mUpperValue - slidervalue > mLowerValue) ? mUpperValue - slidervalue : mLowerValue;
                         int value = (destinationValue < mLowerValue + _aMinimumRange) ? mLowerValue + _aMinimumRange : destinationValue;
                         setUpperValue(value);
-                        emit upperValueMove(value);
+                        emit upperValueMove(mUpperValue);
                     }
                 }
                 else if(type.testFlag(LeftHandle))
                 {
                     //int value = (mLowerValue + slidervalue < mUpperValue) ? mLowerValue + slidervalue : mUpperValue;
                     setLowerValue(destinationValue);
-                    emit lowerValueMove(destinationValue);
+                    emit lowerValueMove(mLowerValue);
                 }
                 else if(type.testFlag(RightHandle))
                 {
                     //int value = (mUpperValue - slidervalue > mLowerValue) ? mUpperValue - slidervalue : mLowerValue;
                     setUpperValue(destinationValue);
-                    emit upperValueMove(destinationValue);
+                    emit upperValueMove(mUpperValue);
                 }
             }
             //Click outside of range beyond second handle
             else if(posValue > secondHandleRectPosValue + scHandleSideLength)
             {
                 setUpperValue(destinationValue);
-                emit upperValueMove(destinationValue);
+                emit upperValueMove(mUpperValue);
             }
         }
     }
@@ -224,7 +224,7 @@ void RangeSlider::mouseMoveEvent(QMouseEvent* aEvent)
             {
                 int lowerValue = (posValue - mDelta - scLeftRightMargin - scHandleSideLength / 2) * 1.0 / validLength() * mInterval + mMinimum;
                 setLowerValue(lowerValue);
-                emit lowerValueMove(lowerValue);
+                emit lowerValueMove(mLowerValue);
             }
             else
             {
@@ -238,7 +238,7 @@ void RangeSlider::mouseMoveEvent(QMouseEvent* aEvent)
             {
                 int upperValue = (posValue - mDelta - scLeftRightMargin - scHandleSideLength / 2 - (type.testFlag(DoubleHandles) ? scHandleSideLength : 0)) * 1.0 / validLength() * mInterval + mMinimum;
                 setUpperValue(upperValue);
-                emit upperValueMove(upperValue);
+                emit upperValueMove(mUpperValue);
             }
             else
             {

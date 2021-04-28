@@ -9,6 +9,8 @@ int main(int argc, char *argv[])
     qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
     qRegisterMetaTypeStreamOperators<DecoderModel>("DecoderModel");
     qRegisterMetaTypeStreamOperators<LibraryListItem>("LibraryListItem");
+    qRegisterMetaTypeStreamOperators<LibraryListItemMetaData>("LibraryListItemMetaData");
+    qRegisterMetaTypeStreamOperators<Bookmark>("Bookmark");
     qRegisterMetaTypeStreamOperators<QMap<QString, QList<LibraryListItem>>>("QMap<QString, QList<LibraryListItem>>");
     qRegisterMetaTypeStreamOperators<QList<LibraryListItem>>("QList<LibraryListItem>");
     QApplication a(argc, argv);

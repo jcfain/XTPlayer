@@ -78,6 +78,7 @@ HEADERS += \
     lib/struct/Funscript.h \
     lib/struct/GamepadState.h \
     lib/struct/LibraryListItem.h \
+    lib/struct/LibraryListItemMetaData.h \
     lib/struct/NetworkAddress.h \
     lib/struct/SerialComboboxItem.h \
     lib/struct/VRPacket.h \

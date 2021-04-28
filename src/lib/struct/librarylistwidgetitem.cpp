@@ -1,24 +1,25 @@
 #include "librarylistwidgetitem.h"
-#include <QApplication>
-#include <QFileInfo>
-#include "../handler/settingshandler.h"
-#include "../tool/xmath.h"
 
-LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem localData) :
+LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem &localData) :
     QListWidgetItem(localData.nameNoExtension)
 {
     auto mfs = updateToolTip(localData);
 
-    QFileInfo thumbInfo(localData.thumbFile);
-    QString thumbString = localData.thumbFile;
-    if (!thumbInfo.exists())
+    localData.thumbFile = QApplication::applicationDirPath() + "/thumbs/" + localData.name + ".jpg";
+    if(localData.type == LibraryListItemType::Audio)
+        localData.thumbFile = "://images/icons/audio.png";
+    else if(localData.type == LibraryListItemType::PlaylistInternal)
+        localData.thumbFile = "://images/icons/playlist.png";
+    QFileInfo thumbFile = QFileInfo(localData.thumbFile);
+    bool loadingThumbNail = false;
+    if (!thumbFile.exists())
     {
-        thumbString = "://images/icons/loading.png";
+        loadingThumbNail = true;
     }
     QIcon thumb;
-    QPixmap bgPixmap(thumbString);
+    QPixmap bgPixmap(loadingThumbNail ? "://images/icons/loading.png" : localData.thumbFile);
     int thumbSize = SettingsHandler::getThumbSize();
-    QSize size = {thumbSize, thumbSize};
+    //QSize size = {thumbSize, thumbSize - 50};
     QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
     thumb.addPixmap(scaled);
     setIcon(thumb);

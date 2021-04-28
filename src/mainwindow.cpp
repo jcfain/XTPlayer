@@ -312,6 +312,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_playerControlsFrame, &PlayerControls::settingsClicked, this, &MainWindow::on_settingsButton_clicked);
     connect(_playerControlsFrame, &PlayerControls::playClicked, this, &MainWindow::on_PlayBtn_clicked);
     connect(_playerControlsFrame, &PlayerControls::skipForward, this, &MainWindow::on_skipForwardButton_clicked);
+    connect(_playerControlsFrame, &PlayerControls::skipToMoneyShot, this, &MainWindow::skipToMoneyShot);
+
     connect(_playerControlsFrame, &PlayerControls::skipBack, this, &MainWindow::on_skipBackButton_clicked);
     //connect(player, static_cast<void(AVPlayer::*)(AVPlayer::Error )>(&AVPlayer::error), this, &MainWindow::on_media_error);
 
@@ -366,8 +368,12 @@ void MainWindow::onEventLoopStarted()
 void MainWindow::dispose()
 {
     deviceSwitchedHome();
+    if(playingLibraryListItem != nullptr)
+        updateMetaData(playingLibraryListItem->getLibraryListItem());
+
     SettingsHandler::Save();
     _xSettings->dispose();
+
     if (videoHandler->isPlaying())
     {
         videoHandler->stop();
@@ -506,6 +512,9 @@ void MainWindow::on_key_press(QKeyEvent * event)
             break;
          case Qt::Key_P:
              mediaAction(actions.TogglePauseAllDeviceActions);
+             break;
+         case Qt::Key_J:
+             mediaAction(actions.SkipToMoneyShot);
              break;
     }
 }
@@ -774,6 +783,10 @@ void MainWindow::mediaAction(QString action)
          bool paused = SettingsHandler::getLiveActionPaused();
          textToSpeech->say(paused ? "Resume action" : "Pause action");
          SettingsHandler::setLiveActionPaused(!paused);
+     }
+     else if (action == actions.SkipToMoneyShot)
+     {
+         skipToMoneyShot();
      }
 }
 
@@ -1045,8 +1058,14 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             myMenu.addAction("Regenerate thumbnail", this, &MainWindow::regenerateThumbNail);
             myMenu.addAction("Set thumbnail from current", this, &MainWindow::setThumbNailFromCurrent);
         }
+        myMenu.addAction("Set moneyshot from current", this, [this, selectedFileListItem] () {
+            onSetMoneyShot(selectedFileListItem, videoHandler->position());
+        });
+//        myMenu.addAction("Add bookmark from current", this, [this, selectedFileListItem] () {
+//            onAddBookmark(selectedFileListItem, "Book mark 1", videoHandler->position());
+//        });
         myMenu.addAction("Reveal in directory", this, [this, selectedFileListItem] () {
-                showInGraphicalShell(selectedFileListItem.path);
+            showInGraphicalShell(selectedFileListItem.path);
         });
 
     }
@@ -1173,15 +1192,11 @@ void MainWindow::on_load_library(QString path)
                 QString zipFile;
                 if(scriptZip.exists())
                     zipFile = scriptNoExtension + ".zip";
-                QString thumbFile;
                 bool audioOnly = false;
                 if(audioTypes.contains(mediaExtension))
                 {
-                    thumbFile = "://images/icons/audio.png";
                     audioOnly = true;
                 }
-                else
-                    thumbFile = thumbPath + fileName + ".jpg";
                 LibraryListItem item
                 {
                     audioOnly ? LibraryListItemType::Audio : LibraryListItemType::Video,
@@ -1191,7 +1206,7 @@ void MainWindow::on_load_library(QString path)
                     scriptPath, // script
                     scriptNoExtension,
                     mediaExtension,
-                    thumbFile,
+                    nullptr,
                     zipFile,
                     fileinfo.birthTime().date(),
                     0
@@ -1330,10 +1345,9 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, L
            extractor,
            [this, videoFile, thumbFile, cachedListWidgetItem, libraryListWidgetItem](const QtAV::VideoFrame& frame)
             {
-
+               LogHandler::Debug("Saving thumbnail: " + thumbFile + " for video: " + videoFile);
                const auto& img = frame.toImage();
                QString thumbFileTemp = thumbFile;
-
                if (!img.save(thumbFile, nullptr, 15))
                {
                    LogHandler::Debug("Error saving thumbnail: " + thumbFile + " for video: " + videoFile);
@@ -1448,7 +1462,7 @@ void MainWindow::on_LibraryList_itemClicked(QListWidgetItem *item)
     if(videoHandler->isPlaying() && !videoHandler->isPaused())
     {
         auto playingFile = videoHandler->file();
-        _playerControlsFrame->setPlayIcon(playingFile != selectedItem.path);
+        _playerControlsFrame->setPlayIcon(playingFile == selectedItem.path);
     }
     ui->statusbar->showMessage(selectedItem.nameNoExtension);
     selectedLibraryListItem = (LibraryListWidgetItem*)item;
@@ -1524,6 +1538,8 @@ void MainWindow::stopAndPlayVideo(LibraryListItem selectedFileListItem, QString 
     {
         if (videoHandler->file() != selectedFileListItem.path || !customScript.isEmpty() || audioSync)
         {
+            if(playingLibraryListItem != nullptr)
+                updateMetaData(playingLibraryListItem->getLibraryListItem());
             _playerControlsFrame->SetLoop(false);
             setLoading(true);
             if(videoHandler->isPlaying())
@@ -1662,6 +1678,9 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
             videoHandler->play();
             playingLibraryListIndex = libraryList->currentRow();
             playingLibraryListItem = (LibraryListWidgetItem*)libraryList->item(playingLibraryListIndex);
+
+            processMetaData(selectedFileListItem);
+
             if(!audioSync && !funscriptHandler->isLoaded())
             {
                 LogHandler::Dialog("Error loading script " + customScript + "!\nTry right clicking on the video in the list\nand loading with another script.", XLogLevel::Warning);
@@ -1673,6 +1692,28 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
     {
         LogHandler::Dialog("File '" + selectedFileListItem.path + "' does not exist!", XLogLevel::Critical);
     }
+}
+
+void MainWindow::processMetaData(LibraryListItem libraryListItem)
+{
+    LibraryListItemMetaData libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
+    if(libraryListItemMetaData.lastLoopEnabled && libraryListItemMetaData.lastLoopStart > -1 && libraryListItemMetaData.lastLoopEnd > libraryListItemMetaData.lastLoopStart)
+    {
+        _playerControlsFrame->SetLoop(true);
+    }
+}
+
+void MainWindow::updateMetaData(LibraryListItem libraryListItem)
+{
+    LibraryListItemMetaData libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
+    libraryListItemMetaData.lastPlayPosition = videoHandler->position();
+    libraryListItemMetaData.lastLoopEnabled = _playerControlsFrame->getAutoLoop();
+    if(libraryListItemMetaData.lastLoopEnabled)
+    {
+        libraryListItemMetaData.lastLoopStart = _playerControlsFrame->getSeekSliderLowerValue();
+        libraryListItemMetaData.lastLoopEnd = _playerControlsFrame->getSeekSliderUpperValue();
+    }
+    SettingsHandler::updateLibraryListItemMetaData(libraryListItemMetaData);
 }
 
 void MainWindow::on_mainwindow_change(QEvent* event)
@@ -1993,12 +2034,13 @@ void MainWindow::on_seekSlider_sliderMoved(int position)
             playerPosition = 50;
         videoHandler->seek(playerPosition);
     }
-
 }
 
 
 void MainWindow::onLoopRange_valueChanged(int position, int startLoop, int endLoop)
 {
+    if(endLoop >= 100)
+        endLoop = 99;
     qint64 duration = videoHandler->duration();
 
     qint64 currentVideoPositionPercentage = XMath::mapRange(videoHandler->position(),  (qint64)0, duration, (qint64)0, (qint64)100);
@@ -2036,7 +2078,7 @@ void MainWindow::on_media_positionChanged(qint64 position)
     {
         int endLoop = _playerControlsFrame->getSeekSliderUpperValue();
         qint64 endLoopToVideoPosition = XMath::mapRange((qint64)endLoop, (qint64)0, (qint64)100,  (qint64)0, duration);
-        if (position >= endLoopToVideoPosition)
+        if (position >= endLoopToVideoPosition || (endLoop == 100 && position >= duration - 500))
         {
             int startLoop = _playerControlsFrame->getSeekSliderLowerValue();
             qint64 startLoopVideoPosition = XMath::mapRange((qint64)startLoop, (qint64)0, (qint64)100,  (qint64)0, duration);
@@ -3059,8 +3101,21 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
     {
         connect(_playerControlsFrame, &PlayerControls::loopRangeChanged, this, &MainWindow::onLoopRange_valueChanged);
         videoHandler->setRepeat(-1);
-        qint64 videoToSliderPosition = XMath::mapRange(videoHandler->position(),  (qint64)0, videoHandler->duration(), (qint64)0, (qint64)100);
-        _playerControlsFrame->setSeekSliderLowerValue(videoToSliderPosition);
+        LibraryListItemMetaData libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(playingLibraryListItem->getLibraryListItem().path);
+        if(libraryListItemMetaData.lastLoopStart > -1 && libraryListItemMetaData.lastLoopEnd > libraryListItemMetaData.lastLoopStart)
+        {
+            QTimer::singleShot(250, this, [this, libraryListItemMetaData]() {
+                _playerControlsFrame->setSeekSliderLowerValue(libraryListItemMetaData.lastLoopStart);
+                _playerControlsFrame->setSeekSliderUpperValue(libraryListItemMetaData.lastLoopEnd);
+            });
+//            qint64 sliderToVideoPosition = XMath::mapRange(libraryListItemMetaData.lastLoopStart,  (qint64)0, (qint64)100, (qint64)0, videoHandler->duration());
+//            videoHandler->setPosition(sliderToVideoPosition +100);
+        }
+        else
+        {
+            qint64 videoToSliderPosition = XMath::mapRange(videoHandler->position(),  (qint64)0, videoHandler->duration(), (qint64)0, (qint64)100);
+            _playerControlsFrame->setSeekSliderLowerValue(videoToSliderPosition);
+        }
         _playerControlsFrame->setSeekSliderMinimumRange(1);
     }
     else
@@ -3114,7 +3169,7 @@ LibraryListItem MainWindow::setupPlaylistItem(QString playlistName)
         nullptr, // script
         nullptr,
         nullptr,
-        "://images/icons/playlist.png",
+        nullptr,
         nullptr,
         QDate::currentDate(),
         0
@@ -3326,4 +3381,33 @@ void MainWindow::showInGraphicalShell(QString path)
 //    if (!success)
 //        LogHandler::Dialog(error, XLogLevel::Critical);
 #endif
+}
+
+void MainWindow::onSetMoneyShot(LibraryListItem libraryListItem, qint64 currentPosition)
+{
+    LibraryListItemMetaData libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
+    libraryListItemMetaData.moneyShotMillis = currentPosition;
+    SettingsHandler::updateLibraryListItemMetaData(libraryListItemMetaData);
+}
+void MainWindow::onAddBookmark(LibraryListItem libraryListItem, QString name, qint64 currentPosition)
+{
+    LibraryListItemMetaData libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
+    libraryListItemMetaData.bookmarks.append({name, currentPosition});
+    SettingsHandler::updateLibraryListItemMetaData(libraryListItemMetaData);
+}
+void MainWindow::skipToMoneyShot()
+{
+    if(_playerControlsFrame->getAutoLoop())
+        _playerControlsFrame->SetLoop(false);
+    LibraryListItem selectedLibraryListItem = playingLibraryListItem->getLibraryListItem();
+    LibraryListItemMetaData libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(selectedLibraryListItem.path);
+    if (libraryListItemMetaData.moneyShotMillis > -1 && libraryListItemMetaData.moneyShotMillis < videoHandler->duration())
+    {
+        videoHandler->setPosition(libraryListItemMetaData.moneyShotMillis);
+    }
+    else
+    {
+        qint64 last30PercentOfduration = videoHandler->duration() - videoHandler->duration() * .1;
+        videoHandler->setPosition(last30PercentOfduration);
+    }
 }

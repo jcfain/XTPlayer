@@ -4,7 +4,6 @@
 #include <QMutex>
 #include <QHash>
 #include "loghandler.h"
-#include "devicehandler.h"
 #include "../lookup/enum.h"
 #include "../lookup/AxisNames.h"
 #include "../lookup/GamepadAxisNames.h"
@@ -12,8 +11,8 @@
 #include "../tool/xmath.h"
 #include "../struct/ChannelModel.h"
 #include "../struct/DecoderModel.h"
-#include "../struct/librarylistwidgetitem.h"
 #include "../struct/LibraryListItem.h"
+#include "../struct/LibraryListItemMetaData.h"
 
 class SettingsHandler
 {
@@ -153,6 +152,9 @@ public:
     static void setFunscriptLoaded(QString key, bool loaded);
     static bool getFunscriptLoaded(QString key);
 
+    static LibraryListItemMetaData getLibraryListItemMetaData(QString path);
+    static void updateLibraryListItemMetaData(LibraryListItemMetaData libraryListItemMetaData);
+
     static QString GetHashedPass();
     static void SetHashedPass(QString value);
 
@@ -224,6 +226,7 @@ private:
     static QList<DecoderModel> decoderPriority;
     static QList<QString> _libraryExclusions;
     static QMap<QString, QList<LibraryListItem>> _playlists;
+    static QHash<QString, LibraryListItemMetaData> _libraryListItemMetaDatas;
 
     static bool disableSpeechToText;
     static bool defaultReset;

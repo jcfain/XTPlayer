@@ -2,6 +2,7 @@
 #define UDPHANDLER_H
 #include <QUdpSocket>
 #include <QNetworkDatagram>
+#include <QHostInfo>
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>

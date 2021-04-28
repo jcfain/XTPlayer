@@ -12,41 +12,6 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 
     setLayout(playerControlsGrid);
 
-    skipForwardButton = new QPushButton(this);
-    skipForwardButton->setObjectName(QString::fromUtf8("skipForwardButton"));
-    skipForwardButton->setMinimumSize(QSize(0, 20));
-    QIcon icon1;
-    icon1.addFile(QString::fromUtf8(":/images/icons/skipForward.svg"), QSize(), QIcon::Normal, QIcon::Off);
-    skipForwardButton->setIcon(icon1);
-    skipForwardButton->setIconSize(QSize(20, 20));
-    skipForwardButton->setFlat(true);
-
-    playerControlsGrid->addWidget(skipForwardButton, 2, 6, 1, 1);
-
-    MuteBtn = new QPushButton(this);
-    MuteBtn->setObjectName(QString::fromUtf8("MuteBtn"));
-    MuteBtn->setMinimumSize(QSize(0, 20));
-    QIcon icon2;
-    icon2.addFile(QString::fromUtf8(":/images/icons/speakerMute.svg"), QSize(), QIcon::Normal, QIcon::Off);
-    MuteBtn->setIcon(icon2);
-    MuteBtn->setIconSize(QSize(20, 20));
-    MuteBtn->setCheckable(true);
-    MuteBtn->setFlat(true);
-
-    playerControlsGrid->addWidget(MuteBtn, 2, 10, 1, 1);
-
-    loopToggleButton = new QPushButton(this);
-    loopToggleButton->setObjectName(QString::fromUtf8("loopToggleButton"));
-    loopToggleButton->setMinimumSize(QSize(0, 20));
-    QIcon icon3;
-    icon3.addFile(QString::fromUtf8(":/images/icons/loop.svg"), QSize(), QIcon::Normal, QIcon::Off);
-    loopToggleButton->setIcon(icon3);
-    loopToggleButton->setIconSize(QSize(20, 20));
-    loopToggleButton->setCheckable(true);
-    loopToggleButton->setFlat(true);
-
-    playerControlsGrid->addWidget(loopToggleButton, 2, 7, 1, 1);
-
     fullScreenBtn = new QPushButton(this);
     fullScreenBtn->setObjectName(QString::fromUtf8("fullScreenBtn"));
     fullScreenBtn->setEnabled(true);
@@ -70,40 +35,17 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 
     playerControlsGrid->addWidget(settingsButton, 2, 1, 1, 1);
 
-    VolumeSlider = new RangeSlider(this);
-    VolumeSlider->setObjectName(QString::fromUtf8("VolumeSlider"));
-    VolumeSlider->setMinimumSize(QSize(0, 20));
-    VolumeSlider->setOrientation(Qt::Horizontal);
-    VolumeSlider->setDisabled(false);
-    VolumeSlider->SetRange(0, 1000);
-    VolumeSlider->setOption(RangeSlider::Option::RightHandle);
+    skipToMoneyShotButton = new QPushButton(this);
+    skipToMoneyShotButton->setObjectName(QString::fromUtf8("skipToMoneyShotButton"));
+    skipToMoneyShotButton->setMinimumSize(QSize(0, 20));
+    QIcon iconMoneyShot;
+    iconMoneyShot.addFile(QString::fromUtf8(":/images/icons/skipToMoneyShot.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    skipToMoneyShotButton->setIcon(iconMoneyShot);
+    skipToMoneyShotButton->setIconSize(QSize(20, 20));
+    skipToMoneyShotButton->setFlat(true);
+    skipToMoneyShotButton->setEnabled(false);
 
-    playerControlsGrid->addWidget(VolumeSlider, 2, 8, 1, 2);
-
-    SeekSlider = new RangeSlider(this);
-    SeekSlider->setObjectName(QString::fromUtf8("SeekSlider"));
-    SeekSlider->setEnabled(false);
-    SeekSlider->setMinimumSize(QSize(100, 15));
-    SeekSlider->setMaximum(100);
-    SeekSlider->setOrientation(Qt::Horizontal);
-    SeekSlider->setDisabled(true);
-    SeekSlider->SetRange(0, 100);
-    SeekSlider->setOption(RangeSlider::Option::RightHandle);
-    SeekSlider->setUpperValue(0);
-
-    playerControlsGrid->addWidget(SeekSlider, 1, 0, 1, 11);
-
-    lblCurrentTime = new QLabel(this);
-    lblCurrentTime->setObjectName(QString::fromUtf8("lblCurrentTime"));
-    lblCurrentTime->setAlignment(Qt::AlignLeft|Qt::AlignBottom);
-
-    playerControlsGrid->addWidget(lblCurrentTime, 0, 0, 1, 1);
-
-    lblDuration = new QLabel(this);
-    lblDuration->setObjectName(QString::fromUtf8("lblDuration"));
-    lblDuration->setAlignment(Qt::AlignRight|Qt::AlignBottom);
-
-    playerControlsGrid->addWidget(lblDuration, 0, 10, 1, 1);
+    playerControlsGrid->addWidget(skipToMoneyShotButton, 2, 2, 1, 1);
 
     skipBackButton = new QPushButton(this);
     skipBackButton->setObjectName(QString::fromUtf8("skipBackButton"));
@@ -127,12 +69,85 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 
     playerControlsGrid->addWidget(PlayBtn, 2, 5, 1, 1);
 
+    skipForwardButton = new QPushButton(this);
+    skipForwardButton->setObjectName(QString::fromUtf8("skipForwardButton"));
+    skipForwardButton->setMinimumSize(QSize(0, 20));
+    QIcon icon1;
+    icon1.addFile(QString::fromUtf8(":/images/icons/skipForward.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    skipForwardButton->setIcon(icon1);
+    skipForwardButton->setIconSize(QSize(20, 20));
+    skipForwardButton->setFlat(true);
+
+    playerControlsGrid->addWidget(skipForwardButton, 2, 6, 1, 1);
+
+
+    loopToggleButton = new QPushButton(this);
+    loopToggleButton->setObjectName(QString::fromUtf8("loopToggleButton"));
+    loopToggleButton->setMinimumSize(QSize(0, 20));
+    QIcon icon3;
+    icon3.addFile(QString::fromUtf8(":/images/icons/loop.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    loopToggleButton->setIcon(icon3);
+    loopToggleButton->setIconSize(QSize(20, 20));
+    loopToggleButton->setCheckable(true);
+    loopToggleButton->setFlat(true);
+    loopToggleButton->setEnabled(false);
+
+    playerControlsGrid->addWidget(loopToggleButton, 2, 7, 1, 1);
+
+    VolumeSlider = new RangeSlider(this);
+    VolumeSlider->setObjectName(QString::fromUtf8("VolumeSlider"));
+    VolumeSlider->setMinimumSize(QSize(0, 20));
+    VolumeSlider->setOrientation(Qt::Horizontal);
+    VolumeSlider->setDisabled(false);
+    VolumeSlider->SetRange(0, 1000);
+    VolumeSlider->setOption(RangeSlider::Option::RightHandle);
+
+    playerControlsGrid->addWidget(VolumeSlider, 2, 8, 1, 2);
+
+    MuteBtn = new QPushButton(this);
+    MuteBtn->setObjectName(QString::fromUtf8("MuteBtn"));
+    MuteBtn->setMinimumSize(QSize(0, 20));
+    QIcon icon2;
+    icon2.addFile(QString::fromUtf8(":/images/icons/speakerMute.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    MuteBtn->setIcon(icon2);
+    MuteBtn->setIconSize(QSize(20, 20));
+    MuteBtn->setCheckable(true);
+    MuteBtn->setFlat(true);
+
+    playerControlsGrid->addWidget(MuteBtn, 2, 10, 1, 1);
+
+    lblCurrentTime = new QLabel(this);
+    lblCurrentTime->setObjectName(QString::fromUtf8("lblCurrentTime"));
+    lblCurrentTime->setAlignment(Qt::AlignLeft|Qt::AlignBottom);
+
+    playerControlsGrid->addWidget(lblCurrentTime, 0, 0, 1, 1);
+
+    SeekSlider = new RangeSlider(this);
+    SeekSlider->setObjectName(QString::fromUtf8("SeekSlider"));
+    SeekSlider->setEnabled(false);
+    SeekSlider->setMinimumSize(QSize(100, 15));
+    SeekSlider->setMaximum(100);
+    SeekSlider->setOrientation(Qt::Horizontal);
+    SeekSlider->setDisabled(true);
+    SeekSlider->SetRange(0, 100);
+    SeekSlider->setOption(RangeSlider::Option::RightHandle);
+    SeekSlider->setUpperValue(0);
+
+    playerControlsGrid->addWidget(SeekSlider, 1, 0, 1, 11);
+
+    lblDuration = new QLabel(this);
+    lblDuration->setObjectName(QString::fromUtf8("lblDuration"));
+    lblDuration->setAlignment(Qt::AlignRight|Qt::AlignBottom);
+
+    playerControlsGrid->addWidget(lblDuration, 0, 10, 1, 1);
+
     connect(SeekSlider, &RangeSlider::upperValueMove, this, &PlayerControls::on_seekSlider_sliderMoved);
     connect(SeekSlider, &RangeSlider::onHover, this, &PlayerControls::on_seekslider_hover);
     connect(SeekSlider, &RangeSlider::onLeave, this, &PlayerControls::on_seekslider_leave);
     connect(VolumeSlider, &RangeSlider::upperValueMove, this, &PlayerControls::on_VolumeSlider_valueChanged);
     connect(PlayBtn, &QPushButton::clicked, this, &PlayerControls::on_PlayBtn_clicked);
     connect(skipForwardButton, &QPushButton::clicked, this, [this]() {emit skipForward();});
+    connect(skipToMoneyShotButton, &QPushButton::clicked, this, [this]() {emit skipToMoneyShot();});
     connect(skipBackButton, &QPushButton::clicked, this, [this]() {emit skipBack();});
     connect(fullScreenBtn, &QPushButton::clicked, this, [this]() {emit fullscreenToggled();});
     connect(settingsButton, &QPushButton::clicked, this, [this]() {emit settingsClicked();});
@@ -185,6 +200,8 @@ void PlayerControls::resetMediaControlStatus(bool playing)
     LogHandler::Debug("Enter toggleMediaControlStatus: "+QString::number(playing));
     setSeekSliderUpperValue(0);
     setSeekSliderDisabled(!playing);
+    setSkipToMoneyShotEnabled(playing);
+    loopToggleButton->setEnabled(playing);
     setPlayIcon(playing);
     if(!playing)
     {
@@ -379,4 +396,9 @@ void PlayerControls::on_seekslider_hover(int position, int sliderValue)
 void PlayerControls::on_seekslider_leave()
 {
     emit seekSliderLeave();
+}
+
+void PlayerControls::setSkipToMoneyShotEnabled(bool enabled)
+{
+    skipToMoneyShotButton->setEnabled(enabled);
 }
