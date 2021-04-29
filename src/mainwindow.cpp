@@ -339,6 +339,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     setFocus();
     _defaultAppSize = this->size();
+    _appSize = _defaultAppSize;
+    _appPos = this->pos();
 
     loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading Library...", Qt::AlignBottom, Qt::white);
     on_load_library(SettingsHandler::getSelectedLibrary());
@@ -1721,13 +1723,27 @@ void MainWindow::on_mainwindow_change(QEvent* event)
     if (event->type() == QEvent::WindowStateChange)
     {
         QWindowStateChangeEvent* stateEvent = (QWindowStateChangeEvent*)event;
-        if(stateEvent->oldState() == Qt::WindowState::WindowMaximized && !_isFullScreen && !_isMaximized)
+        if(stateEvent->oldState() == Qt::WindowState::WindowNoState)
         {
-            this->resize(_defaultAppSize);
-            QMainWindow::move(_appPos.x() < 10 ? 10 : _appPos.x(), _appPos.y() < 10 ? 10 : _appPos.y());
+            LogHandler::Debug("oldState No state: "+QString::number(stateEvent->oldState()));
         }
-        else if(stateEvent->oldState() == Qt::WindowState::WindowMaximized && !_isFullScreen)
+        else if(stateEvent->oldState() == Qt::WindowState::WindowMaximized && !_isFullScreen && !_isMaximized)
         {
+            LogHandler::Debug("oldState WindowMaximized: "+QString::number(stateEvent->oldState()));
+            //QMainWindow::resize(_appSize);
+            //QMainWindow::move(_appPos.x() < 10 ? 10 : _appPos.x(), _appPos.y() < 10 ? 10 : _appPos.y());
+        }
+        else if(stateEvent->oldState() == Qt::WindowState::WindowFullScreen && !_isMaximized)
+        {
+            LogHandler::Debug("WindowFullScreen to normal: "+QString::number(stateEvent->oldState()));
+            QTimer::singleShot(50, [this]{
+                QMainWindow::resize(_appSize);
+                QMainWindow::move(_appPos.x() < 10 ? 10 : _appPos.x(), _appPos.y() < 10 ? 10 : _appPos.y());
+            });
+        }
+        else if(stateEvent->oldState() == Qt::WindowState::WindowMaximized && !_isFullScreen && !QMainWindow::isMaximized())
+        {
+            LogHandler::Debug("WindowMaximized to normal");
             _isMaximized = false;
         }
     }
@@ -1811,7 +1827,7 @@ void MainWindow::toggleFullScreen()
     {
         ui->fullScreenGrid->removeWidget(videoHandler);
         playerControlsPlaceHolder->layout()->removeWidget(_playerControlsFrame);
-        videoHandler->resize(_videoSize);
+        //videoHandler->resize(_videoSize);
         _mediaGrid->addWidget(videoHandler, 0, 0, 3, 5);
         _mediaGrid->addWidget(_videoLoadingLabel, 1, 2);
         ui->fullScreenGrid->removeWidget(playerControlsPlaceHolder);
@@ -1822,8 +1838,8 @@ void MainWindow::toggleFullScreen()
         _playerControlsFrame->style()->unpolish(_playerControlsFrame);
         _playerControlsFrame->style()->polish(_playerControlsFrame);
         libraryList->setProperty("cssClass", "windowedLibrary");
-        _playerControlsFrame->style()->unpolish(libraryList);
-        _playerControlsFrame->style()->polish(libraryList);
+        libraryList->style()->unpolish(libraryList);
+        libraryList->style()->polish(libraryList);
 
         if(libraryOverlay)
         {
@@ -1855,9 +1871,11 @@ void MainWindow::toggleFullScreen()
         }
         else
         {
-            QMainWindow::resize(_appSize);
-            QMainWindow::move(_appPos.x() < 100 ? 100 : _appPos.x(), _appPos.y() < 100 ? 100 : _appPos.y());
+//            QMainWindow::showMaximized();
+//            QMainWindow::resize(_appSize);
+//            QMainWindow::move(_appPos.x() < 100 ? 100 : _appPos.x(), _appPos.y() < 100 ? 100 : _appPos.y());
             QMainWindow::showNormal();
+//            this->repaint();
         }
         _isFullScreen = false;
         delete placeHolderControlsGrid;
