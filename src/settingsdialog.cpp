@@ -86,6 +86,15 @@ void SettingsDialog::initLive()
     ui.enableMultiplierCheckbox->setChecked(SettingsHandler::getMultiplierEnabled());
     if(HasLaunchPass())
         ui.passwordButton->setText("Change password");
+
+//    auto availableAxis = SettingsHandler::getAvailableAxis();
+//    foreach(auto channel, availableAxis->keys())
+//    {
+//        ChannelModel axis = SettingsHandler::getAxis(channel);
+//        QCheckBox* invertedCheckbox = ui.FunscriptSettingsGrid->findChild<QCheckBox*>(axis.FriendlyName);
+//        if(invertedCheckbox != nullptr)
+//            invertedCheckbox->setChecked(SettingsHandler::getChannelInverseChecked(channel));
+//    }
 }
 
 void SettingsDialog::setupUi()
@@ -1267,18 +1276,17 @@ void SettingsDialog::on_passwordButton_clicked()
     }
 }
 
-bool SettingsDialog::GetLaunchPass()
+PasswordResponse SettingsDialog::GetLaunchPass()
 {
      bool ok;
-     QString text = QInputDialog::getText(this, tr("Enter password to continue"),
+     QString text = QInputDialog::getText(this, tr("STOP!"),
                                           tr("Password:"), QLineEdit::Password,
                                           "", &ok);
      if (ok && !text.isEmpty())
      {
          return CheckPass(text);
      }
-     return false;
-
+     return PasswordResponse::CANCEL ;
 }
 
 bool SettingsDialog::HasLaunchPass()
@@ -1286,11 +1294,11 @@ bool SettingsDialog::HasLaunchPass()
     return !SettingsHandler::GetHashedPass().isEmpty();
 }
 
-bool SettingsDialog::CheckPass(QString pass)
+PasswordResponse SettingsDialog::CheckPass(QString pass)
 {
     //QString encrypted = encryptPass(pass);
     QString stored = decryptPass(SettingsHandler::GetHashedPass());
-    return pass == stored;
+    return pass == stored ? PasswordResponse::CORRECT : PasswordResponse::INCORRECT;
 }
 
 QString SettingsDialog::encryptPass(QString pass)
@@ -1307,4 +1315,14 @@ QString SettingsDialog::decryptPass(QString pass)
 
     //Encryption
     return crypto.decryptToString(pass);
+}
+
+void SettingsDialog::on_exportButton_clicked()
+{
+    SettingsHandler::Export(this);
+}
+
+void SettingsDialog::on_importButton_clicked()
+{
+    SettingsHandler::Import(this);
 }

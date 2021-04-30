@@ -42,6 +42,7 @@ SOURCES += \
     lib/tool/tcodefactory.cpp \
     lib/tool/xmath.cpp \
     lib/tool/xtimer.cpp \
+    libraryItemSettingsDialog.cpp \
     libraryexclusions.cpp \
     librarywindow.cpp \
     main.cpp \
@@ -72,6 +73,7 @@ HEADERS += \
     lib/handler/tcodehandler.h \
     lib/handler/udphandler.h \
     lib/lookup/enum.h \
+    lib/struct/Bookmark.h \
     lib/struct/ChannelModel.h \
     lib/struct/ConnectionChangedSignal.h \
     lib/struct/DecoderModel.h \
@@ -79,6 +81,7 @@ HEADERS += \
     lib/struct/GamepadState.h \
     lib/struct/LibraryListItem.h \
     lib/struct/LibraryListItemMetaData.h \
+    lib/struct/LibraryListItemMetaData258.h \
     lib/struct/NetworkAddress.h \
     lib/struct/SerialComboboxItem.h \
     lib/struct/VRPacket.h \
@@ -90,6 +93,7 @@ HEADERS += \
     lib/tool/tcodefactory.h \
     lib/tool/xmath.h \
     lib/tool/xtimer.h \
+    libraryItemSettingsDialog.h \
     libraryexclusions.h \
     librarywindow.h \
     mainwindow.h \

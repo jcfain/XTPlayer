@@ -10,6 +10,7 @@ int main(int argc, char *argv[])
     qRegisterMetaTypeStreamOperators<DecoderModel>("DecoderModel");
     qRegisterMetaTypeStreamOperators<LibraryListItem>("LibraryListItem");
     qRegisterMetaTypeStreamOperators<LibraryListItemMetaData>("LibraryListItemMetaData");
+    qRegisterMetaTypeStreamOperators<LibraryListItemMetaData258>("LibraryListItemMetaData258");
     qRegisterMetaTypeStreamOperators<Bookmark>("Bookmark");
     qRegisterMetaTypeStreamOperators<QMap<QString, QList<LibraryListItem>>>("QMap<QString, QList<LibraryListItem>>");
     qRegisterMetaTypeStreamOperators<QList<LibraryListItem>>("QList<LibraryListItem>");

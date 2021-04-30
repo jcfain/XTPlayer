@@ -10,21 +10,16 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem &localData) :
         localData.thumbFile = "://images/icons/audio.png";
     else if(localData.type == LibraryListItemType::PlaylistInternal)
         localData.thumbFile = "://images/icons/playlist.png";
-    QFileInfo thumbFile = QFileInfo(localData.thumbFile);
+    _thumbFile = localData.thumbFile;
     bool loadingThumbNail = false;
+    QFileInfo thumbFile = QFileInfo(_thumbFile);
     if (!thumbFile.exists())
     {
         loadingThumbNail = true;
     }
-    QIcon thumb;
-    QPixmap bgPixmap(loadingThumbNail ? "://images/icons/loading.png" : localData.thumbFile);
+    _bgPixmap = QPixmap(loadingThumbNail ? "://images/icons/loading.png" : _thumbFile);
     int thumbSize = SettingsHandler::getThumbSize();
-    //QSize size = {thumbSize, thumbSize - 50};
-    QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
-    thumb.addPixmap(scaled);
-    setIcon(thumb);
-    //setSizeHint(size);
-    setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
+    updateThumbSize({thumbSize, thumbSize});
     if (mfs)
     {
         setForeground(QColorConstants::Green);
@@ -33,8 +28,14 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem &localData) :
     else
         setText(localData.nameNoExtension);
     QVariant listItem;
+
     listItem.setValue(localData);
     setData(Qt::UserRole, listItem);
+}
+
+LibraryListWidgetItem::~LibraryListWidgetItem()
+{
+
 }
 
 bool LibraryListWidgetItem::updateToolTip(LibraryListItem localData)
@@ -42,7 +43,7 @@ bool LibraryListWidgetItem::updateToolTip(LibraryListItem localData)
     bool mfs = false;
     QFileInfo scriptInfo(localData.script);
     QFileInfo zipScriptInfo(localData.zipFile);
-    QString toolTip = "Media:";
+    QString toolTip = localData.nameNoExtension + "\nMedia:";
     if (localData.type != LibraryListItemType::PlaylistInternal && !scriptInfo.exists() && !zipScriptInfo.exists())
     {
         toolTip = localData.path + "\nNo script file of the same name found.\nRight click and Play with funscript.";
@@ -177,9 +178,31 @@ bool LibraryListWidgetItem::operator == (const LibraryListWidgetItem & other) co
 {
     return other.text() == text();
 }
+
 void LibraryListWidgetItem::setSortMode(LibrarySortMode sortMode)
 {
     _sortMode = sortMode;
+}
+
+void LibraryListWidgetItem::updateThumbSize(QSize thumbSize)
+{
+    QIcon thumb;
+    //QSize maxThumbSize = SettingsHandler::getMaxThumbnailSize();
+    //int newHeight = round((float)bgPixmap.height() / bgPixmap.width() * 1080);
+    //QSize newSize = calculateSize(thumbSize);
+    QPixmap scaled = _bgPixmap.scaled(thumbSize, Qt::AspectRatioMode::KeepAspectRatio);
+    QSize maxHeight = calculateMaxSize(thumbSize);
+
+    if(scaled.height() > maxHeight.height())
+    {
+        scaled = _bgPixmap.scaled(maxHeight, Qt::AspectRatioMode::KeepAspectRatio);
+//        QRect rect(0,0,scaled.width(), newHeight);
+//        scaled = scaled.copy(rect);
+    }
+    thumb.addPixmap(scaled);
+    setIcon(thumb);
+    setSizeHint(thumbSize);
+    setTextAlignment(Qt::AlignmentFlag::AlignTop | Qt::AlignmentFlag::AlignHCenter);
 }
 
 LibraryListWidgetItem* LibraryListWidgetItem::clone() const
@@ -187,4 +210,13 @@ LibraryListWidgetItem* LibraryListWidgetItem::clone() const
    return new LibraryListWidgetItem(*this);
 }
 
+QSize LibraryListWidgetItem::calculateMaxSize(QSize size)
+{
+    return {size.width(), (int)round(size.height()-size.height()/3.5)};
+}
+
+QSize LibraryListWidgetItem::calculateHintSize(QSize size)
+{
+    return {size.width(), size.height()-size.height()/7};
+}
 LibrarySortMode LibraryListWidgetItem::_sortMode = LibrarySortMode::NAME_ASC;

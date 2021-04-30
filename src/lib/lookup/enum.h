@@ -34,4 +34,10 @@ enum LibrarySortMode {
     TYPE_DESC
 };
 
+enum PasswordResponse {
+    CORRECT,
+    INCORRECT,
+    CANCEL
+};
+
 #endif // ENUM_H

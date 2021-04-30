@@ -53,8 +53,8 @@ public:
     void setAxisProgressBar(QString axis, int value);
     void resetAxisProgressBars();
     void latestYoutubeDownloaded();
-    bool CheckPass(QString pass);
-    bool GetLaunchPass();
+    PasswordResponse CheckPass(QString pass);
+    PasswordResponse GetLaunchPass();
     bool HasLaunchPass();
 
 signals:
@@ -152,6 +152,10 @@ private slots:
     void on_libraryExclusionsBtn_clicked();
 
     void on_passwordButton_clicked();
+
+    void on_exportButton_clicked();
+
+    void on_importButton_clicked();
 
 private:
     Ui::SettingsDialog ui;
