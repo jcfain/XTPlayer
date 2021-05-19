@@ -133,42 +133,45 @@ void SerialHandler::run()
         const QByteArray requestData = currentRequest.toUtf8();
         serial.write(requestData);
 
-        if (serial.waitForBytesWritten(_waitTimeout))
-        {
-            serial.flush();
-            // read response
-            if ((currentPortNameChanged || !_isConnected) && serial.waitForReadyRead(currentWaitTimeout))
-            {
-                QByteArray responseData = serial.readAll();
-                while (serial.waitForReadyRead(currentWaitTimeout))
-                    responseData += serial.readAll();
+//        if (serial.waitForBytesWritten(_waitTimeout))
+//        {
+//            serial.flush();
+//            // read response
+//            if ((currentPortNameChanged || !_isConnected) && serial.waitForReadyRead(currentWaitTimeout))
+//            {
+//                QByteArray responseData = serial.readAll();
+//                while (serial.waitForReadyRead(currentWaitTimeout))
+//                    responseData += serial.readAll();
 
-                const QString response = QString::fromUtf8(responseData);
-                LogHandler::Debug("Serial read: "+ response);
-                if (response.contains(SettingsHandler::TCodeVersion))
-                {
+//                const QString response = QString::fromUtf8(responseData);
+//                LogHandler::Debug("Serial read: "+ response);
+//                if (response.contains(SettingsHandler::TCodeVersion))
+//                {
+        if(!_isConnected) //temp
+        { // temp
                     emit connectionChange({DeviceType::Serial, ConnectionStatus::Connected, "Connected"});
                     _mutex.lock();
                     _isConnected = true;
                     _mutex.unlock();
-                }
-                else
-                {
-                    emit connectionChange({DeviceType::Serial, ConnectionStatus::Error, "No TCode"});
-                }
-            }
-            else if (currentPortNameChanged || !_isConnected)
-            {
+        } // temp
+//                }
+//                else
+//                {
+//                    emit connectionChange({DeviceType::Serial, ConnectionStatus::Error, "No TCode"});
+//                }
+//            }
+//            else if (currentPortNameChanged || !_isConnected)
+//            {
 
-                LogHandler::Debug(tr("Read serial handshake timeout %1")
-                             .arg(QTime::currentTime().toString()));
-            }
-        }
-        else
-        {
-            LogHandler::Debug(tr("Write tcode to serial timeout %1")
-                         .arg(QTime::currentTime().toString()));
-        }
+//                LogHandler::Debug(tr("Read serial handshake timeout %1")
+//                             .arg(QTime::currentTime().toString()));
+//            }
+//        }
+//        else
+//        {
+//            LogHandler::Debug(tr("Write tcode to serial timeout %1")
+//                         .arg(QTime::currentTime().toString()));
+//        }
         if (!_stop)
         {
             _mutex.lock();

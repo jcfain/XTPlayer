@@ -1,7 +1,7 @@
 #include "settingshandler.h"
 
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.256";
+const QString SettingsHandler::XTPVersion = "0.257";
 const float SettingsHandler::XTPVersionNum = 0.256f;
 
 SettingsHandler::SettingsHandler()

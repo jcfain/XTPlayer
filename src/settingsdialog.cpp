@@ -236,8 +236,9 @@ void SettingsDialog::setupUi()
                 ui.MultiplierSettingsGrid->addWidget(multiplierCheckbox, multiplierGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
                 ui.MultiplierSettingsGrid->addWidget(multiplierInput, multiplierGridRow, 1, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
                 QCheckBox* linkCheckbox = new QCheckBox(this);
-                linkCheckbox->setToolTip("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS " + ChannelNames.value(axis.RelatedChannel) + " funscript value.\nIf there is no " + ChannelNames.value(axis.RelatedChannel) + " funscript then it will default to random motion.");
-                linkCheckbox->setText("Link to MFS " + ChannelNames.value(axis.RelatedChannel));
+                auto relatedChannel = ChannelNames.value(axis.RelatedChannel);
+                linkCheckbox->setToolTip("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS " + relatedChannel + " funscript value.\nIf there is no " + relatedChannel + " funscript then it will default to random motion.");
+                linkCheckbox->setText("Link to MFS " + relatedChannel);
                 linkCheckbox->setChecked(SettingsHandler::getLinkToRelatedAxisChecked(channel));
                 connect(linkCheckbox, &QCheckBox::clicked, this,
                         [channel](bool checked)
