@@ -19,8 +19,8 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
         {
             position = XMath::reverseNumber(position, 0, 100);
         }
-        char tcodeValueString[4];
-        sprintf(tcodeValueString, "%03d", calculateRange(axisNames.Stroke.toUtf8(), position));
+        char tcodeValueString[5];
+        sprintf(tcodeValueString, "%04d", calculateRange(axisNames.Stroke.toUtf8(), position));
         tcode += axisNames.Stroke;
         tcode += tcodeValueString;
         if (speed > 0)
