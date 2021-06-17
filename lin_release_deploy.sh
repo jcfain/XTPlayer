@@ -7,6 +7,7 @@ cqtdeployer -confFile cqt-deb.conf
 cp -R src/themes ./XTPlayer-v0.255b_Linux_x86_64/bin
 cp -R lib/* ./XTPlayer-v0.255b_Linux_x86_64/lib
 cp src/rename_me_for_local_settings.ini ./XTPlayer-v0.255b_Linux_x86_64/bin
+cp "XTP and DeoVR guide.pdf" ./XTPlayer-v0.255b_Linux_x86_64
 read -p "Press enter to resume ..."
 
 

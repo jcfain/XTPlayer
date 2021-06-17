@@ -3,6 +3,8 @@
 #include <QSettings>
 #include <QMutex>
 #include <QHash>
+#include <QFileDialog>
+#include <QProcess>
 #include "loghandler.h"
 #include "../lookup/enum.h"
 #include "../lookup/AxisNames.h"
@@ -13,6 +15,7 @@
 #include "../struct/DecoderModel.h"
 #include "../struct/LibraryListItem.h"
 #include "../struct/LibraryListItemMetaData.h"
+#include "../struct/LibraryListItemMetaData258.h"
 
 class SettingsHandler
 {
@@ -134,6 +137,8 @@ public:
     static void setLiveGamepadConnected(bool value);
     static bool getLiveActionPaused();
     static void setLiveActionPaused(bool value);
+    static int getLiveOffSet();
+    static void setLiveOffset(int value);
 
     static void setDecoderPriority(QList<DecoderModel> value);
     static QList<DecoderModel> getDecoderPriority();
@@ -152,8 +157,8 @@ public:
     static void setFunscriptLoaded(QString key, bool loaded);
     static bool getFunscriptLoaded(QString key);
 
-    static LibraryListItemMetaData getLibraryListItemMetaData(QString path);
-    static void updateLibraryListItemMetaData(LibraryListItemMetaData libraryListItemMetaData);
+    static LibraryListItemMetaData258 getLibraryListItemMetaData(QString path);
+    static void updateLibraryListItemMetaData(LibraryListItemMetaData258 libraryListItemMetaData);
 
     static QString GetHashedPass();
     static void SetHashedPass(QString value);
@@ -161,11 +166,14 @@ public:
     static QSize getMaxThumbnailSize();
     static void SetupAvailableAxis();
     static void SetupDecoderPriority();
-    static void Load();
-    static void Save();
+    static void Load(QSettings* settingsToLoadFrom = nullptr);
+    static void Save(QSettings* settingsToSaveTo = nullptr);
     static void PersistSelectSettings();
     static void Default();
     static void Clear();
+    static void Export(QWidget* parent);
+    static void Import(QWidget* parent);
+    static void requestRestart(QWidget* parent);
 
 private:
     SettingsHandler();
@@ -175,6 +183,8 @@ private:
     static void MigrateTo23();
     static void MigrateTo25();
     static void MigrateTo252();
+    static void MigrateLibraryMetaDataTo258();
+    static void DeMigrateLibraryMetaDataTo258();
     static GamepadAxisNames gamepadAxisNames;
     static TCodeChannels channelNames;
     static MediaActions mediaActions;
@@ -210,6 +220,7 @@ private:
     static int _liveGamepadSpeed;
     static bool _liveGamepadConnected;
     static bool _liveActionPaused;
+    static int _liveOffset;
 
     static int _xRangeStep;
     static int _liveXRangeMax;
@@ -226,7 +237,7 @@ private:
     static QList<DecoderModel> decoderPriority;
     static QList<QString> _libraryExclusions;
     static QMap<QString, QList<LibraryListItem>> _playlists;
-    static QHash<QString, LibraryListItemMetaData> _libraryListItemMetaDatas;
+    static QHash<QString, LibraryListItemMetaData258> _libraryListItemMetaDatas;
 
     static bool disableSpeechToText;
     static bool defaultReset;

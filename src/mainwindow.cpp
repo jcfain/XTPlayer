@@ -1069,7 +1069,9 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
         myMenu.addAction("Reveal in directory", this, [this, selectedFileListItem] () {
             showInGraphicalShell(selectedFileListItem.path);
         });
-
+        myMenu.addAction("Edit media settings...", this, [this, selectedFileListItem] () {
+            LibraryItemSettingsDialog::getSettings(this, selectedFileListItem.path);
+        });
     }
 
     // Show context menu at handling position
@@ -1698,16 +1700,17 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
 
 void MainWindow::processMetaData(LibraryListItem libraryListItem)
 {
-    LibraryListItemMetaData libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
+    auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
     if(libraryListItemMetaData.lastLoopEnabled && libraryListItemMetaData.lastLoopStart > -1 && libraryListItemMetaData.lastLoopEnd > libraryListItemMetaData.lastLoopStart)
     {
         _playerControlsFrame->SetLoop(true);
     }
+    SettingsHandler::setLiveOffset(libraryListItemMetaData.offset);
 }
 
 void MainWindow::updateMetaData(LibraryListItem libraryListItem)
 {
-    LibraryListItemMetaData libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
+    auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
     libraryListItemMetaData.lastPlayPosition = videoHandler->position();
     libraryListItemMetaData.lastLoopEnabled = _playerControlsFrame->getAutoLoop();
     if(libraryListItemMetaData.lastLoopEnabled)
@@ -3119,7 +3122,7 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
     {
         connect(_playerControlsFrame, &PlayerControls::loopRangeChanged, this, &MainWindow::onLoopRange_valueChanged);
         videoHandler->setRepeat(-1);
-        LibraryListItemMetaData libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(playingLibraryListItem->getLibraryListItem().path);
+        auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(playingLibraryListItem->getLibraryListItem().path);
         if(libraryListItemMetaData.lastLoopStart > -1 && libraryListItemMetaData.lastLoopEnd > libraryListItemMetaData.lastLoopStart)
         {
             QTimer::singleShot(250, this, [this, libraryListItemMetaData]() {
@@ -3403,13 +3406,13 @@ void MainWindow::showInGraphicalShell(QString path)
 
 void MainWindow::onSetMoneyShot(LibraryListItem libraryListItem, qint64 currentPosition)
 {
-    LibraryListItemMetaData libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
+    auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
     libraryListItemMetaData.moneyShotMillis = currentPosition;
     SettingsHandler::updateLibraryListItemMetaData(libraryListItemMetaData);
 }
 void MainWindow::onAddBookmark(LibraryListItem libraryListItem, QString name, qint64 currentPosition)
 {
-    LibraryListItemMetaData libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
+    auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
     libraryListItemMetaData.bookmarks.append({name, currentPosition});
     SettingsHandler::updateLibraryListItemMetaData(libraryListItemMetaData);
 }
@@ -3418,7 +3421,7 @@ void MainWindow::skipToMoneyShot()
     if(_playerControlsFrame->getAutoLoop())
         _playerControlsFrame->SetLoop(false);
     LibraryListItem selectedLibraryListItem = playingLibraryListItem->getLibraryListItem();
-    LibraryListItemMetaData libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(selectedLibraryListItem.path);
+    auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(selectedLibraryListItem.path);
     if (libraryListItemMetaData.moneyShotMillis > -1 && libraryListItemMetaData.moneyShotMillis < videoHandler->duration())
     {
         videoHandler->setPosition(libraryListItemMetaData.moneyShotMillis);

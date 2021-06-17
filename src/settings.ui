@@ -20,23 +20,10 @@
   <property name="modal">
    <bool>true</bool>
   </property>
-  <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0,0,0,0">
+  <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0,0,0,0,0">
    <property name="sizeConstraint">
     <enum>QLayout::SetNoConstraint</enum>
    </property>
-   <item row="5" column="1">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Close|QDialogButtonBox::RestoreDefaults</set>
-     </property>
-     <property name="centerButtons">
-      <bool>false</bool>
-     </property>
-    </widget>
-   </item>
    <item row="1" column="1">
     <widget class="QTabWidget" name="settingsTabWidget">
      <property name="currentIndex">
@@ -490,6 +477,20 @@
          </property>
         </widget>
        </item>
+       <item row="0" column="10">
+        <widget class="QPushButton" name="exportButton">
+         <property name="text">
+          <string>Export</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="9">
+        <widget class="QPushButton" name="importButton">
+         <property name="text">
+          <string>Import</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="helpTab">
@@ -693,6 +694,19 @@ p, li { white-space: pre-wrap; }
        </item>
       </layout>
      </widget>
+    </widget>
+   </item>
+   <item row="6" column="1">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Close|QDialogButtonBox::RestoreDefaults</set>
+     </property>
+     <property name="centerButtons">
+      <bool>false</bool>
+     </property>
     </widget>
    </item>
   </layout>

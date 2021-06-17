@@ -29,6 +29,7 @@
 #include "settingsdialog.h"
 #include "librarywindow.h"
 #include "addplaylistdialog.h"
+#include "libraryItemSettingsDialog.h"
 #include "playercontrols.h"
 #include "lib/handler/videohandler.h"
 #include "CustomControls/rangeslider.h"

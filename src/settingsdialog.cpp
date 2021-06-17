@@ -86,6 +86,15 @@ void SettingsDialog::initLive()
     ui.enableMultiplierCheckbox->setChecked(SettingsHandler::getMultiplierEnabled());
     if(HasLaunchPass())
         ui.passwordButton->setText("Change password");
+
+//    auto availableAxis = SettingsHandler::getAvailableAxis();
+//    foreach(auto channel, availableAxis->keys())
+//    {
+//        ChannelModel axis = SettingsHandler::getAxis(channel);
+//        QCheckBox* invertedCheckbox = ui.FunscriptSettingsGrid->findChild<QCheckBox*>(axis.FriendlyName);
+//        if(invertedCheckbox != nullptr)
+//            invertedCheckbox->setChecked(SettingsHandler::getChannelInverseChecked(channel));
+//    }
 }
 
 void SettingsDialog::setupUi()
@@ -1307,4 +1316,14 @@ QString SettingsDialog::decryptPass(QString pass)
 
     //Encryption
     return crypto.decryptToString(pass);
+}
+
+void SettingsDialog::on_exportButton_clicked()
+{
+    SettingsHandler::Export(this);
+}
+
+void SettingsDialog::on_importButton_clicked()
+{
+    SettingsHandler::Import(this);
 }

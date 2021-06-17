@@ -1,8 +1,8 @@
 #include "settingshandler.h"
 
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.257";
-const float SettingsHandler::XTPVersionNum = 0.256f;
+const QString SettingsHandler::XTPVersion = "0.258";
+const float SettingsHandler::XTPVersionNum = 0.258f;
 
 SettingsHandler::SettingsHandler()
 {
@@ -11,22 +11,28 @@ SettingsHandler::~SettingsHandler()
 {
     delete settings;
 }
-void SettingsHandler::Load()
+void SettingsHandler::Load(QSettings* settingsToLoadFrom)
 {
     QMutexLocker locker(&mutex);
     QCoreApplication::setOrganizationName("cUrbSide prOd");
     QCoreApplication::setOrganizationDomain("https://www.patreon.com/Khrull");
     QCoreApplication::setApplicationName("XTPlayer");
-    QFile settingsini(QApplication::applicationDirPath() + "/settings.ini");
-    if(settingsini.exists())
+
+    if(settingsToLoadFrom == nullptr)
     {
-        settings = new QSettings("settings.ini", QSettings::Format::IniFormat);
+        QFile settingsini(QApplication::applicationDirPath() + "/settings.ini");
+        if(settingsini.exists())
+        {
+            settings = new QSettings("settings.ini", QSettings::Format::IniFormat);
+        }
+        else
+        {
+            settings = new QSettings("cUrbSide prOd", "XTPlayer");
+        }
+        settingsToLoadFrom = settings;
     }
-    else
-    {
-        settings = new QSettings("cUrbSide prOd", "XTPlayer");
-    }
-    float currentVersion = settings->value("version").toFloat();
+
+    float currentVersion = settingsToLoadFrom->value("version").toFloat();
     if (currentVersion == 0)
     {
         locker.unlock();
@@ -37,47 +43,47 @@ void SettingsHandler::Load()
         {
             decoderVarient.append(QVariant::fromValue(decoder));
         }
-        settings->setValue("decoderPriority", decoderVarient);
+        settingsToLoadFrom->setValue("decoderPriority", decoderVarient);
     }
     locker.relock();
-    selectedTheme = settings->value("selectedTheme").toString();
+    selectedTheme = settingsToLoadFrom->value("selectedTheme").toString();
     selectedTheme = selectedTheme.isNull() ? QApplication::applicationDirPath() + "/themes/black-silver.css" : selectedTheme;
-    selectedLibrary = settings->value("selectedLibrary").toString();
-    selectedDevice = settings->value("selectedDevice").toInt();
-    playerVolume = settings->value("playerVolume").toInt();
-    offSet = settings->value("offSet").toInt();
-    selectedFunscriptLibrary = settings->value("selectedFunscriptLibrary").toString();
-    serialPort = settings->value("serialPort").toString();
-    serverAddress = settings->value("serverAddress").toString();
+    selectedLibrary = settingsToLoadFrom->value("selectedLibrary").toString();
+    selectedDevice = settingsToLoadFrom->value("selectedDevice").toInt();
+    playerVolume = settingsToLoadFrom->value("playerVolume").toInt();
+    offSet = settingsToLoadFrom->value("offSet").toInt();
+    selectedFunscriptLibrary = settingsToLoadFrom->value("selectedFunscriptLibrary").toString();
+    serialPort = settingsToLoadFrom->value("serialPort").toString();
+    serverAddress = settingsToLoadFrom->value("serverAddress").toString();
     serverAddress = serverAddress.isNull() ? "tcode.local" : serverAddress;
-    serverPort = settings->value("serverPort").toString();
+    serverPort = settingsToLoadFrom->value("serverPort").toString();
     serverPort = serverPort.isNull() ? "8000" : serverPort;
-    deoAddress = settings->value("deoAddress").toString();
+    deoAddress = settingsToLoadFrom->value("deoAddress").toString();
     deoAddress = deoAddress.isNull() ? "127.0.0.1" : deoAddress;
-    deoPort = settings->value("deoPort").toString();
+    deoPort = settingsToLoadFrom->value("deoPort").toString();
     deoPort = deoPort.isNull() ? "23554" : deoPort;
-    deoEnabled = settings->value("deoEnabled").toBool();
+    deoEnabled = settingsToLoadFrom->value("deoEnabled").toBool();
 
-    whirligigAddress = settings->value("whirligigAddress").toString();
+    whirligigAddress = settingsToLoadFrom->value("whirligigAddress").toString();
     whirligigAddress = whirligigAddress.isNull() ? "127.0.0.1" : whirligigAddress;
-    whirligigPort = settings->value("whirligigPort").toString();
+    whirligigPort = settingsToLoadFrom->value("whirligigPort").toString();
     whirligigPort = whirligigPort.isNull() ? "2000" : whirligigPort;
-    whirligigEnabled = settings->value("whirligigEnabled").toBool();
+    whirligigEnabled = settingsToLoadFrom->value("whirligigEnabled").toBool();
 
-    libraryView = settings->value("libraryView").toInt();
-    _librarySortMode = settings->value("selectedLibrarySortMode").toInt();
-    thumbSize = settings->value("thumbSize").toInt();
+    libraryView = settingsToLoadFrom->value("libraryView").toInt();
+    _librarySortMode = settingsToLoadFrom->value("selectedLibrarySortMode").toInt();
+    thumbSize = settingsToLoadFrom->value("thumbSize").toInt();
     thumbSize = thumbSize == 0 ? 150 : thumbSize;
-    thumbSizeList = settings->value("thumbSizeList").toInt();
+    thumbSizeList = settingsToLoadFrom->value("thumbSizeList").toInt();
     thumbSizeList = thumbSizeList == 0 ? 50 : thumbSizeList;
-    videoIncrement = settings->value("videoIncrement").toInt();
+    videoIncrement = settingsToLoadFrom->value("videoIncrement").toInt();
     videoIncrement = videoIncrement == 0 ? 10 : videoIncrement;
-    deoDnlaFunscriptLookup = settings->value("deoDnlaFunscriptLookup").toHash();
+    deoDnlaFunscriptLookup = settingsToLoadFrom->value("deoDnlaFunscriptLookup").toHash();
 
-    _gamePadEnabled = settings->value("gamePadEnabled").toBool();
-    _multiplierEnabled = settings->value("multiplierEnabled").toBool();
+    _gamePadEnabled = settingsToLoadFrom->value("gamePadEnabled").toBool();
+    _multiplierEnabled = settingsToLoadFrom->value("multiplierEnabled").toBool();
     _liveMultiplierEnabled = _multiplierEnabled;
-    QVariantMap availableAxis = settings->value("availableAxis").toMap();
+    QVariantMap availableAxis = settingsToLoadFrom->value("availableAxis").toMap();
     foreach(auto axis, availableAxis.keys())
     {
         _availableAxis.insert(axis, availableAxis[axis].value<ChannelModel>());
@@ -85,52 +91,60 @@ void SettingsHandler::Load()
     }
     _liveXRangeMax = _availableAxis[channelNames.Stroke].UserMax;
     _liveXRangeMin = _availableAxis[channelNames.Stroke].UserMin;
-    QVariantMap gamepadButtonMap = settings->value("gamepadButtonMap").toMap();
+    QVariantMap gamepadButtonMap = settingsToLoadFrom->value("gamepadButtonMap").toMap();
     foreach(auto button, gamepadButtonMap.keys())
     {
         _gamepadButtonMap.insert(button, gamepadButtonMap[button].toString());
     }
-    _inverseStroke = settings->value("inverseTcXL0").toBool();
-    _inversePitch = settings->value("inverseTcXRollR2").toBool();
-    _inverseRoll = settings->value("inverseTcYRollR1").toBool();
-    _gamepadSpeed = settings->value("gamepadSpeed").toInt();
+    _inverseStroke = settingsToLoadFrom->value("inverseTcXL0").toBool();
+    _inversePitch = settingsToLoadFrom->value("inverseTcXRollR2").toBool();
+    _inverseRoll = settingsToLoadFrom->value("inverseTcYRollR1").toBool();
+    _gamepadSpeed = settingsToLoadFrom->value("gamepadSpeed").toInt();
     _gamepadSpeed = _gamepadSpeed == 0 ? 1000 : _gamepadSpeed;
-    _gamepadSpeedStep = settings->value("gamepadSpeedStep").toInt();
+    _gamepadSpeedStep = settingsToLoadFrom->value("gamepadSpeedStep").toInt();
     _gamepadSpeedStep = _gamepadSpeedStep == 0 ? 500 : _gamepadSpeedStep;
     _liveGamepadSpeed = _gamepadSpeed;
-    _xRangeStep = settings->value("xRangeStep").toInt();
+    _xRangeStep = settingsToLoadFrom->value("xRangeStep").toInt();
     _xRangeStep = _xRangeStep == 0 ? 50 : _xRangeStep;
-    disableSpeechToText = settings->value("disableSpeechToText").toBool();
-    QList<QVariant> decoderPriorityvarient = settings->value("decoderPriority").toList();
+    disableSpeechToText = settingsToLoadFrom->value("disableSpeechToText").toBool();
+    QList<QVariant> decoderPriorityvarient = settingsToLoadFrom->value("decoderPriority").toList();
     decoderPriority.clear();
     foreach(auto varient, decoderPriorityvarient)
     {
         decoderPriority.append(varient.value<DecoderModel>());
     }
-    auto splitterSizes = settings->value("mainWindowPos").toList();
+    auto splitterSizes = settingsToLoadFrom->value("mainWindowPos").toList();
     foreach (auto splitterPos, splitterSizes)
     {
         _mainWindowPos.append(splitterPos.value<int>());
     }
-    _libraryExclusions = settings->value("libraryExclusions").value<QList<QString>>();
+    _libraryExclusions = settingsToLoadFrom->value("libraryExclusions").value<QList<QString>>();
 
-    QVariantMap playlists = settings->value("playlists").toMap();
+    QVariantMap playlists = settingsToLoadFrom->value("playlists").toMap();
     foreach(auto playlist, playlists.keys())
     {
         _playlists.insert(playlist, playlists[playlist].value<QList<LibraryListItem>>());
     }
 
-    QVariantHash libraryListItemMetaDatas = settings->value("libraryListItemMetaDatas").toHash();
-    foreach(auto key, libraryListItemMetaDatas.keys())
+    _hashedPass = settingsToLoadFrom->value("userData").toString();
+    if(currentVersion != 0 && currentVersion < 0.258f)
     {
-        _libraryListItemMetaDatas.insert(key, libraryListItemMetaDatas[key].value<LibraryListItemMetaData>());
-        foreach(auto bookmark, libraryListItemMetaDatas[key].value<LibraryListItemMetaData>().bookmarks)
-            _libraryListItemMetaDatas[key].bookmarks.append(bookmark);
-        foreach(auto funscript, libraryListItemMetaDatas[key].value<LibraryListItemMetaData>().funscripts)
-            _libraryListItemMetaDatas[key].funscripts.append(funscript);
+        locker.unlock();
+        MigrateLibraryMetaDataTo258();
+    }
+    else
+    {
+        QVariantHash libraryListItemMetaDatas = settingsToLoadFrom->value("libraryListItemMetaDatas").toHash();
+        foreach(auto key, libraryListItemMetaDatas.keys())
+        {
+            _libraryListItemMetaDatas.insert(key, libraryListItemMetaDatas[key].value<LibraryListItemMetaData258>());
+            foreach(auto bookmark, libraryListItemMetaDatas[key].value<LibraryListItemMetaData>().bookmarks)
+                _libraryListItemMetaDatas[key].bookmarks.append(bookmark);
+            foreach(auto funscript, libraryListItemMetaDatas[key].value<LibraryListItemMetaData>().funscripts)
+                _libraryListItemMetaDatas[key].funscripts.append(funscript);
+        }
     }
 
-    _hashedPass = settings->value("userData").toString();
 
     if(currentVersion != 0 && currentVersion < 0.2f)
     {
@@ -153,99 +167,135 @@ void SettingsHandler::Load()
     }
 }
 
-void SettingsHandler::Save()
+void SettingsHandler::Save(QSettings* settingsToSaveTo)
 {
     QMutexLocker locker(&mutex);
     if (!defaultReset)
     {
-        settings->setValue("version", XTPVersionNum);
-        settings->setValue("selectedLibrary", selectedLibrary);
-        settings->setValue("selectedTheme", selectedTheme);
-        settings->setValue("selectedDevice", selectedDevice);
-        settings->setValue("playerVolume", playerVolume);
-        settings->setValue("offSet", offSet);
-        settings->setValue("selectedFunscriptLibrary", selectedFunscriptLibrary);
-        settings->setValue("serialPort", serialPort);
-        settings->setValue("serverAddress", serverAddress);
-        settings->setValue("serverPort", serverPort);
-        settings->setValue("deoAddress", deoAddress);
-        settings->setValue("deoPort", deoPort);
-        settings->setValue("deoEnabled", deoEnabled);
-        settings->setValue("whirligigAddress", whirligigAddress);
-        settings->setValue("whirligigPort", whirligigPort);
-        settings->setValue("whirligigEnabled", whirligigEnabled);
+        if(settingsToSaveTo == nullptr) {
+            settingsToSaveTo = settings;
+        }
+        settingsToSaveTo->setValue("version", XTPVersionNum);
+        settingsToSaveTo->setValue("selectedLibrary", selectedLibrary);
+        settingsToSaveTo->setValue("selectedTheme", selectedTheme);
+        settingsToSaveTo->setValue("selectedDevice", selectedDevice);
+        settingsToSaveTo->setValue("playerVolume", playerVolume);
+        settingsToSaveTo->setValue("offSet", offSet);
+        settingsToSaveTo->setValue("selectedFunscriptLibrary", selectedFunscriptLibrary);
+        settingsToSaveTo->setValue("serialPort", serialPort);
+        settingsToSaveTo->setValue("serverAddress", serverAddress);
+        settingsToSaveTo->setValue("serverPort", serverPort);
+        settingsToSaveTo->setValue("deoAddress", deoAddress);
+        settingsToSaveTo->setValue("deoPort", deoPort);
+        settingsToSaveTo->setValue("deoEnabled", deoEnabled);
+        settingsToSaveTo->setValue("whirligigAddress", whirligigAddress);
+        settingsToSaveTo->setValue("whirligigPort", whirligigPort);
+        settingsToSaveTo->setValue("whirligigEnabled", whirligigEnabled);
 
-        settings->setValue("libraryView", libraryView);
-        settings->setValue("selectedLibrarySortMode", _librarySortMode);
+        settingsToSaveTo->setValue("libraryView", libraryView);
+        settingsToSaveTo->setValue("selectedLibrarySortMode", _librarySortMode);
 
-        settings->setValue("thumbSize", thumbSize);
-        settings->setValue("thumbSizeList", thumbSizeList);
-        settings->setValue("videoIncrement", videoIncrement);
+        settingsToSaveTo->setValue("thumbSize", thumbSize);
+        settingsToSaveTo->setValue("thumbSizeList", thumbSizeList);
+        settingsToSaveTo->setValue("videoIncrement", videoIncrement);
 
-        settings->setValue("deoDnlaFunscriptLookup", deoDnlaFunscriptLookup);
+        settingsToSaveTo->setValue("deoDnlaFunscriptLookup", deoDnlaFunscriptLookup);
 
-        settings->setValue("gamePadEnabled", _gamePadEnabled);
-        settings->setValue("multiplierEnabled", _multiplierEnabled);
+        settingsToSaveTo->setValue("gamePadEnabled", _gamePadEnabled);
+        settingsToSaveTo->setValue("multiplierEnabled", _multiplierEnabled);
 
         QList<QVariant> decoderVarient;
         foreach(auto decoder, decoderPriority)
         {
             decoderVarient.append(QVariant::fromValue(decoder));
         }
-        settings->setValue("decoderPriority", decoderVarient);
+        settingsToSaveTo->setValue("decoderPriority", decoderVarient);
         QVariantMap availableAxis;
         foreach(auto axis, _availableAxis.keys())
         {
             availableAxis.insert(axis, QVariant::fromValue(_availableAxis[axis]));
         }
-        settings->setValue("availableAxis", availableAxis);
+        settingsToSaveTo->setValue("availableAxis", availableAxis);
         QVariantMap gamepadMap;
         foreach(auto button, _gamepadButtonMap.keys())
         {
             gamepadMap.insert(button, QVariant::fromValue(_gamepadButtonMap[button]));
         }
-        settings->setValue("gamepadButtonMap", gamepadMap);
-        settings->setValue("inverseTcXL0", _inverseStroke);
-        settings->setValue("inverseTcXRollR2", _inversePitch);
-        settings->setValue("inverseTcYRollR1", _inverseRoll);
-        settings->setValue("gamepadSpeed", _gamepadSpeed);
-        settings->setValue("gamepadSpeedStep", _gamepadSpeedStep);
-        settings->setValue("xRangeStep", _xRangeStep);
-        settings->setValue("disableSpeechToText", disableSpeechToText);
+        settingsToSaveTo->setValue("gamepadButtonMap", gamepadMap);
+        settingsToSaveTo->setValue("inverseTcXL0", _inverseStroke);
+        settingsToSaveTo->setValue("inverseTcXRollR2", _inversePitch);
+        settingsToSaveTo->setValue("inverseTcYRollR1", _inverseRoll);
+        settingsToSaveTo->setValue("gamepadSpeed", _gamepadSpeed);
+        settingsToSaveTo->setValue("gamepadSpeedStep", _gamepadSpeedStep);
+        settingsToSaveTo->setValue("xRangeStep", _xRangeStep);
+        settingsToSaveTo->setValue("disableSpeechToText", disableSpeechToText);
         QList<QVariant> splitterPos;
         foreach(auto pos, _mainWindowPos)
         {
             splitterPos.append(pos);
         }
-        settings->setValue("mainWindowPos", splitterPos);
+        settingsToSaveTo->setValue("mainWindowPos", splitterPos);
 
-        settings->setValue("libraryExclusions", QVariant::fromValue(_libraryExclusions));
+        settingsToSaveTo->setValue("libraryExclusions", QVariant::fromValue(_libraryExclusions));
 
         QVariantMap playlists;
         foreach(auto playlist, _playlists.keys())
         {
             playlists.insert(playlist, QVariant::fromValue(_playlists[playlist]));
         }
-        settings->setValue("playlists", playlists);
-        settings->setValue("userData", _hashedPass);
+        settingsToSaveTo->setValue("playlists", playlists);
+        settingsToSaveTo->setValue("userData", _hashedPass);
 
         QVariantHash libraryListItemMetaDatas;
         foreach(auto libraryListItemMetaData, _libraryListItemMetaDatas.keys())
         {
             libraryListItemMetaDatas.insert(libraryListItemMetaData, QVariant::fromValue(_libraryListItemMetaDatas[libraryListItemMetaData]));
             foreach(auto bookmark, _libraryListItemMetaDatas[libraryListItemMetaData].bookmarks)
-                libraryListItemMetaDatas[libraryListItemMetaData].value<LibraryListItemMetaData>().bookmarks.append(bookmark);
+                libraryListItemMetaDatas[libraryListItemMetaData].value<LibraryListItemMetaData258>().bookmarks.append(bookmark);
             foreach(auto funscript, _libraryListItemMetaDatas[libraryListItemMetaData].funscripts)
-                libraryListItemMetaDatas[libraryListItemMetaData].value<LibraryListItemMetaData>().funscripts.append(funscript);
+                libraryListItemMetaDatas[libraryListItemMetaData].value<LibraryListItemMetaData258>().funscripts.append(funscript);
         }
-        settings->setValue("libraryListItemMetaDatas", libraryListItemMetaDatas);
+        settingsToSaveTo->setValue("libraryListItemMetaDatas", libraryListItemMetaDatas);
 
 
 
-        settings->sync();
+        settingsToSaveTo->sync();
     }
 
 }
+
+void SettingsHandler::Export(QWidget* parent)
+{
+    QString selectedFile = QFileDialog::getSaveFileName(parent, QApplication::applicationDirPath() + "/Save settings ini", "settings_export.ini", "INI Files (*.ini)");
+    if(!selectedFile.isEmpty())
+    {
+        QSettings* settingsExport = new QSettings(selectedFile, QSettings::Format::IniFormat);
+        Save(settingsExport);
+        delete settingsExport;
+        LogHandler::Dialog("Settings saved to "+ selectedFile, XLogLevel::Information);
+    }
+}
+
+void SettingsHandler::Import(QWidget* parent)
+{
+    QString selectedFile = QFileDialog::getOpenFileName(parent, "Choose settings ini", QApplication::applicationDirPath(), "INI Files (*.ini)");
+    if(!selectedFile.isEmpty())
+    {
+        QSettings* settingsImport = new QSettings(selectedFile, QSettings::Format::IniFormat);
+        Load(settingsImport);
+        delete settingsImport;
+        requestRestart(parent);
+    }
+}
+
+void SettingsHandler::requestRestart(QWidget* parent)
+{
+    QMessageBox::question(parent, "Restart Application", "Changes will take effect on application restart.",
+                                  "Restart now", 0);
+    QApplication::quit();
+    QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
+}
+
 void SettingsHandler::Clear()
 {
     QMutexLocker locker(&mutex);
@@ -319,6 +369,37 @@ void SettingsHandler::MigrateTo252()
     LogHandler::Dialog("Due to a standards update your CHANNELS\nhave been set to default for a new data structure.\nPlease reset your Multiplier/Range settings before using.", XLogLevel::Information);
 }
 
+void SettingsHandler::MigrateLibraryMetaDataTo258()
+{
+    settings->setValue("version", XTPVersionNum);
+    QVariantHash libraryListItemMetaDatas = settings->value("libraryListItemMetaDatas").toHash();
+    foreach(auto key, libraryListItemMetaDatas.keys())
+    {
+        auto libraryListItemMetaData = libraryListItemMetaDatas[key].value<LibraryListItemMetaData258>();
+        QFile file(libraryListItemMetaData.libraryItemPath);
+        if(file.exists())
+        {
+            _libraryListItemMetaDatas.insert(key, {
+                                                     libraryListItemMetaData.libraryItemPath, // libraryItemPath
+                                                     libraryListItemMetaData.lastPlayPosition, // lastPlayPosition
+                                                     libraryListItemMetaData.lastLoopEnabled, // lastLoopEnabled
+                                                     libraryListItemMetaData.lastLoopStart, // lastLoopStart
+                                                     libraryListItemMetaData.lastLoopEnd, // lastLoopEnd
+                                                     0, // offset
+                                                     libraryListItemMetaData.moneyShotMillis, // moneyShotMillis
+                                                     libraryListItemMetaData.bookmarks, // bookmarks
+                                                     libraryListItemMetaData.funscripts
+                                              });
+            foreach(auto bookmark, libraryListItemMetaDatas[key].value<LibraryListItemMetaData258>().bookmarks)
+                _libraryListItemMetaDatas[key].bookmarks.append(bookmark);
+            foreach(auto funscript, libraryListItemMetaDatas[key].value<LibraryListItemMetaData258>().funscripts)
+                _libraryListItemMetaDatas[key].funscripts.append(funscript);
+        }
+    }
+    Save();
+    Load();
+}
+
 QString SettingsHandler::getSelectedTheme()
 {
     QMutexLocker locker(&mutex);
@@ -359,10 +440,28 @@ int SettingsHandler::getPlayerVolume()
     QMutexLocker locker(&mutex);
     return playerVolume;
 }
+
 int SettingsHandler::getoffSet()
 {
     QMutexLocker locker(&mutex);
     return offSet;
+}
+void SettingsHandler::setoffSet(int value)
+{
+    QMutexLocker locker(&mutex);
+    offSet = value;
+}
+
+int SettingsHandler::getLiveOffSet()
+{
+    QMutexLocker locker(&mutex);
+    return _liveOffset;
+}
+
+void SettingsHandler::setLiveOffset(int value)
+{
+    QMutexLocker locker(&mutex);
+    _liveOffset = value;
 }
 
 int SettingsHandler::getChannelUserMin(QString channel)
@@ -762,11 +861,6 @@ void SettingsHandler::setPlayerVolume(int value)
     QMutexLocker locker(&mutex);
     playerVolume = value;
 }
-void SettingsHandler::setoffSet(int value)
-{
-    QMutexLocker locker(&mutex);
-    offSet = value;
-}
 
 void SettingsHandler::setLibraryView(int value)
 {
@@ -1038,7 +1132,7 @@ bool SettingsHandler::getFunscriptLoaded(QString key)
     return false;
 }
 
-LibraryListItemMetaData SettingsHandler::getLibraryListItemMetaData(QString path)
+LibraryListItemMetaData258 SettingsHandler::getLibraryListItemMetaData(QString path)
 {
     QMutexLocker locker(&mutex);
     if(_libraryListItemMetaDatas.contains(path))
@@ -1046,11 +1140,23 @@ LibraryListItemMetaData SettingsHandler::getLibraryListItemMetaData(QString path
         return _libraryListItemMetaDatas.value(path);
     }
     //Default meta data
-    _libraryListItemMetaDatas.insert(path, {path, -1,false,-1,-1,-1, {}});
+    QList<QString> funscripts;
+    QList<Bookmark> bookmarks;
+    _libraryListItemMetaDatas.insert(path, {
+                                         path, // libraryItemPath
+                                         -1, // lastPlayPosition
+                                         false, // lastLoopEnabled
+                                         -1, // lastLoopStart
+                                         -1, // lastLoopEnd
+                                         0, // offset
+                                         -1, // moneyShotMillis
+                                         bookmarks, // bookmarks
+                                         funscripts
+                                     });
     return _libraryListItemMetaDatas.value(path);
 }
 
-void SettingsHandler::updateLibraryListItemMetaData(LibraryListItemMetaData libraryListItemMetaData)
+void SettingsHandler::updateLibraryListItemMetaData(LibraryListItemMetaData258 libraryListItemMetaData)
 {
     QMutexLocker locker(&mutex);
     _libraryListItemMetaDatas.insert(libraryListItemMetaData.libraryItemPath, libraryListItemMetaData);
@@ -1088,6 +1194,7 @@ int SettingsHandler::_gamepadSpeedStep;
 int SettingsHandler::_liveGamepadSpeed;
 bool SettingsHandler::_liveGamepadConnected;
 bool SettingsHandler::_liveActionPaused;
+int SettingsHandler::_liveOffset;
 
 int SettingsHandler::_xRangeStep;
 int SettingsHandler::_liveXRangeMax;
@@ -1114,4 +1221,4 @@ QString SettingsHandler::_hashedPass;
 QList<DecoderModel> SettingsHandler::decoderPriority;
 QList<QString> SettingsHandler::_libraryExclusions;
 QMap<QString, QList<LibraryListItem>> SettingsHandler::_playlists;
-QHash<QString, LibraryListItemMetaData> SettingsHandler::_libraryListItemMetaDatas;
+QHash<QString, LibraryListItemMetaData258> SettingsHandler::_libraryListItemMetaDatas;

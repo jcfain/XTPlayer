@@ -19,9 +19,6 @@ private:
     QLineEdit* nameEdit;
 
     static QString getPlaylistNAme(PlaylistDialog *dialog, bool *ok = nullptr);
-
-signals:
-
 };
 
 #endif // ADDPLAYLISTDIALOG_H
