@@ -164,7 +164,7 @@ protected:
 private:
     //Hack because QTAV calls stopped and start out of order
     bool _mediaStopped = true;
-    bool _isPasswordIncorrect = false;
+    PasswordResponse _isPasswordIncorrect = PasswordResponse::INCORRECT;
 
     Ui::MainWindow *ui;
     QMutex mutex;

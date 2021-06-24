@@ -16,13 +16,38 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     SettingsHandler::Load();
     _xSettings = new SettingsDialog(this);
     tcodeHandler = new TCodeHandler();
-    if(_xSettings->HasLaunchPass())
-        _isPasswordIncorrect = !_xSettings->GetLaunchPass();
-    if(_isPasswordIncorrect)
-    {
-        LogHandler::Dialog("Incorrect password!", XLogLevel::Critical);
-        QTimer::singleShot(0, this, SLOT(onEventLoopStarted()));
-        return;
+    if(_xSettings->HasLaunchPass()) {
+        int tries = 1;
+        while(_isPasswordIncorrect != PasswordResponse::CANCEL && _isPasswordIncorrect == PasswordResponse::INCORRECT)
+        {
+            _isPasswordIncorrect = _xSettings->GetLaunchPass();
+            if(_isPasswordIncorrect == PasswordResponse::CANCEL)
+            {
+                QTimer::singleShot(0, this, SLOT(onEventLoopStarted()));
+                return;
+            }
+            else if(_isPasswordIncorrect == PasswordResponse::INCORRECT)
+            {
+                switch(tries) {
+                    case 1:
+                        LogHandler::Dialog("Wrong!", XLogLevel::Critical);
+                    break;
+                    case 2:
+                        LogHandler::Dialog("Nope!", XLogLevel::Critical);
+                    break;
+                    case 3:
+                        LogHandler::Dialog("K thx byyye!", XLogLevel::Critical);
+                    break;
+                }
+
+                if( tries >= 3)
+                {
+                    QTimer::singleShot(0, this, SLOT(onEventLoopStarted()));
+                    return;
+                }
+            }
+            tries++;
+        }
     }
 
     if(arguments.length() > 0)
@@ -110,6 +135,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     libraryList->setContextMenuPolicy(Qt::CustomContextMenu);
     libraryList->setProperty("id", "libraryList");
     libraryList->setMovement(QListView::Static);
+    libraryList->setTextElideMode(Qt::TextElideMode::ElideRight);
+    libraryList->setWordWrap(true);
 
     QScroller::grabGesture(libraryList->viewport(), QScroller::LeftMouseButtonGesture);
     auto scroller = QScroller::scroller(libraryList->viewport());
@@ -1739,28 +1766,32 @@ void MainWindow::on_mainwindow_change(QEvent* event)
         else if(stateEvent->oldState() == Qt::WindowState::WindowFullScreen && !_isMaximized)
         {
             LogHandler::Debug("WindowFullScreen to normal: "+QString::number(stateEvent->oldState()));
-            QTimer::singleShot(50, [this]{
+            QTimer::singleShot(200, [this]{
                 QMainWindow::resize(_appSize);
                 QMainWindow::move(_appPos.x() < 10 ? 10 : _appPos.x(), _appPos.y() < 10 ? 10 : _appPos.y());
+               // videoHandler->resize(_videoSize);
             });
         }
         else if(stateEvent->oldState() == Qt::WindowState::WindowMaximized && !_isFullScreen && !QMainWindow::isMaximized())
         {
             LogHandler::Debug("WindowMaximized to normal");
+
             _isMaximized = false;
         }
     }
 }
-
+QPoint _mainStackedWidgetPos;
 void MainWindow::toggleFullScreen()
 {
     if(!_isFullScreen)
     {
+        LogHandler::Debug("Before full VideoSize: width: "+QString::number(videoHandler->size().width()) + " height: " + QString::number(videoHandler->size().height()));
         QScreen *screen = this->window()->windowHandle()->screen();
         QSize screenSize = screen->size();
         _videoSize = videoHandler->size();
         _appSize = this->size();
         _appPos = this->pos();
+        _mainStackedWidgetPos = ui->mainStackedWidget->pos();
         _isMaximized = this->isMaximized();
         _isFullScreen = true;
         //QMainWindow::setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
@@ -1780,7 +1811,7 @@ void MainWindow::toggleFullScreen()
         playerControlsPlaceHolder->move(QPoint(0, screenSize.height() - _playerControlsFrame->height()));
         playerControlsPlaceHolder->setFixedWidth(screenSize.width());
         playerControlsPlaceHolder->setFixedHeight(_playerControlsFrame->height());
-    playerControlsPlaceHolder->setFocusPolicy(Qt::StrongFocus);
+        playerControlsPlaceHolder->setFocusPolicy(Qt::StrongFocus);
         int rows = screenSize.height() / _playerControlsFrame->height();
         ui->fullScreenGrid->addWidget(videoHandler, 0, 0, rows, 5);
         ui->fullScreenGrid->addWidget(_videoLoadingLabel, (rows / 2) - 1, 2, 2, 1);
@@ -1813,26 +1844,24 @@ void MainWindow::toggleFullScreen()
         _playerControlsFrame->style()->unpolish(_playerControlsFrame);
         _playerControlsFrame->style()->polish(_playerControlsFrame);
         ui->mainStackedWidget->setCurrentIndex(1);
-        QMainWindow::resize(screenSize);
         QMainWindow::centralWidget()->layout()->setMargin(0);
         QMainWindow::showFullScreen();
+        LogHandler::Debug("After full VideoSize: width: "+QString::number(videoHandler->size().width()) + " height: " + QString::number(videoHandler->size().height()));
         videoHandler->layout()->setMargin(0);
-        ui->mainStackedWidget->move(QPoint(0, 0));
-        //videoHandler->move(QPoint(0, 0));
-        //videoHandler->resize(QSize(screenSize.width()+1, screenSize.height()+1));
+        //ui->mainStackedWidget->move(QPoint(0, 0));
         hideControls();
         ui->menubar->hide();
         ui->statusbar->hide();
-        videoHandler->resize(screenSize);
         QMainWindow::setFocus();
     }
     else
     {
+        ui->mainStackedWidget->setCurrentIndex(0);
+        LogHandler::Debug("Before Normal VideoSize: width: "+QString::number(videoHandler->size().width()) + " height: " + QString::number(videoHandler->size().height()));
         ui->fullScreenGrid->removeWidget(videoHandler);
-        playerControlsPlaceHolder->layout()->removeWidget(_playerControlsFrame);
-        //videoHandler->resize(_videoSize);
         _mediaGrid->addWidget(videoHandler, 0, 0, 3, 5);
         _mediaGrid->addWidget(_videoLoadingLabel, 1, 2);
+        playerControlsPlaceHolder->layout()->removeWidget(_playerControlsFrame);
         ui->fullScreenGrid->removeWidget(playerControlsPlaceHolder);
         _videoLoadingLabel->raise();
         _playerControlsFrame->setWindowFlags(Qt::Widget);
@@ -1861,13 +1890,7 @@ void MainWindow::toggleFullScreen()
         videoHandler->layout()->setMargin(9);
         QMainWindow::centralWidget()->layout()->setMargin(9);
 
-        ui->mainStackedWidget->setCurrentIndex(0);
 
-        ui->menubar->show();
-        ui->statusbar->show();
-        _playerControlsFrame->show();
-        libraryList->show();
-        QMainWindow::setWindowFlags(Qt::WindowFlags());
         if(_isMaximized)
         {
             QMainWindow::showMaximized();
@@ -1875,12 +1898,19 @@ void MainWindow::toggleFullScreen()
         else
         {
 //            QMainWindow::showMaximized();
-//            QMainWindow::resize(_appSize);
-//            QMainWindow::move(_appPos.x() < 100 ? 100 : _appPos.x(), _appPos.y() < 100 ? 100 : _appPos.y());
             QMainWindow::showNormal();
+            //videoHandler->resize(_videoSize);
+            //QMainWindow::resize(_appSize);
+//            QMainWindow::move(_appPos.x() < 10 ? 10 : _appPos.x(), _appPos.y() < 10 ? 10 : _appPos.y());
 //            this->repaint();
         }
+        LogHandler::Debug("After Normal VideoSize: width: "+QString::number(videoHandler->size().width()) + " height: " + QString::number(videoHandler->size().height()));
+        ui->menubar->show();
+        ui->statusbar->show();
+        _playerControlsFrame->show();
+        libraryList->show();
         _isFullScreen = false;
+        //QMainWindow::setWindowFlags(Qt::WindowFlags());
         delete placeHolderControlsGrid;
         delete playerControlsPlaceHolder;
     }
@@ -2958,11 +2988,12 @@ void MainWindow::setThumbSize(int size)
 
 void MainWindow::resizeThumbs(int size)
 {
+    QSize newSize = {size, size};
     for(int i = 0; i < libraryList->count(); i++)
     {
-        libraryList->item(i)->setSizeHint({size, size-(size/4)});
+        ((LibraryListWidgetItem*)libraryList->item(i))->updateThumbSize(newSize);
     }
-    libraryList->setIconSize({size, size});
+    libraryList->setIconSize(newSize);
 }
 
 void MainWindow::updateLibrarySortUI()

@@ -53,8 +53,8 @@ public:
     void setAxisProgressBar(QString axis, int value);
     void resetAxisProgressBars();
     void latestYoutubeDownloaded();
-    bool CheckPass(QString pass);
-    bool GetLaunchPass();
+    PasswordResponse CheckPass(QString pass);
+    PasswordResponse GetLaunchPass();
     bool HasLaunchPass();
 
 signals:

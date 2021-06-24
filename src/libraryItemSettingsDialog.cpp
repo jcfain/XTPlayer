@@ -8,6 +8,9 @@ LibraryItemSettingsDialog::LibraryItemSettingsDialog(QString key, QWidget *paren
     offsetSpinBox = new QSpinBox(this);
     offsetSpinBox->setSuffix("ms");
     offsetSpinBox->setSingleStep(1);
+    connect(offsetSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, [](int value) {
+        SettingsHandler::setLiveOffset(value);
+    });
     //offsetSpinBox->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
     offsetSpinBox->setMinimum(std::numeric_limits<int>::lowest());
     offsetSpinBox->setMaximum(std::numeric_limits<int>::max());
@@ -45,7 +48,6 @@ void LibraryItemSettingsDialog::showDialog(LibraryItemSettingsDialog *dialog, bo
         {
             dialog->offsetSpinBox->setValue(0);
         }
-        _libraryListItemMetaData.offset = dialog->offsetSpinBox->value();
         SettingsHandler::updateLibraryListItemMetaData(_libraryListItemMetaData);
     }
     dialog->deleteLater();

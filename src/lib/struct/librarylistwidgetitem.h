@@ -10,6 +10,7 @@ class LibraryListWidgetItem : public QListWidgetItem
 {
 public:
     LibraryListWidgetItem(LibraryListItem &data);
+    ~LibraryListWidgetItem();
     LibraryListItem getLibraryListItem();
     LibraryListItemType getType();
     bool updateToolTip(LibraryListItem localData);
@@ -17,9 +18,14 @@ public:
     virtual bool operator< (const QListWidgetItem & other) const override;
     bool operator== (const LibraryListWidgetItem & other) const;
     void dropEvent(QDropEvent* event);
+    void updateThumbSize(QSize thumbSize);
     virtual LibraryListWidgetItem* clone() const override;
+    QSize calculateHintSize(QSize size);
 private:
+    QString _thumbFile;
+    QPixmap _bgPixmap;
     static LibrarySortMode _sortMode;
+    QSize calculateMaxSize(QSize size);
 };
 
 #endif // LIBRARYLISTWIDGETITEM_H

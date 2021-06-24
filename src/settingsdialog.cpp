@@ -1276,18 +1276,17 @@ void SettingsDialog::on_passwordButton_clicked()
     }
 }
 
-bool SettingsDialog::GetLaunchPass()
+PasswordResponse SettingsDialog::GetLaunchPass()
 {
      bool ok;
-     QString text = QInputDialog::getText(this, tr("Enter password to continue"),
+     QString text = QInputDialog::getText(this, tr("STOP!"),
                                           tr("Password:"), QLineEdit::Password,
                                           "", &ok);
      if (ok && !text.isEmpty())
      {
          return CheckPass(text);
      }
-     return false;
-
+     return PasswordResponse::CANCEL ;
 }
 
 bool SettingsDialog::HasLaunchPass()
@@ -1295,11 +1294,11 @@ bool SettingsDialog::HasLaunchPass()
     return !SettingsHandler::GetHashedPass().isEmpty();
 }
 
-bool SettingsDialog::CheckPass(QString pass)
+PasswordResponse SettingsDialog::CheckPass(QString pass)
 {
     //QString encrypted = encryptPass(pass);
     QString stored = decryptPass(SettingsHandler::GetHashedPass());
-    return pass == stored;
+    return pass == stored ? PasswordResponse::CORRECT : PasswordResponse::INCORRECT;
 }
 
 QString SettingsDialog::encryptPass(QString pass)
