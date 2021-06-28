@@ -157,6 +157,10 @@ private slots:
 
     void on_importButton_clicked();
 
+    void on_thumbDirButton_clicked();
+
+    void on_thumbsDirDefaultButton_clicked();
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();

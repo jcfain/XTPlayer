@@ -1326,3 +1326,12 @@ void SettingsDialog::on_importButton_clicked()
 {
     SettingsHandler::Import(this);
 }
+
+void SettingsDialog::on_thumbDirButton_clicked()
+{
+    SettingsHandler::setSelectedThumbsDir(this);
+}
+void SettingsDialog::on_thumbsDirDefaultButton_clicked()
+{
+    SettingsHandler::setSelectedThumbsDirDefault(this);
+}

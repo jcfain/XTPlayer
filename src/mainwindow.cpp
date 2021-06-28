@@ -1032,20 +1032,20 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
     QListWidgetItem* selectedItem = libraryList->selectedItems().first();
     LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
 
-    myMenu.addAction("Play", this, &MainWindow::playFileFromContextMenu);
+    myMenu.addAction(tr("Play"), this, &MainWindow::playFileFromContextMenu);
     if(selectedFileListItem.type == LibraryListItemType::PlaylistInternal)
     {
-        myMenu.addAction("Open", this, [this]()
+        myMenu.addAction(tr("Open"), this, [this]()
         {
             QListWidgetItem* selectedItem = libraryList->selectedItems().first();
             LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
             loadPlaylistIntoLibrary(selectedFileListItem.nameNoExtension);
         });
-        myMenu.addAction("Rename...", this, &MainWindow::renamePlaylist);
-        myMenu.addAction("Delete...", this, [this, selectedFileListItem]() {
+        myMenu.addAction(tr("Rename..."), this, &MainWindow::renamePlaylist);
+        myMenu.addAction(tr("Delete..."), this, [this, selectedFileListItem]() {
 
             QMessageBox::StandardButton reply;
-            reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to delete the playlist: " + selectedFileListItem.nameNoExtension,
+            reply = QMessageBox::question(this, tr("WARNING!"), tr("Are you sure you want to delete the playlist: ") + selectedFileListItem.nameNoExtension,
                                           QMessageBox::Yes|QMessageBox::No);
             if (reply == QMessageBox::Yes)
             {
@@ -1057,15 +1057,15 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
     {
         if(selectedPlaylistItems.length() > 0)
         {
-            myMenu.addAction("Remove from playlist", this, &MainWindow::removeFromPlaylist);
+            myMenu.addAction(tr("Remove from playlist"), this, &MainWindow::removeFromPlaylist);
         }
-        myMenu.addAction("Play with funscript...", this, &MainWindow::playFileWithCustomScript);
+        myMenu.addAction(tr("Play with funscript..."), this, &MainWindow::playFileWithCustomScript);
         // Experimental
         //myMenu.addAction("Play with audio sync (Experimental)", this, &MainWindow::playFileWithAudioSync);
         if(selectedPlaylistItems.length() == 0)
         {
             QMenu* subMenu = myMenu.addMenu(tr("Add to playlist"));
-            subMenu->addAction("New playlist...", this, [this]()
+            subMenu->addAction(tr("New playlist..."), this, [this]()
             {
                 QString playlist = getPlaylistName();
                 if(!playlist.isEmpty())
@@ -1084,19 +1084,19 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
 
         if(selectedFileListItem.type != LibraryListItemType::Audio)
         {
-            myMenu.addAction("Regenerate thumbnail", this, &MainWindow::regenerateThumbNail);
-            myMenu.addAction("Set thumbnail from current", this, &MainWindow::setThumbNailFromCurrent);
+            myMenu.addAction(tr("Regenerate thumbnail"), this, &MainWindow::regenerateThumbNail);
+            myMenu.addAction(tr("Set thumbnail from current"), this, &MainWindow::setThumbNailFromCurrent);
         }
-        myMenu.addAction("Set moneyshot from current", this, [this, selectedFileListItem] () {
+        myMenu.addAction(tr("Set moneyshot from current"), this, [this, selectedFileListItem] () {
             onSetMoneyShot(selectedFileListItem, videoHandler->position());
         });
 //        myMenu.addAction("Add bookmark from current", this, [this, selectedFileListItem] () {
 //            onAddBookmark(selectedFileListItem, "Book mark 1", videoHandler->position());
 //        });
-        myMenu.addAction("Reveal in directory", this, [this, selectedFileListItem] () {
+        myMenu.addAction(tr("Reveal in directory"), this, [this, selectedFileListItem] () {
             showInGraphicalShell(selectedFileListItem.path);
         });
-        myMenu.addAction("Edit media settings...", this, [this, selectedFileListItem] () {
+        myMenu.addAction(tr("Edit media settings..."), this, [this, selectedFileListItem] () {
             LibraryItemSettingsDialog::getSettings(this, selectedFileListItem.path);
         });
     }
@@ -1112,7 +1112,7 @@ void MainWindow::changeDeoFunscript()
     {
         QFileInfo videoFile(playingPacket.path);
         funscriptFileSelectorOpen = true;
-        QString funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + videoFile.fileName(), SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
+        QString funscriptPath = QFileDialog::getOpenFileName(this, tr("Choose script for video: ") + videoFile.fileName(), SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
         funscriptFileSelectorOpen = false;
         if (!funscriptPath.isEmpty())
         {
@@ -1122,7 +1122,7 @@ void MainWindow::changeDeoFunscript()
     }
     else
     {
-        LogHandler::Dialog("No packet for current video or no video playing", XLogLevel::Information);
+        LogHandler::Dialog(tr("No packet for current video or no video playing"), XLogLevel::Information);
     }
 }
 
@@ -1130,7 +1130,7 @@ void MainWindow::on_load_library(QString path)
 {
     if (!path.isNull() && !path.isEmpty())
     {
-        QString thumbPath = QCoreApplication::applicationDirPath() + "/thumbs/";
+        QString thumbPath = SettingsHandler::getSelectedThumbsDir();
         QDir thumbDir(thumbPath);
         if (!thumbDir.exists())
         {
@@ -1251,7 +1251,7 @@ void MainWindow::on_load_library(QString path)
         }
         else
         {
-           LogHandler::Dialog("Library path '" + path + "' does not exist anymore!", XLogLevel::Critical);
+           LogHandler::Dialog(tr("Library path '") + path + tr("' does not exist anymore!"), XLogLevel::Critical);
            on_actionSelect_library_triggered();
         }
     }
@@ -1376,12 +1376,12 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, L
            extractor,
            [this, videoFile, thumbFile, cachedListWidgetItem, libraryListWidgetItem](const QtAV::VideoFrame& frame)
             {
-               LogHandler::Debug("Saving thumbnail: " + thumbFile + " for video: " + videoFile);
+               LogHandler::Debug(tr("Saving thumbnail: ") + thumbFile + tr(" for video: ") + videoFile);
                const auto& img = frame.toImage();
                QString thumbFileTemp = thumbFile;
                if (!img.save(thumbFile, nullptr, 15))
                {
-                   LogHandler::Debug("Error saving thumbnail: " + thumbFile + " for video: " + videoFile);
+                   LogHandler::Debug(tr("Error saving thumbnail: ") + thumbFile + tr(" for video: ") + videoFile);
                    thumbFileTemp = "://images/icons/error.png";
                }
                QIcon thumb;
@@ -1405,7 +1405,7 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, L
            [this, videoFile, cachedListWidgetItem, libraryListWidgetItem](const QString &errorMessage)
             {
 
-               LogHandler::Debug("Error extracting image from: " + videoFile + " Error: " + errorMessage);
+               LogHandler::Debug(tr("Error extracting image from: ") + videoFile + tr(" Error: ") + errorMessage);
 
                QIcon thumb;
                QPixmap bgPixmap("://images/icons/error.png");
@@ -1413,7 +1413,7 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, L
                QSize size = {thumbSize,thumbSize};
                QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
                thumb.addPixmap(scaled);
-               auto errorMsg = cachedListWidgetItem->toolTip() + "\n\nError: "+ errorMessage;
+               auto errorMsg = cachedListWidgetItem->toolTip() + tr("\n\nError: ") + errorMessage;
                cachedListWidgetItem->setIcon(thumb);
                cachedListWidgetItem->setToolTip(errorMsg);
                cachedListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
@@ -1435,7 +1435,7 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, L
            thumbNailPlayer,
            [this, position]()
             {
-               LogHandler::Debug("Loaded video for thumb duration: "+ QString::number(thumbNailPlayer->duration()));
+               LogHandler::Debug(tr("Loaded video for thumb duration: ") + QString::number(thumbNailPlayer->duration()));
                qint64 randomPosition = position > 0 ? position : XMath::rand((qint64)1, thumbNailPlayer->duration());
                //LogHandler::Debug("randomPosition: " + QString::number(randomPosition));
                extractor->setPosition(randomPosition);
@@ -1446,14 +1446,14 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, L
            thumbNailPlayer,
            [this, cachedListWidgetItem, libraryListWidgetItem](QtAV::AVError er)
             {
-               LogHandler::Debug("Video load error");
+               LogHandler::Debug(tr("Video load error"));
                QIcon thumb;
                QPixmap bgPixmap("://images/icons/error.png");
                int thumbSize = SettingsHandler::getThumbSize();
                QSize size = {thumbSize,thumbSize};
                QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
                thumb.addPixmap(scaled);
-               auto errorMsg = cachedListWidgetItem->toolTip() + "\n\nError: "+ er.ffmpegErrorString();
+               auto errorMsg = cachedListWidgetItem->toolTip() + tr("\n\nError: ") + er.ffmpegErrorString();
                cachedListWidgetItem->setIcon(thumb);
                cachedListWidgetItem->setToolTip(errorMsg);
                cachedListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
@@ -1580,7 +1580,7 @@ void MainWindow::stopAndPlayVideo(LibraryListItem selectedFileListItem, QString 
                 {
                     while(!_mediaStopped)
                     {
-                        LogHandler::Debug("Waiting for media stop...");
+                        LogHandler::Debug(tr("Waiting for media stop..."));
                         QThread::msleep(500);
                     }
                     playVideo(selectedFileListItem, customScript, audioSync);
@@ -1638,7 +1638,7 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
                    }
                    else
                    {
-                       LogHandler::Dialog("Custom zip file missing main funscript.", XLogLevel::Warning);
+                       LogHandler::Dialog(tr("Custom zip file missing main funscript."), XLogLevel::Warning);
                    }
                 }
                 else if(zipFile.isReadable())
@@ -1650,7 +1650,7 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
                     }
                     else
                     {
-                        LogHandler::Dialog("Zip file missing main funscript.", XLogLevel::Warning);
+                        LogHandler::Dialog(tr("Zip file missing main funscript."), XLogLevel::Warning);
                     }
                 }
 
@@ -1714,14 +1714,14 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
 
             if(!audioSync && !funscriptHandler->isLoaded())
             {
-                LogHandler::Dialog("Error loading script " + customScript + "!\nTry right clicking on the video in the list\nand loading with another script.", XLogLevel::Warning);
+                LogHandler::Dialog(tr("Error loading script ") + customScript + tr("!\nTry right clicking on the video in the list\nand loading with another script."), XLogLevel::Warning);
             }
         }
 
     }
     else
     {
-        LogHandler::Dialog("File '" + selectedFileListItem.path + "' does not exist!", XLogLevel::Critical);
+        LogHandler::Dialog(tr("File '") + selectedFileListItem.path + tr("' does not exist!"), XLogLevel::Critical);
     }
 }
 
@@ -3204,7 +3204,7 @@ QString MainWindow::getPlaylistName(bool newPlaylist)
         }
         else
         {
-            LogHandler::Dialog(("Playlist '" + playlistName + "' already exists.\nPlease choose another name."), XLogLevel::Critical);
+            LogHandler::Dialog((tr("Playlist '") + playlistName + tr("' already exists.\nPlease choose another name.")), XLogLevel::Critical);
         }
     }
     return ok ? playlistName : nullptr;
@@ -3260,7 +3260,7 @@ void MainWindow::loadPlaylistIntoLibrary(QString playlistName)
         librarySortGroup->setEnabled(false);
     }
     else
-        LogHandler::Dialog("Please wait for thumbnails to fully load!", XLogLevel::Warning);
+        LogHandler::Dialog(tr("Please wait for thumbnails to fully load!"), XLogLevel::Warning);
 }
 
 void MainWindow::backToMainLibrary()
@@ -3365,7 +3365,7 @@ void MainWindow::renamePlaylist()
         }
         else if(playlist.nameNoExtension != renamedPlaylistName)
         {
-            LogHandler::Dialog(("Playlist '" + renamedPlaylistName + "' already exists.\nPlease choose another name."), XLogLevel::Critical);
+            LogHandler::Dialog((tr("Playlist '") + renamedPlaylistName + tr("' already exists.\nPlease choose another name.")), XLogLevel::Critical);
         }
     }
 

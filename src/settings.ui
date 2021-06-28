@@ -24,6 +24,19 @@
    <property name="sizeConstraint">
     <enum>QLayout::SetNoConstraint</enum>
    </property>
+   <item row="6" column="1">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Close|QDialogButtonBox::RestoreDefaults</set>
+     </property>
+     <property name="centerButtons">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
    <item row="1" column="1">
     <widget class="QTabWidget" name="settingsTabWidget">
      <property name="currentIndex">
@@ -336,17 +349,20 @@
        <string>System</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
-       <item row="4" column="0" colspan="6">
-        <widget class="QLabel" name="label">
+       <item row="6" column="0">
+        <widget class="QPushButton" name="axisDefaultButton">
          <property name="text">
-          <string>Tcode Tracks (Be careful here! May affect gamepad map. May require restart to take effect)</string>
+          <string>Default</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="10">
-        <widget class="QPushButton" name="cancelPriorityButton">
+       <item row="5" column="0" colspan="8">
+        <widget class="QTableView" name="channelTableView"/>
+       </item>
+       <item row="6" column="6">
+        <widget class="QPushButton" name="channelAddButton">
          <property name="text">
-          <string>Cancel</string>
+          <string>Add</string>
          </property>
         </widget>
        </item>
@@ -354,19 +370,6 @@
         <widget class="QLabel" name="label_3">
          <property name="text">
           <string>Decoder priority</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0" colspan="8">
-        <widget class="QTableView" name="channelTableView"/>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_2">
-         <property name="toolTip">
-          <string>This sets the value the video will either skip forward or back via shortcuts.</string>
-         </property>
-         <property name="text">
-          <string>Video time step in secs</string>
          </property>
         </widget>
        </item>
@@ -384,17 +387,10 @@
          </property>
         </widget>
        </item>
-       <item row="6" column="6">
-        <widget class="QPushButton" name="channelAddButton">
+       <item row="0" column="10">
+        <widget class="QPushButton" name="exportButton">
          <property name="text">
-          <string>Add</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="6">
-        <widget class="QPushButton" name="libraryExclusionsBtn">
-         <property name="text">
-          <string>Library exclusions</string>
+          <string>Export</string>
          </property>
         </widget>
        </item>
@@ -426,17 +422,41 @@
          </property>
         </widget>
        </item>
-       <item row="6" column="0">
-        <widget class="QPushButton" name="axisDefaultButton">
+       <item row="4" column="0" colspan="6">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Tcode Tracks (Be careful here! May affect gamepad map. May require restart to take effect)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="toolTip">
+          <string>This sets the value the video will either skip forward or back via shortcuts.</string>
+         </property>
+         <property name="text">
+          <string>Video time step in secs</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="9">
+        <widget class="QPushButton" name="importButton">
+         <property name="text">
+          <string>Import</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="8">
+        <widget class="QPushButton" name="defaultPriorityButton">
          <property name="text">
           <string>Default</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="5">
-        <widget class="QCheckBox" name="checkBox">
+       <item row="6" column="10">
+        <widget class="QPushButton" name="cancelPriorityButton">
          <property name="text">
-          <string>Debug</string>
+          <string>Cancel</string>
          </property>
         </widget>
        </item>
@@ -456,38 +476,45 @@
          </property>
         </widget>
        </item>
-       <item row="6" column="8">
-        <widget class="QPushButton" name="defaultPriorityButton">
+       <item row="1" column="0">
+        <widget class="QPushButton" name="thumbDirButton">
          <property name="text">
-          <string>Default</string>
+          <string>Thumb Directory</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="3">
+       <item row="1" column="1" colspan="2">
+        <widget class="QPushButton" name="thumbsDirDefaultButton">
+         <property name="text">
+          <string>Thumb Directory Default</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2" colspan="2">
         <widget class="QCheckBox" name="disableTextToSpeechCheckBox">
          <property name="text">
-          <string>Disable text to speech</string>
+          <string>Disable speech</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="7">
+       <item row="1" column="10">
+        <widget class="QCheckBox" name="checkBox">
+         <property name="text">
+          <string>Debug</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="4">
         <widget class="QPushButton" name="passwordButton">
          <property name="text">
           <string>Set password</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="10">
-        <widget class="QPushButton" name="exportButton">
+       <item row="0" column="5">
+        <widget class="QPushButton" name="libraryExclusionsBtn">
          <property name="text">
-          <string>Export</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="9">
-        <widget class="QPushButton" name="importButton">
-         <property name="text">
-          <string>Import</string>
+          <string>Library exclusions</string>
          </property>
         </widget>
        </item>
@@ -694,19 +721,6 @@ p, li { white-space: pre-wrap; }
        </item>
       </layout>
      </widget>
-    </widget>
-   </item>
-   <item row="6" column="1">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Close|QDialogButtonBox::RestoreDefaults</set>
-     </property>
-     <property name="centerButtons">
-      <bool>false</bool>
-     </property>
     </widget>
    </item>
   </layout>

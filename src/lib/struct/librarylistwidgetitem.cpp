@@ -5,7 +5,8 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem &localData) :
 {
     auto mfs = updateToolTip(localData);
 
-    localData.thumbFile = QApplication::applicationDirPath() + "/thumbs/" + localData.name + ".jpg";
+
+    localData.thumbFile = SettingsHandler::getSelectedThumbsDir() + localData.name + ".jpg";
     if(localData.type == LibraryListItemType::Audio)
         localData.thumbFile = "://images/icons/audio.png";
     else if(localData.type == LibraryListItemType::PlaylistInternal)

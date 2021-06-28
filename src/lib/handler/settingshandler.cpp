@@ -18,6 +18,12 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     QCoreApplication::setOrganizationDomain("https://www.patreon.com/Khrull");
     QCoreApplication::setApplicationName("XTPlayer");
 
+    _appdataLocation = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+    if(_appdataLocation.isEmpty())
+        _appdataLocation = QApplication::applicationDirPath();
+    QDir dir(_appdataLocation);
+    if (!dir.exists())
+        dir.mkpath(_appdataLocation);
     if(settingsToLoadFrom == nullptr)
     {
         QFile settingsini(QApplication::applicationDirPath() + "/settings.ini");
@@ -49,6 +55,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     selectedTheme = settingsToLoadFrom->value("selectedTheme").toString();
     selectedTheme = selectedTheme.isNull() ? QApplication::applicationDirPath() + "/themes/black-silver.css" : selectedTheme;
     selectedLibrary = settingsToLoadFrom->value("selectedLibrary").toString();
+    _selectedThumbsDir = settingsToLoadFrom->value("selectedThumbsDir").toString();
     selectedDevice = settingsToLoadFrom->value("selectedDevice").toInt();
     playerVolume = settingsToLoadFrom->value("playerVolume").toInt();
     offSet = settingsToLoadFrom->value("offSet").toInt();
@@ -178,6 +185,7 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         settingsToSaveTo->setValue("version", XTPVersionNum);
         settingsToSaveTo->setValue("selectedLibrary", selectedLibrary);
         settingsToSaveTo->setValue("selectedTheme", selectedTheme);
+        settingsToSaveTo->setValue("selectedThumbsDir", _selectedThumbsDir);
         settingsToSaveTo->setValue("selectedDevice", selectedDevice);
         settingsToSaveTo->setValue("playerVolume", playerVolume);
         settingsToSaveTo->setValue("offSet", offSet);
@@ -345,7 +353,7 @@ void SettingsHandler::SetMapDefaults()
 
 void SettingsHandler::MigrateTo23()
 {
-    settings->setValue("version", XTPVersionNum);
+    settings->setValue("version", 0.23f);
     SetupAvailableAxis();
     SetupDecoderPriority();
     Save();
@@ -355,23 +363,22 @@ void SettingsHandler::MigrateTo23()
 
 void SettingsHandler::MigrateTo25()
 {
-    settings->setValue("version", XTPVersionNum);
+    settings->setValue("version", 0.25f);
     Save();
     Load();
 }
 
 void SettingsHandler::MigrateTo252()
 {
-    settings->setValue("version", XTPVersionNum);
+    settings->setValue("version", 0.252f);
     SetupAvailableAxis();
     Save();
     Load();
     LogHandler::Dialog("Due to a standards update your CHANNELS\nhave been set to default for a new data structure.\nPlease reset your Multiplier/Range settings before using.", XLogLevel::Information);
 }
-
 void SettingsHandler::MigrateLibraryMetaDataTo258()
 {
-    settings->setValue("version", XTPVersionNum);
+    settings->setValue("version", 0.258f);
     QVariantHash libraryListItemMetaDatas = settings->value("libraryListItemMetaDatas").toHash();
     foreach(auto key, libraryListItemMetaDatas.keys())
     {
@@ -397,6 +404,35 @@ void SettingsHandler::MigrateLibraryMetaDataTo258()
         }
     }
     Save();
+    auto fromDir = QApplication::applicationDirPath() + "/thumbs/";
+    QDir oldThumbPath(fromDir);
+    if(oldThumbPath.exists())
+    {
+        auto toDir = _appdataLocation + "/thumbs/";
+        QDirIterator it(fromDir, QDirIterator::Subdirectories);
+        QDir dir(fromDir);
+        const int absSourcePathLength = dir.absoluteFilePath(fromDir).length();
+
+        while (it.hasNext()){
+            it.next();
+            const auto fileInfo = it.fileInfo();
+            if(!fileInfo.isHidden()) { //filters dot and dotdot
+                const QString subPathStructure = fileInfo.absoluteFilePath().mid(absSourcePathLength);
+                const QString constructedAbsolutePath = toDir + subPathStructure;
+
+                if(fileInfo.isDir()){
+                    //Create directory in target folder
+                    dir.mkpath(constructedAbsolutePath);
+                } else if(fileInfo.isFile()) {
+                    //Copy File to target directory
+
+                    //Remove file at target location, if it exists, or QFile::copy will fail
+                    QFile::remove(constructedAbsolutePath);
+                    QFile::copy(fileInfo.absoluteFilePath(), constructedAbsolutePath);
+                }
+            }
+        }
+    }
     Load();
 }
 
@@ -414,6 +450,27 @@ QString SettingsHandler::getSelectedFunscriptLibrary()
 {
      QMutexLocker locker(&mutex);
     return selectedFunscriptLibrary;
+}
+QString SettingsHandler::getSelectedThumbsDir()
+{
+    auto customThumbDirExists  = !_selectedThumbsDir.isEmpty() && QFileInfo::exists(_selectedThumbsDir);
+    return (customThumbDirExists ? _selectedThumbsDir + "/" : _appdataLocation + "/thumbs/");
+}
+void SettingsHandler::setSelectedThumbsDir(QWidget* parent)
+{
+    auto customThumbDirExists  = !_selectedThumbsDir.isEmpty() && QFileInfo::exists(_selectedThumbsDir);
+    QString selectedDir = QFileDialog::getExistingDirectory(parent, QFileDialog::tr("Choose thumbnail storage directory"), customThumbDirExists ? _selectedThumbsDir : _appdataLocation + "/thumbs/", QFileDialog::ReadOnly);
+    if (selectedDir != Q_NULLPTR)
+    {
+        _selectedThumbsDir = selectedDir;
+        Save();
+        requestRestart(parent);
+    }
+}
+void SettingsHandler::setSelectedThumbsDirDefault(QWidget* parent)
+{
+    _selectedThumbsDir = nullptr;
+    requestRestart(parent);
 }
 int SettingsHandler::getSelectedDevice()
 {
@@ -1164,6 +1221,7 @@ void SettingsHandler::updateLibraryListItemMetaData(LibraryListItemMetaData258 l
 
 QSettings* SettingsHandler::settings;
 QMutex SettingsHandler::mutex;
+QString SettingsHandler::_appdataLocation;
 QHash<QString, bool> SettingsHandler::_funscriptLoaded;
 QList<int> SettingsHandler::_mainWindowPos;
 QSize SettingsHandler::_maxThumbnailSize = {500, 500};
@@ -1173,6 +1231,7 @@ MediaActions SettingsHandler::mediaActions;
 QHash<QString, QVariant> SettingsHandler::deoDnlaFunscriptLookup;
 QString SettingsHandler::selectedTheme;
 QString SettingsHandler::selectedLibrary;
+QString SettingsHandler::_selectedThumbsDir;
 int SettingsHandler::selectedDevice;
 int SettingsHandler::_librarySortMode;
 int SettingsHandler::playerVolume;

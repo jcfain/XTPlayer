@@ -5,6 +5,9 @@
 #include <QHash>
 #include <QFileDialog>
 #include <QProcess>
+#include <QTranslator>
+#include <QStandardPaths>
+#include <QDirIterator>
 #include "loghandler.h"
 #include "../lookup/enum.h"
 #include "../lookup/AxisNames.h"
@@ -23,9 +26,13 @@ public:
     static const QString TCodeVersion;
     static const QString XTPVersion;
     static const float XTPVersionNum;
+    static QString _appdataLocation;
     static QString getDeoDnlaFunscript(QString key);
     static QString getSelectedTheme();
     static QString getSelectedLibrary();
+    static QString getSelectedThumbsDir();
+    static void setSelectedThumbsDir(QWidget* parent);
+    static void setSelectedThumbsDirDefault(QWidget* parent);
     static QString getSelectedFunscriptLibrary();
     static int getSelectedDevice();
     static QString getSerialPort();
@@ -194,6 +201,7 @@ private:
     static QString selectedTheme;
     static QString selectedLibrary;
     static QString selectedFunscriptLibrary;
+    static QString _selectedThumbsDir;
     static QString selectedFile;
     static int selectedDevice;
     static QString serialPort;
