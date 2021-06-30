@@ -1353,19 +1353,11 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, L
     //://images/icons/loading_current.png
     if(cachedListItem.type == LibraryListItemType::Audio)
     {
-        QIcon thumb;
-        QPixmap bgPixmap(cachedListItem.thumbFile);
         int thumbSize = SettingsHandler::getThumbSize();
         QSize size = {thumbSize, thumbSize};
-        QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
-        thumb.addPixmap(scaled);
-
-        cachedListWidgetItem->setIcon(thumb);
-        cachedListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
-
+        cachedListWidgetItem->updateThumbSize(size);
         libraryList->removeItemWidget(libraryListWidgetItem);
-        libraryListWidgetItem->setIcon(thumb);
-        libraryListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
+        libraryListWidgetItem->updateThumbSize(size);
 
         saveNewThumbs();
     }
@@ -1376,27 +1368,34 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, L
            extractor,
            [this, videoFile, thumbFile, cachedListWidgetItem, libraryListWidgetItem](const QtAV::VideoFrame& frame)
             {
-               LogHandler::Debug(tr("Saving thumbnail: ") + thumbFile + tr(" for video: ") + videoFile);
-               const auto& img = frame.toImage();
-               QString thumbFileTemp = thumbFile;
-               if (!img.save(thumbFile, nullptr, 15))
-               {
-                   LogHandler::Debug(tr("Error saving thumbnail: ") + thumbFile + tr(" for video: ") + videoFile);
-                   thumbFileTemp = "://images/icons/error.png";
-               }
-               QIcon thumb;
-               QPixmap bgPixmap(thumbFileTemp);
-               int thumbSize = SettingsHandler::getThumbSize();
-               QSize size = {thumbSize, thumbSize};
-               QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
-               thumb.addPixmap(scaled);
+                if(frame.isValid())
+                {
+                    bool error = false;
+                    QImage img;
+                    try{
+                        LogHandler::Debug(tr("Saving thumbnail: ") + thumbFile + tr(" for video: ") + videoFile);
+                        img = frame.toImage();
+//                        auto vf = VideoFormat::pixelFormatFromImageFormat(QImage::Format_ARGB32);
+//                        auto vf2 = VideoFormat(vf);
+//                        VideoFrame f = frame.to(vf2, {frame.width(), frame.height()}, QRect(0,0,frame.width(), frame.height()));
+//                        QImage img(f.frameDataPtr(), f.width(), f.height(), f.bytesPerLine(0), QImage::Format_ARGB32);
+                    }
+                    catch (...) {
+                        error = true;
+                    }
+                    QString thumbFileTemp = thumbFile;
+                    if (error || img.isNull() || !img.save(thumbFile, nullptr, 15))
+                    {
+                       LogHandler::Debug(tr("Error saving thumbnail: ") + thumbFile + tr(" for video: ") + videoFile);
+                       thumbFileTemp = "://images/icons/error.png";
+                    }
 
-               cachedListWidgetItem->setIcon(thumb);
-               cachedListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
-
-               libraryList->removeItemWidget(libraryListWidgetItem);
-               libraryListWidgetItem->setIcon(thumb);
-               libraryListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
+                    int thumbSize = SettingsHandler::getThumbSize();
+                    QSize size = {thumbSize, thumbSize};
+                    cachedListWidgetItem->updateThumbSize(size, thumbFileTemp);
+                    libraryList->removeItemWidget(libraryListWidgetItem);
+                    libraryListWidgetItem->updateThumbSize(size, thumbFileTemp);
+                }
                saveNewThumbs();
             });
         connect(extractor,
@@ -1406,22 +1405,18 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, L
             {
 
                LogHandler::Debug(tr("Error extracting image from: ") + videoFile + tr(" Error: ") + errorMessage);
+               auto errorMsg = cachedListWidgetItem->toolTip() + tr("\n\nError: ") + errorMessage;
 
-               QIcon thumb;
-               QPixmap bgPixmap("://images/icons/error.png");
+               auto thumbError = "://images/icons/error.png";
+               cachedListWidgetItem->setToolTip(errorMsg);
                int thumbSize = SettingsHandler::getThumbSize();
                QSize size = {thumbSize,thumbSize};
-               QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
-               thumb.addPixmap(scaled);
-               auto errorMsg = cachedListWidgetItem->toolTip() + tr("\n\nError: ") + errorMessage;
-               cachedListWidgetItem->setIcon(thumb);
-               cachedListWidgetItem->setToolTip(errorMsg);
-               cachedListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
+               cachedListWidgetItem->updateThumbSize(size, thumbError);
 
                libraryList->removeItemWidget(libraryListWidgetItem);
-               libraryListWidgetItem->setIcon(thumb);
                libraryListWidgetItem->setToolTip(errorMsg);
-               libraryListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
+               libraryListWidgetItem->updateThumbSize(size, thumbError);
+
                saveNewThumbs();
             });
 
@@ -1447,21 +1442,16 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, L
            [this, cachedListWidgetItem, libraryListWidgetItem](QtAV::AVError er)
             {
                LogHandler::Debug(tr("Video load error"));
-               QIcon thumb;
-               QPixmap bgPixmap("://images/icons/error.png");
+               auto errorMsg = cachedListWidgetItem->toolTip() + tr("\n\nError: ") + er.ffmpegErrorString();
+               auto thumbError = "://images/icons/error.png";
+               cachedListWidgetItem->setToolTip(errorMsg);
                int thumbSize = SettingsHandler::getThumbSize();
                QSize size = {thumbSize,thumbSize};
-               QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
-               thumb.addPixmap(scaled);
-               auto errorMsg = cachedListWidgetItem->toolTip() + tr("\n\nError: ") + er.ffmpegErrorString();
-               cachedListWidgetItem->setIcon(thumb);
-               cachedListWidgetItem->setToolTip(errorMsg);
-               cachedListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
+               cachedListWidgetItem->updateThumbSize(size, thumbError);
 
                libraryList->removeItemWidget(libraryListWidgetItem);
-               libraryListWidgetItem->setIcon(thumb);
                libraryListWidgetItem->setToolTip(errorMsg);
-               libraryListWidgetItem->setSizeHint({thumbSize, thumbSize-(thumbSize/4)});
+               libraryListWidgetItem->updateThumbSize(size, thumbError);
 
                disconnect(extractor, nullptr,  nullptr, nullptr);
                saveNewThumbs();

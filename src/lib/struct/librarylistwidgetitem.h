@@ -18,7 +18,7 @@ public:
     virtual bool operator< (const QListWidgetItem & other) const override;
     bool operator== (const LibraryListWidgetItem & other) const;
     void dropEvent(QDropEvent* event);
-    void updateThumbSize(QSize thumbSize);
+    void updateThumbSize(QSize thumbSize, QString filePath = nullptr);
     virtual LibraryListWidgetItem* clone() const override;
     QSize calculateHintSize(QSize size);
 private:

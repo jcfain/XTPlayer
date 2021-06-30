@@ -185,8 +185,22 @@ void LibraryListWidgetItem::setSortMode(LibrarySortMode sortMode)
     _sortMode = sortMode;
 }
 
-void LibraryListWidgetItem::updateThumbSize(QSize thumbSize)
+void LibraryListWidgetItem::updateThumbSize(QSize thumbSize, QString filePath)
 {
+    if(!filePath.isEmpty())
+    {
+        bool loadingThumbNail = false;
+        QFileInfo thumbFile = QFileInfo(filePath);
+        if (!thumbFile.exists())
+        {
+            loadingThumbNail = true;
+        }
+        else
+        {
+            _thumbFile = filePath;
+        }
+        _bgPixmap = QPixmap(loadingThumbNail ? "://images/icons/loading.png" : _thumbFile);
+    }
     QIcon thumb;
     //QSize maxThumbSize = SettingsHandler::getMaxThumbnailSize();
     //int newHeight = round((float)bgPixmap.height() / bgPixmap.width() * 1080);
