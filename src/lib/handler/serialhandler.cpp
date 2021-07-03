@@ -133,9 +133,9 @@ void SerialHandler::run()
         const QByteArray requestData = currentRequest.toUtf8();
         serial.write(requestData);
 
-//        if (serial.waitForBytesWritten(_waitTimeout))
-//        {
-//            serial.flush();
+        if (serial.waitForBytesWritten(_waitTimeout))
+        {
+            serial.flush();
 //            // read response
 //            if ((currentPortNameChanged || !_isConnected) && serial.waitForReadyRead(currentWaitTimeout))
 //            {
@@ -166,12 +166,12 @@ void SerialHandler::run()
 //                LogHandler::Debug(tr("Read serial handshake timeout %1")
 //                             .arg(QTime::currentTime().toString()));
 //            }
-//        }
-//        else
-//        {
-//            LogHandler::Debug(tr("Write tcode to serial timeout %1")
-//                         .arg(QTime::currentTime().toString()));
-//        }
+        }
+        else
+        {
+            LogHandler::Debug(tr("Write tcode to serial timeout %1")
+                         .arg(QTime::currentTime().toString()));
+        }
         if (!_stop)
         {
             _mutex.lock();
