@@ -47,6 +47,7 @@ SOURCES += \
     librarywindow.cpp \
     main.cpp \
     mainwindow.cpp \
+    noMatchingScriptDialog.cpp \
     playercontrols.cpp \
     settingsdialog.cpp
 
@@ -97,6 +98,7 @@ HEADERS += \
     libraryexclusions.h \
     librarywindow.h \
     mainwindow.h \
+    noMatchingScriptDialog.h \
     playercontrols.h \
     settingsdialog.h
 

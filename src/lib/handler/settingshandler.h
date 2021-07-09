@@ -66,6 +66,10 @@ public:
 
     static bool getDisableSpeechToText();
     static void setDisableSpeechToText(bool value);
+    static bool getDisableNoScriptFound();
+    static void setDisableNoScriptFound(bool value);
+    static bool getDisableVRScriptSelect();
+    static void setDisableVRScriptSelect(bool value);
 
     static void setDeoDnlaFunscript(QString key, QString value);
     static void setSelectedTheme(QString value);
@@ -247,6 +251,8 @@ private:
     static QMap<QString, QList<LibraryListItem>> _playlists;
     static QHash<QString, LibraryListItemMetaData258> _libraryListItemMetaDatas;
 
+    static bool _disableVRScriptSelect;
+    static bool _disableNoScriptFound;
     static bool disableSpeechToText;
     static bool defaultReset;
     static QString _hashedPass;

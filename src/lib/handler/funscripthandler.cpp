@@ -9,7 +9,7 @@ FunscriptHandler::~FunscriptHandler()
 {
     delete(funscript);
     _loaded = false;
-    SettingsHandler::setFunscriptLoaded(_channel, false);
+    SettingsHandler::setFunscriptLoaded(_channel, _loaded);
 }
 
 QString FunscriptHandler::channel()
@@ -31,7 +31,7 @@ void FunscriptHandler::load(QString funscriptString)
     lastActionIndex = -1;
     nextActionIndex = 1;
     if (!loadFile.open(QIODevice::ReadOnly)) {
-        qWarning("Couldn't open funscript file.");
+        LogHandler::Warn("Couldn't open funscript file.");
         _loaded = false;
         SettingsHandler::setFunscriptLoaded(_channel, _loaded);
         return;
@@ -39,11 +39,13 @@ void FunscriptHandler::load(QString funscriptString)
 
     //LogHandler::Debug("funscriptHandler->load "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
     QByteArray funData = loadFile.readAll();
+    locker.unlock();
     load(funData);
 }
 
 void FunscriptHandler::load(QByteArray byteArray)
 {
+    QMutexLocker locker(&mutex);
     QJsonParseError* error = new QJsonParseError();
     QJsonDocument doc = QJsonDocument::fromJson(byteArray, error);
 
@@ -75,8 +77,8 @@ bool FunscriptHandler::isLoaded()
 void FunscriptHandler::setLoaded(bool value)
 {
     QMutexLocker locker(&mutex);
-    SettingsHandler::setFunscriptLoaded(_channel, _loaded);
     _loaded = value;
+    SettingsHandler::setFunscriptLoaded(_channel, _loaded);
 }
 void FunscriptHandler::JSonToFunscript(QJsonObject json)
 {

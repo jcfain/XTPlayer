@@ -1,8 +1,8 @@
 #include "settingshandler.h"
 
 const QString SettingsHandler::TCodeVersion = "TCode v0.2";
-const QString SettingsHandler::XTPVersion = "0.2581";
-const float SettingsHandler::XTPVersionNum = 0.258f;
+const QString SettingsHandler::XTPVersion = "0.2582";
+const float SettingsHandler::XTPVersionNum = 0.2582f;
 
 SettingsHandler::SettingsHandler()
 {
@@ -114,6 +114,8 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     _xRangeStep = settingsToLoadFrom->value("xRangeStep").toInt();
     _xRangeStep = _xRangeStep == 0 ? 50 : _xRangeStep;
     disableSpeechToText = settingsToLoadFrom->value("disableSpeechToText").toBool();
+    _disableVRScriptSelect = settingsToLoadFrom->value("disableVRScriptSelect").toBool();
+    _disableNoScriptFound = settingsToLoadFrom->value("disableNoScriptFound").toBool();
     QList<QVariant> decoderPriorityvarient = settingsToLoadFrom->value("decoderPriority").toList();
     decoderPriority.clear();
     foreach(auto varient, decoderPriorityvarient)
@@ -236,7 +238,11 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         settingsToSaveTo->setValue("gamepadSpeed", _gamepadSpeed);
         settingsToSaveTo->setValue("gamepadSpeedStep", _gamepadSpeedStep);
         settingsToSaveTo->setValue("xRangeStep", _xRangeStep);
+        ;
+
         settingsToSaveTo->setValue("disableSpeechToText", disableSpeechToText);
+        settingsToSaveTo->setValue("disableVRScriptSelect", _disableVRScriptSelect);
+        settingsToSaveTo->setValue("disableNoScriptFound", _disableNoScriptFound);
         QList<QVariant> splitterPos;
         foreach(auto pos, _mainWindowPos)
         {
@@ -786,6 +792,25 @@ void SettingsHandler::setDisableSpeechToText(bool value)
     disableSpeechToText = value;
 }
 
+bool SettingsHandler::getDisableNoScriptFound()
+{
+    return _disableNoScriptFound;
+}
+void SettingsHandler::setDisableNoScriptFound(bool value)
+{
+    QMutexLocker locker(&mutex);
+    _disableNoScriptFound = value;
+}
+
+bool SettingsHandler::getDisableVRScriptSelect()
+{
+    return _disableVRScriptSelect;
+}
+void SettingsHandler::setDisableVRScriptSelect(bool value)
+{
+    QMutexLocker locker(&mutex);
+    _disableVRScriptSelect = value;
+}
 
 void SettingsHandler::setLibrarySortMode(int value)
 {
@@ -1274,6 +1299,8 @@ QString SettingsHandler::whirligigPort;
 bool SettingsHandler::whirligigEnabled;
 bool SettingsHandler::defaultReset = false;
 bool SettingsHandler::disableSpeechToText;
+bool SettingsHandler::_disableVRScriptSelect;
+bool SettingsHandler::_disableNoScriptFound;
 
 QString SettingsHandler::_hashedPass;
 

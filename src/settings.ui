@@ -289,7 +289,7 @@
         <rect>
          <x>10</x>
          <y>20</y>
-         <width>501</width>
+         <width>851</width>
          <height>311</height>
         </rect>
        </property>
@@ -301,7 +301,7 @@
          <rect>
           <x>10</x>
           <y>30</y>
-          <width>481</width>
+          <width>831</width>
           <height>271</height>
          </rect>
         </property>
@@ -322,7 +322,7 @@
       <widget class="QGroupBox" name="groupBox_2">
        <property name="geometry">
         <rect>
-         <x>520</x>
+         <x>870</x>
          <y>20</y>
          <width>131</width>
          <height>311</height>
@@ -356,45 +356,44 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="0" colspan="8">
-        <widget class="QTableView" name="channelTableView"/>
-       </item>
-       <item row="6" column="6">
-        <widget class="QPushButton" name="channelAddButton">
-         <property name="text">
-          <string>Add</string>
+       <item row="0" column="1">
+        <widget class="QSpinBox" name="videoIncrementSpinBox">
+         <property name="toolTip">
+          <string>This sets the value the video will either skip forward or back via shortcuts.</string>
+         </property>
+         <property name="suffix">
+          <string>s</string>
+         </property>
+         <property name="maximum">
+          <number>5000</number>
+         </property>
+         <property name="singleStep">
+          <number>10</number>
          </property>
         </widget>
        </item>
-       <item row="4" column="8" colspan="3">
-        <widget class="QLabel" name="label_3">
+       <item row="6" column="11">
+        <widget class="QPushButton" name="cancelPriorityButton">
          <property name="text">
-          <string>Decoder priority</string>
+          <string>Cancel</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="9">
+       <item row="6" column="10">
         <widget class="QPushButton" name="savePriorityButton">
          <property name="text">
           <string>Save</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="7">
-        <widget class="QPushButton" name="channelDeleteButton">
-         <property name="text">
-          <string>Delete</string>
-         </property>
-        </widget>
-       </item>
        <item row="0" column="10">
-        <widget class="QPushButton" name="exportButton">
+        <widget class="QPushButton" name="importButton">
          <property name="text">
-          <string>Export</string>
+          <string>Import</string>
          </property>
         </widget>
        </item>
-       <item row="5" column="8" colspan="3">
+       <item row="5" column="9" colspan="3">
         <widget class="QListWidget" name="decoderListWidget">
          <property name="dragEnabled">
           <bool>true</bool>
@@ -422,10 +421,38 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="0" colspan="6">
-        <widget class="QLabel" name="label">
+       <item row="4" column="9" colspan="3">
+        <widget class="QLabel" name="label_3">
          <property name="text">
-          <string>Tcode Tracks (Be careful here! May affect gamepad map. May require restart to take effect)</string>
+          <string>Decoder priority</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="8">
+        <widget class="QPushButton" name="channelDeleteButton">
+         <property name="text">
+          <string>Delete</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1" colspan="2">
+        <widget class="QPushButton" name="thumbsDirDefaultButton">
+         <property name="text">
+          <string>Thumb Directory Default</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="9">
+        <widget class="QPushButton" name="defaultPriorityButton">
+         <property name="text">
+          <string>Default</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="11">
+        <widget class="QPushButton" name="exportButton">
+         <property name="text">
+          <string>Export</string>
          </property>
         </widget>
        </item>
@@ -439,42 +466,15 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="9">
-        <widget class="QPushButton" name="importButton">
+       <item row="0" column="2" colspan="2">
+        <widget class="QCheckBox" name="disableTextToSpeechCheckBox">
          <property name="text">
-          <string>Import</string>
+          <string>Disable speech</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="8">
-        <widget class="QPushButton" name="defaultPriorityButton">
-         <property name="text">
-          <string>Default</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="10">
-        <widget class="QPushButton" name="cancelPriorityButton">
-         <property name="text">
-          <string>Cancel</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QSpinBox" name="videoIncrementSpinBox">
-         <property name="toolTip">
-          <string>This sets the value the video will either skip forward or back via shortcuts.</string>
-         </property>
-         <property name="suffix">
-          <string>s</string>
-         </property>
-         <property name="maximum">
-          <number>5000</number>
-         </property>
-         <property name="singleStep">
-          <number>10</number>
-         </property>
-        </widget>
+       <item row="5" column="0" colspan="9">
+        <widget class="QTableView" name="channelTableView"/>
        </item>
        <item row="1" column="0">
         <widget class="QPushButton" name="thumbDirButton">
@@ -483,38 +483,52 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="1" colspan="2">
-        <widget class="QPushButton" name="thumbsDirDefaultButton">
+       <item row="6" column="7">
+        <widget class="QPushButton" name="channelAddButton">
          <property name="text">
-          <string>Thumb Directory Default</string>
+          <string>Add</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="2" colspan="2">
-        <widget class="QCheckBox" name="disableTextToSpeechCheckBox">
-         <property name="text">
-          <string>Disable speech</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="10">
+       <item row="1" column="11">
         <widget class="QCheckBox" name="checkBox">
          <property name="text">
           <string>Debug</string>
          </property>
         </widget>
        </item>
+       <item row="4" column="0" colspan="7">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Tcode Tracks (Be careful here! May affect gamepad map. May require restart to take effect)</string>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="4">
+        <widget class="QCheckBox" name="disableVRScriptNotFoundCheckbox">
+         <property name="text">
+          <string>Disable script selector in VR</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="9">
+        <widget class="QPushButton" name="libraryExclusionsBtn">
+         <property name="text">
+          <string>Library exclusions</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="8">
         <widget class="QPushButton" name="passwordButton">
          <property name="text">
           <string>Set password</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="5">
-        <widget class="QPushButton" name="libraryExclusionsBtn">
+       <item row="0" column="6" colspan="2">
+        <widget class="QCheckBox" name="disableNoScriptFoundInLibrary">
          <property name="text">
-          <string>Library exclusions</string>
+          <string>Disable no script found in library</string>
          </property>
         </widget>
        </item>
@@ -531,7 +545,7 @@
           <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:9.75pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;table border=&quot;0&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; border-collapse:collapse;&quot; cellspacing=&quot;2&quot; cellpadding=&quot;0&quot;&gt;&lt;thead&gt;
 &lt;tr&gt;
 &lt;td style=&quot; padding-left:10; padding-right:10; padding-top:10; padding-bottom:10; border-top:1px; border-right:1px; border-bottom:1px; border-left:1px; border-top-color:#000000; border-right-color:#000000; border-bottom-color:#000000; border-left-color:#000000; border-top-style:solid; border-right-style:solid; border-bottom-style:solid; border-left-style:solid;&quot;&gt;

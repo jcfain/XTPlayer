@@ -161,6 +161,10 @@ private slots:
 
     void on_thumbsDirDefaultButton_clicked();
 
+    void on_disableVRScriptNotFoundCheckbox_stateChanged(int arg1);
+
+    void on_disableNoScriptFoundInLibrary_stateChanged(int arg1);
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();

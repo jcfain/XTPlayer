@@ -13,26 +13,33 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
     auto axisKeys = availibleAxis->keys();
     if(action != nullptr)
     {
-        int position = action->pos;
-        int speed = action->speed;
-        if (FunscriptHandler::getInverted() || SettingsHandler::getChannelInverseChecked(axisNames.Stroke))
+        int distance = action->pos >= action->lastPos ? action->pos - action->lastPos : action->lastPos - action->pos;
+        if(distance > 0)
         {
-            position = XMath::reverseNumber(position, 0, 100);
-        }
-        char tcodeValueString[4];
-        sprintf(tcodeValueString, "%03d", calculateRange(axisNames.Stroke.toUtf8(), position));
-        tcode += axisNames.Stroke;
-        tcode += tcodeValueString;
-        if (speed > 0)
-        {
-          tcode += "I";
-          tcode += QString::number(speed);
+            int position = action->pos;
+            int speed = action->speed;
+            if (FunscriptHandler::getInverted() || SettingsHandler::getChannelInverseChecked(axisNames.Stroke))
+            {
+                position = XMath::reverseNumber(position, 0, 100);
+            }
+            char tcodeValueString[4];
+            sprintf(tcodeValueString, "%03d", calculateRange(axisNames.Stroke.toUtf8(), position));
+            tcode += axisNames.Stroke;
+            tcode += tcodeValueString;
+            LogHandler::Debug("Stroke tcode: "+ tcode);
+            if (speed > 0)
+            {
+              tcode += "I";
+              tcode += QString::number(speed);
+            }
         }
     }
-    if(otherActions.keys().length() > 0)
+    if(!otherActions.empty())
     {
         foreach(auto axis, axisKeys)
         {
+            if(!availibleAxis->contains(axis))
+                continue;
             auto axisModel = availibleAxis->value(axis);
             if (axisModel.Channel == axisNames.Stroke || axisModel.TrackName.isEmpty())
                 continue;
@@ -63,6 +70,8 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
     {
         foreach(auto axis, axisKeys)
         {
+            if(!availibleAxis->contains(axis))
+                continue;
             ChannelModel channel = availibleAxis->value(axis);
             if (channel.Dimension == AxisDimension::Heave || channel.Type == AxisType::HalfRange || channel.Type == AxisType::None)
                 continue;
@@ -74,32 +83,40 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
             if (SettingsHandler::getMultiplierChecked(axis))
             {
                 auto currentAction = action;
-                if (channel.LinkToRelatedMFS && SettingsHandler::getFunscriptLoaded(channel.RelatedChannel) && otherActions.contains(channel.RelatedChannel))
+                if ((channel.LinkToRelatedMFS && SettingsHandler::getFunscriptLoaded(channel.RelatedChannel) && otherActions.contains(channel.RelatedChannel))) // Establish link to related channel to axis that are NOT stroke.
                     currentAction = otherActions.value(channel.RelatedChannel);
                 else if(channel.LinkToRelatedMFS && SettingsHandler::getFunscriptLoaded(channel.RelatedChannel) && !otherActions.contains(channel.RelatedChannel) && channel.RelatedChannel != axisNames.Stroke)
+                    continue;
+                if(currentAction == nullptr)
                     continue;
                 int distance = currentAction->pos >= currentAction->lastPos ? currentAction->pos - currentAction->lastPos : currentAction->lastPos - currentAction->pos;
                 if (distance > 0)
                 {
-                    int value;
-                    if (channel.LinkToRelatedMFS && SettingsHandler::getFunscriptLoaded(channel.RelatedChannel) && otherActions.contains(channel.RelatedChannel))
+                    int value = -1;
+                    if ((channel.LinkToRelatedMFS && SettingsHandler::getFunscriptLoaded(channel.RelatedChannel) && otherActions.contains(channel.RelatedChannel)) ||
+                            (channel.LinkToRelatedMFS && SettingsHandler::getFunscriptLoaded(channel.RelatedChannel) && channel.RelatedChannel == axisNames.Stroke))
                     {
                         value = currentAction->pos;
 //                        LogHandler::Debug("Channel: "+ axis);
 //                        LogHandler::Debug("FriendlyName: "+ channel.FriendlyName);
 //                        LogHandler::Debug("RelatedChannel: "+ channel.RelatedChannel);
 //                        LogHandler::Debug("RelatedChannel FriendlyName: "+ SettingsHandler::getAxis(channel.RelatedChannel).FriendlyName);
-//                        LogHandler::Debug("value: "+ QString::number(value));
+//                        LogHandler::Debug("LinkToRelatedMFS value: "+ QString::number(value));
 //                        LogHandler::Debug("currentAction->pos: "+ QString::number(currentAction->pos));
+//                        LogHandler::Debug("action->pos: "+ QString::number(action->pos));
                     }
-                    else if(!channel.LinkToRelatedMFS ||
-                            (channel.LinkToRelatedMFS && (channel.RelatedChannel == axisNames.Stroke || !SettingsHandler::getFunscriptLoaded(channel.RelatedChannel))))
+                    else
                     {
                         //LogHandler::Debug("Multiplier: "+ axis);
                         value = XMath::constrain(XMath::randSine(XMath::mapRange(currentAction->pos, 0, 100, 0, 180) * multiplierValue), 0, 100);
                     }
                     //lowMin + (highMin-lowMin)*level,lowMax + (highMax-lowMax)*level
                     //LogHandler::Debug("randSine: "+ QString::number(value));
+                    if (value < 0)
+                    {
+                        LogHandler::Warn("Value was less than zero: "+ QString::number(value));
+                        continue;
+                    }
                     if ((channel.Inverted && channel.LinkToRelatedMFS) || (SettingsHandler::getChannelInverseChecked(axisNames.Stroke) && !channel.Inverted && !channel.LinkToRelatedMFS) )
                     {
                         //LogHandler::Debug("inverted: "+ QString::number(value));
@@ -112,18 +129,20 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
                     tcode += tcodeValueString;
                     tcode += "S";
                     float speedModifierValue = SettingsHandler::getDamperValue(axis);
-                    char tcodeSpeedString[4];
-                    if (SettingsHandler::getDamperChecked(axis) && speedModifierValue > 0.0 && currentAction->speed > 1000 && distance > 50)
+                    char tcodeSpeedString[5];
+                    if (SettingsHandler::getDamperChecked(axis) && speedModifierValue > 0.0)
                     {
-                        sprintf(tcodeSpeedString, "%03d", qRound(currentAction->speed * speedModifierValue));
-                        tcode += tcodeValueString;
+                        auto speed = currentAction->speed > 0 ? currentAction->speed : 500;
+                        sprintf(tcodeSpeedString, "%03d", qRound(speed * speedModifierValue));
+                        tcode += tcodeSpeedString;
                     }
                     else
                     {
-                        sprintf(tcodeSpeedString, "%03d", currentAction->speed > 0 ? currentAction->speed : 1000);
-                        tcode += tcodeValueString;
+                        sprintf(tcodeSpeedString, "%03d", (currentAction->speed > 0 ? currentAction->speed : 500));
+                        tcode += tcodeSpeedString;
                     }
                 }
+
             }
             else
             {

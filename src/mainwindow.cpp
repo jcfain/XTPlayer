@@ -126,7 +126,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     _videoLoadingLabel->setStyleSheet("* {background: transparent}");
     _videoLoadingLabel->setAlignment(Qt::AlignCenter);
     _mediaGrid->addWidget(_videoLoadingLabel, 1, 2);
-    setLoading(false);
+    on_setLoading(false);
 
     _playerControlsFrame->setVolume(SettingsHandler::getPlayerVolume());
 
@@ -348,6 +348,9 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(videoHandler, &VideoHandler::rightClicked, this, &MainWindow::media_single_click_event);
     connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
     connect(this, &MainWindow::change, this, &MainWindow::on_mainwindow_change);
+    connect(this, &MainWindow::playVideo, this, &MainWindow::on_playVideo);
+    //    connect(this, &MainWindow::setLoading, this, &MainWindow::on_setLoading);
+    //    connect(this, &MainWindow::scriptNotFound, this, &MainWindow::on_scriptNotFound);
     //connect(videoHandler, &VideoHandler::mouseEnter, this, &MainWindow::on_video_mouse_enter);
 
     connect(libraryList, &QListWidget::customContextMenuRequested, this, &MainWindow::onLibraryList_ContextMenuRequested);
@@ -1550,7 +1553,6 @@ void MainWindow::playFileWithCustomScript()
         stopAndPlayVideo(selectedFileListItem, selectedScript);
     }
 }
-
 //Hack because QTAV calls stopped and start out of order
 void MainWindow::stopAndPlayVideo(LibraryListItem selectedFileListItem, QString customScript, bool audioSync)
 {
@@ -1562,30 +1564,41 @@ void MainWindow::stopAndPlayVideo(LibraryListItem selectedFileListItem, QString 
             if(playingLibraryListItem != nullptr)
                 updateMetaData(playingLibraryListItem->getLibraryListItem());
             _playerControlsFrame->SetLoop(false);
-            setLoading(true);
+            on_setLoading(true);
             if(videoHandler->isPlaying())
             {
                 stopMedia();
-                auto waitForStopFuture = QtConcurrent::run([this, selectedFileListItem, customScript, audioSync]()
+                if(_waitForStopFuture.isRunning())
+                {
+                    _waitForStopFuture.cancel();
+                    _waitForStopFutureCancel = true;
+                    _waitForStopFuture.waitForFinished();
+                }
+
+                _waitForStopFuture = QtConcurrent::run([this, selectedFileListItem, customScript, audioSync]()
                 {
                     while(!_mediaStopped)
                     {
                         LogHandler::Debug(tr("Waiting for media stop..."));
-                        QThread::msleep(500);
+                        if(!_waitForStopFutureCancel)
+                            QThread::msleep(500);
+                        else {
+                            _waitForStopFutureCancel = false;
+                            return;
+                        }
                     }
-                    playVideo(selectedFileListItem, customScript, audioSync);
+                    emit playVideo(selectedFileListItem, customScript, audioSync);
                 });
             }
             else
             {
-                playVideo(selectedFileListItem, customScript, audioSync);
+                on_playVideo(selectedFileListItem, customScript, audioSync);
             }
         }
     }
 
 }
-
-void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customScript, bool audioSync)
+void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString customScript, bool audioSync)
 {
     QFile file(selectedFileListItem.path);
     if (file.exists())
@@ -1594,7 +1607,8 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
         {
             deviceHome();
             _playerControlsFrame->SetLoop(false);
-            setLoading(true);
+            funscriptHandler->setLoaded(false);
+            on_setLoading(true);
             videoHandler->setFile(selectedFileListItem.path);
             videoPreviewWidget->setFile(selectedFileListItem.path);
             videoHandler->load();
@@ -1696,16 +1710,16 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
                 strokerLastUpdate = QTime::currentTime().msecsSinceStartOfDay();
                 connect(audioSyncFilter, &AudioSyncFilter::levelChanged, this, &MainWindow::on_audioLevel_Change);
             }
+            if(!SettingsHandler::getDisableNoScriptFound() && !audioSync && !funscriptHandler->isLoaded())
+            {
+                on_scriptNotFound(customScript);
+            }
             videoHandler->play();
             playingLibraryListIndex = libraryList->currentRow();
             playingLibraryListItem = (LibraryListWidgetItem*)libraryList->item(playingLibraryListIndex);
 
             processMetaData(selectedFileListItem);
 
-            if(!audioSync && !funscriptHandler->isLoaded())
-            {
-                LogHandler::Dialog(tr("Error loading script ") + customScript + tr("!\nTry right clicking on the video in the list\nand loading with another script."), XLogLevel::Warning);
-            }
         }
 
     }
@@ -2183,7 +2197,7 @@ void MainWindow::on_media_start()
     {
         funscriptFuture = QtConcurrent::run(syncFunscript, videoHandler, _xSettings, tcodeHandler, funscriptHandler, funscriptHandlers);
     }
-    setLoading(false);
+    on_setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(true);
     _mediaStopped = false;
 }
@@ -2191,26 +2205,32 @@ void MainWindow::on_media_start()
 void MainWindow::on_media_stop()
 {
     LogHandler::Debug("Enter on_media_stop");
-    _mediaStopped = true;
-    setLoading(false);
+    on_setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(false);
     if(funscriptFuture.isRunning())
     {
         funscriptFuture.cancel();
+        funscriptFuture.waitForFinished();
     }
+    _mediaStopped = true;
 }
-void MainWindow::setLoading(bool loading)
+void MainWindow::on_setLoading(bool loading)
 {
-    if(loading)
+    if(loading && _videoLoadingMovie->state() != QMovie::MovieState::Running)
     {
         _videoLoadingLabel->show();
         _videoLoadingMovie->start();
     }
-    else
+    else if(!loading && _videoLoadingMovie->state() == QMovie::MovieState::Running)
     {
         _videoLoadingLabel->hide();
         _videoLoadingMovie->stop();
     }
+}
+
+void MainWindow::on_scriptNotFound(QString message)
+{
+    NoMatchingScriptDialog::show(this, message);
 }
 
 void MainWindow::setLibraryLoading(bool loading)
@@ -2279,23 +2299,26 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
                 }
             }
             //If the above locations fail ask the user to select a file manually.
-            if (funscriptPath == nullptr)
+            if (funscriptPath.isEmpty())
             {
-                funscriptFileSelectorOpen = true;
-                if (!SettingsHandler::getDisableSpeechToText())
-                    textToSpeech->say("Script for video playing in Deeo VR not found. Please check your computer to select a script.");
-                funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + videoFile.fileName(), SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
-                funscriptFileSelectorOpen = false;
-                //LogHandler::Debug("funscriptPath: "+funscriptPath);
+                if(SettingsHandler::getDisableVRScriptSelect())
+                {
+                    if (!SettingsHandler::getDisableSpeechToText())
+                        textToSpeech->say("Script for video playing in Deeo VR not found. Please check your computer to select a script.");
+                    funscriptFileSelectorOpen = true;
+                    funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + videoFile.fileName(), SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
+                    funscriptFileSelectorOpen = false;
+                    //LogHandler::Debug("funscriptPath: "+funscriptPath);
+                }
                 if(funscriptPath.isEmpty())
                 {
                     vrScriptSelectorCanceled = true;
                     vrScriptSelectedCanceledPath = packet.path;
                 }
-
             }
             //Store the location of the file so the above check doesnt happen again.
-            SettingsHandler::setDeoDnlaFunscript(videoPath, funscriptPath);
+            if(!funscriptPath.isEmpty())
+                SettingsHandler::setDeoDnlaFunscript(videoPath, funscriptPath);
         }
     }
 }
@@ -2511,16 +2534,16 @@ void MainWindow::on_media_statusChanged(MediaStatus status)
         //status = tr("Invalid meida");
         break;
     case BufferingMedia:
-        setLoading(true);
+        on_setLoading(true);
         break;
     case BufferedMedia:
-        setLoading(false);
+        on_setLoading(false);
         break;
     case LoadingMedia:
-        setLoading(true);
+        on_setLoading(true);
         break;
     case LoadedMedia:
-        setLoading(false);
+        on_setLoading(false);
         break;
     case StalledMedia:
 

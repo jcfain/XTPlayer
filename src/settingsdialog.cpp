@@ -84,6 +84,7 @@ void SettingsDialog::init(VideoHandler* videoHandler)
 void SettingsDialog::initLive()
 {
     ui.enableMultiplierCheckbox->setChecked(SettingsHandler::getMultiplierEnabled());
+    ui.disableNoScriptFoundInLibrary->setChecked(SettingsHandler::getDisableNoScriptFound());
     if(HasLaunchPass())
         ui.passwordButton->setText("Change password");
 
@@ -324,6 +325,7 @@ void SettingsDialog::setupUi()
         ui.gamePadMapGroupbox->setHidden(!SettingsHandler::getGamepadEnabled());
         ui.videoIncrementSpinBox->setValue(SettingsHandler::getVideoIncrement());
         ui.disableTextToSpeechCheckBox->setChecked(SettingsHandler::getDisableSpeechToText());
+        ui.disableVRScriptNotFoundCheckbox->setChecked(SettingsHandler::getDisableVRScriptSelect());
         //Load user decoder priority. (Too lazy to make a new function sue me...)
         on_cancelPriorityButton_clicked();
         setupGamepadMap();
@@ -1248,7 +1250,7 @@ void SettingsDialog::on_passwordButton_clicked()
                                               "", &ok);
          if (ok && !text.isEmpty())
          {
-             if(CheckPass(text))
+             if(CheckPass(text) == PasswordResponse::CORRECT)
              {
                  QString text = QInputDialog::getText(this, tr("Change password"),
                                                       tr("New password (Leave blank to remove protection):"), QLineEdit::PasswordEchoOnEdit,
@@ -1334,4 +1336,14 @@ void SettingsDialog::on_thumbDirButton_clicked()
 void SettingsDialog::on_thumbsDirDefaultButton_clicked()
 {
     SettingsHandler::setSelectedThumbsDirDefault(this);
+}
+
+void SettingsDialog::on_disableVRScriptNotFoundCheckbox_stateChanged(int checkState)
+{
+    SettingsHandler::setDisableVRScriptSelect(checkState == Qt::CheckState::Checked);
+}
+
+void SettingsDialog::on_disableNoScriptFoundInLibrary_stateChanged(int checkState)
+{
+    SettingsHandler::setDisableNoScriptFound(checkState == Qt::CheckState::Checked);
 }
