@@ -26,6 +26,7 @@ private:
     QMutex mutex;
     void getChannelHome(ChannelModel channel, QString &tcode);
     const TCodeChannels axisNames;
+    int getTCodePadding();
 };
 
 #endif // TCODEHANDLER_H

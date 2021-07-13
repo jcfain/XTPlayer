@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
     qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
     qRegisterMetaTypeStreamOperators<DecoderModel>("DecoderModel");
     qRegisterMetaTypeStreamOperators<LibraryListItem>("LibraryListItem");
+    qRegisterMetaTypeStreamOperators<TCodeVersion>("TCodeVersion");
     qRegisterMetaTypeStreamOperators<LibraryListItemMetaData>("LibraryListItemMetaData");
     qRegisterMetaTypeStreamOperators<LibraryListItemMetaData258>("LibraryListItemMetaData258");
     qRegisterMetaTypeStreamOperators<Bookmark>("Bookmark");

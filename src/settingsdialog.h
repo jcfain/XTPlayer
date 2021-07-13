@@ -165,6 +165,8 @@ private slots:
 
     void on_disableNoScriptFoundInLibrary_stateChanged(int arg1);
 
+    void on_tCodeVSComboBox_currentIndexChanged(int index);
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();

@@ -23,10 +23,11 @@
 class SettingsHandler
 {
 public:
-    static const QString TCodeVersion;
+    static const QMap<TCodeVersion, QString> SupportedTCodeVersions;
     static const QString XTPVersion;
     static const float XTPVersionNum;
-    static QString _appdataLocation;
+    static QString getSelectedTCodeVersion();
+    static void setSelectedTCodeVersion(TCodeVersion key, QWidget* parent);
     static QString getDeoDnlaFunscript(QString key);
     static QString getSelectedTheme();
     static QString getSelectedLibrary();
@@ -196,6 +197,8 @@ private:
     static void MigrateTo252();
     static void MigrateLibraryMetaDataTo258();
     static void DeMigrateLibraryMetaDataTo258();
+    static QString _appdataLocation;
+    static TCodeVersion _selectedTCodeVersion;
     static GamepadAxisNames gamepadAxisNames;
     static TCodeChannels channelNames;
     static MediaActions mediaActions;

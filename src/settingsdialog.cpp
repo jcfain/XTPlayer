@@ -119,6 +119,15 @@ void SettingsDialog::setupUi()
     {
         _interfaceInitialized = true;
 
+        foreach(auto version, SettingsHandler::SupportedTCodeVersions.keys())
+        {
+            QVariant variant;
+            variant.setValue(version);
+            ui.tCodeVersionComboBox->addItem(SettingsHandler::SupportedTCodeVersions.value(version), variant);
+        }
+        auto versionTCode = SettingsHandler::getSelectedTCodeVersion();
+        ui.tCodeVersionComboBox->setCurrentText(SettingsHandler::getSelectedTCodeVersion());
+        connect(ui.tCodeVersionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
         channelTableViewModel = new ChannelTableViewModel(this);
         ui.channelTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
         ui.channelTableView->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -1346,4 +1355,9 @@ void SettingsDialog::on_disableVRScriptNotFoundCheckbox_stateChanged(int checkSt
 void SettingsDialog::on_disableNoScriptFoundInLibrary_stateChanged(int checkState)
 {
     SettingsHandler::setDisableNoScriptFound(checkState == Qt::CheckState::Checked);
+}
+
+void SettingsDialog::on_tCodeVSComboBox_currentIndexChanged(int index)
+{
+    SettingsHandler::setSelectedTCodeVersion(ui.tCodeVersionComboBox->currentData().value<TCodeVersion>(), this);
 }

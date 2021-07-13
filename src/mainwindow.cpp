@@ -2794,7 +2794,7 @@ void MainWindow::on_actionAbout_triggered()
     layout.setGeometry(windowRect);
     QLabel copyright;
     copyright.setText("<b>XTPlayer v"+SettingsHandler::XTPVersion + "</b><br>"
-                       + SettingsHandler::TCodeVersion + "<br>"
+                       + SettingsHandler::getSelectedTCodeVersion() + "<br>"
                                                 "Copyright 2020 Jason C. Fain<br>"
                                                 "Donate: <a href='https://www.patreon.com/Khrull'>https://www.patreon.com/Khrull</a><br>"
                                                 "THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND.");

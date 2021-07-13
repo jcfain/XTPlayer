@@ -99,21 +99,33 @@ void UdpHandler::run()
             udpSocketSend->write(currentRequest);
             if (!_isConnected)
             {
+                QString version = "V?";
                 if(udpSocketSend->waitForReadyRead(_waitTimeout))
                 {
                     QNetworkDatagram datagram = udpSocketSend->receiveDatagram();
 
                     QString response = QString(datagram.data());
-                    if (response.startsWith(SettingsHandler::TCodeVersion))
+                    bool validated = false;
+                    if(response.contains(SettingsHandler::SupportedTCodeVersions.value(TCodeVersion::v2)))
                     {
-                        emit connectionChange({DeviceType::Network, ConnectionStatus::Connected, "Connected"});
+                        version = "V2";
+                        validated = true;
+                    }
+                    else if (response.contains(SettingsHandler::SupportedTCodeVersions.value(TCodeVersion::v3)))
+                    {
+                        version = "V3";
+                        validated = true;
+                    }
+                    if (validated)
+                    {
+                        emit connectionChange({DeviceType::Network, ConnectionStatus::Connected, "Connected: "+version});
                         _mutex.lock();
                         _isConnected = true;
                         _mutex.unlock();
                     }
                     else
                     {
-                        emit connectionChange({DeviceType::Network, ConnectionStatus::Error, "No TCode"});
+                        emit connectionChange({DeviceType::Network, ConnectionStatus::Error, "No " + SettingsHandler::getSelectedTCodeVersion()});
                     }
                 }
             }

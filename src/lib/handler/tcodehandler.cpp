@@ -22,11 +22,9 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
             {
                 position = XMath::reverseNumber(position, 0, 100);
             }
-            char tcodeValueString[4];
-            sprintf(tcodeValueString, "%03d", calculateRange(axisNames.Stroke.toUtf8(), position));
             tcode += axisNames.Stroke;
-            tcode += tcodeValueString;
-            LogHandler::Debug("Stroke tcode: "+ tcode);
+            tcode += QString::number(calculateRange(axisNames.Stroke.toUtf8(), position)).rightJustified(getTCodePadding(), '0');
+            // LogHandler::Debug("Stroke tcode: "+ tcode);
             if (speed > 0)
             {
               tcode += "I";
@@ -51,12 +49,10 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
                 {
                     position = XMath::reverseNumber(position, 0, 100);
                 }
-                char tcodeValueString[4];
-                sprintf(tcodeValueString, "%03d", calculateRange(axis.toUtf8(), position));
                 if(!tcode.isEmpty())
                     tcode += " ";
                 tcode += axis;
-                tcode += tcodeValueString;
+                tcode += QString::number(calculateRange(axis.toUtf8(), position)).rightJustified(getTCodePadding(), '0');
                 if (axisAction->speed > 0)
                 {
                   tcode += "I";
@@ -122,24 +118,19 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
                         //LogHandler::Debug("inverted: "+ QString::number(value));
                         value = XMath::reverseNumber(value, 0, 100);
                     }
-                    char tcodeValueString[4];
-                    sprintf(tcodeValueString, "%03d", calculateRange(axis.toUtf8(), value));
                     tcode += " ";
                     tcode += axis;
-                    tcode += tcodeValueString;
+                    tcode += QString::number(calculateRange(axis.toUtf8(), value)).rightJustified(getTCodePadding(), '0');
                     tcode += "S";
                     float speedModifierValue = SettingsHandler::getDamperValue(axis);
-                    char tcodeSpeedString[5];
                     if (SettingsHandler::getDamperChecked(axis) && speedModifierValue > 0.0)
                     {
                         auto speed = currentAction->speed > 0 ? currentAction->speed : 500;
-                        sprintf(tcodeSpeedString, "%03d", qRound(speed * speedModifierValue));
-                        tcode += tcodeSpeedString;
+                        tcode += QString::number(qRound(speed * speedModifierValue));
                     }
                     else
                     {
-                        sprintf(tcodeSpeedString, "%03d", (currentAction->speed > 0 ? currentAction->speed : 500));
-                        tcode += tcodeSpeedString;
+                        tcode += QString::number((currentAction->speed > 0 ? currentAction->speed : 500));
                     }
                 }
 
@@ -214,11 +205,14 @@ QString TCodeHandler::getSwitchedHome()
 
 void TCodeHandler::getChannelHome(ChannelModel channel, QString &tcode)
 {
-    char tcodeValueString[4];
-    sprintf(tcodeValueString, "%03d", channel.Mid);
     if(!tcode.isEmpty())
         tcode += " ";
     tcode += channel.Channel;
-    tcode += tcodeValueString;
+    tcode += QString::number(channel.Mid).rightJustified(getTCodePadding(), '0');;
     tcode += "S500";
+}
+
+int TCodeHandler::getTCodePadding()
+{
+    return SettingsHandler::getSelectedTCodeVersion() == TCodeVersion::v3 ? 4 : 3;
 }

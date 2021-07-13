@@ -1,12 +1,13 @@
 #include "settingshandler.h"
 
-const QString SettingsHandler::TCodeVersion = "TCode v0.2";
+const QMap<TCodeVersion, QString> SettingsHandler::SupportedTCodeVersions = {
+    {TCodeVersion::v2, "TCode v0.2"},
+    {TCodeVersion::v3, "TCode v0.3"}
+};
 const QString SettingsHandler::XTPVersion = "0.2582";
 const float SettingsHandler::XTPVersionNum = 0.2582f;
 
-SettingsHandler::SettingsHandler()
-{
-}
+SettingsHandler::SettingsHandler(){}
 SettingsHandler::~SettingsHandler()
 {
     delete settings;
@@ -53,7 +54,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     }
     locker.relock();
     selectedTheme = settingsToLoadFrom->value("selectedTheme").toString();
-    selectedTheme = selectedTheme.isNull() ? QApplication::applicationDirPath() + "/themes/black-silver.css" : selectedTheme;
+    selectedTheme = selectedTheme.isEmpty() ? QApplication::applicationDirPath() + "/themes/black-silver.css" : selectedTheme;
     selectedLibrary = settingsToLoadFrom->value("selectedLibrary").toString();
     _selectedThumbsDir = settingsToLoadFrom->value("selectedThumbsDir").toString();
     selectedDevice = settingsToLoadFrom->value("selectedDevice").toInt();
@@ -62,19 +63,19 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     selectedFunscriptLibrary = settingsToLoadFrom->value("selectedFunscriptLibrary").toString();
     serialPort = settingsToLoadFrom->value("serialPort").toString();
     serverAddress = settingsToLoadFrom->value("serverAddress").toString();
-    serverAddress = serverAddress.isNull() ? "tcode.local" : serverAddress;
+    serverAddress = serverAddress.isEmpty() ? "tcode.local" : serverAddress;
     serverPort = settingsToLoadFrom->value("serverPort").toString();
-    serverPort = serverPort.isNull() ? "8000" : serverPort;
+    serverPort = serverPort.isEmpty() ? "8000" : serverPort;
     deoAddress = settingsToLoadFrom->value("deoAddress").toString();
-    deoAddress = deoAddress.isNull() ? "127.0.0.1" : deoAddress;
+    deoAddress = deoAddress.isEmpty() ? "127.0.0.1" : deoAddress;
     deoPort = settingsToLoadFrom->value("deoPort").toString();
-    deoPort = deoPort.isNull() ? "23554" : deoPort;
+    deoPort = deoPort.isEmpty() ? "23554" : deoPort;
     deoEnabled = settingsToLoadFrom->value("deoEnabled").toBool();
 
     whirligigAddress = settingsToLoadFrom->value("whirligigAddress").toString();
-    whirligigAddress = whirligigAddress.isNull() ? "127.0.0.1" : whirligigAddress;
+    whirligigAddress = whirligigAddress.isEmpty() ? "127.0.0.1" : whirligigAddress;
     whirligigPort = settingsToLoadFrom->value("whirligigPort").toString();
-    whirligigPort = whirligigPort.isNull() ? "2000" : whirligigPort;
+    whirligigPort = whirligigPort.isEmpty() ? "2000" : whirligigPort;
     whirligigEnabled = settingsToLoadFrom->value("whirligigEnabled").toBool();
 
     libraryView = settingsToLoadFrom->value("libraryView").toInt();
@@ -174,6 +175,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
         locker.unlock();
         MigrateTo252();
     }
+    _selectedTCodeVersion = (TCodeVersion)(settingsToLoadFrom->value("selectedTCodeVersion").toInt());
 }
 
 void SettingsHandler::Save(QSettings* settingsToSaveTo)
@@ -184,7 +186,9 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         if(settingsToSaveTo == nullptr) {
             settingsToSaveTo = settings;
         }
+
         settingsToSaveTo->setValue("version", XTPVersionNum);
+        settingsToSaveTo->setValue("selectedTCodeVersion", ((int)_selectedTCodeVersion));
         settingsToSaveTo->setValue("selectedLibrary", selectedLibrary);
         settingsToSaveTo->setValue("selectedTheme", selectedTheme);
         settingsToSaveTo->setValue("selectedThumbsDir", _selectedThumbsDir);
@@ -441,7 +445,38 @@ void SettingsHandler::MigrateLibraryMetaDataTo258()
     }
     Load();
 }
+QString SettingsHandler::getSelectedTCodeVersion()
+{
+    return SupportedTCodeVersions.value(_selectedTCodeVersion);
+}
+void SettingsHandler::setSelectedTCodeVersion(TCodeVersion key, QWidget* parent)
+{
+    if(_selectedTCodeVersion != key)
+    {
+        _selectedTCodeVersion = key;
+        foreach(auto axis, _availableAxis.keys())
+        {
+            if(_selectedTCodeVersion == TCodeVersion::v3)
+            {
+                _availableAxis[axis].Max = 9999;
+                _availableAxis[axis].Mid = 5000;
+                _availableAxis[axis].UserMax = XMath::mapRange(_availableAxis[axis].UserMax, 0,999, 0,9999);
+                _availableAxis[axis].UserMin = XMath::mapRange(_availableAxis[axis].UserMin, 0,999, 0,9999);
+                _availableAxis[axis].UserMid = XMath::mapRange(_availableAxis[axis].UserMid, 0,999, 0,9999);
+            }
+            else
+            {
+                _availableAxis[axis].Max = 999;
+                _availableAxis[axis].Mid = 500;
+                _availableAxis[axis].UserMax = XMath::mapRange(_availableAxis[axis].UserMax, 0,9999, 0,999);
+                _availableAxis[axis].UserMin = XMath::mapRange(_availableAxis[axis].UserMin, 0,9999, 0,999);
+                _availableAxis[axis].UserMid = XMath::mapRange(_availableAxis[axis].UserMid, 0,9999, 0,999);
+            }
+        }
+        requestRestart(parent);
+    }
 
+}
 QString SettingsHandler::getSelectedTheme()
 {
     QMutexLocker locker(&mutex);
@@ -1245,6 +1280,7 @@ void SettingsHandler::updateLibraryListItemMetaData(LibraryListItemMetaData258 l
 }
 
 QSettings* SettingsHandler::settings;
+TCodeVersion SettingsHandler::_selectedTCodeVersion;
 QMutex SettingsHandler::mutex;
 QString SettingsHandler::_appdataLocation;
 QHash<QString, bool> SettingsHandler::_funscriptLoaded;
