@@ -363,9 +363,12 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nSetting user styles...", Qt::AlignBottom, Qt::white);
     QFile file(SettingsHandler::getSelectedTheme());
-    file.open(QFile::ReadOnly);
-    QString styleSheet = QLatin1String(file.readAll());
-    setStyleSheet(styleSheet);
+    if(file.exists())
+    {
+        file.open(QFile::ReadOnly);
+        QString styleSheet = QLatin1String(file.readAll());
+        setStyleSheet(styleSheet);
+    }
 
     setFocus();
     _defaultAppSize = this->size();
