@@ -73,6 +73,7 @@ private slots:
     void on_serialOutputRdo_clicked();
 
     void on_networkOutputRdo_clicked();
+    void setUpTCodeAxis();
 
     void on_serialRefreshBtn_clicked();
 

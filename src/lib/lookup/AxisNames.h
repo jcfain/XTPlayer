@@ -66,6 +66,9 @@ struct TCodeChannels
     const QString Vib = "V0";
     const QString Lube = "V1";
     const QString Suck = "L3";
+    const QString SuckPosition = "A0";
+    const QString SuctionLevel = "A1";
+    const QString LubeV3 = "A2";
 };
 
 const QMap<QString, QString> ChannelNames =

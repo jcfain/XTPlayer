@@ -39,6 +39,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
         settingsToLoadFrom = settings;
     }
 
+    _selectedTCodeVersion = (TCodeVersion)(settingsToLoadFrom->value("selectedTCodeVersion").toInt());
     float currentVersion = settingsToLoadFrom->value("version").toFloat();
     if (currentVersion == 0)
     {
@@ -175,7 +176,6 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
         locker.unlock();
         MigrateTo252();
     }
-    _selectedTCodeVersion = (TCodeVersion)(settingsToLoadFrom->value("selectedTCodeVersion").toInt());
 }
 
 void SettingsHandler::Save(QSettings* settingsToSaveTo)
@@ -342,6 +342,7 @@ void SettingsHandler::Default()
 void SettingsHandler::SetMapDefaults()
 {
     SetupAvailableAxis();
+    setSelectedTCodeVersion();
     SetupGamepadButtonMap();
     QVariantHash availableAxis;
     foreach(auto axis, _availableAxis.keys())
@@ -449,34 +450,67 @@ QString SettingsHandler::getSelectedTCodeVersion()
 {
     return SupportedTCodeVersions.value(_selectedTCodeVersion);
 }
+
 void SettingsHandler::setSelectedTCodeVersion(TCodeVersion key, QWidget* parent)
 {
     if(_selectedTCodeVersion != key)
     {
         _selectedTCodeVersion = key;
-        foreach(auto axis, _availableAxis.keys())
-        {
-            if(_selectedTCodeVersion == TCodeVersion::v3)
-            {
-                _availableAxis[axis].Max = 9999;
-                _availableAxis[axis].Mid = 5000;
-                _availableAxis[axis].UserMax = XMath::mapRange(_availableAxis[axis].UserMax, 0,999, 0,9999);
-                _availableAxis[axis].UserMin = XMath::mapRange(_availableAxis[axis].UserMin, 0,999, 0,9999);
-                _availableAxis[axis].UserMid = XMath::mapRange(_availableAxis[axis].UserMid, 0,999, 0,9999);
-            }
-            else
-            {
-                _availableAxis[axis].Max = 999;
-                _availableAxis[axis].Mid = 500;
-                _availableAxis[axis].UserMax = XMath::mapRange(_availableAxis[axis].UserMax, 0,9999, 0,999);
-                _availableAxis[axis].UserMin = XMath::mapRange(_availableAxis[axis].UserMin, 0,9999, 0,999);
-                _availableAxis[axis].UserMid = XMath::mapRange(_availableAxis[axis].UserMid, 0,9999, 0,999);
-            }
-        }
-        requestRestart(parent);
+        setSelectedTCodeVersion();
+        emit instance().tcodeVersionChanged();
     }
 
 }
+
+void SettingsHandler::setSelectedTCodeVersion()
+{
+    foreach(auto axis, _availableAxis.keys())
+    {
+        if(_selectedTCodeVersion == TCodeVersion::v3)
+        {
+            _availableAxis[axis].Max = 9999;
+            _availableAxis[axis].Mid = _availableAxis[axis].Type == AxisType::Switch ? 0 : 5000;
+            _availableAxis[axis].UserMax = XMath::mapRange(_availableAxis[axis].UserMax, 0,999, 0,9999);
+            _availableAxis[axis].UserMin = XMath::mapRange(_availableAxis[axis].UserMin, 0,999, 0,9999);
+            _availableAxis[axis].UserMid = XMath::mapRange(_availableAxis[axis].UserMid, 0,999, 0,9999);
+        }
+        else
+        {
+            _availableAxis[axis].Max = 999;
+            _availableAxis[axis].Mid = _availableAxis[axis].Type == AxisType::Switch ? 0 : 500;
+            _availableAxis[axis].UserMax = XMath::mapRange(_availableAxis[axis].UserMax, 0,9999, 0,999);
+            _availableAxis[axis].UserMin = XMath::mapRange(_availableAxis[axis].UserMin, 0,9999, 0,999);
+            _availableAxis[axis].UserMid = XMath::mapRange(_availableAxis[axis].UserMid, 0,9999, 0,999);
+        }
+    }
+    ChannelModel lubeModel = { "Lube", channelNames.Lube, channelNames.Lube, 0, 0, 999, 0, 0, 999, AxisDimension::None, AxisType::Switch, "lube", false, 0.01f, false, 0.2f, false, false, channelNames.Stroke };
+    if(_selectedTCodeVersion == TCodeVersion::v3)
+    {
+        ChannelModel suctionLevelModel = { "Suction level" ,channelNames.Suck, channelNames.Suck, 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::Range, "sucklevel", false, 0.01f, false, 0.2f, false, false, channelNames.Stroke };
+        suctionLevelModel.AxisName = channelNames.SuctionLevel;
+        suctionLevelModel.Channel = channelNames.SuctionLevel;
+         _availableAxis.insert(_availableAxis.constEnd(), channelNames.SuctionLevel, suctionLevelModel);
+         ChannelModel suctionPositionModel = { "Suction position", channelNames.SuckPosition, channelNames.SuckPosition, 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::Range, "suck", false, 0.01f, false, 0.2f, false, false, channelNames.Stroke };
+        _availableAxis.insert(_availableAxis.constEnd(), channelNames.SuckPosition, suctionPositionModel);
+        lubeModel.AxisName = channelNames.LubeV3;
+        lubeModel.Channel = channelNames.LubeV3;
+        lubeModel.Max = 9999;
+        lubeModel.UserMax = 9999;
+        _availableAxis.insert(_availableAxis.constEnd(), channelNames.LubeV3, lubeModel);
+        _availableAxis.remove(channelNames.Lube);
+        _availableAxis.remove(channelNames.Suck);
+    }
+    else
+    {
+        ChannelModel suckModel = { "Suck", channelNames.Suck, channelNames.Suck, 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::Range, "suck", false, 0.01f, false, 0.2f, false, false, channelNames.Stroke };
+        _availableAxis.remove(channelNames.SuctionLevel);
+        _availableAxis.remove(channelNames.SuckPosition);
+        _availableAxis.remove(channelNames.LubeV3);
+        _availableAxis.insert(_availableAxis.constEnd(), channelNames.Lube, lubeModel);
+        _availableAxis.insert(_availableAxis.constEnd(), channelNames.Suck, suckModel);
+    }
+}
+
 QString SettingsHandler::getSelectedTheme()
 {
     QMutexLocker locker(&mutex);
@@ -1280,6 +1314,7 @@ void SettingsHandler::updateLibraryListItemMetaData(LibraryListItemMetaData258 l
 }
 
 QSettings* SettingsHandler::settings;
+SettingsHandler SettingsHandler::m_instance;
 TCodeVersion SettingsHandler::_selectedTCodeVersion;
 QMutex SettingsHandler::mutex;
 QString SettingsHandler::_appdataLocation;

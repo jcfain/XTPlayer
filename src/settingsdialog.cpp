@@ -117,8 +117,7 @@ void SettingsDialog::setupUi()
     }
     if (!_interfaceInitialized)
     {
-        _interfaceInitialized = true;
-
+        // TCode version
         foreach(auto version, SettingsHandler::SupportedTCodeVersions.keys())
         {
             QVariant variant;
@@ -128,6 +127,8 @@ void SettingsDialog::setupUi()
         auto versionTCode = SettingsHandler::getSelectedTCodeVersion();
         ui.tCodeVersionComboBox->setCurrentText(SettingsHandler::getSelectedTCodeVersion());
         connect(ui.tCodeVersionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
+        connect(&SettingsHandler::instance(), &SettingsHandler::tcodeVersionChanged, this, &SettingsDialog::setUpTCodeAxis);
+
         channelTableViewModel = new ChannelTableViewModel(this);
         ui.channelTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
         ui.channelTableView->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -152,169 +153,8 @@ void SettingsDialog::setupUi()
         ui.deoPortTxt->setText(SettingsHandler::getDeoPort());
 
         ui.RangeSettingsGrid->setSpacing(5);
-        QFont font( "Sans Serif", 8);
-        int sliderGridRow = 0;
-        int multiplierGridRow = 1;
-        int funscriptSettingsGridRow = 0;
-        auto availableAxis = SettingsHandler::getAvailableAxis();
-        foreach(auto channel, availableAxis->keys())
-        {
-            ChannelModel axis = SettingsHandler::getAxis(channel);
-            if(axis.Type == AxisType::None || axis.Type == AxisType::HalfRange)
-                continue;
 
-            int userMin = axis.UserMin;
-            int userMax = axis.UserMax;
-            QLabel* rangeMinLabel = new QLabel(QString::number(userMin));
-            rangeMinLabel->setFont(font);
-            rangeMinLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-            ui.RangeSettingsGrid->addWidget(rangeMinLabel, sliderGridRow, 0);
-            rangeMinLabels.insert(channel, rangeMinLabel);
-
-            QLabel* rangeLabel = new QLabel(axis.FriendlyName + " Range");
-            rangeLabel->setFont(font);
-            rangeLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-            ui.RangeSettingsGrid->addWidget(rangeLabel, sliderGridRow, 1);
-
-            QLabel* rangeMaxLabel = new QLabel(QString::number(userMax));
-            rangeMaxLabel->setFont(font);
-            rangeMaxLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-            ui.RangeSettingsGrid->addWidget(rangeMaxLabel, sliderGridRow, 2);
-            rangeMaxLabels.insert(channel, rangeMaxLabel);
-
-            RangeSlider* axisRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, nullptr);
-            axisRangeSlider->SetRange(axis.Min, axis.Max);
-            axisRangeSlider->setLowerValue(userMin);
-            axisRangeSlider->setUpperValue(userMax);
-            axisRangeSlider->setName(channel);
-            axisRangeSlider->SetMinimumRange(1);
-            sliderGridRow++;
-            ui.RangeSettingsGrid->addWidget(axisRangeSlider, sliderGridRow,0,1,3);
-            rangeSliders.insert(channel, axisRangeSlider);
-            sliderGridRow++;
-
-            QProgressBar* funscriptProgressbar = new QProgressBar(this);
-            funscriptProgressbar->setMinimum(0);
-            funscriptProgressbar->setMaximum(100);
-            funscriptProgressbar->setMaximumHeight(5);
-            ui.RangeSettingsGrid->addWidget(funscriptProgressbar, sliderGridRow,0,1,3);
-            axisProgressbars.insert(channel, funscriptProgressbar);
-            sliderGridRow++;
-
-            connect(this, &SettingsDialog::onAxisValueChange, this, &SettingsDialog::on_axis_valueChange);
-            connect(this, &SettingsDialog::onAxisValueReset, this, &SettingsDialog::on_axis_valueReset);
-            connect(axisRangeSlider, QOverload<QString, int>::of(&RangeSlider::lowerValueChanged), this, &SettingsDialog::onRange_valueChanged);
-            connect(axisRangeSlider, QOverload<QString, int>::of(&RangeSlider::upperValueChanged), this, &SettingsDialog::onRange_valueChanged);
-            // mouse release work around for gamepad recalculation reseting on every valueChange event.
-            connect(axisRangeSlider, QOverload<QString>::of(&RangeSlider::mouseRelease), this, &SettingsDialog::onRange_mouseRelease);
-
-            // Multipliers
-            if(axis.Dimension != AxisDimension::Heave)
-            {
-                QCheckBox* multiplierCheckbox = new QCheckBox(this);
-                multiplierCheckbox->setText(axis.FriendlyName);
-                multiplierCheckbox->setChecked(SettingsHandler::getMultiplierChecked(channel));
-                QDoubleSpinBox* multiplierInput = new QDoubleSpinBox(this);
-                multiplierInput->setDecimals(3);
-                multiplierInput->setSingleStep(0.1f);
-                multiplierInput->setMinimum(std::numeric_limits<int>::lowest());
-                multiplierInput->setMaximum(std::numeric_limits<int>::max());
-                multiplierInput->setValue(SettingsHandler::getMultiplierValue(channel));
-                connect(multiplierInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
-                        [channel](float value)
-                          {
-                            SettingsHandler::setMultiplierValue(channel, value);
-                          });
-                connect(multiplierCheckbox, &QCheckBox::clicked, this,
-                        [channel](bool checked)
-                          {
-                            SettingsHandler::setMultiplierChecked(channel, checked);
-                          });
-                QCheckBox* damperCheckbox = new QCheckBox(this);
-                damperCheckbox->setText("Speed");
-                damperCheckbox->setChecked(SettingsHandler::getDamperChecked(channel));
-                QDoubleSpinBox* damperInput = new QDoubleSpinBox(this);
-                damperInput->setToolTip("If the funscript travel distance is greater than half(50) and the speed is greater than 1000,\nmultiply the speed by the inputed value.\n4000 * 0.05 = 2000");
-                damperInput->setDecimals(1);
-                damperInput->setSingleStep(0.1f);
-                damperInput->setMinimum(0.1f);
-                damperInput->setMaximum(std::numeric_limits<int>::max());
-                damperInput->setValue(SettingsHandler::getDamperValue(channel));
-                connect(damperInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
-                        [channel](float value)
-                          {
-                            SettingsHandler::setDamperValue(channel, value);
-                          });
-                connect(damperCheckbox, &QCheckBox::clicked, this,
-                        [channel](bool checked)
-                          {
-                            SettingsHandler::setDamperChecked(channel, checked);
-                          });
-
-
-                ui.MultiplierSettingsGrid->addWidget(multiplierCheckbox, multiplierGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-                ui.MultiplierSettingsGrid->addWidget(multiplierInput, multiplierGridRow, 1, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-                QCheckBox* linkCheckbox = new QCheckBox(this);
-                auto relatedChannel = ChannelNames.value(axis.RelatedChannel);
-                linkCheckbox->setToolTip("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS " + relatedChannel + " funscript value.\nIf there is no " + relatedChannel + " funscript then it will default to random motion.");
-                linkCheckbox->setText("Link to MFS " + relatedChannel);
-                linkCheckbox->setChecked(SettingsHandler::getLinkToRelatedAxisChecked(channel));
-                connect(linkCheckbox, &QCheckBox::clicked, this,
-                        [channel](bool checked)
-                          {
-                            SettingsHandler::setLinkToRelatedAxisChecked(channel, checked);
-                          });
-                ui.MultiplierSettingsGrid->addWidget(linkCheckbox, multiplierGridRow, 2, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-                ui.MultiplierSettingsGrid->addWidget(damperCheckbox, multiplierGridRow, 3, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
-                ui.MultiplierSettingsGrid->addWidget(damperInput, multiplierGridRow, 4, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-                multiplierGridRow++;
-            }
-            QCheckBox* invertedCheckbox = new QCheckBox(this);
-            invertedCheckbox->setText(axis.FriendlyName);
-            invertedCheckbox->setChecked(SettingsHandler::getChannelInverseChecked(channel));
-            connect(invertedCheckbox, &QCheckBox::clicked, this,
-                    [channel](bool checked)
-                      {
-                        SettingsHandler::setChannelInverseChecked(channel, checked);
-                      });
-            ui.FunscriptSettingsGrid->addWidget(invertedCheckbox, funscriptSettingsGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-
-            funscriptSettingsGridRow++;
-        }
-
-        offSetLabel = new QLabel("Sync offset");
-        offSetLabel->setFont(font);
-        offSetLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-        offSetSpinBox = new QSpinBox(this);
-        offSetSpinBox->setSuffix("ms");
-        offSetSpinBox->setSingleStep(1);
-        offSetSpinBox->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-        offSetSpinBox->setMinimum(std::numeric_limits<int>::lowest());
-        offSetSpinBox->setMaximum(std::numeric_limits<int>::max());
-        offSetSpinBox->setValue(SettingsHandler::getoffSet());
-        ui.RangeSettingsGrid->addWidget(offSetLabel, sliderGridRow, 0);
-        ui.RangeSettingsGrid->addWidget(offSetSpinBox, sliderGridRow + 1,0);
-
-        QPushButton* zeroOutButton = new QPushButton(this);
-        zeroOutButton->setText("All axis home");
-        connect(zeroOutButton, & QPushButton::clicked, this, &SettingsDialog::on_tCodeHome_clicked);
-        ui.RangeSettingsGrid->addWidget(zeroOutButton, sliderGridRow + 1, 1);
-
-        QLabel* xRangeStepLabel = new QLabel(this);
-        xRangeStepLabel->setText("Stroke range change step");
-        xRangeStepLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-        QSpinBox* xRangeStepInput = new QSpinBox(this);
-        xRangeStepInput->setMinimum(1);
-        xRangeStepInput->setMaximum(100);
-        xRangeStepInput->setMinimumWidth(75);
-        xRangeStepInput->setSingleStep(50);
-        xRangeStepInput->setValue(SettingsHandler::getGamepadSpeedIncrement());
-        xRangeStepInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-        connect(xRangeStepInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::xRangeStepInput_valueChanged);
-        ui.RangeSettingsGrid->addWidget(xRangeStepLabel, sliderGridRow, 2);
-        ui.RangeSettingsGrid->addWidget(xRangeStepInput, sliderGridRow + 1, 2);
-
-        connect(offSetSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onOffSet_valueChanged);
+        setUpTCodeAxis();
 
         if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
         {
@@ -337,11 +177,26 @@ void SettingsDialog::setupUi()
         ui.disableVRScriptNotFoundCheckbox->setChecked(SettingsHandler::getDisableVRScriptSelect());
         //Load user decoder priority. (Too lazy to make a new function sue me...)
         on_cancelPriorityButton_clicked();
-        setupGamepadMap();
+
+        _interfaceInitialized = true;
     }
 }
 void SettingsDialog::setupGamepadMap()
 {
+    if(_interfaceInitialized)
+    {
+        QLayoutItem *child;
+        while ((child = ui.gamePadMapGridLayout->takeAt(0)) != 0)
+        {
+            //setParent is NULL, preventing the interface from disappearing after deletion.
+            if(child->widget())
+            {
+                child->widget()->setParent(NULL);
+            }
+
+            delete child;
+        }
+    }
     auto gamepadMap = SettingsHandler::getGamePadMap();
     auto availableAxis = SettingsHandler::getAvailableAxis();
     MediaActions actions;
@@ -444,6 +299,202 @@ void SettingsDialog::setupGamepadMap()
     inverseXRoll->setChecked(SettingsHandler::getInverseTcXRollR2());
     connect(inverseXRoll, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcXRollR2_valueChanged);
     inverseGrid->addWidget(inverseXRoll, 4, 2, Qt::AlignCenter);
+}
+
+void SettingsDialog::setUpTCodeAxis()
+{
+    if(_interfaceInitialized)
+    {
+        QLayoutItem *child;
+        while ((child = ui.RangeSettingsGrid->takeAt(0)) != 0)
+        {
+            //setParent is NULL, preventing the interface from disappearing after deletion.
+            if(child->widget())
+            {
+                child->widget()->setParent(NULL);
+            }
+
+            delete child;
+        }
+        while ((child = ui.MultiplierSettingsGrid->takeAt(0)) != 0)
+        {
+            if(child->widget())
+            {
+                child->widget()->setParent(NULL);
+            }
+
+            delete child;
+        }
+    }
+     QFont font( "Sans Serif", 8);
+     int sliderGridRow = 0;
+     int multiplierGridRow = 1;
+     int funscriptSettingsGridRow = 0;
+     auto availableAxis = SettingsHandler::getAvailableAxis();
+     foreach(auto channel, availableAxis->keys())
+     {
+         ChannelModel axis = SettingsHandler::getAxis(channel);
+         if(axis.Type == AxisType::None || axis.Type == AxisType::HalfRange)
+             continue;
+
+         int userMin = axis.UserMin;
+         int userMax = axis.UserMax;
+         QLabel* rangeMinLabel = new QLabel(QString::number(userMin));
+         rangeMinLabel->setObjectName(axis.AxisName+"RangeMinLabel");
+         rangeMinLabel->setFont(font);
+         rangeMinLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+         ui.RangeSettingsGrid->addWidget(rangeMinLabel, sliderGridRow, 0);
+         rangeMinLabels.insert(channel, rangeMinLabel);
+
+         QLabel* rangeLabel = new QLabel(axis.FriendlyName + " Range");
+         rangeLabel->setObjectName(axis.AxisName+"RangeLabel");
+         rangeLabel->setFont(font);
+         rangeLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+         ui.RangeSettingsGrid->addWidget(rangeLabel, sliderGridRow, 1);
+
+         QLabel* rangeMaxLabel = new QLabel(QString::number(userMax));
+         rangeMaxLabel->setObjectName(axis.AxisName+"RangeMaxLabel");
+         rangeMaxLabel->setFont(font);
+         rangeMaxLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+         ui.RangeSettingsGrid->addWidget(rangeMaxLabel, sliderGridRow, 2);
+         rangeMaxLabels.insert(channel, rangeMaxLabel);
+
+         RangeSlider* axisRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, this);
+         axisRangeSlider->setObjectName(axis.AxisName+"RangeSlider");
+         axisRangeSlider->SetRange(axis.Min, axis.Max);
+         axisRangeSlider->setLowerValue(userMin);
+         axisRangeSlider->setUpperValue(userMax);
+         axisRangeSlider->SetMinimumRange(1);
+         axisRangeSlider->setName(channel);// Required
+         sliderGridRow++;
+         ui.RangeSettingsGrid->addWidget(axisRangeSlider, sliderGridRow,0,1,3);
+         rangeSliders.insert(channel, axisRangeSlider);
+         sliderGridRow++;
+
+         QProgressBar* funscriptProgressbar = new QProgressBar(this);
+         funscriptProgressbar->setObjectName(axis.AxisName+"FunscriptStatus");
+         funscriptProgressbar->setMinimum(0);
+         funscriptProgressbar->setMaximum(100);
+         funscriptProgressbar->setMaximumHeight(5);
+         ui.RangeSettingsGrid->addWidget(funscriptProgressbar, sliderGridRow,0,1,3);
+         axisProgressbars.insert(channel, funscriptProgressbar);
+         sliderGridRow++;
+
+         connect(this, &SettingsDialog::onAxisValueChange, this, &SettingsDialog::on_axis_valueChange);
+         connect(this, &SettingsDialog::onAxisValueReset, this, &SettingsDialog::on_axis_valueReset);
+         connect(axisRangeSlider, QOverload<QString, int>::of(&RangeSlider::lowerValueChanged), this, &SettingsDialog::onRange_valueChanged);
+         connect(axisRangeSlider, QOverload<QString, int>::of(&RangeSlider::upperValueChanged), this, &SettingsDialog::onRange_valueChanged);
+         // mouse release work around for gamepad recalculation reseting on every valueChange event.
+         connect(axisRangeSlider, QOverload<QString>::of(&RangeSlider::mouseRelease), this, &SettingsDialog::onRange_mouseRelease);
+
+         // Multipliers
+         if(axis.Dimension != AxisDimension::Heave)
+         {
+             QCheckBox* multiplierCheckbox = new QCheckBox(this);
+             multiplierCheckbox->setText(axis.FriendlyName);
+             multiplierCheckbox->setChecked(SettingsHandler::getMultiplierChecked(channel));
+             QDoubleSpinBox* multiplierInput = new QDoubleSpinBox(this);
+             multiplierInput->setDecimals(3);
+             multiplierInput->setSingleStep(0.1f);
+             multiplierInput->setMinimum(std::numeric_limits<int>::lowest());
+             multiplierInput->setMaximum(std::numeric_limits<int>::max());
+             multiplierInput->setValue(SettingsHandler::getMultiplierValue(channel));
+             connect(multiplierInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+                     [channel](float value)
+                       {
+                         SettingsHandler::setMultiplierValue(channel, value);
+                       });
+             connect(multiplierCheckbox, &QCheckBox::clicked, this,
+                     [channel](bool checked)
+                       {
+                         SettingsHandler::setMultiplierChecked(channel, checked);
+                       });
+             QCheckBox* damperCheckbox = new QCheckBox(this);
+             damperCheckbox->setText("Speed");
+             damperCheckbox->setChecked(SettingsHandler::getDamperChecked(channel));
+             QDoubleSpinBox* damperInput = new QDoubleSpinBox(this);
+             damperInput->setToolTip("If the funscript travel distance is greater than half(50) and the speed is greater than 1000,\nmultiply the speed by the inputed value.\n4000 * 0.05 = 2000");
+             damperInput->setDecimals(1);
+             damperInput->setSingleStep(0.1f);
+             damperInput->setMinimum(0.1f);
+             damperInput->setMaximum(std::numeric_limits<int>::max());
+             damperInput->setValue(SettingsHandler::getDamperValue(channel));
+             connect(damperInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+                     [channel](float value)
+                       {
+                         SettingsHandler::setDamperValue(channel, value);
+                       });
+             connect(damperCheckbox, &QCheckBox::clicked, this,
+                     [channel](bool checked)
+                       {
+                         SettingsHandler::setDamperChecked(channel, checked);
+                       });
+
+
+             ui.MultiplierSettingsGrid->addWidget(multiplierCheckbox, multiplierGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+             ui.MultiplierSettingsGrid->addWidget(multiplierInput, multiplierGridRow, 1, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+             QCheckBox* linkCheckbox = new QCheckBox(this);
+             auto relatedChannel = ChannelNames.value(axis.RelatedChannel);
+             linkCheckbox->setToolTip("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS " + relatedChannel + " funscript value.\nIf there is no " + relatedChannel + " funscript then it will default to random motion.");
+             linkCheckbox->setText("Link to MFS " + relatedChannel);
+             linkCheckbox->setChecked(SettingsHandler::getLinkToRelatedAxisChecked(channel));
+             connect(linkCheckbox, &QCheckBox::clicked, this,
+                     [channel](bool checked)
+                       {
+                         SettingsHandler::setLinkToRelatedAxisChecked(channel, checked);
+                       });
+             ui.MultiplierSettingsGrid->addWidget(linkCheckbox, multiplierGridRow, 2, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+             ui.MultiplierSettingsGrid->addWidget(damperCheckbox, multiplierGridRow, 3, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
+             ui.MultiplierSettingsGrid->addWidget(damperInput, multiplierGridRow, 4, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+             multiplierGridRow++;
+         }
+         QCheckBox* invertedCheckbox = new QCheckBox(this);
+         invertedCheckbox->setText(axis.FriendlyName);
+         invertedCheckbox->setChecked(SettingsHandler::getChannelInverseChecked(channel));
+         connect(invertedCheckbox, &QCheckBox::clicked, this,
+                 [channel](bool checked)
+                   {
+                     SettingsHandler::setChannelInverseChecked(channel, checked);
+                   });
+         ui.FunscriptSettingsGrid->addWidget(invertedCheckbox, funscriptSettingsGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+
+         funscriptSettingsGridRow++;
+     }
+
+     offSetLabel = new QLabel("Sync offset");
+     offSetLabel->setFont(font);
+     offSetLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+     offSetSpinBox = new QSpinBox(this);
+     offSetSpinBox->setSuffix("ms");
+     offSetSpinBox->setSingleStep(1);
+     offSetSpinBox->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+     offSetSpinBox->setMinimum(std::numeric_limits<int>::lowest());
+     offSetSpinBox->setMaximum(std::numeric_limits<int>::max());
+     offSetSpinBox->setValue(SettingsHandler::getoffSet());
+     ui.RangeSettingsGrid->addWidget(offSetLabel, sliderGridRow, 0);
+     ui.RangeSettingsGrid->addWidget(offSetSpinBox, sliderGridRow + 1,0);
+     connect(offSetSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onOffSet_valueChanged);
+
+     QPushButton* zeroOutButton = new QPushButton(this);
+     zeroOutButton->setText("All axis home");
+     connect(zeroOutButton, & QPushButton::clicked, this, &SettingsDialog::on_tCodeHome_clicked);
+     ui.RangeSettingsGrid->addWidget(zeroOutButton, sliderGridRow + 1, 1);
+
+     QLabel* xRangeStepLabel = new QLabel(this);
+     xRangeStepLabel->setText("Stroke range change step");
+     xRangeStepLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+     QSpinBox* xRangeStepInput = new QSpinBox(this);
+     xRangeStepInput->setMinimum(1);
+     xRangeStepInput->setMaximum(100);
+     xRangeStepInput->setMinimumWidth(75);
+     xRangeStepInput->setSingleStep(50);
+     xRangeStepInput->setValue(SettingsHandler::getGamepadSpeedIncrement());
+     xRangeStepInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+     connect(xRangeStepInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::xRangeStepInput_valueChanged);
+     ui.RangeSettingsGrid->addWidget(xRangeStepLabel, sliderGridRow, 2);
+     ui.RangeSettingsGrid->addWidget(xRangeStepInput, sliderGridRow + 1, 2);
+
+     setupGamepadMap();
 }
 
 void SettingsDialog::setAxisProgressBar(QString axis, int value)
@@ -1176,6 +1227,7 @@ void SettingsDialog::on_axisDefaultButton_clicked()
     if (reply == QMessageBox::Yes)
     {
         SettingsHandler::SetupAvailableAxis();
+        SettingsHandler::setSelectedTCodeVersion();
         channelTableViewModel->setMap();
         QApplication::quit();
         QProcess::startDetached(qApp->arguments()[0], qApp->arguments());

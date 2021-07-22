@@ -1,6 +1,7 @@
 #ifndef SETTINGSHANDLER_H
 #define SETTINGSHANDLER_H
 #include <QSettings>
+#include <QObject>
 #include <QMutex>
 #include <QHash>
 #include <QFileDialog>
@@ -20,14 +21,22 @@
 #include "../struct/LibraryListItemMetaData.h"
 #include "../struct/LibraryListItemMetaData258.h"
 
-class SettingsHandler
+class SettingsHandler: public QObject
 {
+    Q_OBJECT
+signals:
+    void tcodeVersionChanged();
+
 public:
+    static SettingsHandler& instance(){
+        return m_instance;
+    }
     static const QMap<TCodeVersion, QString> SupportedTCodeVersions;
     static const QString XTPVersion;
     static const float XTPVersionNum;
     static QString getSelectedTCodeVersion();
     static void setSelectedTCodeVersion(TCodeVersion key, QWidget* parent);
+    static void setSelectedTCodeVersion();
     static QString getDeoDnlaFunscript(QString key);
     static QString getSelectedTheme();
     static QString getSelectedLibrary();
@@ -190,6 +199,7 @@ public:
 private:
     SettingsHandler();
     ~SettingsHandler();
+    static SettingsHandler m_instance;
     static void SetMapDefaults();
     static void SetupGamepadButtonMap();
     static void MigrateTo23();
