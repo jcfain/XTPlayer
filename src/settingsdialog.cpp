@@ -199,6 +199,7 @@ void SettingsDialog::setupGamepadMap()
     }
     auto gamepadMap = SettingsHandler::getGamePadMap();
     auto availableAxis = SettingsHandler::getAvailableAxis();
+    auto tcodeChannels = TCodeChannelLookup::GetSelectedVersionMap();
     MediaActions actions;
     int rowIterator = 0;
     int columnIterator = 0;
@@ -210,9 +211,9 @@ void SettingsDialog::setupGamepadMap()
         QLabel* mapLabel = new QLabel(this);
         mapLabel->setText(button);
         QComboBox* mapComboBox = new QComboBox(this);
-        foreach(auto axis, availableAxis->keys())
+        foreach(auto axis, tcodeChannels.keys())
         {
-            auto channel = availableAxis->value(axis);
+            auto channel = availableAxis->value(TCodeChannelLookup::ToString(axis));
             QVariant variant;
             variant.setValue(channel);
             mapComboBox->addItem(channel.FriendlyName, variant);
@@ -330,10 +331,11 @@ void SettingsDialog::setUpTCodeAxis()
      int sliderGridRow = 0;
      int multiplierGridRow = 1;
      int funscriptSettingsGridRow = 0;
-     auto availableAxis = SettingsHandler::getAvailableAxis();
-     foreach(auto channel, availableAxis->keys())
+     auto tcodeChannels = TCodeChannelLookup::GetSelectedVersionMap();
+     foreach(auto channel, tcodeChannels.keys())
      {
-         ChannelModel axis = SettingsHandler::getAxis(channel);
+         QString channelName = TCodeChannelLookup::ToString(channel);
+         ChannelModel axis = SettingsHandler::getAxis(channelName);
          if(axis.Type == AxisType::None || axis.Type == AxisType::HalfRange)
              continue;
 
@@ -344,7 +346,7 @@ void SettingsDialog::setUpTCodeAxis()
          rangeMinLabel->setFont(font);
          rangeMinLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
          ui.RangeSettingsGrid->addWidget(rangeMinLabel, sliderGridRow, 0);
-         rangeMinLabels.insert(channel, rangeMinLabel);
+         rangeMinLabels.insert(channelName, rangeMinLabel);
 
          QLabel* rangeLabel = new QLabel(axis.FriendlyName + " Range");
          rangeLabel->setObjectName(axis.AxisName+"RangeLabel");
@@ -357,7 +359,7 @@ void SettingsDialog::setUpTCodeAxis()
          rangeMaxLabel->setFont(font);
          rangeMaxLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
          ui.RangeSettingsGrid->addWidget(rangeMaxLabel, sliderGridRow, 2);
-         rangeMaxLabels.insert(channel, rangeMaxLabel);
+         rangeMaxLabels.insert(channelName, rangeMaxLabel);
 
          RangeSlider* axisRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, this);
          axisRangeSlider->setObjectName(axis.AxisName+"RangeSlider");
@@ -365,10 +367,10 @@ void SettingsDialog::setUpTCodeAxis()
          axisRangeSlider->setLowerValue(userMin);
          axisRangeSlider->setUpperValue(userMax);
          axisRangeSlider->SetMinimumRange(1);
-         axisRangeSlider->setName(channel);// Required
+         axisRangeSlider->setName(channelName);// Required
          sliderGridRow++;
          ui.RangeSettingsGrid->addWidget(axisRangeSlider, sliderGridRow,0,1,3);
-         rangeSliders.insert(channel, axisRangeSlider);
+         rangeSliders.insert(channelName, axisRangeSlider);
          sliderGridRow++;
 
          QProgressBar* funscriptProgressbar = new QProgressBar(this);
@@ -377,7 +379,7 @@ void SettingsDialog::setUpTCodeAxis()
          funscriptProgressbar->setMaximum(100);
          funscriptProgressbar->setMaximumHeight(5);
          ui.RangeSettingsGrid->addWidget(funscriptProgressbar, sliderGridRow,0,1,3);
-         axisProgressbars.insert(channel, funscriptProgressbar);
+         axisProgressbars.insert(channelName, funscriptProgressbar);
          sliderGridRow++;
 
          connect(this, &SettingsDialog::onAxisValueChange, this, &SettingsDialog::on_axis_valueChange);
@@ -392,69 +394,90 @@ void SettingsDialog::setUpTCodeAxis()
          {
              QCheckBox* multiplierCheckbox = new QCheckBox(this);
              multiplierCheckbox->setText(axis.FriendlyName);
-             multiplierCheckbox->setChecked(SettingsHandler::getMultiplierChecked(channel));
+             multiplierCheckbox->setChecked(SettingsHandler::getMultiplierChecked(channelName));
              QDoubleSpinBox* multiplierInput = new QDoubleSpinBox(this);
              multiplierInput->setDecimals(3);
              multiplierInput->setSingleStep(0.1f);
              multiplierInput->setMinimum(std::numeric_limits<int>::lowest());
              multiplierInput->setMaximum(std::numeric_limits<int>::max());
-             multiplierInput->setValue(SettingsHandler::getMultiplierValue(channel));
+             multiplierInput->setValue(SettingsHandler::getMultiplierValue(channelName));
              connect(multiplierInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
-                     [channel](float value)
+                     [channelName](float value)
                        {
-                         SettingsHandler::setMultiplierValue(channel, value);
+                         SettingsHandler::setMultiplierValue(channelName, value);
                        });
              connect(multiplierCheckbox, &QCheckBox::clicked, this,
-                     [channel](bool checked)
+                     [channelName](bool checked)
                        {
-                         SettingsHandler::setMultiplierChecked(channel, checked);
+                         SettingsHandler::setMultiplierChecked(channelName, checked);
                        });
              QCheckBox* damperCheckbox = new QCheckBox(this);
              damperCheckbox->setText("Speed");
-             damperCheckbox->setChecked(SettingsHandler::getDamperChecked(channel));
+             damperCheckbox->setChecked(SettingsHandler::getDamperChecked(channelName));
              QDoubleSpinBox* damperInput = new QDoubleSpinBox(this);
-             damperInput->setToolTip("If the funscript travel distance is greater than half(50) and the speed is greater than 1000,\nmultiply the speed by the inputed value.\n4000 * 0.05 = 2000");
+             damperInput->setToolTip("Multiply the speed by the value.\n4000 * 0.5 = 2000");
              damperInput->setDecimals(1);
              damperInput->setSingleStep(0.1f);
              damperInput->setMinimum(0.1f);
              damperInput->setMaximum(std::numeric_limits<int>::max());
-             damperInput->setValue(SettingsHandler::getDamperValue(channel));
+             damperInput->setValue(SettingsHandler::getDamperValue(channelName));
              connect(damperInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
-                     [channel](float value)
+                     [channelName](float value)
                        {
-                         SettingsHandler::setDamperValue(channel, value);
+                         SettingsHandler::setDamperValue(channelName, value);
                        });
              connect(damperCheckbox, &QCheckBox::clicked, this,
-                     [channel](bool checked)
+                     [channelName](bool checked)
                        {
-                         SettingsHandler::setDamperChecked(channel, checked);
+                         SettingsHandler::setDamperChecked(channelName, checked);
                        });
 
 
              ui.MultiplierSettingsGrid->addWidget(multiplierCheckbox, multiplierGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
              ui.MultiplierSettingsGrid->addWidget(multiplierInput, multiplierGridRow, 1, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
              QCheckBox* linkCheckbox = new QCheckBox(this);
-             auto relatedChannel = ChannelNames.value(axis.RelatedChannel);
-             linkCheckbox->setToolTip("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS " + relatedChannel + " funscript value.\nIf there is no " + relatedChannel + " funscript then it will default to random motion.");
-             linkCheckbox->setText("Link to MFS " + relatedChannel);
-             linkCheckbox->setChecked(SettingsHandler::getLinkToRelatedAxisChecked(channel));
+             auto relatedChannel = SettingsHandler::getAxis(axis.RelatedChannel);
+             linkCheckbox->setToolTip("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS " + relatedChannel.FriendlyName + " funscript value.\nIf there is no " + relatedChannel.FriendlyName + " funscript then it will default to random motion.");
+             linkCheckbox->setText("Link to MFS: ");
+             linkCheckbox->setChecked(SettingsHandler::getLinkToRelatedAxisChecked(channelName));
              connect(linkCheckbox, &QCheckBox::clicked, this,
-                     [channel](bool checked)
+                     [channelName](bool checked)
                        {
-                         SettingsHandler::setLinkToRelatedAxisChecked(channel, checked);
+                         SettingsHandler::setLinkToRelatedAxisChecked(channelName, checked);
                        });
-             ui.MultiplierSettingsGrid->addWidget(linkCheckbox, multiplierGridRow, 2, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-             ui.MultiplierSettingsGrid->addWidget(damperCheckbox, multiplierGridRow, 3, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
-             ui.MultiplierSettingsGrid->addWidget(damperInput, multiplierGridRow, 4, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+
+             QComboBox* linkToAxisCombobox = new QComboBox(this);
+             foreach(auto axis, tcodeChannels.keys())
+             {
+                 auto channel = SettingsHandler::getAxis(TCodeChannelLookup::ToString(axis));
+                 if(channel.AxisName == channelName || channel.Type == AxisType::HalfRange || channel.AxisName == TCodeChannelLookup::None())
+                     continue;
+                 QVariant variant;
+                 variant.setValue(channel);
+                 linkToAxisCombobox->addItem(channel.FriendlyName, variant);
+             }
+             linkToAxisCombobox->setCurrentText(relatedChannel.FriendlyName);
+             connect(linkToAxisCombobox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+                     [channelName, linkToAxisCombobox, linkCheckbox](int value)
+                       {
+                            auto relatedChannel = linkToAxisCombobox->currentData().value<ChannelModel>();
+                            linkCheckbox->setToolTip("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS " + relatedChannel.FriendlyName + " funscript value.\nIf there is no " + relatedChannel.FriendlyName + " funscript then it will default to random motion.");
+                            SettingsHandler::setLinkToRelatedAxis(channelName, relatedChannel.AxisName);
+                       });
+
+             ui.MultiplierSettingsGrid->addWidget(linkCheckbox, multiplierGridRow, 2, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
+             ui.MultiplierSettingsGrid->addWidget(linkToAxisCombobox, multiplierGridRow, 3, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+             ui.MultiplierSettingsGrid->addWidget(damperCheckbox, multiplierGridRow, 4, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
+             ui.MultiplierSettingsGrid->addWidget(damperInput, multiplierGridRow, 5, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
              multiplierGridRow++;
          }
          QCheckBox* invertedCheckbox = new QCheckBox(this);
          invertedCheckbox->setText(axis.FriendlyName);
-         invertedCheckbox->setChecked(SettingsHandler::getChannelInverseChecked(channel));
+         invertedCheckbox->setChecked(SettingsHandler::getChannelInverseChecked(channelName));
          connect(invertedCheckbox, &QCheckBox::clicked, this,
-                 [channel](bool checked)
+                 [channelName](bool checked)
                    {
-                     SettingsHandler::setChannelInverseChecked(channel, checked);
+                     SettingsHandler::setChannelInverseChecked(channelName, checked);
                    });
          ui.FunscriptSettingsGrid->addWidget(invertedCheckbox, funscriptSettingsGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
 
@@ -1189,6 +1212,7 @@ void SettingsDialog::on_channelAddButton_clicked()
     {
         SettingsHandler::addAxis(channel);
         channelTableViewModel->setMap();
+        setUpTCodeAxis();
     }
 }
 
@@ -1208,13 +1232,14 @@ void SettingsDialog::on_channelDeleteButton_clicked()
             {
                 const auto model = row.model();
                 const auto channelData = ((ChannelTableViewModel*)model)->getRowData(row.row());
-                if (channelData == nullptr || channelData->AxisName == axisNames.None)
+                if (channelData == nullptr || channelData->AxisName == TCodeChannelLookup::None())
                     continue;
                 channelsToDelete << channelData->AxisName;
             }
             foreach(auto channel, channelsToDelete)
                 SettingsHandler::deleteAxis(channel);
             channelTableViewModel->setMap();
+            setUpTCodeAxis();
         }
     }
 }
@@ -1222,15 +1247,14 @@ void SettingsDialog::on_channelDeleteButton_clicked()
 void SettingsDialog::on_axisDefaultButton_clicked()
 {
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset the channel map?\nThis will reset ALL range and multiplier settings!\nApp will restart on yes.",
+    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset the channel map?\nThis will reset ALL range and multiplier settings!",
                                   QMessageBox::Yes|QMessageBox::No);
     if (reply == QMessageBox::Yes)
     {
-        SettingsHandler::SetupAvailableAxis();
+        SettingsHandler::setupAvailableAxis();
         SettingsHandler::setSelectedTCodeVersion();
         channelTableViewModel->setMap();
-        QApplication::quit();
-        QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
+        setUpTCodeAxis();
     }
 }
 

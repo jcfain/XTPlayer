@@ -12,6 +12,7 @@
 #include "loghandler.h"
 #include "../lookup/enum.h"
 #include "../lookup/AxisNames.h"
+#include "../lookup/tcodechannellookup.h"
 #include "../lookup/GamepadAxisNames.h"
 #include "../lookup/MediaActions.h"
 #include "../tool/xmath.h"
@@ -121,6 +122,7 @@ public:
     static void setDamperChecked(QString channel, bool value);
     static bool getLinkToRelatedAxisChecked(QString channel);
     static void setLinkToRelatedAxisChecked(QString channel, bool value);
+    static void setLinkToRelatedAxis(QString channel, QString linkedChannel);
 
     static void setLibraryView(int value);
     static void setThumbSize(int value);
@@ -185,7 +187,7 @@ public:
     static void SetHashedPass(QString value);
 
     static QSize getMaxThumbnailSize();
-    static void SetupAvailableAxis();
+    static void setupAvailableAxis();
     static void SetupDecoderPriority();
     static void Load(QSettings* settingsToLoadFrom = nullptr);
     static void Save(QSettings* settingsToSaveTo = nullptr);
@@ -201,7 +203,7 @@ private:
     ~SettingsHandler();
     static SettingsHandler m_instance;
     static void SetMapDefaults();
-    static void SetupGamepadButtonMap();
+    static void setupGamepadButtonMap();
     static void MigrateTo23();
     static void MigrateTo25();
     static void MigrateTo252();
@@ -210,7 +212,6 @@ private:
     static QString _appdataLocation;
     static TCodeVersion _selectedTCodeVersion;
     static GamepadAxisNames gamepadAxisNames;
-    static TCodeChannels channelNames;
     static MediaActions mediaActions;
     static QSize _maxThumbnailSize;
 

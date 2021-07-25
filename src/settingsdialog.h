@@ -181,7 +181,6 @@ private:
     QString encryptPass(QString pass);
     QString decryptPass(QString pass);
     LibraryExclusions* _libraryExclusions;
-    TCodeChannels axisNames;
     bool _interfaceInitialized = false;
     ConnectionStatus _outConnectionStatus = ConnectionStatus::Disconnected;
     ConnectionStatus _deoConnectionStatus = ConnectionStatus::Disconnected;

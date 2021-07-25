@@ -70,7 +70,6 @@ void GamepadHandler::run()
     TCodeFactory* tcodeFactory = new TCodeFactory(0.0, 1.0);
     QVector<ChannelValueModel> axisValues;
     GamepadAxisNames gamepadAxisNames;
-    TCodeChannels axisNames;
     MediaActions mediaActions;
     XTimer leftXAxisTimer;
     XTimer leftYAxisTimer;
@@ -99,7 +98,7 @@ void GamepadHandler::run()
     {
         axisValues.clear();
         QString LeftXAxis = SettingsHandler::getGamePadMapButton(gamepadAxisNames.LeftXAxis);
-        if (LeftXAxis != axisNames.None)
+        if (LeftXAxis != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(LeftXAxis))
                 tcodeFactory->calculate(LeftXAxis, calculateDeadZone(_gamepad->axisLeftX()), axisValues);
@@ -111,7 +110,7 @@ void GamepadHandler::run()
         }
 
         QString LeftYAxis = SettingsHandler::getGamePadMapButton(gamepadAxisNames.LeftYAxis);
-        if (LeftYAxis != axisNames.None)
+        if (LeftYAxis != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(LeftYAxis))
                 tcodeFactory->calculate(LeftYAxis, calculateDeadZone(-_gamepad->axisLeftY()), axisValues);
@@ -123,7 +122,7 @@ void GamepadHandler::run()
         }
 
         QString RightXAxis = SettingsHandler::getGamePadMapButton(gamepadAxisNames.RightXAxis);
-        if (RightXAxis != axisNames.None)
+        if (RightXAxis != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(RightXAxis))
                 tcodeFactory->calculate(RightXAxis, calculateDeadZone(_gamepad->axisRightX()), axisValues);
@@ -135,7 +134,7 @@ void GamepadHandler::run()
         }
 
         QString RightYAxis = SettingsHandler::getGamePadMapButton(gamepadAxisNames.RightYAxis);
-        if (RightYAxis != axisNames.None)
+        if (RightYAxis != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(RightYAxis))
                 tcodeFactory->calculate(RightYAxis, calculateDeadZone(-_gamepad->axisRightY()), axisValues);
@@ -147,7 +146,7 @@ void GamepadHandler::run()
         }
 
         QString RightTrigger = SettingsHandler::getGamePadMapButton(gamepadAxisNames.RightTrigger);
-        if (RightTrigger != axisNames.None)
+        if (RightTrigger != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(RightTrigger))
                 tcodeFactory->calculate(RightTrigger, _gamepad->buttonR2(), axisValues);
@@ -159,7 +158,7 @@ void GamepadHandler::run()
         }
 
         QString LeftTrigger = SettingsHandler::getGamePadMapButton(gamepadAxisNames.LeftTrigger);
-        if (LeftTrigger != axisNames.None)
+        if (LeftTrigger != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(LeftTrigger))
                 tcodeFactory->calculate(LeftTrigger, _gamepad->buttonL2(), axisValues);
@@ -172,7 +171,7 @@ void GamepadHandler::run()
 
         // Binary inputs
         QString A = SettingsHandler::getGamePadMapButton(gamepadAxisNames.A);
-        if (A != axisNames.None)
+        if (A != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(A))
                 tcodeFactory->calculate(A, _gamepad->buttonA(), axisValues);
@@ -184,7 +183,7 @@ void GamepadHandler::run()
         }
 
         QString B = SettingsHandler::getGamePadMapButton(gamepadAxisNames.B);
-        if (B != axisNames.None)
+        if (B != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(B))
                 tcodeFactory->calculate(B, _gamepad->buttonB(), axisValues);
@@ -196,7 +195,7 @@ void GamepadHandler::run()
         }
 
         QString X = SettingsHandler::getGamePadMapButton(gamepadAxisNames.X);
-        if (X != axisNames.None)
+        if (X != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(X))
                 tcodeFactory->calculate(X, _gamepad->buttonX(), axisValues);
@@ -208,7 +207,7 @@ void GamepadHandler::run()
         }
 
         QString Y = SettingsHandler::getGamePadMapButton(gamepadAxisNames.Y);
-        if (Y != axisNames.None)
+        if (Y != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(Y))
                 tcodeFactory->calculate(Y, _gamepad->buttonY(), axisValues);
@@ -220,7 +219,7 @@ void GamepadHandler::run()
         }
 
         QString RightBumper = SettingsHandler::getGamePadMapButton(gamepadAxisNames.RightBumper);
-        if (RightBumper != axisNames.None)
+        if (RightBumper != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(RightBumper))
                 tcodeFactory->calculate(RightBumper, _gamepad->buttonR1(), axisValues);
@@ -232,7 +231,7 @@ void GamepadHandler::run()
         }
 
         QString LeftBumper = SettingsHandler::getGamePadMapButton(gamepadAxisNames.LeftBumper);
-        if (LeftBumper != axisNames.None)
+        if (LeftBumper != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(LeftBumper))
                 tcodeFactory->calculate(LeftBumper, _gamepad->buttonL1(), axisValues);
@@ -244,7 +243,7 @@ void GamepadHandler::run()
         }
 
         QString Start = SettingsHandler::getGamePadMapButton(gamepadAxisNames.Start);
-        if (Start != axisNames.None)
+        if (Start != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(Start))
                 tcodeFactory->calculate(Start, _gamepad->buttonStart(), axisValues);
@@ -255,7 +254,7 @@ void GamepadHandler::run()
             }
         }
         QString Select = SettingsHandler::getGamePadMapButton(gamepadAxisNames.Select);
-        if (Select != axisNames.None)
+        if (Select != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(Select))
                 tcodeFactory->calculate(Select, _gamepad->buttonSelect(), axisValues);
@@ -267,7 +266,7 @@ void GamepadHandler::run()
         }
 
         QString DPadUp = SettingsHandler::getGamePadMapButton(gamepadAxisNames.DPadUp);
-        if (DPadUp != axisNames.None)
+        if (DPadUp != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(DPadUp))
                 tcodeFactory->calculate(DPadUp, _gamepad->buttonUp(), axisValues);
@@ -278,7 +277,7 @@ void GamepadHandler::run()
             }
         }
         QString DPadDown = SettingsHandler::getGamePadMapButton(gamepadAxisNames.DPadDown);
-        if (DPadDown != axisNames.None)
+        if (DPadDown != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(DPadDown))
                 tcodeFactory->calculate(DPadDown, _gamepad->buttonDown(), axisValues);
@@ -290,7 +289,7 @@ void GamepadHandler::run()
         }
 
         QString DPadLeft = SettingsHandler::getGamePadMapButton(gamepadAxisNames.DPadLeft);
-        if (DPadLeft != axisNames.None)
+        if (DPadLeft != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(DPadLeft))
                 tcodeFactory->calculate(DPadLeft, _gamepad->buttonLeft(), axisValues);
@@ -302,7 +301,7 @@ void GamepadHandler::run()
         }
 
         QString DPadRight = SettingsHandler::getGamePadMapButton(gamepadAxisNames.DPadRight);
-        if (DPadRight != axisNames.None)
+        if (DPadRight != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(DPadRight))
                 tcodeFactory->calculate(DPadRight, _gamepad->buttonRight(), axisValues);
@@ -314,7 +313,7 @@ void GamepadHandler::run()
         }
 
         QString RightAxisButton = SettingsHandler::getGamePadMapButton(gamepadAxisNames.RightAxisButton);
-        if (RightAxisButton != axisNames.None)
+        if (RightAxisButton != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(RightAxisButton))
                 tcodeFactory->calculate(RightAxisButton, _gamepad->buttonR3(), axisValues);
@@ -326,7 +325,7 @@ void GamepadHandler::run()
         }
 
         QString LeftAxisButton = SettingsHandler::getGamePadMapButton(gamepadAxisNames.LeftAxisButton);
-        if (LeftAxisButton != axisNames.None)
+        if (LeftAxisButton != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(LeftAxisButton))
                 tcodeFactory->calculate(LeftAxisButton, _gamepad->buttonL3(), axisValues);
@@ -338,7 +337,7 @@ void GamepadHandler::run()
         }
 
         QString Center = SettingsHandler::getGamePadMapButton(gamepadAxisNames.Center);
-        if (Center != axisNames.None)
+        if (Center != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(Center))
                 tcodeFactory->calculate(Center, _gamepad->buttonCenter(), axisValues);
@@ -350,7 +349,7 @@ void GamepadHandler::run()
         }
 
         QString Guide = SettingsHandler::getGamePadMapButton(gamepadAxisNames.Guide);
-        if (Guide != axisNames.None)
+        if (Guide != TCodeChannelLookup::None())
         {
             if (!mediaActions.Values.contains(Guide))
                 tcodeFactory->calculate(Guide, _gamepad->buttonGuide(), axisValues);

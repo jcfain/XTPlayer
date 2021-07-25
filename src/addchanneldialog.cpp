@@ -85,12 +85,18 @@ ChannelModel AddChannelDialog::getNewChannel(QWidget *parent, bool *ok)
         channelModel.AxisName = dialog->channelName->text() + modifier;
         channelModel.Type = AxisTypes[dialog->type->currentText()];
         channelModel.Dimension = AxisDimensions[dialog->dimension->currentText()];
-        channelModel.Min = 1;
-        channelModel.Mid = 500;
-        channelModel.Max = 999;
-        channelModel.UserMin = 1;
-        channelModel.UserMid = 500;
-        channelModel.UserMax = 999;
+        channelModel.Min = 0;
+        channelModel.Mid = SettingsHandler::getSelectedTCodeVersion() == TCodeVersion::v2 ? 500 : 5000;
+        channelModel.Max = SettingsHandler::getSelectedTCodeVersion() == TCodeVersion::v2 ? 999: 9999;
+        channelModel.UserMin = 0;
+        channelModel.UserMid = SettingsHandler::getSelectedTCodeVersion() == TCodeVersion::v2 ? 500 : 5000;
+        channelModel.UserMax = SettingsHandler::getSelectedTCodeVersion() == TCodeVersion::v2 ? 999 : 9999;
+        channelModel.DamperEnabled = false;
+        channelModel.DamperValue = 0.2f;
+        channelModel.Inverted = false;
+        channelModel.MultiplierEnabled = false;
+        channelModel.LinkToRelatedMFS = false;
+        channelModel.RelatedChannel = TCodeChannelLookup::Stroke();
         channelModel.TrackName = "";
         if(SettingsHandler::getAvailableAxis()->contains(channelModel.AxisName))
         {

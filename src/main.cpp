@@ -2,11 +2,19 @@
 
 #include <QApplication>
 
+
 int main(int argc, char *argv[])
 {
+    #ifdef _WIN32
+    if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+        freopen("CONOUT$", "w", stdout);
+        freopen("CONOUT$", "w", stderr);
+    }
+    #endif
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     qRegisterMetaTypeStreamOperators<QList<QString>>("QList<QString>");
     qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
+    qRegisterMetaTypeStreamOperators<AxisNames>("AxisNames");
     qRegisterMetaTypeStreamOperators<DecoderModel>("DecoderModel");
     qRegisterMetaTypeStreamOperators<LibraryListItem>("LibraryListItem");
     qRegisterMetaTypeStreamOperators<TCodeVersion>("TCodeVersion");

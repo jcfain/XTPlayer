@@ -14,8 +14,10 @@ void LogHandler::Debug(QString message)
     else if(_userDebugMode)
     {
         QMutexLocker locker(&mutex);
-        userDebugIndex++;
-        _debugStore.insert(userDebugIndex, QDateTime::currentDateTime().toString("MM-dd-yyyy_hh-mm-ss-zzz") +" Debug: " + message);
+        auto debugMessage = QDateTime::currentDateTime().toString("MM-dd-yyyy_hh-mm-ss-zzz") +" Debug: " + message;
+        qDebug() << debugMessage;
+//        userDebugIndex++;
+//        _debugStore.insert(userDebugIndex, debugMessage);
     }
 }
 
@@ -28,8 +30,10 @@ void LogHandler::Info(QString message)
     else if(_userDebugMode)
     {
         QMutexLocker locker(&mutex);
-        userDebugIndex++;
-        _debugStore.insert(userDebugIndex, QDateTime::currentDateTime().toString("MM-dd-yyyy_hh-mm-ss-zzz") +" Info: " + message);
+        auto infoMessage = QDateTime::currentDateTime().toString("MM-dd-yyyy_hh-mm-ss-zzz") +" Info: " + message;
+        qDebug() << infoMessage;
+//        userDebugIndex++;
+//        _debugStore.insert(userDebugIndex, infoMessage);
     }
 }
 
@@ -42,8 +46,10 @@ void LogHandler::Warn(QString message)
     else if(_userDebugMode)
     {
         QMutexLocker locker(&mutex);
-        userDebugIndex++;
-        _debugStore.insert(userDebugIndex, QDateTime::currentDateTime().toString("MM-dd-yyyy_hh-mm-ss-zzz") +" WARNING: " + message);
+        auto warnMessage = QDateTime::currentDateTime().toString("MM-dd-yyyy_hh-mm-ss-zzz") +" WARNING: " + message;
+        qWarning() << warnMessage;
+//        userDebugIndex++;
+//        _debugStore.insert(userDebugIndex, warnMessage);
     }
 }
 
@@ -56,9 +62,11 @@ void LogHandler::Error(QString message)
     else if(_userDebugMode)
     {
         QMutexLocker locker(&mutex);
-        userDebugIndex++;
-        _debugStore.insert(userDebugIndex, QDateTime::currentDateTime().toString("MM-dd-yyyy_hh-mm-ss-zzz") +" ERROR: " + message);
-        return;
+        auto criticalMessage = QDateTime::currentDateTime().toString("MM-dd-yyyy_hh-mm-ss-zzz") +" ERROR: " + message;
+        qCritical() << criticalMessage;
+//        userDebugIndex++;
+//        _debugStore.insert(userDebugIndex, criticalMessage);
+//        return;
     }
 }
 
@@ -103,21 +111,26 @@ void LogHandler::DebugHandler(QtMsgType type, const QMessageLogContext &, const 
 {
     QString txt;
     switch (type) {
-        case QtInfoMsg:
+        case QtInfoMsg: {
             txt = QString("Info: %1").arg(msg);
             break;
-        case QtDebugMsg:
+        }
+        case QtDebugMsg: {
             txt = QString("Debug: %1").arg(msg);
             break;
-        case QtWarningMsg:
+        }
+        case QtWarningMsg: {
             txt = QString("Warning: %1").arg(msg);
-        break;
-        case QtCriticalMsg:
+            break;
+        }
+        case QtCriticalMsg: {
             txt = QString("Critical: %1").arg(msg);
-        break;
-        case QtFatalMsg:
+            break;
+        }
+        case QtFatalMsg: {
             txt = QString("Fatal: %1").arg(msg);
-        break;
+            break;
+        }
     }
     QMutexLocker locker(&mutex);
     userDebugIndex++;
@@ -128,14 +141,14 @@ void LogHandler::UserDebug(bool on)
 {
     QMutexLocker locker(&mutex);
     _userDebugMode = on;
-    if (on)
-    {
-        qInstallMessageHandler(DebugHandler);
-    }
-    else
-    {
-        qInstallMessageHandler(0);
-    }
+//    if (on)
+//    {
+//        qInstallMessageHandler(DebugHandler);
+//    }
+//    else
+//    {
+//        qInstallMessageHandler(0);
+//    }
 }
 
 void LogHandler::ExportDebug()

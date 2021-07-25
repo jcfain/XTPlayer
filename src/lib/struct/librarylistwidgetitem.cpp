@@ -65,12 +65,11 @@ bool LibraryListWidgetItem::updateToolTip(LibraryListItem localData)
         {
             toolTip += localData.script;
         }
-        TCodeChannels axisNames;
         auto availibleAxis = SettingsHandler::getAvailableAxis();
         foreach(auto axisName, availibleAxis->keys())
         {
             auto trackName = availibleAxis->value(axisName).TrackName;
-            if(axisName == axisNames.Stroke || trackName.isEmpty())
+            if(axisName == TCodeChannelLookup::Stroke() || trackName.isEmpty())
                 continue;
 
             QString script = localData.scriptNoExtension + "." + trackName + ".funscript";

@@ -17,7 +17,7 @@ public:
     QString formatTCode(QVector<ChannelValueModel>* values);
 
 private:
-    int calculateTcodeRange(double value, QString channel);
+    int calculateTcodeRange(double value, ChannelModel channel);
     int calculateGamepadSpeed(double gpIn);
 
     QHash<QString, double>* _addedAxis = new QHash<QString, double>();

@@ -66,7 +66,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     qRegisterMetaType<LibraryListItem>();
     qRegisterMetaTypeStreamOperators<LibraryListItem>();
 
-    funscriptHandler = new FunscriptHandler(_axisNames.Stroke);
+    funscriptHandler = new FunscriptHandler(TCodeChannelLookup::Stroke());
 
     textToSpeech = new QTextToSpeech(this);
     auto availableVoices = textToSpeech->availableVoices();
@@ -556,7 +556,7 @@ void MainWindow::on_key_press(QKeyEvent * event)
 void MainWindow::mediaAction(QString action)
 {
     MediaActions actions;
-     if (action == actions.TogglePause)
+    if (action == actions.TogglePause)
     {
         if (videoHandler->isPaused() || videoHandler->isPlaying())
         {
@@ -573,7 +573,8 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.FullScreen)
     {
-        toggleFullScreen();
+        if (videoHandler->isPaused() || videoHandler->isPlaying())
+            toggleFullScreen();
     }
     else if(action == actions.Mute)
     {
@@ -581,15 +582,18 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.Stop)
     {
-        stopMedia();
+        if (videoHandler->isPaused() || videoHandler->isPlaying())
+            stopMedia();
     }
      else if(action == actions.Next)
     {
-        skipForward();
+        if (videoHandler->isPaused() || videoHandler->isPlaying())
+            skipForward();
     }
     else if(action == actions.Back)
     {
-        skipBack();
+        if (videoHandler->isPaused() || videoHandler->isPlaying())
+            skipBack();
     }
     else if(action == actions.VolumeUp)
     {
@@ -606,16 +610,12 @@ void MainWindow::mediaAction(QString action)
     else if(action == actions.Rewind)
     {
         if (videoHandler->isPlaying())
-        {
             rewind();
-        }
     }
     else if(action == actions.FastForward)
     {
         if (videoHandler->isPlaying())
-        {
             fastForward();
-        }
     }
     else if(action == actions.TCodeSpeedUp)
     {
@@ -637,7 +637,6 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.IncreaseXLowerRange)
     {
-        TCodeChannels axisNames;
         int xRangeStep = SettingsHandler::getXRangeStep();
         int newLiveRange = SettingsHandler::getLiveXRangeMin() + SettingsHandler::getXRangeStep();
         int xRangeMax = SettingsHandler::getLiveXRangeMax();
@@ -656,9 +655,8 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.DecreaseXLowerRange)
     {
-        TCodeChannels axisNames;
         int newLiveRange = SettingsHandler::getLiveXRangeMin() - SettingsHandler::getXRangeStep();
-        int axisMin = SettingsHandler::getAxis(axisNames.Stroke).Min;
+        int axisMin = SettingsHandler::getAxis(TCodeChannelLookup::Stroke()).Min;
         if(newLiveRange > axisMin)
         {
             SettingsHandler::setLiveXRangeMin(newLiveRange);
@@ -674,9 +672,8 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.IncreaseXUpperRange)
     {
-        TCodeChannels axisNames;
         int newLiveRange = SettingsHandler::getLiveXRangeMax() + SettingsHandler::getXRangeStep();
-        int axisMax = SettingsHandler::getAxis(axisNames.Stroke).Max;
+        int axisMax = SettingsHandler::getAxis(TCodeChannelLookup::Stroke()).Max;
         if(newLiveRange < axisMax)
         {
             SettingsHandler::setLiveXRangeMax(newLiveRange);
@@ -692,7 +689,6 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.DecreaseXUpperRange)
     {
-        TCodeChannels axisNames;
         int xRangeStep = SettingsHandler::getXRangeStep();
         int newLiveRange = SettingsHandler::getLiveXRangeMax() - xRangeStep;
         int xRangeMin = SettingsHandler::getLiveXRangeMin();
@@ -711,13 +707,12 @@ void MainWindow::mediaAction(QString action)
     }
     else if (action == actions.IncreaseXRange)
     {
-        TCodeChannels axisNames;
         int xRangeMax = SettingsHandler::getLiveXRangeMax();
         int xRangeMin = SettingsHandler::getLiveXRangeMin();
         int xRangeStep = SettingsHandler::getXRangeStep();
         int newLiveMaxRange = xRangeMax + xRangeStep;
         int limitXMax = 0;
-        int axisMax = SettingsHandler::getAxis(axisNames.Stroke).Max;
+        int axisMax = SettingsHandler::getAxis(TCodeChannelLookup::Stroke()).Max;
         if(newLiveMaxRange < axisMax)
         {
             SettingsHandler::setLiveXRangeMax(newLiveMaxRange);
@@ -729,7 +724,7 @@ void MainWindow::mediaAction(QString action)
         }
 
         int newLiveMinRange = xRangeMin - xRangeStep;
-        int axisMin = SettingsHandler::getAxis(axisNames.Stroke).Min;
+        int axisMin = SettingsHandler::getAxis(TCodeChannelLookup::Stroke()).Min;
         int limitXMin = 0;
         if(newLiveMinRange > axisMin)
         {
@@ -756,7 +751,6 @@ void MainWindow::mediaAction(QString action)
     }
     else if (action == actions.DecreaseXRange)
     {
-        TCodeChannels axisNames;
         int xRangeMax = SettingsHandler::getLiveXRangeMax();
         int xRangeMin = SettingsHandler::getLiveXRangeMin();
         int xRangeStep = SettingsHandler::getXRangeStep();
@@ -821,7 +815,8 @@ void MainWindow::mediaAction(QString action)
      }
      else if (action == actions.SkipToMoneyShot)
      {
-         skipToMoneyShot();
+        if (videoHandler->isPaused() || videoHandler->isPlaying())
+            skipToMoneyShot();
      }
 }
 
@@ -874,12 +869,12 @@ void MainWindow::on_audioLevel_Change(int decibelL,int decibelR)
             foreach(auto axis, availibleAxis->keys())
             {
                 ChannelModel channel = availibleAxis->value(axis);
-                if (channel.AxisName == _axisNames.Stroke  || SettingsHandler::getMultiplierChecked(axis))
+                if (channel.AxisName == TCodeChannelLookup::Stroke()  || SettingsHandler::getMultiplierChecked(axis))
                 {
                     if (channel.Type == AxisType::HalfRange || channel.Type == AxisType::None)
                         continue;
                     auto multiplierValue = SettingsHandler::getMultiplierValue(axis);
-                    if (channel.AxisName == _axisNames.Stroke)
+                    if (channel.AxisName == TCodeChannelLookup::Stroke())
                         multiplierValue = 1.0f;
                     auto angle = XMath::mapRange(amplitude * 2, minAmplitude, maxAmplitude, 0, 180);
                     auto magnifiedAmplitude = XMath::mapRange(amplitude * 2, minAmplitude, maxAmplitude, 0, 100);
@@ -1667,12 +1662,11 @@ void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString cust
                     funscriptHandlers.clear();
                 }
 
-                TCodeChannels axisNames;
                 auto availibleAxis = SettingsHandler::getAvailableAxis();
                 foreach(auto axisName, availibleAxis->keys())
                 {
                     auto trackName = availibleAxis->value(axisName).TrackName;
-                    if(axisName == axisNames.Stroke || trackName.isEmpty())
+                    if(axisName == TCodeChannelLookup::Stroke() || trackName.isEmpty())
                         continue;
 
                     QFileInfo fileInfo(scriptFileNoExtension + "." + trackName + ".funscript");
@@ -2333,7 +2327,6 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
         xPlayer->stop();
         funscriptHandler->setLoaded(false);
     }
-    TCodeChannels axisNames;
     DeviceHandler* device = xSettings->getSelectedDeviceHandler();
     QList<FunscriptHandler*> funscriptHandlers;
     std::shared_ptr<FunscriptAction> actionPosition;
@@ -2381,7 +2374,7 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
                 //LogHandler::Debug("funscriptHandler->getPosition: "+QString::number(currentTime));
                 actionPosition = funscriptHandler->getPosition(currentTime);
                 if(actionPosition != nullptr)
-                    xSettings->setAxisProgressBar(axisNames.Stroke, actionPosition->pos);
+                    xSettings->setAxisProgressBar(TCodeChannelLookup::Stroke(), actionPosition->pos);
                 foreach(auto funscriptHandlerOther, funscriptHandlers)
                 {
                     auto otherAction = funscriptHandlerOther->getPosition(currentTime);
@@ -2421,7 +2414,7 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
                 foreach(auto axisName, availibleAxis->keys())
                 {
                     auto trackName = availibleAxis->value(axisName).TrackName;
-                    if(axisName == axisNames.Stroke || trackName.isEmpty())
+                    if(axisName == TCodeChannelLookup::Stroke() || trackName.isEmpty())
                         continue;
                     QString funscriptPathTemp = funscriptPath;
                     auto funscriptNoExtension = funscriptPathTemp.remove(funscriptPathTemp.lastIndexOf('.'), funscriptPathTemp.length() -  1);
@@ -2454,7 +2447,6 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
 
 void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler, QList<FunscriptHandler*> funscriptHandlers)
 {
-    TCodeChannels axisNames;
     std::shared_ptr<FunscriptAction> actionPosition;
     QMap<QString, std::shared_ptr<FunscriptAction>> otherActions;
     DeviceHandler* device = xSettings->getSelectedDeviceHandler();
@@ -2472,7 +2464,7 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
                 qint64 currentTime = player->position();
                 actionPosition = funscriptHandler->getPosition(currentTime);
                 if(actionPosition != nullptr)
-                    xSettings->setAxisProgressBar(axisNames.Stroke, actionPosition->pos);
+                    xSettings->setAxisProgressBar(TCodeChannelLookup::Stroke(), actionPosition->pos);
                 foreach(auto funscriptHandlerOther, funscriptHandlers)
                 {
                     auto otherAction = funscriptHandlerOther->getPosition(currentTime);
@@ -2499,9 +2491,15 @@ void MainWindow::on_gamepad_sendTCode(QString value)
 {
     if(_xSettings->isConnected())
     {
-        if(SettingsHandler::getFunscriptLoaded(_axisNames.Stroke) && (videoHandler->isPlaying() || _xSettings->getDeoHandler()->isPlaying()))
+        if(SettingsHandler::getFunscriptLoaded(TCodeChannelLookup::Stroke()) && (videoHandler->isPlaying() || _xSettings->getDeoHandler()->isPlaying()))
         {
             QRegularExpression rx("L0[^\\s]*\\s?");
+            value = value.remove(rx);
+        }
+
+        if((value.contains(TCodeChannelLookup::Suck()) && value.contains(TCodeChannelLookup::SuckPosition())))
+        {
+            QRegularExpression rx("A1[^\\s]*\\s?");
             value = value.remove(rx);
         }
         _xSettings->getSelectedDeviceHandler()->sendTCode(value);

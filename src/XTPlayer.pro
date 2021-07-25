@@ -35,6 +35,7 @@ SOURCES += \
     lib/handler/videohandler.cpp \
     lib/handler/vrdevicehandler.cpp \
     lib/handler/whirligighandler.cpp \
+    lib/lookup/tcodechannellookup.cpp \
     lib/struct/channeltablecomboboxdelegate.cpp \
     lib/struct/channeltableviewmodel.cpp \
     lib/struct/librarylistwidgetitem.cpp \
@@ -74,6 +75,7 @@ HEADERS += \
     lib/handler/tcodehandler.h \
     lib/handler/udphandler.h \
     lib/lookup/enum.h \
+    lib/lookup/tcodechannellookup.h \
     lib/struct/Bookmark.h \
     lib/struct/ChannelModel.h \
     lib/struct/ConnectionChangedSignal.h \

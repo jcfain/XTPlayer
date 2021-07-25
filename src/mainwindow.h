@@ -182,7 +182,6 @@ private:
     QGridLayout* _mediaGrid;
     PlayerControls* _playerControlsFrame;
     LibraryWindow* libraryWindow;
-    TCodeChannels _axisNames;
     QSplashScreen* loadingSplash;
     QTextToSpeech* textToSpeech;
     VideoPreviewWidget* videoPreviewWidget;

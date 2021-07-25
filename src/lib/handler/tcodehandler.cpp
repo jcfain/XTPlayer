@@ -18,12 +18,12 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
         {
             int position = action->pos;
             int speed = action->speed;
-            if (FunscriptHandler::getInverted() || SettingsHandler::getChannelInverseChecked(axisNames.Stroke))
+            if (FunscriptHandler::getInverted() || SettingsHandler::getChannelInverseChecked(TCodeChannelLookup::Stroke()))
             {
                 position = XMath::reverseNumber(position, 0, 100);
             }
-            tcode += axisNames.Stroke;
-            tcode += QString::number(calculateRange(axisNames.Stroke.toUtf8(), position)).rightJustified(getTCodePadding(), '0');
+            tcode += TCodeChannelLookup::Stroke();
+            tcode += QString::number(calculateRange(TCodeChannelLookup::Stroke().toUtf8(), position)).rightJustified(getTCodePadding(), '0');
             // LogHandler::Debug("Stroke tcode: "+ tcode);
             if (speed > 0)
             {
@@ -39,7 +39,9 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
             if(!availibleAxis->contains(axis))
                 continue;
             auto axisModel = availibleAxis->value(axis);
-            if (axisModel.Channel == axisNames.Stroke || axisModel.TrackName.isEmpty())
+            if (axisModel.Channel == TCodeChannelLookup::Stroke() || axisModel.TrackName.isEmpty())
+                continue;
+            if((axisModel.AxisName == TCodeChannelLookup::Suck() || axisModel.AxisName == TCodeChannelLookup::SuckPosition()) && (tcode.contains(TCodeChannelLookup::Suck()) || tcode.contains(TCodeChannelLookup::SuckPosition())))
                 continue;
             if (otherActions.contains(axis))
             {
@@ -66,6 +68,8 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
     {
         foreach(auto axis, axisKeys)
         {
+            if(axis.isEmpty())
+                continue;
             if(!availibleAxis->contains(axis))
                 continue;
             ChannelModel channel = availibleAxis->value(axis);
@@ -76,12 +80,14 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
             float multiplierValue = SettingsHandler::getMultiplierValue(axis);
             if (multiplierValue == 0.0)
                 continue;
+            if((channel.AxisName == TCodeChannelLookup::Suck() || channel.AxisName == TCodeChannelLookup::SuckPosition()) && (tcode.contains(TCodeChannelLookup::Suck()) || tcode.contains(TCodeChannelLookup::SuckPosition())))
+                continue;
             if (SettingsHandler::getMultiplierChecked(axis))
             {
                 auto currentAction = action;
                 if ((channel.LinkToRelatedMFS && SettingsHandler::getFunscriptLoaded(channel.RelatedChannel) && otherActions.contains(channel.RelatedChannel))) // Establish link to related channel to axis that are NOT stroke.
                     currentAction = otherActions.value(channel.RelatedChannel);
-                else if(channel.LinkToRelatedMFS && SettingsHandler::getFunscriptLoaded(channel.RelatedChannel) && !otherActions.contains(channel.RelatedChannel) && channel.RelatedChannel != axisNames.Stroke)
+                else if(channel.LinkToRelatedMFS && SettingsHandler::getFunscriptLoaded(channel.RelatedChannel) && !otherActions.contains(channel.RelatedChannel) && channel.RelatedChannel != TCodeChannelLookup::Stroke())
                     continue;
                 if(currentAction == nullptr)
                     continue;
@@ -90,7 +96,7 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
                 {
                     int value = -1;
                     if ((channel.LinkToRelatedMFS && SettingsHandler::getFunscriptLoaded(channel.RelatedChannel) && otherActions.contains(channel.RelatedChannel)) ||
-                            (channel.LinkToRelatedMFS && SettingsHandler::getFunscriptLoaded(channel.RelatedChannel) && channel.RelatedChannel == axisNames.Stroke))
+                            (channel.LinkToRelatedMFS && SettingsHandler::getFunscriptLoaded(channel.RelatedChannel) && channel.RelatedChannel == TCodeChannelLookup::Stroke()))
                     {
                         value = currentAction->pos;
 //                        LogHandler::Debug("Channel: "+ axis);
@@ -113,7 +119,7 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
                         LogHandler::Warn("Value was less than zero: "+ QString::number(value));
                         continue;
                     }
-                    if ((channel.Inverted && channel.LinkToRelatedMFS) || (SettingsHandler::getChannelInverseChecked(axisNames.Stroke) && !channel.Inverted && !channel.LinkToRelatedMFS) )
+                    if ((channel.Inverted && channel.LinkToRelatedMFS) || (SettingsHandler::getChannelInverseChecked(TCodeChannelLookup::Stroke()) && !channel.Inverted && !channel.LinkToRelatedMFS) )
                     {
                         //LogHandler::Debug("inverted: "+ QString::number(value));
                         value = XMath::reverseNumber(value, 0, 100);
@@ -149,7 +155,7 @@ int TCodeHandler::calculateRange(const char* channel, int rawValue)
     int xMax = SettingsHandler::getAxis(channel).UserMax;
     int xMin = SettingsHandler::getAxis(channel).UserMin;
     // Update for live x range switch
-    if(QString(channel) == axisNames.Stroke)
+    if(QString(channel) == TCodeChannelLookup::Stroke())
     {
         xMax = SettingsHandler::getLiveXRangeMax();
         xMin = SettingsHandler::getLiveXRangeMin();
