@@ -468,6 +468,9 @@
        </item>
        <item row="0" column="2" colspan="2">
         <widget class="QCheckBox" name="disableTextToSpeechCheckBox">
+         <property name="toolTip">
+          <string>This disables all speech in the app.</string>
+         </property>
          <property name="text">
           <string>Disable speech</string>
          </property>
@@ -506,6 +509,11 @@
        </item>
        <item row="0" column="4">
         <widget class="QCheckBox" name="disableVRScriptNotFoundCheckbox">
+         <property name="toolTip">
+          <string>This disables the Script not found\n
+selector when in VR and the video playing\n
+has no script associated with it.</string>
+         </property>
          <property name="text">
           <string>Disable script selector in VR</string>
          </property>
@@ -527,8 +535,13 @@
        </item>
        <item row="0" column="6" colspan="2">
         <widget class="QCheckBox" name="disableNoScriptFoundInLibrary">
+         <property name="toolTip">
+          <string>This will disable the warning that pops up\n
+when you play a video from the library window\n
+that has no script of the same name.</string>
+         </property>
          <property name="text">
-          <string>Disable no script found in library</string>
+          <string>Disable no script warning in library</string>
          </property>
         </widget>
        </item>

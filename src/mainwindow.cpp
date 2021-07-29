@@ -115,8 +115,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     ui->mediaAndControlsGrid->addWidget(_mediaFrame, 0, 0, 19, 3);
     ui->mediaAndControlsGrid->addWidget(_controlsHomePlaceHolderFrame, 20, 0, 1, 3);
 
-    audioSyncFilter = new AudioSyncFilter(this);
-    videoHandler->installFilter(audioSyncFilter);
+    //audioSyncFilter = new AudioSyncFilter(this);
+    //videoHandler->installFilter(audioSyncFilter);
 
     _videoLoadingMovie = new QMovie("://images/Eclipse-1s-loading-200px.gif");
     _videoLoadingLabel = new QLabel(this);
@@ -340,8 +340,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_playerControlsFrame, &PlayerControls::playClicked, this, &MainWindow::on_PlayBtn_clicked);
     connect(_playerControlsFrame, &PlayerControls::skipForward, this, &MainWindow::on_skipForwardButton_clicked);
     connect(_playerControlsFrame, &PlayerControls::skipToMoneyShot, this, &MainWindow::skipToMoneyShot);
-
     connect(_playerControlsFrame, &PlayerControls::skipBack, this, &MainWindow::on_skipBackButton_clicked);
+
     //connect(player, static_cast<void(AVPlayer::*)(AVPlayer::Error )>(&AVPlayer::error), this, &MainWindow::on_media_error);
 
     connect(videoHandler, &VideoHandler::doubleClicked, this, &MainWindow::media_double_click_event);
@@ -925,7 +925,7 @@ void MainWindow::on_audioLevel_Change(int decibelL,int decibelR)
 
 void MainWindow::turnOffAudioSync()
 {
-    disconnect(audioSyncFilter, &AudioSyncFilter::levelChanged, this, &MainWindow::on_audioLevel_Change);
+    // disconnect(audioSyncFilter, &AudioSyncFilter::levelChanged, this, &MainWindow::on_audioLevel_Change);
     minAmplitude = 0;
     maxAmplitude = 0;
 //    strokerUpdateMillis = 1000;
@@ -1704,8 +1704,8 @@ void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString cust
             else
             {
                 turnOffAudioSync();
-                strokerLastUpdate = QTime::currentTime().msecsSinceStartOfDay();
-                connect(audioSyncFilter, &AudioSyncFilter::levelChanged, this, &MainWindow::on_audioLevel_Change);
+                //strokerLastUpdate = QTime::currentTime().msecsSinceStartOfDay();
+                //connect(audioSyncFilter, &AudioSyncFilter::levelChanged, this, &MainWindow::on_audioLevel_Change);
             }
             if(!SettingsHandler::getDisableNoScriptFound() && !audioSync && !funscriptHandler->isLoaded())
             {
@@ -2084,7 +2084,7 @@ void MainWindow::on_seekSlider_sliderMoved(int position)
         LogHandler::Debug("playerPosition: "+ QString::number(playerPosition));
         if(playerPosition <= 0)
             playerPosition = 50;
-        videoHandler->seek(playerPosition);
+        videoHandler->setPosition(playerPosition);
     }
 }
 
@@ -2137,7 +2137,7 @@ void MainWindow::on_media_positionChanged(qint64 position)
             if(startLoopVideoPosition <= 0)
                 startLoopVideoPosition = 50;
             if (videoHandler->position() != startLoopVideoPosition)
-                videoHandler->setPosition(startLoopVideoPosition);
+                videoHandler->seek(startLoopVideoPosition);
         }
         QPoint gpos;
         qint64 videoToSliderPosition = XMath::mapRange(position,  (qint64)0, duration, (qint64)0, (qint64)100);
@@ -2298,7 +2298,7 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
             //If the above locations fail ask the user to select a file manually.
             if (funscriptPath.isEmpty())
             {
-                if(SettingsHandler::getDisableVRScriptSelect())
+                if(!SettingsHandler::getDisableVRScriptSelect())
                 {
                     if (!SettingsHandler::getDisableSpeechToText())
                         textToSpeech->say("Script for video playing in Deeo VR not found. Please check your computer to select a script.");
@@ -2585,24 +2585,29 @@ void MainWindow::skipBack()
 {
     if (libraryList->count() > 0)
     {
-        LibraryListWidgetItem* item;
-        int index = libraryList->currentRow() - 1;
-        if(index >= 0)
+        if(!videoHandler->isPlaying() || videoHandler->position() < 5000)
         {
-            item = setCurrentLibraryRow(index);
-        }
-        else
-        {
-            item = setCurrentLibraryRow(libraryList->count() - 1);
-        }
+            LibraryListWidgetItem* item;
+            int index = libraryList->currentRow() - 1;
+            if(index >= 0)
+            {
+                item = setCurrentLibraryRow(index);
+            }
+            else
+            {
+                item = setCurrentLibraryRow(libraryList->count() - 1);
+            }
 
-        auto libraryListItem = item->getLibraryListItem();
-        if(libraryListItem.type == LibraryListItemType::PlaylistInternal)
-        {
-            skipBack();
+            auto libraryListItem = item->getLibraryListItem();
+            if(libraryListItem.type == LibraryListItemType::PlaylistInternal)
+            {
+                skipBack();
+            }
+            else
+                stopAndPlayVideo(libraryListItem);
         }
         else
-            stopAndPlayVideo(libraryListItem);
+            videoHandler->seek(50);
     }
 }
 

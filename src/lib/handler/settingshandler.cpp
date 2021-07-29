@@ -4,8 +4,8 @@ const QMap<TCodeVersion, QString> SettingsHandler::SupportedTCodeVersions = {
     {TCodeVersion::v2, "TCode v0.2"},
     {TCodeVersion::v3, "TCode v0.3"}
 };
-const QString SettingsHandler::XTPVersion = "0.26";
-const float SettingsHandler::XTPVersionNum = 0.26f;
+const QString SettingsHandler::XTPVersion = "0.261";
+const float SettingsHandler::XTPVersionNum = 0.261f;
 
 SettingsHandler::SettingsHandler(){}
 SettingsHandler::~SettingsHandler()

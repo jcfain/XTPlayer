@@ -40,7 +40,7 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent)
     _player->setBufferMode(QtAV::BufferBytes);
     _player->audio()->setVolume(SettingsHandler::getPlayerVolume() * 0.001f);
     _widgetLayout->addWidget(_videoRenderer->widget());
-    _player->setSeekType(AccurateSeek);
+    _player->setSeekType(QtAV::SeekType::KeyFrameSeek);
 
     connect(_player, &AVPlayer::positionChanged, this, &VideoHandler::on_media_positionChanged, Qt::QueuedConnection);
     connect(_player, &AVPlayer::mediaStatusChanged, this, &VideoHandler::on_media_statusChanged, Qt::QueuedConnection);
