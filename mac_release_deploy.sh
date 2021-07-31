@@ -14,7 +14,7 @@ install_name_tool -change ~/Qt/5.15.2/clang_64/lib/QtOpenGL.framework/Versions/5
 install_name_tool -change ~/Qt/5.15.2/clang_64/lib/QtWidgets.framework/Versions/5/QtWidgets  @executable_path/../Frameworks/QtWidgets.framework/Versions/5/QtWidgets XTPlayer.app/Contents/Frameworks/QtAVWidgets.framework/Versions/1/QtAVWidgets
 install_name_tool -change ~/Qt/5.15.2/clang_64/lib/QtGui.framework/Versions/5/QtGui  @executable_path/../Frameworks/QtGui.framework/Versions/5/QtGui XTPlayer.app/Contents/Frameworks/QtAVWidgets.framework/Versions/1/QtAVWidgets
 install_name_tool -change ~/Qt/5.15.2/clang_64/lib/QtCore.framework/Versions/5/QtCore  @executable_path/../Frameworks/QtCore.framework/Versions/5/QtCore XTPlayer.app/Contents/Frameworks/QtAVWidgets.framework/Versions/1/QtAVWidgets
-mkdir XTPlayer-v0.258b_MacOS_x86_64
-cp -R XTPlayer.app XTPlayer-v0.258b_MacOS_x86_64/
-hdiutil create /tmp/tmp.dmg -ov -volname "XTPlayer-v0.258b_MacOS_x86_64" -fs HFS+ -srcfolder "XTPlayer-v0.258b_MacOS_x86_64"
-hdiutil convert /tmp/tmp.dmg -format UDZO -o XTPlayer-v0.258b_MacOS_x86_64.dmg
+mkdir XTPlayer-v0.261b_MacOS_x86_64
+cp -R XTPlayer.app XTPlayer-v0.261b_MacOS_x86_64/
+hdiutil create /tmp/tmp.dmg -ov -volname "XTPlayer-v0.261b_MacOS_x86_64" -fs HFS+ -srcfolder "XTPlayer-v0.261b_MacOS_x86_64"
+hdiutil convert /tmp/tmp.dmg -format UDZO -o XTPlayer-v0.261b_MacOS_x86_64.dmg
