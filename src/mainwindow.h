@@ -30,6 +30,7 @@
 #include "librarywindow.h"
 #include "addplaylistdialog.h"
 #include "libraryItemSettingsDialog.h"
+#include "noMatchingScriptDialog.h"
 #include "playercontrols.h"
 #include "lib/handler/videohandler.h"
 #include "CustomControls/rangeslider.h"
@@ -146,11 +147,17 @@ private slots:
     void on_audioLevel_Change(int decibelL, int decibelR);
 
     void onEventLoopStarted();
+    void on_scriptNotFound(QString message);
+    void on_setLoading(bool loading);
+    void on_playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
 
 signals:
     void keyPressed(QKeyEvent * event);
     void change(QEvent * event);
     void sendTCode(QString tcode);
+//    void scriptNotFound(QString message);
+//    void setLoading(bool loading);
+    void playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
 protected:
     virtual void keyPressEvent(QKeyEvent *event) override
     {
@@ -175,13 +182,14 @@ private:
     QGridLayout* _mediaGrid;
     PlayerControls* _playerControlsFrame;
     LibraryWindow* libraryWindow;
-    TCodeChannels _axisNames;
     QSplashScreen* loadingSplash;
     QTextToSpeech* textToSpeech;
     VideoPreviewWidget* videoPreviewWidget;
     QFuture<void> funscriptFuture;
     QFuture<void> funscriptVRSyncFuture;
     QFuture<void> loadingLibraryFuture;
+    QFuture<void> _waitForStopFuture;
+    bool _waitForStopFutureCancel = false;
     QProgressBar* bar;
     VideoHandler* videoHandler;
     FunscriptHandler* funscriptHandler;
@@ -282,7 +290,6 @@ private:
 
     void deviceHome();
     void deviceSwitchedHome();
-    void setLoading(bool loading);
     void setLibraryLoading(bool loading);
     void saveNewThumbs();
     void mediaAction(QString action);
@@ -302,7 +309,6 @@ private:
     void changeDeoFunscript();
     void turnOffAudioSync();
 
-    void playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
     void stopAndPlayVideo(LibraryListItem selectedFileListItem, QString customScript = nullptr, bool audioSync = false);
     void initNetworkEvent();
     void initSerialEvent();

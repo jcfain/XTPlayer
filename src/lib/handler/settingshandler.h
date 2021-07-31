@@ -1,6 +1,7 @@
 #ifndef SETTINGSHANDLER_H
 #define SETTINGSHANDLER_H
 #include <QSettings>
+#include <QObject>
 #include <QMutex>
 #include <QHash>
 #include <QFileDialog>
@@ -11,6 +12,7 @@
 #include "loghandler.h"
 #include "../lookup/enum.h"
 #include "../lookup/AxisNames.h"
+#include "../lookup/tcodechannellookup.h"
 #include "../lookup/GamepadAxisNames.h"
 #include "../lookup/MediaActions.h"
 #include "../tool/xmath.h"
@@ -20,13 +22,22 @@
 #include "../struct/LibraryListItemMetaData.h"
 #include "../struct/LibraryListItemMetaData258.h"
 
-class SettingsHandler
+class SettingsHandler: public QObject
 {
+    Q_OBJECT
+signals:
+    void tcodeVersionChanged();
+
 public:
-    static const QString TCodeVersion;
+    static SettingsHandler& instance(){
+        return m_instance;
+    }
+    static const QMap<TCodeVersion, QString> SupportedTCodeVersions;
     static const QString XTPVersion;
     static const float XTPVersionNum;
-    static QString _appdataLocation;
+    static QString getSelectedTCodeVersion();
+    static void setSelectedTCodeVersion(TCodeVersion key);
+    static void setSelectedTCodeVersion();
     static QString getDeoDnlaFunscript(QString key);
     static QString getSelectedTheme();
     static QString getSelectedLibrary();
@@ -66,6 +77,10 @@ public:
 
     static bool getDisableSpeechToText();
     static void setDisableSpeechToText(bool value);
+    static bool getDisableNoScriptFound();
+    static void setDisableNoScriptFound(bool value);
+    static bool getDisableVRScriptSelect();
+    static void setDisableVRScriptSelect(bool value);
 
     static void setDeoDnlaFunscript(QString key, QString value);
     static void setSelectedTheme(QString value);
@@ -107,6 +122,7 @@ public:
     static void setDamperChecked(QString channel, bool value);
     static bool getLinkToRelatedAxisChecked(QString channel);
     static void setLinkToRelatedAxisChecked(QString channel, bool value);
+    static void setLinkToRelatedAxis(QString channel, QString linkedChannel);
 
     static void setLibraryView(int value);
     static void setThumbSize(int value);
@@ -171,7 +187,7 @@ public:
     static void SetHashedPass(QString value);
 
     static QSize getMaxThumbnailSize();
-    static void SetupAvailableAxis();
+    static void setupAvailableAxis();
     static void SetupDecoderPriority();
     static void Load(QSettings* settingsToLoadFrom = nullptr);
     static void Save(QSettings* settingsToSaveTo = nullptr);
@@ -185,15 +201,17 @@ public:
 private:
     SettingsHandler();
     ~SettingsHandler();
+    static SettingsHandler m_instance;
     static void SetMapDefaults();
-    static void SetupGamepadButtonMap();
+    static void setupGamepadButtonMap();
     static void MigrateTo23();
     static void MigrateTo25();
     static void MigrateTo252();
     static void MigrateLibraryMetaDataTo258();
     static void DeMigrateLibraryMetaDataTo258();
+    static QString _appdataLocation;
+    static TCodeVersion _selectedTCodeVersion;
     static GamepadAxisNames gamepadAxisNames;
-    static TCodeChannels channelNames;
     static MediaActions mediaActions;
     static QSize _maxThumbnailSize;
 
@@ -247,6 +265,8 @@ private:
     static QMap<QString, QList<LibraryListItem>> _playlists;
     static QHash<QString, LibraryListItemMetaData258> _libraryListItemMetaDatas;
 
+    static bool _disableVRScriptSelect;
+    static bool _disableNoScriptFound;
     static bool disableSpeechToText;
     static bool defaultReset;
     static QString _hashedPass;

@@ -125,7 +125,7 @@ void SerialHandler::run()
                 serial.setParity(QSerialPort::NoParity);
                 serial.setStopBits(QSerialPort::OneStop);
                 serial.setFlowControl(QSerialPort::NoFlowControl);
-                serial.setRequestToSend(true);
+                //serial.setRequestToSend(true);
                 serial.setDataTerminalReady(true);
             }
         }
@@ -136,36 +136,62 @@ void SerialHandler::run()
         if (serial.waitForBytesWritten(_waitTimeout))
         {
             serial.flush();
-//            // read response
-//            if ((currentPortNameChanged || !_isConnected) && serial.waitForReadyRead(currentWaitTimeout))
-//            {
-//                QByteArray responseData = serial.readAll();
-//                while (serial.waitForReadyRead(currentWaitTimeout))
-//                    responseData += serial.readAll();
+            // read response
+            QString version = "V?";
+            if ((currentPortNameChanged || !_isConnected) && serial.waitForReadyRead(currentWaitTimeout))
+            {
+                QByteArray responseData = serial.readAll();
+                while (serial.waitForReadyRead(currentWaitTimeout))
+                    responseData += serial.readAll();
 
-//                const QString response = QString::fromUtf8(responseData);
-//                LogHandler::Debug("Serial read: "+ response);
-//                if (response.contains(SettingsHandler::TCodeVersion))
-//                {
-        if(!_isConnected) //temp
-        { // temp
-                    emit connectionChange({DeviceType::Serial, ConnectionStatus::Connected, "Connected"});
+                const QString response = QString::fromUtf8(responseData);
+                LogHandler::Debug("Serial read: "+ response);
+                bool validated = false;
+                if(response.contains(SettingsHandler::SupportedTCodeVersions.value(TCodeVersion::v2)))
+                {
+                    version = "V2";
+                    validated = true;
+                }
+                else if (response.contains(SettingsHandler::SupportedTCodeVersions.value(TCodeVersion::v3)))
+                {
+                    version = "V3";
+                    validated = true;
+                }
+                if (validated)
+                {
+                    if(!_isConnected) //temp
+                    { // temp
+                                emit connectionChange({DeviceType::Serial, ConnectionStatus::Connected, "Connected: "+version});
+                                _mutex.lock();
+                                _isConnected = true;
+                                _mutex.unlock();
+                    } // temp
+                }
+                else
+                {
+                    //emit connectionChange({DeviceType::Serial, ConnectionStatus::Error, "No TCode"});
+                    // Due to issue with connecting to some romeos with validation. Do not block them from using it.
+                    emit connectionChange({DeviceType::Serial, ConnectionStatus::Connected, "Connected: "+version});
                     _mutex.lock();
                     _isConnected = true;
                     _mutex.unlock();
-        } // temp
-//                }
-//                else
-//                {
-//                    emit connectionChange({DeviceType::Serial, ConnectionStatus::Error, "No TCode"});
-//                }
-//            }
-//            else if (currentPortNameChanged || !_isConnected)
-//            {
+                    LogHandler::Error("There was an error validating the serial");
+                    LogHandler::Error("response: "+response);
+                    emit errorOccurred("There was an error validating the serial!\nYou should be able to keep using the program if you have the correct port enabled\n\nIt would be greatly appreciated if you could start the program\nin debugmode with the bat file and close out the program after this message. Send the txt filr to Khrull on patreon or discord. Thanks!");
+                }
+            }
+            else if (currentPortNameChanged || !_isConnected)
+            {
 
-//                LogHandler::Debug(tr("Read serial handshake timeout %1")
-//                             .arg(QTime::currentTime().toString()));
-//            }
+                LogHandler::Error(tr("Read serial handshake timeout %1")
+                             .arg(QTime::currentTime().toString()));
+                // Due to issue with connecting to some romeos with validation. Do not block them from using it.
+                emit connectionChange({DeviceType::Serial, ConnectionStatus::Connected, "Connected: "+version});
+                _mutex.lock();
+                _isConnected = true;
+                _mutex.unlock();
+                emit errorOccurred("There was an error validating the serial!\nYou should be able to keep using the program if you have the correct port enabled\n\nIt would be greatly appreciated if you could start the program\nin debugmode with the bat file and close out the program after this message. Send the txt filr to Khrull on patreon or discord. Thanks!");
+            }
         }
         else
         {

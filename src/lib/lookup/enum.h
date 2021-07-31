@@ -1,6 +1,6 @@
 #ifndef ENUM_H
 #define ENUM_H
-
+#include <QObject>
 enum DeviceType
 {
     Serial,
@@ -40,4 +40,9 @@ enum PasswordResponse {
     CANCEL
 };
 
+enum TCodeVersion {
+    v2,
+    v3
+};
+Q_DECLARE_METATYPE(TCodeVersion);
 #endif // ENUM_H

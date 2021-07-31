@@ -66,7 +66,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     qRegisterMetaType<LibraryListItem>();
     qRegisterMetaTypeStreamOperators<LibraryListItem>();
 
-    funscriptHandler = new FunscriptHandler(_axisNames.Stroke);
+    funscriptHandler = new FunscriptHandler(TCodeChannelLookup::Stroke());
 
     textToSpeech = new QTextToSpeech(this);
     auto availableVoices = textToSpeech->availableVoices();
@@ -115,8 +115,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     ui->mediaAndControlsGrid->addWidget(_mediaFrame, 0, 0, 19, 3);
     ui->mediaAndControlsGrid->addWidget(_controlsHomePlaceHolderFrame, 20, 0, 1, 3);
 
-    audioSyncFilter = new AudioSyncFilter(this);
-    videoHandler->installFilter(audioSyncFilter);
+    //audioSyncFilter = new AudioSyncFilter(this);
+    //videoHandler->installFilter(audioSyncFilter);
 
     _videoLoadingMovie = new QMovie("://images/Eclipse-1s-loading-200px.gif");
     _videoLoadingLabel = new QLabel(this);
@@ -126,7 +126,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     _videoLoadingLabel->setStyleSheet("* {background: transparent}");
     _videoLoadingLabel->setAlignment(Qt::AlignCenter);
     _mediaGrid->addWidget(_videoLoadingLabel, 1, 2);
-    setLoading(false);
+    on_setLoading(false);
 
     _playerControlsFrame->setVolume(SettingsHandler::getPlayerVolume());
 
@@ -340,14 +340,17 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_playerControlsFrame, &PlayerControls::playClicked, this, &MainWindow::on_PlayBtn_clicked);
     connect(_playerControlsFrame, &PlayerControls::skipForward, this, &MainWindow::on_skipForwardButton_clicked);
     connect(_playerControlsFrame, &PlayerControls::skipToMoneyShot, this, &MainWindow::skipToMoneyShot);
-
     connect(_playerControlsFrame, &PlayerControls::skipBack, this, &MainWindow::on_skipBackButton_clicked);
+
     //connect(player, static_cast<void(AVPlayer::*)(AVPlayer::Error )>(&AVPlayer::error), this, &MainWindow::on_media_error);
 
     connect(videoHandler, &VideoHandler::doubleClicked, this, &MainWindow::media_double_click_event);
     connect(videoHandler, &VideoHandler::rightClicked, this, &MainWindow::media_single_click_event);
     connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
     connect(this, &MainWindow::change, this, &MainWindow::on_mainwindow_change);
+    connect(this, &MainWindow::playVideo, this, &MainWindow::on_playVideo);
+    //    connect(this, &MainWindow::setLoading, this, &MainWindow::on_setLoading);
+    //    connect(this, &MainWindow::scriptNotFound, this, &MainWindow::on_scriptNotFound);
     //connect(videoHandler, &VideoHandler::mouseEnter, this, &MainWindow::on_video_mouse_enter);
 
     connect(libraryList, &QListWidget::customContextMenuRequested, this, &MainWindow::onLibraryList_ContextMenuRequested);
@@ -360,9 +363,12 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nSetting user styles...", Qt::AlignBottom, Qt::white);
     QFile file(SettingsHandler::getSelectedTheme());
-    file.open(QFile::ReadOnly);
-    QString styleSheet = QLatin1String(file.readAll());
-    setStyleSheet(styleSheet);
+    if(file.exists())
+    {
+        file.open(QFile::ReadOnly);
+        QString styleSheet = QLatin1String(file.readAll());
+        setStyleSheet(styleSheet);
+    }
 
     setFocus();
     _defaultAppSize = this->size();
@@ -550,7 +556,7 @@ void MainWindow::on_key_press(QKeyEvent * event)
 void MainWindow::mediaAction(QString action)
 {
     MediaActions actions;
-     if (action == actions.TogglePause)
+    if (action == actions.TogglePause)
     {
         if (videoHandler->isPaused() || videoHandler->isPlaying())
         {
@@ -567,7 +573,8 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.FullScreen)
     {
-        toggleFullScreen();
+        if (videoHandler->isPaused() || videoHandler->isPlaying())
+            toggleFullScreen();
     }
     else if(action == actions.Mute)
     {
@@ -575,15 +582,18 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.Stop)
     {
-        stopMedia();
+        if (videoHandler->isPaused() || videoHandler->isPlaying())
+            stopMedia();
     }
      else if(action == actions.Next)
     {
-        skipForward();
+        if (videoHandler->isPaused() || videoHandler->isPlaying())
+            skipForward();
     }
     else if(action == actions.Back)
     {
-        skipBack();
+        if (videoHandler->isPaused() || videoHandler->isPlaying())
+            skipBack();
     }
     else if(action == actions.VolumeUp)
     {
@@ -600,16 +610,12 @@ void MainWindow::mediaAction(QString action)
     else if(action == actions.Rewind)
     {
         if (videoHandler->isPlaying())
-        {
             rewind();
-        }
     }
     else if(action == actions.FastForward)
     {
         if (videoHandler->isPlaying())
-        {
             fastForward();
-        }
     }
     else if(action == actions.TCodeSpeedUp)
     {
@@ -631,7 +637,6 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.IncreaseXLowerRange)
     {
-        TCodeChannels axisNames;
         int xRangeStep = SettingsHandler::getXRangeStep();
         int newLiveRange = SettingsHandler::getLiveXRangeMin() + SettingsHandler::getXRangeStep();
         int xRangeMax = SettingsHandler::getLiveXRangeMax();
@@ -650,9 +655,8 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.DecreaseXLowerRange)
     {
-        TCodeChannels axisNames;
         int newLiveRange = SettingsHandler::getLiveXRangeMin() - SettingsHandler::getXRangeStep();
-        int axisMin = SettingsHandler::getAxis(axisNames.Stroke).Min;
+        int axisMin = SettingsHandler::getAxis(TCodeChannelLookup::Stroke()).Min;
         if(newLiveRange > axisMin)
         {
             SettingsHandler::setLiveXRangeMin(newLiveRange);
@@ -668,9 +672,8 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.IncreaseXUpperRange)
     {
-        TCodeChannels axisNames;
         int newLiveRange = SettingsHandler::getLiveXRangeMax() + SettingsHandler::getXRangeStep();
-        int axisMax = SettingsHandler::getAxis(axisNames.Stroke).Max;
+        int axisMax = SettingsHandler::getAxis(TCodeChannelLookup::Stroke()).Max;
         if(newLiveRange < axisMax)
         {
             SettingsHandler::setLiveXRangeMax(newLiveRange);
@@ -686,7 +689,6 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.DecreaseXUpperRange)
     {
-        TCodeChannels axisNames;
         int xRangeStep = SettingsHandler::getXRangeStep();
         int newLiveRange = SettingsHandler::getLiveXRangeMax() - xRangeStep;
         int xRangeMin = SettingsHandler::getLiveXRangeMin();
@@ -705,13 +707,12 @@ void MainWindow::mediaAction(QString action)
     }
     else if (action == actions.IncreaseXRange)
     {
-        TCodeChannels axisNames;
         int xRangeMax = SettingsHandler::getLiveXRangeMax();
         int xRangeMin = SettingsHandler::getLiveXRangeMin();
         int xRangeStep = SettingsHandler::getXRangeStep();
         int newLiveMaxRange = xRangeMax + xRangeStep;
         int limitXMax = 0;
-        int axisMax = SettingsHandler::getAxis(axisNames.Stroke).Max;
+        int axisMax = SettingsHandler::getAxis(TCodeChannelLookup::Stroke()).Max;
         if(newLiveMaxRange < axisMax)
         {
             SettingsHandler::setLiveXRangeMax(newLiveMaxRange);
@@ -723,7 +724,7 @@ void MainWindow::mediaAction(QString action)
         }
 
         int newLiveMinRange = xRangeMin - xRangeStep;
-        int axisMin = SettingsHandler::getAxis(axisNames.Stroke).Min;
+        int axisMin = SettingsHandler::getAxis(TCodeChannelLookup::Stroke()).Min;
         int limitXMin = 0;
         if(newLiveMinRange > axisMin)
         {
@@ -750,7 +751,6 @@ void MainWindow::mediaAction(QString action)
     }
     else if (action == actions.DecreaseXRange)
     {
-        TCodeChannels axisNames;
         int xRangeMax = SettingsHandler::getLiveXRangeMax();
         int xRangeMin = SettingsHandler::getLiveXRangeMin();
         int xRangeStep = SettingsHandler::getXRangeStep();
@@ -815,7 +815,8 @@ void MainWindow::mediaAction(QString action)
      }
      else if (action == actions.SkipToMoneyShot)
      {
-         skipToMoneyShot();
+        if (videoHandler->isPaused() || videoHandler->isPlaying())
+            skipToMoneyShot();
      }
 }
 
@@ -868,12 +869,12 @@ void MainWindow::on_audioLevel_Change(int decibelL,int decibelR)
             foreach(auto axis, availibleAxis->keys())
             {
                 ChannelModel channel = availibleAxis->value(axis);
-                if (channel.AxisName == _axisNames.Stroke  || SettingsHandler::getMultiplierChecked(axis))
+                if (channel.AxisName == TCodeChannelLookup::Stroke()  || SettingsHandler::getMultiplierChecked(axis))
                 {
                     if (channel.Type == AxisType::HalfRange || channel.Type == AxisType::None)
                         continue;
                     auto multiplierValue = SettingsHandler::getMultiplierValue(axis);
-                    if (channel.AxisName == _axisNames.Stroke)
+                    if (channel.AxisName == TCodeChannelLookup::Stroke())
                         multiplierValue = 1.0f;
                     auto angle = XMath::mapRange(amplitude * 2, minAmplitude, maxAmplitude, 0, 180);
                     auto magnifiedAmplitude = XMath::mapRange(amplitude * 2, minAmplitude, maxAmplitude, 0, 100);
@@ -924,7 +925,7 @@ void MainWindow::on_audioLevel_Change(int decibelL,int decibelR)
 
 void MainWindow::turnOffAudioSync()
 {
-    disconnect(audioSyncFilter, &AudioSyncFilter::levelChanged, this, &MainWindow::on_audioLevel_Change);
+    // disconnect(audioSyncFilter, &AudioSyncFilter::levelChanged, this, &MainWindow::on_audioLevel_Change);
     minAmplitude = 0;
     maxAmplitude = 0;
 //    strokerUpdateMillis = 1000;
@@ -1550,7 +1551,6 @@ void MainWindow::playFileWithCustomScript()
         stopAndPlayVideo(selectedFileListItem, selectedScript);
     }
 }
-
 //Hack because QTAV calls stopped and start out of order
 void MainWindow::stopAndPlayVideo(LibraryListItem selectedFileListItem, QString customScript, bool audioSync)
 {
@@ -1562,30 +1562,41 @@ void MainWindow::stopAndPlayVideo(LibraryListItem selectedFileListItem, QString 
             if(playingLibraryListItem != nullptr)
                 updateMetaData(playingLibraryListItem->getLibraryListItem());
             _playerControlsFrame->SetLoop(false);
-            setLoading(true);
+            on_setLoading(true);
             if(videoHandler->isPlaying())
             {
                 stopMedia();
-                auto waitForStopFuture = QtConcurrent::run([this, selectedFileListItem, customScript, audioSync]()
+                if(_waitForStopFuture.isRunning())
+                {
+                    _waitForStopFuture.cancel();
+                    _waitForStopFutureCancel = true;
+                    _waitForStopFuture.waitForFinished();
+                }
+
+                _waitForStopFuture = QtConcurrent::run([this, selectedFileListItem, customScript, audioSync]()
                 {
                     while(!_mediaStopped)
                     {
                         LogHandler::Debug(tr("Waiting for media stop..."));
-                        QThread::msleep(500);
+                        if(!_waitForStopFutureCancel)
+                            QThread::msleep(500);
+                        else {
+                            _waitForStopFutureCancel = false;
+                            return;
+                        }
                     }
-                    playVideo(selectedFileListItem, customScript, audioSync);
+                    emit playVideo(selectedFileListItem, customScript, audioSync);
                 });
             }
             else
             {
-                playVideo(selectedFileListItem, customScript, audioSync);
+                on_playVideo(selectedFileListItem, customScript, audioSync);
             }
         }
     }
 
 }
-
-void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customScript, bool audioSync)
+void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString customScript, bool audioSync)
 {
     QFile file(selectedFileListItem.path);
     if (file.exists())
@@ -1594,7 +1605,8 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
         {
             deviceHome();
             _playerControlsFrame->SetLoop(false);
-            setLoading(true);
+            funscriptHandler->setLoaded(false);
+            on_setLoading(true);
             videoHandler->setFile(selectedFileListItem.path);
             videoPreviewWidget->setFile(selectedFileListItem.path);
             videoHandler->load();
@@ -1650,12 +1662,11 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
                     funscriptHandlers.clear();
                 }
 
-                TCodeChannels axisNames;
                 auto availibleAxis = SettingsHandler::getAvailableAxis();
                 foreach(auto axisName, availibleAxis->keys())
                 {
                     auto trackName = availibleAxis->value(axisName).TrackName;
-                    if(axisName == axisNames.Stroke || trackName.isEmpty())
+                    if(axisName == TCodeChannelLookup::Stroke() || trackName.isEmpty())
                         continue;
 
                     QFileInfo fileInfo(scriptFileNoExtension + "." + trackName + ".funscript");
@@ -1693,8 +1704,12 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
             else
             {
                 turnOffAudioSync();
-                strokerLastUpdate = QTime::currentTime().msecsSinceStartOfDay();
-                connect(audioSyncFilter, &AudioSyncFilter::levelChanged, this, &MainWindow::on_audioLevel_Change);
+                //strokerLastUpdate = QTime::currentTime().msecsSinceStartOfDay();
+                //connect(audioSyncFilter, &AudioSyncFilter::levelChanged, this, &MainWindow::on_audioLevel_Change);
+            }
+            if(!SettingsHandler::getDisableNoScriptFound() && !audioSync && !funscriptHandler->isLoaded())
+            {
+                on_scriptNotFound(customScript);
             }
             videoHandler->play();
             playingLibraryListIndex = libraryList->currentRow();
@@ -1702,10 +1717,6 @@ void MainWindow::playVideo(LibraryListItem selectedFileListItem, QString customS
 
             processMetaData(selectedFileListItem);
 
-            if(!audioSync && !funscriptHandler->isLoaded())
-            {
-                LogHandler::Dialog(tr("Error loading script ") + customScript + tr("!\nTry right clicking on the video in the list\nand loading with another script."), XLogLevel::Warning);
-            }
         }
 
     }
@@ -2073,7 +2084,7 @@ void MainWindow::on_seekSlider_sliderMoved(int position)
         LogHandler::Debug("playerPosition: "+ QString::number(playerPosition));
         if(playerPosition <= 0)
             playerPosition = 50;
-        videoHandler->seek(playerPosition);
+        videoHandler->setPosition(playerPosition);
     }
 }
 
@@ -2126,7 +2137,7 @@ void MainWindow::on_media_positionChanged(qint64 position)
             if(startLoopVideoPosition <= 0)
                 startLoopVideoPosition = 50;
             if (videoHandler->position() != startLoopVideoPosition)
-                videoHandler->setPosition(startLoopVideoPosition);
+                videoHandler->seek(startLoopVideoPosition);
         }
         QPoint gpos;
         qint64 videoToSliderPosition = XMath::mapRange(position,  (qint64)0, duration, (qint64)0, (qint64)100);
@@ -2183,7 +2194,7 @@ void MainWindow::on_media_start()
     {
         funscriptFuture = QtConcurrent::run(syncFunscript, videoHandler, _xSettings, tcodeHandler, funscriptHandler, funscriptHandlers);
     }
-    setLoading(false);
+    on_setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(true);
     _mediaStopped = false;
 }
@@ -2191,26 +2202,32 @@ void MainWindow::on_media_start()
 void MainWindow::on_media_stop()
 {
     LogHandler::Debug("Enter on_media_stop");
-    _mediaStopped = true;
-    setLoading(false);
+    on_setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(false);
     if(funscriptFuture.isRunning())
     {
         funscriptFuture.cancel();
+        funscriptFuture.waitForFinished();
     }
+    _mediaStopped = true;
 }
-void MainWindow::setLoading(bool loading)
+void MainWindow::on_setLoading(bool loading)
 {
-    if(loading)
+    if(loading && _videoLoadingMovie->state() != QMovie::MovieState::Running)
     {
         _videoLoadingLabel->show();
         _videoLoadingMovie->start();
     }
-    else
+    else if(!loading && _videoLoadingMovie->state() == QMovie::MovieState::Running)
     {
         _videoLoadingLabel->hide();
         _videoLoadingMovie->stop();
     }
+}
+
+void MainWindow::on_scriptNotFound(QString message)
+{
+    NoMatchingScriptDialog::show(this, message);
 }
 
 void MainWindow::setLibraryLoading(bool loading)
@@ -2279,23 +2296,26 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
                 }
             }
             //If the above locations fail ask the user to select a file manually.
-            if (funscriptPath == nullptr)
+            if (funscriptPath.isEmpty())
             {
-                funscriptFileSelectorOpen = true;
-                if (!SettingsHandler::getDisableSpeechToText())
-                    textToSpeech->say("Script for video playing in Deeo VR not found. Please check your computer to select a script.");
-                funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + videoFile.fileName(), SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
-                funscriptFileSelectorOpen = false;
-                //LogHandler::Debug("funscriptPath: "+funscriptPath);
+                if(!SettingsHandler::getDisableVRScriptSelect())
+                {
+                    if (!SettingsHandler::getDisableSpeechToText())
+                        textToSpeech->say("Script for video playing in Deeo VR not found. Please check your computer to select a script.");
+                    funscriptFileSelectorOpen = true;
+                    funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + videoFile.fileName(), SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
+                    funscriptFileSelectorOpen = false;
+                    //LogHandler::Debug("funscriptPath: "+funscriptPath);
+                }
                 if(funscriptPath.isEmpty())
                 {
                     vrScriptSelectorCanceled = true;
                     vrScriptSelectedCanceledPath = packet.path;
                 }
-
             }
             //Store the location of the file so the above check doesnt happen again.
-            SettingsHandler::setDeoDnlaFunscript(videoPath, funscriptPath);
+            if(!funscriptPath.isEmpty())
+                SettingsHandler::setDeoDnlaFunscript(videoPath, funscriptPath);
         }
     }
 }
@@ -2307,7 +2327,6 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
         xPlayer->stop();
         funscriptHandler->setLoaded(false);
     }
-    TCodeChannels axisNames;
     DeviceHandler* device = xSettings->getSelectedDeviceHandler();
     QList<FunscriptHandler*> funscriptHandlers;
     std::shared_ptr<FunscriptAction> actionPosition;
@@ -2355,7 +2374,7 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
                 //LogHandler::Debug("funscriptHandler->getPosition: "+QString::number(currentTime));
                 actionPosition = funscriptHandler->getPosition(currentTime);
                 if(actionPosition != nullptr)
-                    xSettings->setAxisProgressBar(axisNames.Stroke, actionPosition->pos);
+                    xSettings->setAxisProgressBar(TCodeChannelLookup::Stroke(), actionPosition->pos);
                 foreach(auto funscriptHandlerOther, funscriptHandlers)
                 {
                     auto otherAction = funscriptHandlerOther->getPosition(currentTime);
@@ -2395,7 +2414,7 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
                 foreach(auto axisName, availibleAxis->keys())
                 {
                     auto trackName = availibleAxis->value(axisName).TrackName;
-                    if(axisName == axisNames.Stroke || trackName.isEmpty())
+                    if(axisName == TCodeChannelLookup::Stroke() || trackName.isEmpty())
                         continue;
                     QString funscriptPathTemp = funscriptPath;
                     auto funscriptNoExtension = funscriptPathTemp.remove(funscriptPathTemp.lastIndexOf('.'), funscriptPathTemp.length() -  1);
@@ -2428,7 +2447,6 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
 
 void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler, QList<FunscriptHandler*> funscriptHandlers)
 {
-    TCodeChannels axisNames;
     std::shared_ptr<FunscriptAction> actionPosition;
     QMap<QString, std::shared_ptr<FunscriptAction>> otherActions;
     DeviceHandler* device = xSettings->getSelectedDeviceHandler();
@@ -2446,7 +2464,7 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
                 qint64 currentTime = player->position();
                 actionPosition = funscriptHandler->getPosition(currentTime);
                 if(actionPosition != nullptr)
-                    xSettings->setAxisProgressBar(axisNames.Stroke, actionPosition->pos);
+                    xSettings->setAxisProgressBar(TCodeChannelLookup::Stroke(), actionPosition->pos);
                 foreach(auto funscriptHandlerOther, funscriptHandlers)
                 {
                     auto otherAction = funscriptHandlerOther->getPosition(currentTime);
@@ -2473,9 +2491,15 @@ void MainWindow::on_gamepad_sendTCode(QString value)
 {
     if(_xSettings->isConnected())
     {
-        if(SettingsHandler::getFunscriptLoaded(_axisNames.Stroke) && (videoHandler->isPlaying() || _xSettings->getDeoHandler()->isPlaying()))
+        if(SettingsHandler::getFunscriptLoaded(TCodeChannelLookup::Stroke()) && (videoHandler->isPlaying() || _xSettings->getDeoHandler()->isPlaying()))
         {
             QRegularExpression rx("L0[^\\s]*\\s?");
+            value = value.remove(rx);
+        }
+
+        if((value.contains(TCodeChannelLookup::Suck()) && value.contains(TCodeChannelLookup::SuckPosition())))
+        {
+            QRegularExpression rx("A1[^\\s]*\\s?");
             value = value.remove(rx);
         }
         _xSettings->getSelectedDeviceHandler()->sendTCode(value);
@@ -2511,16 +2535,16 @@ void MainWindow::on_media_statusChanged(MediaStatus status)
         //status = tr("Invalid meida");
         break;
     case BufferingMedia:
-        setLoading(true);
+        on_setLoading(true);
         break;
     case BufferedMedia:
-        setLoading(false);
+        on_setLoading(false);
         break;
     case LoadingMedia:
-        setLoading(true);
+        on_setLoading(true);
         break;
     case LoadedMedia:
-        setLoading(false);
+        on_setLoading(false);
         break;
     case StalledMedia:
 
@@ -2561,24 +2585,29 @@ void MainWindow::skipBack()
 {
     if (libraryList->count() > 0)
     {
-        LibraryListWidgetItem* item;
-        int index = libraryList->currentRow() - 1;
-        if(index >= 0)
+        if(!videoHandler->isPlaying() || videoHandler->position() < 5000)
         {
-            item = setCurrentLibraryRow(index);
-        }
-        else
-        {
-            item = setCurrentLibraryRow(libraryList->count() - 1);
-        }
+            LibraryListWidgetItem* item;
+            int index = libraryList->currentRow() - 1;
+            if(index >= 0)
+            {
+                item = setCurrentLibraryRow(index);
+            }
+            else
+            {
+                item = setCurrentLibraryRow(libraryList->count() - 1);
+            }
 
-        auto libraryListItem = item->getLibraryListItem();
-        if(libraryListItem.type == LibraryListItemType::PlaylistInternal)
-        {
-            skipBack();
+            auto libraryListItem = item->getLibraryListItem();
+            if(libraryListItem.type == LibraryListItemType::PlaylistInternal)
+            {
+                skipBack();
+            }
+            else
+                stopAndPlayVideo(libraryListItem);
         }
         else
-            stopAndPlayVideo(libraryListItem);
+            videoHandler->seek(50);
     }
 }
 
@@ -2771,7 +2800,7 @@ void MainWindow::on_actionAbout_triggered()
     layout.setGeometry(windowRect);
     QLabel copyright;
     copyright.setText("<b>XTPlayer v"+SettingsHandler::XTPVersion + "</b><br>"
-                       + SettingsHandler::TCodeVersion + "<br>"
+                       + SettingsHandler::getSelectedTCodeVersion() + "<br>"
                                                 "Copyright 2020 Jason C. Fain<br>"
                                                 "Donate: <a href='https://www.patreon.com/Khrull'>https://www.patreon.com/Khrull</a><br>"
                                                 "THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND.");

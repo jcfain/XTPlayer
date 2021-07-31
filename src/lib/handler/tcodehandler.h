@@ -3,6 +3,7 @@
 #include "../struct/Funscript.h"
 #include "../struct/ChannelModel.h"
 #include "../struct/GamepadState.h"
+#include "../lookup/tcodechannellookup.h"
 #include "../lookup/AxisNames.h"
 #include "../tool/xmath.h"
 #include "settingshandler.h"
@@ -25,7 +26,7 @@ public:
 private:
     QMutex mutex;
     void getChannelHome(ChannelModel channel, QString &tcode);
-    const TCodeChannels axisNames;
+    int getTCodePadding();
 };
 
 #endif // TCODEHANDLER_H

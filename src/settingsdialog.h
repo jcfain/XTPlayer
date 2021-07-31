@@ -73,6 +73,7 @@ private slots:
     void on_serialOutputRdo_clicked();
 
     void on_networkOutputRdo_clicked();
+    void setUpTCodeAxis();
 
     void on_serialRefreshBtn_clicked();
 
@@ -161,6 +162,12 @@ private slots:
 
     void on_thumbsDirDefaultButton_clicked();
 
+    void on_disableVRScriptNotFoundCheckbox_stateChanged(int arg1);
+
+    void on_disableNoScriptFoundInLibrary_stateChanged(int arg1);
+
+    void on_tCodeVSComboBox_currentIndexChanged(int index);
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();
@@ -174,7 +181,6 @@ private:
     QString encryptPass(QString pass);
     QString decryptPass(QString pass);
     LibraryExclusions* _libraryExclusions;
-    TCodeChannels axisNames;
     bool _interfaceInitialized = false;
     ConnectionStatus _outConnectionStatus = ConnectionStatus::Disconnected;
     ConnectionStatus _deoConnectionStatus = ConnectionStatus::Disconnected;
