@@ -36,7 +36,7 @@ public:
     static const QString XTPVersion;
     static const float XTPVersionNum;
     static QString getSelectedTCodeVersion();
-    static void setSelectedTCodeVersion(TCodeVersion key, QWidget* parent);
+    static void setSelectedTCodeVersion(TCodeVersion key);
     static void setSelectedTCodeVersion();
     static QString getDeoDnlaFunscript(QString key);
     static QString getSelectedTheme();

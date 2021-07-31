@@ -1435,5 +1435,5 @@ void SettingsDialog::on_disableNoScriptFoundInLibrary_stateChanged(int checkStat
 
 void SettingsDialog::on_tCodeVSComboBox_currentIndexChanged(int index)
 {
-    SettingsHandler::setSelectedTCodeVersion(ui.tCodeVersionComboBox->currentData().value<TCodeVersion>(), this);
+    SettingsHandler::setSelectedTCodeVersion(ui.tCodeVersionComboBox->currentData().value<TCodeVersion>());
 }

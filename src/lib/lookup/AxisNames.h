@@ -28,7 +28,6 @@ enum class AxisNames
     Lube,
     Suck,
     SuckPosition,
-    SuctionLevel,
     AXIS_NAMES_LENGTH
 };
 

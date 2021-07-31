@@ -180,6 +180,11 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
         locker.unlock();
         MigrateTo252();
     }
+    if(currentVersion != 0 && currentVersion < 0.2581f)
+    {
+        locker.unlock();
+        setSelectedTCodeVersion();
+    }
 }
 
 void SettingsHandler::Save(QSettings* settingsToSaveTo)
@@ -455,7 +460,7 @@ QString SettingsHandler::getSelectedTCodeVersion()
     return SupportedTCodeVersions.value(_selectedTCodeVersion);
 }
 
-void SettingsHandler::setSelectedTCodeVersion(TCodeVersion key, QWidget* parent)
+void SettingsHandler::setSelectedTCodeVersion(TCodeVersion key)
 {
     if(_selectedTCodeVersion != key)
     {
@@ -471,7 +476,7 @@ void SettingsHandler::setSelectedTCodeVersion()
 {
     foreach(auto axis, _availableAxis.keys())
     {
-        if(_selectedTCodeVersion == TCodeVersion::v3)
+        if(_selectedTCodeVersion == TCodeVersion::v3 && _availableAxis[axis].Max != 9999)
         {
             _availableAxis[axis].Max = 9999;
             _availableAxis[axis].Mid = _availableAxis[axis].Type == AxisType::Switch ? 0 : 5000;
@@ -479,7 +484,7 @@ void SettingsHandler::setSelectedTCodeVersion()
             _availableAxis[axis].UserMin = XMath::constrain(XMath::mapRange(_availableAxis[axis].UserMin, 0, 999, 0, 9999), 0 ,9999);
             _availableAxis[axis].UserMid = XMath::constrain(XMath::mapRange(_availableAxis[axis].UserMid, 0, 999, 0, 9999), 0 ,9999);
         }
-        else
+        else if(_availableAxis[axis].Max != 999)
         {
             _availableAxis[axis].Max = 999;
             _availableAxis[axis].Mid = _availableAxis[axis].Type == AxisType::Switch ? 0 : 500;
@@ -493,46 +498,56 @@ void SettingsHandler::setSelectedTCodeVersion()
     if(_selectedTCodeVersion == TCodeVersion::v3)
     {
         auto v2ChannelMap = TCodeChannelLookup::TCodeVersionMap.value(TCodeVersion::v2);
-        auto suckV2Cahnnel = _availableAxis[v2ChannelMap.value(AxisNames::Suck)].AxisName;
-        auto lubeV2Cahnnel = _availableAxis[v2ChannelMap.value(AxisNames::Lube)].AxisName;
-        if(_availableAxis.contains(suckV2Cahnnel))
+        auto suckV2Channel = _availableAxis.value(v2ChannelMap.value(AxisNames::Suck)).AxisName;
+        auto lubeV2Channel = _availableAxis.value(v2ChannelMap.value(AxisNames::Lube)).AxisName;
+        if(!lubeV2Channel.isEmpty())
         {
-             ChannelModel suctionPositionModel = { "Suction position", TCodeChannelLookup::SuckPosition(), TCodeChannelLookup::SuckPosition(), 0, 0, 9999, 0, 0, 9999, AxisDimension::None, AxisType::Switch, "suckPosition", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::Stroke() };
-            _availableAxis.insert(TCodeChannelLookup::SuckPosition(), suctionPositionModel);
             lubeModel.Max = 9999;
-            lubeModel.UserMax = XMath::constrain(XMath::mapRange(_availableAxis[lubeV2Cahnnel].UserMax, 0,999, 0, 9999), 0 ,9999);
-            lubeModel.UserMin = XMath::constrain(XMath::mapRange(_availableAxis[lubeV2Cahnnel].UserMin, 0,999, 0, 9999), 0 ,9999);
-            lubeModel.UserMid = XMath::constrain(XMath::mapRange(_availableAxis[lubeV2Cahnnel].UserMid, 0,999, 0, 9999), 0 ,9999);
-            suckModel.Max = 9999;
-            suckModel.UserMax = XMath::constrain(XMath::mapRange(_availableAxis[suckV2Cahnnel].UserMax, 0,999, 0, 9999), 0 ,9999);
-            suckModel.UserMin = XMath::constrain(XMath::mapRange(_availableAxis[suckV2Cahnnel].UserMin, 0,999, 0, 9999), 0 ,9999);
-            suckModel.UserMid = XMath::constrain(XMath::mapRange(_availableAxis[suckV2Cahnnel].UserMid, 0,999, 0, 9999), 0 ,9999);
-            _availableAxis.remove(lubeV2Cahnnel);
-            _availableAxis.remove(suckV2Cahnnel);
+            lubeModel.UserMax = XMath::constrain(XMath::mapRange(_availableAxis[lubeV2Channel].UserMax, 0,999, 0, 9999), 0 ,9999);
+            lubeModel.UserMin = XMath::constrain(XMath::mapRange(_availableAxis[lubeV2Channel].UserMin, 0,999, 0, 9999), 0 ,9999);
+            lubeModel.UserMid = XMath::constrain(XMath::mapRange(_availableAxis[lubeV2Channel].UserMid, 0,999, 0, 9999), 0 ,9999);
+            _availableAxis.remove(lubeV2Channel);
             _availableAxis.insert(TCodeChannelLookup::Lube(), lubeModel);
+        }
+        if(!suckV2Channel.isEmpty())
+        {
+            suckModel.Max = 9999;
+            suckModel.UserMax = XMath::constrain(XMath::mapRange(_availableAxis[suckV2Channel].UserMax, 0,999, 0, 9999), 0 ,9999);
+            suckModel.UserMin = XMath::constrain(XMath::mapRange(_availableAxis[suckV2Channel].UserMin, 0,999, 0, 9999), 0 ,9999);
+            suckModel.UserMid = XMath::constrain(XMath::mapRange(_availableAxis[suckV2Channel].UserMid, 0,999, 0, 9999), 0 ,9999);
+            _availableAxis.remove(suckV2Channel);
             _availableAxis.insert(TCodeChannelLookup::Suck(), suckModel);
         }
+        ChannelModel suctionPositionModel = { "Suction position", TCodeChannelLookup::SuckPosition(), TCodeChannelLookup::SuckPosition(), 0, 0, 9999, 0, 0, 9999, AxisDimension::None, AxisType::Switch, "suckPosition", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::Stroke() };
+       _availableAxis.insert(TCodeChannelLookup::SuckPosition(), suctionPositionModel);
     }
     else
     {
         auto v3ChannelMap = TCodeChannelLookup::TCodeVersionMap.value(TCodeVersion::v3);
-        auto suckV3Cahnnel = _availableAxis[v3ChannelMap.value(AxisNames::Suck)].AxisName;
-        auto lubeV3Cahnnel = _availableAxis[v3ChannelMap.value(AxisNames::Lube)].AxisName;
-        if(_availableAxis.contains(suckV3Cahnnel))
+        auto suckV3Channel = _availableAxis.value(v3ChannelMap.value(AxisNames::Suck)).AxisName;
+        auto suckPositionV3Channel = _availableAxis.value(v3ChannelMap.value(AxisNames::SuckPosition)).AxisName;
+        auto lubeV3Channel = _availableAxis.value(v3ChannelMap.value(AxisNames::Lube)).AxisName;
+        if(!lubeV3Channel.isEmpty())
         {
             lubeModel.Max = 999;
-            lubeModel.UserMax = XMath::constrain(XMath::mapRange(_availableAxis[lubeV3Cahnnel].UserMax, 0, 9999, 0, 999), 0 ,999);
-            lubeModel.UserMin = XMath::constrain(XMath::mapRange(_availableAxis[lubeV3Cahnnel].UserMin, 0, 9999, 0, 999), 0 ,999);
-            lubeModel.UserMid = XMath::constrain(XMath::mapRange(_availableAxis[lubeV3Cahnnel].UserMid, 0, 9999, 0, 999), 0 ,999);
-            suckModel.Max = 999;
-            suckModel.UserMax = XMath::constrain(XMath::mapRange(_availableAxis[suckV3Cahnnel].UserMax, 0, 9999, 0, 999), 0 ,999);
-            suckModel.UserMin = XMath::constrain(XMath::mapRange(_availableAxis[suckV3Cahnnel].UserMin, 0, 9999, 0, 999), 0 ,999);
-            suckModel.UserMid = XMath::constrain(XMath::mapRange(_availableAxis[suckV3Cahnnel].UserMid, 0, 9999, 0, 999), 0 ,999);
+            lubeModel.UserMax = XMath::constrain(XMath::mapRange(_availableAxis[lubeV3Channel].UserMax, 0, 9999, 0, 999), 0 ,999);
+            lubeModel.UserMin = XMath::constrain(XMath::mapRange(_availableAxis[lubeV3Channel].UserMin, 0, 9999, 0, 999), 0 ,999);
+            lubeModel.UserMid = XMath::constrain(XMath::mapRange(_availableAxis[lubeV3Channel].UserMid, 0, 9999, 0, 999), 0 ,999);
             _availableAxis.remove(v3ChannelMap.value(AxisNames::Lube));
-            _availableAxis.remove(v3ChannelMap.value(AxisNames::Suck));
-            _availableAxis.remove(v3ChannelMap.value(AxisNames::SuckPosition));
             _availableAxis.insert(TCodeChannelLookup::Lube(), lubeModel);
+        }
+        if(!suckV3Channel.isEmpty())
+        {
+            suckModel.Max = 999;
+            suckModel.UserMax = XMath::constrain(XMath::mapRange(_availableAxis[suckV3Channel].UserMax, 0, 9999, 0, 999), 0 ,999);
+            suckModel.UserMin = XMath::constrain(XMath::mapRange(_availableAxis[suckV3Channel].UserMin, 0, 9999, 0, 999), 0 ,999);
+            suckModel.UserMid = XMath::constrain(XMath::mapRange(_availableAxis[suckV3Channel].UserMid, 0, 9999, 0, 999), 0 ,999);
+            _availableAxis.remove(v3ChannelMap.value(AxisNames::Suck));
             _availableAxis.insert(TCodeChannelLookup::Suck(), suckModel);
+        }
+        if(!suckPositionV3Channel.isEmpty())
+        {
+            _availableAxis.remove(v3ChannelMap.value(AxisNames::SuckPosition));
         }
     }
 }
