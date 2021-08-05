@@ -12,67 +12,65 @@ SerialHandler::~SerialHandler()
 void SerialHandler::init(const QString &portName, int waitTimeout)
 {
     auto available = getPorts();
-
+    _portName = portName;
     LogHandler::Debug("Connecting to port: "+ portName);
     LogHandler::Debug("Availible ports length: "+ QString::number(available.length()));
     foreach(SerialComboboxItem port, available)
     {
         LogHandler::Debug("Port: "+ port.portName);
     }
-    if(portName.isEmpty())
+    if(portName.isEmpty() && available.count() > 0)
+    {
+        foreach(SerialComboboxItem port, available)
+        {
+            if(port.friendlyName.toLower().contains("arduino") || port.friendlyName.toLower().contains("esp32"))
+            {
+                _portName = portName;
+            }
+        }
+        if(portName.isEmpty())
+            _portName = available[0].portName;
+    }
+    else if(portName.isEmpty() || available.length() == 0)
     {
         //LogHandler::Dialog("No portname specified", XLogLevel::Critical);
-        emit connectionChange({DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"});
-        return;
-    }
-    else if(available.length() == 0)
-    {
-        //LogHandler::Dialog("No ports on machine", XLogLevel::Critical);
-        emit connectionChange({DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"});
-        return;
-    }
-    else if(!boolinq::from(available).any([portName](const SerialComboboxItem &x) { return x.portName == portName; }))
-    {
-        //LogHandler::Dialog("Port: "+ portName + " not found", XLogLevel::Critical);
-        emit connectionChange({DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"});
+        emit connectionChange({DeviceType::Serial, ConnectionStatus::Disconnected, "No COM"});
         return;
     }
     emit connectionChange({DeviceType::Serial, ConnectionStatus::Connecting, "Connecting..."});
     _mutex.lock();
     _stop = false;
-    _portName = portName;
     _waitTimeout = waitTimeout;
     _mutex.unlock();
-    int timeouttracker = 0;
-    QElapsedTimer mSecTimer;
-    qint64 time1 = 0;
-    qint64 time2 = 0;
-    mSecTimer.start();
-    LogHandler::Debug("Starting timer: "+ portName);
-    while(!_isConnected && !_stop && timeouttracker <= 4)
-    {
-        if (time2 - time1 >= _waitTimeout + 1000 || timeouttracker == 0)
-        {
-            LogHandler::Debug("Not connected: "+ QString::number(timeouttracker));
-            time1 = time2;
-            sendTCode("D1");
-            ++timeouttracker;
-        }
-        time2 = (round(mSecTimer.nsecsElapsed() / 1000000));
-    }
-    if (timeouttracker > 4)
-    {
-        _stop = true;
-        _isConnected = false;
-        emit connectionChange({DeviceType::Serial, ConnectionStatus::Error, "Timed out"});
-    }
+//    int timeouttracker = 0;
+//    QElapsedTimer mSecTimer;
+//    qint64 time1 = 0;
+//    qint64 time2 = 0;
+//    mSecTimer.start();
+//    LogHandler::Debug("Starting timer: "+ portName);
+//    while(!_isConnected && !_stop && timeouttracker <= 10)
+//    {
+//        if (time2 - time1 >= _waitTimeout + 1000 || timeouttracker == 0)
+//        {
+//            LogHandler::Debug("Not connected: "+ QString::number(timeouttracker));
+//            time1 = time2;
+    sendTCode("D1");
+//            ++timeouttracker;
+//        }
+//        time2 = (round(mSecTimer.nsecsElapsed() / 1000000));
+//    }
+//    if (timeouttracker > 10)
+//    {
+//        _stop = true;
+//        _isConnected = false;
+//        emit connectionChange({DeviceType::Serial, ConnectionStatus::Error, "Timed out"});
+//    }
 }
 
 void SerialHandler::sendTCode(const QString &tcode)
 {
     const QMutexLocker locker(&_mutex);
     _tcode = tcode + "\n";
-    LogHandler::Debug("Sending TCode serial: "+ _tcode);
     if (!isRunning())
         start();
     else
@@ -129,7 +127,10 @@ void SerialHandler::run()
                 serial.setDataTerminalReady(true);
             }
         }
+        if(currentRequest.startsWith("D1"))
+            QThread::sleep(5);
         // write request
+        LogHandler::Debug("Sending TCode serial: "+ currentRequest);
         const QByteArray requestData = currentRequest.toUtf8();
         serial.write(requestData);
 
@@ -137,11 +138,13 @@ void SerialHandler::run()
         {
             serial.flush();
             // read response
-            QString version = "V?";
-            if ((currentPortNameChanged || !_isConnected) && serial.waitForReadyRead(currentWaitTimeout))
+            if ((currentPortNameChanged || !_isConnected))
             {
+                serial.waitForReadyRead(currentWaitTimeout);
+                QString version = "V?";
+                LogHandler::Debug(tr("Bytes read"));
                 QByteArray responseData = serial.readAll();
-                while (serial.waitForReadyRead(currentWaitTimeout))
+                while (serial.waitForReadyRead(100))
                     responseData += serial.readAll();
 
                 const QString response = QString::fromUtf8(responseData);
@@ -175,23 +178,23 @@ void SerialHandler::run()
                     _mutex.lock();
                     _isConnected = true;
                     _mutex.unlock();
-                    LogHandler::Error("There was an error validating the serial");
+                    LogHandler::Error("An INVALID response recieved: ");
                     LogHandler::Error("response: "+response);
-                    emit errorOccurred("There was an error validating the serial!\nYou should be able to keep using the program if you have the correct port enabled\n\nIt would be greatly appreciated if you could start the program\nin debugmode with the bat file and close out the program after this message. Send the txt filr to Khrull on patreon or discord. Thanks!");
+                    emit errorOccurred("Warning! You should be able to keep using the program if you have the correct port selected\n\nIt would be greatly appreciated if you could run the program\nin debug mode.\nSend the console output file to Khrull on patreon or discord. Thanks!");
                 }
             }
-            else if (currentPortNameChanged || !_isConnected)
-            {
+//            else if (currentPortNameChanged || !_isConnected)
+//            {
 
-                LogHandler::Error(tr("Read serial handshake timeout %1")
-                             .arg(QTime::currentTime().toString()));
-                // Due to issue with connecting to some romeos with validation. Do not block them from using it.
-                emit connectionChange({DeviceType::Serial, ConnectionStatus::Connected, "Connected: "+version});
-                _mutex.lock();
-                _isConnected = true;
-                _mutex.unlock();
-                emit errorOccurred("There was an error validating the serial!\nYou should be able to keep using the program if you have the correct port enabled\n\nIt would be greatly appreciated if you could start the program\nin debugmode with the bat file and close out the program after this message. Send the txt filr to Khrull on patreon or discord. Thanks!");
-            }
+//                LogHandler::Error(tr("Read serial handshake timeout %1")
+//                             .arg(QTime::currentTime().toString()));
+//                // Due to issue with connecting to some romeos with validation. Do not block them from using it.
+//                emit connectionChange({DeviceType::Serial, ConnectionStatus::Connected, "Connected: V?"});
+//                _mutex.lock();
+//                _isConnected = true;
+//                _mutex.unlock();
+//                emit errorOccurred("Warning! You should be able to keep using the program if you have the correct port selected\n\nIt would be greatly appreciated if you could run the program\nin debug mode.\nSend the console output file to Khrull on patreon or discord. Thanks!");
+//            }
         }
         else
         {

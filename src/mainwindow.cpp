@@ -2346,7 +2346,7 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
     while (vrPlayer->isConnected() && !xPlayer->isPlaying())
     {
         //timer.start();
-        if(!SettingsHandler::getLiveActionPaused() && xSettings->isConnected() && funscriptHandler->isLoaded() && !currentVRPacket.path.isNull() && currentVRPacket.duration > 0 && currentVRPacket.playing)
+        if(!SettingsHandler::getLiveActionPaused() && xSettings->isConnected() && funscriptHandler->isLoaded() && !currentVRPacket.path.isEmpty() && currentVRPacket.duration > 0 && currentVRPacket.playing)
         {
             //execute once every millisecond
             if (timer2 - timer1 >= 1)
@@ -2396,7 +2396,7 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
         }
         else if(!funscriptHandler->isLoaded() && xSettings->isConnected() && currentVRPacket.duration > 0 && currentVRPacket.playing)
         {
-            if (!currentVRPacket.path.isEmpty() && !currentVRPacket.path.isNull())
+            if (!currentVRPacket.path.isEmpty())
             {
                 QString funscriptPath = SettingsHandler::getDeoDnlaFunscript(currentVRPacket.path);
                 currentVideo = currentVRPacket.path;
@@ -2481,7 +2481,6 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
             }
         }
         timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
-        QThread::currentThread()->usleep(500);
     }
     xSettings->resetAxisProgressBars();
     LogHandler::Debug("exit syncFunscript");

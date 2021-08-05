@@ -17,6 +17,7 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
         if(distance > 0)
         {
             int position = action->pos;
+            LogHandler::Debug("Stroke pos: " + QString::number(position) + ", at: " + QString::number(action->at));
             int speed = action->speed;
             if (FunscriptHandler::getInverted() || SettingsHandler::getChannelInverseChecked(TCodeChannelLookup::Stroke()))
             {
@@ -47,6 +48,7 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
             {
                 std::shared_ptr<FunscriptAction> axisAction = otherActions.value(axis);
                 int position = axisAction->pos;
+                LogHandler::Debug("MFS: "+ axisModel.FriendlyName + " pos: " + QString::number(position) + ", at: " + QString::number(axisAction->at));
                 if (axisModel.Inverted)
                 {
                     position = XMath::reverseNumber(position, 0, 100);
@@ -119,6 +121,7 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
                         LogHandler::Warn("Value was less than zero: "+ QString::number(value));
                         continue;
                     }
+                    LogHandler::Debug("Multiplier: "+ channel.FriendlyName + " pos: " + QString::number(value) + ", at: " + QString::number(currentAction->at));
                     if ((channel.Inverted && channel.LinkToRelatedMFS) || (SettingsHandler::getChannelInverseChecked(TCodeChannelLookup::Stroke()) && !channel.Inverted && !channel.LinkToRelatedMFS) )
                     {
                         //LogHandler::Debug("inverted: "+ QString::number(value));
@@ -220,5 +223,5 @@ void TCodeHandler::getChannelHome(ChannelModel channel, QString &tcode)
 
 int TCodeHandler::getTCodePadding()
 {
-    return SettingsHandler::getSelectedTCodeVersion() == TCodeVersion::v3 ? 4 : 3;
+    return SettingsHandler::getSelectedTCodeVersion() == TCodeVersion::v3 ? 5 : 4;
 }
