@@ -67,10 +67,12 @@ void SerialHandler::init(const QString &portName, int waitTimeout)
 //    }
 }
 
+
 void SerialHandler::sendTCode(const QString &tcode)
 {
     const QMutexLocker locker(&_mutex);
     _tcode = tcode + "\n";
+    LogHandler::Debug("Sending TCode serial: "+ _tcode);
     if (!isRunning())
         start();
     else
@@ -127,8 +129,8 @@ void SerialHandler::run()
                 serial.setDataTerminalReady(true);
             }
         }
-        if(currentRequest.startsWith("D1"))
-            QThread::sleep(5);
+//        if(currentRequest.startsWith("D1"))
+//            QThread::sleep(5);
         // write request
         LogHandler::Debug("Sending TCode serial: "+ currentRequest);
         const QByteArray requestData = currentRequest.toUtf8();
@@ -138,9 +140,9 @@ void SerialHandler::run()
         {
             serial.flush();
             // read response
-            if ((currentPortNameChanged || !_isConnected))
+            if ((currentPortNameChanged || !_isConnected) && serial.waitForReadyRead(currentWaitTimeout))
             {
-                serial.waitForReadyRead(currentWaitTimeout);
+                ;
                 QString version = "V?";
                 LogHandler::Debug(tr("Bytes read"));
                 QByteArray responseData = serial.readAll();
@@ -180,21 +182,21 @@ void SerialHandler::run()
                     _mutex.unlock();
                     LogHandler::Error("An INVALID response recieved: ");
                     LogHandler::Error("response: "+response);
-                    emit errorOccurred("Warning! You should be able to keep using the program if you have the correct port selected\n\nIt would be greatly appreciated if you could run the program\nin debug mode.\nSend the console output file to Khrull on patreon or discord. Thanks!");
+                    emit errorOccurred("Warning! You should be able to keep using the program if you have the correct port selected\n\nIt would be greatly appreciated if you could run the program in debug mode.\nSend the console output file to Khrull on patreon or discord. Thanks!");
                 }
             }
-//            else if (currentPortNameChanged || !_isConnected)
-//            {
+            else if (currentPortNameChanged || !_isConnected)
+            {
 
-//                LogHandler::Error(tr("Read serial handshake timeout %1")
-//                             .arg(QTime::currentTime().toString()));
-//                // Due to issue with connecting to some romeos with validation. Do not block them from using it.
-//                emit connectionChange({DeviceType::Serial, ConnectionStatus::Connected, "Connected: V?"});
-//                _mutex.lock();
-//                _isConnected = true;
-//                _mutex.unlock();
-//                emit errorOccurred("Warning! You should be able to keep using the program if you have the correct port selected\n\nIt would be greatly appreciated if you could run the program\nin debug mode.\nSend the console output file to Khrull on patreon or discord. Thanks!");
-//            }
+                LogHandler::Error(tr("Read serial handshake timeout %1")
+                             .arg(QTime::currentTime().toString()));
+                // Due to issue with connecting to some romeos with validation. Do not block them from using it.
+                emit connectionChange({DeviceType::Serial, ConnectionStatus::Connected, "Connected: V?"});
+                _mutex.lock();
+                _isConnected = true;
+                _mutex.unlock();
+                emit errorOccurred("Warning! You should be able to keep using the program if you have the correct port selected\n\nIt would be greatly appreciated if you could run the program in debug mode.\nSend the console output file to Khrull on patreon or discord. Thanks!");
+            }
         }
         else
         {
@@ -232,6 +234,7 @@ bool SerialHandler::isConnected()
 
 void SerialHandler::dispose()
 {
+    LogHandler::Debug("Serial dispose "+ _portName);
     _mutex.lock();
     _stop = true;
     _isConnected = false;

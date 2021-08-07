@@ -158,6 +158,7 @@ void UdpHandler::run()
 
 void UdpHandler::dispose()
 {
+    LogHandler::Debug("Udp dispose "+ _address.address);
     _mutex.lock();
     _isConnected = false;
     _stop = true;

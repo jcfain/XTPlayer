@@ -2327,7 +2327,6 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
         xPlayer->stop();
         funscriptHandler->setLoaded(false);
     }
-    DeviceHandler* device = xSettings->getSelectedDeviceHandler();
     QList<FunscriptHandler*> funscriptHandlers;
     std::shared_ptr<FunscriptAction> actionPosition;
     QMap<QString, std::shared_ptr<FunscriptAction>> otherActions;
@@ -2386,7 +2385,7 @@ void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsD
                 }
                 QString tcode = tcodeHandler->funscriptToTCode(actionPosition, otherActions);
                 if(tcode != nullptr)
-                    device->sendTCode(tcode);
+                    xSettings->getSelectedDeviceHandler()->sendTCode(tcode);
                 otherActions.clear();
            /*     LogHandler::Debug("timer "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
                 timer.start()*/;
@@ -2449,7 +2448,6 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
 {
     std::shared_ptr<FunscriptAction> actionPosition;
     QMap<QString, std::shared_ptr<FunscriptAction>> otherActions;
-    DeviceHandler* device = xSettings->getSelectedDeviceHandler();
     QElapsedTimer mSecTimer;
     qint64 timer1 = 0;
     qint64 timer2 = 0;
@@ -2476,7 +2474,7 @@ void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler
                 }
                 QString tcode = tcodeHandler->funscriptToTCode(actionPosition, otherActions);
                 if(tcode != nullptr)
-                    device->sendTCode(tcode);
+                    xSettings->getSelectedDeviceHandler()->sendTCode(tcode);
                 otherActions.clear();
             }
         }
