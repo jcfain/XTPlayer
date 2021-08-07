@@ -56,7 +56,7 @@ QString TCodeFactory::formatTCode(QVector<ChannelValueModel>* values)
             auto minValue = SettingsHandler::getAxis(value.Channel).Min;
             auto maxValue = SettingsHandler::getAxis(value.Channel).Max;
             auto clampedValue = maxValue == 0 ? value.Value : XMath::constrain(value.Value, minValue, maxValue);
-            tCode += value.Channel + (clampedValue < 10 ? "0" : "") + QString::number(clampedValue) + "S" + QString::number(SettingsHandler::getLiveGamepadSpeed()) + " ";
+            tCode += value.Channel + QString::number(clampedValue).rightJustified(SettingsHandler::getTCodePadding(), '0') + "S" + QString::number(SettingsHandler::getLiveGamepadSpeed()) + " ";
         }
     }
     return tCode.trimmed();

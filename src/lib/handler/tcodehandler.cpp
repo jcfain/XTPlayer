@@ -24,7 +24,7 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
                 position = XMath::reverseNumber(position, 0, 100);
             }
             tcode += TCodeChannelLookup::Stroke();
-            tcode += QString::number(calculateRange(TCodeChannelLookup::Stroke().toUtf8(), position)).rightJustified(getTCodePadding(), '0');
+            tcode += QString::number(calculateRange(TCodeChannelLookup::Stroke().toUtf8(), position)).rightJustified(SettingsHandler::getTCodePadding(), '0');
             // LogHandler::Debug("Stroke tcode: "+ tcode);
             if (speed > 0)
             {
@@ -56,7 +56,7 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
                 if(!tcode.isEmpty())
                     tcode += " ";
                 tcode += axis;
-                tcode += QString::number(calculateRange(axis.toUtf8(), position)).rightJustified(getTCodePadding(), '0');
+                tcode += QString::number(calculateRange(axis.toUtf8(), position)).rightJustified(SettingsHandler::getTCodePadding(), '0');
                 if (axisAction->speed > 0)
                 {
                   tcode += "I";
@@ -129,7 +129,7 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
                     }
                     tcode += " ";
                     tcode += axis;
-                    tcode += QString::number(calculateRange(axis.toUtf8(), value)).rightJustified(getTCodePadding(), '0');
+                    tcode += QString::number(calculateRange(axis.toUtf8(), value)).rightJustified(SettingsHandler::getTCodePadding(), '0');
                     tcode += "S";
                     float speedModifierValue = SettingsHandler::getDamperValue(axis);
                     if (SettingsHandler::getDamperChecked(axis) && speedModifierValue > 0.0)
@@ -217,11 +217,6 @@ void TCodeHandler::getChannelHome(ChannelModel channel, QString &tcode)
     if(!tcode.isEmpty())
         tcode += " ";
     tcode += channel.Channel;
-    tcode += QString::number(channel.Mid).rightJustified(getTCodePadding(), '0');;
+    tcode += QString::number(channel.Mid).rightJustified(SettingsHandler::getTCodePadding(), '0');;
     tcode += "S500";
-}
-
-int TCodeHandler::getTCodePadding()
-{
-    return SettingsHandler::getSelectedTCodeVersion() == TCodeVersion::v3 ? 5 : 4;
 }

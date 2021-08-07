@@ -37,7 +37,11 @@ public:
     static QString Vib();
     static QString Lube();
     static QString Suck();
+    static QString SuckMore();
+    static QString SuckLess();
     static QString SuckPosition();
+    static QString SuckMorePosition();
+    static QString SuckLessPosition();
 private:
     static int _channelCount;
     static QMap<AxisNames,  QString> _selectedTCodeVersionMap;

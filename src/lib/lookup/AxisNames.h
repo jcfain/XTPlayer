@@ -27,7 +27,11 @@ enum class AxisNames
     Vib,
     Lube,
     Suck,
+    SuckMore,
+    SuckLess,
     SuckPosition,
+    SuckMorePosition,
+    SuckLessPosition,
     AXIS_NAMES_LENGTH
 };
 

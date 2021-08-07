@@ -109,9 +109,25 @@ QString TCodeChannelLookup::Suck()
 {
     return _selectedTCodeVersionMap.value(AxisNames::Suck);
 }
+QString TCodeChannelLookup::SuckMore()
+{
+    return _selectedTCodeVersionMap.value(AxisNames::SuckMore);
+}
+QString TCodeChannelLookup::SuckLess()
+{
+    return _selectedTCodeVersionMap.value(AxisNames::SuckLess);
+}
 QString TCodeChannelLookup::SuckPosition()
 {
     return _selectedTCodeVersionMap.value(AxisNames::SuckPosition);
+}
+QString TCodeChannelLookup::SuckMorePosition()
+{
+    return _selectedTCodeVersionMap.value(AxisNames::SuckMorePosition);
+}
+QString TCodeChannelLookup::SuckLessPosition()
+{
+    return _selectedTCodeVersionMap.value(AxisNames::SuckLessPosition);
 }
 
 int TCodeChannelLookup::_channelCount = (int)AxisNames::AXIS_NAMES_LENGTH;
@@ -157,7 +173,9 @@ QHash<TCodeVersion, QMap<AxisNames, QString>> TCodeChannelLookup::TCodeVersionMa
             {AxisNames::SwayRight, L2 + NegativeModifier},
             {AxisNames::Vib, V0},
             {AxisNames::Lube, V1},
-            {AxisNames::Suck, L3}
+            {AxisNames::Suck, L3},
+            {AxisNames::SuckMore, L3 + NegativeModifier},
+            {AxisNames::SuckLess, L3 + PositiveModifier}
         }
     },
     {
@@ -184,7 +202,11 @@ QHash<TCodeVersion, QMap<AxisNames, QString>> TCodeChannelLookup::TCodeVersionMa
             {AxisNames::SwayRight, L2 + NegativeModifier},
             {AxisNames::Vib, V0},
             {AxisNames::Suck, A0},
+            {AxisNames::SuckMore, A0 + NegativeModifier},
+            {AxisNames::SuckLess, A0 + PositiveModifier},
             {AxisNames::SuckPosition, A1},
+            {AxisNames::SuckMorePosition, A1 + NegativeModifier},
+            {AxisNames::SuckLessPosition, A1 + PositiveModifier},
             {AxisNames::Lube, A2}
         }
     }

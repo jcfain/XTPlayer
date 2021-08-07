@@ -35,6 +35,7 @@ public:
     static const QMap<TCodeVersion, QString> SupportedTCodeVersions;
     static const QString XTPVersion;
     static const float XTPVersionNum;
+    static int getTCodePadding();
     static QString getSelectedTCodeVersion();
     static void setSelectedTCodeVersion(TCodeVersion key);
     static void setSelectedTCodeVersion();
@@ -208,6 +209,7 @@ private:
     static void MigrateTo25();
     static void MigrateTo252();
     static void MigrateLibraryMetaDataTo258();
+    static void MigratrTo2615();
     static void DeMigrateLibraryMetaDataTo258();
     static QString _appdataLocation;
     static TCodeVersion _selectedTCodeVersion;

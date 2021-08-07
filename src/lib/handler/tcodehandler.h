@@ -26,7 +26,6 @@ public:
 private:
     QMutex mutex;
     void getChannelHome(ChannelModel channel, QString &tcode);
-    int getTCodePadding();
 };
 
 #endif // TCODEHANDLER_H
