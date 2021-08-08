@@ -160,35 +160,37 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
         }
     }
 
-
-    if(currentVersion != 0 && currentVersion < 0.2f)
+    if(currentVersion != 0 )
     {
-        setupGamepadButtonMap();
-    }
-    if(currentVersion != 0 && currentVersion < 0.23f)
-    {
-        locker.unlock();
-        MigrateTo23();
-    }
-    if(currentVersion != 0 && currentVersion < 0.25f)
-    {
-        locker.unlock();
-        MigrateTo25();
-    }
-    if(currentVersion != 0 && currentVersion < 0.252f)
-    {
-        locker.unlock();
-        MigrateTo252();
-    }
-    if(currentVersion != 0 && currentVersion < 0.2581f)
-    {
-        locker.unlock();
-        setSelectedTCodeVersion();
-    }
-    if(currentVersion != 0 && currentVersion < 0.2615f)
-    {
-        locker.unlock();
-        MigratrTo2615() ;
+        if(currentVersion < 0.2f)
+        {
+            setupGamepadButtonMap();
+        }
+        if(currentVersion < 0.23f)
+        {
+            locker.unlock();
+            MigrateTo23();
+        }
+        if(currentVersion < 0.25f)
+        {
+            locker.unlock();
+            MigrateTo25();
+        }
+        if(currentVersion < 0.252f)
+        {
+            locker.unlock();
+            MigrateTo252();
+        }
+        if(currentVersion < 0.2581f)
+        {
+            locker.unlock();
+            setSelectedTCodeVersion();
+        }
+        if(currentVersion < 0.2615f)
+        {
+            locker.unlock();
+            MigratrTo2615() ;
+        }
     }
 }
 
@@ -470,7 +472,7 @@ void SettingsHandler::MigratrTo2615()
     setSelectedTCodeVersion();
     Save();
     Load();
-    LogHandler::Dialog("Due to a standards update your CHANNELS\nhave been set to default for a new data structure.\nPlease reset your Multiplier/Range settings before using.", XLogLevel::Information);
+    LogHandler::Dialog("Due to a standards update your CHANNEL SETTINGS\nhave been set to default for a new data structure.\nPlease reset your RANGES and MULTIPLIERS settings before using.", XLogLevel::Information);
 }
 QString SettingsHandler::getSelectedTCodeVersion()
 {
@@ -512,6 +514,9 @@ void SettingsHandler::setSelectedTCodeVersion()
     }
     _liveXRangeMax = _availableAxis.value(TCodeChannelLookup::Stroke()).UserMax;
     _liveXRangeMin = _availableAxis.value(TCodeChannelLookup::Stroke()).UserMin;
+
+//    ChannelModel suckMoreModel = { "Suck more", TCodeChannelLookup::SuckMore(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::HalfRange, "suck", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::StrokeUp() };
+//    ChannelModel suckLessModel = { "Suck less", TCodeChannelLookup::SuckLess(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::HalfRange, "suck", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::StrokeDown() };
     if(_selectedTCodeVersion == TCodeVersion::v3)
     {
         auto v2ChannelMap = TCodeChannelLookup::TCodeVersionMap.value(TCodeVersion::v2);
@@ -552,9 +557,9 @@ void SettingsHandler::setSelectedTCodeVersion()
             _availableAxis.remove(suckLessV2Channel);
         }
 
-        ChannelModel suctionPositionModel = { "Suction position", TCodeChannelLookup::SuckPosition(), TCodeChannelLookup::SuckPosition(), 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::Range, "suckPosition", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::Stroke() };
-        ChannelModel suctionMorePositionModel = { "Suck more manual", TCodeChannelLookup::SuckMorePosition(), TCodeChannelLookup::SuckPosition(), 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::HalfRange, "suckPosition", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::StrokeUp() };
-        ChannelModel suctionLessPositionModel = { "Suck less manual", TCodeChannelLookup::SuckLessPosition(), TCodeChannelLookup::SuckPosition(), 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::HalfRange, "suckPosition", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::StrokeDown() };
+        ChannelModel suctionPositionModel = { "Suck manual", TCodeChannelLookup::SuckPosition(), TCodeChannelLookup::SuckPosition(), 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::Range, "suckManual", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::Stroke() };
+        ChannelModel suctionMorePositionModel = { "Suck manual more ", TCodeChannelLookup::SuckMorePosition(), TCodeChannelLookup::SuckPosition(), 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::HalfRange, "suckManual", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::StrokeUp() };
+        ChannelModel suctionLessPositionModel = { "Suck manual less ", TCodeChannelLookup::SuckLessPosition(), TCodeChannelLookup::SuckPosition(), 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::HalfRange, "suckManual", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::StrokeDown() };
        _availableAxis.insert(TCodeChannelLookup::SuckPosition(), suctionPositionModel);
        _availableAxis.insert(TCodeChannelLookup::SuckMorePosition(), suctionMorePositionModel);
        _availableAxis.insert(TCodeChannelLookup::SuckLessPosition(), suctionLessPositionModel);
