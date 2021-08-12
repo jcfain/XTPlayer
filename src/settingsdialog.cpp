@@ -825,9 +825,7 @@ void SettingsDialog::onRange_valueChanged(QString name, int value)
     rangeMaxLabels.value(name)->setText(QString::number(slider->GetUpperValue()));
     if ((!_videoHandler->isPlaying() || _videoHandler->isPaused() || SettingsHandler::getLiveActionPaused()) && !_deoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
     {
-        char tcodeValueString[4];
-        sprintf(tcodeValueString, "%03d", value);
-        getSelectedDeviceHandler()->sendTCode(name + QString(tcodeValueString) + "S1000");
+        getSelectedDeviceHandler()->sendTCode(name + QString::number(value).rightJustified(SettingsHandler::getTCodePadding(), '0')+ "S1000");
     }
 }
 
