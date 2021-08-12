@@ -11,13 +11,6 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem &localData, QListWi
     else if(localData.type == LibraryListItemType::PlaylistInternal)
         localData.thumbFile = "://images/icons/playlist.png";
     _thumbFile = localData.thumbFile;
-    bool loadingThumbNail = false;
-    QFileInfo thumbFile = QFileInfo(_thumbFile);
-    if (!thumbFile.exists())
-    {
-        loadingThumbNail = true;
-    }
-    _bgPixmap = QPixmap(loadingThumbNail ? "://images/icons/loading.png" : _thumbFile);
     int thumbSize = SettingsHandler::getThumbSize();
     updateThumbSize({thumbSize, thumbSize});
     if (mfs)
@@ -187,28 +180,24 @@ void LibraryListWidgetItem::updateThumbSize(QSize thumbSize, QString filePath)
 {
     if(!filePath.isEmpty())
     {
-        bool loadingThumbNail = false;
         QFileInfo thumbFile = QFileInfo(filePath);
-        if (!thumbFile.exists())
-        {
-            loadingThumbNail = true;
-        }
-        else
+        if (thumbFile.exists())
         {
             _thumbFile = filePath;
         }
-        _bgPixmap = QPixmap(loadingThumbNail ? "://images/icons/loading.png" : _thumbFile);
     }
+    QFileInfo thumbFile = QFileInfo(_thumbFile);
+    QPixmap bgPixmap = QPixmap(!thumbFile.exists() ? "://images/icons/loading.png" : _thumbFile);
     QIcon thumb;
     //QSize maxThumbSize = SettingsHandler::getMaxThumbnailSize();
     //int newHeight = round((float)bgPixmap.height() / bgPixmap.width() * 1080);
     //QSize newSize = calculateSize(thumbSize);
-    QPixmap scaled = _bgPixmap.scaled(thumbSize, Qt::AspectRatioMode::KeepAspectRatio);
+    QPixmap scaled = bgPixmap.scaled(thumbSize, Qt::AspectRatioMode::KeepAspectRatio);
     QSize maxHeight = calculateMaxSize(thumbSize);
 
     if(scaled.height() > maxHeight.height())
     {
-        scaled = _bgPixmap.scaled(maxHeight, Qt::AspectRatioMode::KeepAspectRatio);
+        scaled = bgPixmap.scaled(maxHeight, Qt::AspectRatioMode::KeepAspectRatio);
 //        QRect rect(0,0,scaled.width(), newHeight);
 //        scaled = scaled.copy(rect);
     }

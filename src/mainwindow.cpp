@@ -310,6 +310,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(ui->actionReload_library, &QAction::triggered, this, &MainWindow::loadLibraryAsync);
     connect(this, &MainWindow::libraryLoaded, this, &MainWindow::onLibraryLoaded);
     connect(this, &MainWindow::prepareLibraryLoad, this, &MainWindow::onPrepareLibraryLoad);
+    connect(this, &MainWindow::libraryIconResized, this, &MainWindow::libraryListSetIconSize);
 
     connect(action75_Size, &QAction::triggered, this, &MainWindow::on_action75_triggered);
     connect(action100_Size, &QAction::triggered, this, &MainWindow::on_action100_triggered);
@@ -1296,11 +1297,11 @@ void MainWindow::onLibraryLoaded()
     changelibraryDisplayMode(SettingsHandler::getLibraryView());
     resizeThumbs(SettingsHandler::getThumbSize());
     updateLibrarySortUI();
-    setLibraryLoading(false);
     startThumbProcess();
     _playerControlsFrame->setDisabled(false);
     ui->actionReload_library->setDisabled(false);
     ui->actionSelect_library->setDisabled(false);
+    setLibraryLoading(false);
 }
 
 void MainWindow::startThumbProcess()
@@ -3040,12 +3041,24 @@ void MainWindow::setThumbSize(int size)
 
 void MainWindow::resizeThumbs(int size)
 {
-    QSize newSize = {size, size};
-    for(int i = 0; i < libraryList->count(); i++)
+    if(!loadingLibraryFuture.isRunning())
     {
-        ((LibraryListWidgetItem*)libraryList->item(i))->updateThumbSize(newSize);
+        setLibraryLoading(true);
+        loadingLibraryFuture = QtConcurrent::run([this, size]() {
+            QSize newSize = {size, size};
+            for(int i = 0; i < libraryList->count(); i++)
+            {
+                ((LibraryListWidgetItem*)libraryList->item(i))->updateThumbSize(newSize);
+            }
+            emit libraryIconResized(newSize);
+        });
     }
+}
+
+void MainWindow::libraryListSetIconSize(QSize newSize)
+{
     libraryList->setIconSize(newSize);
+    setLibraryLoading(false);
 }
 
 void MainWindow::updateLibrarySortUI()

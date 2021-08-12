@@ -145,6 +145,7 @@ private slots:
     void onPrepareLibraryLoad();
     void loadLibraryAsync();
     void onLibraryLoaded();
+    void libraryListSetIconSize(QSize newSize);
 
     void on_audioLevel_Change(int decibelL, int decibelR);
 
@@ -159,6 +160,7 @@ signals:
     void sendTCode(QString tcode);
     void prepareLibraryLoad();
     void libraryLoaded();
+    void libraryIconResized(QSize newSize);
 //    void scriptNotFound(QString message);
 //    void setLoading(bool loading);
     void playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr, bool audioSync = false);

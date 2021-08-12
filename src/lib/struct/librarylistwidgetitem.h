@@ -23,7 +23,6 @@ public:
     QSize calculateHintSize(QSize size);
 private:
     QString _thumbFile;
-    QPixmap _bgPixmap;
     static LibrarySortMode _sortMode;
     QSize calculateMaxSize(QSize size);
 };
