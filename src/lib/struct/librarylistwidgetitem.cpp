@@ -1,10 +1,9 @@
 #include "librarylistwidgetitem.h"
 
-LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem &localData) :
-    QListWidgetItem(localData.nameNoExtension)
+LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem &localData, QListWidget* parent) :
+    QListWidgetItem(localData.nameNoExtension, parent)
 {
     auto mfs = updateToolTip(localData);
-
 
     localData.thumbFile = SettingsHandler::getSelectedThumbsDir() + localData.name + ".jpg";
     if(localData.type == LibraryListItemType::Audio)

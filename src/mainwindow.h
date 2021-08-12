@@ -142,7 +142,9 @@ private slots:
 
     void on_loopToggleButton_toggled(bool checked);
 
-    void on_actionReload_library_triggered();
+    void onPrepareLibraryLoad();
+    void loadLibraryAsync();
+    void onLibraryLoaded();
 
     void on_audioLevel_Change(int decibelL, int decibelR);
 
@@ -155,6 +157,8 @@ signals:
     void keyPressed(QKeyEvent * event);
     void change(QEvent * event);
     void sendTCode(QString tcode);
+    void prepareLibraryLoad();
+    void libraryLoaded();
 //    void scriptNotFound(QString message);
 //    void setLoading(bool loading);
     void playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
@@ -272,7 +276,6 @@ private:
 
     LibraryListItem getSelectedLibraryListItem();
     void on_load_library(QString path);
-    void on_libray_path_select(QString path);
     void backToMainLibrary();
     void loadPlaylistIntoLibrary(QString playlistName);
     void media_double_click_event(QMouseEvent * event);

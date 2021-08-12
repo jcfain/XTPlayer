@@ -9,7 +9,7 @@
 class LibraryListWidgetItem : public QListWidgetItem
 {
 public:
-    LibraryListWidgetItem(LibraryListItem &data);
+    LibraryListWidgetItem(LibraryListItem &data, QListWidget* parent = nullptr);
     ~LibraryListWidgetItem();
     LibraryListItem getLibraryListItem();
     LibraryListItemType getType();

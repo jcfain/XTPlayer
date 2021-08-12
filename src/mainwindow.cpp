@@ -123,7 +123,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     _videoLoadingLabel->setMovie(_videoLoadingMovie);
     _videoLoadingLabel->setAttribute(Qt::WA_TransparentForMouseEvents );
     _videoLoadingLabel->setMaximumSize(200,200);
-    _videoLoadingLabel->setStyleSheet("* {background: transparent}");
+    _videoLoadingLabel->setStyleSheet("* {background: ffffff}");
     _videoLoadingLabel->setAlignment(Qt::AlignCenter);
     _mediaGrid->addWidget(_videoLoadingLabel, 1, 2);
     on_setLoading(false);
@@ -307,6 +307,10 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     _xSettings->init(videoHandler);
 
+    connect(ui->actionReload_library, &QAction::triggered, this, &MainWindow::loadLibraryAsync);
+    connect(this, &MainWindow::libraryLoaded, this, &MainWindow::onLibraryLoaded);
+    connect(this, &MainWindow::prepareLibraryLoad, this, &MainWindow::onPrepareLibraryLoad);
+
     connect(action75_Size, &QAction::triggered, this, &MainWindow::on_action75_triggered);
     connect(action100_Size, &QAction::triggered, this, &MainWindow::on_action100_triggered);
     connect(action125_Size, &QAction::triggered, this, &MainWindow::on_action125_triggered);
@@ -376,7 +380,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     _appPos = this->pos();
 
     loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading Library...", Qt::AlignBottom, Qt::white);
-    on_load_library(SettingsHandler::getSelectedLibrary());
+    loadLibraryAsync();
+    //on_load_library(SettingsHandler::getSelectedLibrary());
 
 //    QScreen *screen = this->screen();
 //    QSize screenSize = screen->size();
@@ -1127,10 +1132,35 @@ void MainWindow::changeDeoFunscript()
     }
 }
 
+
+void MainWindow::loadLibraryAsync()
+{
+    if(!loadingLibraryFuture.isRunning())
+    {
+        setLibraryLoading(true);
+        loadingLibraryFuture = QtConcurrent::run([this]() {
+            on_load_library(SettingsHandler::getSelectedLibrary());
+        });
+    }
+}
+
+
+void MainWindow::onPrepareLibraryLoad()
+{
+    stopThumbProcess();
+    qDeleteAll(cachedLibraryItems);
+    cachedLibraryItems.clear();
+    libraryList->clear();
+    ui->actionReload_library->setDisabled(true);
+    ui->actionSelect_library->setDisabled(true);
+    _playerControlsFrame->setDisabled(true);
+}
+
 void MainWindow::on_load_library(QString path)
 {
     if (!path.isNull() && !path.isEmpty())
     {
+
         QString thumbPath = SettingsHandler::getSelectedThumbsDir();
         QDir thumbDir(thumbPath);
         if (!thumbDir.exists())
@@ -1174,9 +1204,9 @@ void MainWindow::on_load_library(QString path)
             mediaTypes.append(audioTypes);
             QDirIterator library(path, mediaTypes, QDir::Files, QDirIterator::Subdirectories);
 
-            stopThumbProcess();
-            cachedLibraryItems.clear();
-            libraryList->clear();
+            emit prepareLibraryLoad();
+            QThread::sleep(1);
+
             auto playlists = SettingsHandler::getPlaylists();
             foreach(auto playlist, playlists.keys())
             {
@@ -1243,12 +1273,11 @@ void MainWindow::on_load_library(QString path)
                     fileinfo.birthTime().date(),
                     0
                 };
-                LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item);
+                LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, libraryList);
                 libraryList->addItem(qListWidgetItem);
                 cachedLibraryItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
             }
-            updateLibrarySortUI();
-            startThumbProcess();
+            emit libraryLoaded();
         }
         else
         {
@@ -1260,6 +1289,18 @@ void MainWindow::on_load_library(QString path)
     {
         on_actionSelect_library_triggered();
     }
+}
+
+void MainWindow::onLibraryLoaded()
+{
+    changelibraryDisplayMode(SettingsHandler::getLibraryView());
+    resizeThumbs(SettingsHandler::getThumbSize());
+    updateLibrarySortUI();
+    setLibraryLoading(false);
+    startThumbProcess();
+    _playerControlsFrame->setDisabled(false);
+    ui->actionReload_library->setDisabled(false);
+    ui->actionSelect_library->setDisabled(false);
 }
 
 void MainWindow::startThumbProcess()
@@ -1460,11 +1501,6 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, L
     }
 }
 
-void MainWindow::on_libray_path_select(QString path)
-{
-    on_load_library(path);
-}
-
 void MainWindow::on_actionSelect_library_triggered()
 {
     QString currentPath = SettingsHandler::getSelectedLibrary();
@@ -1473,8 +1509,8 @@ void MainWindow::on_actionSelect_library_triggered()
     QString selectedLibrary = QFileDialog::getExistingDirectory(this, tr("Choose media library"), defaultPath, QFileDialog::ReadOnly);
     if (selectedLibrary != Q_NULLPTR)
     {
-        on_libray_path_select(selectedLibrary);
         SettingsHandler::setSelectedLibrary(selectedLibrary);
+        loadLibraryAsync();
     }
 }
 
@@ -3242,7 +3278,7 @@ LibraryListItem MainWindow::setupPlaylistItem(QString playlistName)
         QDate::currentDate(),
         0
     };
-    LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item);
+    LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, libraryList);
     libraryList->insertItem(0, qListWidgetItem);
     cachedLibraryItems.push_front(new LibraryListWidgetItem(item));
     return item;
@@ -3261,19 +3297,29 @@ void MainWindow::loadPlaylistIntoLibrary(QString playlistName)
 {
     if(!thumbProcessIsRunning)
     {
-        selectedPlaylistName = playlistName;
-        libraryList->clear();
-        auto playlists = SettingsHandler::getPlaylists();
-        auto playlist = playlists.value(playlistName);
-        foreach(auto item, playlist)
+        if(!loadingLibraryFuture.isRunning())
         {
-            LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item);
-            libraryList->addItem(qListWidgetItem);
-            selectedPlaylistItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
+            setLibraryLoading(true);
+            libraryList->clear();
+            loadingLibraryFuture = QtConcurrent::run([this, playlistName]() {
+                selectedPlaylistName = playlistName;
+                auto playlists = SettingsHandler::getPlaylists();
+                auto playlist = playlists.value(playlistName);
+                foreach(auto item, playlist)
+                {
+                    LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, libraryList);
+                    libraryList->addItem(qListWidgetItem);
+                    selectedPlaylistItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
+                }
+                backLibraryButton->show();
+                editPlaylistButton->show();
+                librarySortGroup->setEnabled(false);
+                changelibraryDisplayMode(SettingsHandler::getLibraryView());
+                resizeThumbs(SettingsHandler::getThumbSize());
+                updateLibrarySortUI();
+                setLibraryLoading(false);
+            });
         }
-        backLibraryButton->show();
-        editPlaylistButton->show();
-        librarySortGroup->setEnabled(false);
     }
     else
         LogHandler::Dialog(tr("Please wait for thumbnails to fully load!"), XLogLevel::Warning);
@@ -3283,28 +3329,35 @@ void MainWindow::backToMainLibrary()
 {
     librarySortGroup->setEnabled(true);
     selectedPlaylistName = nullptr;
+    qDeleteAll(selectedPlaylistItems);
     selectedPlaylistItems.clear();
     if(cachedLibraryItems.length() == 0)
-        on_load_library(SettingsHandler::getSelectedLibrary());
+        loadLibraryAsync();
     else
     {
-        libraryList->clear();
-        foreach(auto item, cachedLibraryItems)
+        if(!loadingLibraryFuture.isRunning())
         {
-            auto name = item->text();
-            libraryList->addItem(item->clone());
+            //disconnect(libraryList, &QListWidget::itemChanged, 0, 0);
+            setLibraryLoading(true);
+            libraryList->clear();
+            loadingLibraryFuture = QtConcurrent::run([this]() {
+                foreach(auto item, cachedLibraryItems)
+                {
+                    auto name = item->text();
+                    libraryList->addItem(item->clone());
+                }
+                backLibraryButton->hide();
+                editPlaylistButton->hide();
+                savePlaylistButton->hide();
+                cancelEditPlaylistButton->hide();
+                libraryList->setDragEnabled(false);
+                changelibraryDisplayMode(SettingsHandler::getLibraryView());
+                resizeThumbs(SettingsHandler::getThumbSize());
+                updateLibrarySortUI();
+                setLibraryLoading(false);
+            });
         }
     }
-    backLibraryButton->hide();
-    editPlaylistButton->hide();
-    savePlaylistButton->hide();
-    cancelEditPlaylistButton->hide();
-    libraryList->setDragEnabled(false);
-    disconnect(libraryList, &QListWidget::itemChanged, 0, 0);
-
-    changelibraryDisplayMode(SettingsHandler::getLibraryView());
-    resizeThumbs(SettingsHandler::getThumbSize());
-    updateLibrarySortUI();
 }
 
 void MainWindow::savePlaylist()
@@ -3405,17 +3458,6 @@ LibraryListItem MainWindow::getSelectedLibraryListItem()
     return ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
 }
 
-void MainWindow::on_actionReload_library_triggered()
-{
-    if(!loadingLibraryFuture.isRunning())
-    {
-        setLibraryLoading(true);
-        loadingLibraryFuture = QtConcurrent::run([this]() {
-            on_load_library(SettingsHandler::getSelectedLibrary());
-            setLibraryLoading(false);
-        });
-    }
-}
 
 void MainWindow::showInGraphicalShell(QString path)
 {
