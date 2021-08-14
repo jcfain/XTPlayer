@@ -17,50 +17,52 @@ QString FunscriptHandler::channel()
     return _channel;
 }
 
-void FunscriptHandler::load(QString funscriptString)
+bool FunscriptHandler::load(QString funscriptString)
 {
     QMutexLocker locker(&mutex);
     if (funscriptString == nullptr)
     {
         _loaded = false;
+        LogHandler::Error("Loading funscript failed: Empty string" );
         SettingsHandler::setFunscriptLoaded(_channel, _loaded);
-        return;
+        return false;
     }
     LogHandler::Debug("Funscript load: "+funscriptString);
     QFile loadFile(funscriptString);
     lastActionIndex = -1;
     nextActionIndex = 1;
     if (!loadFile.open(QIODevice::ReadOnly)) {
-        LogHandler::Warn("Couldn't open funscript file.");
+        LogHandler::Warn("Loading funscript failed: Couldn't open funscript file.");
         _loaded = false;
         SettingsHandler::setFunscriptLoaded(_channel, _loaded);
-        return;
+        return false;
     }
 
     //LogHandler::Debug("funscriptHandler->load "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
     QByteArray funData = loadFile.readAll();
     locker.unlock();
-    load(funData);
+    return load(funData);
 }
 
-void FunscriptHandler::load(QByteArray byteArray)
+bool FunscriptHandler::load(QByteArray byteArray)
 {
     QMutexLocker locker(&mutex);
     QJsonParseError* error = new QJsonParseError();
     QJsonDocument doc = QJsonDocument::fromJson(byteArray, error);
 
     if(doc.isNull()) {
-        emit errorOccurred("loading funscript failed: " + error->errorString());
+        LogHandler::Error("Loading funscript JSON failed: " + error->errorString());
         delete error;
         _loaded = false;
         SettingsHandler::setFunscriptLoaded(_channel, _loaded);
-        return;
+        return false;
     }
     delete error;
     JSonToFunscript(doc.object());
 
     _loaded = true;
     SettingsHandler::setFunscriptLoaded(_channel, _loaded);
+    return true;
 }
 
 Funscript* FunscriptHandler::currentFunscript()
@@ -157,7 +159,7 @@ std::shared_ptr<FunscriptAction> FunscriptHandler::getPosition(qint64 millis)
     //LogHandler::Debug("lastActionIndex: "+ QString::number(lastActionIndex));
     //LogHandler::Debug("nextActionIndex: "+ QString::number(nextActionIndex));
 //    LogHandler::Debug("nextMillis: "+ QString::number(nextMillis));
-    if ((lastActionIndex != nextActionIndex && millis >= closestMillis) ||lastActionIndex == -1)
+    if ((lastActionIndex != nextActionIndex && millis >= closestMillis) || lastActionIndex == -1)
     {
         int speed = lastActionIndex == -1 ? closestMillis : nextMillis - closestMillis;
         //LogHandler::Debug("offSet: "+ QString::number(SettingsHandler::getoffSet()));

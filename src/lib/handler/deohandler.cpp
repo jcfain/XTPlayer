@@ -76,11 +76,19 @@ void DeoHandler::send(const QString &command)
 void DeoHandler::dispose()
 {
     LogHandler::Debug("Deo: dispose");
+    tearDown();
+    emit connectionChange({DeviceType::Deo, ConnectionStatus::Disconnected, "Disconnected"});
+}
+
+void DeoHandler::tearDown()
+{
+
     _isConnected = false;
     _isPlaying = false;
+    if (keepAliveTimer != nullptr)
+        disconnect(keepAliveTimer, &QTimer::timeout, this, &DeoHandler::sendKeepAlive);
     if (keepAliveTimer != nullptr && keepAliveTimer->isActive())
         keepAliveTimer->stop();
-    emit connectionChange({DeviceType::Deo, ConnectionStatus::Disconnected, "Disconnected"});
     if (tcpSocket != nullptr)
     {
         disconnect(tcpSocket, &QTcpSocket::stateChanged, this, &DeoHandler::onSocketStateChange);
@@ -99,11 +107,15 @@ void DeoHandler::readData()
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(datagram, &error);
-    if (error.errorString() != "no error occurred")
+    if (doc.isNull())
     {
         LogHandler::Error("Deo json response error: "+error.errorString());
         LogHandler::Error("datagram: "+datagram);
         //emit connectionChange({DeviceType::Deo, ConnectionStatus::Error, "Read error: " + error.errorString()});
+//        if(currentPacket != nullptr)
+//        {
+//            currentPacket->playing = false;
+//        }
     }
     else
     {
@@ -112,7 +124,7 @@ void DeoHandler::readData()
         qint64 duration = jsonObject["duration"].toDouble() * 1000;
         qint64 currentTime = jsonObject["currentTime"].toDouble() * 1000;
         float playbackSpeed = jsonObject["playbackSpeed"].toDouble() * 1.0;
-        bool playing = jsonObject["playerState"].toInt() == 0 && currentPacket->currentTime != currentTime;
+        bool playing = jsonObject["playerState"].toInt() == 0;
 //        LogHandler::Debug("Deo path: "+path);
 //        LogHandler::Debug("Deo duration: "+QString::number(duration));
 //        LogHandler::Debug("Deo currentTime------------------------------------------------> "+QString::number(currentTime));
@@ -167,7 +179,7 @@ VRPacket DeoHandler::getCurrentPacket()
         0,
         0,
         0,
-        1
+        0
     };
     return (currentPacket == nullptr) ? blankPacket : *currentPacket;
 }
@@ -182,32 +194,41 @@ void DeoHandler::onSocketStateChange (QAbstractSocket::SocketState state)
             _isConnected = true;
             LogHandler::Debug("Deo connected");
             send(nullptr);
-            connect(tcpSocket, &QTcpSocket::readyRead, this, &DeoHandler::readData);
             if (keepAliveTimer != nullptr && keepAliveTimer->isActive())
                 keepAliveTimer->stop();
             keepAliveTimer = new QTimer(this);
             //_mutex.unlock();
             connect(keepAliveTimer, &QTimer::timeout, this, &DeoHandler::sendKeepAlive);
             keepAliveTimer->start(1000);
+            connect(tcpSocket, &QTcpSocket::readyRead, this, &DeoHandler::readData);
             emit connectionChange({DeviceType::Deo, ConnectionStatus::Connected, "Connected"});
             break;
         }
         case QAbstractSocket::SocketState::UnconnectedState:
         {
-            //_mutex.lock();
-            _isConnected = false;
-            _isPlaying = false;
-            //_mutex.unlock();
-            if (keepAliveTimer != nullptr && keepAliveTimer->isActive())
-                keepAliveTimer->stop();
+//            //_mutex.lock();
+//            _isConnected = false;
+//            _isPlaying = false;
+//            //_mutex.unlock();
+//            if (keepAliveTimer != nullptr)
+//            {
+//                disconnect(keepAliveTimer, &QTimer::timeout, this, &DeoHandler::sendKeepAlive);
+//            }
+//            if (keepAliveTimer != nullptr && keepAliveTimer->isActive())
+//            {
+//                keepAliveTimer->stop();
+//            }
             if(SettingsHandler::getDeoEnabled())
             {
                 LogHandler::Debug("DeoVR retrying: " + _address.address);
-                LogHandler::Debug("port: " + QString::number(_address.port));
-                QHostAddress addressObj;
-                addressObj.setAddress(_address.address);
-                tcpSocket->connectToHost(addressObj, _address.port);
-            } else
+//                LogHandler::Debug("port: " + QString::number(_address.port));
+//                QHostAddress addressObj;
+//                addressObj.setAddress(_address.address);
+//                tcpSocket->connectToHost(addressObj, _address.port);
+                tearDown();
+                init(_address, _waitTimeout);
+            }
+            else
             {
                 LogHandler::Debug("Deo disconnected");
                 emit connectionChange({DeviceType::Deo, ConnectionStatus::Disconnected, "Disconnected"});

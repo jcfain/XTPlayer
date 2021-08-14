@@ -46,6 +46,7 @@ public:
     GamepadHandler* getGamepadHandler();
     void setSelectedDeviceHandler(DeviceHandler* device);
     DeviceHandler* getSelectedDeviceHandler();
+    VRDeviceHandler* getConnectedVRHandler();
     bool isConnected();
     void initDeviceRetry();
     void initDeoRetry();
@@ -189,6 +190,7 @@ private:
     QList<SerialComboboxItem> serialPorts;
     SerialComboboxItem selectedSerialPort;
     DeviceHandler* selectedDeviceHandler;
+    VRDeviceHandler* _connectedVRHandler;
     VideoHandler* _videoHandler;
     SerialHandler* _serialHandler;
     UdpHandler* _udpHandler;

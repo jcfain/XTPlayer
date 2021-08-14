@@ -19,13 +19,12 @@ class FunscriptHandler : public QObject
 {
     Q_OBJECT
 signals:
-    void errorOccurred(QString error);
 
 public:
     FunscriptHandler(QString name);
     ~FunscriptHandler();
-    void load(QString funscript);
-    void load(QByteArray funscript);
+    bool load(QString funscript);
+    bool load(QByteArray funscript);
     bool isLoaded();
     void setLoaded(bool value);
     bool exists(QString path);

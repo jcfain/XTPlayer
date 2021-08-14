@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
     qRegisterMetaTypeStreamOperators<Bookmark>("Bookmark");
     qRegisterMetaTypeStreamOperators<QMap<QString, QList<LibraryListItem>>>("QMap<QString, QList<LibraryListItem>>");
     qRegisterMetaTypeStreamOperators<QList<LibraryListItem>>("QList<LibraryListItem>");
+    qRegisterMetaType<QVector<int> >("QVector<int>");
     QApplication a(argc, argv);
 
     MainWindow w(a.arguments());

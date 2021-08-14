@@ -35,6 +35,7 @@ private:
     void onSocketStateChange (QAbstractSocket::SocketState state);
     void tcpErrorOccured(QAbstractSocket::SocketError);
     void sendKeepAlive();
+    void tearDown();
 
     VRPacket* currentPacket = nullptr;
     QTcpSocket* tcpSocket = nullptr;

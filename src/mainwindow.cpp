@@ -381,8 +381,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     _appPos = this->pos();
 
     loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading Library...", Qt::AlignBottom, Qt::white);
-    loadLibraryAsync();
-    //on_load_library(SettingsHandler::getSelectedLibrary());
+    on_load_library(SettingsHandler::getSelectedLibrary());
 
 //    QScreen *screen = this->screen();
 //    QSize screenSize = screen->size();
@@ -1129,7 +1128,7 @@ void MainWindow::changeDeoFunscript()
     }
     else
     {
-        LogHandler::Dialog(tr("No packet for current video or no video playing"), XLogLevel::Information);
+        LogHandler::Dialog(tr("No script for current video or no video playing"), XLogLevel::Information);
     }
 }
 
@@ -1148,6 +1147,7 @@ void MainWindow::loadLibraryAsync()
 
 void MainWindow::onPrepareLibraryLoad()
 {
+    libraryList->setIconSize({SettingsHandler::getThumbSize(),SettingsHandler::getThumbSize()});
     stopThumbProcess();
     qDeleteAll(cachedLibraryItems);
     cachedLibraryItems.clear();
@@ -1640,6 +1640,8 @@ void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString cust
     {
         if (videoHandler->file() != selectedFileListItem.path || !customScript.isEmpty())
         {
+            QString scriptFile;
+            QList<QString> invalidScripts;
             deviceHome();
             _playerControlsFrame->SetLoop(false);
             funscriptHandler->setLoaded(false);
@@ -1656,7 +1658,7 @@ void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString cust
                     QString customScriptTemp = customScript;
                     customScriptNoextension = customScriptTemp.remove(customScriptTemp.lastIndexOf('.'), customScriptTemp.length() -  1);
                 }
-                QString scriptFile = customScript.isEmpty() ? selectedFileListItem.script : customScript;
+                scriptFile = customScript.isEmpty() ? selectedFileListItem.script : customScript;
                 QString scriptFileNoExtension = customScript.isEmpty() ? selectedFileListItem.scriptNoExtension : customScriptNoextension;
                 QFileInfo scriptFileNoExtensionInfo(scriptFileNoExtension);
                 QString scriptNameNoextension = nullptr;
@@ -1666,14 +1668,16 @@ void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString cust
                 QFileInfo scriptFileInfo(scriptFile);
                 if(scriptFile.endsWith(".funscript") && scriptFileInfo.exists())
                 {
-                    funscriptHandler->load(scriptFile);
+                    if(!funscriptHandler->load(scriptFile))
+                        invalidScripts.append(scriptFile);
                 }
                 else if(scriptFile.endsWith(".zip") && customZipFile.isReadable())
                 {
                    QByteArray data = customZipFile.fileData(scriptNameNoextension + ".funscript");
                    if (!data.isEmpty())
                    {
-                       funscriptHandler->load(data);
+                       if(!funscriptHandler->load(data))
+                           invalidScripts.append("Zip file: " + scriptNameNoextension + ".funscript");
                    }
                    else
                    {
@@ -1685,7 +1689,8 @@ void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString cust
                     QByteArray data = zipFile.fileData(selectedFileListItem.nameNoExtension + ".funscript");
                     if (!data.isEmpty())
                     {
-                        funscriptHandler->load(data);
+                        if(!funscriptHandler->load(data))
+                            invalidScripts.append("Zip file: " + selectedFileListItem.nameNoExtension + ".funscript");
                     }
                     else
                     {
@@ -1713,15 +1718,19 @@ void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString cust
                        if (!data.isEmpty())
                        {
                            FunscriptHandler* otherFunscript = new FunscriptHandler(axisName);
-                           otherFunscript->load(data);
-                           funscriptHandlers.append(otherFunscript);
+                           if(!otherFunscript->load(data))
+                               invalidScripts.append("MFS zip: " + scriptNameNoextension + "." + availibleAxis->value(axisName).TrackName  + ".funscript");
+                           else
+                               funscriptHandlers.append(otherFunscript);
                        }
                     }
                     else if(fileInfo.exists())
                     {
                         FunscriptHandler* otherFunscript = new FunscriptHandler(axisName);
-                        otherFunscript->load(fileInfo.absoluteFilePath());
-                        funscriptHandlers.append(otherFunscript);
+                        if(!otherFunscript->load(fileInfo.absoluteFilePath()))
+                            invalidScripts.append("MFS script: " + fileInfo.absoluteFilePath());
+                        else
+                            funscriptHandlers.append(otherFunscript);
                     }
                     else if(zipFile.isReadable())
                     {
@@ -1732,8 +1741,10 @@ void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString cust
                        if (!data.isEmpty())
                        {
                            FunscriptHandler* otherFunscript = new FunscriptHandler(axisName);
-                           otherFunscript->load(data);
-                           funscriptHandlers.append(otherFunscript);
+                           if(!otherFunscript->load(data))
+                               invalidScripts.append("MFS zip script: " + selectedFileListItem.nameNoExtension + "." + trackName + ".funscript");
+                           else
+                               funscriptHandlers.append(otherFunscript);
                        }
                     }
                 }
@@ -1744,9 +1755,18 @@ void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString cust
                 //strokerLastUpdate = QTime::currentTime().msecsSinceStartOfDay();
                 //connect(audioSyncFilter, &AudioSyncFilter::levelChanged, this, &MainWindow::on_audioLevel_Change);
             }
-            if(!SettingsHandler::getDisableNoScriptFound() && !audioSync && !funscriptHandler->isLoaded())
+            QString filesWithLoadingIssues = "";
+            if(!invalidScripts.empty())
             {
-                on_scriptNotFound(customScript);
+                filesWithLoadingIssues += "The following scripts was found but had issues loading:\n\n";
+                foreach(auto invalidFunscript, invalidScripts)
+                    filesWithLoadingIssues += "* " + invalidFunscript + "\n";
+                filesWithLoadingIssues += "\n\nThis is probably due to an invalid JSON format.\nTry downloading the script again or asking the script maker.\nYou may also find some information running XTP in debug mode.";
+                LogHandler::Dialog(filesWithLoadingIssues, XLogLevel::Critical);
+            }
+            if(!SettingsHandler::getDisableNoScriptFound() && !audioSync && !funscriptHandler->isLoaded() && !invalidScripts.contains(scriptFile))
+            {
+                on_scriptNotFound(scriptFile);
             }
             videoHandler->play();
             playingLibraryListIndex = libraryList->currentRow();
@@ -2229,7 +2249,7 @@ void MainWindow::on_media_start()
     }
     if (funscriptHandler->isLoaded())
     {
-        funscriptFuture = QtConcurrent::run(syncFunscript, videoHandler, _xSettings, tcodeHandler, funscriptHandler, funscriptHandlers);
+        syncFunscript();
     }
     on_setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(true);
@@ -2299,7 +2319,11 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
 //        LogHandler::Debug("VR playing: "+QString::number(packet.playing));
 
     if(!packet.path.isEmpty() && packet.path != vrScriptSelectedCanceledPath)
+    {
+        LogHandler::Debug("onVRMessageRecieved video changed: "+packet.path);
+        LogHandler::Debug("onVRMessageRecieved old path: "+vrScriptSelectedCanceledPath);
         vrScriptSelectorCanceled = false;
+    }
 
     if (!vrScriptSelectorCanceled && !packet.path.isEmpty() && !funscriptFileSelectorOpen && packet.duration > 0)
     {
@@ -2307,8 +2331,9 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
         QFileInfo videoFile(videoPath);
         QString funscriptPath = SettingsHandler::getDeoDnlaFunscript(videoPath);
         QFileInfo funscriptFile(funscriptPath);
-        if (funscriptPath == nullptr || !funscriptFile.exists())
+        if (funscriptPath.isEmpty() || !funscriptFile.exists())
         {
+            LogHandler::Debug("onVRMessageRecieved funscript not found in app data");
             funscriptHandler->setLoaded(false);
             //Check the deo device local video directory for funscript.
             int indexOfSuffix = packet.path.lastIndexOf(".");
@@ -2318,18 +2343,25 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
             LogHandler::Debug("Searching local path: "+localFunscriptPath);
             if(localFile.exists())
             {
+                LogHandler::Debug("onVRMessageRecieved script found in path of media");
                 funscriptPath = localFunscriptPath;
             }
             else
             {
                 //Check the user selected library location.
+                LogHandler::Debug("onVRMessageRecieved funscript not found in path of media");
+                LogHandler::Debug("onVRMessageRecieved Searching in library root...");
                 QFileInfo fileinfo(packet.path);
                 QString libraryScriptFile = fileinfo.fileName().remove(fileinfo.fileName().lastIndexOf('.'), fileinfo.fileName().length() -  1) + ".funscript";
                 QString libraryScriptPath = SettingsHandler::getSelectedLibrary() + QDir::separator() + libraryScriptFile;
                 QFile libraryFile(libraryScriptPath);
                 if(libraryFile.exists())
                 {
+                    LogHandler::Debug("onVRMessageRecieved Script found in root: "+libraryScriptPath);
                     funscriptPath = libraryScriptPath;
+                }
+                else {
+                    LogHandler::Debug("onVRMessageRecieved Script not found");
                 }
             }
             //If the above locations fail ask the user to select a file manually.
@@ -2337,6 +2369,7 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
             {
                 if(!SettingsHandler::getDisableVRScriptSelect())
                 {
+                    LogHandler::Debug("onVRMessageRecieved Enter no scripts found. Ask user");
                     if (!SettingsHandler::getDisableSpeechToText())
                         textToSpeech->say("Script for video playing in Deeo VR not found. Please check your computer to select a script.");
                     funscriptFileSelectorOpen = true;
@@ -2346,179 +2379,207 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
                 }
                 if(funscriptPath.isEmpty())
                 {
+                    LogHandler::Debug("Funscript selector canceled");
                     vrScriptSelectorCanceled = true;
                     vrScriptSelectedCanceledPath = packet.path;
                 }
             }
             //Store the location of the file so the above check doesnt happen again.
             if(!funscriptPath.isEmpty())
+            {
+                LogHandler::Debug("Saving script into data: "+funscriptPath);
                 SettingsHandler::setDeoDnlaFunscript(videoPath, funscriptPath);
+            }
+        }
+        else if(vrScriptSelectedCanceledPath != packet.path)
+        {
+            LogHandler::Debug("onVRMessageRecieved funscript found in data store: " + funscriptPath);
+            vrScriptSelectedCanceledPath = packet.path;
         }
     }
 }
 
-void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler)
+void MainWindow::syncVRFunscript()
 {
-    if(xPlayer->isPlaying())
+    LogHandler::Debug("syncVRFunscript start thread");
+    funscriptVRSyncFuture = QtConcurrent::run([this]()
     {
-        xPlayer->stop();
-        funscriptHandler->setLoaded(false);
-    }
-    QList<FunscriptHandler*> funscriptHandlers;
-    std::shared_ptr<FunscriptAction> actionPosition;
-    QMap<QString, std::shared_ptr<FunscriptAction>> otherActions;
-    VRPacket currentVRPacket = vrPlayer->getCurrentPacket();
-    QString currentVideo;
-    qint64 timeTracker = 0;
-    qint64 lastVRTime = 0;
-    QElapsedTimer mSecTimer;
-    qint64 timer1 = 0;
-    qint64 timer2 = 0;
-    bool deviceHomed = false;
-    //qint64 elapsedTracker = 0;
-//    QElapsedTimer timer;
-//    timer.start();
-    mSecTimer.start();
-    while (vrPlayer->isConnected() && !xPlayer->isPlaying())
-    {
-        //timer.start();
-        if(!SettingsHandler::getLiveActionPaused() && xSettings->isConnected() && funscriptHandler->isLoaded() && !currentVRPacket.path.isEmpty() && currentVRPacket.duration > 0 && currentVRPacket.playing)
+        if(videoHandler->isPlaying())
         {
-            //execute once every millisecond
-            if (timer2 - timer1 >= 1)
-            {
-//                LogHandler::Debug("timer1: "+QString::number(timer1));
-//                LogHandler::Debug("timer2: "+QString::number(timer2));
-//                LogHandler::Debug("timer2 - timer1 "+QString::number(timer2-timer1));
-//                LogHandler::Debug("Out timeTracker: "+QString::number(timeTracker));
-                timer1 = timer2;
-                qint64 currentTime = currentVRPacket.currentTime;
-                //LogHandler::Debug("VR time reset: "+QString::number(currentTime));
-                bool hasRewind = lastVRTime > currentTime;
-                if (currentTime > timeTracker + 100 || hasRewind)
-                {
-                    lastVRTime = currentTime;
-                    LogHandler::Debug("current time reset: " + QString::number(currentTime));
-                    LogHandler::Debug("timeTracker: " + QString::number(timeTracker));
-                    timeTracker = currentTime;
-                }
-                else
-                {
-                    timeTracker++;
-                    currentTime = timeTracker;
-                }
-                //LogHandler::Debug("funscriptHandler->getPosition: "+QString::number(currentTime));
-                actionPosition = funscriptHandler->getPosition(currentTime);
-                if(actionPosition != nullptr)
-                    xSettings->setAxisProgressBar(TCodeChannelLookup::Stroke(), actionPosition->pos);
-                foreach(auto funscriptHandlerOther, funscriptHandlers)
-                {
-                    auto otherAction = funscriptHandlerOther->getPosition(currentTime);
-                    if(otherAction != nullptr)
-                    {
-                        otherActions.insert(funscriptHandlerOther->channel(), otherAction);
-                        xSettings->setAxisProgressBar(funscriptHandlerOther->channel(), otherAction->pos);
-                    }
-                }
-                QString tcode = tcodeHandler->funscriptToTCode(actionPosition, otherActions);
-                if(tcode != nullptr)
-                    xSettings->getSelectedDeviceHandler()->sendTCode(tcode);
-                otherActions.clear();
-           /*     LogHandler::Debug("timer "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
-                timer.start()*/;
-            }
-            timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
-            //LogHandler::Debug("timer nsecsElapsed: "+QString::number(timer2));
-        }
-        else if(!funscriptHandler->isLoaded() && xSettings->isConnected() && currentVRPacket.duration > 0 && currentVRPacket.playing)
-        {
-            if (!currentVRPacket.path.isEmpty())
-            {
-                QString funscriptPath = SettingsHandler::getDeoDnlaFunscript(currentVRPacket.path);
-                currentVideo = currentVRPacket.path;
-                funscriptHandler->load(funscriptPath);
-
-                qDeleteAll(funscriptHandlers);
-                funscriptHandlers.clear();
-                if(!deviceHomed)
-                {
-                    deviceHomed = true;
-                    xSettings->getSelectedDeviceHandler()->sendTCode(tcodeHandler->getRunningHome());
-                }
-
-                auto availibleAxis = SettingsHandler::getAvailableAxis();
-                foreach(auto axisName, availibleAxis->keys())
-                {
-                    auto trackName = availibleAxis->value(axisName).TrackName;
-                    if(axisName == TCodeChannelLookup::Stroke() || trackName.isEmpty())
-                        continue;
-                    QString funscriptPathTemp = funscriptPath;
-                    auto funscriptNoExtension = funscriptPathTemp.remove(funscriptPathTemp.lastIndexOf('.'), funscriptPathTemp.length() -  1);
-                    QFileInfo fileInfo(funscriptNoExtension + "." + trackName + ".funscript");
-                    if(fileInfo.exists())
-                    {
-                        FunscriptHandler* otherFunscript = new FunscriptHandler(axisName);
-                        otherFunscript->load(fileInfo.absoluteFilePath());
-                        funscriptHandlers.append(otherFunscript);
-                    }
-                }
-            }
-        }
-
-        if(currentVideo != currentVRPacket.path)
-        {
-            currentVideo = currentVRPacket.path;
+            on_media_stop();
             funscriptHandler->setLoaded(false);
         }
-
-        //LogHandler::Debug("Get deo packet: "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
-        currentVRPacket = vrPlayer->getCurrentPacket();
-        //QThread::currentThread()->usleep(10);
-        //LogHandler::Debug("After get deo packet: "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
-        //QThread::currentThread()->msleep(1);
-    }
-    xSettings->resetAxisProgressBars();
-    LogHandler::Debug("exit syncDeoFunscript");
-}
-
-void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler, QList<FunscriptHandler*> funscriptHandlers)
-{
-    std::shared_ptr<FunscriptAction> actionPosition;
-    QMap<QString, std::shared_ptr<FunscriptAction>> otherActions;
-    QElapsedTimer mSecTimer;
-    qint64 timer1 = 0;
-    qint64 timer2 = 0;
-    mSecTimer.start();
-    while (player->isPlaying())
-    {
-        if (timer2 - timer1 >= 1)
+        QList<FunscriptHandler*> funscriptHandlers;
+        std::shared_ptr<FunscriptAction> actionPosition;
+        QMap<QString, std::shared_ptr<FunscriptAction>> otherActions;
+        VRPacket currentVRPacket = _xSettings->getConnectedVRHandler()->getCurrentPacket();
+        QString currentVideo;
+        qint64 timeTracker = 0;
+        qint64 lastVRTime = 0;
+        QElapsedTimer mSecTimer;
+        qint64 timer1 = 0;
+        qint64 timer2 = 0;
+        bool deviceHomed = false;
+        //qint64 elapsedTracker = 0;
+    //    QElapsedTimer timer;
+    //    timer.start();
+        mSecTimer.start();
+        while (_xSettings->getConnectedVRHandler()->isConnected() && !videoHandler->isPlaying())
         {
-            timer1 = timer2;
-            if(!SettingsHandler::getLiveActionPaused() && xSettings->isConnected())
+            //timer.start();
+            if(!SettingsHandler::getLiveActionPaused() && _xSettings->isConnected() && funscriptHandler->isLoaded() && !currentVRPacket.path.isEmpty() && currentVRPacket.duration > 0 && currentVRPacket.playing)
             {
-                qint64 currentTime = player->position();
-                actionPosition = funscriptHandler->getPosition(currentTime);
-                if(actionPosition != nullptr)
-                    xSettings->setAxisProgressBar(TCodeChannelLookup::Stroke(), actionPosition->pos);
-                foreach(auto funscriptHandlerOther, funscriptHandlers)
+                //execute once every millisecond
+                if (timer2 - timer1 >= 1)
                 {
-                    auto otherAction = funscriptHandlerOther->getPosition(currentTime);
-                    if(otherAction != nullptr)
+    //                LogHandler::Debug("timer1: "+QString::number(timer1));
+    //                LogHandler::Debug("timer2: "+QString::number(timer2));
+                    //LogHandler::Debug("timer2 - timer1 "+QString::number(timer2-timer1));
+    //                LogHandler::Debug("Out timeTracker: "+QString::number(timeTracker));
+                    timer1 = timer2;
+                    qint64 currentTime = currentVRPacket.currentTime;
+                    //LogHandler::Debug("VR time reset: "+QString::number(currentTime));
+                    bool hasRewind = lastVRTime > currentTime;
+                    if (currentTime > timeTracker + 100 || hasRewind)
                     {
-                        otherActions.insert(funscriptHandlerOther->channel(), otherAction);
-                        xSettings->setAxisProgressBar(funscriptHandlerOther->channel(), otherAction->pos);
+                        lastVRTime = currentTime;
+//                        LogHandler::Debug("current time reset: " + QString::number(currentTime));
+//                        LogHandler::Debug("timeTracker: " + QString::number(timeTracker));
+                        timeTracker = currentTime;
+                    }
+                    else
+                    {
+                        timeTracker++;
+                        currentTime = timeTracker;
+                    }
+                    //LogHandler::Debug("funscriptHandler->getPosition: "+QString::number(currentTime));
+                    actionPosition = funscriptHandler->getPosition(currentTime);
+                    if(actionPosition != nullptr) {
+                        _xSettings->setAxisProgressBar(TCodeChannelLookup::Stroke(), actionPosition->pos);
+//                        LogHandler::Debug("actionPosition != nullptr/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////pos: "+QString::number(actionPosition->pos));
+//                        LogHandler::Debug("actionPosition != nullptr/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////speed: "+QString::number(actionPosition->speed));
+//                        LogHandler::Debug("actionPosition != nullptr/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////lastPos: "+QString::number(actionPosition->lastPos));
+//                        LogHandler::Debug("actionPosition != nullptr/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////lastSpeed: "+QString::number(actionPosition->lastSpeed));
+                    }
+                    foreach(auto funscriptHandlerOther, funscriptHandlers)
+                    {
+                        auto otherAction = funscriptHandlerOther->getPosition(currentTime);
+                        if(otherAction != nullptr)
+                        {
+                            otherActions.insert(funscriptHandlerOther->channel(), otherAction);
+                            _xSettings->setAxisProgressBar(funscriptHandlerOther->channel(), otherAction->pos);
+                        }
+                    }
+                    QString tcode = tcodeHandler->funscriptToTCode(actionPosition, otherActions);
+                    if(tcode != nullptr)
+                        _xSettings->getSelectedDeviceHandler()->sendTCode(tcode);
+                    otherActions.clear();
+               /*     LogHandler::Debug("timer "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
+                    timer.start()*/;
+                }
+                timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
+                //LogHandler::Debug("timer nsecsElapsed: "+QString::number(timer2));
+            }
+            else if(!currentVRPacket.path.isEmpty() && !funscriptHandler->isLoaded() && _xSettings->isConnected() && currentVRPacket.duration > 0 && currentVRPacket.playing)
+            {
+                //LogHandler::Debug("Enter syncDeoFunscript load funscript");
+                QString funscriptPath = SettingsHandler::getDeoDnlaFunscript(currentVRPacket.path);
+                currentVideo = currentVRPacket.path;
+                if(!funscriptPath.isEmpty())
+                {
+                    QFileInfo fileInfo(funscriptPath);
+                    if(fileInfo.exists())
+                    {
+                        funscriptHandler->load(funscriptPath);
+
+                        qDeleteAll(funscriptHandlers);
+                        funscriptHandlers.clear();
+                        if(!deviceHomed)
+                        {
+                            deviceHomed = true;
+                            _xSettings->getSelectedDeviceHandler()->sendTCode(tcodeHandler->getRunningHome());
+                        }
+
+                        auto availibleAxis = SettingsHandler::getAvailableAxis();
+                        foreach(auto axisName, availibleAxis->keys())
+                        {
+                            auto trackName = availibleAxis->value(axisName).TrackName;
+                            if(axisName == TCodeChannelLookup::Stroke() || trackName.isEmpty())
+                                continue;
+                            QString funscriptPathTemp = funscriptPath;
+                            auto funscriptNoExtension = funscriptPathTemp.remove(funscriptPathTemp.lastIndexOf('.'), funscriptPathTemp.length() -  1);
+                            QFileInfo fileInfo(funscriptNoExtension + "." + trackName + ".funscript");
+                            if(fileInfo.exists())
+                            {
+                                FunscriptHandler* otherFunscript = new FunscriptHandler(axisName);
+                                otherFunscript->load(fileInfo.absoluteFilePath());
+                                funscriptHandlers.append(otherFunscript);
+                            }
+                        }
                     }
                 }
-                QString tcode = tcodeHandler->funscriptToTCode(actionPosition, otherActions);
-                if(tcode != nullptr)
-                    xSettings->getSelectedDeviceHandler()->sendTCode(tcode);
-                otherActions.clear();
             }
+
+            if(currentVideo != currentVRPacket.path)
+            {
+                LogHandler::Debug("Enter syncDeoFunscript change funscript");
+                currentVideo = currentVRPacket.path;
+                funscriptHandler->setLoaded(false);
+            }
+
+            //LogHandler::Debug("Get deo packet: "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
+            currentVRPacket = _xSettings->getConnectedVRHandler()->getCurrentPacket();
+            //QThread::currentThread()->usleep(10);
+            //LogHandler::Debug("After get deo packet: "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
+            //QThread::currentThread()->msleep(1);
         }
-        timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
-    }
-    xSettings->resetAxisProgressBars();
-    LogHandler::Debug("exit syncFunscript");
+        _xSettings->resetAxisProgressBars();
+        LogHandler::Debug("exit syncVRFunscript");
+    });
+}
+
+void MainWindow::syncFunscript()
+{
+    LogHandler::Debug("syncFunscript start thread");
+    funscriptFuture = QtConcurrent::run([this]()
+    {
+        std::shared_ptr<FunscriptAction> actionPosition;
+        QMap<QString, std::shared_ptr<FunscriptAction>> otherActions;
+        QElapsedTimer mSecTimer;
+        qint64 timer1 = 0;
+        qint64 timer2 = 0;
+        mSecTimer.start();
+        while (videoHandler->isPlaying())
+        {
+            if (timer2 - timer1 >= 1)
+            {
+                timer1 = timer2;
+                if(!SettingsHandler::getLiveActionPaused() && _xSettings->isConnected())
+                {
+                    qint64 currentTime = videoHandler->position();
+                    actionPosition = funscriptHandler->getPosition(currentTime);
+                    if(actionPosition != nullptr)
+                        _xSettings->setAxisProgressBar(TCodeChannelLookup::Stroke(), actionPosition->pos);
+                    foreach(auto funscriptHandlerOther, funscriptHandlers)
+                    {
+                        auto otherAction = funscriptHandlerOther->getPosition(currentTime);
+                        if(otherAction != nullptr)
+                        {
+                            otherActions.insert(funscriptHandlerOther->channel(), otherAction);
+                            _xSettings->setAxisProgressBar(funscriptHandlerOther->channel(), otherAction->pos);
+                        }
+                    }
+                    QString tcode = tcodeHandler->funscriptToTCode(actionPosition, otherActions);
+                    if(tcode != nullptr)
+                        _xSettings->getSelectedDeviceHandler()->sendTCode(tcode);
+                    otherActions.clear();
+                }
+            }
+            timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
+        }
+        _xSettings->resetAxisProgressBars();
+        LogHandler::Debug("exit syncFunscript");
+    });
 }
 
 void MainWindow::on_gamepad_sendTCode(QString value)
@@ -2759,7 +2820,7 @@ void MainWindow::on_deo_device_connectionChanged(ConnectionChangedSignal event)
             funscriptVRSyncFuture.cancel();
             funscriptVRSyncFuture.waitForFinished();
         }
-        funscriptVRSyncFuture = QtConcurrent::run(syncVRFunscript, _xSettings->getDeoHandler(), videoHandler, _xSettings, tcodeHandler, funscriptHandler);
+        syncVRFunscript();
 
     }
     else if(event.status == ConnectionStatus::Connecting)
@@ -2804,7 +2865,7 @@ void MainWindow::on_whirligig_device_connectionChanged(ConnectionChangedSignal e
             funscriptVRSyncFuture.cancel();
             funscriptVRSyncFuture.waitForFinished();
         }
-        funscriptVRSyncFuture = QtConcurrent::run(syncVRFunscript, _xSettings->getWhirligigHandler(), videoHandler, _xSettings, tcodeHandler, funscriptHandler);
+        syncVRFunscript();
 
     }
     else if(event.status == ConnectionStatus::Connecting)
@@ -3058,6 +3119,7 @@ void MainWindow::resizeThumbs(int size)
 void MainWindow::libraryListSetIconSize(QSize newSize)
 {
     libraryList->setIconSize(newSize);
+    startThumbProcess();
     setLibraryLoading(false);
 }
 

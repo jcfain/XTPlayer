@@ -846,11 +846,16 @@ void SettingsDialog::on_deo_connectionChanged(ConnectionChangedSignal event)
     _deoConnectionStatus = event.status;
     if (event.status == ConnectionStatus::Error)
     {
+        _connectedVRHandler = nullptr;
         ui.deoConnectButton->setEnabled(true);
         setDeviceStatusStyle(event.status, event.deviceType, event.message);
     }
     else
     {
+        if(_whirligigHandler->isConnected())
+        {
+            _whirligigHandler->dispose();
+        }
         if (event.status == ConnectionStatus::Connected || event.status == ConnectionStatus::Connecting)
         {
             ui.deoConnectButton->setEnabled(false);
@@ -860,12 +865,14 @@ void SettingsDialog::on_deo_connectionChanged(ConnectionChangedSignal event)
             ui.deoConnectButton->setEnabled(true);
         }
         setDeviceStatusStyle(event.status, event.deviceType);
+        _connectedVRHandler = _deoHandler;
     }
     emit deoDeviceConnectionChange({event.deviceType, event.status, event.message});
 }
 
 void SettingsDialog::on_deo_error(QString error)
 {
+    _connectedVRHandler = nullptr;
     emit deoDeviceError(error);
 }
 void SettingsDialog::on_device_connectionChanged(ConnectionChangedSignal event)
@@ -937,9 +944,14 @@ void SettingsDialog::on_whirligig_connectionChanged(ConnectionChangedSignal even
     {
         ui.whirligigConnectButton->setEnabled(true);
         setDeviceStatusStyle(event.status, event.deviceType, event.message);
+        _connectedVRHandler = nullptr;
     }
     else
     {
+        if(_deoHandler->isConnected())
+        {
+            _deoHandler->dispose();
+        }
         if (event.status == ConnectionStatus::Connected || event.status == ConnectionStatus::Connecting)
         {
             ui.whirligigConnectButton->setEnabled(false);
@@ -950,11 +962,17 @@ void SettingsDialog::on_whirligig_connectionChanged(ConnectionChangedSignal even
         }
         setDeviceStatusStyle(event.status, event.deviceType);
     }
+    _connectedVRHandler = _whirligigHandler;
     emit whirligigDeviceConnectionChange({event.deviceType, event.status, event.message});
 }
+
 void SettingsDialog::on_whirligig_error(QString error)
 {
     emit whirligigDeviceError(error);
+}
+
+VRDeviceHandler* SettingsDialog::getConnectedVRHandler() {
+    return _connectedVRHandler;
 }
 
 void SettingsDialog::on_gamepad_connectionChanged(ConnectionChangedSignal event)

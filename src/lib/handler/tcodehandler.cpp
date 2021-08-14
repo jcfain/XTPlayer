@@ -121,7 +121,7 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
                         LogHandler::Warn("Value was less than zero: "+ QString::number(value));
                         continue;
                     }
-                    LogHandler::Debug("Multiplier: "+ channel.FriendlyName + " pos: " + QString::number(value) + ", at: " + QString::number(currentAction->at));
+                    //LogHandler::Debug("Multiplier: "+ channel.FriendlyName + " pos: " + QString::number(value) + ", at: " + QString::number(currentAction->at));
                     if ((channel.Inverted && channel.LinkToRelatedMFS) || (SettingsHandler::getChannelInverseChecked(TCodeChannelLookup::Stroke()) && !channel.Inverted && !channel.LinkToRelatedMFS) )
                     {
                         //LogHandler::Debug("inverted: "+ QString::number(value));

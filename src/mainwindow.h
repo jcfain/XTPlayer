@@ -58,8 +58,6 @@ namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 
-extern void syncFunscript(VideoHandler* player, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler, QList<FunscriptHandler*> funscriptHandlers);
-extern void syncVRFunscript(VRDeviceHandler* vrPlayer, VideoHandler* xPlayer, SettingsDialog* xSettings, TCodeHandler* tcodeHandler, FunscriptHandler* funscriptHandler);
 
 class MainWindow : public QMainWindow
 {
@@ -323,6 +321,8 @@ private:
     void rewind();
     void fastForward();
     LibraryListWidgetItem* setCurrentLibraryRow(int row);
+    void syncFunscript();
+    void syncVRFunscript();
 
     bool eventFilter(QObject *obj, QEvent *event) override;
 
