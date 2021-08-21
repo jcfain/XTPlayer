@@ -181,6 +181,8 @@
     </property>
     <addaction name="actionSelect_library"/>
     <addaction name="actionReload_library"/>
+    <addaction name="actionChange_theme"/>
+    <addaction name="actionReload_theme"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
     <addaction name="actionDonate"/>
@@ -197,7 +199,6 @@
      <string>Edit</string>
     </property>
     <addaction name="actionSettings"/>
-    <addaction name="actionChange_theme"/>
     <addaction name="actionChange_current_deo_script"/>
    </widget>
    <addaction name="menuFile"/>
@@ -267,6 +268,11 @@
   <action name="actionDownload_URL">
    <property name="text">
     <string>Download URL...</string>
+   </property>
+  </action>
+  <action name="actionReload_theme">
+   <property name="text">
+    <string>Reload theme</string>
    </property>
   </action>
  </widget>

@@ -1,0 +1,255 @@
+
+QMainWindow, QDialog, QTabWidget > QWidget, QLineEdit, LibraryWindow  {
+    background-color: #33363c;
+    color: #bec0c1;
+}
+QFrame#libraryFrame {
+	border: 1px solid;
+	border-color: #3e4249;
+	border-radius: 4px;
+}
+QSplitter::handle {
+	background: #3e4249;
+	margin-left:5px;
+}
+QStatusBar::item {
+    border: none;
+}
+QStatusBar QPushButton[cssClass="retryButton"] {
+	color="yellow";
+}
+QStatusBar QLabel#connectionStatusLabel[cssClass="connectionStatusConnected"] {
+	color="green";
+}
+QStatusBar QLabel#connectionStatusLabel[cssClass="connectionStatusDisconnected"] {
+	color="red";
+}
+QStatusBar QLabel#connectionStatusLabel[cssClass="connectionStatusConnecting"] {
+	color="yellow";
+}
+QProgressBar {
+	color: green;
+    margin: 0.5px;
+}
+QTabBar::tab {
+	background-color: #33363c; 
+	padding: 5px;
+	color: #bec0c1;
+    border: 2px solid #3e4249;
+	border-radius: 4px 4px 0px 0px;
+} 
+QTabBar::tab:hover {
+    background-color: #44474f;
+    color: #dddedf;
+}
+QTabBar::tab:selected { 
+	background: white; 
+	border: transparent; 
+	color: #33363c;
+}
+QTabWidget::pane {
+	border: none;
+}
+QLabel {
+    background-color: transparent;
+    color: white;
+}
+QListWidget {
+    background-color: #33363c;
+    color: white;
+	border: none;
+}
+QMenuBar {
+    background-color: #33363c;
+    color: white;
+}
+QMenuBar::item {
+    padding: 1px 4px;
+    background: transparent;
+    border-radius: 4px;
+}
+QMenuBar::item:selected { /* when selected using mouse or keyboard */
+    background: white;
+	color: #33363c;
+}
+QMenuBar::item:pressed {
+    background: white;
+	color: #33363c;
+}
+QMenu {
+    background-color: #33363c;
+    color: #bec0c1;
+}
+QMenu::item{
+	background-color: transparent;
+	color: #bec0c1;
+}
+QMenu::item:selected:!disabled{
+	background-color: #33363c;
+	color: white;
+} 
+QMenu::item:disabled{
+	background-color: #33363c;
+	color: grey;
+} 
+
+QScrollBar:vertical,
+QScrollBar:horizontal {
+    background: #3e4249;
+	border-radius: 5px;
+	width: 10px;
+}
+QScrollBar::handle:vertical,
+QScrollBar:handle::horizontal {
+    background-color: #81848d;
+	border-radius: 5px;
+	height: 30px;
+}
+QScrollBar::handle:vertical:hover,
+QScrollBar:handle::horizontal:hover {
+    background-color: #bec1cb;
+}
+QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical,
+QScrollBar::up-arrow:horizontal, QScrollBar::down-arrow:horizontal {
+	border: none;
+	background: none;
+	width: 0px;
+	height: 0px;
+}
+QScrollBar::right-arrow:vertical, QScrollBar::left-arrow:vertical,
+QScrollBar::right-arrow:horizontal, QScrollBar::left-arrow:horizontal
+{
+	border: none;
+	background: none;
+	width: 0px;
+	height: 0px;
+}
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical,
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+	border: none;
+	background: none;
+} 
+QScrollBar::add-line:vertical,
+QScrollBar::add-line:horizontal {
+	border: none;
+	background: none;
+	width: 0px;
+	height: 0px;
+}
+QScrollBar::sub-line:vertical,
+QScrollBar::sub-line:horizontal {
+	border: none;
+	background: none;
+	width: 0px;
+	height: 0px;
+}
+QFrame[cssClass="windowedControls"] {
+    background-color: transparent;
+    color: white;
+}
+
+QFrame[cssClass="fullScreenControls"] {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: black;
+}
+QFrame[cssClass="windowedLibrary"] {
+    background-color: transparent;
+    color: white;
+}
+QFrame[cssClass="fullScreenLibrary"] {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: black;
+}
+QStatusBar {
+    color: white;
+}
+QComboBox QAbstractItemView {
+    background-color: #3e4249;
+    color: #bec0c1;
+	font-size: 12px;
+    selection-background-color: #44474f;
+    selection-color: #dddedf;
+}
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 15px;
+
+    border-left-width: 1px;
+    border-left-color: darkgray;
+    border-left-style: solid; 
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+QComboBox::down-arrow {
+    image: url(://images/icons/expand-button.png);
+	width: 8px;
+	height: 8px;
+    fill: #bec0c1;
+}
+QRadioButton, QCheckBox, QGroupBox, QLabel {
+    background-color: transparent;
+    color: white;
+}
+QPushButton,QComboBox,QLineEdit,QSpinBox {
+    background-color: #3e4249;
+    color: #bec0c1;
+	padding: 2px;
+	font-size: 12px;
+	border-radius: 4px 4px 0px 0px;
+}
+QPushButton:hover,QComboBox:hover,QLineEdit::focus,QLineEdit::hover,QSpinBox::hover {
+    background-color: #44474f;
+    color: #dddedf;
+}
+QPushButton:disabled,QComboBox:disabled,QLineEdit::disabled,QSpinBox::disabled {
+    background-color: grey;
+    color: lightgrey;
+}
+QPushButton[cssClass="playerControlButton"] {
+    background-color: #33363c;
+	border-radius: 2px;
+    color: #bec0c1;
+}
+QPushButton[cssClass="playerControlButton"]:hover {
+    background-color: #44474f;
+    color: #dddedf;
+}
+QPushButton[cssClass="playerControlButton"]:disabled {
+    background-color: #33363c;
+    color: grey;
+}
+QPushButton:pressed,
+QPushButton[cssClass="playerControlButton"]:pressed,
+QPushButton[id="windowedLibraryButton"]:pressed,
+QPushButton[id="randomizeLibraryButton"]:pressed,
+QPushButton[id="backLibraryButton"]:pressed,
+QPushButton[id="savePlaylistButton"]:pressed,
+QPushButton[id="editPlaylistButton"]:pressed,
+QPushButton[id="cancelEditPlaylistButton"]:pressed {
+    background-color: rgba(100, 100, 100, 0.5);
+    color: black;
+}
+QPushButton[id="windowedLibraryButton"],
+QPushButton[id="randomizeLibraryButton"],
+QPushButton[id="backLibraryButton"],
+QPushButton[id="savePlaylistButton"],
+QPushButton[id="editPlaylistButton"],
+QPushButton[id="cancelEditPlaylistButton"] {
+	height: 20px;
+	width: 20px;
+	border-radius: 4px 4px 0px 0px;
+}
+QPushButton[id="randomizeLibraryButton"],
+QPushButton[id="backLibraryButton"],
+QPushButton[id="windowedLibraryButton"],
+QPushButton[id="editPlaylistButton"] {
+    background-color: rgba(255, 255, 255, 0.5);
+}
+QPushButton[id="savePlaylistButton"] {
+    background-color: rgba(0, 255, 0, 0.5);
+}
+QPushButton[id="cancelEditPlaylistButton"] {
+    background-color: rgba(255, 0, 0, 0.5);
+}
+;

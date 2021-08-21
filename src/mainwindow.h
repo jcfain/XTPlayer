@@ -152,6 +152,8 @@ private slots:
     void on_setLoading(bool loading);
     void on_playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
 
+    void on_actionReload_theme_triggered();
+
 signals:
     void keyPressed(QKeyEvent * event);
     void change(QEvent * event);
@@ -288,6 +290,7 @@ private:
     void removeFromPlaylist();
     void deleteSelectedPlaylist();
     QString getPlaylistName(bool newPlaylist = true);
+    void loadTheme(QString cssFilePath);
 
     void changelibraryDisplayMode(LibraryView value);
 

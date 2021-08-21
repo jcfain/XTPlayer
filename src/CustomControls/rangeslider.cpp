@@ -23,12 +23,13 @@ RangeSlider::RangeSlider(QWidget* aParent)
       mBackgroudColorEnabled(QColorConstants::White),
       mBackgroudColorDisabled(QColorConstants::LightGray),
       mBackgroudColor(mBackgroudColorEnabled),
-      mForgroundColorEnabled(QColorConstants::Black),
+      mForgroundColorEnabled(QColorConstants::Gray),
       mForgroundColorDisabled(QColorConstants::LightGray),
       mForgroundColor(mForgroundColorEnabled),
       orientation(Qt::Horizontal)
 {
     setMouseTracking(true);
+    setProperty("cssClass", "RangeSlider");
 }
 
 RangeSlider::RangeSlider(Qt::Orientation ori, Options t, QWidget* aParent)
@@ -43,13 +44,14 @@ RangeSlider::RangeSlider(Qt::Orientation ori, Options t, QWidget* aParent)
       mBackgroudColorEnabled(QColorConstants::White),
       mBackgroudColorDisabled(QColorConstants::LightGray),
       mBackgroudColor(mBackgroudColorEnabled),
-      mForgroundColorEnabled(QColorConstants::Black),
+      mForgroundColorEnabled(QColorConstants::Gray),
       mForgroundColorDisabled(QColorConstants::LightGray),
       mForgroundColor(mForgroundColorEnabled),
       orientation(ori),
       type(t)
 {
     setMouseTracking(true);
+    setProperty("cssClass", "RangeSlider");
 }
 
 void RangeSlider::paintEvent(QPaintEvent* aEvent)

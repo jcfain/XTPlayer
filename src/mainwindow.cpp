@@ -77,6 +77,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     deoConnectionStatusLabel = new QLabel(this);
     deoRetryConnectionButton = new QPushButton(this);
     deoRetryConnectionButton->hide();
+    deoRetryConnectionButton->setProperty("cssClass", "retryButton");
     deoRetryConnectionButton->setText("DeoVR Retry");
     ui->statusbar->addPermanentWidget(deoConnectionStatusLabel);
     ui->statusbar->addPermanentWidget(deoRetryConnectionButton);
@@ -84,13 +85,16 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     whirligigConnectionStatusLabel = new QLabel(this);
     whirligigRetryConnectionButton = new QPushButton(this);
     whirligigRetryConnectionButton->hide();
+    whirligigRetryConnectionButton->setProperty("cssClass", "retryButton");
     whirligigRetryConnectionButton->setText("Whirligig Retry");
     ui->statusbar->addPermanentWidget(whirligigConnectionStatusLabel);
     ui->statusbar->addPermanentWidget(whirligigRetryConnectionButton);
 
     connectionStatusLabel = new QLabel(this);
+    connectionStatusLabel->setObjectName("connectionStatusLabel");
     retryConnectionButton = new QPushButton(this);
     retryConnectionButton->hide();
+    retryConnectionButton->setProperty("cssClass", "retryButton");
     retryConnectionButton->setText("TCode Retry");
     ui->statusbar->addPermanentWidget(connectionStatusLabel);
     ui->statusbar->addPermanentWidget(retryConnectionButton);
@@ -367,13 +371,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(QApplication::instance(), &QCoreApplication::aboutToQuit, this, &MainWindow::dispose);
 
     loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nSetting user styles...", Qt::AlignBottom, Qt::white);
-    QFile file(SettingsHandler::getSelectedTheme());
-    if(file.exists())
-    {
-        file.open(QFile::ReadOnly);
-        QString styleSheet = QLatin1String(file.readAll());
-        setStyleSheet(styleSheet);
-    }
+    loadTheme(SettingsHandler::getSelectedTheme());
 
     setFocus();
     _defaultAppSize = this->size();
@@ -2745,6 +2743,10 @@ void MainWindow::media_single_click_event(QMouseEvent * event)
 void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
 {
     deviceConnected = event.status == ConnectionStatus::Connected;
+    if(deviceConnected)
+        connectionStatusLabel->setProperty("cssClass", "connectionStatusConnected");
+    else if(event.status == ConnectionStatus::Connecting)
+        connectionStatusLabel->setProperty("cssClass", "connectionStatusConnecting");
     QString message = "";
     if (event.deviceType == DeviceType::Serial)
     {
@@ -2759,11 +2761,14 @@ void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
     if(event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected)
     {
         retryConnectionButton->show();
+        connectionStatusLabel->setProperty("cssClass", "connectionStatusDisconnected");
     }
     else
     {
         retryConnectionButton->hide();
     }
+    connectionStatusLabel->style()->unpolish(connectionStatusLabel);
+    connectionStatusLabel->style()->polish(connectionStatusLabel);
 }
 
 void MainWindow::on_gamepad_connectionChanged(ConnectionChangedSignal event)
@@ -3257,7 +3262,15 @@ void MainWindow::on_actionChange_theme_triggered()
     if(!selectedTheme.isEmpty())
     {
         SettingsHandler::setSelectedTheme(selectedTheme);
-        QFile file(selectedTheme);
+        loadTheme(selectedTheme);
+    }
+}
+
+void MainWindow::loadTheme(QString cssFilePath)
+{
+    QFile file(cssFilePath);
+    if(file.exists())
+    {
         file.open(QFile::ReadOnly);
         QString styleSheet = QLatin1String(file.readAll());
         setStyleSheet(styleSheet);
@@ -3595,4 +3608,9 @@ void MainWindow::skipToMoneyShot()
         qint64 last30PercentOfduration = videoHandler->duration() - videoHandler->duration() * .1;
         videoHandler->setPosition(last30PercentOfduration);
     }
+}
+
+void MainWindow::on_actionReload_theme_triggered()
+{
+    loadTheme(SettingsHandler::getSelectedTheme());
 }

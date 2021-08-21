@@ -33,5 +33,6 @@
         <file>images/icons/loading_current.png</file>
         <file>images/XTP_Splash.png</file>
         <file>images/icons/skipToMoneyShot.svg</file>
+        <file>images/icons/expand-button.png</file>
     </qresource>
 </RCC>
