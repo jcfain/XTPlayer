@@ -16,16 +16,16 @@ QStatusBar::item {
     border: none;
 }
 QStatusBar QPushButton[cssClass="retryButton"] {
-	color="yellow";
+	color: white;
 }
-QStatusBar QLabel#connectionStatusLabel[cssClass="connectionStatusConnected"] {
-	color="green";
+QStatusBar QLabel[cssClass="connectionStatusConnected"] {
+	color: green;
 }
-QStatusBar QLabel#connectionStatusLabel[cssClass="connectionStatusDisconnected"] {
-	color="red";
+QStatusBar QLabel[cssClass="connectionStatusDisconnected"] {
+	color: red;
 }
-QStatusBar QLabel#connectionStatusLabel[cssClass="connectionStatusConnecting"] {
-	color="yellow";
+QStatusBar QLabel[cssClass="connectionStatusConnecting"] {
+	color: yellow;
 }
 QProgressBar {
 	color: green;
@@ -185,7 +185,6 @@ QComboBox::down-arrow {
     image: url(://images/icons/expand-button.png);
 	width: 8px;
 	height: 8px;
-    fill: #bec0c1;
 }
 QRadioButton, QCheckBox, QGroupBox, QLabel {
     background-color: transparent;
@@ -194,9 +193,12 @@ QRadioButton, QCheckBox, QGroupBox, QLabel {
 QPushButton,QComboBox,QLineEdit,QSpinBox {
     background-color: #3e4249;
     color: #bec0c1;
-	padding: 2px;
+	padding: 5px;
 	font-size: 12px;
 	border-radius: 4px 4px 0px 0px;
+}
+QLineEdit {
+	padding: 2px;
 }
 QPushButton:hover,QComboBox:hover,QLineEdit::focus,QLineEdit::hover,QSpinBox::hover {
     background-color: #44474f;
@@ -219,37 +221,42 @@ QPushButton[cssClass="playerControlButton"]:disabled {
     background-color: #33363c;
     color: grey;
 }
-QPushButton:pressed,
-QPushButton[cssClass="playerControlButton"]:pressed,
-QPushButton[id="windowedLibraryButton"]:pressed,
-QPushButton[id="randomizeLibraryButton"]:pressed,
-QPushButton[id="backLibraryButton"]:pressed,
-QPushButton[id="savePlaylistButton"]:pressed,
-QPushButton[id="editPlaylistButton"]:pressed,
-QPushButton[id="cancelEditPlaylistButton"]:pressed {
+QPushButton#loopToggleButton:checked,
+QPushButton#muteBtn:checked  {
     background-color: rgba(100, 100, 100, 0.5);
     color: black;
 }
-QPushButton[id="windowedLibraryButton"],
-QPushButton[id="randomizeLibraryButton"],
-QPushButton[id="backLibraryButton"],
-QPushButton[id="savePlaylistButton"],
-QPushButton[id="editPlaylistButton"],
-QPushButton[id="cancelEditPlaylistButton"] {
+QPushButton:pressed,
+QPushButton[cssClass="playerControlButton"]:pressed,
+QPushButton#windowedLibraryButton:pressed,
+QPushButton#randomizeLibraryButton:pressed,
+QPushButton#backLibraryButton:pressed,
+QPushButton#savePlaylistButton:pressed,
+QPushButton#editPlaylistButton:pressed,
+QPushButton#cancelEditPlaylistButton:pressed {
+    background-color: rgba(100, 100, 100, 0.5);
+    color: black;
+}
+QPushButton#windowedLibraryButton,
+QPushButton#randomizeLibraryButton,
+QPushButton#backLibraryButton,
+QPushButton#savePlaylistButton,
+QPushButton#editPlaylistButton,
+QPushButton#cancelEditPlaylistButton {
 	height: 20px;
 	width: 20px;
 	border-radius: 4px 4px 0px 0px;
 }
-QPushButton[id="randomizeLibraryButton"],
-QPushButton[id="backLibraryButton"],
-QPushButton[id="windowedLibraryButton"],
-QPushButton[id="editPlaylistButton"] {
+QPushButton#randomizeLibraryButton,
+QPushButton#backLibraryButton,
+QPushButton#windowedLibraryButton,
+QPushButton#editPlaylistButton {
     background-color: rgba(255, 255, 255, 0.5);
 }
-QPushButton[id="savePlaylistButton"] {
+QPushButton#savePlaylistButton {
     background-color: rgba(0, 255, 0, 0.5);
 }
-QPushButton[id="cancelEditPlaylistButton"] {
+QPushButton#cancelEditPlaylistButton {
     background-color: rgba(255, 0, 0, 0.5);
 }
 ;

@@ -112,7 +112,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     playerControlsGrid->addWidget(VolumeSlider, 2, 8, 1, 2);
 
     MuteBtn = new QPushButton(this);
-    MuteBtn->setObjectName(QString::fromUtf8("MuteBtn"));
+    MuteBtn->setObjectName(QString::fromUtf8("muteBtn"));
     MuteBtn->setProperty("cssClass", "playerControlButton");
     MuteBtn->setMinimumSize(QSize(0, 20));
     QIcon icon2;

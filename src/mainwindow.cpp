@@ -11,7 +11,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     loadingSplash->show();
 
     ui->setupUi(this);
-
     loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading Settings...", Qt::AlignBottom, Qt::white);
     SettingsHandler::Load();
     _xSettings = new SettingsDialog(this);
@@ -392,6 +391,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nStarting Application...", Qt::AlignBottom, Qt::white);
     loadingSplash->finish(this);
 
+
 }
 MainWindow::~MainWindow()
 {
@@ -400,6 +400,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::onEventLoopStarted()
 {
+    raise();
     if(_isPasswordIncorrect)
         QApplication::quit();
 }
@@ -3273,8 +3274,13 @@ void MainWindow::loadTheme(QString cssFilePath)
     {
         file.open(QFile::ReadOnly);
         QString styleSheet = QLatin1String(file.readAll());
-        setStyleSheet(styleSheet);
+        if(!styleSheet.isEmpty())
+            setStyleSheet(styleSheet);
+        else
+            setStyleSheet("");
     }
+    else
+        setStyleSheet("");
 }
 
 void MainWindow::on_actionChange_current_deo_script_triggered()

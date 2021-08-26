@@ -57,7 +57,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
 
     locker.relock();
     selectedTheme = settingsToLoadFrom->value("selectedTheme").toString();
-    selectedTheme = selectedTheme.isEmpty() ? QApplication::applicationDirPath() + "/themes/black-silver.css" : selectedTheme;
+    selectedTheme = selectedTheme.isEmpty() ? QApplication::applicationDirPath() + "/themes/dark.css" : selectedTheme;
     selectedLibrary = settingsToLoadFrom->value("selectedLibrary").toString();
     _selectedThumbsDir = settingsToLoadFrom->value("selectedThumbsDir").toString();
     selectedDevice = settingsToLoadFrom->value("selectedDevice").toInt();

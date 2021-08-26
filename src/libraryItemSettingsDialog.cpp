@@ -41,6 +41,7 @@ void LibraryItemSettingsDialog::getSettings(QWidget *parent, QString key, bool *
 
 void LibraryItemSettingsDialog::showDialog(LibraryItemSettingsDialog *dialog, bool *ok)
 {
+    dialog->offsetSpinBox->setValue(_libraryListItemMetaData.offset);
     const int ret = dialog->exec();
     if (ret)
     {
@@ -48,6 +49,8 @@ void LibraryItemSettingsDialog::showDialog(LibraryItemSettingsDialog *dialog, bo
         {
             dialog->offsetSpinBox->setValue(0);
         }
+        _libraryListItemMetaData.offset = dialog->offsetSpinBox->value();
+        SettingsHandler::setLiveOffset(_libraryListItemMetaData.offset);
         SettingsHandler::updateLibraryListItemMetaData(_libraryListItemMetaData);
     }
     dialog->deleteLater();
