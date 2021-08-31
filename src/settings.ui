@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1170</width>
+    <width>1224</width>
     <height>618</height>
    </rect>
   </property>
@@ -368,7 +368,7 @@
        <item row="6" column="0">
         <widget class="QPushButton" name="axisDefaultButton">
          <property name="text">
-          <string>Default</string>
+          <string>Channel Default</string>
          </property>
         </widget>
        </item>
@@ -391,14 +391,14 @@
        <item row="6" column="11">
         <widget class="QPushButton" name="cancelPriorityButton">
          <property name="text">
-          <string>Cancel</string>
+          <string>Cancel Priority</string>
          </property>
         </widget>
        </item>
        <item row="6" column="10">
         <widget class="QPushButton" name="savePriorityButton">
          <property name="text">
-          <string>Save</string>
+          <string>Save Priority</string>
          </property>
         </widget>
        </item>
@@ -447,7 +447,7 @@
        <item row="6" column="8">
         <widget class="QPushButton" name="channelDeleteButton">
          <property name="text">
-          <string>Delete</string>
+          <string>Delete Channel</string>
          </property>
         </widget>
        </item>
@@ -461,7 +461,7 @@
        <item row="6" column="9">
         <widget class="QPushButton" name="defaultPriorityButton">
          <property name="text">
-          <string>Default</string>
+          <string>Default Priority</string>
          </property>
         </widget>
        </item>
@@ -505,7 +505,7 @@
        <item row="6" column="7">
         <widget class="QPushButton" name="channelAddButton">
          <property name="text">
-          <string>Add</string>
+          <string>Add Channel</string>
          </property>
         </widget>
        </item>
@@ -563,6 +563,13 @@ that has no script of the same name.</string>
        </item>
        <item row="1" column="9" colspan="2">
         <widget class="QComboBox" name="tCodeVersionComboBox"/>
+       </item>
+       <item row="1" column="4">
+        <widget class="QCheckBox" name="hideWelcomeDialog">
+         <property name="text">
+          <string>Hide welcome dialog</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>

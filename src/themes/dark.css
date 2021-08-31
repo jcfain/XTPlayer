@@ -209,16 +209,16 @@ QPushButton:disabled,QComboBox:disabled,QLineEdit::disabled,QSpinBox::disabled {
     color: lightgrey;
 }
 QPushButton[cssClass="playerControlButton"] {
-    background-color: #33363c;
+    background: transparent;
 	border-radius: 2px;
-    color: #bec0c1;
+    color: black;
 }
 QPushButton[cssClass="playerControlButton"]:hover {
     background-color: #44474f;
     color: #dddedf;
 }
 QPushButton[cssClass="playerControlButton"]:disabled {
-    background-color: #33363c;
+    background-color: transparent;
     color: grey;
 }
 QPushButton#loopToggleButton:checked,

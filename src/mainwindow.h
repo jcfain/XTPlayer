@@ -32,6 +32,7 @@
 #include "libraryItemSettingsDialog.h"
 #include "noMatchingScriptDialog.h"
 #include "playercontrols.h"
+#include "welcomedialog.h"
 #include "lib/handler/videohandler.h"
 #include "CustomControls/rangeslider.h"
 #include "lib/handler/settingshandler.h"
@@ -147,7 +148,7 @@ private slots:
 
     void on_audioLevel_Change(int decibelL, int decibelR);
 
-    void onEventLoopStarted();
+    void onPasswordIncorrect();
     void on_scriptNotFound(QString message);
     void on_setLoading(bool loading);
     void on_playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
@@ -182,6 +183,7 @@ private:
     Ui::MainWindow *ui;
     QMutex mutex;
     SettingsDialog* _xSettings;
+    WelcomeDialog* _welcomeDialog;
     QFrame* _controlsHomePlaceHolderFrame;
     QGridLayout* _controlsHomePlaceHolderGrid;
     QFrame* _mediaFrame;

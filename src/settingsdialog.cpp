@@ -87,6 +87,7 @@ void SettingsDialog::initLive()
     ui.disableNoScriptFoundInLibrary->setChecked(SettingsHandler::getDisableNoScriptFound());
     if(HasLaunchPass())
         ui.passwordButton->setText("Change password");
+    ui.hideWelcomeDialog->setChecked(SettingsHandler::getHideWelcomeScreen());
 
 //    auto availableAxis = SettingsHandler::getAvailableAxis();
 //    foreach(auto channel, availableAxis->keys())
@@ -1452,4 +1453,9 @@ void SettingsDialog::on_disableNoScriptFoundInLibrary_stateChanged(int checkStat
 void SettingsDialog::on_tCodeVSComboBox_currentIndexChanged(int index)
 {
     SettingsHandler::setSelectedTCodeVersion(ui.tCodeVersionComboBox->currentData().value<TCodeVersion>());
+}
+
+void SettingsDialog::on_hideWelcomeDialog_toggled(bool checked)
+{
+    SettingsHandler::setHideWelcomeScreen(checked);
 }

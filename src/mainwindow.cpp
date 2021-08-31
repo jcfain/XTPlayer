@@ -22,7 +22,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
             _isPasswordIncorrect = _xSettings->GetLaunchPass();
             if(_isPasswordIncorrect == PasswordResponse::CANCEL)
             {
-                QTimer::singleShot(0, this, SLOT(onEventLoopStarted()));
+                QTimer::singleShot(0, this, SLOT(onPasswordIncorrect()));
                 return;
             }
             else if(_isPasswordIncorrect == PasswordResponse::INCORRECT)
@@ -41,7 +41,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
                 if( tries >= 3)
                 {
-                    QTimer::singleShot(0, this, SLOT(onEventLoopStarted()));
+                    QTimer::singleShot(0, this, SLOT(onPasswordIncorrect()));
                     return;
                 }
             }
@@ -378,7 +378,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     _appPos = this->pos();
 
     loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading Library...", Qt::AlignBottom, Qt::white);
-    on_load_library(SettingsHandler::getSelectedLibrary());
+    loadLibraryAsync();
 
 //    QScreen *screen = this->screen();
 //    QSize screenSize = screen->size();
@@ -390,17 +390,20 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nStarting Application...", Qt::AlignBottom, Qt::white);
     loadingSplash->finish(this);
-
-
+    if(!SettingsHandler::getHideWelcomeScreen())
+    {
+        _welcomeDialog = new WelcomeDialog(this);
+        _welcomeDialog->show();
+        _welcomeDialog->raise();
+    }
 }
 MainWindow::~MainWindow()
 {
 
 }
 
-void MainWindow::onEventLoopStarted()
+void MainWindow::onPasswordIncorrect()
 {
-    raise();
     if(_isPasswordIncorrect)
         QApplication::quit();
 }
@@ -409,7 +412,6 @@ void MainWindow::dispose()
     deviceSwitchedHome();
     if(playingLibraryListItem != nullptr)
         updateMetaData(playingLibraryListItem->getLibraryListItem());
-
     SettingsHandler::Save();
     _xSettings->dispose();
 
@@ -1134,6 +1136,11 @@ void MainWindow::changeDeoFunscript()
 
 void MainWindow::loadLibraryAsync()
 {
+    if(SettingsHandler::getSelectedLibrary().isEmpty())
+    {
+        setLibraryLoading(false);
+        return;
+    }
     if(!loadingLibraryFuture.isRunning())
     {
         setLibraryLoading(true);
@@ -1158,137 +1165,138 @@ void MainWindow::onPrepareLibraryLoad()
 
 void MainWindow::on_load_library(QString path)
 {
-    if (!path.isNull() && !path.isEmpty())
+    if (path.isEmpty())
     {
-
-        QString thumbPath = SettingsHandler::getSelectedThumbsDir();
-        QDir thumbDir(thumbPath);
-        if (!thumbDir.exists())
-        {
-            thumbDir.mkdir(thumbPath);
-        }
-        QDir directory(path);
-        if (directory.exists())
-        {
-            QStringList videoTypes = QStringList()
-                    << "*.mp4"
-                    << "*.avi"
-                    << "*.mpg"
-                    << "*.wmv"
-                    << "*.mkv"
-                    << "*.webm"
-                    << "*.mp2"
-                    << "*.mpeg"
-                    << "*.mpv"
-                    << "*.ogg"
-                    << "*.m4p"
-                    << "*.m4v"
-                    << "*.mov"
-                    << "*.qt"
-                    << "*.flv"
-                    << "*.swf"
-                    << "*.avchd";
-
-            QStringList audioTypes = QStringList()
-                    << "*.m4a"
-                    << "*.mp3"
-                    << "*.aac"
-                    << "*.flac"
-                    << "*.wav"
-                    << "*.wma";
-            QStringList playlistTypes = QStringList()
-                    << "*.m3u";
-
-            QStringList mediaTypes;
-            mediaTypes.append(videoTypes);
-            mediaTypes.append(audioTypes);
-            QDirIterator library(path, mediaTypes, QDir::Files, QDirIterator::Subdirectories);
-
-            emit prepareLibraryLoad();
-            QThread::sleep(1);
-
-            auto playlists = SettingsHandler::getPlaylists();
-            foreach(auto playlist, playlists.keys())
-            {
-                setupPlaylistItem(playlist);
-            }
-            while (library.hasNext())
-            {
-                QFileInfo fileinfo(library.next());
-                QString fileDir = fileinfo.dir().path();
-                QList<QString> excludedLibraryPaths = SettingsHandler::getLibraryExclusions();
-                bool isExcluded = false;
-                foreach(QString dir, excludedLibraryPaths)
-                {
-                    if(dir != path && (fileDir.startsWith(dir, Qt::CaseInsensitive)))
-                        isExcluded = true;
-                }
-                if (isExcluded)
-                    continue;
-                QString videoPath = fileinfo.filePath();
-                QString videoPathTemp = fileinfo.filePath();
-                QString fileName = fileinfo.fileName();
-                QString fileNameTemp = fileinfo.fileName();
-                QString fileNameNoExtension = fileNameTemp.remove(fileNameTemp.lastIndexOf('.'), fileNameTemp.length() -  1);
-                QString scriptFile = fileNameNoExtension + ".funscript";
-                QString scriptPath;
-                QString scriptNoExtension = videoPathTemp.remove(videoPathTemp.lastIndexOf('.'), videoPathTemp.length() - 1);
-                fileNameTemp = fileinfo.fileName();
-                QString mediaExtension = "*" + fileNameTemp.remove(0, fileNameTemp.length() - (fileNameTemp.length() - fileNameTemp.lastIndexOf('.')));
-
-                if (SettingsHandler::getSelectedFunscriptLibrary() == Q_NULLPTR)
-                {
-                    scriptPath = scriptNoExtension + ".funscript";
-                }
-                else
-                {
-                    scriptNoExtension = SettingsHandler::getSelectedFunscriptLibrary() + QDir::separator() + fileNameNoExtension;
-                    scriptPath = SettingsHandler::getSelectedFunscriptLibrary() + QDir::separator() + scriptFile;
-                }
-                if (!funscriptHandler->exists(scriptPath))
-                {
-                    scriptPath = nullptr;
-                }
-
-                QFileInfo scriptZip(scriptNoExtension + ".zip");
-                QString zipFile;
-                if(scriptZip.exists())
-                    zipFile = scriptNoExtension + ".zip";
-                bool audioOnly = false;
-                if(audioTypes.contains(mediaExtension))
-                {
-                    audioOnly = true;
-                }
-                LibraryListItem item
-                {
-                    audioOnly ? LibraryListItemType::Audio : LibraryListItemType::Video,
-                    videoPath, // path
-                    fileName, // name
-                    fileNameNoExtension, //nameNoExtension
-                    scriptPath, // script
-                    scriptNoExtension,
-                    mediaExtension,
-                    nullptr,
-                    zipFile,
-                    fileinfo.birthTime().date(),
-                    0
-                };
-                LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, libraryList);
-                libraryList->addItem(qListWidgetItem);
-                cachedLibraryItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
-            }
-            emit libraryLoaded();
-        }
-        else
-        {
-           LogHandler::Dialog(tr("Library path '") + path + tr("' does not exist anymore!"), XLogLevel::Critical);
-           on_actionSelect_library_triggered();
-        }
+        return;
     }
     else
     {
-        on_actionSelect_library_triggered();
+        QDir directory(path);
+        if(!directory.exists())
+        {
+            QMessageBox::StandardButton reply = QMessageBox::question(this, "ERROR!", "The media library stored in settings does not exist anymore.\nChoose a new one now?",
+                                          QMessageBox::Yes|QMessageBox::No);
+            if (reply == QMessageBox::Yes)
+            {
+                on_actionSelect_library_triggered();
+            }
+            return;
+        }
     }
+    QString thumbPath = SettingsHandler::getSelectedThumbsDir();
+    QDir thumbDir(thumbPath);
+    if (!thumbDir.exists())
+    {
+        thumbDir.mkdir(thumbPath);
+    }
+    QStringList videoTypes = QStringList()
+            << "*.mp4"
+            << "*.avi"
+            << "*.mpg"
+            << "*.wmv"
+            << "*.mkv"
+            << "*.webm"
+            << "*.mp2"
+            << "*.mpeg"
+            << "*.mpv"
+            << "*.ogg"
+            << "*.m4p"
+            << "*.m4v"
+            << "*.mov"
+            << "*.qt"
+            << "*.flv"
+            << "*.swf"
+            << "*.avchd";
+
+    QStringList audioTypes = QStringList()
+            << "*.m4a"
+            << "*.mp3"
+            << "*.aac"
+            << "*.flac"
+            << "*.wav"
+            << "*.wma";
+    QStringList playlistTypes = QStringList()
+            << "*.m3u";
+
+    QStringList mediaTypes;
+    mediaTypes.append(videoTypes);
+    mediaTypes.append(audioTypes);
+    QDirIterator library(path, mediaTypes, QDir::Files, QDirIterator::Subdirectories);
+
+    emit prepareLibraryLoad();
+    QThread::sleep(1);
+
+    auto playlists = SettingsHandler::getPlaylists();
+    foreach(auto playlist, playlists.keys())
+    {
+        setupPlaylistItem(playlist);
+    }
+    while (library.hasNext())
+    {
+        QFileInfo fileinfo(library.next());
+        QString fileDir = fileinfo.dir().path();
+        QList<QString> excludedLibraryPaths = SettingsHandler::getLibraryExclusions();
+        bool isExcluded = false;
+        foreach(QString dir, excludedLibraryPaths)
+        {
+            if(dir != path && (fileDir.startsWith(dir, Qt::CaseInsensitive)))
+                isExcluded = true;
+        }
+        if (isExcluded)
+            continue;
+        QString videoPath = fileinfo.filePath();
+        QString videoPathTemp = fileinfo.filePath();
+        QString fileName = fileinfo.fileName();
+        QString fileNameTemp = fileinfo.fileName();
+        QString fileNameNoExtension = fileNameTemp.remove(fileNameTemp.lastIndexOf('.'), fileNameTemp.length() -  1);
+        QString scriptFile = fileNameNoExtension + ".funscript";
+        QString scriptPath;
+        QString scriptNoExtension = videoPathTemp.remove(videoPathTemp.lastIndexOf('.'), videoPathTemp.length() - 1);
+        fileNameTemp = fileinfo.fileName();
+        QString mediaExtension = "*" + fileNameTemp.remove(0, fileNameTemp.length() - (fileNameTemp.length() - fileNameTemp.lastIndexOf('.')));
+
+        if (SettingsHandler::getSelectedFunscriptLibrary() == Q_NULLPTR)
+        {
+            scriptPath = scriptNoExtension + ".funscript";
+        }
+        else
+        {
+            scriptNoExtension = SettingsHandler::getSelectedFunscriptLibrary() + QDir::separator() + fileNameNoExtension;
+            scriptPath = SettingsHandler::getSelectedFunscriptLibrary() + QDir::separator() + scriptFile;
+        }
+        if (!funscriptHandler->exists(scriptPath))
+        {
+            scriptPath = nullptr;
+        }
+
+        QFileInfo scriptZip(scriptNoExtension + ".zip");
+        QString zipFile;
+        if(scriptZip.exists())
+            zipFile = scriptNoExtension + ".zip";
+        bool audioOnly = false;
+        if(audioTypes.contains(mediaExtension))
+        {
+            audioOnly = true;
+        }
+        LibraryListItem item
+        {
+            audioOnly ? LibraryListItemType::Audio : LibraryListItemType::Video,
+            videoPath, // path
+            fileName, // name
+            fileNameNoExtension, //nameNoExtension
+            scriptPath, // script
+            scriptNoExtension,
+            mediaExtension,
+            nullptr,
+            zipFile,
+            fileinfo.birthTime().date(),
+            0
+        };
+        LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, libraryList);
+        libraryList->addItem(qListWidgetItem);
+        cachedLibraryItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
+    }
+    emit libraryLoaded();
 }
 
 void MainWindow::onLibraryLoaded()

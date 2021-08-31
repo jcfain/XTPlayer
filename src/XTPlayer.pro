@@ -51,7 +51,7 @@ SOURCES += \
     noMatchingScriptDialog.cpp \
     playercontrols.cpp \
     settingsdialog.cpp \
-    welcome.cpp
+    welcomedialog.cpp
 
 HEADERS += \
     CustomControls/rangeslider.h \
@@ -104,13 +104,13 @@ HEADERS += \
     noMatchingScriptDialog.h \
     playercontrols.h \
     settingsdialog.h \
-    welcome.h
+    welcomedialog.h
 
 FORMS += \
     libraryexclusions.ui \
     mainwindow.ui \
     settings.ui \
-    welcome.ui
+    welcomedialog.ui
 
 # LIBS       += -lVLCQtCore -lVLCQtWidgets
 unix:!mac {

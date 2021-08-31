@@ -34,5 +34,11 @@
         <file>images/XTP_Splash.png</file>
         <file>images/icons/skipToMoneyShot.svg</file>
         <file>images/icons/expand-button.png</file>
+        <file>images/welcome/XTP_welcome-1.png</file>
+        <file>images/welcome/XTP_welcome-2.png</file>
+        <file>images/welcome/XTP_welcome-3.png</file>
+        <file>images/welcome/XTP_welcome-4.png</file>
+        <file>images/welcome/XTP_welcome-5.png</file>
+        <file>images/welcome/XTP_welcome-6.png</file>
     </qresource>
 </RCC>

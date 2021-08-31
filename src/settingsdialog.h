@@ -169,6 +169,8 @@ private slots:
 
     void on_tCodeVSComboBox_currentIndexChanged(int index);
 
+    void on_hideWelcomeDialog_toggled(bool checked);
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();

@@ -35,6 +35,8 @@ public:
     static const QMap<TCodeVersion, QString> SupportedTCodeVersions;
     static const QString XTPVersion;
     static const float XTPVersionNum;
+    static bool getHideWelcomeScreen();
+    static void setHideWelcomeScreen(bool value);
     static int getTCodePadding();
     static QString getSelectedTCodeVersion();
     static void setSelectedTCodeVersion(TCodeVersion key);
@@ -216,6 +218,7 @@ private:
     static GamepadAxisNames gamepadAxisNames;
     static MediaActions mediaActions;
     static QSize _maxThumbnailSize;
+    static bool _hideWelcomeScreen;
 
     static QHash<QString, QVariant> deoDnlaFunscriptLookup;
     static QString selectedTheme;

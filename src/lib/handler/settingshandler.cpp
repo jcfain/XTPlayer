@@ -60,6 +60,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     selectedTheme = selectedTheme.isEmpty() ? QApplication::applicationDirPath() + "/themes/dark.css" : selectedTheme;
     selectedLibrary = settingsToLoadFrom->value("selectedLibrary").toString();
     _selectedThumbsDir = settingsToLoadFrom->value("selectedThumbsDir").toString();
+    _hideWelcomeScreen = settingsToLoadFrom->value("hideWelcomeScreen").toBool();
     selectedDevice = settingsToLoadFrom->value("selectedDevice").toInt();
     playerVolume = settingsToLoadFrom->value("playerVolume").toInt();
     offSet = settingsToLoadFrom->value("offSet").toInt();
@@ -205,6 +206,7 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
 
         settingsToSaveTo->setValue("version", XTPVersionNum);
         settingsToSaveTo->setValue("selectedTCodeVersion", ((int)_selectedTCodeVersion));
+        settingsToSaveTo->setValue("hideWelcomeScreen", ((int)_hideWelcomeScreen));
         settingsToSaveTo->setValue("selectedLibrary", selectedLibrary);
         settingsToSaveTo->setValue("selectedTheme", selectedTheme);
         settingsToSaveTo->setValue("selectedThumbsDir", _selectedThumbsDir);
@@ -614,6 +616,15 @@ void SettingsHandler::setSelectedTCodeVersion()
         _availableAxis.remove(suckLessPositionV3Channel);
 
     }
+}
+
+bool SettingsHandler::getHideWelcomeScreen()
+{
+    return _hideWelcomeScreen;
+}
+void SettingsHandler::setHideWelcomeScreen(bool value)
+{
+    _hideWelcomeScreen = value;
 }
 
 int SettingsHandler::getTCodePadding()
@@ -1436,6 +1447,7 @@ void SettingsHandler::updateLibraryListItemMetaData(LibraryListItemMetaData258 l
 QSettings* SettingsHandler::settings;
 SettingsHandler SettingsHandler::m_instance;
 TCodeVersion SettingsHandler::_selectedTCodeVersion;
+bool SettingsHandler::_hideWelcomeScreen;
 QMutex SettingsHandler::mutex;
 QString SettingsHandler::_appdataLocation;
 QHash<QString, bool> SettingsHandler::_funscriptLoaded;
