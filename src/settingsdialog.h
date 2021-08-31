@@ -69,6 +69,7 @@ signals:
     void TCodeHomeClicked();
     void onAxisValueChange(QString axis, int value);
     void onAxisValueReset();
+    void onOpenWelcomeDialog();
 
 private slots:
     void on_serialOutputRdo_clicked();
@@ -170,6 +171,8 @@ private slots:
     void on_tCodeVSComboBox_currentIndexChanged(int index);
 
     void on_hideWelcomeDialog_toggled(bool checked);
+
+    void on_launchWelcomeDialog_clicked();
 
 private:
     Ui::SettingsDialog ui;

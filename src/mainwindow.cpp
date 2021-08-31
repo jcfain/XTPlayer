@@ -307,6 +307,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_xSettings, &SettingsDialog::gamepadConnectionChange, this, &MainWindow::on_gamepad_connectionChanged);
     connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitTCode, this, &MainWindow::on_gamepad_sendTCode);
     connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitAction, this, &MainWindow::on_gamepad_sendAction);
+    connect(_xSettings, &SettingsDialog::onOpenWelcomeDialog, this, &MainWindow::openWelcomeDialog);
 
     _xSettings->init(videoHandler);
 
@@ -392,9 +393,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     loadingSplash->finish(this);
     if(!SettingsHandler::getHideWelcomeScreen())
     {
-        _welcomeDialog = new WelcomeDialog(this);
-        _welcomeDialog->show();
-        _welcomeDialog->raise();
+        openWelcomeDialog();
     }
 }
 MainWindow::~MainWindow()
@@ -431,6 +430,7 @@ void MainWindow::dispose()
     }
     if(loadingLibraryFuture.isRunning())
     {
+        loadingLibraryStop = true;
         loadingLibraryFuture.cancel();
         loadingLibraryFuture.waitForFinished();
     }
@@ -1133,6 +1133,12 @@ void MainWindow::changeDeoFunscript()
     }
 }
 
+void MainWindow::openWelcomeDialog()
+{
+    _welcomeDialog = new WelcomeDialog(this);
+    _welcomeDialog->show();
+    _welcomeDialog->raise();
+}
 
 void MainWindow::loadLibraryAsync()
 {
@@ -1233,6 +1239,8 @@ void MainWindow::on_load_library(QString path)
     }
     while (library.hasNext())
     {
+        if(loadingLibraryStop)
+            return;
         QFileInfo fileinfo(library.next());
         QString fileDir = fileinfo.dir().path();
         QList<QString> excludedLibraryPaths = SettingsHandler::getLibraryExclusions();

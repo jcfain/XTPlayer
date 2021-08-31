@@ -47,9 +47,12 @@
        <string>Connection</string>
       </attribute>
       <layout class="QFormLayout" name="formLayout">
+       <property name="fieldGrowthPolicy">
+        <enum>QFormLayout::ExpandingFieldsGrow</enum>
+       </property>
        <item row="0" column="0" colspan="2">
         <layout class="QGridLayout" name="ConnectionSettings" rowstretch="0,0,0,0,0" columnstretch="0,0,0,0,0,0,0,0,0,0,0">
-         <property name="verticalSpacing">
+         <property name="spacing">
           <number>6</number>
          </property>
          <item row="0" column="8">
@@ -57,7 +60,7 @@
            <property name="minimumSize">
             <size>
              <width>50</width>
-             <height>0</height>
+             <height>25</height>
             </size>
            </property>
            <property name="statusTip">
@@ -83,6 +86,12 @@
          </item>
          <item row="2" column="8">
           <widget class="QLineEdit" name="deoPortTxt">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
              <width>100</width>
@@ -96,16 +105,35 @@
          </item>
          <item row="4" column="0" colspan="2">
           <widget class="QCheckBox" name="gamePadCheckbox">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
            <property name="text">
             <string>Gamepad</string>
            </property>
           </widget>
          </item>
          <item row="1" column="2" colspan="6">
-          <widget class="QLineEdit" name="networkAddressTxt"/>
+          <widget class="QLineEdit" name="networkAddressTxt">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
+          </widget>
          </item>
          <item row="2" column="10">
           <widget class="QPushButton" name="deoConnectButton">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
            <property name="text">
             <string>Connect</string>
            </property>
@@ -115,6 +143,12 @@
           <widget class="QCheckBox" name="deoCheckbox">
            <property name="enabled">
             <bool>true</bool>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
            </property>
            <property name="text">
             <string>Deo VR</string>
@@ -126,7 +160,7 @@
            <property name="minimumSize">
             <size>
              <width>50</width>
-             <height>0</height>
+             <height>25</height>
             </size>
            </property>
            <property name="text">
@@ -146,7 +180,7 @@
            <property name="minimumSize">
             <size>
              <width>75</width>
-             <height>0</height>
+             <height>25</height>
             </size>
            </property>
            <property name="text">
@@ -159,7 +193,7 @@
            <property name="minimumSize">
             <size>
              <width>75</width>
-             <height>0</height>
+             <height>25</height>
             </size>
            </property>
            <property name="text">
@@ -169,6 +203,12 @@
          </item>
          <item row="1" column="8">
           <widget class="QLineEdit" name="networkPortTxt">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
            <property name="maximumSize">
             <size>
              <width>100</width>
@@ -182,6 +222,18 @@
          </item>
          <item row="0" column="10">
           <widget class="QPushButton" name="serialConnectButton">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
            <property name="text">
             <string>Connect</string>
            </property>
@@ -189,6 +241,12 @@
          </item>
          <item row="0" column="0" colspan="2">
           <widget class="QRadioButton" name="serialOutputRdo">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
            <property name="text">
             <string>Serial</string>
            </property>
@@ -205,13 +263,32 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
           </widget>
          </item>
          <item row="0" column="2" colspan="6">
-          <widget class="QComboBox" name="SerialOutputCmb"/>
+          <widget class="QComboBox" name="SerialOutputCmb">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
+          </widget>
          </item>
          <item row="1" column="0" colspan="2">
           <widget class="QRadioButton" name="networkOutputRdo">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
            <property name="text">
             <string>Network</string>
            </property>
@@ -222,6 +299,12 @@
          </item>
          <item row="1" column="10">
           <widget class="QPushButton" name="networkConnectButton">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
            <property name="text">
             <string>Connect</string>
            </property>
@@ -229,6 +312,12 @@
          </item>
          <item row="3" column="9">
           <widget class="QLabel" name="whirligigStatuslbl">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
            <property name="text">
             <string>Timed out</string>
            </property>
@@ -242,6 +331,12 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
            <property name="text">
             <string>Connect</string>
            </property>
@@ -249,6 +344,12 @@
          </item>
          <item row="3" column="0" colspan="2">
           <widget class="QCheckBox" name="whirligigCheckBox">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
            <property name="text">
             <string>Whirligig</string>
            </property>
@@ -365,13 +466,6 @@
        <string>System</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
-       <item row="6" column="0">
-        <widget class="QPushButton" name="axisDefaultButton">
-         <property name="text">
-          <string>Channel Default</string>
-         </property>
-        </widget>
-       </item>
        <item row="0" column="1">
         <widget class="QSpinBox" name="videoIncrementSpinBox">
          <property name="toolTip">
@@ -388,24 +482,10 @@
          </property>
         </widget>
        </item>
-       <item row="6" column="11">
-        <widget class="QPushButton" name="cancelPriorityButton">
+       <item row="4" column="0" colspan="7">
+        <widget class="QLabel" name="label">
          <property name="text">
-          <string>Cancel Priority</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="10">
-        <widget class="QPushButton" name="savePriorityButton">
-         <property name="text">
-          <string>Save Priority</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="10">
-        <widget class="QPushButton" name="importButton">
-         <property name="text">
-          <string>Import</string>
+          <string>Tcode Tracks (Be careful here! May affect gamepad map. May require restart to take effect)</string>
          </property>
         </widget>
        </item>
@@ -444,24 +524,17 @@
          </property>
         </widget>
        </item>
-       <item row="6" column="8">
-        <widget class="QPushButton" name="channelDeleteButton">
+       <item row="6" column="7">
+        <widget class="QPushButton" name="channelAddButton">
          <property name="text">
-          <string>Delete Channel</string>
+          <string>Add Channel</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="1" colspan="2">
-        <widget class="QPushButton" name="thumbsDirDefaultButton">
+       <item row="0" column="9">
+        <widget class="QPushButton" name="libraryExclusionsBtn">
          <property name="text">
-          <string>Thumb Directory Default</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="9">
-        <widget class="QPushButton" name="defaultPriorityButton">
-         <property name="text">
-          <string>Default Priority</string>
+          <string>Library exclusions</string>
          </property>
         </widget>
        </item>
@@ -482,6 +555,13 @@
          </property>
         </widget>
        </item>
+       <item row="0" column="10">
+        <widget class="QPushButton" name="importButton">
+         <property name="text">
+          <string>Import</string>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="2" colspan="2">
         <widget class="QCheckBox" name="disableTextToSpeechCheckBox">
          <property name="toolTip">
@@ -495,17 +575,27 @@
        <item row="5" column="0" colspan="9">
         <widget class="QTableView" name="channelTableView"/>
        </item>
-       <item row="1" column="0">
-        <widget class="QPushButton" name="thumbDirButton">
+       <item row="6" column="8">
+        <widget class="QPushButton" name="channelDeleteButton">
          <property name="text">
-          <string>Thumb Directory</string>
+          <string>Delete Channel</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="7">
-        <widget class="QPushButton" name="channelAddButton">
+       <item row="6" column="10">
+        <widget class="QPushButton" name="savePriorityButton">
          <property name="text">
-          <string>Add Channel</string>
+          <string>Save Priority</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="9" colspan="2">
+        <widget class="QComboBox" name="tCodeVersionComboBox"/>
+       </item>
+       <item row="1" column="1" colspan="2">
+        <widget class="QPushButton" name="thumbsDirDefaultButton">
+         <property name="text">
+          <string>Thumb Directory Default</string>
          </property>
         </widget>
        </item>
@@ -516,14 +606,35 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="0" colspan="7">
-        <widget class="QLabel" name="label">
+       <item row="6" column="11">
+        <widget class="QPushButton" name="cancelPriorityButton">
          <property name="text">
-          <string>Tcode Tracks (Be careful here! May affect gamepad map. May require restart to take effect)</string>
+          <string>Cancel Priority</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="4">
+       <item row="6" column="0">
+        <widget class="QPushButton" name="axisDefaultButton">
+         <property name="text">
+          <string>Channel Default</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QPushButton" name="thumbDirButton">
+         <property name="text">
+          <string>Thumb Directory</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="9">
+        <widget class="QPushButton" name="defaultPriorityButton">
+         <property name="text">
+          <string>Default Priority</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="4" colspan="2">
         <widget class="QCheckBox" name="disableVRScriptNotFoundCheckbox">
          <property name="toolTip">
           <string>This disables the Script not found\n
@@ -535,21 +646,21 @@ has no script associated with it.</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="9">
-        <widget class="QPushButton" name="libraryExclusionsBtn">
+       <item row="1" column="4" colspan="2">
+        <widget class="QCheckBox" name="hideWelcomeDialog">
          <property name="text">
-          <string>Library exclusions</string>
+          <string>Hide welcome dialog</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="8">
+       <item row="1" column="8">
         <widget class="QPushButton" name="passwordButton">
          <property name="text">
           <string>Set password</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="6" colspan="2">
+       <item row="0" column="6" colspan="3">
         <widget class="QCheckBox" name="disableNoScriptFoundInLibrary">
          <property name="toolTip">
           <string>This will disable the warning that pops up\n
@@ -561,13 +672,10 @@ that has no script of the same name.</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="9" colspan="2">
-        <widget class="QComboBox" name="tCodeVersionComboBox"/>
-       </item>
-       <item row="1" column="4">
-        <widget class="QCheckBox" name="hideWelcomeDialog">
+       <item row="1" column="6">
+        <widget class="QPushButton" name="launchWelcomeDialog">
          <property name="text">
-          <string>Hide welcome dialog</string>
+          <string>Open Welcome</string>
          </property>
         </widget>
        </item>

@@ -4,8 +4,8 @@ const QMap<TCodeVersion, QString> SettingsHandler::SupportedTCodeVersions = {
     {TCodeVersion::v2, "TCode v0.2"},
     {TCodeVersion::v3, "TCode v0.3"}
 };
-const QString SettingsHandler::XTPVersion = "0.262";
-const float SettingsHandler::XTPVersionNum = 0.262f;
+const QString SettingsHandler::XTPVersion = "0.263";
+const float SettingsHandler::XTPVersionNum = 0.263f;
 
 SettingsHandler::SettingsHandler(){}
 SettingsHandler::~SettingsHandler()
@@ -105,6 +105,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     }
     _liveXRangeMax = _availableAxis[TCodeChannelLookup::Stroke()].UserMax;
     _liveXRangeMin = _availableAxis[TCodeChannelLookup::Stroke()].UserMin;
+    _liveXRangeMid = _availableAxis[TCodeChannelLookup::Stroke()].UserMid;
     QVariantMap gamepadButtonMap = settingsToLoadFrom->value("gamepadButtonMap").toMap();
     foreach(auto button, gamepadButtonMap.keys())
     {
@@ -190,8 +191,14 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
         if(currentVersion < 0.2615f)
         {
             locker.unlock();
-            MigratrTo2615() ;
+            MigratrTo2615();
         }
+        if(currentVersion < 0.263f)
+        {
+            locker.unlock();
+            MigrateTo263();
+        }
+
     }
 }
 
@@ -476,6 +483,20 @@ void SettingsHandler::MigratrTo2615()
     Load();
     LogHandler::Dialog("Due to a standards update your CHANNEL SETTINGS\nhave been set to default for a new data structure.\nPlease reset your RANGES and MULTIPLIERS settings before using.", XLogLevel::Information);
 }
+
+void SettingsHandler::MigrateTo263() {
+
+    settings->setValue("version", 0.263f);
+    foreach(auto axis, _availableAxis.keys())
+    {
+        int max = _availableAxis.value(axis).UserMax;
+        int min = _availableAxis.value(axis).UserMin;
+        setChannelUserMid(axis, XMath::middle(min, max));
+    }
+    Save();
+    Load();
+}
+
 QString SettingsHandler::getSelectedTCodeVersion()
 {
     return SupportedTCodeVersions.value(_selectedTCodeVersion);
@@ -516,6 +537,7 @@ void SettingsHandler::setSelectedTCodeVersion()
     }
     _liveXRangeMax = _availableAxis.value(TCodeChannelLookup::Stroke()).UserMax;
     _liveXRangeMin = _availableAxis.value(TCodeChannelLookup::Stroke()).UserMin;
+    _liveXRangeMid = _availableAxis.value(TCodeChannelLookup::Stroke()).UserMid;
 
 //    ChannelModel suckMoreModel = { "Suck more", TCodeChannelLookup::SuckMore(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::HalfRange, "suck", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::StrokeUp() };
 //    ChannelModel suckLessModel = { "Suck less", TCodeChannelLookup::SuckLess(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::HalfRange, "suck", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::StrokeDown() };
@@ -741,6 +763,13 @@ void SettingsHandler::setChannelUserMax(QString channel, int value)
     if(channel == TCodeChannelLookup::Stroke())
         _liveXRangeMax = value;
 }
+void SettingsHandler::setChannelUserMid(QString channel, int value)
+{
+    QMutexLocker locker(&mutex);
+    _availableAxis[channel].UserMid = value;
+    if(channel == TCodeChannelLookup::Stroke())
+        _liveXRangeMid = value;
+}
 
 float SettingsHandler::getMultiplierValue(QString channel)
 {
@@ -932,8 +961,8 @@ void SettingsHandler::setLiveXRangeMin(int value)
 {
     QMutexLocker locker(&mutex);
     _liveXRangeMin = value;
+    _liveXRangeMid = XMath::middle(_liveXRangeMin, _liveXRangeMax);
 }
-
 int SettingsHandler::getLiveXRangeMin()
 {
     QMutexLocker locker(&mutex);
@@ -944,6 +973,7 @@ void SettingsHandler::setLiveXRangeMax(int value)
 {
     QMutexLocker locker(&mutex);
     _liveXRangeMax = value;
+    _liveXRangeMid = XMath::middle(_liveXRangeMin, _liveXRangeMax);
 }
 
 int SettingsHandler::getLiveXRangeMax()
@@ -951,11 +981,24 @@ int SettingsHandler::getLiveXRangeMax()
     QMutexLocker locker(&mutex);
     return _liveXRangeMax;
 }
+
+void SettingsHandler::setLiveXRangeMid(int value)
+{
+    QMutexLocker locker(&mutex);
+    _liveXRangeMid = value;
+}
+
+int SettingsHandler::getLiveXRangeMid()
+{
+    QMutexLocker locker(&mutex);
+    return _liveXRangeMid;
+}
 void SettingsHandler::resetLiveXRange()
 {
     QMutexLocker locker(&mutex);
     _liveXRangeMax = _availableAxis.value(TCodeChannelLookup::Stroke()).UserMax;
     _liveXRangeMin = _availableAxis.value(TCodeChannelLookup::Stroke()).UserMin;
+    _liveXRangeMid = _availableAxis.value(TCodeChannelLookup::Stroke()).UserMid;
 }
 
 void SettingsHandler::setLiveMultiplierEnabled(bool value)
@@ -1484,6 +1527,7 @@ int SettingsHandler::_liveOffset;
 
 int SettingsHandler::_xRangeStep;
 int SettingsHandler::_liveXRangeMax;
+int SettingsHandler::_liveXRangeMid;
 int SettingsHandler::_liveXRangeMin;
 bool SettingsHandler::_liveMultiplierEnabled = false;
 bool SettingsHandler::_multiplierEnabled;

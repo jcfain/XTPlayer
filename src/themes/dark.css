@@ -186,11 +186,15 @@ QComboBox::down-arrow {
 	width: 8px;
 	height: 8px;
 }
-QRadioButton, QCheckBox, QGroupBox, QLabel {
+QRadioButton, QGroupBox, QLabel {
     background-color: transparent;
     color: white;
 }
-QPushButton,QComboBox,QLineEdit,QSpinBox {
+QCheckBox {
+    background-color: #33363c;
+    color: white;
+}
+QPushButton,QComboBox,QLineEdit,QSpinBox,QDoubleSpinBox {
     background-color: #3e4249;
     color: #bec0c1;
 	padding: 5px;

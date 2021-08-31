@@ -196,6 +196,7 @@ private:
     QFuture<void> funscriptFuture;
     QFuture<void> funscriptVRSyncFuture;
     QFuture<void> loadingLibraryFuture;
+    bool loadingLibraryStop = false;
     QFuture<void> _waitForStopFuture;
     bool _waitForStopFutureCancel = false;
     QProgressBar* bar;
@@ -280,6 +281,7 @@ private:
 
     LibraryListItem getSelectedLibraryListItem();
     void on_load_library(QString path);
+    void openWelcomeDialog();
     void backToMainLibrary();
     void loadPlaylistIntoLibrary(QString playlistName);
     void media_double_click_event(QMouseEvent * event);

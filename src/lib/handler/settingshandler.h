@@ -59,6 +59,7 @@ public:
     static int getChannelUserMax(QString channel);
     static void setChannelUserMin(QString channel, int value);
     static void setChannelUserMax(QString channel, int value);
+    static void setChannelUserMid(QString channel, int value);
 
     static LibraryView getLibraryView();
     static int getVideoIncrement();
@@ -152,10 +153,13 @@ public:
 
 
     static void setLiveXRangeMin(int value);
-    static void setLiveXRangeMax(int value);
     static int getLiveXRangeMin();
+    static void setLiveXRangeMid(int value);
+    static int getLiveXRangeMid();
+    static void setLiveXRangeMax(int value);
     static int getLiveXRangeMax();
     static void resetLiveXRange();
+
     static bool getMultiplierEnabled();
     static void setMultiplierEnabled(bool value);
     static void setLiveMultiplierEnabled(bool value);
@@ -212,6 +216,7 @@ private:
     static void MigrateTo252();
     static void MigrateLibraryMetaDataTo258();
     static void MigratrTo2615();
+    static void MigrateTo263();
     static void DeMigrateLibraryMetaDataTo258();
     static QString _appdataLocation;
     static TCodeVersion _selectedTCodeVersion;
@@ -255,6 +260,7 @@ private:
 
     static int _xRangeStep;
     static int _liveXRangeMax;
+    static int _liveXRangeMid;
     static int _liveXRangeMin;
     static bool _liveMultiplierEnabled;
     static bool _multiplierEnabled;

@@ -112,7 +112,11 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
                     else
                     {
                         //LogHandler::Debug("Multiplier: "+ axis);
-                        value = XMath::constrain(XMath::randSine(XMath::mapRange(currentAction->pos, 0, 100, 0, 180) * multiplierValue), 0, 100);
+                        float calculatedMultiplier = multiplierValue;
+                        int tcodeRandSineValue = XMath::randSine(XMath::mapRange(currentAction->pos, 0, 100, 0, 180));
+                        if(multiplierValue < 1.0 && multiplierValue > -1.0 && tcodeRandSineValue < channel.UserMid)
+                            calculatedMultiplier = 1 + multiplierValue;
+                        value = XMath::constrain(tcodeRandSineValue * calculatedMultiplier, 0, 100);
                     }
                     //lowMin + (highMin-lowMin)*level,lowMax + (highMax-lowMax)*level
                     //LogHandler::Debug("randSine: "+ QString::number(value));
@@ -157,13 +161,14 @@ int TCodeHandler::calculateRange(const char* channel, int rawValue)
 {
     int xMax = SettingsHandler::getAxis(channel).UserMax;
     int xMin = SettingsHandler::getAxis(channel).UserMin;
+    int xMid = SettingsHandler::getAxis(channel).UserMid;
     // Update for live x range switch
     if(QString(channel) == TCodeChannelLookup::Stroke())
     {
         xMax = SettingsHandler::getLiveXRangeMax();
         xMin = SettingsHandler::getLiveXRangeMin();
+        xMid = SettingsHandler::getLiveXRangeMid();
     }
-    int xMid = qRound((xMax + xMin) / 2.0);
     return XMath::mapRange(rawValue, 50, 100, xMid, xMax);
 }
 

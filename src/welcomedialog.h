@@ -25,6 +25,9 @@ private slots:
 
     void on_buttonBox_accepted();
 
+protected:
+    void showEvent(QShowEvent* event);
+
 private:
     Ui::welcomedialog *ui;
     int currentIndex = 1;

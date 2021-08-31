@@ -8,16 +8,17 @@ WelcomeDialog::WelcomeDialog(QWidget *parent) :
     ui->setupUi(this);
     setModal(false);
 
-    QPixmap pixmap("://images/welcome/XTP_welcome-1.png");
-    ui->welcomeImageLabel->setPixmap(pixmap);
-
 }
 
 WelcomeDialog::~WelcomeDialog()
 {
     delete ui;
 }
-
+void WelcomeDialog::showEvent(QShowEvent *ev)
+{
+    QDialog::showEvent(ev);
+    loadImage(currentIndex);
+}
 void WelcomeDialog::on_doNotShowAgainCheckBox_toggled(bool checked)
 {
     SettingsHandler::setHideWelcomeScreen(checked);

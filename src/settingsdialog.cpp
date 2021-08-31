@@ -3,6 +3,7 @@
 SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
 {
     ui.setupUi(this);
+    ui.ConnectionSettings->setContentsMargins(20,20,20,20);
     _serialHandler = new SerialHandler(this);
     _udpHandler = new UdpHandler(this);
     _deoHandler = new DeoHandler(this);
@@ -833,8 +834,11 @@ void SettingsDialog::onRange_valueChanged(QString name, int value)
 void SettingsDialog::onRange_mouseRelease(QString name)
 {
     RangeSlider* slider = rangeSliders.value(name);
-    SettingsHandler::setChannelUserMin(name, slider->GetLowerValue());
-    SettingsHandler::setChannelUserMax(name, slider->GetUpperValue());
+    int max = slider->GetUpperValue();
+    int min = slider->GetLowerValue();
+    SettingsHandler::setChannelUserMin(name, min);
+    SettingsHandler::setChannelUserMax(name, max);
+    SettingsHandler::setChannelUserMid(name, XMath::middle(min, max));
 }
 
 void SettingsDialog::onOffSet_valueChanged(int value)
@@ -1458,4 +1462,9 @@ void SettingsDialog::on_tCodeVSComboBox_currentIndexChanged(int index)
 void SettingsDialog::on_hideWelcomeDialog_toggled(bool checked)
 {
     SettingsHandler::setHideWelcomeScreen(checked);
+}
+
+void SettingsDialog::on_launchWelcomeDialog_clicked()
+{
+    emit onOpenWelcomeDialog();
 }
