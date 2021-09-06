@@ -15,6 +15,7 @@
 #include "../lookup/tcodechannellookup.h"
 #include "../lookup/GamepadAxisNames.h"
 #include "../lookup/MediaActions.h"
+#include "../lookup/xvideorenderer.h"
 #include "../tool/xmath.h"
 #include "../struct/ChannelModel.h"
 #include "../struct/DecoderModel.h"
@@ -172,6 +173,8 @@ public:
 
     static void setDecoderPriority(QList<DecoderModel> value);
     static QList<DecoderModel> getDecoderPriority();
+    static void setSelectedVideoRenderer(XVideoRenderer value);
+    static XVideoRenderer getSelectedVideoRenderer();
 
     static void addToLibraryExclusions(QString values);
     static void removeFromLibraryExclusions(QList<int> indexes);
@@ -272,6 +275,7 @@ private:
     static int videoIncrement;
 
     static QList<DecoderModel> decoderPriority;
+    static XVideoRenderer _selectedVideoRenderer;
     static QList<QString> _libraryExclusions;
     static QMap<QString, QList<LibraryListItem>> _playlists;
     static QHash<QString, LibraryListItemMetaData258> _libraryListItemMetaDatas;

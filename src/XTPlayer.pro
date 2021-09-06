@@ -77,6 +77,7 @@ HEADERS += \
     lib/handler/udphandler.h \
     lib/lookup/enum.h \
     lib/lookup/tcodechannellookup.h \
+    lib/lookup/xvideorenderer.h \
     lib/struct/Bookmark.h \
     lib/struct/ChannelModel.h \
     lib/struct/ConnectionChangedSignal.h \
@@ -148,12 +149,16 @@ unix {
     DESTDIR = $$shell_path($$OUT_PWD)
 }
 win32{
-    LIBS += -L$$QT.core.libs -lQtAV1 -lQtAVWidgets1
+    #LIBS += -L$$QT.core.libs -lQtAV1 -lQtAVWidgets1
     build_pass: CONFIG(debug, debug|release) {
         DESTDIR = $$shell_path($$OUT_PWD/debug)
+        LIBS += -L"../../QtAV-Builds/Debug/x64/lib" -lQtAV1 -lQtAVWidgets1
+        #INCLUDEPATH += ../../QtAV-Builds/Debug/x64/include
     }
     else: build_pass {
         DESTDIR = $$shell_path($$OUT_PWD/release)
+        LIBS += -L$$QT.core.libs -lQtAV1 -lQtAVWidgets1
+        #INCLUDEPATH += ../../QtAV-Builds/Release/x64/include
     }
     RC_FILE = XTPlayer.rc
 }

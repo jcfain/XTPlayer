@@ -4,8 +4,8 @@ const QMap<TCodeVersion, QString> SettingsHandler::SupportedTCodeVersions = {
     {TCodeVersion::v2, "TCode v0.2"},
     {TCodeVersion::v3, "TCode v0.3"}
 };
-const QString SettingsHandler::XTPVersion = "0.263";
-const float SettingsHandler::XTPVersionNum = 0.263f;
+const QString SettingsHandler::XTPVersion = "0.2631";
+const float SettingsHandler::XTPVersionNum = 0.2631f;
 
 SettingsHandler::SettingsHandler(){}
 SettingsHandler::~SettingsHandler()
@@ -124,12 +124,16 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     disableSpeechToText = settingsToLoadFrom->value("disableSpeechToText").toBool();
     _disableVRScriptSelect = settingsToLoadFrom->value("disableVRScriptSelect").toBool();
     _disableNoScriptFound = settingsToLoadFrom->value("disableNoScriptFound").toBool();
+
     QList<QVariant> decoderPriorityvarient = settingsToLoadFrom->value("decoderPriority").toList();
     decoderPriority.clear();
     foreach(auto varient, decoderPriorityvarient)
     {
         decoderPriority.append(varient.value<DecoderModel>());
     }
+
+    _selectedVideoRenderer = (XVideoRenderer)settingsToLoadFrom->value("selectedVideoRenderer").toInt();
+
     auto splitterSizes = settingsToLoadFrom->value("mainWindowPos").toList();
     foreach (auto splitterPos, splitterSizes)
     {
@@ -249,17 +253,22 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
             decoderVarient.append(QVariant::fromValue(decoder));
         }
         settingsToSaveTo->setValue("decoderPriority", decoderVarient);
+
+        settingsToSaveTo->setValue("selectedVideoRenderer", (int)_selectedVideoRenderer);
+
         QVariantMap availableAxis;
         foreach(auto axis, _availableAxis.keys())
         {
             availableAxis.insert(axis, QVariant::fromValue(_availableAxis[axis]));
         }
         settingsToSaveTo->setValue("availableAxis", availableAxis);
+
         QVariantMap gamepadMap;
         foreach(auto button, _gamepadButtonMap.keys())
         {
             gamepadMap.insert(button, QVariant::fromValue(_gamepadButtonMap[button]));
         }
+
         settingsToSaveTo->setValue("gamepadButtonMap", gamepadMap);
         settingsToSaveTo->setValue("inverseTcXL0", _inverseStroke);
         settingsToSaveTo->setValue("inverseTcXRollR2", _inversePitch);
@@ -272,6 +281,7 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         settingsToSaveTo->setValue("disableSpeechToText", disableSpeechToText);
         settingsToSaveTo->setValue("disableVRScriptSelect", _disableVRScriptSelect);
         settingsToSaveTo->setValue("disableNoScriptFound", _disableNoScriptFound);
+
         QList<QVariant> splitterPos;
         foreach(auto pos, _mainWindowPos)
         {
@@ -1265,7 +1275,14 @@ QList<DecoderModel> SettingsHandler::getDecoderPriority()
 {
     return decoderPriority;
 }
-
+void SettingsHandler::setSelectedVideoRenderer(XVideoRenderer value)
+{
+    _selectedVideoRenderer = value;
+}
+XVideoRenderer SettingsHandler::getSelectedVideoRenderer()
+{
+    return _selectedVideoRenderer;
+}
 void SettingsHandler::deleteAxis(QString axis)
 {
     QMutexLocker locker(&mutex);
@@ -1551,6 +1568,8 @@ bool SettingsHandler::_disableNoScriptFound;
 QString SettingsHandler::_hashedPass;
 
 QList<DecoderModel> SettingsHandler::decoderPriority;
+XVideoRenderer SettingsHandler::_selectedVideoRenderer;
+
 QList<QString> SettingsHandler::_libraryExclusions;
 QMap<QString, QList<LibraryListItem>> SettingsHandler::_playlists;
 QHash<QString, LibraryListItemMetaData258> SettingsHandler::_libraryListItemMetaDatas;

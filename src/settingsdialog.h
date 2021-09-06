@@ -12,6 +12,7 @@
 #include "lib/struct/channeltablecomboboxdelegate.h"
 #include "lib/struct/DecoderModel.h"
 #include "lib/lookup/MediaActions.h"
+#include "lib/lookup/xvideorenderer.h"
 #include "lib/tool/simplecrypt.h"
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/serialhandler.h"
@@ -70,6 +71,7 @@ signals:
     void onAxisValueChange(QString axis, int value);
     void onAxisValueReset();
     void onOpenWelcomeDialog();
+
 
 private slots:
     void on_serialOutputRdo_clicked();
@@ -174,6 +176,8 @@ private slots:
 
     void on_launchWelcomeDialog_clicked();
 
+    void on_videoRenderer_textChanged(const QString &value);
+
 private:
     Ui::SettingsDialog ui;
     void loadSerialPorts();
@@ -207,12 +211,14 @@ private:
     ChannelTableViewModel* channelTableViewModel;
 
     QMap<QString, QLabel*> rangeMinLabels;
+    QMap<QString, QLabel*> rangeLabels;
     QMap<QString, QLabel*> rangeMaxLabels;
     QMap<QString, RangeSlider*> rangeSliders;
     QMap<QString, QProgressBar*> axisProgressbars;
 
     QLabel* offSetLabel;
     QSpinBox* offSetSpinBox;
+    bool hasVideoPlayed = false;
 
     void setDeviceStatusStyle(ConnectionStatus status, DeviceType deviceType, QString message = "");
 };

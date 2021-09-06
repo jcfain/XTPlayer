@@ -84,6 +84,9 @@ void SettingsDialog::init(VideoHandler* videoHandler)
 
 void SettingsDialog::initLive()
 {
+    if(_videoHandler->isPlaying())
+        hasVideoPlayed = true;
+    ui.videoRendererComboBox->setEnabled(!hasVideoPlayed);
     ui.enableMultiplierCheckbox->setChecked(SettingsHandler::getMultiplierEnabled());
     ui.disableNoScriptFoundInLibrary->setChecked(SettingsHandler::getDisableNoScriptFound());
     if(HasLaunchPass())
@@ -153,6 +156,15 @@ void SettingsDialog::setupUi()
         ui.networkPortTxt->setText(SettingsHandler::getServerPort());
         ui.deoAddressTxt->setText(SettingsHandler::getDeoAddress());
         ui.deoPortTxt->setText(SettingsHandler::getDeoPort());
+
+        foreach(auto renderer, XVideoRendererMap.keys())
+        {
+            ui.videoRendererComboBox->addItem(renderer);
+        }
+
+        ui.videoRendererComboBox->setToolTip("Due to a bug, this can only be changed before ANY video has been played.");
+        ui.videoRendererComboBox->setCurrentText(XVideoRendererReverseMap.value(SettingsHandler::getSelectedVideoRenderer()));
+        connect(ui.videoRendererComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::on_videoRenderer_textChanged);
 
         ui.RangeSettingsGrid->setSpacing(5);
 
@@ -342,6 +354,7 @@ void SettingsDialog::setUpTCodeAxis()
              continue;
 
          int userMin = axis.UserMin;
+         int userMid = axis.UserMid;
          int userMax = axis.UserMax;
          QLabel* rangeMinLabel = new QLabel(QString::number(userMin));
          rangeMinLabel->setObjectName(axis.AxisName+"RangeMinLabel");
@@ -350,11 +363,12 @@ void SettingsDialog::setUpTCodeAxis()
          ui.RangeSettingsGrid->addWidget(rangeMinLabel, sliderGridRow, 0);
          rangeMinLabels.insert(channelName, rangeMinLabel);
 
-         QLabel* rangeLabel = new QLabel(axis.FriendlyName + " Range");
+         QLabel* rangeLabel = new QLabel(axis.FriendlyName + " Range mid: " + QString::number(userMid));
          rangeLabel->setObjectName(axis.AxisName+"RangeLabel");
          rangeLabel->setFont(font);
          rangeLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
          ui.RangeSettingsGrid->addWidget(rangeLabel, sliderGridRow, 1);
+         rangeLabels.insert(channelName, rangeLabel);
 
          QLabel* rangeMaxLabel = new QLabel(QString::number(userMax));
          rangeMaxLabel->setObjectName(axis.AxisName+"RangeMaxLabel");
@@ -823,8 +837,13 @@ void SettingsDialog::on_serialRefreshBtn_clicked()
 void SettingsDialog::onRange_valueChanged(QString name, int value)
 {
     RangeSlider* slider = rangeSliders.value(name);
-    rangeMinLabels.value(name)->setText(QString::number(slider->GetLowerValue()));
-    rangeMaxLabels.value(name)->setText(QString::number(slider->GetUpperValue()));
+    auto channel = SettingsHandler::getAxis(name);
+    auto mainLabel = rangeLabels.value(name);
+    int max = slider->GetUpperValue();
+    int min = slider->GetLowerValue();
+    rangeMinLabels.value(name)->setText(QString::number(min));
+    rangeMaxLabels.value(name)->setText(QString::number(max));
+    mainLabel->setText(channel.FriendlyName + " mid: " + QString::number(XMath::middle(min, max)));
     if ((!_videoHandler->isPlaying() || _videoHandler->isPaused() || SettingsHandler::getLiveActionPaused()) && !_deoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
     {
         getSelectedDeviceHandler()->sendTCode(name + QString::number(value).rightJustified(SettingsHandler::getTCodePadding(), '0')+ "S1000");
@@ -1467,4 +1486,20 @@ void SettingsDialog::on_hideWelcomeDialog_toggled(bool checked)
 void SettingsDialog::on_launchWelcomeDialog_clicked()
 {
     emit onOpenWelcomeDialog();
+}
+
+void SettingsDialog::on_videoRenderer_textChanged(const QString &value)
+{
+    XVideoRenderer renderer = XVideoRendererMap.value(value);
+    if(_videoHandler->setVideoRenderer(renderer))
+    {
+        SettingsHandler::setSelectedVideoRenderer(renderer);
+        SettingsHandler::requestRestart(this);
+    }
+    else
+    {
+        disconnect(ui.videoRendererComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::on_videoRenderer_textChanged);
+        ui.videoRendererComboBox->setCurrentText(XVideoRendererReverseMap.value(SettingsHandler::getSelectedVideoRenderer()));
+        connect(ui.videoRendererComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::on_videoRenderer_textChanged);
+    }
 }

@@ -6,6 +6,7 @@
 #include <QHBoxLayout>
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/loghandler.h"
+#include "lib/lookup/xvideorenderer.h"
 
 using namespace QtAV;
 
@@ -61,10 +62,12 @@ public:;
     void clearFilters();
 
 
+    bool setVideoRenderer(XVideoRenderer renderer);
+
 private:
     QHBoxLayout* _widgetLayout;
     AVPlayer* _player;
-    VideoOutput* _videoRenderer;
+    VideoRenderer* _videoRenderer;
     VideoPreviewWidget* _videoPreviewWidget;
     QString _currentFile;
     QMutex _mutex;
@@ -74,7 +77,5 @@ private:
     void mousePressEvent(QMouseEvent * e) override;
     void keyPressEvent(QKeyEvent * e) override;
     void enterEvent(QEvent * e) override;
-
-
 };
 #endif // VIDEOHANDLER_H

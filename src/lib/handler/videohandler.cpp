@@ -1,45 +1,53 @@
 #include "videohandler.h"
-VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent)
+VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent),
+    _videoRenderer(0)
 {
-    //QtAV::setLogLevel(QtAV::LogLevel::LogAll);
-    //new QOpenGLWidget(this);
     LogHandler::Debug("Create QHBoxLayout");
     _widgetLayout = new QHBoxLayout;
-    QtAV::Widgets::registerRenderers();
+    setLayout(_widgetLayout);
+    //QtAV::setLogLevel(QtAV::LogLevel::LogAll);
+    //new QOpenGLWidget(this);
     //_videoRenderer = new VideoOutput(this);
-    LogHandler::Debug("Create OpenGLWidget");
-    _videoRenderer = new VideoOutput(QtAV::VideoRendererId_OpenGLWidget, this);
-    if (!_videoRenderer || !_videoRenderer->isAvailable() || !_videoRenderer->widget())
-    {
-        LogHandler::Debug("OpenGLWidget failed, trying default");
-        _videoRenderer = new VideoOutput(this);
-        if (!_videoRenderer || !_videoRenderer->isAvailable() || !_videoRenderer->widget())
-        {
-            LogHandler::Dialog("QtAV Video renderer is not availabe on your platform!", XLogLevel::Critical);
-            return;
-        }
-    }
     LogHandler::Debug("Create player");
-    _player = new AVPlayer(_videoRenderer->widget());
+    _player = new AVPlayer(this);
+    //_player->setFrameRate(23.65);
+    LogHandler::Debug("Create Renderer");
+//    _videoRenderer = new VideoOutput(QtAV::VideoRendererId_GLWidget2, this);
+//    if (!_videoRenderer || !_videoRenderer->isAvailable() || !_videoRenderer->widget())
+//    {
+//        LogHandler::Debug("OpenGLWidget failed, trying default");
+//        _videoRenderer = new VideoOutput(this);
+//        if (!_videoRenderer || !_videoRenderer->isAvailable() || !_videoRenderer->widget())
+//        {
+//            LogHandler::Dialog("QtAV Video renderer is not availabe on your platform!", XLogLevel::Critical);
+//            return;
+//        //}
+//    }
+    setVideoRenderer(SettingsHandler::getSelectedVideoRenderer());
     setDecoderPriority();
     //_player->setVideoDecoderPriority(QStringList() << "CUDA" << "D3D11" << "DXVA" << "VAAPI" << "VideoToolbox" << "FFmpeg");
+    QVariantHash opt;
     QVariantHash cuda_opt;
     cuda_opt["surfaces"] = 20; //key is property name, case sensitive
     cuda_opt["copyMode"] = "DirectCopy"; // default is "DirectCopy"
     cuda_opt["flags"] = "Default";
     cuda_opt["deinterlace"] = "Adaptive";
-    QVariantHash opt;
     opt["CUDA"] = cuda_opt; //key is decoder name, case sensitive
+
     QVariantHash va_opt;
     va_opt["display"] = "X11"; //"GLX", "X11", "DRM"
     va_opt["copyMode"] = "ZeroCopy"; // "ZeroCopy", "OptimizedCopy", "GenericCopy". Default is "ZeroCopy" if possible
     opt["VAAPI"] = va_opt; //key is decoder name, case sensitive
+
+    QVariantHash avfmt_opt;
+    avfmt_opt["probesize"] = 4096;
+    avfmt_opt["user_agent"] = "xxx";
+    opt["avformat"] = avfmt_opt;
     _player->setOptionsForVideoCodec(opt);
 
-    _player->setRenderer(_videoRenderer);
-    _player->setBufferMode(QtAV::BufferBytes);
+    _player->setBufferMode(QtAV::BufferMode::BufferBytes);
+
     _player->audio()->setVolume(SettingsHandler::getPlayerVolume() * 0.001f);
-    _widgetLayout->addWidget(_videoRenderer->widget());
     _player->setSeekType(QtAV::SeekType::KeyFrameSeek);
 
     connect(_player, &AVPlayer::positionChanged, this, &VideoHandler::on_media_positionChanged, Qt::QueuedConnection);
@@ -49,7 +57,6 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent)
 
     setMinimumHeight(SettingsHandler::getThumbSize());
     setMinimumWidth(SettingsHandler::getThumbSize());
-    setLayout(_widgetLayout);
 }
 
 VideoHandler::~VideoHandler()
@@ -231,6 +238,46 @@ void VideoHandler::setDecoderPriority()
     if(wasPlaying)
         play();
 }
+bool VideoHandler::setVideoRenderer(XVideoRenderer renderer)
+{
+    QtAV::Widgets::registerRenderers();
+    QtAV::VideoRendererId vid = QtAVVideoRendererIdMap.value(renderer);
+    VideoRenderer *videoRenderer = new VideoOutput(vid, this);
+    if (!videoRenderer || !videoRenderer->isAvailable() || !videoRenderer->widget())
+    {
+//        LogHandler::Debug(" '" + XVideoRendererReverseMap.value(renderer) + "' failed, trying default");
+//        _videoRenderer = new VideoOutput(this);
+//        if (!_videoRenderer || !_videoRenderer->isAvailable() || !_videoRenderer->widget())
+//        {
+            LogHandler::Dialog("QtAV Video renderer '" + XVideoRendererReverseMap.value(renderer) + "' is not availabe on your platform!", XLogLevel::Critical);
+            return false;
+//        }
+    }
+
+    if (_videoRenderer && _videoRenderer->widget())
+    {
+        _widgetLayout->removeWidget(_videoRenderer->widget());
+        _videoRenderer->widget()->close();
+//        if (!_videoRenderer->widget()->testAttribute(Qt::WA_DeleteOnClose))
+//        {
+//            delete _videoRenderer->widget();
+//        }
+        delete _videoRenderer;
+    }
+    _videoRenderer = videoRenderer;
+    _player->setRenderer(_videoRenderer);
+    _widgetLayout->addWidget(_videoRenderer->widget());
+    if (vid == VideoRendererId_GLWidget || vid == VideoRendererId_GLWidget2 || vid == VideoRendererId_OpenGLWidget || vid == VideoRendererId_XV)
+    {
+        _player->renderer()->forcePreferredPixelFormat(true);
+    }
+    else
+    {
+        _player->renderer()->forcePreferredPixelFormat(false);
+    }
+    return true;
+}
+
 void VideoHandler::installFilter(AudioFilter* filter)
 {
     _player->installFilter(filter);
