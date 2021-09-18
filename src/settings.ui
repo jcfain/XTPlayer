@@ -30,7 +30,7 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Close|QDialogButtonBox::RestoreDefaults</set>
+      <set>QDialogButtonBox::Close|QDialogButtonBox::RestoreDefaults|QDialogButtonBox::SaveAll</set>
      </property>
      <property name="centerButtons">
       <bool>false</bool>
@@ -411,7 +411,7 @@
         </rect>
        </property>
        <property name="title">
-        <string>Multipliers</string>
+        <string>Random motion on channels without scripts</string>
        </property>
        <widget class="QWidget" name="gridLayoutWidget">
         <property name="geometry">
@@ -428,8 +428,11 @@
          </property>
          <item row="0" column="0">
           <widget class="QCheckBox" name="enableMultiplierCheckbox">
+           <property name="toolTip">
+            <string>Enables the random motion on the channels below that have been checked.</string>
+           </property>
            <property name="text">
-            <string>Enable multiplier </string>
+            <string>Enable</string>
            </property>
           </widget>
          </item>
@@ -468,20 +471,27 @@
       <widget class="QWidget" name="formLayoutWidget">
        <property name="geometry">
         <rect>
-         <x>9</x>
-         <y>9</y>
+         <x>300</x>
+         <y>30</y>
          <width>431</width>
-         <height>531</height>
+         <height>451</height>
         </rect>
        </property>
        <layout class="QFormLayout" name="formLayout_2">
-        <item row="0" column="1">
-         <widget class="QComboBox" name="videoRendererComboBox"/>
-        </item>
         <item row="0" column="0">
          <widget class="QLabel" name="videoRendererLabel">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>Video renderer</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="videoRendererComboBox">
+          <property name="enabled">
+           <bool>false</bool>
           </property>
          </widget>
         </item>
@@ -490,8 +500,8 @@
       <widget class="QPushButton" name="savePriorityButton">
        <property name="geometry">
         <rect>
-         <x>1013</x>
-         <y>460</y>
+         <x>109</x>
+         <y>461</y>
          <width>91</width>
          <height>21</height>
         </rect>
@@ -503,8 +513,8 @@
       <widget class="QListWidget" name="decoderListWidget">
        <property name="geometry">
         <rect>
-         <x>914</x>
-         <y>29</y>
+         <x>10</x>
+         <y>30</y>
          <width>288</width>
          <height>425</height>
         </rect>
@@ -537,8 +547,8 @@
       <widget class="QLabel" name="label_3">
        <property name="geometry">
         <rect>
-         <x>914</x>
-         <y>10</y>
+         <x>10</x>
+         <y>11</y>
          <width>288</width>
          <height>13</height>
         </rect>
@@ -550,8 +560,8 @@
       <widget class="QPushButton" name="defaultPriorityButton">
        <property name="geometry">
         <rect>
-         <x>914</x>
-         <y>460</y>
+         <x>10</x>
+         <y>461</y>
          <width>93</width>
          <height>21</height>
         </rect>
@@ -563,8 +573,8 @@
       <widget class="QPushButton" name="cancelPriorityButton">
        <property name="geometry">
         <rect>
-         <x>1110</x>
-         <y>460</y>
+         <x>206</x>
+         <y>461</y>
          <width>92</width>
          <height>21</height>
         </rect>
@@ -579,6 +589,133 @@
        <string>System</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
+       <item row="5" column="9">
+        <widget class="QCheckBox" name="disableVRScriptNotFoundCheckbox">
+         <property name="toolTip">
+          <string>This disables the Script not found\n
+selector when in VR and the video playing\n
+has no script associated with it.</string>
+         </property>
+         <property name="text">
+          <string>Disable script selector in VR</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="8">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Tcode Tracks (Be careful here! May affect gamepad map. May require restart to take effect)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="16" column="6">
+        <widget class="QPushButton" name="channelAddButton">
+         <property name="text">
+          <string>Add Channel</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="9">
+        <widget class="QCheckBox" name="disableTextToSpeechCheckBox">
+         <property name="toolTip">
+          <string>This disables all speech in the app.</string>
+         </property>
+         <property name="text">
+          <string>Disable speech</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" rowspan="15" colspan="8">
+        <widget class="QTableView" name="channelTableView"/>
+       </item>
+       <item row="16" column="7">
+        <widget class="QPushButton" name="channelDeleteButton">
+         <property name="text">
+          <string>Delete Channel</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="10">
+        <widget class="QCheckBox" name="checkBox">
+         <property name="text">
+          <string>Debug</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="9">
+        <widget class="QCheckBox" name="hideWelcomeDialog">
+         <property name="text">
+          <string>Hide welcome dialog</string>
+         </property>
+        </widget>
+       </item>
+       <item row="16" column="0">
+        <widget class="QPushButton" name="axisDefaultButton">
+         <property name="text">
+          <string>Channel Default</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="10">
+        <widget class="QPushButton" name="exportButton">
+         <property name="text">
+          <string>Export settings</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="10">
+        <widget class="QPushButton" name="launchWelcomeDialog">
+         <property name="text">
+          <string>Open Welcome</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="9">
+        <widget class="QPushButton" name="importButton">
+         <property name="text">
+          <string>Import settings</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="9">
+        <widget class="QCheckBox" name="disableTCodeValidationCheckbox">
+         <property name="text">
+          <string>Disable serial TCode validation</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="9">
+        <widget class="QPushButton" name="passwordButton">
+         <property name="text">
+          <string>Set password</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="9" colspan="2">
+        <widget class="QComboBox" name="tCodeVersionComboBox"/>
+       </item>
+       <item row="4" column="9">
+        <widget class="QCheckBox" name="disableNoScriptFoundInLibrary">
+         <property name="toolTip">
+          <string>This will disable the warning that pops up\n
+when you play a video from the library window\n
+that has no script of the same name.</string>
+         </property>
+         <property name="text">
+          <string>Disable no script warning in library</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="9">
+        <widget class="QLabel" name="label_2">
+         <property name="toolTip">
+          <string>This sets the value the video will either skip forward or back via shortcuts.</string>
+         </property>
+         <property name="text">
+          <string>Video time step in secs</string>
+         </property>
+        </widget>
+       </item>
        <item row="8" column="10">
         <widget class="QSpinBox" name="videoIncrementSpinBox">
          <property name="toolTip">
@@ -602,109 +739,6 @@
          </property>
         </widget>
        </item>
-       <item row="10" column="9">
-        <widget class="QPushButton" name="libraryExclusionsBtn">
-         <property name="text">
-          <string>Library exclusions</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="9">
-        <widget class="QCheckBox" name="disableVRScriptNotFoundCheckbox">
-         <property name="toolTip">
-          <string>This disables the Script not found\n
-selector when in VR and the video playing\n
-has no script associated with it.</string>
-         </property>
-         <property name="text">
-          <string>Disable script selector in VR</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0" rowspan="11" colspan="9">
-        <widget class="QTableView" name="channelTableView"/>
-       </item>
-       <item row="12" column="8">
-        <widget class="QPushButton" name="channelDeleteButton">
-         <property name="text">
-          <string>Delete Channel</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="9">
-        <widget class="QPushButton" name="importButton">
-         <property name="text">
-          <string>Import</string>
-         </property>
-        </widget>
-       </item>
-       <item row="12" column="7">
-        <widget class="QPushButton" name="channelAddButton">
-         <property name="text">
-          <string>Add Channel</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="10">
-        <widget class="QPushButton" name="exportButton">
-         <property name="text">
-          <string>Export</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="9">
-        <widget class="QPushButton" name="passwordButton">
-         <property name="text">
-          <string>Set password</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="9" colspan="2">
-        <widget class="QComboBox" name="tCodeVersionComboBox"/>
-       </item>
-       <item row="12" column="0">
-        <widget class="QPushButton" name="axisDefaultButton">
-         <property name="text">
-          <string>Channel Default</string>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="9">
-        <widget class="QCheckBox" name="hideWelcomeDialog">
-         <property name="text">
-          <string>Hide welcome dialog</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="9">
-        <widget class="QCheckBox" name="disableNoScriptFoundInLibrary">
-         <property name="toolTip">
-          <string>This will disable the warning that pops up\n
-when you play a video from the library window\n
-that has no script of the same name.</string>
-         </property>
-         <property name="text">
-          <string>Disable no script warning in library</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="9">
-        <widget class="QCheckBox" name="disableTextToSpeechCheckBox">
-         <property name="toolTip">
-          <string>This disables all speech in the app.</string>
-         </property>
-         <property name="text">
-          <string>Disable speech</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Tcode Tracks (Be careful here! May affect gamepad map. May require restart to take effect)</string>
-         </property>
-        </widget>
-       </item>
        <item row="9" column="9">
         <widget class="QPushButton" name="thumbDirButton">
          <property name="text">
@@ -712,27 +746,10 @@ that has no script of the same name.</string>
          </property>
         </widget>
        </item>
-       <item row="7" column="10">
-        <widget class="QPushButton" name="launchWelcomeDialog">
+       <item row="10" column="9">
+        <widget class="QPushButton" name="libraryExclusionsBtn">
          <property name="text">
-          <string>Open Welcome</string>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="9">
-        <widget class="QLabel" name="label_2">
-         <property name="toolTip">
-          <string>This sets the value the video will either skip forward or back via shortcuts.</string>
-         </property>
-         <property name="text">
-          <string>Video time step in secs</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="9">
-        <widget class="QCheckBox" name="checkBox">
-         <property name="text">
-          <string>Debug</string>
+          <string>Library exclusions</string>
          </property>
         </widget>
        </item>

@@ -28,6 +28,7 @@ class SettingsHandler: public QObject
     Q_OBJECT
 signals:
     void tcodeVersionChanged();
+    void settingsChanged(bool dirty);
 
 public:
     static SettingsHandler& instance(){
@@ -36,6 +37,7 @@ public:
     static const QMap<TCodeVersion, QString> SupportedTCodeVersions;
     static const QString XTPVersion;
     static const float XTPVersionNum;
+    static bool getSettingsChanged();
     static bool getHideWelcomeScreen();
     static void setHideWelcomeScreen(bool value);
     static int getTCodePadding();
@@ -55,6 +57,8 @@ public:
     static QString getServerPort();
     static int getPlayerVolume();
     static int getoffSet();
+    static bool getDisableSerialTCodeValidation();
+    static void setDisableSerialTCodeValidation(bool value);
 
     static int getChannelUserMin(QString channel);
     static int getChannelUserMax(QString channel);
@@ -197,7 +201,8 @@ public:
     static void SetHashedPass(QString value);
 
     static QSize getMaxThumbnailSize();
-    static void setupAvailableAxis();
+    static void SetChannelMapDefaults();
+    static void SetGamepadMapDefaults();
     static void SetupDecoderPriority();
     static void Load(QSettings* settingsToLoadFrom = nullptr);
     static void Save(QSettings* settingsToSaveTo = nullptr);
@@ -212,7 +217,10 @@ private:
     SettingsHandler();
     ~SettingsHandler();
     static SettingsHandler m_instance;
+    static bool _settingsChanged;
+    static void settingsChangedEvent(bool dirty);
     static void SetMapDefaults();
+    static void setupAvailableAxis();
     static void setupGamepadButtonMap();
     static void MigrateTo23();
     static void MigrateTo25();
@@ -246,6 +254,7 @@ private:
     static bool whirligigEnabled;
     static int playerVolume;
     static int offSet;
+    static bool _disableSerialTCodeValidation;
     static QList<int> _mainWindowPos;
 
     static bool _gamePadEnabled;

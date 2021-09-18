@@ -48,7 +48,7 @@ public:
     void setSelectedDeviceHandler(DeviceHandler* device);
     DeviceHandler* getSelectedDeviceHandler();
     VRDeviceHandler* getConnectedVRHandler();
-    bool isConnected();
+    bool isDeviceConnected();
     void initDeviceRetry();
     void initDeoRetry();
     void dispose();
@@ -98,8 +98,6 @@ private slots:
 
     void on_networkPortTxt_editingFinished();
 
-    void on_buttonBox_clicked(QAbstractButton *button);
-
     void on_serialConnectButton_clicked();
 
     void on_networkConnectButton_clicked();
@@ -118,7 +116,7 @@ private slots:
 
     void on_gamePadCheckbox_clicked(bool checked);
 
-    void on_videoIncrementSpinBox_valueChanged(int value);
+    void on_videoIncrement_valueChanged(int value);
 
     void on_inverseTcXL0_valueChanged(bool checked);
     void on_inverseTcXRollR2_valueChanged(bool checked);
@@ -172,11 +170,14 @@ private slots:
 
     void on_tCodeVSComboBox_currentIndexChanged(int index);
 
-    void on_hideWelcomeDialog_toggled(bool checked);
+    void on_hideWelcomeDialog_clicked(bool checked);
 
     void on_launchWelcomeDialog_clicked();
 
     void on_videoRenderer_textChanged(const QString &value);
+
+    void on_disableTCodeValidationCheckbox_clicked(bool checked);
+    void on_settingsChange(bool dirty);
 
 private:
     Ui::SettingsDialog ui;
@@ -187,12 +188,12 @@ private:
     void initWhirligigEvent();
     void setupUi();
     void setupGamepadMap();
-
+    void enableOrDisableDeviceConnectionUI(DeviceType deviceType);
     QString encryptPass(QString pass);
     QString decryptPass(QString pass);
     LibraryExclusions* _libraryExclusions;
     bool _interfaceInitialized = false;
-    ConnectionStatus _outConnectionStatus = ConnectionStatus::Disconnected;
+    ConnectionStatus _outDeviceConnectionStatus = ConnectionStatus::Disconnected;
     ConnectionStatus _deoConnectionStatus = ConnectionStatus::Disconnected;
     ConnectionStatus _whirligigConnectionStatus = ConnectionStatus::Disconnected;
     ConnectionStatus _gamepadConnectionStatus = ConnectionStatus::Disconnected;
@@ -218,6 +219,7 @@ private:
 
     QLabel* offSetLabel;
     QSpinBox* offSetSpinBox;
+    QPushButton* saveAllBtn;
     bool hasVideoPlayed = false;
 
     void setDeviceStatusStyle(ConnectionStatus status, DeviceType deviceType, QString message = "");

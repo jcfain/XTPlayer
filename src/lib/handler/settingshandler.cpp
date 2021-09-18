@@ -64,6 +64,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     selectedDevice = settingsToLoadFrom->value("selectedDevice").toInt();
     playerVolume = settingsToLoadFrom->value("playerVolume").toInt();
     offSet = settingsToLoadFrom->value("offSet").toInt();
+    _disableSerialTCodeValidation = settingsToLoadFrom->value("disableSerialTCodeValidation").toBool();
     selectedFunscriptLibrary = settingsToLoadFrom->value("selectedFunscriptLibrary").toString();
     serialPort = settingsToLoadFrom->value("serialPort").toString();
     serverAddress = settingsToLoadFrom->value("serverAddress").toString();
@@ -204,6 +205,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
         }
 
     }
+    settingsChangedEvent(false);
 }
 
 void SettingsHandler::Save(QSettings* settingsToSaveTo)
@@ -224,6 +226,7 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         settingsToSaveTo->setValue("selectedDevice", selectedDevice);
         settingsToSaveTo->setValue("playerVolume", playerVolume);
         settingsToSaveTo->setValue("offSet", offSet);
+        settingsToSaveTo->setValue("disableSerialTCodeValidation", _disableSerialTCodeValidation);
         settingsToSaveTo->setValue("selectedFunscriptLibrary", selectedFunscriptLibrary);
         settingsToSaveTo->setValue("serialPort", serialPort);
         settingsToSaveTo->setValue("serverAddress", serverAddress);
@@ -313,6 +316,8 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
 
 
         settingsToSaveTo->sync();
+
+        settingsChangedEvent(false);
     }
 
 }
@@ -357,7 +362,19 @@ void SettingsHandler::Clear()
     QMutexLocker locker(&mutex);
     defaultReset = true;
     settings->clear();
+    settingsChangedEvent(true);
 }
+
+void SettingsHandler::settingsChangedEvent(bool dirty)
+{
+    _settingsChanged = dirty;
+    emit instance().settingsChanged(dirty);
+}
+bool SettingsHandler::getSettingsChanged()
+{
+    return _settingsChanged;
+}
+
 void SettingsHandler::PersistSelectSettings()
 {
     QVariantMap playlists;
@@ -375,13 +392,18 @@ void SettingsHandler::PersistSelectSettings()
 void SettingsHandler::Default()
 {
     Clear();
+    settingsChangedEvent(true);
 }
 
 void SettingsHandler::SetMapDefaults()
 {
+    SetChannelMapDefaults();
+    SetGamepadMapDefaults();
+}
+void SettingsHandler::SetChannelMapDefaults()
+{
     setupAvailableAxis();
     setSelectedTCodeVersion();
-    setupGamepadButtonMap();
     QVariantHash availableAxis;
     foreach(auto axis, _availableAxis.keys())
     {
@@ -390,6 +412,11 @@ void SettingsHandler::SetMapDefaults()
         availableAxis.insert(axis, axisVariant);
     }
     settings->setValue("availableAxis", availableAxis);
+    settingsChangedEvent(true);
+}
+void SettingsHandler::SetGamepadMapDefaults()
+{
+    setupGamepadButtonMap();
     QVariantHash gamepadMap;
     foreach(auto button, _gamepadButtonMap.keys())
     {
@@ -398,6 +425,7 @@ void SettingsHandler::SetMapDefaults()
         gamepadMap.insert(button, buttonVariant);
     }
     settings->setValue("gamepadButtonMap", gamepadMap);
+    settingsChangedEvent(true);
 }
 
 void SettingsHandler::MigrateTo23()
@@ -520,6 +548,7 @@ void SettingsHandler::setSelectedTCodeVersion(TCodeVersion key)
         TCodeChannelLookup::setSelectedTCodeVersion(_selectedTCodeVersion);
         setSelectedTCodeVersion();
         emit instance().tcodeVersionChanged();
+        settingsChangedEvent(true);
     }
 
 }
@@ -549,8 +578,8 @@ void SettingsHandler::setSelectedTCodeVersion()
     _liveXRangeMin = _availableAxis.value(TCodeChannelLookup::Stroke()).UserMin;
     _liveXRangeMid = _availableAxis.value(TCodeChannelLookup::Stroke()).UserMid;
 
-//    ChannelModel suckMoreModel = { "Suck more", TCodeChannelLookup::SuckMore(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::HalfRange, "suck", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::StrokeUp() };
-//    ChannelModel suckLessModel = { "Suck less", TCodeChannelLookup::SuckLess(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::HalfRange, "suck", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::StrokeDown() };
+//    ChannelModel suckMoreModel = { "Suck more", TCodeChannelLookup::SuckMore(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::HalfRange, "suck", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeUp() };
+//    ChannelModel suckLessModel = { "Suck less", TCodeChannelLookup::SuckLess(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::HalfRange, "suck", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeDown() };
     if(_selectedTCodeVersion == TCodeVersion::v3)
     {
         auto v2ChannelMap = TCodeChannelLookup::TCodeVersionMap.value(TCodeVersion::v2);
@@ -591,9 +620,9 @@ void SettingsHandler::setSelectedTCodeVersion()
             _availableAxis.remove(suckLessV2Channel);
         }
 
-        ChannelModel suctionPositionModel = { "Suck manual", TCodeChannelLookup::SuckPosition(), TCodeChannelLookup::SuckPosition(), 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::Range, "suckManual", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::Stroke() };
-        ChannelModel suctionMorePositionModel = { "Suck manual more ", TCodeChannelLookup::SuckMorePosition(), TCodeChannelLookup::SuckPosition(), 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::HalfRange, "suckManual", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::StrokeUp() };
-        ChannelModel suctionLessPositionModel = { "Suck manual less ", TCodeChannelLookup::SuckLessPosition(), TCodeChannelLookup::SuckPosition(), 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::HalfRange, "suckManual", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::StrokeDown() };
+        ChannelModel suctionPositionModel = { "Suck manual", TCodeChannelLookup::SuckPosition(), TCodeChannelLookup::SuckPosition(), 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::Range, "suckManual", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Stroke() };
+        ChannelModel suctionMorePositionModel = { "Suck manual more ", TCodeChannelLookup::SuckMorePosition(), TCodeChannelLookup::SuckPosition(), 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::HalfRange, "suckManual", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeUp() };
+        ChannelModel suctionLessPositionModel = { "Suck manual less ", TCodeChannelLookup::SuckLessPosition(), TCodeChannelLookup::SuckPosition(), 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::HalfRange, "suckManual", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeDown() };
        _availableAxis.insert(TCodeChannelLookup::SuckPosition(), suctionPositionModel);
        _availableAxis.insert(TCodeChannelLookup::SuckMorePosition(), suctionMorePositionModel);
        _availableAxis.insert(TCodeChannelLookup::SuckLessPosition(), suctionLessPositionModel);
@@ -657,6 +686,7 @@ bool SettingsHandler::getHideWelcomeScreen()
 void SettingsHandler::setHideWelcomeScreen(bool value)
 {
     _hideWelcomeScreen = value;
+    settingsChangedEvent(true);
 }
 
 int SettingsHandler::getTCodePadding()
@@ -742,11 +772,21 @@ int SettingsHandler::getLiveOffSet()
     QMutexLocker locker(&mutex);
     return _liveOffset;
 }
-
 void SettingsHandler::setLiveOffset(int value)
 {
     QMutexLocker locker(&mutex);
     _liveOffset = value;
+    settingsChangedEvent(true);
+}
+
+bool SettingsHandler::getDisableSerialTCodeValidation()
+{
+    return _disableSerialTCodeValidation;
+}
+void SettingsHandler::setDisableSerialTCodeValidation(bool value)
+{
+    _disableSerialTCodeValidation = value;
+    settingsChangedEvent(true);
 }
 
 int SettingsHandler::getChannelUserMin(QString channel)
@@ -765,6 +805,7 @@ void SettingsHandler::setChannelUserMin(QString channel, int value)
     _availableAxis[channel].UserMin = value;
     if(channel == TCodeChannelLookup::Stroke())
         _liveXRangeMin = value;
+    settingsChangedEvent(true);
 }
 void SettingsHandler::setChannelUserMax(QString channel, int value)
 {
@@ -772,6 +813,7 @@ void SettingsHandler::setChannelUserMax(QString channel, int value)
     _availableAxis[channel].UserMax = value;
     if(channel == TCodeChannelLookup::Stroke())
         _liveXRangeMax = value;
+    settingsChangedEvent(true);
 }
 void SettingsHandler::setChannelUserMid(QString channel, int value)
 {
@@ -779,6 +821,7 @@ void SettingsHandler::setChannelUserMid(QString channel, int value)
     _availableAxis[channel].UserMid = value;
     if(channel == TCodeChannelLookup::Stroke())
         _liveXRangeMid = value;
+    settingsChangedEvent(true);
 }
 
 float SettingsHandler::getMultiplierValue(QString channel)
@@ -793,6 +836,7 @@ void SettingsHandler::setMultiplierValue(QString channel, float value)
     QMutexLocker locker(&mutex);
     if(_availableAxis.contains(channel))
         _availableAxis[channel].MultiplierValue = value;
+    settingsChangedEvent(true);
 }
 
 bool SettingsHandler::getMultiplierChecked(QString channel)
@@ -807,6 +851,7 @@ void SettingsHandler::setMultiplierChecked(QString channel, bool value)
     QMutexLocker locker(&mutex);
     if(_availableAxis.contains(channel))
         _availableAxis[channel].MultiplierEnabled = value;
+    settingsChangedEvent(true);
 }
 
 bool SettingsHandler::getChannelInverseChecked(QString channel)
@@ -821,6 +866,7 @@ void SettingsHandler::setChannelInverseChecked(QString channel, bool value)
     QMutexLocker locker(&mutex);
     if(_availableAxis.contains(channel))
         _availableAxis[channel].Inverted = value;
+    settingsChangedEvent(true);
 }
 
 float SettingsHandler::getDamperValue(QString channel)
@@ -835,6 +881,7 @@ void SettingsHandler::setDamperValue(QString channel, float value)
     QMutexLocker locker(&mutex);
     if(_availableAxis.contains(channel))
         _availableAxis[channel].DamperValue = value;
+    settingsChangedEvent(true);
 }
 
 bool SettingsHandler::getDamperChecked(QString channel)
@@ -849,6 +896,7 @@ void SettingsHandler::setDamperChecked(QString channel, bool value)
     QMutexLocker locker(&mutex);
     if(_availableAxis.contains(channel))
         _availableAxis[channel].DamperEnabled = value;
+    settingsChangedEvent(true);
 }
 
 bool SettingsHandler::getLinkToRelatedAxisChecked(QString channel)
@@ -863,6 +911,7 @@ void SettingsHandler::setLinkToRelatedAxisChecked(QString channel, bool value)
     QMutexLocker locker(&mutex);
     if(_availableAxis.contains(channel))
         _availableAxis[channel].LinkToRelatedMFS = value;
+    settingsChangedEvent(true);
 }
 
 void SettingsHandler::setLinkToRelatedAxis(QString channel, QString linkedChannel)
@@ -870,6 +919,7 @@ void SettingsHandler::setLinkToRelatedAxis(QString channel, QString linkedChanne
     QMutexLocker locker(&mutex);
     if(_availableAxis.contains(channel))
         _availableAxis[channel].RelatedChannel = linkedChannel;
+    settingsChangedEvent(true);
 }
 
 QString SettingsHandler::getDeoDnlaFunscript(QString key)
@@ -914,6 +964,7 @@ void SettingsHandler::setGamepadSpeed(int value)
 {
     QMutexLocker locker(&mutex);
     _gamepadSpeed = value;
+    settingsChangedEvent(true);
 }
 
 int SettingsHandler::getGamepadSpeedIncrement()
@@ -926,6 +977,7 @@ void SettingsHandler::setGamepadSpeedStep(int value)
 {
     QMutexLocker locker(&mutex);
     _gamepadSpeedStep = value;
+    settingsChangedEvent(true);
 }
 
 int SettingsHandler::getLiveGamepadSpeed()
@@ -959,6 +1011,7 @@ void SettingsHandler::setXRangeStep(int value)
 {
     QMutexLocker locker(&mutex);
     _xRangeStep = value;
+    settingsChangedEvent(true);
 }
 
 int SettingsHandler::getXRangeStep()
@@ -1038,6 +1091,7 @@ void SettingsHandler::setDisableSpeechToText(bool value)
 {
     QMutexLocker locker(&mutex);
     disableSpeechToText = value;
+    settingsChangedEvent(true);
 }
 
 bool SettingsHandler::getDisableNoScriptFound()
@@ -1048,6 +1102,7 @@ void SettingsHandler::setDisableNoScriptFound(bool value)
 {
     QMutexLocker locker(&mutex);
     _disableNoScriptFound = value;
+    settingsChangedEvent(true);
 }
 
 bool SettingsHandler::getDisableVRScriptSelect()
@@ -1058,11 +1113,13 @@ void SettingsHandler::setDisableVRScriptSelect(bool value)
 {
     QMutexLocker locker(&mutex);
     _disableVRScriptSelect = value;
+    settingsChangedEvent(true);
 }
 
 void SettingsHandler::setLibrarySortMode(int value)
 {
     _librarySortMode = value;
+    settingsChangedEvent(true);
 }
 LibrarySortMode SettingsHandler::getLibrarySortMode()
 {
@@ -1092,52 +1149,62 @@ void SettingsHandler::setSelectedTheme(QString value)
 {
     QMutexLocker locker(&mutex);
     selectedTheme = value;
+    settingsChangedEvent(true);
 }
 void SettingsHandler::setSelectedLibrary(QString value)
 {
     QMutexLocker locker(&mutex);
     selectedLibrary = value;
+    settingsChangedEvent(true);
 }
 void SettingsHandler::setSelectedFunscriptLibrary(QString value)
 {
     QMutexLocker locker(&mutex);
     selectedFunscriptLibrary = value;
+    settingsChangedEvent(true);
 }
 void SettingsHandler::setSelectedDevice(int value)
 {
     QMutexLocker locker(&mutex);
     selectedDevice = value;
+    settingsChangedEvent(true);
 }
 void SettingsHandler::setSerialPort(QString value)
 {
     QMutexLocker locker(&mutex);
     serialPort = value;
+    settingsChangedEvent(true);
 }
 void SettingsHandler::setServerAddress(QString value)
 {
     QMutexLocker locker(&mutex);
     serverAddress = value;
+    settingsChangedEvent(true);
 }
 void SettingsHandler::setServerPort(QString value)
 {
     QMutexLocker locker(&mutex);
     serverPort = value;
+    settingsChangedEvent(true);
 }
 
 void SettingsHandler::setDeoAddress(QString value)
 {
     QMutexLocker locker(&mutex);
     deoAddress = value;
+    settingsChangedEvent(true);
 }
 void SettingsHandler::setDeoPort(QString value)
 {
     QMutexLocker locker(&mutex);
     deoPort = value;
+    settingsChangedEvent(true);
 }
 void SettingsHandler::setDeoEnabled(bool value)
 {
     QMutexLocker locker(&mutex);
     deoEnabled = value;
+    settingsChangedEvent(true);
 }
 QString SettingsHandler::getDeoAddress()
 {
@@ -1159,16 +1226,19 @@ void SettingsHandler::setWhirligigAddress(QString value)
 {
     QMutexLocker locker(&mutex);
     whirligigAddress = value;
+    settingsChangedEvent(true);
 }
 void SettingsHandler::setWhirligigPort(QString value)
 {
     QMutexLocker locker(&mutex);
     whirligigPort = value;
+    settingsChangedEvent(true);
 }
 void SettingsHandler::setWhirligigEnabled(bool value)
 {
     QMutexLocker locker(&mutex);
     whirligigEnabled = value;
+    settingsChangedEvent(true);
 }
 QString SettingsHandler::getWhirligigAddress()
 {
@@ -1190,12 +1260,14 @@ void SettingsHandler::setPlayerVolume(int value)
 {
     QMutexLocker locker(&mutex);
     playerVolume = value;
+    settingsChangedEvent(true);
 }
 
 void SettingsHandler::setLibraryView(int value)
 {
     QMutexLocker locker(&mutex);
     libraryView = value;
+    settingsChangedEvent(true);
 }
 LibraryView SettingsHandler::getLibraryView()
 {
@@ -1223,6 +1295,7 @@ void SettingsHandler::setThumbSize(int value)
     {
         thumbSize = value;
     }
+    settingsChangedEvent(true);
 }
 
 QSize SettingsHandler::getMaxThumbnailSize()
@@ -1239,24 +1312,28 @@ int SettingsHandler::getVideoIncrement()
 void SettingsHandler::setVideoIncrement(int value)
 {
     videoIncrement = value;
+    settingsChangedEvent(true);
 }
 
 void SettingsHandler::setDeoDnlaFunscript(QString key, QString value)
 {
     QMutexLocker locker(&mutex);
     deoDnlaFunscriptLookup[key] = value;
+    settingsChangedEvent(true);
 }
 
 void SettingsHandler::setGamepadEnabled(bool value)
 {
     QMutexLocker locker(&mutex);
     _gamePadEnabled = value;
+    settingsChangedEvent(true);
 }
 
 void SettingsHandler::setAxis(QString axis, ChannelModel channel)
 {
     QMutexLocker locker(&mutex);
     _availableAxis[axis] = channel;
+    settingsChangedEvent(true);
 }
 
 void SettingsHandler::addAxis(ChannelModel channel)
@@ -1265,11 +1342,13 @@ void SettingsHandler::addAxis(ChannelModel channel)
     _availableAxis.insert(channel.AxisName, channel);
     if(!TCodeChannelLookup::ChannelExists(channel.AxisName))
         TCodeChannelLookup::AddUserAxis(channel.AxisName);
+    settingsChangedEvent(true);
 }
 
 void SettingsHandler::setDecoderPriority(QList<DecoderModel> value)
 {
     decoderPriority = value;
+    settingsChangedEvent(true);
 }
 QList<DecoderModel> SettingsHandler::getDecoderPriority()
 {
@@ -1278,6 +1357,7 @@ QList<DecoderModel> SettingsHandler::getDecoderPriority()
 void SettingsHandler::setSelectedVideoRenderer(XVideoRenderer value)
 {
     _selectedVideoRenderer = value;
+    settingsChangedEvent(true);
 }
 XVideoRenderer SettingsHandler::getSelectedVideoRenderer()
 {
@@ -1287,28 +1367,33 @@ void SettingsHandler::deleteAxis(QString axis)
 {
     QMutexLocker locker(&mutex);
     _availableAxis.remove(axis);
+    settingsChangedEvent(true);
 }
 
 void SettingsHandler::setGamePadMapButton(QString gamePadButton, QString axis)
 {
     QMutexLocker locker(&mutex);
     _gamepadButtonMap[gamePadButton] = axis;
+    settingsChangedEvent(true);
 }
 
 void SettingsHandler::setInverseTcXL0(bool value)
 {
     QMutexLocker locker(&mutex);
     _inverseStroke = value;
+    settingsChangedEvent(true);
 }
 void SettingsHandler::setInverseTcXRollR2(bool value)
 {
     QMutexLocker locker(&mutex);
     _inversePitch = value;
+    settingsChangedEvent(true);
 }
 void SettingsHandler::setInverseTcYRollR1(bool value)
 {
     QMutexLocker locker(&mutex);
     _inverseRoll  = value;
+    settingsChangedEvent(true);
 }
 
 QList<int> SettingsHandler::getMainWindowSplitterPos()
@@ -1320,16 +1405,19 @@ void SettingsHandler::setMainWindowSplitterPos(QList<int> value)
 {
     QMutexLocker locker(&mutex);
     _mainWindowPos = value;
+    settingsChangedEvent(true);
 }
 
 void SettingsHandler::addToLibraryExclusions(QString values)
 {
     _libraryExclusions.append(values);
+    settingsChangedEvent(true);
 }
 void SettingsHandler::removeFromLibraryExclusions(QList<int> indexes)
 {
     foreach(auto index, indexes)
         _libraryExclusions.removeAt(index);
+    settingsChangedEvent(true);
 }
 QList<QString> SettingsHandler::getLibraryExclusions()
 {
@@ -1343,25 +1431,30 @@ QMap<QString, QList<LibraryListItem>> SettingsHandler::getPlaylists()
 void SettingsHandler::setPlaylists(QMap<QString, QList<LibraryListItem>> value)
 {
     _playlists = value;
+    settingsChangedEvent(true);
 }
 void SettingsHandler::updatePlaylist(QString name, QList<LibraryListItem> value)
 {
     _playlists.insert(name, value);
+    settingsChangedEvent(true);
 }
 void SettingsHandler::addToPlaylist(QString name, LibraryListItem value)
 {
     auto playlist = _playlists.value(name);
     playlist.append(value);
     _playlists.insert(name, playlist);
+    settingsChangedEvent(true);
 }
 void SettingsHandler::addNewPlaylist(QString name)
 {
     QList<LibraryListItem> playlist;
     _playlists.insert(name, playlist);
+    settingsChangedEvent(true);
 }
 void SettingsHandler::deletePlaylist(QString name)
 {
     _playlists.remove(name);
+    settingsChangedEvent(true);
 }
 
 QString SettingsHandler::GetHashedPass()
@@ -1371,36 +1464,37 @@ QString SettingsHandler::GetHashedPass()
 void SettingsHandler::SetHashedPass(QString value)
 {
     _hashedPass = value;
+    settingsChangedEvent(true);
 }
 
 void SettingsHandler::setupAvailableAxis()
 {
     TCodeChannelLookup::setSelectedTCodeVersion(_selectedTCodeVersion);
     _availableAxis = {
-        {TCodeChannelLookup::None(), { "None", TCodeChannelLookup::None(), TCodeChannelLookup::None(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::None, "", false, 0.01f, false, 0.2f, false, false, "" } },
-        {TCodeChannelLookup::Stroke(), { "Stroke", TCodeChannelLookup::Stroke(), TCodeChannelLookup::Stroke(), 0, 500, 999, 0, 500, 999, AxisDimension::Heave, AxisType::Range, "", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::Twist() } },
-        {TCodeChannelLookup::StrokeDown(), { "Stroke Down", TCodeChannelLookup::StrokeDown(), TCodeChannelLookup::Stroke(), 0, 500, 999, 0, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::TwistCounterClockwise() } },
-        {TCodeChannelLookup::StrokeUp(), { "Stroke Up", TCodeChannelLookup::StrokeUp(), TCodeChannelLookup::Stroke(), 0, 500, 999, 0, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::TwistClockwise() } },
-        {TCodeChannelLookup::Sway(), { "Sway", TCodeChannelLookup::Sway(), TCodeChannelLookup::Sway(), 0, 500, 999, 0, 500, 999, AxisDimension::Sway, AxisType::Range, "sway", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::Roll() } },
-        {TCodeChannelLookup::SwayLeft(), { "Sway Left", TCodeChannelLookup::SwayLeft(), TCodeChannelLookup::Sway(), 0, 500, 999, 0, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::RollLeft() } },
-        {TCodeChannelLookup::SwayRight(), { "Sway Right", TCodeChannelLookup::SwayRight(), TCodeChannelLookup::Sway(), 0, 500, 999, 0, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::RollRight() } },
-        {TCodeChannelLookup::Surge(), { "Surge", TCodeChannelLookup::Surge(), TCodeChannelLookup::Surge(), 0, 500, 999, 0, 500, 999, AxisDimension::Surge, AxisType::Range, "surge", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::Pitch() } },
-        {TCodeChannelLookup::SurgeBack(), { "Surge Back", TCodeChannelLookup::SurgeBack(), TCodeChannelLookup::Surge(), 0, 500, 999, 0, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::PitchBack() } },
-        {TCodeChannelLookup::SurgeForward(), { "Surge Forward", TCodeChannelLookup::SurgeForward(), TCodeChannelLookup::Surge(), 0, 500, 999, 0, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::PitchForward() } },
-        {TCodeChannelLookup::Pitch(), { "Pitch", TCodeChannelLookup::Pitch(), TCodeChannelLookup::Pitch(), 0, 500, 999, 0, 500, 999, AxisDimension::Pitch, AxisType::Range, "pitch", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::Surge() } },
-        {TCodeChannelLookup::PitchForward(), { "Pitch Forward", TCodeChannelLookup::PitchForward(), TCodeChannelLookup::Pitch(), 0, 500, 999, 0, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::SurgeForward() } },
-        {TCodeChannelLookup::PitchBack(), { "Pitch Back", TCodeChannelLookup::PitchBack(), TCodeChannelLookup::Pitch(), 0, 500, 999, 0, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::SurgeBack() } },
-        {TCodeChannelLookup::Roll(), { "Roll", TCodeChannelLookup::Roll(), TCodeChannelLookup::Roll(), 0, 500, 999, 0, 500, 999, AxisDimension::Roll, AxisType::Range, "roll", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::Sway() } },
-        {TCodeChannelLookup::RollLeft(), { "Roll Left", TCodeChannelLookup::RollLeft(), TCodeChannelLookup::Roll(), 0, 500, 999, 0, 500, 999, AxisDimension::Roll, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::SwayLeft() } },
+        {TCodeChannelLookup::None(), { "None", TCodeChannelLookup::None(), TCodeChannelLookup::None(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::None, "", false, 2.50f, false, 1.0f, false, false, "" } },
+        {TCodeChannelLookup::Stroke(), { "Stroke", TCodeChannelLookup::Stroke(), TCodeChannelLookup::Stroke(), 0, 500, 999, 0, 500, 999, AxisDimension::Heave, AxisType::Range, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Twist() } },
+        {TCodeChannelLookup::StrokeDown(), { "Stroke Down", TCodeChannelLookup::StrokeDown(), TCodeChannelLookup::Stroke(), 0, 500, 999, 0, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::TwistCounterClockwise() } },
+        {TCodeChannelLookup::StrokeUp(), { "Stroke Up", TCodeChannelLookup::StrokeUp(), TCodeChannelLookup::Stroke(), 0, 500, 999, 0, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::TwistClockwise() } },
+        {TCodeChannelLookup::Sway(), { "Sway", TCodeChannelLookup::Sway(), TCodeChannelLookup::Sway(), 0, 500, 999, 0, 500, 999, AxisDimension::Sway, AxisType::Range, "sway", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Roll() } },
+        {TCodeChannelLookup::SwayLeft(), { "Sway Left", TCodeChannelLookup::SwayLeft(), TCodeChannelLookup::Sway(), 0, 500, 999, 0, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::RollLeft() } },
+        {TCodeChannelLookup::SwayRight(), { "Sway Right", TCodeChannelLookup::SwayRight(), TCodeChannelLookup::Sway(), 0, 500, 999, 0, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::RollRight() } },
+        {TCodeChannelLookup::Surge(), { "Surge", TCodeChannelLookup::Surge(), TCodeChannelLookup::Surge(), 0, 500, 999, 0, 500, 999, AxisDimension::Surge, AxisType::Range, "surge", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Pitch() } },
+        {TCodeChannelLookup::SurgeBack(), { "Surge Back", TCodeChannelLookup::SurgeBack(), TCodeChannelLookup::Surge(), 0, 500, 999, 0, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::PitchBack() } },
+        {TCodeChannelLookup::SurgeForward(), { "Surge Forward", TCodeChannelLookup::SurgeForward(), TCodeChannelLookup::Surge(), 0, 500, 999, 0, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::PitchForward() } },
+        {TCodeChannelLookup::Pitch(), { "Pitch", TCodeChannelLookup::Pitch(), TCodeChannelLookup::Pitch(), 0, 500, 999, 0, 500, 999, AxisDimension::Pitch, AxisType::Range, "pitch", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Surge() } },
+        {TCodeChannelLookup::PitchForward(), { "Pitch Forward", TCodeChannelLookup::PitchForward(), TCodeChannelLookup::Pitch(), 0, 500, 999, 0, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::SurgeForward() } },
+        {TCodeChannelLookup::PitchBack(), { "Pitch Back", TCodeChannelLookup::PitchBack(), TCodeChannelLookup::Pitch(), 0, 500, 999, 0, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::SurgeBack() } },
+        {TCodeChannelLookup::Roll(), { "Roll", TCodeChannelLookup::Roll(), TCodeChannelLookup::Roll(), 0, 500, 999, 0, 500, 999, AxisDimension::Roll, AxisType::Range, "roll", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Sway() } },
+        {TCodeChannelLookup::RollLeft(), { "Roll Left", TCodeChannelLookup::RollLeft(), TCodeChannelLookup::Roll(), 0, 500, 999, 0, 500, 999, AxisDimension::Roll, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::SwayLeft() } },
         {TCodeChannelLookup::RollRight(), { "Roll Right", TCodeChannelLookup::RollRight(), TCodeChannelLookup::Roll(), 0, 500, 999, 0, 500, 999, AxisDimension::Roll, AxisType::HalfRange, "", false, 0.01f, false, 0.2f , false, false, TCodeChannelLookup::SwayRight() } },
-        {TCodeChannelLookup::Twist(), { "Twist", TCodeChannelLookup::Twist(), TCodeChannelLookup::Twist(), 0, 500, 999, 0, 500, 999, AxisDimension::Yaw, AxisType::Range, "twist", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::Stroke() } },
-        {TCodeChannelLookup::TwistClockwise(), { "Twist (CW)", TCodeChannelLookup::TwistClockwise(), TCodeChannelLookup::Twist(), 0, 500, 999, 0, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::StrokeUp() } },
-        {TCodeChannelLookup::TwistCounterClockwise(), { "Twist (CCW)", TCodeChannelLookup::TwistCounterClockwise(), TCodeChannelLookup::Twist(), 0, 500, 999, 0, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::StrokeDown() } },
-        {TCodeChannelLookup::Vib(), { "Vib", TCodeChannelLookup::Vib(), TCodeChannelLookup::Vib(), 0, 0, 999, 0, 0, 999, AxisDimension::None, AxisType::Switch, "vib", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::Stroke() } },
-        {TCodeChannelLookup::Lube(), { "Lube", TCodeChannelLookup::Lube(), TCodeChannelLookup::Lube(), 0, 0, 999, 0, 0, 999, AxisDimension::None, AxisType::Switch, "lube", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::Stroke() } },
-        {TCodeChannelLookup::Suck(), { "Suck", TCodeChannelLookup::Suck(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::Range, "suck", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::Stroke() } },
-        {TCodeChannelLookup::SuckMore(), { "Suck more", TCodeChannelLookup::SuckMore(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::HalfRange, "suck", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::StrokeUp() } },
-        {TCodeChannelLookup::SuckLess(), { "Suck less", TCodeChannelLookup::SuckLess(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::HalfRange, "suck", false, 0.01f, false, 0.2f, false, false, TCodeChannelLookup::StrokeDown() } }
+        {TCodeChannelLookup::Twist(), { "Twist", TCodeChannelLookup::Twist(), TCodeChannelLookup::Twist(), 0, 500, 999, 0, 500, 999, AxisDimension::Yaw, AxisType::Range, "twist", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Stroke() } },
+        {TCodeChannelLookup::TwistClockwise(), { "Twist (CW)", TCodeChannelLookup::TwistClockwise(), TCodeChannelLookup::Twist(), 0, 500, 999, 0, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeUp() } },
+        {TCodeChannelLookup::TwistCounterClockwise(), { "Twist (CCW)", TCodeChannelLookup::TwistCounterClockwise(), TCodeChannelLookup::Twist(), 0, 500, 999, 0, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeDown() } },
+        {TCodeChannelLookup::Vib(), { "Vib", TCodeChannelLookup::Vib(), TCodeChannelLookup::Vib(), 0, 0, 999, 0, 0, 999, AxisDimension::None, AxisType::Switch, "vib", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Stroke() } },
+        {TCodeChannelLookup::Lube(), { "Lube", TCodeChannelLookup::Lube(), TCodeChannelLookup::Lube(), 0, 0, 999, 0, 0, 999, AxisDimension::None, AxisType::Switch, "lube", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Stroke() } },
+        {TCodeChannelLookup::Suck(), { "Suck", TCodeChannelLookup::Suck(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::Range, "suck", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Stroke() } },
+        {TCodeChannelLookup::SuckMore(), { "Suck more", TCodeChannelLookup::SuckMore(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::HalfRange, "suck", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeUp() } },
+        {TCodeChannelLookup::SuckLess(), { "Suck less", TCodeChannelLookup::SuckLess(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::HalfRange, "suck", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeDown() } }
     };
 }
 
@@ -1410,8 +1504,8 @@ void SettingsHandler::setupGamepadButtonMap()
     _gamepadButtonMap = {
         { "None", TCodeChannelLookup::None() },
         { gamepadAxisNames.LeftXAxis, TCodeChannelLookup::Twist() },
-        { gamepadAxisNames.LeftYAxis,  TCodeChannelLookup::Stroke() },
-        { gamepadAxisNames.RightYAxis ,  TCodeChannelLookup::Pitch()  },
+        { gamepadAxisNames.LeftYAxis, TCodeChannelLookup::Stroke() },
+        { gamepadAxisNames.RightYAxis, TCodeChannelLookup::Pitch()  },
         { gamepadAxisNames.RightXAxis, TCodeChannelLookup::Roll()  },
         { gamepadAxisNames.RightTrigger, mediaActions.IncreaseXRange },
         { gamepadAxisNames.LeftTrigger, mediaActions.DecreaseXRange },
@@ -1502,10 +1596,12 @@ void SettingsHandler::updateLibraryListItemMetaData(LibraryListItemMetaData258 l
 {
     QMutexLocker locker(&mutex);
     _libraryListItemMetaDatas.insert(libraryListItemMetaData.libraryItemPath, libraryListItemMetaData);
+    settingsChangedEvent(true);
 }
 
 QSettings* SettingsHandler::settings;
 SettingsHandler SettingsHandler::m_instance;
+bool SettingsHandler::_settingsChanged;
 TCodeVersion SettingsHandler::_selectedTCodeVersion;
 bool SettingsHandler::_hideWelcomeScreen;
 QMutex SettingsHandler::mutex;
@@ -1523,6 +1619,7 @@ int SettingsHandler::selectedDevice;
 int SettingsHandler::_librarySortMode;
 int SettingsHandler::playerVolume;
 int SettingsHandler::offSet;
+bool SettingsHandler::_disableSerialTCodeValidation;
 
 int SettingsHandler::libraryView = LibraryView::Thumb;
 int SettingsHandler::thumbSize = 175;

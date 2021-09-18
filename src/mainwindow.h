@@ -295,6 +295,7 @@ private:
     void deleteSelectedPlaylist();
     QString getPlaylistName(bool newPlaylist = true);
     void loadTheme(QString cssFilePath);
+    void sortLibraryList(LibrarySortMode sortMode);
 
     void changelibraryDisplayMode(LibraryView value);
 

@@ -271,14 +271,13 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     if (SettingsHandler::getLibraryView() == LibraryView::List)
     {
         ui->actionList->setChecked(true);
-        on_actionList_triggered();
     }
     else
     {
         ui->actionThumbnail->setChecked(true);
-        on_actionThumbnail_triggered();
     }
 
+    changelibraryDisplayMode(SettingsHandler::getLibraryView());
 
     auto splitterSizes = SettingsHandler::getMainWindowSplitterPos();
     if (splitterSizes.count() > 0)
@@ -829,13 +828,13 @@ void MainWindow::mediaAction(QString action)
 void MainWindow::deviceHome()
 {
     auto deviceHandler = _xSettings->getSelectedDeviceHandler();
-    if(deviceHandler != nullptr && _xSettings->isConnected())
+    if(deviceHandler != nullptr && _xSettings->isDeviceConnected())
         deviceHandler->sendTCode(tcodeHandler->getAllHome());
 }
 void MainWindow::deviceSwitchedHome()
 {
     auto deviceHandler = _xSettings->getSelectedDeviceHandler();
-    if(deviceHandler != nullptr && _xSettings->isConnected())
+    if(deviceHandler != nullptr && _xSettings->isDeviceConnected())
         deviceHandler->sendTCode(tcodeHandler->getSwitchedHome());
 }
 
@@ -857,7 +856,7 @@ void MainWindow::on_audioLevel_Change(int decibelL,int decibelR)
 //    if (timer2 - timer1 >= 1)
 //    {
 //    timer1 = timer2;
-        if(_xSettings->isConnected())
+        if(_xSettings->isDeviceConnected())
         {
     //        strokerLastUpdate = time;
             auto availibleAxis = SettingsHandler::getAvailableAxis();
@@ -2442,7 +2441,7 @@ void MainWindow::syncVRFunscript()
         while (_xSettings->getConnectedVRHandler()->isConnected() && !videoHandler->isPlaying())
         {
             //timer.start();
-            if(!SettingsHandler::getLiveActionPaused() && _xSettings->isConnected() && funscriptHandler->isLoaded() && !currentVRPacket.path.isEmpty() && currentVRPacket.duration > 0 && currentVRPacket.playing)
+            if(!SettingsHandler::getLiveActionPaused() && _xSettings->isDeviceConnected() && funscriptHandler->isLoaded() && !currentVRPacket.path.isEmpty() && currentVRPacket.duration > 0 && currentVRPacket.playing)
             {
                 //execute once every millisecond
                 if (timer2 - timer1 >= 1)
@@ -2495,7 +2494,7 @@ void MainWindow::syncVRFunscript()
                 timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
                 //LogHandler::Debug("timer nsecsElapsed: "+QString::number(timer2));
             }
-            else if(!currentVRPacket.path.isEmpty() && !funscriptHandler->isLoaded() && _xSettings->isConnected() && currentVRPacket.duration > 0 && currentVRPacket.playing)
+            else if(!currentVRPacket.path.isEmpty() && !funscriptHandler->isLoaded() && _xSettings->isDeviceConnected() && currentVRPacket.duration > 0 && currentVRPacket.playing)
             {
                 //LogHandler::Debug("Enter syncDeoFunscript load funscript");
                 QString funscriptPath = SettingsHandler::getDeoDnlaFunscript(currentVRPacket.path);
@@ -2569,7 +2568,7 @@ void MainWindow::syncFunscript()
             if (timer2 - timer1 >= 1)
             {
                 timer1 = timer2;
-                if(!SettingsHandler::getLiveActionPaused() && _xSettings->isConnected())
+                if(!SettingsHandler::getLiveActionPaused() && _xSettings->isDeviceConnected())
                 {
                     qint64 currentTime = videoHandler->position();
                     actionPosition = funscriptHandler->getPosition(currentTime);
@@ -2599,9 +2598,12 @@ void MainWindow::syncFunscript()
 
 void MainWindow::on_gamepad_sendTCode(QString value)
 {
-    if(_xSettings->isConnected())
+    if(_xSettings->isDeviceConnected())
     {
-        if(SettingsHandler::getFunscriptLoaded(TCodeChannelLookup::Stroke()) && (videoHandler->isPlaying() || _xSettings->getDeoHandler()->isPlaying()))
+        if(SettingsHandler::getFunscriptLoaded(
+                TCodeChannelLookup::Stroke()) &&
+                !SettingsHandler::getLiveActionPaused() &&
+                ((videoHandler->isPlaying() && !videoHandler->isPaused()) || _xSettings->getDeoHandler()->isPlaying() || _xSettings->getWhirligigHandler()->isPlaying() ))
         {
             QRegularExpression rx("L0[^\\s]*\\s?");
             value = value.remove(rx);
@@ -3040,62 +3042,62 @@ void MainWindow::updateThumbSizeUI(int size)
     {
         case 75:
             action75_Size->setChecked(true);
-            on_action75_triggered();
         break;
         case 100:
             action100_Size->setChecked(true);
-            on_action100_triggered();
         break;
         case 125:
             action125_Size->setChecked(true);
-            on_action125_triggered();
         break;
         case 150:
             action150_Size->setChecked(true);
-            on_action150_triggered();
         break;
         case 175:
             action175_Size->setChecked(true);
-            on_action175_triggered();
         break;
         case 200:
             action200_Size->setChecked(true);
-            on_action200_triggered();
         break;
         default:
             actionCustom_Size->setChecked(true);
-            setThumbSize(size);
         break;
     }
+    setThumbSize(size);
 }
 
 void MainWindow::on_action75_triggered()
 {
+    SettingsHandler::setThumbSize(75);
     setThumbSize(75);
 }
 
 void MainWindow::on_action100_triggered()
 {
+    SettingsHandler::setThumbSize(100);
     setThumbSize(100);
 }
 
 void MainWindow::on_action125_triggered()
 {
+    SettingsHandler::setThumbSize(125);
     setThumbSize(125);
 }
 
 void MainWindow::on_action150_triggered()
 {
+    SettingsHandler::setThumbSize(150);
     setThumbSize(150);
 }
 
 void MainWindow::on_action175_triggered()
 {
+    SettingsHandler::setThumbSize(175);
     setThumbSize(175);
 }
 
 void MainWindow::on_action200_triggered()
 {
+    SettingsHandler::setThumbSize(200);
     setThumbSize(200);
 }
 
@@ -3105,12 +3107,14 @@ void MainWindow::on_actionCustom_triggered()
     int size = QInputDialog::getInt(this, tr("Custom size"), "Size (Max:"+QString::number(SettingsHandler::getMaxThumbnailSize().height()) + ")",
                                          SettingsHandler::getThumbSize(), 1, SettingsHandler::getMaxThumbnailSize().height(), 50, &ok);
     if (ok && size > 0)
+    {
         setThumbSize(size);
+        SettingsHandler::setThumbSize(size);
+    }
 }
 
 void MainWindow::setThumbSize(int size)
 {
-    SettingsHandler::setThumbSize(size);
     resizeThumbs(size);
 
     videoHandler->setMinimumHeight(SettingsHandler::getThumbSize());
@@ -3156,119 +3160,113 @@ void MainWindow::updateLibrarySortUI(LibrarySortMode mode)
     {
         case LibrarySortMode::NAME_ASC:
             actionNameAsc_Sort->setChecked(true);
-            on_actionNameAsc_triggered();
         break;
         case LibrarySortMode::NAME_DESC:
             actionNameDesc_Sort->setChecked(true);
-            on_actionNameDesc_triggered();
         break;
         case LibrarySortMode::CREATED_ASC:
             actionCreatedAsc_Sort->setChecked(true);
-            on_actionCreatedAsc_triggered();
         break;
         case LibrarySortMode::CREATED_DESC:
             actionCreatedDesc_Sort->setChecked(true);
-            on_actionCreatedDesc_triggered();
         break;
         case LibrarySortMode::RANDOM:
             actionRandom_Sort->setChecked(true);
-            on_actionRandom_triggered();
         break;
         case LibrarySortMode::TYPE_ASC:
             actionTypeAsc_Sort->setChecked(true);
-            on_actionTypeAsc_triggered();
         break;
         case LibrarySortMode::TYPE_DESC:
             actionTypeDesc_Sort->setChecked(true);
-            on_actionTypeDesc_triggered();
         break;
     }
-
+    sortLibraryList(mode);
     libraryList->setCurrentRow(0);
 }
 
 void MainWindow::on_actionNameAsc_triggered()
 {
-    randomizeLibraryButton->hide();
-    LibraryListWidgetItem::setSortMode(LibrarySortMode::NAME_ASC);
     SettingsHandler::setLibrarySortMode(LibrarySortMode::NAME_ASC);
-    libraryList->sortItems();
+    sortLibraryList(LibrarySortMode::NAME_ASC);
 }
 void MainWindow::on_actionNameDesc_triggered()
 {
-    randomizeLibraryButton->hide();
-    LibraryListWidgetItem::setSortMode(LibrarySortMode::NAME_DESC);
     SettingsHandler::setLibrarySortMode(LibrarySortMode::NAME_DESC);
-    libraryList->sortItems();
+    sortLibraryList(LibrarySortMode::NAME_DESC);
 }
 void MainWindow::on_actionRandom_triggered()
 {
-    if(!loadingLibraryFuture.isRunning())
-    {
-        setLibraryLoading(true);
-        LibraryListWidgetItem::setSortMode(LibrarySortMode::RANDOM);
-        SettingsHandler::setLibrarySortMode(LibrarySortMode::RANDOM);
-
-        loadingLibraryFuture = QtConcurrent::run([this]() {
-            //Fisher and Yates algorithm
-            int n = libraryList->count();
-
-            QList<LibraryListWidgetItem*> arr, arr1;
-            int index_arr[n];
-            int index;
-
-            for (int i = 0; i < n; i++)
-                index_arr[i] = 0;
-
-            for (int i = 0; i < n; i++)
-            {
-              do
-              {
-                 index = XMath::rand(0, n);
-              }
-              while (index_arr[index] != 0);
-              index_arr[index] = 1;
-              arr1.push_back(((LibraryListWidgetItem*)libraryList->item(index)));
-            }
-            while(libraryList->count()>0)
-            {
-              libraryList->takeItem(0);
-            }
-            foreach(auto item, arr1)
-            {
-                libraryList->addItem(item);
-            }
-            randomizeLibraryButton->show();
-            setLibraryLoading(false);
-        });
-    }
+    SettingsHandler::setLibrarySortMode(LibrarySortMode::RANDOM);
+    sortLibraryList(LibrarySortMode::RANDOM);
 }
 void MainWindow::on_actionCreatedAsc_triggered()
 {
-    randomizeLibraryButton->hide();
-    LibraryListWidgetItem::setSortMode(LibrarySortMode::CREATED_ASC);
     SettingsHandler::setLibrarySortMode(LibrarySortMode::CREATED_ASC);
-    libraryList->sortItems();
+    sortLibraryList(LibrarySortMode::CREATED_ASC);
 }
 void MainWindow::on_actionCreatedDesc_triggered()
 {
-    randomizeLibraryButton->hide();
-    LibraryListWidgetItem::setSortMode(LibrarySortMode::CREATED_DESC);
     SettingsHandler::setLibrarySortMode(LibrarySortMode::CREATED_DESC);
-    libraryList->sortItems();
+    sortLibraryList(LibrarySortMode::CREATED_DESC);
 }
 void MainWindow::on_actionTypeAsc_triggered()
 {
-    randomizeLibraryButton->hide();
-    LibraryListWidgetItem::setSortMode(LibrarySortMode::TYPE_ASC);
     SettingsHandler::setLibrarySortMode(LibrarySortMode::TYPE_ASC);
-    libraryList->sortItems();
+    sortLibraryList(LibrarySortMode::TYPE_ASC);
 }
 void MainWindow::on_actionTypeDesc_triggered()
 {
-    randomizeLibraryButton->hide();
-    LibraryListWidgetItem::setSortMode(LibrarySortMode::TYPE_DESC);
     SettingsHandler::setLibrarySortMode(LibrarySortMode::TYPE_DESC);
+    sortLibraryList(LibrarySortMode::TYPE_DESC);
+}
+
+void MainWindow::sortLibraryList(LibrarySortMode sortMode)
+{
+    if(sortMode == LibrarySortMode::RANDOM)
+    {
+        if(!loadingLibraryFuture.isRunning())
+        {
+            setLibraryLoading(true);
+
+            loadingLibraryFuture = QtConcurrent::run([this]() {
+                //Fisher and Yates algorithm
+                int n = libraryList->count();
+
+                QList<LibraryListWidgetItem*> arr, arr1;
+                int index_arr[n];
+                int index;
+
+                for (int i = 0; i < n; i++)
+                    index_arr[i] = 0;
+
+                for (int i = 0; i < n; i++)
+                {
+                  do
+                  {
+                     index = XMath::rand(0, n);
+                  }
+                  while (index_arr[index] != 0);
+                  index_arr[index] = 1;
+                  arr1.push_back(((LibraryListWidgetItem*)libraryList->item(index)));
+                }
+                while(libraryList->count()>0)
+                {
+                  libraryList->takeItem(0);
+                }
+                foreach(auto item, arr1)
+                {
+                    libraryList->addItem(item);
+                }
+                randomizeLibraryButton->show();
+                setLibraryLoading(false);
+            });
+        }
+    }
+    else
+    {
+        randomizeLibraryButton->hide();
+    }
+    LibraryListWidgetItem::setSortMode(sortMode);
     libraryList->sortItems();
 }
 

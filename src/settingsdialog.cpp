@@ -92,7 +92,7 @@ void SettingsDialog::initLive()
     if(HasLaunchPass())
         ui.passwordButton->setText("Change password");
     ui.hideWelcomeDialog->setChecked(SettingsHandler::getHideWelcomeScreen());
-
+    on_settingsChange(SettingsHandler::getSettingsChanged());
 //    auto availableAxis = SettingsHandler::getAvailableAxis();
 //    foreach(auto channel, availableAxis->keys())
 //    {
@@ -107,8 +107,8 @@ void SettingsDialog::setupUi()
 {
 
     loadSerialPorts();
-    setDeviceStatusStyle(_outConnectionStatus, DeviceType::Serial);
-    setDeviceStatusStyle(_outConnectionStatus, DeviceType::Network);
+    setDeviceStatusStyle(_outDeviceConnectionStatus, DeviceType::Serial);
+    setDeviceStatusStyle(_outDeviceConnectionStatus, DeviceType::Network);
     setDeviceStatusStyle(_deoConnectionStatus, DeviceType::Deo);
     setDeviceStatusStyle(_whirligigConnectionStatus, DeviceType::Whirligig);
     setDeviceStatusStyle(_gamepadConnectionStatus, DeviceType::Gamepad);
@@ -122,6 +122,18 @@ void SettingsDialog::setupUi()
     }
     if (!_interfaceInitialized)
     {
+        saveAllBtn = ui.buttonBox->button(QDialogButtonBox::SaveAll);
+        saveAllBtn->setAutoDefault(false);
+        saveAllBtn->setDefault(false);
+        saveAllBtn->setEnabled(false);
+        saveAllBtn->setText("Save Now");
+        QPushButton* restireDefaultsBtn = ui.buttonBox->button(QDialogButtonBox::RestoreDefaults);
+        restireDefaultsBtn->setAutoDefault(false);
+        restireDefaultsBtn->setDefault(false);
+        QPushButton* closeBtn = ui.buttonBox->button(QDialogButtonBox::Close);
+        closeBtn->setAutoDefault(false);
+        closeBtn->setDefault(false);
+        closeBtn->setText("Close (Save later)");
         // TCode version
         foreach(auto version, SettingsHandler::SupportedTCodeVersions.keys())
         {
@@ -161,7 +173,7 @@ void SettingsDialog::setupUi()
         {
             ui.videoRendererComboBox->addItem(renderer);
         }
-
+        ui.disableTCodeValidationCheckbox->setChecked(SettingsHandler::getDisableSerialTCodeValidation());
         ui.videoRendererComboBox->setToolTip("Due to a bug, this can only be changed before ANY video has been played.");
         ui.videoRendererComboBox->setCurrentText(XVideoRendererReverseMap.value(SettingsHandler::getSelectedVideoRenderer()));
         connect(ui.videoRendererComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::on_videoRenderer_textChanged);
@@ -172,12 +184,13 @@ void SettingsDialog::setupUi()
 
         if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
         {
-            on_serialOutputRdo_clicked();
+            ui.serialOutputRdo->setChecked(true);
         }
         else if (SettingsHandler::getSelectedDevice() == DeviceType::Network)
         {
-            on_networkOutputRdo_clicked();
+            ui.networkOutputRdo->setChecked(true);
         }
+        enableOrDisableDeviceConnectionUI((DeviceType)SettingsHandler::getSelectedDevice());
         bool deoEnabled = SettingsHandler::getDeoEnabled();
         ui.deoCheckbox->setChecked(deoEnabled);
         ui.deoAddressTxt->setEnabled(deoEnabled);
@@ -192,9 +205,21 @@ void SettingsDialog::setupUi()
         //Load user decoder priority. (Too lazy to make a new function sue me...)
         on_cancelPriorityButton_clicked();
 
+        connect(ui.SerialOutputCmb, &QComboBox::currentTextChanged, this, [](const QString value)
+        {
+            SettingsHandler::setSerialPort(value);
+        });
+        connect(ui.videoIncrementSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_videoIncrement_valueChanged);
+        connect(&SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
         _interfaceInitialized = true;
     }
 }
+
+void SettingsDialog::on_settingsChange(bool dirty)
+{
+    saveAllBtn->setEnabled(dirty);
+}
+
 void SettingsDialog::setupGamepadMap()
 {
     if(_interfaceInitialized)
@@ -225,6 +250,7 @@ void SettingsDialog::setupGamepadMap()
         QLabel* mapLabel = new QLabel(this);
         mapLabel->setText(button);
         QComboBox* mapComboBox = new QComboBox(this);
+        mapComboBox->setObjectName(button);
         foreach(auto axis, tcodeChannels.keys())
         {
             auto channel = availableAxis->value(TCodeChannelLookup::ToString(axis));
@@ -252,7 +278,7 @@ void SettingsDialog::setupGamepadMap()
         ui.gamePadMapGridLayout->addWidget(mapComboBox, rowIterator, columnIterator + 1, Qt::AlignLeft);
 
         connect(mapComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
-                [mapComboBox, gamepadMap, button](int index)
+                [this, mapComboBox, gamepadMap, button](int index)
                   {
                         ChannelModel selectedChannel = mapComboBox->currentData().value<ChannelModel>();
                         SettingsHandler::setGamePadMapButton(button, selectedChannel.AxisName);
@@ -285,6 +311,32 @@ void SettingsDialog::setupGamepadMap()
     inverseGrid->addWidget(speedLabel, 0, 0, Qt::AlignCenter);
     inverseGrid->addWidget(speedInput, 1, 0, Qt::AlignCenter);
 
+    QPushButton* resetGamepadMap = new QPushButton("Reset gamepad map", this);
+    connect(resetGamepadMap, &QPushButton::clicked, this,
+            [this, gamepadMap, availableAxis]()
+              {
+                    QMessageBox::StandardButton reply;
+                    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset the gamepad map?",
+                                                  QMessageBox::Yes|QMessageBox::No);
+                    if (reply == QMessageBox::Yes)
+                    {
+                        MediaActions actions;
+                        SettingsHandler::SetGamepadMapDefaults();
+                        foreach(auto button, gamepadMap->keys())
+                        {
+                            if (button == "None")
+                                continue;
+                            auto mapComboBox = ui.gamePadMapGroupbox->findChild<QComboBox*>(button);
+                            auto gameMap = gamepadMap->value(button);
+                            if (availableAxis->contains(gameMap))
+                                mapComboBox->setCurrentText(availableAxis->value(gameMap).FriendlyName);
+                            else
+                                mapComboBox->setCurrentText(actions.Values.value(gameMap));
+                        }
+                    }
+              });
+    inverseGrid->addWidget(resetGamepadMap, 1, 1, Qt::AlignCenter);
+
     QLabel* speedIncrementLabel = new QLabel(this);
     speedIncrementLabel->setText("Speed change step");
     speedIncrementLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
@@ -303,17 +355,17 @@ void SettingsDialog::setupGamepadMap()
     inverseX->setText("Inverse Stroke");
     inverseX->setChecked(SettingsHandler::getInverseTcXL0());
     connect(inverseX, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcXL0_valueChanged);
-    inverseGrid->addWidget(inverseX, 4, 0, Qt::AlignCenter);
+    inverseGrid->addWidget(inverseX, 3, 0, Qt::AlignCenter);
     QCheckBox* inverseYRoll = new QCheckBox(this);
     inverseYRoll->setText("Inverse Roll");
     inverseYRoll->setChecked(SettingsHandler::getInverseTcYRollR1());
     connect(inverseYRoll, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcYRollR1_valueChanged);
-    inverseGrid->addWidget(inverseYRoll, 4, 1, Qt::AlignCenter);
+    inverseGrid->addWidget(inverseYRoll, 3, 1, Qt::AlignCenter);
     QCheckBox* inverseXRoll = new QCheckBox(this);
     inverseXRoll->setText("Inverse Pitch");
     inverseXRoll->setChecked(SettingsHandler::getInverseTcXRollR2());
     connect(inverseXRoll, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcXRollR2_valueChanged);
-    inverseGrid->addWidget(inverseXRoll, 4, 2, Qt::AlignCenter);
+    inverseGrid->addWidget(inverseXRoll, 3, 2, Qt::AlignCenter);
 }
 
 void SettingsDialog::setUpTCodeAxis()
@@ -418,12 +470,12 @@ void SettingsDialog::setUpTCodeAxis()
              multiplierInput->setMaximum(std::numeric_limits<int>::max());
              multiplierInput->setValue(SettingsHandler::getMultiplierValue(channelName));
              connect(multiplierInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
-                     [channelName](float value)
+                     [this, channelName](float value)
                        {
                          SettingsHandler::setMultiplierValue(channelName, value);
                        });
              connect(multiplierCheckbox, &QCheckBox::clicked, this,
-                     [channelName](bool checked)
+                     [this, channelName](bool checked)
                        {
                          SettingsHandler::setMultiplierChecked(channelName, checked);
                        });
@@ -438,12 +490,12 @@ void SettingsDialog::setUpTCodeAxis()
              damperInput->setMaximum(std::numeric_limits<int>::max());
              damperInput->setValue(SettingsHandler::getDamperValue(channelName));
              connect(damperInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
-                     [channelName](float value)
+                     [this, channelName](float value)
                        {
                          SettingsHandler::setDamperValue(channelName, value);
                        });
              connect(damperCheckbox, &QCheckBox::clicked, this,
-                     [channelName](bool checked)
+                     [this, channelName](bool checked)
                        {
                          SettingsHandler::setDamperChecked(channelName, checked);
                        });
@@ -457,7 +509,7 @@ void SettingsDialog::setUpTCodeAxis()
              linkCheckbox->setText("Link to MFS: ");
              linkCheckbox->setChecked(SettingsHandler::getLinkToRelatedAxisChecked(channelName));
              connect(linkCheckbox, &QCheckBox::clicked, this,
-                     [channelName](bool checked)
+                     [this, channelName](bool checked)
                        {
                          SettingsHandler::setLinkToRelatedAxisChecked(channelName, checked);
                        });
@@ -474,10 +526,10 @@ void SettingsDialog::setUpTCodeAxis()
              }
              linkToAxisCombobox->setCurrentText(relatedChannel.FriendlyName);
              connect(linkToAxisCombobox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
-                     [channelName, linkToAxisCombobox, linkCheckbox](int value)
+                     [this, channelName, linkToAxisCombobox, linkCheckbox](int value)
                        {
                             auto relatedChannel = linkToAxisCombobox->currentData().value<ChannelModel>();
-                            linkCheckbox->setToolTip("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS " + relatedChannel.FriendlyName + " funscript value.\nIf there is no " + relatedChannel.FriendlyName + " funscript then it will default to random motion.");
+                            linkCheckbox->setToolTip("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS (Multi-funscript) " + relatedChannel.FriendlyName + " funscript value.\nIf there is no " + relatedChannel.FriendlyName + " funscript then it will default to random motion.");
                             SettingsHandler::setLinkToRelatedAxis(channelName, relatedChannel.AxisName);
                        });
 
@@ -491,7 +543,7 @@ void SettingsDialog::setUpTCodeAxis()
          invertedCheckbox->setText(axis.FriendlyName);
          invertedCheckbox->setChecked(SettingsHandler::getChannelInverseChecked(channelName));
          connect(invertedCheckbox, &QCheckBox::clicked, this,
-                 [channelName](bool checked)
+                 [this, channelName](bool checked)
                    {
                      SettingsHandler::setChannelInverseChecked(channelName, checked);
                    });
@@ -535,6 +587,7 @@ void SettingsDialog::setUpTCodeAxis()
 
      setupGamepadMap();
 }
+
 
 void SettingsDialog::setAxisProgressBar(QString axis, int value)
 {
@@ -615,15 +668,14 @@ GamepadHandler* SettingsDialog::getGamepadHandler()
 {
     return _gamepadHandler;
 }
-bool SettingsDialog::isConnected()
+bool SettingsDialog::isDeviceConnected()
 {
-    return _outConnectionStatus == ConnectionStatus::Connected;
+    return _outDeviceConnectionStatus == ConnectionStatus::Connected;
 }
 
 void SettingsDialog::setSelectedDeviceHandler(DeviceHandler* device)
 {
     selectedDeviceHandler = device;
-
 }
 
 DeviceHandler* SettingsDialog::getSelectedDeviceHandler()
@@ -667,7 +719,6 @@ void SettingsDialog::initSerialEvent()
         _initFuture.waitForFinished();
     }
     setSelectedDeviceHandler(_serialHandler);
-    SettingsHandler::setSelectedDevice(DeviceType::Serial);
     _initFuture = QtConcurrent::run(initSerial, _serialHandler, selectedSerialPort);
 }
 
@@ -691,7 +742,6 @@ void SettingsDialog::initNetworkEvent()
     if(!SettingsHandler::getServerAddress().isEmpty() && !SettingsHandler::getServerPort().isEmpty() &&
         SettingsHandler::getServerAddress() != "0" && SettingsHandler::getServerPort() != "0")
     {
-        SettingsHandler::setSelectedDevice(DeviceType::Network);
         setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceType::Network);
         ui.networkConnectButton->setEnabled(false);
         NetworkAddress address { SettingsHandler::getServerAddress(), SettingsHandler::getServerPort().toInt() };
@@ -811,24 +861,36 @@ void SettingsDialog::setDeviceStatusStyle(ConnectionStatus status, DeviceType de
 
 void SettingsDialog::on_serialOutputRdo_clicked()
 {
-    ui.SerialOutputCmb->setEnabled(true);;
-    ui.networkAddressTxt->setEnabled(false);
-    ui.networkPortTxt->setEnabled(false);
-    ui.networkConnectButton->setEnabled(false);
-    ui.serialConnectButton->setEnabled(true);
-    ui.serialRefreshBtn->setEnabled(true);
+    enableOrDisableDeviceConnectionUI(DeviceType::Serial);
+    SettingsHandler::setSelectedDevice(DeviceType::Serial);
 }
 
 void SettingsDialog::on_networkOutputRdo_clicked()
 {
-    ui.SerialOutputCmb->setEnabled(false);
-    ui.networkAddressTxt->setEnabled(true);
-    ui.networkPortTxt->setEnabled(true);
-    ui.serialConnectButton->setEnabled(false);
-    ui.networkConnectButton->setEnabled(true);
-    ui.serialRefreshBtn->setEnabled(false);
+    enableOrDisableDeviceConnectionUI(DeviceType::Network);
+    SettingsHandler::setSelectedDevice(DeviceType::Network);
 }
-
+void SettingsDialog::enableOrDisableDeviceConnectionUI(DeviceType deviceType)
+{
+    if(deviceType == DeviceType::Network)
+    {
+        ui.SerialOutputCmb->setEnabled(false);
+        ui.networkAddressTxt->setEnabled(true);
+        ui.networkPortTxt->setEnabled(true);
+        ui.serialConnectButton->setEnabled(false);
+        ui.networkConnectButton->setEnabled(true);
+        ui.serialRefreshBtn->setEnabled(false);
+    }
+    else if(deviceType == DeviceType::Serial)
+    {
+        ui.SerialOutputCmb->setEnabled(true);;
+        ui.networkAddressTxt->setEnabled(false);
+        ui.networkPortTxt->setEnabled(false);
+        ui.networkConnectButton->setEnabled(false);
+        ui.serialConnectButton->setEnabled(true);
+        ui.serialRefreshBtn->setEnabled(true);
+    }
+}
 void SettingsDialog::on_serialRefreshBtn_clicked()
 {
     loadSerialPorts();
@@ -901,14 +963,7 @@ void SettingsDialog::on_deo_error(QString error)
 }
 void SettingsDialog::on_device_connectionChanged(ConnectionChangedSignal event)
 {
-    _outConnectionStatus = event.status;
-    if(event.deviceType == DeviceType::Serial)
-    {
-        SettingsHandler::setSerialPort(ui.SerialOutputCmb->currentText());
-    }
-    else if (event.deviceType == DeviceType::Network)
-    {
-    }
+    _outDeviceConnectionStatus = event.status;
     if (event.status == ConnectionStatus::Error)
     {
         if (event.deviceType == DeviceType::Serial)
@@ -1123,9 +1178,14 @@ void SettingsDialog::on_deoCheckbox_clicked(bool checked)
 
 void SettingsDialog::on_checkBox_clicked(bool checked)
 {
-    LogHandler::UserDebug(checked);
-    if(!checked)
-        LogHandler::ExportDebug();
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "WARNING!", "Restart the app in debug mode?",
+                                  QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes)
+    {
+        QApplication::quit();
+        QProcess::startDetached(qApp->arguments()[0], QStringList("-debug"));
+    }
 }
 
 void SettingsDialog::on_resetAllButton_clicked()
@@ -1182,7 +1242,7 @@ void SettingsDialog::on_gamePadCheckbox_clicked(bool checked)
     }
 }
 
-void SettingsDialog::on_videoIncrementSpinBox_valueChanged(int value)
+void SettingsDialog::on_videoIncrement_valueChanged(int value)
 {
     SettingsHandler::setVideoIncrement(value);
 }
@@ -1233,14 +1293,14 @@ void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
     {
         on_resetAllButton_clicked();
     }
-    else
+    else if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::AcceptRole)
+    {
+        SettingsHandler::Save();
+    }
+    else if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::RejectRole)
     {
         hide();
     }
-}
-void SettingsDialog::on_buttonBox_clicked(QAbstractButton *button)
-{
-
 }
 
 #include <QInputDialog>
@@ -1291,8 +1351,7 @@ void SettingsDialog::on_axisDefaultButton_clicked()
                                   QMessageBox::Yes|QMessageBox::No);
     if (reply == QMessageBox::Yes)
     {
-        SettingsHandler::setupAvailableAxis();
-        SettingsHandler::setSelectedTCodeVersion();
+        SettingsHandler::SetChannelMapDefaults();
         channelTableViewModel->setMap();
         setUpTCodeAxis();
     }
@@ -1478,7 +1537,7 @@ void SettingsDialog::on_tCodeVSComboBox_currentIndexChanged(int index)
     SettingsHandler::setSelectedTCodeVersion(ui.tCodeVersionComboBox->currentData().value<TCodeVersion>());
 }
 
-void SettingsDialog::on_hideWelcomeDialog_toggled(bool checked)
+void SettingsDialog::on_hideWelcomeDialog_clicked(bool checked)
 {
     SettingsHandler::setHideWelcomeScreen(checked);
 }
@@ -1502,4 +1561,14 @@ void SettingsDialog::on_videoRenderer_textChanged(const QString &value)
         ui.videoRendererComboBox->setCurrentText(XVideoRendererReverseMap.value(SettingsHandler::getSelectedVideoRenderer()));
         connect(ui.videoRendererComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::on_videoRenderer_textChanged);
     }
+}
+
+void SettingsDialog::on_disableTCodeValidationCheckbox_clicked(bool checked)
+{
+    if(checked)
+    {
+        LogHandler::Dialog("Make sure to verify the version of TCode firmware installed on your device.", XLogLevel::Warning);
+    }
+    SettingsHandler::setDisableSerialTCodeValidation(checked);
+    SettingsHandler::requestRestart(this);
 }
