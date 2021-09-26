@@ -45,6 +45,7 @@ public:
     static void setSelectedTCodeVersion(TCodeVersion key);
     static void setSelectedTCodeVersion();
     static QString getDeoDnlaFunscript(QString key);
+    static QHash<QString, QVariant> getDeoDnlaFunscripts();
     static QString getSelectedTheme();
     static QString getSelectedLibrary();
     static QString getSelectedThumbsDir();
@@ -91,7 +92,8 @@ public:
     static bool getDisableVRScriptSelect();
     static void setDisableVRScriptSelect(bool value);
 
-    static void setDeoDnlaFunscript(QString key, QString value);
+    static void setLinkedVRFunscript(QString key, QString value);
+    static void removeLinkedVRFunscript(QString key);
     static void setSelectedTheme(QString value);
     static void setSelectedLibrary(QString value);
     static void setSelectedFunscriptLibrary(QString value);

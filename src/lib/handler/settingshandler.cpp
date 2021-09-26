@@ -4,8 +4,8 @@ const QMap<TCodeVersion, QString> SettingsHandler::SupportedTCodeVersions = {
     {TCodeVersion::v2, "TCode v0.2"},
     {TCodeVersion::v3, "TCode v0.3"}
 };
-const QString SettingsHandler::XTPVersion = "0.2631";
-const float SettingsHandler::XTPVersionNum = 0.2631f;
+const QString SettingsHandler::XTPVersion = "0.2632";
+const float SettingsHandler::XTPVersionNum = 0.2632f;
 
 SettingsHandler::SettingsHandler(){}
 SettingsHandler::~SettingsHandler()
@@ -931,6 +931,11 @@ QString SettingsHandler::getDeoDnlaFunscript(QString key)
     }
     return nullptr;
 }
+QHash<QString, QVariant> SettingsHandler::getDeoDnlaFunscripts()
+{
+    QMutexLocker locker(&mutex);
+    return deoDnlaFunscriptLookup;
+}
 
 bool SettingsHandler::getGamepadEnabled()
 {
@@ -1315,10 +1320,16 @@ void SettingsHandler::setVideoIncrement(int value)
     settingsChangedEvent(true);
 }
 
-void SettingsHandler::setDeoDnlaFunscript(QString key, QString value)
+void SettingsHandler::setLinkedVRFunscript(QString key, QString value)
 {
     QMutexLocker locker(&mutex);
     deoDnlaFunscriptLookup[key] = value;
+    settingsChangedEvent(true);
+}
+void SettingsHandler::removeLinkedVRFunscript(QString key)
+{
+    QMutexLocker locker(&mutex);
+    deoDnlaFunscriptLookup.remove(key);
     settingsChangedEvent(true);
 }
 

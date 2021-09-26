@@ -14,6 +14,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading Settings...", Qt::AlignBottom, Qt::white);
     SettingsHandler::Load();
     _xSettings = new SettingsDialog(this);
+    _dlnaScriptLinksDialog = new DLNAScriptLinks(this);
     tcodeHandler = new TCodeHandler();
     if(_xSettings->HasLaunchPass()) {
         int tries = 1;
@@ -1122,7 +1123,7 @@ void MainWindow::changeDeoFunscript()
         funscriptFileSelectorOpen = false;
         if (!funscriptPath.isEmpty())
         {
-            SettingsHandler::setDeoDnlaFunscript(playingPacket.path, funscriptPath);
+            SettingsHandler::setLinkedVRFunscript(playingPacket.path, funscriptPath);
             funscriptHandler->setLoaded(false);
         }
     }
@@ -2402,7 +2403,7 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
             if(!funscriptPath.isEmpty())
             {
                 LogHandler::Debug("Saving script into data: "+funscriptPath);
-                SettingsHandler::setDeoDnlaFunscript(videoPath, funscriptPath);
+                SettingsHandler::setLinkedVRFunscript(videoPath, funscriptPath);
             }
         }
         else if(vrScriptSelectedCanceledPath != packet.path)
@@ -3326,6 +3327,7 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
         else
         {
             qint64 videoToSliderPosition = XMath::mapRange(videoHandler->position(),  (qint64)0, videoHandler->duration(), (qint64)0, (qint64)100);
+            updateMetaData(playingLibraryListItem->getLibraryListItem());
             _playerControlsFrame->setSeekSliderLowerValue(videoToSliderPosition);
         }
         _playerControlsFrame->setSeekSliderMinimumRange(1);
@@ -3633,4 +3635,9 @@ void MainWindow::skipToMoneyShot()
 void MainWindow::on_actionReload_theme_triggered()
 {
     loadTheme(SettingsHandler::getSelectedTheme());
+}
+
+void MainWindow::on_actionStored_DLNA_links_triggered()
+{
+    _dlnaScriptLinksDialog->showDialog();
 }

@@ -199,6 +199,7 @@
      <string>Edit</string>
     </property>
     <addaction name="actionSettings"/>
+    <addaction name="actionStored_DLNA_links"/>
     <addaction name="actionChange_current_deo_script"/>
    </widget>
    <addaction name="menuFile"/>
@@ -273,6 +274,11 @@
   <action name="actionReload_theme">
    <property name="text">
     <string>Reload theme</string>
+   </property>
+  </action>
+  <action name="actionStored_DLNA_links">
+   <property name="text">
+    <string>Stored DLNA links</string>
    </property>
   </action>
  </widget>

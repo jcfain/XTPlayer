@@ -33,6 +33,7 @@
 #include "noMatchingScriptDialog.h"
 #include "playercontrols.h"
 #include "welcomedialog.h"
+#include "dlnascriptlinks.h"
 #include "lib/handler/videohandler.h"
 #include "CustomControls/rangeslider.h"
 #include "lib/handler/settingshandler.h"
@@ -155,6 +156,8 @@ private slots:
 
     void on_actionReload_theme_triggered();
 
+    void on_actionStored_DLNA_links_triggered();
+
 signals:
     void keyPressed(QKeyEvent * event);
     void change(QEvent * event);
@@ -184,6 +187,7 @@ private:
     QMutex mutex;
     SettingsDialog* _xSettings;
     WelcomeDialog* _welcomeDialog;
+    DLNAScriptLinks* _dlnaScriptLinksDialog;
     QFrame* _controlsHomePlaceHolderFrame;
     QGridLayout* _controlsHomePlaceHolderGrid;
     QFrame* _mediaFrame;

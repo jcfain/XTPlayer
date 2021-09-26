@@ -3,7 +3,10 @@
 SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
 {
     ui.setupUi(this);
-    ui.ConnectionSettings->setContentsMargins(20,20,20,20);
+    // Disable the videoRendererComboBox cause it causes issues with the full screen player controls
+    hasVideoPlayed = true;
+    ui.videoRendererComboBox->setToolTip("Was going to add this but had some issues with the player controls in full screen. Disabled for now.");
+    //ui.ConnectionSettings->setContentsMargins(20,20,20,20);
     _serialHandler = new SerialHandler(this);
     _udpHandler = new UdpHandler(this);
     _deoHandler = new DeoHandler(this);
@@ -92,7 +95,6 @@ void SettingsDialog::initLive()
     if(HasLaunchPass())
         ui.passwordButton->setText("Change password");
     ui.hideWelcomeDialog->setChecked(SettingsHandler::getHideWelcomeScreen());
-    on_settingsChange(SettingsHandler::getSettingsChanged());
 //    auto availableAxis = SettingsHandler::getAvailableAxis();
 //    foreach(auto channel, availableAxis->keys())
 //    {
@@ -122,18 +124,17 @@ void SettingsDialog::setupUi()
     }
     if (!_interfaceInitialized)
     {
-        saveAllBtn = ui.buttonBox->button(QDialogButtonBox::SaveAll);
-        saveAllBtn->setAutoDefault(false);
-        saveAllBtn->setDefault(false);
-        saveAllBtn->setEnabled(false);
-        saveAllBtn->setText("Save Now");
+//        saveAllBtn = ui.buttonBox->button(QDialogButtonBox::SaveAll);
+//        saveAllBtn->setAutoDefault(false);
+//        saveAllBtn->setDefault(false);
+//        saveAllBtn->setEnabled(false);
+//        saveAllBtn->setText("Close");
         QPushButton* restireDefaultsBtn = ui.buttonBox->button(QDialogButtonBox::RestoreDefaults);
         restireDefaultsBtn->setAutoDefault(false);
         restireDefaultsBtn->setDefault(false);
         QPushButton* closeBtn = ui.buttonBox->button(QDialogButtonBox::Close);
         closeBtn->setAutoDefault(false);
         closeBtn->setDefault(false);
-        closeBtn->setText("Close (Save later)");
         // TCode version
         foreach(auto version, SettingsHandler::SupportedTCodeVersions.keys())
         {
@@ -173,10 +174,11 @@ void SettingsDialog::setupUi()
         {
             ui.videoRendererComboBox->addItem(renderer);
         }
-        ui.disableTCodeValidationCheckbox->setChecked(SettingsHandler::getDisableSerialTCodeValidation());
-        ui.videoRendererComboBox->setToolTip("Due to a bug, this can only be changed before ANY video has been played.");
+//        ui.videoRendererComboBox->setToolTip("Due to a bug, this can only be changed before ANY video has been played.");
         ui.videoRendererComboBox->setCurrentText(XVideoRendererReverseMap.value(SettingsHandler::getSelectedVideoRenderer()));
-        connect(ui.videoRendererComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::on_videoRenderer_textChanged);
+//        connect(ui.videoRendererComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::on_videoRenderer_textChanged);
+
+        ui.disableTCodeValidationCheckbox->setChecked(SettingsHandler::getDisableSerialTCodeValidation());
 
         ui.RangeSettingsGrid->setSpacing(5);
 
@@ -210,14 +212,8 @@ void SettingsDialog::setupUi()
             SettingsHandler::setSerialPort(value);
         });
         connect(ui.videoIncrementSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_videoIncrement_valueChanged);
-        connect(&SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
         _interfaceInitialized = true;
     }
-}
-
-void SettingsDialog::on_settingsChange(bool dirty)
-{
-    saveAllBtn->setEnabled(dirty);
 }
 
 void SettingsDialog::setupGamepadMap()
@@ -1299,6 +1295,7 @@ void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
     }
     else if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::RejectRole)
     {
+        SettingsHandler::Save();
         hide();
     }
 }

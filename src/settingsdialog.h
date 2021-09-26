@@ -177,7 +177,6 @@ private slots:
     void on_videoRenderer_textChanged(const QString &value);
 
     void on_disableTCodeValidationCheckbox_clicked(bool checked);
-    void on_settingsChange(bool dirty);
 
 private:
     Ui::SettingsDialog ui;
@@ -219,7 +218,7 @@ private:
 
     QLabel* offSetLabel;
     QSpinBox* offSetSpinBox;
-    QPushButton* saveAllBtn;
+    //QPushButton* saveAllBtn;
     bool hasVideoPlayed = false;
 
     void setDeviceStatusStyle(ConnectionStatus status, DeviceType deviceType, QString message = "");

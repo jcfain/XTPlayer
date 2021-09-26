@@ -22,6 +22,7 @@ SOURCES += \
     CustomControls/rangeslider.cpp \
     addchanneldialog.cpp \
     addplaylistdialog.cpp \
+    dlnascriptlinks.cpp \
     lib/handler/audiosyncfilter.cpp \
     lib/handler/deohandler.cpp \
     lib/handler/devicehandler.cpp \
@@ -57,6 +58,7 @@ HEADERS += \
     CustomControls/rangeslider.h \
     addchanneldialog.h \
     addplaylistdialog.h \
+    dlnascriptlinks.h \
     lib/handler/audiosyncfilter.h \
     lib/handler/deohandler.h \
     lib/handler/devicehandler.h \
@@ -108,6 +110,7 @@ HEADERS += \
     welcomedialog.h
 
 FORMS += \
+    dlnascriptlinks.ui \
     libraryexclusions.ui \
     mainwindow.ui \
     settings.ui \
