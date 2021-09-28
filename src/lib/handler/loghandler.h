@@ -7,6 +7,10 @@
 #include <QFile>
 #include <QDateTime>
 #include <QApplication>
+#include <QGridLayout>
+#include <QLabel>
+#include <QMovie>
+
 
 enum XLogLevel
 {
@@ -28,6 +32,8 @@ public:
     static QString getLevel(XLogLevel level);
     static void UserDebug(bool on);
     static void ExportDebug();
+    static void Loading(QWidget* parent, QString message);
+    static void LoadingClose();
 
 private:
     LogHandler();
@@ -38,6 +44,7 @@ private:
     static bool _debugMode;
     static bool _userDebugMode;
     static QHash<qint64, QString> _debugStore;
+    static QDialog* _loadingWidget;
 
 };
 

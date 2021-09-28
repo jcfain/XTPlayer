@@ -31,11 +31,17 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
     connect(_whirligigHandler, &WhirligigHandler::errorOccurred, this, &SettingsDialog::on_whirligig_error);
     connect(_gamepadHandler, &GamepadHandler::connectionChange, this, &SettingsDialog::on_gamepad_connectionChanged);
     connect(ui.buttonBox, & QDialogButtonBox::clicked, this, &SettingsDialog::on_dialogButtonboxClicked);
+    connect(this, &SettingsDialog::loadingDialogClose, this, &SettingsDialog::on_close_loading_dialog);
+    connect(&SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
 }
 SettingsDialog::~SettingsDialog()
 {
 }
-
+void SettingsDialog::on_settingsChange(bool dirty)
+{
+    saveAllBtn->setEnabled(dirty);
+    closeBtn->setEnabled(dirty);
+}
 void SettingsDialog::dispose()
 {
     _udpHandler->dispose();
@@ -124,17 +130,18 @@ void SettingsDialog::setupUi()
     }
     if (!_interfaceInitialized)
     {
-//        saveAllBtn = ui.buttonBox->button(QDialogButtonBox::SaveAll);
-//        saveAllBtn->setAutoDefault(false);
-//        saveAllBtn->setDefault(false);
-//        saveAllBtn->setEnabled(false);
-//        saveAllBtn->setText("Close");
+        saveAllBtn = ui.buttonBox->button(QDialogButtonBox::SaveAll);
+        saveAllBtn->setAutoDefault(false);
+        saveAllBtn->setDefault(false);
+        saveAllBtn->setEnabled(false);
         QPushButton* restireDefaultsBtn = ui.buttonBox->button(QDialogButtonBox::RestoreDefaults);
         restireDefaultsBtn->setAutoDefault(false);
         restireDefaultsBtn->setDefault(false);
-        QPushButton* closeBtn = ui.buttonBox->button(QDialogButtonBox::Close);
+        closeBtn = ui.buttonBox->button(QDialogButtonBox::Close);
         closeBtn->setAutoDefault(false);
         closeBtn->setDefault(false);
+        closeBtn->setEnabled(false);
+        closeBtn->setText("Save all and close");
         // TCode version
         foreach(auto version, SettingsHandler::SupportedTCodeVersions.keys())
         {
@@ -1282,25 +1289,6 @@ void SettingsDialog::on_whirligigConnectButton_clicked()
     }
 }
 
-
-void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
-{
-    if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::ResetRole)
-    {
-        on_resetAllButton_clicked();
-    }
-    else if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::AcceptRole)
-    {
-        SettingsHandler::Save();
-    }
-    else if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::RejectRole)
-    {
-        SettingsHandler::Save();
-        hide();
-    }
-}
-
-#include <QInputDialog>
 void SettingsDialog::on_channelAddButton_clicked()
 {
     bool ok;
@@ -1568,4 +1556,38 @@ void SettingsDialog::on_disableTCodeValidationCheckbox_clicked(bool checked)
     }
     SettingsHandler::setDisableSerialTCodeValidation(checked);
     SettingsHandler::requestRestart(this);
+}
+
+void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
+{
+    if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::ResetRole)
+    {
+        on_resetAllButton_clicked();
+    }
+    else if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::AcceptRole)
+    {
+        LogHandler::Loading(this, "Saving settings...");
+        QtConcurrent::run([this] ()
+        {
+            SettingsHandler::Save();
+            emit loadingDialogClose();
+        });
+    }
+    else if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::RejectRole)
+    {
+        if(SettingsHandler::getSettingsChanged())
+        {
+            LogHandler::Loading(this, "Saving settings...");
+            QtConcurrent::run([this] ()
+            {
+                SettingsHandler::Save();
+                emit loadingDialogClose();
+            });
+        }
+    }
+}
+
+void SettingsDialog::on_close_loading_dialog()
+{
+    LogHandler::LoadingClose();
 }

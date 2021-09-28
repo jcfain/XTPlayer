@@ -208,6 +208,7 @@ public:
     static void SetupDecoderPriority();
     static void Load(QSettings* settingsToLoadFrom = nullptr);
     static void Save(QSettings* settingsToSaveTo = nullptr);
+    static void SaveLinkedFunscripts(QSettings* settingsToSaveTo = nullptr);
     static void PersistSelectSettings();
     static void Default();
     static void Clear();

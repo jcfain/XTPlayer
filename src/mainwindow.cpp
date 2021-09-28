@@ -123,11 +123,13 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     //videoHandler->installFilter(audioSyncFilter);
 
     _videoLoadingMovie = new QMovie("://images/Eclipse-1s-loading-200px.gif");
+    _videoLoadingMovie->setProperty("cssClass", "mediaLoadingSpinner");
     _videoLoadingLabel = new QLabel(this);
     _videoLoadingLabel->setMovie(_videoLoadingMovie);
     _videoLoadingLabel->setAttribute(Qt::WA_TransparentForMouseEvents );
     _videoLoadingLabel->setMaximumSize(200,200);
-    _videoLoadingLabel->setStyleSheet("* {background: ffffff}");
+    //_videoLoadingLabel->setStyleSheet("* {background: ffffff}");
+    _videoLoadingLabel->setProperty("cssClass", "mediaLoadingSpinner");
     _videoLoadingLabel->setAlignment(Qt::AlignCenter);
     _mediaGrid->addWidget(_videoLoadingLabel, 1, 2);
     on_setLoading(false);
@@ -204,7 +206,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     libraryLoadingMovie->setScaledSize({200,200});
     libraryLoadingLabel = new QLabel(this);
     libraryLoadingLabel->setMovie(libraryLoadingMovie);
-    libraryLoadingLabel->setStyleSheet("* {background-color: rgba(128,128,128, 0.5)}");
+    //libraryLoadingLabel->setStyleSheet("* {background-color: rgba(128,128,128, 0.5)}");
+    libraryLoadingLabel->setProperty("cssClass", "libraryLoadingSpinner");
     libraryLoadingLabel->setAlignment(Qt::AlignCenter);
     ui->libraryGrid->addWidget(libraryLoadingLabel, 0, 0, 21, 12);
     libraryLoadingLabel->hide();
@@ -1125,6 +1128,7 @@ void MainWindow::changeDeoFunscript()
         {
             SettingsHandler::setLinkedVRFunscript(playingPacket.path, funscriptPath);
             funscriptHandler->setLoaded(false);
+            SettingsHandler::SaveLinkedFunscripts();
         }
     }
     else
@@ -2404,6 +2408,7 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
             {
                 LogHandler::Debug("Saving script into data: "+funscriptPath);
                 SettingsHandler::setLinkedVRFunscript(videoPath, funscriptPath);
+                SettingsHandler::SaveLinkedFunscripts();
             }
         }
         else if(vrScriptSelectedCanceledPath != packet.path)

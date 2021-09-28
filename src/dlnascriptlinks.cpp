@@ -130,6 +130,7 @@ void DLNAScriptLinks::on_buttonBox_accepted()
             SettingsHandler::setLinkedVRFunscript(key, _editedLinks.value(key).toString());
         foreach(auto key, _removedLinks.keys())
             SettingsHandler::removeLinkedVRFunscript(key);
+        SettingsHandler::SaveLinkedFunscripts();
         _saveButton->setEnabled(false);
         _resetButton->setEnabled(false);
         _discardButton->setEnabled(false);

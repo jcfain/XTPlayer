@@ -322,6 +322,14 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
 
 }
 
+void SettingsHandler::SaveLinkedFunscripts(QSettings* settingsToSaveTo)
+{
+    if(settingsToSaveTo == nullptr)
+        settingsToSaveTo = settings;
+    settingsToSaveTo->setValue("deoDnlaFunscriptLookup", deoDnlaFunscriptLookup);
+    settingsToSaveTo->sync();
+}
+
 void SettingsHandler::Export(QWidget* parent)
 {
     QString selectedFile = QFileDialog::getSaveFileName(parent, QApplication::applicationDirPath() + "/Save settings ini", "settings_export.ini", "INI Files (*.ini)");
@@ -1323,14 +1331,12 @@ void SettingsHandler::setVideoIncrement(int value)
 void SettingsHandler::setLinkedVRFunscript(QString key, QString value)
 {
     QMutexLocker locker(&mutex);
-    deoDnlaFunscriptLookup[key] = value;
-    settingsChangedEvent(true);
+    deoDnlaFunscriptLookup[key] = value;// Should be saved on edit
 }
 void SettingsHandler::removeLinkedVRFunscript(QString key)
 {
     QMutexLocker locker(&mutex);
-    deoDnlaFunscriptLookup.remove(key);
-    settingsChangedEvent(true);
+    deoDnlaFunscriptLookup.remove(key);// Should be saved on edit
 }
 
 void SettingsHandler::setGamepadEnabled(bool value)

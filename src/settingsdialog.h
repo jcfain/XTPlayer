@@ -6,6 +6,9 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QFuture>
 #include <QSpinBox>
+#include <QProgressBar>
+#include <QCryptographicHash>
+#include <QInputDialog>
 #include "CustomControls/rangeslider.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/channeltableviewmodel.h"
@@ -24,8 +27,6 @@
 #include "lib/handler/funscripthandler.h"
 #include "libraryexclusions.h"
 #include "addchanneldialog.h"
-#include <QProgressBar>
-#include <QCryptographicHash>
 
 extern void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo);
 extern void initNetwork(UdpHandler* serialHandler, NetworkAddress address);
@@ -178,7 +179,12 @@ private slots:
 
     void on_disableTCodeValidationCheckbox_clicked(bool checked);
 
+    void on_close_loading_dialog();
+
+    void on_settingsChange(bool dirty);
+
 private:
+
     Ui::SettingsDialog ui;
     void loadSerialPorts();
     void initSerialEvent();
@@ -218,10 +224,15 @@ private:
 
     QLabel* offSetLabel;
     QSpinBox* offSetSpinBox;
-    //QPushButton* saveAllBtn;
+    QPushButton* saveAllBtn;
+    QPushButton* closeBtn;
     bool hasVideoPlayed = false;
 
     void setDeviceStatusStyle(ConnectionStatus status, DeviceType deviceType, QString message = "");
+
+
+signals:
+    void loadingDialogClose();
 };
 
 #endif // SETTINGSDIALOG_H

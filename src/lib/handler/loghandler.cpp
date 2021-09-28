@@ -91,6 +91,40 @@ void LogHandler::Dialog(QString message, XLogLevel level)
     messageBox.setFixedSize(500,200);
 }
 
+void LogHandler::Loading(QWidget* parent, QString message)
+{
+    Debug(message);
+    _loadingWidget = new QDialog(parent);
+    _loadingWidget->setModal(true);
+    _loadingWidget->setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+    //_loadingWidget->setAttribute(Qt::WA_TranslucentBackground, false);
+    _loadingWidget->setFixedSize(parent->size());
+    _loadingWidget->setProperty("cssClass", "loadingSpinner");
+    //_loadingWidget->setStyleSheet("* {background-color: rgba(128,128,128, 0.5)}");
+    QGridLayout* grid = new QGridLayout(_loadingWidget);
+    QMovie* loadingMovie = new QMovie("://images/Eclipse-1s-loading-200px.gif", nullptr, _loadingWidget);
+    loadingMovie->setScaledSize({200,200});
+    QLabel* loadingLabel = new QLabel(_loadingWidget);
+    loadingLabel->setProperty("cssClass", "loadingSpinner");
+    loadingLabel->setMovie(loadingMovie);
+    loadingLabel->setAlignment(Qt::AlignCenter);
+    QLabel* messageLabel = new QLabel(_loadingWidget);
+    messageLabel->setText(message);
+    grid->addWidget(loadingLabel, 0, 0, Qt::AlignmentFlag::AlignHCenter | Qt::AlignmentFlag::AlignBottom );
+    grid->addWidget(messageLabel, 1, 0, Qt::AlignmentFlag::AlignHCenter | Qt::AlignmentFlag::AlignTop );
+    _loadingWidget->hide();
+    _loadingWidget->setLayout(grid);
+    _loadingWidget->show();
+    loadingMovie->start();
+}
+
+void LogHandler::LoadingClose()
+{
+    Debug("Close Loading");
+    _loadingWidget->close();
+    delete _loadingWidget;
+}
+
 QString LogHandler::getLevel(XLogLevel level)
 {
     switch(level)
@@ -179,6 +213,7 @@ qint64 LogHandler::userDebugIndex = 0;
 QHash<qint64, QString> LogHandler::_debugStore;
 QString LogHandler::_debugFileName;
 bool LogHandler::_userDebugMode = false;
+QDialog* LogHandler::_loadingWidget;
 #ifdef QT_DEBUG
     bool LogHandler::_debugMode = true;
 #else

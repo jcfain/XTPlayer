@@ -27,6 +27,15 @@ QStatusBar QLabel[cssClass="connectionStatusDisconnected"] {
 QStatusBar QLabel[cssClass="connectionStatusConnecting"] {
 	color: yellow;
 }
+QDialog[cssClass="loadingSpinner"] {
+	
+}
+QLabel[cssClass="libraryLoadingSpinner"] {
+	background-color: rgba(128,128,128, 0.5);
+}
+QLabel[cssClass="mediaLoadingSpinner"] {
+	background-color: transparent;
+}
 QProgressBar {
 	color: green;
     margin: 0.5px;
