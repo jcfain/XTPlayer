@@ -5,8 +5,8 @@
 #include <QtAV>
 #include <QtAVWidgets>
 enum XVideoRenderer {
-    GLWidget2,
     OpenGLWidget,
+    GLWidget2,
     Direct2D,
     GDI,
     GLWidget,
@@ -18,8 +18,8 @@ enum XVideoRenderer {
 };
 const QMap<QString, XVideoRenderer> XVideoRendererMap =
 {
-    {"GLWidget2", XVideoRenderer::GLWidget2},
     {"OpenGLWidget", XVideoRenderer::OpenGLWidget},
+    {"GLWidget2", XVideoRenderer::GLWidget2},
     {"Direct2D", XVideoRenderer::Direct2D},
     {"GDI", XVideoRenderer::GDI},
     {"GLWidget", XVideoRenderer::GLWidget},
@@ -31,8 +31,8 @@ const QMap<QString, XVideoRenderer> XVideoRendererMap =
 };
 const QMap<XVideoRenderer, QString> XVideoRendererReverseMap =
 {
-    {XVideoRenderer::GLWidget2, "GLWidget2"},
     {XVideoRenderer::OpenGLWidget, "OpenGLWidget"},
+    {XVideoRenderer::GLWidget2, "GLWidget2"},
     {XVideoRenderer::Direct2D, "Direct2D"},
     {XVideoRenderer::GDI, "GDI", },
     {XVideoRenderer::GLWidget, "GLWidget", },
@@ -44,8 +44,8 @@ const QMap<XVideoRenderer, QString> XVideoRendererReverseMap =
 };
 const QMap<XVideoRenderer, int> QtAVVideoRendererIdMap =
 {
-    {XVideoRenderer::GLWidget2, QtAV::VideoRendererId_GLWidget2},
     {XVideoRenderer::OpenGLWidget, QtAV::VideoRendererId_OpenGLWidget},
+    {XVideoRenderer::GLWidget2, QtAV::VideoRendererId_GLWidget2},
     {XVideoRenderer::Direct2D, QtAV::VideoRendererId_Direct2D},
     {XVideoRenderer::GDI, QtAV::VideoRendererId_GDI},
     {XVideoRenderer::GLWidget, QtAV::VideoRendererId_GLWidget},
