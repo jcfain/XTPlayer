@@ -31,8 +31,13 @@ public:
     Funscript* currentFunscript();
     static bool getInverted();
     static void setInverted(bool value);
+    qint64 getMin();
+    qint64 getMax();
     std::shared_ptr<FunscriptAction> getPosition(qint64 at);
     QString channel();
+
+    void play(QString funscript);
+    void stop();
 
 
 private:
@@ -50,6 +55,8 @@ private:
     QList<qint64> posList;
     Funscript* funscript = new Funscript();
     int n;
+    qint64 _funscriptMin = 0;
+    qint64 _funscriptMax = -1;
 };
 
 #endif // FUNSCRIPTHANDLER_H

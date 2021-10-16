@@ -10,6 +10,8 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem &localData, QListWi
         localData.thumbFile = "://images/icons/audio.png";
     else if(localData.type == LibraryListItemType::PlaylistInternal)
         localData.thumbFile = "://images/icons/playlist.png";
+    else if(localData.type == LibraryListItemType::FunscriptType)
+        localData.thumbFile = "://images/icons/funscript.png";
     _thumbFile = localData.thumbFile;
     int thumbSize = SettingsHandler::getThumbSize();
     updateThumbSize({thumbSize, thumbSize});

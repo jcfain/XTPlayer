@@ -31,6 +31,7 @@ SOURCES += \
     lib/handler/loghandler.cpp \
     lib/handler/serialhandler.cpp \
     lib/handler/settingshandler.cpp \
+    lib/handler/synchandler.cpp \
     lib/handler/tcodehandler.cpp \
     lib/handler/udphandler.cpp \
     lib/handler/videohandler.cpp \
@@ -63,6 +64,7 @@ HEADERS += \
     lib/handler/deohandler.h \
     lib/handler/devicehandler.h \
     lib/handler/gamepadhandler.h \
+    lib/handler/synchandler.h \
     lib/handler/videohandler.h \
     lib/handler/vrdevicehandler.h \
     lib/handler/whirligighandler.h \

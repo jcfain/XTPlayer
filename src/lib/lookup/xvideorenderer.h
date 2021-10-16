@@ -5,16 +5,16 @@
 #include <QtAV>
 #include <QtAVWidgets>
 enum XVideoRenderer {
-    OpenGLWidget,
-    GLWidget2,
-    Direct2D,
-    GDI,
-    GLWidget,
-    GraphicsItem,
-    OpenGLWindow,
-    Widget,
-    X11,
-    XV
+    OpenGLWidget, // 0
+    GLWidget2, // 1
+    Direct2D, // 2
+    GDI, // 3
+    GLWidget, // 4
+    GraphicsItem, // 5
+    OpenGLWindow, // 6
+    Widget, // 7
+    X11, // 8
+    XV // 9
 };
 const QMap<QString, XVideoRenderer> XVideoRendererMap =
 {

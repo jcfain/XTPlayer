@@ -43,6 +43,7 @@
 #include "lib/handler/devicehandler.h"
 #include "lib/handler/vrdevicehandler.h"
 #include "lib/handler/audiosyncfilter.h"
+#include "lib/handler/synchandler.h"
 #include "lib/struct/LibraryListItem.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/ConnectionChangedSignal.h"
@@ -186,6 +187,7 @@ private:
     Ui::MainWindow *ui;
     QMutex mutex;
     SettingsDialog* _xSettings;
+    SyncHandler* _syncHandler;
     WelcomeDialog* _welcomeDialog;
     DLNAScriptLinks* _dlnaScriptLinksDialog;
     QFrame* _controlsHomePlaceHolderFrame;
@@ -197,16 +199,14 @@ private:
     QSplashScreen* loadingSplash;
     QTextToSpeech* textToSpeech;
     VideoPreviewWidget* videoPreviewWidget;
-    QFuture<void> funscriptFuture;
-    QFuture<void> funscriptVRSyncFuture;
     QFuture<void> loadingLibraryFuture;
     bool loadingLibraryStop = false;
     QFuture<void> _waitForStopFuture;
     bool _waitForStopFutureCancel = false;
     QProgressBar* bar;
     VideoHandler* videoHandler;
-    FunscriptHandler* funscriptHandler;
-    QList<FunscriptHandler*> funscriptHandlers;
+//    FunscriptHandler* funscriptHandler;
+//    QList<FunscriptHandler*> funscriptHandlers;
     TCodeHandler* tcodeHandler;
     bool _isMaximized = false;
     bool _isFullScreen = false;
@@ -333,8 +333,8 @@ private:
     void rewind();
     void fastForward();
     LibraryListWidgetItem* setCurrentLibraryRow(int row);
-    void syncFunscript();
-    void syncVRFunscript();
+//    void syncFunscript();
+//    void syncVRFunscript();
 
     bool eventFilter(QObject *obj, QEvent *event) override;
 

@@ -16,7 +16,6 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
 {
     QMutexLocker locker(&mutex);
     QCoreApplication::setOrganizationName("cUrbSide prOd");
-    QCoreApplication::setOrganizationDomain("https://www.patreon.com/Khrull");
     QCoreApplication::setApplicationName("XTPlayer");
 
     _appdataLocation = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);

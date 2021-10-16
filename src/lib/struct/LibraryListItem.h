@@ -9,7 +9,8 @@
 enum LibraryListItemType {
     PlaylistInternal,
     Video,
-    Audio
+    Audio,
+    FunscriptType
 };
 
 struct LibraryListItem

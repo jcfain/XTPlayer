@@ -40,5 +40,6 @@
         <file>images/welcome/XTP_welcome-4.png</file>
         <file>images/welcome/XTP_welcome-5.png</file>
         <file>images/welcome/XTP_welcome-6.png</file>
+        <file>images/icons/funscript.png</file>
     </qresource>
 </RCC>

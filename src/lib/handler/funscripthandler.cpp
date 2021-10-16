@@ -47,6 +47,7 @@ bool FunscriptHandler::load(QString funscriptString)
 bool FunscriptHandler::load(QByteArray byteArray)
 {
     QMutexLocker locker(&mutex);
+    _funscriptMax = -1;
     QJsonParseError* error = new QJsonParseError();
     QJsonDocument doc = QJsonDocument::fromJson(byteArray, error);
 
@@ -59,6 +60,7 @@ bool FunscriptHandler::load(QByteArray byteArray)
     }
     delete error;
     JSonToFunscript(doc.object());
+    _funscriptMax = posList.length() > 0 ? posList.last() : -1;
 
     _loaded = true;
     SettingsHandler::setFunscriptLoaded(_channel, _loaded);
@@ -76,12 +78,24 @@ bool FunscriptHandler::isLoaded()
     QMutexLocker locker(&mutex);
     return _loaded;
 }
+
 void FunscriptHandler::setLoaded(bool value)
 {
     QMutexLocker locker(&mutex);
     _loaded = value;
     SettingsHandler::setFunscriptLoaded(_channel, _loaded);
 }
+
+qint64 FunscriptHandler::getMin()
+{
+    return _funscriptMin;
+}
+
+qint64 FunscriptHandler::getMax()
+{
+    return _funscriptMax;
+}
+
 void FunscriptHandler::JSonToFunscript(QJsonObject json)
 {
     if (json.contains("range"))
