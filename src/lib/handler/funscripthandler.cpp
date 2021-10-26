@@ -162,11 +162,11 @@ std::shared_ptr<FunscriptAction> FunscriptHandler::getPosition(qint64 millis)
     QMutexLocker locker(&mutex);
     millis += SettingsHandler::getLiveOffSet() == 0 ? SettingsHandler::getoffSet() : SettingsHandler::getLiveOffSet();
     qint64 closestMillis = findClosest(millis, posList);
+    if(closestMillis == -1)
+        return nullptr;
     nextActionIndex = posList.indexOf(closestMillis) + 1;
     if(nextActionIndex >= posList.length())
-    {
         return nullptr;
-    }
     qint64 nextMillis = posList[nextActionIndex];
     //LogHandler::Debug("millis: "+ QString::number(millis));
     //LogHandler::Debug("closestMillis: "+ QString::number(closestMillis));
@@ -197,6 +197,8 @@ std::shared_ptr<FunscriptAction> FunscriptHandler::getPosition(qint64 millis)
 
 qint64 FunscriptHandler::findClosest(qint64 value, QList<qint64> a) {
 
+    if(a.length() == 0)
+        return -1;
       if(value < a[0]) {
           return a[0];
       }

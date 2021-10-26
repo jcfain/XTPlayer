@@ -210,6 +210,9 @@ public:
     static void setSkipToMoneyShotFunscript(QString value);
     static bool getSkipToMoneyShotSkipsVideo();
     static void setSkipToMoneyShotSkipsVideo(bool value);
+    static bool getSkipToMoneyShotStandAloneLoop();
+    static void setSkipToMoneyShotStandAloneLoop(bool value);
+
 
     static void setHideStandAloneFunscriptsInLibrary(bool value);
     static bool getHideStandAloneFunscriptsInLibrary();
@@ -314,6 +317,7 @@ private:
     static bool _skipToMoneyShotPlaysFunscript;
     static QString _skipToMoneyShotFunscript;
     static bool _skipToMoneyShotSkipsVideo;
+    static bool _skipToMoneyShotStandAloneLoop;
 
     static bool _hideStandAloneFunscriptsInLibrary;
     static bool _skipPlayingSTandAloneFunscriptsInLibrary;

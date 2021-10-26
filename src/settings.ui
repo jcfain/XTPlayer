@@ -468,10 +468,23 @@
           <x>10</x>
           <y>30</y>
           <width>611</width>
-          <height>91</height>
+          <height>99</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="skipToMoneyShotGrid">
+         <item row="1" column="0">
+          <widget class="QLineEdit" name="skipToMoneyShotFunscriptLineEdit"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QCheckBox" name="skipToMoneyShotSkipsVideo">
+           <property name="toolTip">
+            <string>If checked, skip to money shot will skip the playing video to either the specified bookmark or the last percent.</string>
+           </property>
+           <property name="text">
+            <string>Skip playing video to bookmark</string>
+           </property>
+          </widget>
+         </item>
          <item row="0" column="0" colspan="2">
           <widget class="QCheckBox" name="skipToMoneyShotPlaysFunscriptCheckbox">
            <property name="text">
@@ -492,16 +505,10 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
-          <widget class="QLineEdit" name="skipToMoneyShotFunscriptLineEdit"/>
-         </item>
-         <item row="2" column="0">
-          <widget class="QCheckBox" name="skipToMoneyShotSkipsVideo">
-           <property name="toolTip">
-            <string>If checked, skip to money shot will skip the playing video to either the specified bookmark or the last percent.</string>
-           </property>
+         <item row="3" column="0">
+          <widget class="QCheckBox" name="skipToMoneyShotStandAloneLoopCheckBox">
            <property name="text">
-            <string>Skip playing video to bookmark</string>
+            <string>Loop</string>
            </property>
           </widget>
          </item>

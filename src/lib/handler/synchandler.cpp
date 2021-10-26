@@ -24,6 +24,11 @@ void SyncHandler::togglePause()
     }
 }
 
+void SyncHandler::setStandAloneLoop(bool enabled)
+{
+    _standAloneLoop = enabled;
+}
+
 bool SyncHandler::isPaused()
 {
     return _isPaused;
@@ -32,41 +37,48 @@ bool SyncHandler::isPlayingStandAlone()
 {
     return _isStandAloneFunscriptPlaying;
 }
-bool SyncHandler::load(QString funscript)
+
+QList<QString> SyncHandler::load(QString scriptFile)
 {
     clear();
-    return _funscriptHandler->load(funscript);
-}
-
-bool SyncHandler::load(QByteArray funscript)
-{
-    clear();
-    return _funscriptHandler->load(funscript);
-}
-
-bool SyncHandler::loadMFS(QString channel, QString funscript)
-{
-    FunscriptHandler* otherFunscript = new FunscriptHandler(channel);
-    if(!otherFunscript->load(funscript))
-        return false;
-    else
-        _funscriptHandlers.append(otherFunscript);
-    return true;
-}
-
-bool SyncHandler::loadMFS(QString channel, QByteArray funscript)
-{
-    FunscriptHandler* otherFunscript = new FunscriptHandler(channel);
-    if(!otherFunscript->load(funscript))
-        return false;
-    else
-        _funscriptHandlers.append(otherFunscript);
-    return true;
+    if(!scriptFile.isEmpty())
+    {
+        QFileInfo scriptInfo(scriptFile);
+        QString scriptTemp = scriptFile;
+        QString scriptFileNoExtension = scriptTemp.remove(scriptTemp.lastIndexOf('.'), scriptTemp.length() -  1);
+        QString fileName = scriptInfo.fileName();
+        QString scriptNameNoExtension = fileName.remove(fileName.lastIndexOf('.'), scriptTemp.length() -  1);
+        if(scriptFile.endsWith(".zip"))
+        {
+           QZipReader zipFile(scriptFile, QIODevice::ReadOnly);
+           if(zipFile.isReadable())
+           {
+               QByteArray data = zipFile.fileData(scriptNameNoExtension + ".funscript");
+               if (!data.isEmpty())
+               {
+                   if(!load(data))
+                   {
+                       _invalidScripts.append("Zip file: " + scriptNameNoExtension + ".funscript");
+                   }
+               }
+               else
+               {
+                   LogHandler::Debug("Main funscript: '"+scriptNameNoExtension + ".funscript' not found in zip");
+               }
+           }
+        }
+        else if(!_funscriptHandler->load(scriptFile))
+        {
+            _invalidScripts.append(scriptFile);
+        }
+        loadMFS(scriptFile);
+    }
+    return _invalidScripts;
 }
 
 bool SyncHandler::isLoaded()
 {
-    return _funscriptHandler->isLoaded();
+    return _funscriptHandler->isLoaded() || _funscriptHandlers.length() > 0;
 }
 
 void SyncHandler::stopAll()
@@ -109,6 +121,9 @@ void SyncHandler::clear()
         _funscriptHandlers.clear();
     }
     _currentTime = 0;
+    _standAloneLoop = false;
+    _isPaused = false;
+    _invalidScripts.clear();
 }
 
 void SyncHandler::reset()
@@ -122,11 +137,16 @@ QString SyncHandler::getPlayingStandAloneScript()
 {
     return _playingStandAloneFunscript;
 }
-void SyncHandler::playFunscript(QString funscript) {
+
+void SyncHandler::playStandAlone(QString funscript) {
     LogHandler::Debug("play Funscript stand alone start thread");
     if(_isFunscriptPlaying)
         stopAll();
-    load(funscript);
+    if(!funscript.isEmpty())
+        load(funscript);
+    _currentTime = 0;
+    _isPaused = false;
+    _standAloneLoop = false;
     _isFunscriptPlaying = true;
     _isStandAloneFunscriptPlaying = true;
     _playingStandAloneFunscript = funscript;
@@ -141,6 +161,7 @@ void SyncHandler::playFunscript(QString funscript) {
         qint64 timer1 = 0;
         qint64 timer2 = 0;
         mSecTimer.start();
+        qint64 funscriptMax = getFunscriptMax();
         while (_isStandAloneFunscriptPlaying)
         {
             if (timer2 - timer1 >= 1)
@@ -156,7 +177,8 @@ void SyncHandler::playFunscript(QString funscript) {
                     {
                         _currentTime++;
                     }
-                    actionPosition = _funscriptHandler->getPosition(_currentTime);
+                    if(_funscriptHandler->isLoaded())
+                        actionPosition = _funscriptHandler->getPosition(_currentTime);
                     if(actionPosition != nullptr)
                         _xSettings->setAxisProgressBar(TCodeChannelLookup::Stroke(), actionPosition->pos);
                     foreach(auto funscriptHandlerOther, _funscriptHandlers)
@@ -176,7 +198,7 @@ void SyncHandler::playFunscript(QString funscript) {
                 secCounter2 = round(mSecTimer.elapsed() / 1000);
                 if(secCounter2 - secCounter1 >= 1)
                 {
-                    if(_seekTime == -1)
+                    if(_seekTime == -1 && !_videoHandler->isPlaying())
                         emit funscriptPositionChanged(_currentTime);
                     secCounter1 = secCounter2;
                 }
@@ -184,10 +206,15 @@ void SyncHandler::playFunscript(QString funscript) {
                     _seekTime = -1;
             }
             timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
-            if(_currentTime >= getFunscriptMax())
+            if(!_standAloneLoop && _currentTime >= funscriptMax)
             {
                 _isStandAloneFunscriptPlaying = false;
-                emit funscriptStatusChanged(QtAV::MediaStatus::EndOfMedia);
+                if(!_videoHandler->isPlaying())
+                    emit funscriptStatusChanged(QtAV::MediaStatus::EndOfMedia);
+            }
+            else if(_standAloneLoop && _currentTime >= funscriptMax)
+            {
+                _currentTime = 0;
             }
         }
         _isFunscriptPlaying = false;
@@ -215,7 +242,16 @@ qint64 SyncHandler::getFunscriptMin()
 
 qint64 SyncHandler::getFunscriptMax()
 {
-    return _funscriptHandler->getMax();
+    if(_funscriptHandler->getMax() > -1)
+        return _funscriptHandler->getMax();
+    qint64 otherMax = -1;
+    foreach(auto handler, _funscriptHandlers)
+    {
+        auto max = handler->getMax();
+        if(max > -1 && max > otherMax)
+            otherMax = max;
+    }
+    return otherMax;
 }
 
 void SyncHandler::syncVRFunscript()
@@ -409,4 +445,71 @@ void SyncHandler::syncFunscript()
         _xSettings->resetAxisProgressBars();
         LogHandler::Debug("exit syncFunscript");
     });
+}
+
+// Private
+bool SyncHandler::load(QByteArray funscript)
+{
+    return _funscriptHandler->load(funscript);
+}
+
+bool SyncHandler::loadMFS(QString channel, QString funscript)
+{
+    FunscriptHandler* otherFunscript = new FunscriptHandler(channel);
+    if(!otherFunscript->load(funscript))
+        return false;
+    else
+        _funscriptHandlers.append(otherFunscript);
+    return true;
+}
+
+bool SyncHandler::loadMFS(QString channel, QByteArray funscript)
+{
+    FunscriptHandler* otherFunscript = new FunscriptHandler(channel);
+    if(!otherFunscript->load(funscript))
+        return false;
+    else
+        _funscriptHandlers.append(otherFunscript);
+    return true;
+}
+
+void SyncHandler::loadMFS(QString scriptFile)
+{
+    QString scriptTemp = scriptFile;
+    QString scriptFileNoExtension = scriptTemp.remove(scriptTemp.lastIndexOf('.'), scriptTemp.length() -  1);
+    QFileInfo scriptFileInfo(scriptFile);
+    QZipReader* zipFile;
+    if(scriptFile.endsWith(".zip"))
+        zipFile = new QZipReader(scriptFile, QIODevice::ReadOnly);
+
+    auto availibleAxis = SettingsHandler::getAvailableAxis();
+    foreach(auto axisName, availibleAxis->keys())
+    {
+        auto track = availibleAxis->value(axisName);
+        if(axisName == TCodeChannelLookup::Stroke() || track.Type == AxisType::HalfRange || track.TrackName.isEmpty())
+            continue;
+
+        QFileInfo fileInfo(scriptFileNoExtension + "." + track.TrackName + ".funscript");
+        if(fileInfo.exists())
+        {
+            LogHandler::Debug("Loading MFS track: "+ scriptFileNoExtension + "." + track.TrackName + ".funscript");
+            if(!loadMFS(axisName, fileInfo.absoluteFilePath()))
+                _invalidScripts.append("MFS script: " + fileInfo.absoluteFilePath());
+        }
+        else if(scriptFile.endsWith(".zip") && zipFile->isReadable())
+        {
+           QString fileName = scriptFileInfo.fileName();
+           QString scriptFileNameNoExtension = fileName.remove(fileName.lastIndexOf('.'), scriptTemp.length() -  1);
+           QString trackFileName = scriptFileNameNoExtension + "." + track.TrackName + ".funscript";
+           QByteArray data = zipFile->fileData(trackFileName);
+           if (!data.isEmpty())
+           {
+               LogHandler::Debug("Loading MFS track from zip: "+ trackFileName);
+               if(!loadMFS(axisName, data))
+                   _invalidScripts.append("MFS zip script: " + trackFileName);
+           }
+        }
+    }
+    if(scriptFile.endsWith(".zip"))
+        delete zipFile;
 }

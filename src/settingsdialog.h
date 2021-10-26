@@ -193,6 +193,8 @@ private slots:
 
     void on_skipToMoneyShotSkipsVideo_clicked(bool checked);
 
+    void on_skipToMoneyShotStandAloneLoopCheckBox_clicked(bool checked);
+
 private:
 
     Ui::SettingsDialog ui;

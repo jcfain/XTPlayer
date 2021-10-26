@@ -237,6 +237,8 @@ void SettingsDialog::setupUi()
         ui.skipToMoneyShotSkipsVideo->setChecked(SettingsHandler::getSkipToMoneyShotSkipsVideo());
         ui.skipToMoneyShotSkipsVideo->setEnabled(skipToMoneyShotPlaysFunscript);
         ui.browseSkipToMoneyShotFunscriptButton->setEnabled(skipToMoneyShotPlaysFunscript);
+        ui.skipToMoneyShotStandAloneLoopCheckBox->setChecked(SettingsHandler::getSkipToMoneyShotStandAloneLoop());
+        ui.skipToMoneyShotStandAloneLoopCheckBox->setEnabled(skipToMoneyShotPlaysFunscript);
 
         _interfaceInitialized = true;
     }
@@ -1640,6 +1642,7 @@ void SettingsDialog::on_skipToMoneyShotPlaysFunscriptCheckbox_clicked(bool check
     SettingsHandler::setSkipToMoneyShotPlaysFunscript(checked);
     ui.skipToMoneyShotSkipsVideo->setEnabled(checked);
     ui.browseSkipToMoneyShotFunscriptButton->setEnabled(checked);
+    ui.skipToMoneyShotStandAloneLoopCheckBox->setEnabled(checked);
 }
 
 void SettingsDialog::on_browseSkipToMoneyShotFunscriptButton_clicked(bool checked)
@@ -1655,4 +1658,9 @@ void SettingsDialog::on_browseSkipToMoneyShotFunscriptButton_clicked(bool checke
 void SettingsDialog::on_skipToMoneyShotSkipsVideo_clicked(bool checked)
 {
     SettingsHandler::setSkipToMoneyShotSkipsVideo(checked);
+}
+
+void SettingsDialog::on_skipToMoneyShotStandAloneLoopCheckBox_clicked(bool checked)
+{
+    SettingsHandler::setSkipToMoneyShotStandAloneLoop(checked);
 }

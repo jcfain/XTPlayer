@@ -152,6 +152,7 @@ private slots:
 
     void onPasswordIncorrect();
     void on_scriptNotFound(QString message);
+    void on_noScriptsFound(QString message);
     void on_setLoading(bool loading);
     void on_playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
 

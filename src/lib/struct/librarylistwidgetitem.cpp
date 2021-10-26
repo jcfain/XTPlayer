@@ -62,11 +62,11 @@ bool LibraryListWidgetItem::updateToolTip(LibraryListItem localData)
         auto availibleAxis = SettingsHandler::getAvailableAxis();
         foreach(auto axisName, availibleAxis->keys())
         {
-            auto trackName = availibleAxis->value(axisName).TrackName;
-            if(axisName == TCodeChannelLookup::Stroke() || trackName.isEmpty())
+            auto track = availibleAxis->value(axisName);
+            if(axisName == TCodeChannelLookup::Stroke() || track.Type == AxisType::HalfRange || track.TrackName.isEmpty())
                 continue;
 
-            QString script = localData.scriptNoExtension + "." + trackName + ".funscript";
+            QString script = localData.scriptNoExtension + "." + track.TrackName + ".funscript";
             QFileInfo fileInfo(script);
             if (fileInfo.exists())
             {

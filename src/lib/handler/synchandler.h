@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QFuture>
+#include <QtCompress/qzipwriter.h>
+#include <QtCompress/qzipreader.h>
 #include "../../settingsdialog.h"
 #include "tcodehandler.h"
 #include "funscripthandler.h"
@@ -22,7 +24,8 @@ public:
     ~SyncHandler();
     void togglePause();
     bool isPaused();
-    void playFunscript(QString funscript);
+    void playStandAlone(QString funscript = nullptr);
+    void setStandAloneLoop(bool enabled);
     void syncVRFunscript();
     void syncFunscript();
     void setFunscriptTime(qint64 secs);
@@ -34,10 +37,7 @@ public:
     void stopAll();
     void clear();
     void reset();
-    bool load(QString funscript);
-    bool load(QByteArray funscript);
-    bool loadMFS(QString channel, QString funscript);
-    bool loadMFS(QString channel, QByteArray funscript);
+    QList<QString> load(QString funscript);
     bool isLoaded();
     bool isPlayingStandAlone();
     QString getPlayingStandAloneScript();
@@ -50,12 +50,19 @@ private:
     bool _isFunscriptPlaying = false;
     bool _isStandAloneFunscriptPlaying = false;
     bool _isPaused = false;
+    bool _standAloneLoop;
     qint64 _currentTime = 0;
     qint64 _seekTime = -1;
     QFuture<void> _funscriptFuture;
     QFuture<void> _funscriptStandAloneFuture;
     FunscriptHandler* _funscriptHandler;
     QList<FunscriptHandler*> _funscriptHandlers;
+    QList<QString> _invalidScripts;
+
+    bool load(QByteArray funscript);
+    void loadMFS(QString funscript);
+    bool loadMFS(QString channel, QString funscript);
+    bool loadMFS(QString channel, QByteArray funscript);
 };
 
 #endif // SYNCHANDLER_H

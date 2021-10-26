@@ -4,8 +4,8 @@ const QMap<TCodeVersion, QString> SettingsHandler::SupportedTCodeVersions = {
     {TCodeVersion::v2, "TCode v0.2"},
     {TCodeVersion::v3, "TCode v0.3"}
 };
-const QString SettingsHandler::XTPVersion = "0.2641";
-const float SettingsHandler::XTPVersionNum = 0.2641f;
+const QString SettingsHandler::XTPVersion = "0.265";
+const float SettingsHandler::XTPVersionNum = 0.265f;
 
 SettingsHandler::SettingsHandler(){}
 SettingsHandler::~SettingsHandler()
@@ -128,6 +128,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     _skipToMoneyShotPlaysFunscript = settingsToLoadFrom->value("skipToMoneyShotPlaysFunscript").toBool();
     _skipToMoneyShotFunscript = settingsToLoadFrom->value("skipToMoneyShotFunscript").toString();
     _skipToMoneyShotSkipsVideo = settingsToLoadFrom->value("skipToMoneyShotSkipsVideo").toBool();
+    _skipToMoneyShotStandAloneLoop = settingsToLoadFrom->value("skipToMoneyShotStandAloneLoop").toBool();
 
     _hideStandAloneFunscriptsInLibrary = settingsToLoadFrom->value("hideStandAloneFunscriptsInLibrary").toBool();
     _skipPlayingSTandAloneFunscriptsInLibrary = settingsToLoadFrom->value("skipPlayingSTandAloneFunscriptsInLibrary").toBool();
@@ -322,6 +323,8 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         settingsToSaveTo->setValue("skipToMoneyShotPlaysFunscript", _skipToMoneyShotPlaysFunscript);
         settingsToSaveTo->setValue("skipToMoneyShotFunscript", _skipToMoneyShotFunscript);
         settingsToSaveTo->setValue("skipToMoneyShotSkipsVideo", _skipToMoneyShotSkipsVideo);
+        settingsToSaveTo->setValue("skipToMoneyShotStandAloneLoop", _skipToMoneyShotStandAloneLoop);
+
 
         settingsToSaveTo->setValue("hideStandAloneFunscriptsInLibrary", _hideStandAloneFunscriptsInLibrary);
         settingsToSaveTo->setValue("skipPlayingSTandAloneFunscriptsInLibrary", _skipPlayingSTandAloneFunscriptsInLibrary);
@@ -1626,7 +1629,15 @@ void SettingsHandler::setSkipToMoneyShotSkipsVideo(bool value)
     _skipToMoneyShotSkipsVideo = value;
     settingsChangedEvent(true);
 }
-
+bool SettingsHandler::getSkipToMoneyShotStandAloneLoop()
+{
+    return _skipToMoneyShotStandAloneLoop;
+}
+void SettingsHandler::setSkipToMoneyShotStandAloneLoop(bool value)
+{
+    _skipToMoneyShotStandAloneLoop = value;
+    settingsChangedEvent(true);
+}
 bool SettingsHandler::getHideStandAloneFunscriptsInLibrary()
 {
     return _hideStandAloneFunscriptsInLibrary;
@@ -1744,6 +1755,7 @@ bool SettingsHandler::_disableNoScriptFound;
 bool SettingsHandler::_skipToMoneyShotPlaysFunscript;
 QString SettingsHandler::_skipToMoneyShotFunscript;
 bool SettingsHandler::_skipToMoneyShotSkipsVideo;
+bool SettingsHandler::_skipToMoneyShotStandAloneLoop;
 
 bool SettingsHandler::_hideStandAloneFunscriptsInLibrary;
 bool SettingsHandler::_skipPlayingSTandAloneFunscriptsInLibrary;

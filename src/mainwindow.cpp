@@ -1319,7 +1319,7 @@ void MainWindow::on_load_library(QString path)
         libraryList->addItem(qListWidgetItem);
         cachedLibraryItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
         if(!scriptPath.isEmpty())
-            funscriptsWithMedia.append(scriptNoExtension);
+            funscriptsWithMedia.append(scriptPath);
         if(!zipFile.isEmpty())
             funscriptsWithMedia.append(zipFile);
     }
@@ -1344,13 +1344,15 @@ void MainWindow::on_load_library(QString path)
             QString scriptPathTemp = fileinfo.filePath();
             QString scriptNoExtension = scriptPathTemp.remove(scriptPathTemp.lastIndexOf('.'), scriptPathTemp.length() - 1);
             QString scriptNoExtensionTemp = QString(scriptNoExtension);
-            if(funscriptsWithMedia.contains(scriptNoExtension, Qt::CaseSensitivity::CaseInsensitive))
+            if(funscriptsWithMedia.contains(scriptPath, Qt::CaseSensitivity::CaseInsensitive))
                 continue;
+
             QString scriptMFSExt = scriptNoExtensionTemp.remove(0, scriptNoExtensionTemp.length() - (scriptNoExtensionTemp.length() - scriptNoExtensionTemp.lastIndexOf('.')));
             bool isMfs = false;
             foreach(auto axisName, availibleAxis->keys())
             {
-                if("."+availibleAxis->value(axisName).TrackName == scriptMFSExt)
+                auto track = availibleAxis->value(axisName);
+                if("."+track.TrackName == scriptMFSExt)
                 {
                     isMfs = true;
                     break;
@@ -1358,6 +1360,7 @@ void MainWindow::on_load_library(QString path)
             }
             if(isMfs)
                 continue;
+
             QString fileDir = fileinfo.dir().path();
             bool isExcluded = false;
             foreach(QString dir, excludedLibraryPaths)
@@ -1371,7 +1374,6 @@ void MainWindow::on_load_library(QString path)
             if(scriptPath.endsWith(".zip", Qt::CaseInsensitive))
             {
                 zipFile = scriptPath;
-                scriptPath = nullptr;
             }
             fileNameTemp = fileinfo.fileName();
             QString fileNameNoExtension = fileNameTemp.remove(fileNameTemp.lastIndexOf('.'), fileNameTemp.length() -  1);
@@ -1384,7 +1386,7 @@ void MainWindow::on_load_library(QString path)
                 fileName, // name
                 fileNameNoExtension, //nameNoExtension
                 scriptPath, // script
-                fileNameNoExtension,
+                scriptNoExtension,
                 mediaExtension,
                 nullptr,
                 zipFile,
@@ -1807,87 +1809,89 @@ void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString cust
             if(!audioSync)
             {
                 turnOffAudioSync();
-                QString customScriptNoextension = nullptr;
-                if (!customScript.isEmpty())
-                {
-                    QString customScriptTemp = customScript;
-                    customScriptNoextension = customScriptTemp.remove(customScriptTemp.lastIndexOf('.'), customScriptTemp.length() -  1);
-                }
-                scriptFile = customScript.isEmpty() ? selectedFileListItem.script : customScript;
-                QString scriptFileNoExtension = customScript.isEmpty() ? selectedFileListItem.scriptNoExtension : customScriptNoextension;
-                QFileInfo scriptFileNoExtensionInfo(scriptFileNoExtension);
-                QString scriptNameNoextension = nullptr;
-                scriptNameNoextension = scriptFileNoExtensionInfo.fileName();
-                QZipReader zipFile(selectedFileListItem.zipFile, QIODevice::ReadOnly);
-                QZipReader customZipFile(scriptFile, QIODevice::ReadOnly);
-                QFileInfo scriptFileInfo(scriptFile);
-                if(scriptFile.endsWith(".funscript") && scriptFileInfo.exists())
-                {
-                    if(!_syncHandler->load(scriptFile))
-                        invalidScripts.append(scriptFile);
-                }
-                else if(scriptFile.endsWith(".zip") && customZipFile.isReadable())
-                {
-                   QByteArray data = customZipFile.fileData(scriptNameNoextension + ".funscript");
-                   if (!data.isEmpty())
-                   {
-                       if(!_syncHandler->load(data))
-                           invalidScripts.append("Zip file: " + scriptNameNoextension + ".funscript");
-                   }
-                   else
-                   {
-                       LogHandler::Dialog(tr("Custom zip file missing main funscript."), XLogLevel::Warning);
-                   }
-                }
-                else if(zipFile.isReadable())
-                {
-                    QByteArray data = zipFile.fileData(selectedFileListItem.nameNoExtension + ".funscript");
-                    if (!data.isEmpty())
-                    {
-                        if(!_syncHandler->load(data))
-                            invalidScripts.append("Zip file: " + selectedFileListItem.nameNoExtension + ".funscript");
-                    }
-                    else
-                    {
-                        LogHandler::Dialog(tr("Zip file missing main funscript."), XLogLevel::Warning);
-                    }
-                }
+//                QString customScriptNoextension = nullptr;
+//                if (!customScript.isEmpty())
+//                {
+//                    QString customScriptTemp = customScript;
+//                    customScriptNoextension = customScriptTemp.remove(customScriptTemp.lastIndexOf('.'), customScriptTemp.length() -  1);
+//                }
+                scriptFile = customScript.isEmpty() ? selectedFileListItem.zipFile.isEmpty() ? selectedFileListItem.script : selectedFileListItem.zipFile : customScript;
+//                QString scriptFileNoExtension = customScript.isEmpty() ? selectedFileListItem.scriptNoExtension : customScriptNoextension;
+//                QFileInfo scriptFileNoExtensionInfo(scriptFileNoExtension);
+//                QString scriptNameNoextension = nullptr;
+//                scriptNameNoextension = scriptFileNoExtensionInfo.fileName();
+//                QZipReader zipFile(selectedFileListItem.zipFile, QIODevice::ReadOnly);
+//                QZipReader customZipFile(scriptFile, QIODevice::ReadOnly);
+//                QFileInfo scriptFileInfo(scriptFile);
 
-                auto availibleAxis = SettingsHandler::getAvailableAxis();
-                foreach(auto axisName, availibleAxis->keys())
-                {
-                    auto trackName = availibleAxis->value(axisName).TrackName;
-                    if(axisName == TCodeChannelLookup::Stroke() || trackName.isEmpty())
-                        continue;
+                invalidScripts = _syncHandler->load(scriptFile);
+//                if(scriptFile.endsWith(".funscript") && scriptFileInfo.exists())
+//                {
+//                    if(!_syncHandler->load(scriptFile))
+//                        invalidScripts.append(scriptFile);
+//                }
+//                else if(scriptFile.endsWith(".zip") && customZipFile.isReadable())
+//                {
+//                   QByteArray data = customZipFile.fileData(scriptNameNoextension + ".funscript");
+//                   if (!data.isEmpty())
+//                   {
+//                       if(!_syncHandler->load(data))
+//                           invalidScripts.append("Zip file: " + scriptNameNoextension + ".funscript");
+//                   }
+//                   else
+//                   {
+//                       LogHandler::Dialog(tr("Custom zip file missing main funscript."), XLogLevel::Warning);
+//                   }
+//                }
+//                else if(zipFile.isReadable())
+//                {
+//                    QByteArray data = zipFile.fileData(selectedFileListItem.nameNoExtension + ".funscript");
+//                    if (!data.isEmpty())
+//                    {
+//                        if(!_syncHandler->load(data))
+//                            invalidScripts.append("Zip file: " + selectedFileListItem.nameNoExtension + ".funscript");
+//                    }
+//                    else
+//                    {
+//                        LogHandler::Dialog(tr("Zip file missing main funscript."), XLogLevel::Warning);
+//                    }
+//                }
 
-                    QFileInfo fileInfo(scriptFileNoExtension + "." + trackName + ".funscript");
-                    if(scriptFile.endsWith(".zip") && customZipFile.isReadable())
-                    {
-                       QByteArray data = customZipFile.fileData(scriptNameNoextension + "." + availibleAxis->value(axisName).TrackName  + ".funscript");
-                       if (!data.isEmpty())
-                       {
-                           if(! _syncHandler->loadMFS(axisName, data))
-                               invalidScripts.append("MFS zip: " + scriptNameNoextension + "." + availibleAxis->value(axisName).TrackName  + ".funscript");
-                       }
-                    }
-                    else if(fileInfo.exists())
-                    {
-                        if(! _syncHandler->loadMFS(axisName, fileInfo.absoluteFilePath()))
-                            invalidScripts.append("MFS script: " + fileInfo.absoluteFilePath());
-                    }
-                    else if(zipFile.isReadable())
-                    {
-                       auto trackName = availibleAxis->value(axisName).TrackName;
-                       if(trackName.isEmpty())
-                           continue;
-                       QByteArray data = zipFile.fileData(selectedFileListItem.nameNoExtension + "." + trackName + ".funscript");
-                       if (!data.isEmpty())
-                       {
-                           if(!_syncHandler->loadMFS(axisName, data))
-                               invalidScripts.append("MFS zip script: " + selectedFileListItem.nameNoExtension + "." + trackName + ".funscript");
-                       }
-                    }
-                }
+//                auto availibleAxis = SettingsHandler::getAvailableAxis();
+//                foreach(auto axisName, availibleAxis->keys())
+//                {
+//                    auto track = availibleAxis->value(axisName);
+//                    if(axisName == TCodeChannelLookup::Stroke() || track.Type == AxisType::HalfRange || track.TrackName.isEmpty())
+//                        continue;
+
+//                    QFileInfo fileInfo(scriptFileNoExtension + "." + track.TrackName + ".funscript");
+//                    if(scriptFile.endsWith(".zip") && customZipFile.isReadable())
+//                    {
+//                       QByteArray data = customZipFile.fileData(scriptNameNoextension + "." + track.TrackName  + ".funscript");
+//                       if (!data.isEmpty())
+//                       {
+//                           if(! _syncHandler->loadMFS(axisName, data))
+//                               invalidScripts.append("MFS zip: " + scriptNameNoextension + "." + track.TrackName  + ".funscript");
+//                       }
+//                    }
+//                    else if(fileInfo.exists())
+//                    {
+//                        if(!_syncHandler->loadMFS(axisName, fileInfo.absoluteFilePath()))
+//                            invalidScripts.append("MFS script: " + fileInfo.absoluteFilePath());
+//                    }
+//                    else if(zipFile.isReadable())
+//                    {
+//                       auto trackName = track.TrackName;
+//                       if(trackName.isEmpty())
+//                           continue;
+//                       QByteArray data = zipFile.fileData(selectedFileListItem.nameNoExtension + "." + trackName + ".funscript");
+//                       if (!data.isEmpty())
+//                       {
+//                           if(!_syncHandler->loadMFS(axisName, data))
+//                               invalidScripts.append("MFS zip script: " + selectedFileListItem.nameNoExtension + "." + trackName + ".funscript");
+//                       }
+//                    }
+//                }
             }
             else
             {
@@ -1904,13 +1908,18 @@ void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString cust
                 filesWithLoadingIssues += "\n\nThis is probably due to an invalid JSON format.\nTry downloading the script again or asking the script maker.\nYou may also find some information running XTP in debug mode.";
                 LogHandler::Dialog(filesWithLoadingIssues, XLogLevel::Critical);
             }
-            if(!SettingsHandler::getDisableNoScriptFound() && !audioSync && !_syncHandler->isLoaded() && !invalidScripts.contains(scriptFile))
+            if(!SettingsHandler::getDisableNoScriptFound() && selectedFileListItem.type != LibraryListItemType::FunscriptType && !audioSync && !_syncHandler->isLoaded() && !invalidScripts.contains(scriptFile))
             {
                 on_scriptNotFound(scriptFile);
             }
-            if(selectedFileListItem.type == LibraryListItemType::FunscriptType)
-                _syncHandler->playFunscript(scriptFile);
-            else
+            if(selectedFileListItem.type == LibraryListItemType::FunscriptType && _syncHandler->isLoaded())
+                _syncHandler->playStandAlone();
+            else if(selectedFileListItem.type == LibraryListItemType::FunscriptType && !_syncHandler->isLoaded())
+            {
+                on_noScriptsFound("No scripts found for the media with the same name: " + selectedFileListItem.path);
+                skipForward();
+            }
+            else if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
                 videoHandler->play();
             playingLibraryListIndex = libraryList->currentRow();
             playingLibraryListItem = (LibraryListWidgetItem*)libraryList->item(playingLibraryListIndex);
@@ -2174,6 +2183,10 @@ void MainWindow::on_PlayBtn_clicked()
         else if(videoHandler->isPaused() || videoHandler->isPlaying())
         {
             videoHandler->togglePause();
+            if(_syncHandler->isPlayingStandAlone())
+            {
+                _syncHandler->togglePause();
+            }
         }
         else if(_syncHandler->isPlayingStandAlone())
         {
@@ -2454,7 +2467,10 @@ void MainWindow::on_scriptNotFound(QString message)
 {
     NoMatchingScriptDialog::show(this, message);
 }
-
+void MainWindow::on_noScriptsFound(QString message)
+{
+    LogHandler::Dialog(message, XLogLevel::Critical);
+}
 void MainWindow::setLibraryLoading(bool loading)
 {
     if(loading)
@@ -3586,7 +3602,9 @@ void MainWindow::skipToMoneyShot()
         if(file.exists())
         {
             _syncHandler->stopAll();
-            _syncHandler->playFunscript(funscript);
+            _syncHandler->load(funscript);
+            _syncHandler->playStandAlone();
+            _syncHandler->setStandAloneLoop(SettingsHandler::getSkipToMoneyShotStandAloneLoop());
             if(!SettingsHandler::getSkipToMoneyShotSkipsVideo())
                 return;
         }
