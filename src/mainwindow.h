@@ -92,7 +92,7 @@ private slots:
     void onLibraryList_ContextMenuRequested(const QPoint &pos);
     void onLibraryWindowed_Clicked();
     void onLibraryWindowed_Closed();
-    void onVideoHandler_togglePaused(bool paused);
+    void on_togglePaused(bool paused);
     void playFileFromContextMenu();
     void playFileWithCustomScript();
     void playFileWithAudioSync();
@@ -275,6 +275,7 @@ private:
     void startThumbProcess();
     void stopThumbProcess();
 
+    LibraryListItem createLibraryListItemFromFunscript(QString funscript);
     QList<LibraryListWidgetItem*> cachedLibraryItems;
     QList<LibraryListWidgetItem*> selectedPlaylistItems;
     QString selectedPlaylistName;
@@ -324,7 +325,7 @@ private:
     void changeDeoFunscript();
     void turnOffAudioSync();
 
-    void stopAndPlayVideo(LibraryListItem selectedFileListItem, QString customScript = nullptr, bool audioSync = false);
+    void stopAndPlayMedia(LibraryListItem selectedFileListItem, QString customScript = nullptr, bool audioSync = false);
     void initNetworkEvent();
     void initSerialEvent();
     void skipForward();
@@ -349,6 +350,8 @@ private:
     void on_media_statusChanged(QtAV::MediaStatus status);
     void on_media_start();
     void on_media_stop();
+    void on_standaloneFunscript_start();
+    void on_standaloneFunscript_stop();
     void on_device_connectionChanged(ConnectionChangedSignal event);
     void on_device_error(QString error);
     void on_deo_device_connectionChanged(ConnectionChangedSignal event);

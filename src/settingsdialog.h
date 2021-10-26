@@ -183,6 +183,16 @@ private slots:
 
     void on_settingsChange(bool dirty);
 
+    void on_showLoneFunscriptsInLibraryCheckbox_clicked(bool checked);
+
+    void on_skipStandAloneFunscriptsInMainLibraryPlaylist_clicked(bool checked);
+
+    void on_skipToMoneyShotPlaysFunscriptCheckbox_clicked(bool checked);
+
+    void on_browseSkipToMoneyShotFunscriptButton_clicked(bool checked);
+
+    void on_skipToMoneyShotSkipsVideo_clicked(bool checked);
+
 private:
 
     Ui::SettingsDialog ui;
@@ -226,6 +236,7 @@ private:
     QSpinBox* offSetSpinBox;
     QPushButton* saveAllBtn;
     QPushButton* closeBtn;
+    QPushButton* saveBtn;
     bool hasVideoPlayed = false;
 
     void setDeviceStatusStyle(ConnectionStatus status, DeviceType deviceType, QString message = "");

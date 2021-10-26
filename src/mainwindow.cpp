@@ -335,11 +335,17 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(actionTypeAsc_Sort, &QAction::triggered, this, &MainWindow::on_actionTypeAsc_triggered);
     connect(actionTypeDesc_Sort, &QAction::triggered, this, &MainWindow::on_actionTypeDesc_triggered);
 
+    connect(_syncHandler, &SyncHandler::funscriptPositionChanged, this, &MainWindow::on_media_positionChanged, Qt::QueuedConnection);
+    connect(_syncHandler, &SyncHandler::funscriptStatusChanged, this, &MainWindow::on_media_statusChanged, Qt::QueuedConnection);
+    connect(_syncHandler, &SyncHandler::funscriptStarted, this, &MainWindow::on_standaloneFunscript_start, Qt::QueuedConnection);
+    connect(_syncHandler, &SyncHandler::funscriptStopped, this, &MainWindow::on_standaloneFunscript_stop, Qt::QueuedConnection);
+    connect(_syncHandler, &SyncHandler::togglePaused, this, &MainWindow::on_togglePaused);
+
     connect(videoHandler, &VideoHandler::positionChanged, this, &MainWindow::on_media_positionChanged, Qt::QueuedConnection);
     connect(videoHandler, &VideoHandler::mediaStatusChanged, this, &MainWindow::on_media_statusChanged, Qt::QueuedConnection);
     connect(videoHandler, &VideoHandler::started, this, &MainWindow::on_media_start, Qt::QueuedConnection);
     connect(videoHandler, &VideoHandler::stopped, this, &MainWindow::on_media_stop, Qt::QueuedConnection);
-    connect(videoHandler, &VideoHandler::togglePaused, this, &MainWindow::onVideoHandler_togglePaused);
+    connect(videoHandler, &VideoHandler::togglePaused, this, &MainWindow::on_togglePaused);
 
     connect(_playerControlsFrame, &PlayerControls::seekSliderMoved, this, &MainWindow::on_seekSlider_sliderMoved);
     connect(_playerControlsFrame, &PlayerControls::seekSliderHover, this, &MainWindow::on_seekslider_hover );
@@ -421,7 +427,7 @@ void MainWindow::dispose()
     {
         videoHandler->stop();
     }
-    _syncHandler->stop();
+    _syncHandler->stopAll();
     if(loadingLibraryFuture.isRunning())
     {
         loadingLibraryStop = true;
@@ -566,6 +572,10 @@ void MainWindow::mediaAction(QString action)
         {
             //_xSettings->getDeoHandler()->togglePause();
         }
+        else if(_syncHandler->isPlayingStandAlone())
+        {
+            _syncHandler->togglePause();
+        }
         else
         {
             on_PlayBtn_clicked();
@@ -582,17 +592,17 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.Stop)
     {
-        if (videoHandler->isPaused() || videoHandler->isPlaying())
+        if (videoHandler->isPaused() || videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone())
             stopMedia();
     }
      else if(action == actions.Next)
     {
-        if (videoHandler->isPaused() || videoHandler->isPlaying())
+        if (videoHandler->isPaused() || videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone())
             skipForward();
     }
     else if(action == actions.Back)
     {
-        if (videoHandler->isPaused() || videoHandler->isPlaying())
+        if (videoHandler->isPaused() || videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone())
             skipBack();
     }
     else if(action == actions.VolumeUp)
@@ -609,10 +619,10 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.Rewind)
     {
-        if (videoHandler->isPlaying())
+        if (videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone())
             rewind();
     }
-    else if(action == actions.FastForward)
+    else if(action == actions.FastForward || _syncHandler->isPlayingStandAlone())
     {
         if (videoHandler->isPlaying())
             fastForward();
@@ -1024,7 +1034,7 @@ void MainWindow::onLibraryWindowed_Closed()
 
 void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
 {
-    if(cachedLibraryItems.count() > 0)
+    if (libraryList->count() > 0)
     {
         // Handle global position
         QPoint globalPos = libraryList->mapToGlobal(pos);
@@ -1314,77 +1324,117 @@ void MainWindow::on_load_library(QString path)
             funscriptsWithMedia.append(zipFile);
     }
 
-    QStringList funscriptTypes = QStringList()
-            << "*.funscript"
-            << "*.zip";
-    mediaTypes.clear();
-    mediaTypes.append(funscriptTypes);
-    QDirIterator funscripts(path, mediaTypes, QDir::Files, QDirIterator::Subdirectories);
-    auto availibleAxis = SettingsHandler::getAvailableAxis();
-    while (funscripts.hasNext())
+    if(!SettingsHandler::getHideStandAloneFunscriptsInLibrary())
     {
-        if(loadingLibraryStop)
-            return;
-        QFileInfo fileinfo(funscripts.next());
-        QString fileName = fileinfo.fileName();
-        QString fileNameTemp = fileinfo.fileName();
-        QString scriptPath = fileinfo.filePath();
-        QString scriptPathTemp = fileinfo.filePath();
-        QString scriptNoExtension = scriptPathTemp.remove(scriptPathTemp.lastIndexOf('.'), scriptPathTemp.length() - 1);
-        QString scriptNoExtensionTemp = QString(scriptNoExtension);
-        if(funscriptsWithMedia.contains(scriptNoExtension))
-            continue;
-        QString scriptMFSExt = scriptNoExtensionTemp.remove(0, scriptNoExtensionTemp.length() - (scriptNoExtensionTemp.length() - scriptNoExtensionTemp.lastIndexOf('.')));
-        bool isMfs = false;
-        foreach(auto axisName, availibleAxis->keys())
+        QStringList funscriptTypes = QStringList()
+                << "*.funscript"
+                << "*.zip";
+        mediaTypes.clear();
+        mediaTypes.append(funscriptTypes);
+        QDirIterator funscripts(path, mediaTypes, QDir::Files, QDirIterator::Subdirectories);
+        auto availibleAxis = SettingsHandler::getAvailableAxis();
+        while (funscripts.hasNext())
         {
-            if("."+availibleAxis->value(axisName).TrackName == scriptMFSExt)
+            if(loadingLibraryStop)
+                return;
+            QFileInfo fileinfo(funscripts.next());
+            QString fileName = fileinfo.fileName();
+            QString fileNameTemp = fileinfo.fileName();
+            QString scriptPath = fileinfo.filePath();
+            QString scriptPathTemp = fileinfo.filePath();
+            QString scriptNoExtension = scriptPathTemp.remove(scriptPathTemp.lastIndexOf('.'), scriptPathTemp.length() - 1);
+            QString scriptNoExtensionTemp = QString(scriptNoExtension);
+            if(funscriptsWithMedia.contains(scriptNoExtension, Qt::CaseSensitivity::CaseInsensitive))
+                continue;
+            QString scriptMFSExt = scriptNoExtensionTemp.remove(0, scriptNoExtensionTemp.length() - (scriptNoExtensionTemp.length() - scriptNoExtensionTemp.lastIndexOf('.')));
+            bool isMfs = false;
+            foreach(auto axisName, availibleAxis->keys())
             {
-                isMfs = true;
-                break;
+                if("."+availibleAxis->value(axisName).TrackName == scriptMFSExt)
+                {
+                    isMfs = true;
+                    break;
+                }
             }
+            if(isMfs)
+                continue;
+            QString fileDir = fileinfo.dir().path();
+            bool isExcluded = false;
+            foreach(QString dir, excludedLibraryPaths)
+            {
+                if(dir != path && (fileDir.startsWith(dir, Qt::CaseInsensitive)))
+                    isExcluded = true;
+            }
+            if (isExcluded)
+                continue;
+            QString zipFile = nullptr;
+            if(scriptPath.endsWith(".zip", Qt::CaseInsensitive))
+            {
+                zipFile = scriptPath;
+                scriptPath = nullptr;
+            }
+            fileNameTemp = fileinfo.fileName();
+            QString fileNameNoExtension = fileNameTemp.remove(fileNameTemp.lastIndexOf('.'), fileNameTemp.length() -  1);
+            fileNameTemp = fileinfo.fileName();
+            QString mediaExtension = "*" + fileNameTemp.remove(0, fileNameTemp.length() - (fileNameTemp.length() - fileNameTemp.lastIndexOf('.')));
+            LibraryListItem item
+            {
+                LibraryListItemType::FunscriptType,
+                scriptPath, // path
+                fileName, // name
+                fileNameNoExtension, //nameNoExtension
+                scriptPath, // script
+                fileNameNoExtension,
+                mediaExtension,
+                nullptr,
+                zipFile,
+                fileinfo.birthTime().date(),
+                0
+            };
+            LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, libraryList);
+            libraryList->addItem(qListWidgetItem);
+            cachedLibraryItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
         }
-        if(isMfs)
-            continue;
-        QString fileDir = fileinfo.dir().path();
-        bool isExcluded = false;
-        foreach(QString dir, excludedLibraryPaths)
-        {
-            if(dir != path && (fileDir.startsWith(dir, Qt::CaseInsensitive)))
-                isExcluded = true;
-        }
-        if (isExcluded)
-            continue;
-        QString zipFile = nullptr;
-        if(scriptPath.endsWith(".zip", Qt::CaseInsensitive))
-        {
-            zipFile = scriptPath;
-            scriptPath = nullptr;
-        }
-        fileNameTemp = fileinfo.fileName();
-        QString fileNameNoExtension = fileNameTemp.remove(fileNameTemp.lastIndexOf('.'), fileNameTemp.length() -  1);
-        fileNameTemp = fileinfo.fileName();
-        QString mediaExtension = "*" + fileNameTemp.remove(0, fileNameTemp.length() - (fileNameTemp.length() - fileNameTemp.lastIndexOf('.')));
-        LibraryListItem item
-        {
-            LibraryListItemType::FunscriptType,
-            scriptPath, // path
-            fileName, // name
-            fileNameNoExtension, //nameNoExtension
-            scriptPath, // script
-            fileNameNoExtension,
-            mediaExtension,
-            nullptr,
-            zipFile,
-            fileinfo.birthTime().date(),
-            0
-        };
-        LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, libraryList);
-        libraryList->addItem(qListWidgetItem);
-        cachedLibraryItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
     }
 
     emit libraryLoaded();
+}
+
+LibraryListItem createLibraryListItemFromFunscript(QString funscript)
+{
+
+    QFileInfo fileinfo(funscript);
+    QString fileName = fileinfo.fileName();
+    QString fileNameTemp = fileinfo.fileName();
+    QString scriptPath = fileinfo.filePath();
+    QString scriptPathTemp = fileinfo.filePath();
+    QString scriptNoExtension = scriptPathTemp.remove(scriptPathTemp.lastIndexOf('.'), scriptPathTemp.length() - 1);
+    QString scriptNoExtensionTemp = QString(scriptNoExtension);
+    QString fileDir = fileinfo.dir().path();
+    QString zipFile = nullptr;
+    if(scriptPath.endsWith(".zip", Qt::CaseInsensitive))
+    {
+        zipFile = scriptPath;
+        scriptPath = nullptr;
+    }
+    fileNameTemp = fileinfo.fileName();
+    QString fileNameNoExtension = fileNameTemp.remove(fileNameTemp.lastIndexOf('.'), fileNameTemp.length() -  1);
+    fileNameTemp = fileinfo.fileName();
+    QString mediaExtension = "*" + fileNameTemp.remove(0, fileNameTemp.length() - (fileNameTemp.length() - fileNameTemp.lastIndexOf('.')));
+    return
+    {
+        LibraryListItemType::FunscriptType,
+        scriptPath, // path
+        fileName, // name
+        fileNameNoExtension, //nameNoExtension
+        scriptPath, // script
+        fileNameNoExtension,
+        mediaExtension,
+        nullptr,
+        zipFile,
+        fileinfo.birthTime().date(),
+        0
+    };
 }
 
 void MainWindow::onLibraryLoaded()
@@ -1613,9 +1663,14 @@ void MainWindow::on_actionSelect_library_triggered()
 void MainWindow::on_LibraryList_itemClicked(QListWidgetItem *item)
 {
     auto selectedItem = item->data(Qt::UserRole).value<LibraryListItem>();
-    if(videoHandler->isPlaying() && !videoHandler->isPaused())
+    if((videoHandler->isPlaying() && !videoHandler->isPaused()))
     {
         auto playingFile = videoHandler->file();
+        _playerControlsFrame->setPlayIcon(playingFile == selectedItem.path);
+    }
+    else if(_syncHandler->isPlayingStandAlone() && !_syncHandler->isPaused())
+    {
+        auto playingFile = _syncHandler->getPlayingStandAloneScript();
         _playerControlsFrame->setPlayIcon(playingFile == selectedItem.path);
     }
     ui->statusbar->showMessage(selectedItem.nameNoExtension);
@@ -1642,7 +1697,7 @@ void MainWindow::on_LibraryList_itemDoubleClicked(QListWidgetItem *item)
     auto libraryListItem = item->data(Qt::UserRole).value<LibraryListItem>();
     if(libraryListItem.type == LibraryListItemType::Audio || libraryListItem.type == LibraryListItemType::Video || libraryListItem.type == LibraryListItemType::FunscriptType)
     {
-        stopAndPlayVideo(item->data(Qt::UserRole).value<LibraryListItem>());
+        stopAndPlayMedia(item->data(Qt::UserRole).value<LibraryListItem>());
     }
     else if(libraryListItem.type == LibraryListItemType::PlaylistInternal)
     {
@@ -1655,7 +1710,7 @@ void MainWindow::playFileFromContextMenu()
     LibraryListItem libraryListItem = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
     if(libraryListItem.type == LibraryListItemType::Audio || libraryListItem.type == LibraryListItemType::Video || libraryListItem.type == LibraryListItemType::FunscriptType)
     {
-        stopAndPlayVideo(libraryListItem);
+        stopAndPlayMedia(libraryListItem);
     }
     else if(libraryListItem.type == LibraryListItemType::PlaylistInternal)
     {
@@ -1663,7 +1718,7 @@ void MainWindow::playFileFromContextMenu()
         if(selectedPlaylistItems.length() > 0)
         {
             LibraryListItem libraryListItem = setCurrentLibraryRow(0)->getLibraryListItem();
-            stopAndPlayVideo(libraryListItem);
+            stopAndPlayMedia(libraryListItem);
         }
     }
 }
@@ -1671,7 +1726,7 @@ void MainWindow::playFileFromContextMenu()
 void MainWindow::playFileWithAudioSync()
 {
     LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
-    stopAndPlayVideo(selectedFileListItem, nullptr, true);
+    stopAndPlayMedia(selectedFileListItem, nullptr, true);
 }
 
 void MainWindow::playFileWithCustomScript()
@@ -1680,11 +1735,11 @@ void MainWindow::playFileWithCustomScript()
     if (selectedScript != Q_NULLPTR)
     {
         LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
-        stopAndPlayVideo(selectedFileListItem, selectedScript);
+        stopAndPlayMedia(selectedFileListItem, selectedScript);
     }
 }
 //Hack because QTAV calls stopped and start out of order
-void MainWindow::stopAndPlayVideo(LibraryListItem selectedFileListItem, QString customScript, bool audioSync)
+void MainWindow::stopAndPlayMedia(LibraryListItem selectedFileListItem, QString customScript, bool audioSync)
 {
     QFile file(selectedFileListItem.path);
     if (file.exists())
@@ -1695,7 +1750,7 @@ void MainWindow::stopAndPlayVideo(LibraryListItem selectedFileListItem, QString 
                 updateMetaData(playingLibraryListItem->getLibraryListItem());
             _playerControlsFrame->SetLoop(false);
             on_setLoading(true);
-            if(videoHandler->isPlaying())
+            if(videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone())
             {
                 stopMedia();
                 if(_waitForStopFuture.isRunning())
@@ -1733,7 +1788,8 @@ void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString cust
     QFile file(selectedFileListItem.path);
     if (file.exists())
     {
-        if (videoHandler->file() != selectedFileListItem.path || !customScript.isEmpty())
+        if ((selectedFileListItem.type == LibraryListItemType::FunscriptType && _syncHandler->getPlayingStandAloneScript() != selectedFileListItem.path) ||
+                (videoHandler->file() != selectedFileListItem.path || !customScript.isEmpty()))
         {
             QString scriptFile;
             QList<QString> invalidScripts;
@@ -1741,9 +1797,13 @@ void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString cust
             _playerControlsFrame->SetLoop(false);
             _syncHandler->reset();
             on_setLoading(true);
-            videoHandler->setFile(selectedFileListItem.path);
-            videoPreviewWidget->setFile(selectedFileListItem.path);
-            videoHandler->load();
+
+            if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
+            {
+                videoHandler->setFile(selectedFileListItem.path);
+                videoPreviewWidget->setFile(selectedFileListItem.path);
+                videoHandler->load();
+            }
             if(!audioSync)
             {
                 turnOffAudioSync();
@@ -2102,18 +2162,22 @@ void MainWindow::on_PlayBtn_clicked()
         if(libraryList->selectedItems().length() == 0)
         {
             LibraryListWidgetItem* selectedItem = setCurrentLibraryRow(0);
-            stopAndPlayVideo(selectedItem->getLibraryListItem());
+            stopAndPlayMedia(selectedItem->getLibraryListItem());
             return;
         }
         LibraryListWidgetItem* selectedItem = (LibraryListWidgetItem*)libraryList->selectedItems().first();
         LibraryListItem selectedFileListItem = selectedItem->getLibraryListItem();
-        if(selectedFileListItem.path != videoHandler->file() || !videoHandler->isPlaying())
+        if(selectedFileListItem.path != videoHandler->file() || (!videoHandler->isPlaying() && !_syncHandler->isPlayingStandAlone()))
         {
-            stopAndPlayVideo(selectedFileListItem);
+            stopAndPlayMedia(selectedFileListItem);
         }
         else if(videoHandler->isPaused() || videoHandler->isPlaying())
         {
             videoHandler->togglePause();
+        }
+        else if(_syncHandler->isPlayingStandAlone())
+        {
+            _syncHandler->togglePause();
         }
     }
 }
@@ -2125,7 +2189,7 @@ LibraryListWidgetItem* MainWindow::setCurrentLibraryRow(int row)
     return (LibraryListWidgetItem*)libraryList->item(row);
 }
 
-void MainWindow::onVideoHandler_togglePaused(bool paused)
+void MainWindow::on_togglePaused(bool paused)
 {
     _playerControlsFrame->setPlayIcon(!paused);
     if(paused)
@@ -2138,6 +2202,11 @@ void MainWindow::stopMedia()
     {
         deviceHome();
         videoHandler->stop();
+    }
+    if(_syncHandler->isPlayingStandAlone())
+    {
+        deviceHome();
+        _syncHandler->stopStandAlone();
     }
 }
 
@@ -2323,13 +2392,32 @@ QString MainWindow::mSecondFormat(int mSecs)
     return (hr.length() == 1 ? "0" + hr : hr ) + ":" + (mn.length() == 1 ? "0" + mn : mn ) + ":" + (sc.length() == 1 ? "0" + sc : sc);
 }
 
+void MainWindow::on_standaloneFunscript_start()
+{
+    LogHandler::Debug("Enter on_standaloneFunscript_start");
+//    if(SettingsHandler::getDeoEnabled())
+//        _xSettings->getDeoHandler()->dispose();
+//    if(SettingsHandler::getWhirligigEnabled())
+//        _xSettings->getWhirligigHandler()->dispose();
+    on_setLoading(false);
+    _playerControlsFrame->resetMediaControlStatus(true);
+}
+
+void MainWindow::on_standaloneFunscript_stop()
+{
+    LogHandler::Debug("Enter on_standaloneFunscript_stop");
+    on_setLoading(false);
+    _playerControlsFrame->resetMediaControlStatus(false);
+}
+
 void MainWindow::on_media_start()
 {
     LogHandler::Debug("Enter on_media_start");
-    if(SettingsHandler::getDeoEnabled())
-        _xSettings->getDeoHandler()->dispose();
-    if(SettingsHandler::getWhirligigEnabled())
-        _xSettings->getWhirligigHandler()->dispose();
+//    if(SettingsHandler::getDeoEnabled())
+//        _xSettings->getDeoHandler()->dispose();
+//    if(SettingsHandler::getWhirligigEnabled())
+//        _xSettings->getWhirligigHandler()->dispose();
+    _syncHandler->stopAll();
     if (_syncHandler->isLoaded())
     {
         _syncHandler->syncFunscript();
@@ -2344,9 +2432,10 @@ void MainWindow::on_media_stop()
     LogHandler::Debug("Enter on_media_stop");
     on_setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(false);
-    _syncHandler->stop();
+    _syncHandler->stopMediaFunscript();
     _mediaStopped = true;
 }
+
 void MainWindow::on_setLoading(bool loading)
 {
     if(loading && _videoLoadingMovie->state() != QMovie::MovieState::Running)
@@ -2413,7 +2502,7 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
         if (funscriptPath.isEmpty() || !funscriptFile.exists())
         {
             LogHandler::Debug("onVRMessageRecieved funscript not found in app data");
-            _syncHandler->stop();
+            _syncHandler->stopAll();
             //Check the deo device local video directory for funscript.
             int indexOfSuffix = packet.path.lastIndexOf(".");
             QString packetPath = packet.path;
@@ -2487,7 +2576,7 @@ void MainWindow::on_gamepad_sendTCode(QString value)
         if(SettingsHandler::getFunscriptLoaded(
                 TCodeChannelLookup::Stroke()) &&
                 !SettingsHandler::getLiveActionPaused() &&
-                ((videoHandler->isPlaying() && !videoHandler->isPaused()) || _xSettings->getDeoHandler()->isPlaying() || _xSettings->getWhirligigHandler()->isPlaying() ))
+                ((videoHandler->isPlaying() && !videoHandler->isPaused()) || _xSettings->getDeoHandler()->isPlaying() || _xSettings->getWhirligigHandler()->isPlaying() || (!_syncHandler->isPaused() && _syncHandler->isPlayingStandAlone()) ))
         {
             QRegularExpression rx("L0[^\\s]*\\s?");
             value = value.remove(rx);
@@ -2568,12 +2657,12 @@ void MainWindow::skipForward()
         }
 
         auto libraryListItem = item->getLibraryListItem();
-        if(libraryListItem.type == LibraryListItemType::PlaylistInternal)
+        if(libraryListItem.type == LibraryListItemType::PlaylistInternal || (SettingsHandler::getSkipPlayingStandAloneFunscriptsInLibrary() && libraryListItem.type == LibraryListItemType::FunscriptType))
         {
             skipForward();
         }
         else
-            stopAndPlayVideo(libraryListItem);
+            stopAndPlayMedia(libraryListItem);
     }
 }
 
@@ -2600,7 +2689,7 @@ void MainWindow::skipBack()
                 skipBack();
             }
             else
-                stopAndPlayVideo(libraryListItem);
+                stopAndPlayMedia(libraryListItem);
         }
         else
             videoHandler->seek(50);
@@ -2612,7 +2701,10 @@ void MainWindow::rewind()
     qint64 position = videoHandler->position();
     qint64 videoIncrement = SettingsHandler::getVideoIncrement() * 1000;
     if (position > videoIncrement)
-        videoHandler->seek(videoHandler->position() - videoIncrement);
+        if(_syncHandler->isPlayingStandAlone())
+            _syncHandler->setFunscriptTime(_syncHandler->getFunscriptTime() - videoIncrement);
+        else
+            videoHandler->seek(videoHandler->position() - videoIncrement);
     else
         skipBack();
 }
@@ -2622,7 +2714,10 @@ void MainWindow::fastForward()
     qint64 position = videoHandler->position();
     qint64 videoIncrement = SettingsHandler::getVideoIncrement() * 1000;
     if (position < videoHandler->duration() - videoIncrement)
-        videoHandler->seek(videoHandler->position() + videoIncrement);
+        if(_syncHandler->isPlayingStandAlone())
+            _syncHandler->setFunscriptTime(_syncHandler->getFunscriptTime() + videoIncrement);
+        else
+            videoHandler->seek(videoHandler->position() + videoIncrement);
     else
         skipForward();
 }
@@ -2713,13 +2808,13 @@ void MainWindow::on_deo_device_connectionChanged(ConnectionChangedSignal event)
     {
         ui->actionChange_current_deo_script->setEnabled(false);
         deoRetryConnectionButton->show();
-        _syncHandler->stop();
+        _syncHandler->stopAll();
     }
     else if(event.status == ConnectionStatus::Connected)
     {
         ui->actionChange_current_deo_script->setEnabled(true);
         deoRetryConnectionButton->hide();
-        _syncHandler->stop();
+        _syncHandler->stopAll();
         _syncHandler->syncVRFunscript();
 
     }
@@ -2750,13 +2845,13 @@ void MainWindow::on_whirligig_device_connectionChanged(ConnectionChangedSignal e
     {
         ui->actionChange_current_deo_script->setEnabled(false);
         whirligigRetryConnectionButton->show();
-        _syncHandler->stop();
+        _syncHandler->stopAll();
     }
     else if(event.status == ConnectionStatus::Connected)
     {
         ui->actionChange_current_deo_script->setEnabled(true);
         whirligigRetryConnectionButton->hide();
-        _syncHandler->stop();
+        _syncHandler->stopAll();
         _syncHandler->syncVRFunscript();
 
     }
@@ -3484,6 +3579,18 @@ void MainWindow::onAddBookmark(LibraryListItem libraryListItem, QString name, qi
 }
 void MainWindow::skipToMoneyShot()
 {
+    QString funscript = SettingsHandler::getSkipToMoneyShotFunscript();
+    if(SettingsHandler::getSkipToMoneyShotPlaysFunscript() && !funscript.isEmpty())
+    {
+        QFile file(funscript);
+        if(file.exists())
+        {
+            _syncHandler->stopAll();
+            _syncHandler->playFunscript(funscript);
+            if(!SettingsHandler::getSkipToMoneyShotSkipsVideo())
+                return;
+        }
+    }
     if(_playerControlsFrame->getAutoLoop())
         _playerControlsFrame->SetLoop(false);
     LibraryListItem selectedLibraryListItem = playingLibraryListItem->getLibraryListItem();

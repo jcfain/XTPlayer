@@ -41,6 +41,7 @@ void SettingsDialog::on_settingsChange(bool dirty)
 {
     saveAllBtn->setEnabled(dirty);
     closeBtn->setEnabled(dirty);
+    saveBtn->setEnabled(dirty);
 }
 void SettingsDialog::dispose()
 {
@@ -137,11 +138,16 @@ void SettingsDialog::setupUi()
         QPushButton* restireDefaultsBtn = ui.buttonBox->button(QDialogButtonBox::RestoreDefaults);
         restireDefaultsBtn->setAutoDefault(false);
         restireDefaultsBtn->setDefault(false);
+        saveBtn = ui.buttonBox->button(QDialogButtonBox::Apply);
+        saveBtn->setAutoDefault(false);
+        saveBtn->setDefault(false);
+        saveBtn->setEnabled(false);
+        saveBtn->setText("Save all and close");
         closeBtn = ui.buttonBox->button(QDialogButtonBox::Close);
+        closeBtn->setText("Save later");
         closeBtn->setAutoDefault(false);
         closeBtn->setDefault(false);
         closeBtn->setEnabled(false);
-        closeBtn->setText("Save all and close");
         // TCode version
         foreach(auto version, SettingsHandler::SupportedTCodeVersions.keys())
         {
@@ -219,6 +225,19 @@ void SettingsDialog::setupUi()
             SettingsHandler::setSerialPort(value);
         });
         connect(ui.videoIncrementSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_videoIncrement_valueChanged);
+
+
+        ui.showLoneFunscriptsInLibraryCheckbox->setChecked(SettingsHandler::getHideStandAloneFunscriptsInLibrary());
+        ui.skipStandAloneFunscriptsInMainLibraryPlaylist->setChecked(SettingsHandler::getSkipPlayingStandAloneFunscriptsInLibrary());
+
+        auto skipToMoneyShotPlaysFunscript = SettingsHandler::getSkipToMoneyShotPlaysFunscript();
+        ui.skipToMoneyShotPlaysFunscriptCheckbox->setChecked(skipToMoneyShotPlaysFunscript);
+        ui.skipToMoneyShotFunscriptLineEdit->setText(SettingsHandler::getSkipToMoneyShotFunscript());
+        ui.skipToMoneyShotFunscriptLineEdit->setDisabled(true);
+        ui.skipToMoneyShotSkipsVideo->setChecked(SettingsHandler::getSkipToMoneyShotSkipsVideo());
+        ui.skipToMoneyShotSkipsVideo->setEnabled(skipToMoneyShotPlaysFunscript);
+        ui.browseSkipToMoneyShotFunscriptButton->setEnabled(skipToMoneyShotPlaysFunscript);
+
         _interfaceInitialized = true;
     }
 }
@@ -370,7 +389,7 @@ void SettingsDialog::setupGamepadMap()
     connect(inverseXRoll, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcXRollR2_valueChanged);
     inverseGrid->addWidget(inverseXRoll, 3, 2, Qt::AlignCenter);
 }
-
+QList<QWidget*> _multiplierWidgets;
 void SettingsDialog::setUpTCodeAxis()
 {
     if(_interfaceInitialized)
@@ -401,6 +420,8 @@ void SettingsDialog::setUpTCodeAxis()
      int multiplierGridRow = 1;
      int funscriptSettingsGridRow = 0;
      auto tcodeChannels = TCodeChannelLookup::GetSelectedVersionMap();
+     _multiplierWidgets.clear();
+     qDeleteAll(_multiplierWidgets);
      foreach(auto channel, tcodeChannels.keys())
      {
          QString channelName = TCodeChannelLookup::ToString(channel);
@@ -540,6 +561,14 @@ void SettingsDialog::setUpTCodeAxis()
              ui.MultiplierSettingsGrid->addWidget(linkToAxisCombobox, multiplierGridRow, 3, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
              ui.MultiplierSettingsGrid->addWidget(damperCheckbox, multiplierGridRow, 4, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
              ui.MultiplierSettingsGrid->addWidget(damperInput, multiplierGridRow, 5, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+
+             _multiplierWidgets.append(multiplierCheckbox);
+             _multiplierWidgets.append(multiplierInput);
+             _multiplierWidgets.append(linkCheckbox);
+             _multiplierWidgets.append(linkToAxisCombobox);
+             _multiplierWidgets.append(damperCheckbox);
+             _multiplierWidgets.append(damperInput);
+
              multiplierGridRow++;
          }
          QCheckBox* invertedCheckbox = new QCheckBox(this);
@@ -1112,6 +1141,8 @@ void SettingsDialog::on_deoPortTxt_editingFinished()
 void SettingsDialog::on_enableMultiplierCheckbox_clicked(bool checked)
 {
     SettingsHandler::setMultiplierEnabled(checked);
+    foreach(auto widget, _multiplierWidgets)
+        widget->setEnabled(checked);
 }
 
 void SettingsDialog::on_serialConnectButton_clicked()
@@ -1573,7 +1604,7 @@ void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
             emit loadingDialogClose();
         });
     }
-    else if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::RejectRole)
+    else if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::ApplyRole)
     {
         if(SettingsHandler::getSettingsChanged())
         {
@@ -1582,6 +1613,7 @@ void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
             {
                 SettingsHandler::Save();
                 emit loadingDialogClose();
+                close();
             });
         }
     }
@@ -1590,4 +1622,37 @@ void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
 void SettingsDialog::on_close_loading_dialog()
 {
     LogHandler::LoadingClose();
+}
+
+void SettingsDialog::on_showLoneFunscriptsInLibraryCheckbox_clicked(bool checked)
+{
+    SettingsHandler::setHideStandAloneFunscriptsInLibrary(checked);
+    SettingsHandler::requestRestart(this);
+}
+
+void SettingsDialog::on_skipStandAloneFunscriptsInMainLibraryPlaylist_clicked(bool checked)
+{
+    SettingsHandler::setSkipPlayingStandAloneFunscriptsInLibrary(checked);
+}
+
+void SettingsDialog::on_skipToMoneyShotPlaysFunscriptCheckbox_clicked(bool checked)
+{
+    SettingsHandler::setSkipToMoneyShotPlaysFunscript(checked);
+    ui.skipToMoneyShotSkipsVideo->setEnabled(checked);
+    ui.browseSkipToMoneyShotFunscriptButton->setEnabled(checked);
+}
+
+void SettingsDialog::on_browseSkipToMoneyShotFunscriptButton_clicked(bool checked)
+{
+    QString selectedScript = QFileDialog::getOpenFileName(this, tr("Choose script"), SettingsHandler::getSelectedLibrary(), tr("Scripts (*.funscript *.zip)"));
+    if (selectedScript != Q_NULLPTR)
+    {
+        SettingsHandler::setSkipToMoneyShotFunscript(selectedScript);
+        ui.skipToMoneyShotFunscriptLineEdit->setText(selectedScript);
+    }
+}
+
+void SettingsDialog::on_skipToMoneyShotSkipsVideo_clicked(bool checked)
+{
+    SettingsHandler::setSkipToMoneyShotSkipsVideo(checked);
 }

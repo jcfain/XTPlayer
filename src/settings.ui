@@ -24,19 +24,6 @@
    <property name="sizeConstraint">
     <enum>QLayout::SetNoConstraint</enum>
    </property>
-   <item row="6" column="1">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Close|QDialogButtonBox::RestoreDefaults|QDialogButtonBox::SaveAll</set>
-     </property>
-     <property name="centerButtons">
-      <bool>false</bool>
-     </property>
-    </widget>
-   </item>
    <item row="1" column="1">
     <widget class="QTabWidget" name="settingsTabWidget">
      <property name="currentIndex">
@@ -463,6 +450,64 @@
         <layout class="QGridLayout" name="FunscriptSettingsGrid"/>
        </widget>
       </widget>
+      <widget class="QGroupBox" name="skipToMoneyShotGroupbox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>390</y>
+         <width>631</width>
+         <height>141</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Skip to moneyshot</string>
+       </property>
+       <widget class="QWidget" name="formLayoutWidget_2">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>611</width>
+          <height>91</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="skipToMoneyShotGrid">
+         <item row="0" column="0" colspan="2">
+          <widget class="QCheckBox" name="skipToMoneyShotPlaysFunscriptCheckbox">
+           <property name="text">
+            <string>Skip to moneyshot plays funscript</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QPushButton" name="browseSkipToMoneyShotFunscriptButton">
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Browse</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLineEdit" name="skipToMoneyShotFunscriptLineEdit"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QCheckBox" name="skipToMoneyShotSkipsVideo">
+           <property name="toolTip">
+            <string>If checked, skip to money shot will skip the playing video to either the specified bookmark or the last percent.</string>
+           </property>
+           <property name="text">
+            <string>Skip playing video to bookmark</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
      </widget>
      <widget class="QWidget" name="videoTab">
       <attribute name="title">
@@ -753,6 +798,26 @@ that has no script of the same name.</string>
          </property>
         </widget>
        </item>
+       <item row="11" column="9">
+        <widget class="QCheckBox" name="showLoneFunscriptsInLibraryCheckbox">
+         <property name="toolTip">
+          <string>If checked, funscripts in your library folder will be shown if they do not have an associated video.</string>
+         </property>
+         <property name="text">
+          <string>Hide stand alone funscripts in library</string>
+         </property>
+        </widget>
+       </item>
+       <item row="12" column="9">
+        <widget class="QCheckBox" name="skipStandAloneFunscriptsInMainLibraryPlaylist">
+         <property name="toolTip">
+          <string>If checked, the library will skip playing standalone funscripts when the previous item finishes playing.</string>
+         </property>
+         <property name="text">
+          <string>Skip playing stand alone funscripts in library</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="helpTab">
@@ -766,7 +831,7 @@ that has no script of the same name.</string>
           <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:9.75pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;table border=&quot;0&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; border-collapse:collapse;&quot; cellspacing=&quot;2&quot; cellpadding=&quot;0&quot;&gt;&lt;thead&gt;
 &lt;tr&gt;
 &lt;td style=&quot; padding-left:10; padding-right:10; padding-top:10; padding-bottom:10; border-top:1px; border-right:1px; border-bottom:1px; border-left:1px; border-top-color:#000000; border-right-color:#000000; border-bottom-color:#000000; border-left-color:#000000; border-top-style:solid; border-right-style:solid; border-bottom-style:solid; border-left-style:solid;&quot;&gt;
@@ -956,6 +1021,19 @@ p, li { white-space: pre-wrap; }
        </item>
       </layout>
      </widget>
+    </widget>
+   </item>
+   <item row="6" column="1">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Apply|QDialogButtonBox::Close|QDialogButtonBox::RestoreDefaults|QDialogButtonBox::SaveAll</set>
+     </property>
+     <property name="centerButtons">
+      <bool>false</bool>
+     </property>
     </widget>
    </item>
   </layout>

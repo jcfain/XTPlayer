@@ -15,6 +15,23 @@ SyncHandler::~SyncHandler()
     qDeleteAll(_funscriptHandlers);
 }
 
+void SyncHandler::togglePause()
+{
+    if((isLoaded() && _isFunscriptPlaying) || (isLoaded() && _isStandAloneFunscriptPlaying))
+    {
+        _isPaused = !_isPaused;
+        emit togglePaused(isPaused());
+    }
+}
+
+bool SyncHandler::isPaused()
+{
+    return _isPaused;
+}
+bool SyncHandler::isPlayingStandAlone()
+{
+    return _isStandAloneFunscriptPlaying;
+}
 bool SyncHandler::load(QString funscript)
 {
     clear();
@@ -52,8 +69,28 @@ bool SyncHandler::isLoaded()
     return _funscriptHandler->isLoaded();
 }
 
-void SyncHandler::stop()
+void SyncHandler::stopAll()
 {
+    stopStandAlone();
+    stopMediaFunscript();
+}
+
+void SyncHandler::stopStandAlone()
+{
+    LogHandler::Debug("Stop standalone sync");
+    _currentTime = 0;
+    _isStandAloneFunscriptPlaying = false;
+    if(_funscriptStandAloneFuture.isRunning())
+    {
+        _funscriptStandAloneFuture.cancel();
+        _funscriptStandAloneFuture.waitForFinished();
+        emit funscriptStopped();
+    }
+}
+
+void SyncHandler::stopMediaFunscript()
+{
+    LogHandler::Debug("Stop media sync");
     _isFunscriptPlaying = false;
     if(_funscriptFuture.isRunning())
     {
@@ -64,26 +101,37 @@ void SyncHandler::stop()
 
 void SyncHandler::clear()
 {
+    LogHandler::Debug("Clear sync");
     _funscriptHandler->setLoaded(false);
     if(_funscriptHandlers.length() > 0)
     {
         qDeleteAll(_funscriptHandlers);
         _funscriptHandlers.clear();
     }
+    _currentTime = 0;
 }
 
 void SyncHandler::reset()
 {
-    stop();
+    LogHandler::Debug("Reset sync");
+    stopAll();
     clear();
 }
 
+QString SyncHandler::getPlayingStandAloneScript()
+{
+    return _playingStandAloneFunscript;
+}
 void SyncHandler::playFunscript(QString funscript) {
     LogHandler::Debug("play Funscript stand alone start thread");
-    stop();
+    if(_isFunscriptPlaying)
+        stopAll();
     load(funscript);
     _isFunscriptPlaying = true;
-    _funscriptFuture = QtConcurrent::run([this]()
+    _isStandAloneFunscriptPlaying = true;
+    _playingStandAloneFunscript = funscript;
+    emit funscriptStarted();
+    _funscriptStandAloneFuture = QtConcurrent::run([this]()
     {
         std::shared_ptr<FunscriptAction> actionPosition;
         QMap<QString, std::shared_ptr<FunscriptAction>> otherActions;
@@ -93,12 +141,12 @@ void SyncHandler::playFunscript(QString funscript) {
         qint64 timer1 = 0;
         qint64 timer2 = 0;
         mSecTimer.start();
-        while (_isFunscriptPlaying)
+        while (_isStandAloneFunscriptPlaying)
         {
             if (timer2 - timer1 >= 1)
             {
                 timer1 = timer2;
-                if(!SettingsHandler::getLiveActionPaused() && _xSettings->isDeviceConnected())
+                if(!_isPaused && !SettingsHandler::getLiveActionPaused() && _xSettings->isDeviceConnected())
                 {
                     if(_seekTime > -1)
                     {
@@ -129,17 +177,24 @@ void SyncHandler::playFunscript(QString funscript) {
                 if(secCounter2 - secCounter1 >= 1)
                 {
                     if(_seekTime == -1)
-                        emit funscriptTimeCode(_currentTime);
+                        emit funscriptPositionChanged(_currentTime);
                     secCounter1 = secCounter2;
                 }
                 if(_seekTime > -1)
                     _seekTime = -1;
             }
             timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
+            if(_currentTime >= getFunscriptMax())
+            {
+                _isStandAloneFunscriptPlaying = false;
+                emit funscriptStatusChanged(QtAV::MediaStatus::EndOfMedia);
+            }
         }
         _isFunscriptPlaying = false;
+        _playingStandAloneFunscript = nullptr;
         _xSettings->resetAxisProgressBars();
-        LogHandler::Debug("exit playFunscript");
+        _currentTime = 0;
+        LogHandler::Debug("exit play Funscript stand alone thread");
     });
 }
 
@@ -166,7 +221,7 @@ qint64 SyncHandler::getFunscriptMax()
 void SyncHandler::syncVRFunscript()
 {
     LogHandler::Debug("syncVRFunscript start thread");
-    stop();
+    stopAll();
     _isFunscriptPlaying = true;
     _funscriptFuture = QtConcurrent::run([this]()
     {
@@ -193,7 +248,7 @@ void SyncHandler::syncVRFunscript()
         while (_isFunscriptPlaying && _xSettings->getConnectedVRHandler()->isConnected() && !_videoHandler->isPlaying())
         {
             //timer.start();
-            if(!SettingsHandler::getLiveActionPaused() && _xSettings->isDeviceConnected() && _funscriptHandler->isLoaded() && !currentVRPacket.path.isEmpty() && currentVRPacket.duration > 0 && currentVRPacket.playing)
+            if(!_isPaused && !SettingsHandler::getLiveActionPaused() && _xSettings->isDeviceConnected() && _funscriptHandler->isLoaded() && !currentVRPacket.path.isEmpty() && currentVRPacket.duration > 0 && currentVRPacket.playing)
             {
                 //execute once every millisecond
                 if (timer2 - timer1 >= 1)
@@ -309,8 +364,10 @@ void SyncHandler::syncVRFunscript()
 void SyncHandler::syncFunscript()
 {
     LogHandler::Debug("syncFunscript start thread");
-    stop();
+    stopAll();
     _isFunscriptPlaying = true;
+
+    emit funscriptStatusChanged(QtAV::MediaStatus::LoadedMedia);
     _funscriptFuture = QtConcurrent::run([this]()
     {
         std::shared_ptr<FunscriptAction> actionPosition;
@@ -324,7 +381,7 @@ void SyncHandler::syncFunscript()
             if (timer2 - timer1 >= 1)
             {
                 timer1 = timer2;
-                if(!SettingsHandler::getLiveActionPaused() && _xSettings->isDeviceConnected())
+                if(!_isPaused && !SettingsHandler::getLiveActionPaused() && _xSettings->isDeviceConnected())
                 {
                     qint64 currentTime = _videoHandler->position();
                     actionPosition = _funscriptHandler->getPosition(currentTime);

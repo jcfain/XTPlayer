@@ -203,6 +203,19 @@ public:
     static void SetHashedPass(QString value);
 
     static QSize getMaxThumbnailSize();
+
+    static bool getSkipToMoneyShotPlaysFunscript();
+    static void setSkipToMoneyShotPlaysFunscript(bool value);
+    static QString getSkipToMoneyShotFunscript();
+    static void setSkipToMoneyShotFunscript(QString value);
+    static bool getSkipToMoneyShotSkipsVideo();
+    static void setSkipToMoneyShotSkipsVideo(bool value);
+
+    static void setHideStandAloneFunscriptsInLibrary(bool value);
+    static bool getHideStandAloneFunscriptsInLibrary();
+    static void setSkipPlayingStandAloneFunscriptsInLibrary(bool value);
+    static bool getSkipPlayingStandAloneFunscriptsInLibrary();
+
     static void SetChannelMapDefaults();
     static void SetGamepadMapDefaults();
     static void SetupDecoderPriority();
@@ -297,6 +310,13 @@ private:
     static bool disableSpeechToText;
     static bool defaultReset;
     static QString _hashedPass;
+
+    static bool _skipToMoneyShotPlaysFunscript;
+    static QString _skipToMoneyShotFunscript;
+    static bool _skipToMoneyShotSkipsVideo;
+
+    static bool _hideStandAloneFunscriptsInLibrary;
+    static bool _skipPlayingSTandAloneFunscriptsInLibrary;
 
     static QHash<QString, bool> _funscriptLoaded;
     static QSettings* settings;

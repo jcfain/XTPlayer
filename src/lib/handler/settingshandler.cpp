@@ -125,6 +125,13 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     _disableVRScriptSelect = settingsToLoadFrom->value("disableVRScriptSelect").toBool();
     _disableNoScriptFound = settingsToLoadFrom->value("disableNoScriptFound").toBool();
 
+    _skipToMoneyShotPlaysFunscript = settingsToLoadFrom->value("skipToMoneyShotPlaysFunscript").toBool();
+    _skipToMoneyShotFunscript = settingsToLoadFrom->value("skipToMoneyShotFunscript").toString();
+    _skipToMoneyShotSkipsVideo = settingsToLoadFrom->value("skipToMoneyShotSkipsVideo").toBool();
+
+    _hideStandAloneFunscriptsInLibrary = settingsToLoadFrom->value("hideStandAloneFunscriptsInLibrary").toBool();
+    _skipPlayingSTandAloneFunscriptsInLibrary = settingsToLoadFrom->value("skipPlayingSTandAloneFunscriptsInLibrary").toBool();
+
     QList<QVariant> decoderPriorityvarient = settingsToLoadFrom->value("decoderPriority").toList();
     decoderPriority.clear();
     foreach(auto varient, decoderPriorityvarient)
@@ -312,7 +319,12 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         }
         settingsToSaveTo->setValue("libraryListItemMetaDatas", libraryListItemMetaDatas);
 
+        settingsToSaveTo->setValue("skipToMoneyShotPlaysFunscript", _skipToMoneyShotPlaysFunscript);
+        settingsToSaveTo->setValue("skipToMoneyShotFunscript", _skipToMoneyShotFunscript);
+        settingsToSaveTo->setValue("skipToMoneyShotSkipsVideo", _skipToMoneyShotSkipsVideo);
 
+        settingsToSaveTo->setValue("hideStandAloneFunscriptsInLibrary", _hideStandAloneFunscriptsInLibrary);
+        settingsToSaveTo->setValue("skipPlayingSTandAloneFunscriptsInLibrary", _skipPlayingSTandAloneFunscriptsInLibrary);
 
         settingsToSaveTo->sync();
 
@@ -1584,6 +1596,57 @@ bool SettingsHandler::getFunscriptLoaded(QString key)
     return false;
 }
 
+
+bool SettingsHandler::getSkipToMoneyShotPlaysFunscript()
+{
+    return _skipToMoneyShotPlaysFunscript;
+}
+void SettingsHandler::setSkipToMoneyShotPlaysFunscript(bool value)
+{
+    _skipToMoneyShotPlaysFunscript = value;
+    settingsChangedEvent(true);
+}
+
+QString SettingsHandler::getSkipToMoneyShotFunscript()
+{
+    return _skipToMoneyShotFunscript;
+}
+void SettingsHandler::setSkipToMoneyShotFunscript(QString value)
+{
+    _skipToMoneyShotFunscript = value;
+    settingsChangedEvent(true);
+}
+
+bool SettingsHandler::getSkipToMoneyShotSkipsVideo()
+{
+    return _skipToMoneyShotSkipsVideo;
+}
+void SettingsHandler::setSkipToMoneyShotSkipsVideo(bool value)
+{
+    _skipToMoneyShotSkipsVideo = value;
+    settingsChangedEvent(true);
+}
+
+bool SettingsHandler::getHideStandAloneFunscriptsInLibrary()
+{
+    return _hideStandAloneFunscriptsInLibrary;
+}
+void SettingsHandler::setHideStandAloneFunscriptsInLibrary(bool value)
+{
+    _hideStandAloneFunscriptsInLibrary = value;
+    settingsChangedEvent(true);
+}
+
+bool SettingsHandler::getSkipPlayingStandAloneFunscriptsInLibrary()
+{
+    return _skipPlayingSTandAloneFunscriptsInLibrary;
+}
+void SettingsHandler::setSkipPlayingStandAloneFunscriptsInLibrary(bool value)
+{
+    _skipPlayingSTandAloneFunscriptsInLibrary = value;
+    settingsChangedEvent(true);
+}
+
 LibraryListItemMetaData258 SettingsHandler::getLibraryListItemMetaData(QString path)
 {
     QMutexLocker locker(&mutex);
@@ -1677,6 +1740,13 @@ bool SettingsHandler::defaultReset = false;
 bool SettingsHandler::disableSpeechToText;
 bool SettingsHandler::_disableVRScriptSelect;
 bool SettingsHandler::_disableNoScriptFound;
+
+bool SettingsHandler::_skipToMoneyShotPlaysFunscript;
+QString SettingsHandler::_skipToMoneyShotFunscript;
+bool SettingsHandler::_skipToMoneyShotSkipsVideo;
+
+bool SettingsHandler::_hideStandAloneFunscriptsInLibrary;
+bool SettingsHandler::_skipPlayingSTandAloneFunscriptsInLibrary;
 
 QString SettingsHandler::_hashedPass;
 
