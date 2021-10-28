@@ -20,6 +20,7 @@ signals:
     void volumeChanged(int value);
     void skipForward();
     void skipToMoneyShot();
+    void skipActionBegin();
     void skipBack();
     void fullscreenToggled();
     void settingsClicked();
@@ -59,6 +60,7 @@ private:
     QGridLayout *playerControlsGrid;
     QPushButton *skipForwardButton;
     QPushButton *skipToMoneyShotButton;
+    QPushButton *skipToActionButton;
     QPushButton *MuteBtn;
     QPushButton *loopToggleButton;
     QPushButton *fullScreenBtn;
@@ -67,8 +69,9 @@ private:
     RangeSlider *SeekSlider;
     QLabel *lblCurrentTime;
     QLabel *lblDuration;
-    QPushButton *skipBackButton;
-    QPushButton *PlayBtn;
+    QPushButton* skipBackButton;
+    QPushButton* PlayBtn;
+    QPushButton* _stopBtn;
 
     int voulumeBeforeMute;
     bool _autoLoopOn = false;

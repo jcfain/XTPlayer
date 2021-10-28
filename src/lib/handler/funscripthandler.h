@@ -46,6 +46,7 @@ private:
     QMutex mutex;
     QString _channel;
     bool _loaded = false;
+    bool _firstActionExecuted;
     void JSonToFunscript(QJsonObject jsonDoc);
     qint64 findClosest(qint64 value, QList<qint64> a);
     qint64 lastActionIndex;

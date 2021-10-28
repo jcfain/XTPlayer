@@ -12,6 +12,59 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 
     setLayout(playerControlsGrid);
 
+    lblCurrentTime = new QLabel(this);
+    lblCurrentTime->setObjectName(QString::fromUtf8("lblCurrentTime"));
+    lblCurrentTime->setAlignment(Qt::AlignLeft|Qt::AlignBottom);
+
+    playerControlsGrid->addWidget(lblCurrentTime, 0, 0, 1, 1);
+
+    skipToActionButton = new QPushButton(this);
+    skipToActionButton->setObjectName(QString::fromUtf8("skipToActionButton"));
+    skipToActionButton->setProperty("cssClass", "playerControlButton");
+    skipToActionButton->setMinimumSize(QSize(0, 15));
+    skipToActionButton->setToolTip("Skips to 1 second before the funscript starts changing position.");
+    QIcon iconActionBegin;
+    iconActionBegin.addFile(QString::fromUtf8(":/images/icons/skipToAction.png"), QSize(), QIcon::Normal, QIcon::Off);
+    skipToActionButton->setIcon(iconActionBegin);
+    skipToActionButton->setIconSize(QSize(15, 15));
+    skipToActionButton->setFlat(true);
+    skipToActionButton->setEnabled(false);
+
+    playerControlsGrid->addWidget(skipToActionButton, 0, 1, 1, 4);
+
+    skipToMoneyShotButton = new QPushButton(this);
+    skipToMoneyShotButton->setObjectName(QString::fromUtf8("skipToMoneyShotButton"));
+    skipToMoneyShotButton->setProperty("cssClass", "playerControlButton");
+    skipToMoneyShotButton->setMinimumSize(QSize(0, 15));
+    skipToMoneyShotButton->setToolTip("Skips to the last 10% of the video by default. You can chenge this by right clicking the library item.\nYou can also assign a script to this action on the funscript tab in settings.");
+    QIcon iconMoneyShot;
+    iconMoneyShot.addFile(QString::fromUtf8(":/images/icons/skipToMoneyShot.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    skipToMoneyShotButton->setIcon(iconMoneyShot);
+    skipToMoneyShotButton->setIconSize(QSize(15, 15));
+    skipToMoneyShotButton->setFlat(true);
+    skipToMoneyShotButton->setEnabled(false);
+
+    playerControlsGrid->addWidget(skipToMoneyShotButton, 0, 6, 1, 4);
+
+    lblDuration = new QLabel(this);
+    lblDuration->setObjectName(QString::fromUtf8("lblDuration"));
+    lblDuration->setAlignment(Qt::AlignRight|Qt::AlignBottom);
+
+    playerControlsGrid->addWidget(lblDuration, 0, 10, 1, 1);
+
+    SeekSlider = new RangeSlider(this);
+    SeekSlider->setObjectName(QString::fromUtf8("SeekSlider"));
+    SeekSlider->setEnabled(false);
+    SeekSlider->setMinimumSize(QSize(100, 15));
+    SeekSlider->setMaximum(100);
+    SeekSlider->setOrientation(Qt::Horizontal);
+    SeekSlider->setDisabled(true);
+    SeekSlider->SetRange(0, 100);
+    SeekSlider->setOption(RangeSlider::Option::RightHandle);
+    SeekSlider->setUpperValue(0);
+
+    playerControlsGrid->addWidget(SeekSlider, 1, 0, 1, 11);
+
     fullScreenBtn = new QPushButton(this);
     fullScreenBtn->setObjectName(QString::fromUtf8("fullScreenBtn"));
     fullScreenBtn->setProperty("cssClass", "playerControlButton");
@@ -37,19 +90,6 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 
     playerControlsGrid->addWidget(settingsButton, 2, 1, 1, 1);
 
-    skipToMoneyShotButton = new QPushButton(this);
-    skipToMoneyShotButton->setObjectName(QString::fromUtf8("skipToMoneyShotButton"));
-    skipToMoneyShotButton->setProperty("cssClass", "playerControlButton");
-    skipToMoneyShotButton->setMinimumSize(QSize(0, 20));
-    QIcon iconMoneyShot;
-    iconMoneyShot.addFile(QString::fromUtf8(":/images/icons/skipToMoneyShot.svg"), QSize(), QIcon::Normal, QIcon::Off);
-    skipToMoneyShotButton->setIcon(iconMoneyShot);
-    skipToMoneyShotButton->setIconSize(QSize(20, 20));
-    skipToMoneyShotButton->setFlat(true);
-    skipToMoneyShotButton->setEnabled(false);
-
-    playerControlsGrid->addWidget(skipToMoneyShotButton, 2, 2, 1, 1);
-
     skipBackButton = new QPushButton(this);
     skipBackButton->setObjectName(QString::fromUtf8("skipBackButton"));
     skipBackButton->setProperty("cssClass", "playerControlButton");
@@ -60,7 +100,20 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipBackButton->setIconSize(QSize(20, 20));
     skipBackButton->setFlat(true);
 
-    playerControlsGrid->addWidget(skipBackButton, 2, 4, 1, 1);
+    playerControlsGrid->addWidget(skipBackButton, 2, 3, 1, 1);
+
+    _stopBtn = new QPushButton(this);
+    _stopBtn->setObjectName(QString::fromUtf8("stopBtn"));
+    _stopBtn->setProperty("cssClass", "playerControlButton");
+    _stopBtn->setMinimumSize(QSize(0, 20));
+    QIcon iconStop;
+    iconStop.addFile(QString::fromUtf8(":/images/icons/stop.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    _stopBtn->setIcon(iconStop);
+    _stopBtn->setIconSize(QSize(20, 20));
+    _stopBtn->setFlat(true);
+    _stopBtn->setEnabled(false);
+
+    playerControlsGrid->addWidget(_stopBtn, 2, 4, 1, 1);
 
     PlayBtn = new QPushButton(this);
     PlayBtn->setObjectName(QString::fromUtf8("PlayBtn"));
@@ -85,7 +138,6 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipForwardButton->setFlat(true);
 
     playerControlsGrid->addWidget(skipForwardButton, 2, 6, 1, 1);
-
 
     loopToggleButton = new QPushButton(this);
     loopToggleButton->setObjectName(QString::fromUtf8("loopToggleButton"));
@@ -124,38 +176,15 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 
     playerControlsGrid->addWidget(MuteBtn, 2, 10, 1, 1);
 
-    lblCurrentTime = new QLabel(this);
-    lblCurrentTime->setObjectName(QString::fromUtf8("lblCurrentTime"));
-    lblCurrentTime->setAlignment(Qt::AlignLeft|Qt::AlignBottom);
-
-    playerControlsGrid->addWidget(lblCurrentTime, 0, 0, 1, 1);
-
-    SeekSlider = new RangeSlider(this);
-    SeekSlider->setObjectName(QString::fromUtf8("SeekSlider"));
-    SeekSlider->setEnabled(false);
-    SeekSlider->setMinimumSize(QSize(100, 15));
-    SeekSlider->setMaximum(100);
-    SeekSlider->setOrientation(Qt::Horizontal);
-    SeekSlider->setDisabled(true);
-    SeekSlider->SetRange(0, 100);
-    SeekSlider->setOption(RangeSlider::Option::RightHandle);
-    SeekSlider->setUpperValue(0);
-
-    playerControlsGrid->addWidget(SeekSlider, 1, 0, 1, 11);
-
-    lblDuration = new QLabel(this);
-    lblDuration->setObjectName(QString::fromUtf8("lblDuration"));
-    lblDuration->setAlignment(Qt::AlignRight|Qt::AlignBottom);
-
-    playerControlsGrid->addWidget(lblDuration, 0, 10, 1, 1);
-
     connect(SeekSlider, &RangeSlider::upperValueMove, this, &PlayerControls::on_seekSlider_sliderMoved);
     connect(SeekSlider, &RangeSlider::onHover, this, &PlayerControls::on_seekslider_hover);
     connect(SeekSlider, &RangeSlider::onLeave, this, &PlayerControls::on_seekslider_leave);
     connect(VolumeSlider, &RangeSlider::upperValueMove, this, &PlayerControls::on_VolumeSlider_valueChanged);
     connect(PlayBtn, &QPushButton::clicked, this, &PlayerControls::on_PlayBtn_clicked);
+    connect(_stopBtn, &QPushButton::clicked, this, [this]() {emit stopClicked();});
     connect(skipForwardButton, &QPushButton::clicked, this, [this]() {emit skipForward();});
     connect(skipToMoneyShotButton, &QPushButton::clicked, this, [this]() {emit skipToMoneyShot();});
+    connect(skipToActionButton, &QPushButton::clicked, this, [this]() {emit skipActionBegin();});
     connect(skipBackButton, &QPushButton::clicked, this, [this]() {emit skipBack();});
     connect(fullScreenBtn, &QPushButton::clicked, this, [this]() {emit fullscreenToggled();});
     connect(settingsButton, &QPushButton::clicked, this, [this]() {emit settingsClicked();});
@@ -210,6 +239,7 @@ void PlayerControls::resetMediaControlStatus(bool playing)
     setSeekSliderDisabled(!playing);
     setSkipToMoneyShotEnabled(playing);
     loopToggleButton->setEnabled(playing);
+    _stopBtn->setEnabled(playing);
     setPlayIcon(playing);
     if(!playing)
     {
@@ -409,4 +439,5 @@ void PlayerControls::on_seekslider_leave()
 void PlayerControls::setSkipToMoneyShotEnabled(bool enabled)
 {
     skipToMoneyShotButton->setEnabled(enabled);
+    skipToActionButton->setEnabled(enabled);
 }

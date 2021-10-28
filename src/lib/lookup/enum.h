@@ -31,7 +31,8 @@ enum LibrarySortMode {
     CREATED_ASC,
     CREATED_DESC,
     TYPE_ASC,
-    TYPE_DESC
+    TYPE_DESC,
+    NONE
 };
 
 enum PasswordResponse {

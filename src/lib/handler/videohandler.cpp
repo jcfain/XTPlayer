@@ -3,7 +3,9 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent),
     _videoRenderer(0)
 {
     LogHandler::Debug("Create QHBoxLayout");
-    _widgetLayout = new QHBoxLayout;
+    _widgetLayout = new QHBoxLayout(this);
+    _widgetLayout->setMargin(0);
+    setContentsMargins(contentsMargins().left(), contentsMargins().top(), contentsMargins().right(), 0);
     setLayout(_widgetLayout);
     //QtAV::setLogLevel(QtAV::LogLevel::LogAll);
     //new QOpenGLWidget(this);

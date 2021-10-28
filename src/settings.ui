@@ -478,7 +478,7 @@
          <item row="2" column="0">
           <widget class="QCheckBox" name="skipToMoneyShotSkipsVideo">
            <property name="toolTip">
-            <string>If checked, skip to money shot will skip the playing video to either the specified bookmark or the last percent.</string>
+            <string>If checked, skip to money shot will skip the playing video to either the specified bookmark or the last 10 percent.\nOtherwise the video position will not change.</string>
            </property>
            <property name="text">
             <string>Skip playing video to bookmark</string>
@@ -507,6 +507,9 @@
          </item>
          <item row="3" column="0">
           <widget class="QCheckBox" name="skipToMoneyShotStandAloneLoopCheckBox">
+           <property name="toolTip">
+            <string>If checked, the selected funscript will loop untill the current playing media has paused, stopped, or changed.</string>
+           </property>
            <property name="text">
             <string>Loop</string>
            </property>

@@ -47,6 +47,7 @@ bool FunscriptHandler::load(QString funscriptString)
 bool FunscriptHandler::load(QByteArray byteArray)
 {
     QMutexLocker locker(&mutex);
+    _firstActionExecuted = false;
     _funscriptMax = -1;
     QJsonParseError* error = new QJsonParseError();
     QJsonDocument doc = QJsonDocument::fromJson(byteArray, error);
@@ -61,6 +62,16 @@ bool FunscriptHandler::load(QByteArray byteArray)
     delete error;
     JSonToFunscript(doc.object());
     _funscriptMax = posList.length() > 0 ? posList.last() : -1;
+    _funscriptMin =  posList.length() > 0 ? posList.first() > 0 || posList.length() == 1 ? posList.first() : posList.value(1) : 0;
+    _funscriptMin = 0;
+    foreach(qint64 value, posList)
+    {
+        if(value > 0)
+        {
+            _funscriptMin = value;
+            break;
+        }
+    }
 
     _loaded = true;
     SettingsHandler::setFunscriptLoaded(_channel, _loaded);
@@ -175,7 +186,13 @@ std::shared_ptr<FunscriptAction> FunscriptHandler::getPosition(qint64 millis)
 //    LogHandler::Debug("nextMillis: "+ QString::number(nextMillis));
     if ((lastActionIndex != nextActionIndex && millis >= closestMillis) || lastActionIndex == -1)
     {
-        int speed = lastActionIndex == -1 ? closestMillis : nextMillis - closestMillis;
+        int interval = lastActionIndex == -1 ? closestMillis : nextMillis - closestMillis;
+        if(!_firstActionExecuted)
+        {
+            _firstActionExecuted = true;
+            if(interval < 500)
+                interval = 500;
+        }
         //LogHandler::Debug("offSet: "+ QString::number(SettingsHandler::getoffSet()));
         //LogHandler::Debug("speed: "+ QString::number(speed));
         //LogHandler::Debug("millis: "+ QString::number(millis));
@@ -185,11 +202,11 @@ std::shared_ptr<FunscriptAction> FunscriptHandler::getPosition(qint64 millis)
 //        LogHandler::Debug("nextActionIndex: "+ QString::number(nextActionIndex));
         //LogHandler::Debug("nextActionPos: "+ QString::number(funscript->actions.value(nextMillis)));
         qint64 executionMillis = lastActionIndex == -1 ? closestMillis : nextMillis;
-        std::shared_ptr<FunscriptAction> nextAction(new FunscriptAction { _channel, executionMillis, funscript->actions.value(executionMillis), speed, lastActionPos, lastActionSpeed });
+        std::shared_ptr<FunscriptAction> nextAction(new FunscriptAction { _channel, executionMillis, funscript->actions.value(executionMillis), interval, lastActionPos, lastActionSpeed });
         //LogHandler::Debug("nextAction.speed: "+ QString::number(nextAction->speed));
         lastActionIndex = nextActionIndex;
         lastActionPos = funscript->actions.value(executionMillis);
-        lastActionSpeed = speed;
+        lastActionSpeed = interval;
         return nextAction;
     }
     return nullptr;

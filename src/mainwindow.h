@@ -170,6 +170,7 @@ signals:
 //    void scriptNotFound(QString message);
 //    void setLoading(bool loading);
     void playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
+    void stopAndPlayVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
 protected:
     virtual void keyPressEvent(QKeyEvent *event) override
     {
@@ -289,7 +290,7 @@ private:
     void on_load_library(QString path);
     void openWelcomeDialog();
     void backToMainLibrary();
-    void loadPlaylistIntoLibrary(QString playlistName);
+    void loadPlaylistIntoLibrary(QString playlistName, bool autoPlay = false);
     void media_double_click_event(QMouseEvent * event);
     QString mSecondFormat(int seconds);
     bool isPlayingFile(QString file);
@@ -303,7 +304,7 @@ private:
     void loadTheme(QString cssFilePath);
     void sortLibraryList(LibrarySortMode sortMode);
 
-    void changelibraryDisplayMode(LibraryView value);
+    void changeLibraryDisplayMode(LibraryView value);
 
     void deviceHome();
     void deviceSwitchedHome();
@@ -331,6 +332,7 @@ private:
     void initSerialEvent();
     void skipForward();
     void skipToMoneyShot();
+    void skipToActionBegin();
     void skipBack();
     void rewind();
     void fastForward();

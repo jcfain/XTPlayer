@@ -106,58 +106,71 @@ bool LibraryListWidgetItem::operator< (const QListWidgetItem & other) const
 {
     LibraryListItem otherData = other.data(Qt::UserRole).value<LibraryListItem>();
     LibraryListItem thisData = data(Qt::UserRole).value<LibraryListItem>();
-    switch(_sortMode)
+
+    if(_sortMode != NONE)
     {
-        case LibrarySortMode::RANDOM:
+        if(thisData.type == LibraryListItemType::PlaylistInternal && otherData.type != LibraryListItemType::PlaylistInternal)
         {
-//            qint64 randomValue = XMath::rand(0, 100);
-//            if(randomValue > 50)
-//                return thisData.modifiedDate < otherData.modifiedDate;
+            return true;
+        }
+        else if(thisData.type != LibraryListItemType::PlaylistInternal && otherData.type == LibraryListItemType::PlaylistInternal)
+        {
             return false;
         }
-        case LibrarySortMode::CREATED_ASC:
+        else if(thisData.type == LibraryListItemType::PlaylistInternal && otherData.type == LibraryListItemType::PlaylistInternal)
+        {
+            return otherData.nameNoExtension.localeAwareCompare(thisData.nameNoExtension) > 0;
+        }
+        else if(_sortMode == LibrarySortMode::RANDOM)
+        {
+    //            qint64 randomValue = XMath::rand(0, 100);
+    //            if(randomValue > 50)
+    //                return thisData.modifiedDate < otherData.modifiedDate;
+            return false;
+        }
+        else if(_sortMode == LibrarySortMode::CREATED_ASC)
         {
             return thisData.modifiedDate < otherData.modifiedDate;
-//            auto d1 = thisData.modifiedDate;
-//            auto d2 = otherData.modifiedDate;
-//            if (d1.year() < d2.year())
-//                return true;
-//            if (d1.year() == d2.year() && d1.month() < d2.month())
-//                return true;
-//            if (d1.year() == d2.year() && d1.month() == d2.month() && d1.day() < d2.day())
-//                return true;
+    //            auto d1 = thisData.modifiedDate;
+    //            auto d2 = otherData.modifiedDate;
+    //            if (d1.year() < d2.year())
+    //                return true;
+    //            if (d1.year() == d2.year() && d1.month() < d2.month())
+    //                return true;
+    //            if (d1.year() == d2.year() && d1.month() == d2.month() && d1.day() < d2.day())
+    //                return true;
 
-//            return false;
+    //            return false;
         }
-        case LibrarySortMode::CREATED_DESC:
+        else if(_sortMode == LibrarySortMode::CREATED_DESC)
         {
             return thisData.modifiedDate > otherData.modifiedDate;
-//            auto d1 = thisData.modifiedDate;
-//            auto d2 = otherData.modifiedDate;
-//            if (d1.year() > d2.year())
-//                return true;
-//            if (d1.year() == d2.year() && d1.month() > d2.month())
-//                return true;
-//            if (d1.year() == d2.year() && d1.month() == d2.month() && d1.day() > d2.day())
-//                return true;
+    //            auto d1 = thisData.modifiedDate;
+    //            auto d2 = otherData.modifiedDate;
+    //            if (d1.year() > d2.year())
+    //                return true;
+    //            if (d1.year() == d2.year() && d1.month() > d2.month())
+    //                return true;
+    //            if (d1.year() == d2.year() && d1.month() == d2.month() && d1.day() > d2.day())
+    //                return true;
 
-//            return false;
+    //            return false;
         }
-        case LibrarySortMode::NAME_DESC:
+        else if(_sortMode == LibrarySortMode::NAME_DESC)
         {
             return thisData.name.localeAwareCompare(otherData.name) > 0;
         }
-        case LibrarySortMode::NAME_ASC:
+        else if(_sortMode == LibrarySortMode::NAME_ASC)
         {
-            break;
+
         }
-        case LibrarySortMode::TYPE_ASC:
+        else if(_sortMode == LibrarySortMode::TYPE_ASC)
         {
             if (thisData.type == otherData.type)
-              break;
+              return otherData.name.localeAwareCompare(thisData.name) > 0;
             return thisData.type < otherData.type;
         }
-        case LibrarySortMode::TYPE_DESC:
+        else if(_sortMode == LibrarySortMode::TYPE_DESC)
         {
             if (thisData.type == otherData.type)
               return thisData.name.localeAwareCompare(otherData.name) > 0;

@@ -29,6 +29,7 @@ struct MediaActions
     const QString ToggleFunscriptInvert = "ToggleFunscriptInvert";
     const QString TogglePauseAllDeviceActions = "TogglePauseAllDeviceActions";
     const QString SkipToMoneyShot = "SkipToMoneyShot";
+    const QString SkipToAction = "SkipToAction";
     const QMap<QString, QString> Values {
         {TogglePause, "Toggle pause"},
         {Next, "Next video"},
@@ -53,7 +54,8 @@ struct MediaActions
         {ToggleAxisMultiplier, "Toggle axis multiplier"},
         {ToggleFunscriptInvert, "Toggle funscript inversion"},
         {TogglePauseAllDeviceActions, "Toggle pause all device actions"},
-        {SkipToMoneyShot, "Skip to moneyshot"}
+        {SkipToMoneyShot, "Skip to moneyshot"},
+        {SkipToAction, "Skip to action begin"}
     };
 };
 #endif // MEDIAACTIONS_H
