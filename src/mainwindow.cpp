@@ -1816,8 +1816,8 @@ void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString cust
             QList<QString> invalidScripts;
             deviceHome();
             _playerControlsFrame->SetLoop(false);
-            _syncHandler->reset();
             on_setLoading(true);
+            _syncHandler->stopAll();
 
             if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
             {
@@ -1921,10 +1921,10 @@ void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString cust
             QString filesWithLoadingIssues = "";
             if(!invalidScripts.empty())
             {
-                filesWithLoadingIssues += "The following scripts was found but had issues loading:\n\n";
+                filesWithLoadingIssues += "The following scripts had issues loading:\n\n";
                 foreach(auto invalidFunscript, invalidScripts)
                     filesWithLoadingIssues += "* " + invalidFunscript + "\n";
-                filesWithLoadingIssues += "\n\nThis is probably due to an invalid JSON format.\nTry downloading the script again or asking the script maker.\nYou may also find some information running XTP in debug mode.";
+                filesWithLoadingIssues += "\n\nThis is may be due to an invalid JSON format.\nTry downloading the script again or asking the script maker.\nYou may also find some information running XTP in debug mode.";
                 LogHandler::Dialog(filesWithLoadingIssues, XLogLevel::Critical);
             }
             if(!SettingsHandler::getDisableNoScriptFound() && selectedFileListItem.type != LibraryListItemType::FunscriptType && !audioSync && !_syncHandler->isLoaded() && !invalidScripts.contains(scriptFile))
@@ -2246,7 +2246,7 @@ void MainWindow::stopMedia()
     }
     if(_syncHandler->isPlayingStandAlone())
     {
-        _syncHandler->stopStandAlone();
+        _syncHandler->stopStandAloneFunscript();
     }
     deviceHome();
 }
@@ -2263,28 +2263,24 @@ void MainWindow::on_fullScreenBtn_clicked()
 
 void MainWindow::on_seekslider_hover(int position, int sliderValue)
 {
-//    if(!isFullScreen())
-//    {
-        qint64 sliderValueTime = XMath::mapRange(static_cast<qint64>(sliderValue), (qint64)0, (qint64)100, (qint64)0, videoHandler->duration());
-    //    if (!videoPreviewWidget)
-    //        videoPreviewWidget = new VideoPreviewWidget();
-        videoPreviewWidget->setTimestamp(sliderValueTime);
-        videoPreviewWidget->preview();
+    qint64 sliderValueTime = XMath::mapRange(static_cast<qint64>(sliderValue), (qint64)0, (qint64)100, (qint64)0, videoHandler->duration());
+//    if (!videoPreviewWidget)
+//        videoPreviewWidget = new VideoPreviewWidget();
 //        LogHandler::Debug("sliderValue: "+QString::number(sliderValue));
 //        LogHandler::Debug("time: "+QString::number(sliderValueTime));
-        //LogHandler::Debug("position: "+QString::number(position));
-        QPoint gpos;
-        if(_isFullScreen)
-        {
-            gpos = mapToGlobal(playerControlsPlaceHolder->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(position, 0));
-            QToolTip::showText(gpos, QTime(0, 0, 0).addMSecs(sliderValueTime).toString(QString::fromLatin1("HH:mm:ss")));
-        }
-        else
-        {
-            auto tootipPos = mapToGlobal(QPoint(ui->medialAndControlsFrame->pos().x(), 0) + _controlsHomePlaceHolderFrame->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(position, 0));
-            QToolTip::showText(tootipPos, QTime(0, 0, 0).addMSecs(sliderValueTime).toString(QString::fromLatin1("HH:mm:ss")));
-            gpos = QPoint(ui->medialAndControlsFrame->pos().x(), 0) + _controlsHomePlaceHolderFrame->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(position, 0);
-        }
+    //LogHandler::Debug("position: "+QString::number(position));
+    QPoint gpos;
+    if(_isFullScreen)
+    {
+        gpos = mapToGlobal(playerControlsPlaceHolder->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(position, 0));
+        QToolTip::showText(gpos, QTime(0, 0, 0).addMSecs(sliderValueTime).toString(QString::fromLatin1("HH:mm:ss")));
+    }
+    else
+    {
+        auto tootipPos = mapToGlobal(QPoint(ui->medialAndControlsFrame->pos().x(), 0) + _controlsHomePlaceHolderFrame->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(position, 0));
+        QToolTip::showText(tootipPos, QTime(0, 0, 0).addMSecs(sliderValueTime).toString(QString::fromLatin1("HH:mm:ss")));
+        gpos = QPoint(ui->medialAndControlsFrame->pos().x(), 0) + _controlsHomePlaceHolderFrame->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(position, 0);
+    }
 
 //        LogHandler::Debug("medialAndControlsFrame x: " + QString::number(ui->medialAndControlsFrame->pos().x()));
 //        LogHandler::Debug("SeekSlider x: " + QString::number(ui->SeekSlider->pos().x()));
@@ -2299,15 +2295,19 @@ void MainWindow::on_seekslider_hover(int position, int sliderValue)
     //    if (!Config::instance().previewEnabled())
     //        return;
 
+    if(videoHandler->isPlaying() || videoHandler->isPaused())
+    {
         //const int w = Config::instance().previewWidth();
         //const int h = Config::instance().previewHeight();
         //videoPreviewWidget->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+        videoPreviewWidget->setTimestamp(sliderValueTime);
+        videoPreviewWidget->preview();
         videoPreviewWidget->resize(176, 100);
         videoPreviewWidget->move(gpos - QPoint(176/2, 100));
         videoPreviewWidget->show();
         //videoPreviewWidget->raise();
         //videoPreviewWidget->activateWindow();
-    //}
+    }
 }
 
 void MainWindow::on_seekslider_leave()
@@ -2316,7 +2316,7 @@ void MainWindow::on_seekslider_leave()
     {
         return;
     }
-    if (videoPreviewWidget->isVisible())
+    if ((videoHandler->isPlaying() || videoHandler->isPaused()) && videoPreviewWidget->isVisible())
     {
         videoPreviewWidget->close();
     }
@@ -2458,7 +2458,6 @@ void MainWindow::on_media_start()
 //        _xSettings->getDeoHandler()->dispose();
 //    if(SettingsHandler::getWhirligigEnabled())
 //        _xSettings->getWhirligigHandler()->dispose();
-    _syncHandler->stopAll();
     if (_syncHandler->isLoaded())
     {
         _syncHandler->syncFunscript();
@@ -2473,7 +2472,6 @@ void MainWindow::on_media_stop()
     LogHandler::Debug("Enter on_media_stop");
     on_setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(false);
-    _syncHandler->stopMediaFunscript();
     _mediaStopped = true;
 }
 
@@ -2583,7 +2581,7 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
                 {
                     LogHandler::Debug("onVRMessageRecieved Enter no scripts found. Ask user");
                     if (!SettingsHandler::getDisableSpeechToText())
-                        textToSpeech->say("Script for video playing in Deeo VR not found. Please check your computer to select a script.");
+                        textToSpeech->say("Script for video playing in VR not found. Please check your computer to select a script.");
                     funscriptFileSelectorOpen = true;
                     funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + videoFile.fileName(), SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
                     funscriptFileSelectorOpen = false;
@@ -2600,6 +2598,7 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
             if(!funscriptPath.isEmpty())
             {
                 LogHandler::Debug("Saving script into data: "+funscriptPath);
+                _syncHandler->syncVRFunscript(funscriptPath);
                 SettingsHandler::setLinkedVRFunscript(videoPath, funscriptPath);
                 SettingsHandler::SaveLinkedFunscripts();
             }
@@ -2607,6 +2606,7 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
         else if(vrScriptSelectedCanceledPath != packet.path)
         {
             LogHandler::Debug("onVRMessageRecieved funscript found in data store: " + funscriptPath);
+            _syncHandler->syncVRFunscript(funscriptPath);
             vrScriptSelectedCanceledPath = packet.path;
         }
     }
@@ -2786,7 +2786,10 @@ void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
 {
     deviceConnected = event.status == ConnectionStatus::Connected;
     if(deviceConnected)
+    {
         connectionStatusLabel->setProperty("cssClass", "connectionStatusConnected");
+        deviceHome();
+    }
     else if(event.status == ConnectionStatus::Connecting)
         connectionStatusLabel->setProperty("cssClass", "connectionStatusConnecting");
     QString message = "";
@@ -2813,6 +2816,11 @@ void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
     connectionStatusLabel->style()->polish(connectionStatusLabel);
 }
 
+void MainWindow::on_device_error(QString error)
+{
+    LogHandler::Dialog(error, XLogLevel::Critical);
+}
+
 void MainWindow::on_gamepad_connectionChanged(ConnectionChangedSignal event)
 {
     QString message = "";
@@ -2837,11 +2845,6 @@ void MainWindow::on_gamepad_connectionChanged(ConnectionChangedSignal event)
     gamepadConnectionStatusLabel->setToolTip(message);
 }
 
-void MainWindow::on_device_error(QString error)
-{
-    LogHandler::Dialog(error, XLogLevel::Critical);
-}
-
 void MainWindow::on_deo_device_connectionChanged(ConnectionChangedSignal event)
 {
     QString message = "";
@@ -2852,14 +2855,14 @@ void MainWindow::on_deo_device_connectionChanged(ConnectionChangedSignal event)
     {
         ui->actionChange_current_deo_script->setEnabled(false);
         deoRetryConnectionButton->show();
-        _syncHandler->stopAll();
+        deviceHome();
     }
     else if(event.status == ConnectionStatus::Connected)
     {
         ui->actionChange_current_deo_script->setEnabled(true);
         deoRetryConnectionButton->hide();
-        _syncHandler->stopAll();
-        _syncHandler->syncVRFunscript();
+        deviceHome();
+        stopMedia();
 
     }
     else if(event.status == ConnectionStatus::Connecting)
@@ -2889,14 +2892,14 @@ void MainWindow::on_whirligig_device_connectionChanged(ConnectionChangedSignal e
     {
         ui->actionChange_current_deo_script->setEnabled(false);
         whirligigRetryConnectionButton->show();
-        _syncHandler->stopAll();
+        deviceHome();
     }
     else if(event.status == ConnectionStatus::Connected)
     {
         ui->actionChange_current_deo_script->setEnabled(true);
         whirligigRetryConnectionButton->hide();
-        _syncHandler->stopAll();
-        _syncHandler->syncVRFunscript();
+        deviceHome();
+        stopMedia();
 
     }
     else if(event.status == ConnectionStatus::Connecting)

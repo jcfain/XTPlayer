@@ -26,14 +26,15 @@ public:
     bool isPaused();
     void playStandAlone(QString funscript = nullptr);
     void setStandAloneLoop(bool enabled);
-    void syncVRFunscript();
+    void syncVRFunscript(QString funscript);
     void syncFunscript();
     void setFunscriptTime(qint64 secs);
     qint64 getFunscriptTime();
     qint64 getFunscriptMin();
     qint64 getFunscriptMax();
-    void stopStandAlone();
+    void stopStandAloneFunscript();
     void stopMediaFunscript();
+    void stopVRFunscript();
     void stopAll();
     void clear();
     void reset();
@@ -46,14 +47,17 @@ private:
     TCodeHandler* _tcodeHandler;
     VideoHandler* _videoHandler;
 
+    QMutex _mutex;
     QString _playingStandAloneFunscript;
-    bool _isFunscriptPlaying = false;
+    bool _isMediaFunscriptPlaying = false;
+    bool _isVRFunscriptPlaying = false;
     bool _isStandAloneFunscriptPlaying = false;
     bool _isPaused = false;
     bool _standAloneLoop;
     qint64 _currentTime = 0;
     qint64 _seekTime = -1;
-    QFuture<void> _funscriptFuture;
+    QFuture<void> _funscriptMediaFuture;
+    QFuture<void> _funscriptVRFuture;
     QFuture<void> _funscriptStandAloneFuture;
     FunscriptHandler* _funscriptHandler;
     QList<FunscriptHandler*> _funscriptHandlers;

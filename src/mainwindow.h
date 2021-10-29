@@ -328,6 +328,7 @@ private:
     void turnOffAudioSync();
 
     void stopAndPlayMedia(LibraryListItem selectedFileListItem, QString customScript = nullptr, bool audioSync = false);
+    //void waitForMediaTostop(LibraryListItem selectedFileListItem, QString customScript = nullptr, bool audioSync = false, bool autoPlay = true);
     void initNetworkEvent();
     void initSerialEvent();
     void skipForward();
