@@ -61,10 +61,9 @@ bool FunscriptHandler::load(QByteArray byteArray)
     }
     delete error;
     JSonToFunscript(doc.object());
-    _funscriptMax = posList.length() > 0 ? posList.last() : -1;
-    _funscriptMin =  posList.length() > 0 ? posList.first() > 0 || posList.length() == 1 ? posList.first() : posList.value(1) : 0;
+    _funscriptMax = atList.length() > 0 ? atList.last() : -1;
     _funscriptMin = 0;
-    foreach(qint64 value, posList)
+    foreach(qint64 value, atList)
     {
         if(value > 0)
         {
@@ -130,9 +129,9 @@ void FunscriptHandler::JSonToFunscript(QJsonObject json)
                 funscript->actions[(qint64)obj["at"].toDouble()] = obj["pos"].toInt();
             }
         }
-        posList = funscript->actions.keys();
-        std::sort(posList.begin(), posList.end());
-        n = posList.length() / sizeof(posList.first());
+        atList = funscript->actions.keys();
+        std::sort(atList.begin(), atList.end());
+        n = atList.length() / sizeof(atList.first());
     }
     if (json.contains("creator") && json["creator"].isString())
         funscript->metadata.creator = json["creator"].toString();
@@ -172,13 +171,13 @@ std::shared_ptr<FunscriptAction> FunscriptHandler::getPosition(qint64 millis)
 {
     QMutexLocker locker(&mutex);
     millis += SettingsHandler::getLiveOffSet() == 0 ? SettingsHandler::getoffSet() : SettingsHandler::getLiveOffSet();
-    qint64 closestMillis = findClosest(millis, posList);
+    qint64 closestMillis = findClosest(millis, atList);
     if(closestMillis == -1)
         return nullptr;
-    nextActionIndex = posList.indexOf(closestMillis) + 1;
-    if(nextActionIndex >= posList.length())
+    nextActionIndex = atList.indexOf(closestMillis) + 1;
+    if(nextActionIndex >= atList.length())
         return nullptr;
-    qint64 nextMillis = posList[nextActionIndex];
+    qint64 nextMillis = atList[nextActionIndex];
     //LogHandler::Debug("millis: "+ QString::number(millis));
     //LogHandler::Debug("closestMillis: "+ QString::number(closestMillis));
     //LogHandler::Debug("lastActionIndex: "+ QString::number(lastActionIndex));

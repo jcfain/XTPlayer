@@ -1108,6 +1108,7 @@ void SettingsHandler::setMultiplierEnabled(bool value)
     QMutexLocker locker(&mutex);
     _multiplierEnabled = value;
     _liveMultiplierEnabled = value;
+    settingsChangedEvent(true);
 }
 
 bool SettingsHandler::getDisableSpeechToText()

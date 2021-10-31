@@ -98,6 +98,7 @@ void SettingsDialog::initLive()
         hasVideoPlayed = true;
     ui.videoRendererComboBox->setEnabled(!hasVideoPlayed);
     ui.enableMultiplierCheckbox->setChecked(SettingsHandler::getMultiplierEnabled());
+    setUpMultiplierUi(SettingsHandler::getMultiplierEnabled());
     ui.disableNoScriptFoundInLibrary->setChecked(SettingsHandler::getDisableNoScriptFound());
     if(HasLaunchPass())
         ui.passwordButton->setText("Change password");
@@ -586,6 +587,8 @@ void SettingsDialog::setUpTCodeAxis()
          funscriptSettingsGridRow++;
      }
 
+     setUpMultiplierUi(SettingsHandler::getMultiplierEnabled());
+
      offSetLabel = new QLabel("Sync offset");
      offSetLabel->setFont(font);
      offSetLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
@@ -622,6 +625,11 @@ void SettingsDialog::setUpTCodeAxis()
      setupGamepadMap();
 }
 
+void SettingsDialog::setUpMultiplierUi(bool enabled)
+{
+    foreach(auto widget, _multiplierWidgets)
+        widget->setHidden(!enabled);
+}
 
 void SettingsDialog::setAxisProgressBar(QString axis, int value)
 {
@@ -1143,8 +1151,7 @@ void SettingsDialog::on_deoPortTxt_editingFinished()
 void SettingsDialog::on_enableMultiplierCheckbox_clicked(bool checked)
 {
     SettingsHandler::setMultiplierEnabled(checked);
-    foreach(auto widget, _multiplierWidgets)
-        widget->setEnabled(checked);
+    setUpMultiplierUi(checked);
 }
 
 void SettingsDialog::on_serialConnectButton_clicked()

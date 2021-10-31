@@ -205,6 +205,7 @@ private:
     void initWhirligigEvent();
     void setupUi();
     void setupGamepadMap();
+    void setUpMultiplierUi(bool enabled);
     void enableOrDisableDeviceConnectionUI(DeviceType deviceType);
     QString encryptPass(QString pass);
     QString decryptPass(QString pass);

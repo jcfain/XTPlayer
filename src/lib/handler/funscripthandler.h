@@ -53,7 +53,7 @@ private:
     qint64 nextActionIndex;
     int lastActionPos;
     int lastActionSpeed;
-    QList<qint64> posList;
+    QList<qint64> atList;
     Funscript* funscript = new Funscript();
     int n;
     qint64 _funscriptMin = 0;

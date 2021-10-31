@@ -2316,7 +2316,7 @@ void MainWindow::on_seekslider_leave()
     {
         return;
     }
-    if ((videoHandler->isPlaying() || videoHandler->isPaused()) && videoPreviewWidget->isVisible())
+    if (videoPreviewWidget->isVisible())
     {
         videoPreviewWidget->close();
     }
@@ -3663,18 +3663,21 @@ void MainWindow::skipToMoneyShot()
                 return;
         }
     }
-    if(_playerControlsFrame->getAutoLoop())
-        _playerControlsFrame->SetLoop(false);
-    LibraryListItem selectedLibraryListItem = playingLibraryListItem->getLibraryListItem();
-    auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(selectedLibraryListItem.path);
-    if (libraryListItemMetaData.moneyShotMillis > -1 && libraryListItemMetaData.moneyShotMillis < videoHandler->duration())
+    if(videoHandler->isPlaying())
     {
-        videoHandler->setPosition(libraryListItemMetaData.moneyShotMillis);
-    }
-    else
-    {
-        qint64 last30PercentOfduration = videoHandler->duration() - videoHandler->duration() * .1;
-        videoHandler->setPosition(last30PercentOfduration);
+        if(_playerControlsFrame->getAutoLoop())
+            _playerControlsFrame->SetLoop(false);
+        LibraryListItem selectedLibraryListItem = playingLibraryListItem->getLibraryListItem();
+        auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(selectedLibraryListItem.path);
+        if (libraryListItemMetaData.moneyShotMillis > -1 && libraryListItemMetaData.moneyShotMillis < videoHandler->duration())
+        {
+            videoHandler->setPosition(libraryListItemMetaData.moneyShotMillis);
+        }
+        else
+        {
+            qint64 last30PercentOfduration = videoHandler->duration() - videoHandler->duration() * .1;
+            videoHandler->setPosition(last30PercentOfduration);
+        }
     }
 }
 
