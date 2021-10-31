@@ -345,50 +345,23 @@ void SyncHandler::syncVRFunscript(QString funscript)
     LogHandler::Debug("syncVRFunscript start thread");
     _funscriptVRFuture = QtConcurrent::run([this]()
     {
-        QList<FunscriptHandler*> funscriptHandlers;
         std::shared_ptr<FunscriptAction> actionPosition;
         QMap<QString, std::shared_ptr<FunscriptAction>> otherActions;
-        VRPacket currentVRPacket = _xSettings->getConnectedVRHandler()->getCurrentPacket();
-        QString currentVideo;
-        qint64 timeTracker = 0;
-        qint64 lastVRTime = 0;
+        VRPacket currentVRPacket;
         QElapsedTimer mSecTimer;
         qint64 timer1 = 0;
         qint64 timer2 = 0;
-        //bool deviceHomed = false;
-        //qint64 elapsedTracker = 0;
-    //    QElapsedTimer timer;
-    //    timer.start();
         mSecTimer.start();
         while (_isVRFunscriptPlaying && _xSettings->getConnectedVRHandler()->isConnected() && !_videoHandler->isPlaying())
         {
             currentVRPacket = _xSettings->getConnectedVRHandler()->getCurrentPacket();
-            //timer.start();
             if(!_isPaused && !SettingsHandler::getLiveActionPaused() && _xSettings->isDeviceConnected() && isLoaded() && !currentVRPacket.path.isEmpty() && currentVRPacket.duration > 0 && currentVRPacket.playing)
             {
                 //execute once every millisecond
                 if (timer2 - timer1 >= 1)
                 {
-    //                LogHandler::Debug("timer1: "+QString::number(timer1));
-    //                LogHandler::Debug("timer2: "+QString::number(timer2));
-                    //LogHandler::Debug("timer2 - timer1 "+QString::number(timer2-timer1));
-    //                LogHandler::Debug("Out timeTracker: "+QString::number(timeTracker));
                     timer1 = timer2;
                     qint64 currentTime = currentVRPacket.currentTime;
-                    //LogHandler::Debug("VR time reset: "+QString::number(currentTime));
-//                    bool hasRewind = lastVRTime > currentTime;
-//                    if (currentTime > timeTracker + 100 || hasRewind)
-//                    {
-//                        lastVRTime = currentTime;
-////                        LogHandler::Debug("current time reset: " + QString::number(currentTime));
-////                        LogHandler::Debug("timeTracker: " + QString::number(timeTracker));
-//                        timeTracker = currentTime;
-//                    }
-//                    else
-//                    {
-//                        timeTracker++;
-//                        currentTime = timeTracker;
-//                    }
                     //LogHandler::Debug("funscriptHandler->getPosition: "+QString::number(currentTime));
                     actionPosition = _funscriptHandler->getPosition(currentTime);
                     if(actionPosition != nullptr) {
@@ -398,7 +371,7 @@ void SyncHandler::syncVRFunscript(QString funscript)
 //                        LogHandler::Debug("actionPosition != nullptr/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////lastPos: "+QString::number(actionPosition->lastPos));
 //                        LogHandler::Debug("actionPosition != nullptr/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////lastSpeed: "+QString::number(actionPosition->lastSpeed));
                     }
-                    foreach(auto funscriptHandlerOther, funscriptHandlers)
+                    foreach(auto funscriptHandlerOther, _funscriptHandlers)
                     {
                         auto otherAction = funscriptHandlerOther->getPosition(currentTime);
                         if(otherAction != nullptr)
@@ -411,8 +384,6 @@ void SyncHandler::syncVRFunscript(QString funscript)
                     if(tcode != nullptr)
                         _xSettings->getSelectedDeviceHandler()->sendTCode(tcode);
                     otherActions.clear();
-               /*     LogHandler::Debug("timer "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
-                    timer.start()*/;
                 }
                 timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
                 //LogHandler::Debug("timer nsecsElapsed: "+QString::number(timer2));
