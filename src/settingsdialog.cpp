@@ -4,8 +4,8 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
 {
     ui.setupUi(this);
     // Disable the videoRendererComboBox cause it causes issues with the full screen player controls
-    hasVideoPlayed = true;
-    ui.videoRendererComboBox->setToolTip("Was going to add this but had some issues with the player controls in full screen. Disabled for now.");
+    //hasVideoPlayed = true;
+    //ui.videoRendererComboBox->setToolTip("WARNING: may cause issues!");
     //ui.ConnectionSettings->setContentsMargins(20,20,20,20);
     _serialHandler = new SerialHandler(this);
     _udpHandler = new UdpHandler(this);
@@ -96,7 +96,7 @@ void SettingsDialog::initLive()
 {
     if(_videoHandler->isPlaying())
         hasVideoPlayed = true;
-    ui.videoRendererComboBox->setEnabled(!hasVideoPlayed);
+    //ui.videoRendererComboBox->setEnabled(!hasVideoPlayed);
     ui.enableMultiplierCheckbox->setChecked(SettingsHandler::getMultiplierEnabled());
     setUpMultiplierUi(SettingsHandler::getMultiplierEnabled());
     ui.disableNoScriptFoundInLibrary->setChecked(SettingsHandler::getDisableNoScriptFound());
@@ -188,9 +188,9 @@ void SettingsDialog::setupUi()
         {
             ui.videoRendererComboBox->addItem(renderer);
         }
-//        ui.videoRendererComboBox->setToolTip("Due to a bug, this can only be changed before ANY video has been played.");
+        ui.videoRendererComboBox->setToolTip("WARNING!: May cause issues with interface!\nDue to a bug, this can only be changed before ANY video has been played.");
         ui.videoRendererComboBox->setCurrentText(XVideoRendererReverseMap.value(SettingsHandler::getSelectedVideoRenderer()));
-//        connect(ui.videoRendererComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::on_videoRenderer_textChanged);
+        connect(ui.videoRendererComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::on_videoRenderer_textChanged);
 
         ui.disableTCodeValidationCheckbox->setChecked(SettingsHandler::getDisableSerialTCodeValidation());
 
@@ -240,6 +240,8 @@ void SettingsDialog::setupUi()
         ui.browseSkipToMoneyShotFunscriptButton->setEnabled(skipToMoneyShotPlaysFunscript);
         ui.skipToMoneyShotStandAloneLoopCheckBox->setChecked(SettingsHandler::getSkipToMoneyShotStandAloneLoop());
         ui.skipToMoneyShotStandAloneLoopCheckBox->setEnabled(skipToMoneyShotPlaysFunscript);
+
+        ui.enableHttpServerCheckbox->setChecked(SettingsHandler::getEnableHttpServer());
 
         _interfaceInitialized = true;
     }
@@ -1578,7 +1580,7 @@ void SettingsDialog::on_videoRenderer_textChanged(const QString &value)
     if(_videoHandler->setVideoRenderer(renderer))
     {
         SettingsHandler::setSelectedVideoRenderer(renderer);
-        SettingsHandler::requestRestart(this);
+        //SettingsHandler::requestRestart(this);
     }
     else
     {
@@ -1670,4 +1672,10 @@ void SettingsDialog::on_skipToMoneyShotSkipsVideo_clicked(bool checked)
 void SettingsDialog::on_skipToMoneyShotStandAloneLoopCheckBox_clicked(bool checked)
 {
     SettingsHandler::setSkipToMoneyShotStandAloneLoop(checked);
+}
+
+void SettingsDialog::on_enableHttpServerCheckbox_clicked(bool checked)
+{
+    SettingsHandler::setEnableHttpServer(checked);
+    SettingsHandler::requestRestart(this);
 }

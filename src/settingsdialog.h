@@ -195,6 +195,8 @@ private slots:
 
     void on_skipToMoneyShotStandAloneLoopCheckBox_clicked(bool checked);
 
+    void on_enableHttpServerCheckbox_clicked(bool checked);
+
 private:
 
     Ui::SettingsDialog ui;

@@ -40,6 +40,7 @@ public:
     void reset();
     QList<QString> load(QString funscript);
     bool isLoaded();
+    bool isPlaying();
     bool isPlayingStandAlone();
     QString getPlayingStandAloneScript();
 private:

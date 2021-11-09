@@ -219,6 +219,11 @@ public:
     static void setSkipPlayingStandAloneFunscriptsInLibrary(bool value);
     static bool getSkipPlayingStandAloneFunscriptsInLibrary();
 
+    static bool getEnableHttpServer();
+    static void setEnableHttpServer(bool enable);
+    static QString getHttpServerRoot();
+    static void setHttpServerRoot(QString enable);
+
     static void SetChannelMapDefaults();
     static void SetGamepadMapDefaults();
     static void SetupDecoderPriority();
@@ -321,6 +326,8 @@ private:
 
     static bool _hideStandAloneFunscriptsInLibrary;
     static bool _skipPlayingSTandAloneFunscriptsInLibrary;
+    static bool _enableHttpServer;
+    static QString _httpServerRoot;
 
     static QHash<QString, bool> _funscriptLoaded;
     static QSettings* settings;

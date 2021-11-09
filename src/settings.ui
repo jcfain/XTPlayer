@@ -546,7 +546,7 @@
         <item row="0" column="1">
          <widget class="QComboBox" name="videoRendererComboBox">
           <property name="enabled">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -825,6 +825,13 @@ that has no script of the same name.</string>
          </property>
          <property name="text">
           <string>Skip playing stand alone funscripts in library</string>
+         </property>
+        </widget>
+       </item>
+       <item row="13" column="9">
+        <widget class="QCheckBox" name="enableHttpServerCheckbox">
+         <property name="text">
+          <string>Enable http server</string>
          </property>
         </widget>
        </item>

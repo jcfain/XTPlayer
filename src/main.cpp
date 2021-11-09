@@ -25,7 +25,6 @@ int main(int argc, char *argv[])
     qRegisterMetaTypeStreamOperators<QList<LibraryListItem>>("QList<LibraryListItem>");
     qRegisterMetaType<QVector<int> >("QVector<int>");
     QApplication a(argc, argv);
-
     MainWindow w(a.arguments());
     w.show();
     return a.exec();

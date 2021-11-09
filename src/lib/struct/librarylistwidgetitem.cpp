@@ -201,7 +201,17 @@ void LibraryListWidgetItem::updateThumbSize(QSize thumbSize, QString filePath)
             _thumbFile = filePath;
         }
     }
+    auto data = getLibraryListItem();
+
+
     QFileInfo thumbFile = QFileInfo(_thumbFile);
+    if(thumbFile.exists())
+    {
+        data.thumbFile = _thumbFile;
+        QVariant listItem;
+        listItem.setValue(data);
+        setData(Qt::UserRole, listItem);
+    }
     QPixmap bgPixmap = QPixmap(!thumbFile.exists() ? "://images/icons/loading.png" : _thumbFile);
     QIcon thumb;
     //QSize maxThumbSize = SettingsHandler::getMaxThumbnailSize();

@@ -13,6 +13,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     ui->setupUi(this);
     loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading Settings...", Qt::AlignBottom, Qt::white);
     SettingsHandler::Load();
+    if(SettingsHandler::getEnableHttpServer())
+        _httpHandler = new HttpHandler();
     _xSettings = new SettingsDialog(this);
     _dlnaScriptLinksDialog = new DLNAScriptLinks(this);
     tcodeHandler = new TCodeHandler();
@@ -103,9 +105,12 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     _mediaFrame = new QFrame(this);
     _mediaGrid = new QGridLayout(_mediaFrame);
     _mediaFrame->setLayout(_mediaGrid);
+    _mediaFrame->setContentsMargins(0,0,0,0);
 
     videoHandler = new VideoHandler(this);
     _mediaGrid->addWidget(videoHandler, 0, 0, 3, 5);
+    _mediaGrid->setMargin(0);
+    _mediaGrid->setContentsMargins(0,0,0,0);
 
     _syncHandler = new SyncHandler(_xSettings, tcodeHandler, videoHandler, this);
 
@@ -437,6 +442,8 @@ void MainWindow::dispose()
         loadingLibraryFuture.waitForFinished();
     }
     //qDeleteAll(funscriptHandlers);
+    if(_httpHandler)
+        delete _httpHandler;
     delete tcodeHandler;
     delete videoHandler;
     delete connectionStatusLabel;
@@ -1184,6 +1191,8 @@ void MainWindow::onPrepareLibraryLoad()
     stopThumbProcess();
     qDeleteAll(cachedLibraryItems);
     cachedLibraryItems.clear();
+    if(_httpHandler)
+        _httpHandler->setLibraryLoaded(false, cachedLibraryItems);
     libraryList->clear();
     ui->actionReload_library->setDisabled(true);
     ui->actionSelect_library->setDisabled(true);
@@ -1461,6 +1470,9 @@ void MainWindow::onLibraryLoaded()
     _playerControlsFrame->setDisabled(false);
     ui->actionReload_library->setDisabled(false);
     ui->actionSelect_library->setDisabled(false);
+
+    if(_httpHandler)
+        _httpHandler->setLibraryLoaded(true, cachedLibraryItems);
     setLibraryLoading(false);
 }
 
@@ -2528,88 +2540,130 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
 //        LogHandler::Debug("VR playbackSpeed: "+QString::number(packet.playbackSpeed));
 //        LogHandler::Debug("VR playing: "+QString::number(packet.playing));
 
-    if(!packet.path.isEmpty() && packet.path != vrScriptSelectedCanceledPath)
+    QString videoPath = packet.path;
+    if(!videoPath.isEmpty() && videoPath != lastVRScriptPath)
     {
-        LogHandler::Debug("onVRMessageRecieved video changed: "+packet.path);
-        LogHandler::Debug("onVRMessageRecieved old path: "+vrScriptSelectedCanceledPath);
+        LogHandler::Debug("onVRMessageRecieved video changed: "+videoPath);
+        LogHandler::Debug("onVRMessageRecieved old path: "+lastVRScriptPath);
         vrScriptSelectorCanceled = false;
-    }
+    } else if(videoPath.isEmpty() || packet.duration <= 0 || _syncHandler->isPlaying())
+        return;
 
-    if (!vrScriptSelectorCanceled && !packet.path.isEmpty() && !funscriptFileSelectorOpen && packet.duration > 0)
+    if (!vrScriptSelectorCanceled && !funscriptFileSelectorOpen)
     {
-        QString videoPath = packet.path;
         QFileInfo videoFile(videoPath);
-        QString funscriptPath = SettingsHandler::getDeoDnlaFunscript(videoPath);
-        QFileInfo funscriptFile(funscriptPath);
-        if (funscriptPath.isEmpty() || !funscriptFile.exists())
+        QString funscriptPath;
+        bool saveLinkedScript = false;
+        if(videoPath.contains("http"))
         {
-            LogHandler::Debug("onVRMessageRecieved funscript not found in app data");
-            _syncHandler->stopAll();
+            LogHandler::Debug("onVRMessageRecieved Funscript is http: "+ videoPath);
+            QUrl funscriptUrl = QUrl(videoPath);
+            QString path = funscriptUrl.path();
+            QString localpath = path;
+            if(path.startsWith("/video"))
+                localpath = path.remove("/video/");
+            int indexOfSuffix = localpath.lastIndexOf(".");
+            QString localFunscriptPath = localpath.replace(indexOfSuffix, localpath.length() - indexOfSuffix, ".funscript");
+            QString libraryScriptPath = SettingsHandler::getSelectedLibrary() + QDir::separator() + localFunscriptPath;
+            QFile libraryFile(libraryScriptPath);
+            if(libraryFile.exists())
+            {
+                LogHandler::Debug("onVRMessageRecieved Script found in url path: "+libraryScriptPath);
+                funscriptPath = libraryScriptPath;
+            }
+            else {
+                LogHandler::Debug("onVRMessageRecieved Script not found in url path");
+            }
+        }
+
+        if(funscriptPath.isEmpty())
+        {
+            funscriptPath = SettingsHandler::getDeoDnlaFunscript(videoPath);
+            if(!funscriptPath.isEmpty())
+            {
+                QFileInfo funscriptFile(funscriptPath);
+                if(!funscriptFile.exists())
+                {
+                    SettingsHandler::removeLinkedVRFunscript(videoPath);
+                    funscriptPath = nullptr;
+                }
+            }
+        }
+
+        if (funscriptPath.isEmpty())
+        {
             //Check the deo device local video directory for funscript.
-            int indexOfSuffix = packet.path.lastIndexOf(".");
-            QString packetPath = packet.path;
-            QString localFunscriptPath = packetPath.replace(indexOfSuffix, packet.path.length() - indexOfSuffix, ".funscript");
+            QString tempPath = videoPath;
+            int indexOfSuffix = tempPath.lastIndexOf(".");
+            QString localFunscriptPath = tempPath.replace(indexOfSuffix, tempPath.length() - indexOfSuffix, ".funscript");
             QFile localFile(localFunscriptPath);
-            LogHandler::Debug("Searching local path: "+localFunscriptPath);
+            LogHandler::Debug("onVRMessageRecieved Searching local path: "+localFunscriptPath);
             if(localFile.exists())
             {
                 LogHandler::Debug("onVRMessageRecieved script found in path of media");
                 funscriptPath = localFunscriptPath;
             }
-            else
+        }
+
+        if (funscriptPath.isEmpty())
+        {
+            LogHandler::Debug("onVRMessageRecieved funscript not found in app data");
+            //Check the user selected library location.
+            QString libraryScriptFile = videoFile.fileName().remove(videoFile.fileName().lastIndexOf('.'), videoFile.fileName().length() -  1) + ".funscript";
+            LogHandler::Debug("onVRMessageRecieved Searching for file in library root: "+ libraryScriptFile);
+            QString libraryScriptPath = SettingsHandler::getSelectedLibrary() + QDir::separator() + libraryScriptFile;
+            QFile libraryFile(libraryScriptPath);
+            if(libraryFile.exists())
             {
-                //Check the user selected library location.
-                LogHandler::Debug("onVRMessageRecieved funscript not found in path of media");
-                LogHandler::Debug("onVRMessageRecieved Searching in library root...");
-                QFileInfo fileinfo(packet.path);
-                QString libraryScriptFile = fileinfo.fileName().remove(fileinfo.fileName().lastIndexOf('.'), fileinfo.fileName().length() -  1) + ".funscript";
-                QString libraryScriptPath = SettingsHandler::getSelectedLibrary() + QDir::separator() + libraryScriptFile;
-                QFile libraryFile(libraryScriptPath);
-                if(libraryFile.exists())
-                {
-                    LogHandler::Debug("onVRMessageRecieved Script found in root: "+libraryScriptPath);
-                    funscriptPath = libraryScriptPath;
-                }
-                else {
-                    LogHandler::Debug("onVRMessageRecieved Script not found");
-                }
+                LogHandler::Debug("onVRMessageRecieved Script found in root: "+libraryScriptPath);
+                funscriptPath = libraryScriptPath;
             }
-            //If the above locations fail ask the user to select a file manually.
-            if (funscriptPath.isEmpty())
+            else {
+                LogHandler::Debug("onVRMessageRecieved Script not found");
+            }
+        }
+
+        //If the above locations fail ask the user to select a file manually.
+        if (funscriptPath.isEmpty())
+        {
+            if(!SettingsHandler::getDisableVRScriptSelect())
             {
-                if(!SettingsHandler::getDisableVRScriptSelect())
-                {
-                    LogHandler::Debug("onVRMessageRecieved Enter no scripts found. Ask user");
-                    if (!SettingsHandler::getDisableSpeechToText())
-                        textToSpeech->say("Script for video playing in VR not found. Please check your computer to select a script.");
-                    funscriptFileSelectorOpen = true;
-                    funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + videoFile.fileName(), SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
-                    funscriptFileSelectorOpen = false;
-                    //LogHandler::Debug("funscriptPath: "+funscriptPath);
-                }
-                if(funscriptPath.isEmpty())
-                {
-                    LogHandler::Debug("Funscript selector canceled");
-                    vrScriptSelectorCanceled = true;
-                    vrScriptSelectedCanceledPath = packet.path;
-                }
+                LogHandler::Debug("onVRMessageRecieved Enter no scripts found. Ask user");
+                if (!SettingsHandler::getDisableSpeechToText())
+                    textToSpeech->say("Script for video playing in VR not found. Please check your computer to select a script.");
+                funscriptFileSelectorOpen = true;
+                funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + videoFile.fileName(), SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
+                funscriptFileSelectorOpen = false;
+                saveLinkedScript = true;
+                //LogHandler::Debug("funscriptPath: "+funscriptPath);
             }
-            //Store the location of the file so the above check doesnt happen again.
-            if(!funscriptPath.isEmpty())
+            if(funscriptPath.isEmpty())
+            {
+                LogHandler::Debug("Funscript selector canceled");
+                vrScriptSelectorCanceled = true;
+            }
+        }
+
+        if(!funscriptPath.isEmpty())
+        {
+            LogHandler::Debug("Starting sync: "+funscriptPath);
+            _syncHandler->syncVRFunscript(funscriptPath);
+            if(saveLinkedScript)
             {
                 LogHandler::Debug("Saving script into data: "+funscriptPath);
-                _syncHandler->syncVRFunscript(funscriptPath);
+                //Store the location of the file so the user doesnt have to select it again.
                 SettingsHandler::setLinkedVRFunscript(videoPath, funscriptPath);
                 SettingsHandler::SaveLinkedFunscripts();
             }
         }
-        else if(vrScriptSelectedCanceledPath != packet.path)
-        {
-            LogHandler::Debug("onVRMessageRecieved funscript found in data store: " + funscriptPath);
-            _syncHandler->syncVRFunscript(funscriptPath);
-            vrScriptSelectedCanceledPath = packet.path;
-        }
+        lastVRScriptPath = videoPath;
     }
+//    else if(vrScriptSelectedCanceledPath != packet.path)
+//    {
+//        LogHandler::Debug("onVRMessageRecieved funscript found in data store: " + funscriptPath);
+//        _syncHandler->syncVRFunscript(funscriptPath);
+//        vrScriptSelectedCanceledPath = packet.path;
+//    }
 }
 
 

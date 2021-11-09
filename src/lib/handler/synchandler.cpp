@@ -35,6 +35,10 @@ bool SyncHandler::isPaused()
 {
     return _isPaused;
 }
+bool SyncHandler::isPlaying()
+{
+    return _isVRFunscriptPlaying || _isMediaFunscriptPlaying || _isStandAloneFunscriptPlaying;
+}
 bool SyncHandler::isPlayingStandAlone()
 {
     return _isStandAloneFunscriptPlaying;

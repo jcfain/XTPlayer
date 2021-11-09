@@ -23,6 +23,7 @@ SOURCES += \
     addchanneldialog.cpp \
     addplaylistdialog.cpp \
     dlnascriptlinks.cpp \
+    lib/handler/httphandler.cpp \
     lib/handler/audiosyncfilter.cpp \
     lib/handler/deohandler.cpp \
     lib/handler/devicehandler.cpp \
@@ -60,6 +61,7 @@ HEADERS += \
     addchanneldialog.h \
     addplaylistdialog.h \
     dlnascriptlinks.h \
+    lib/handler/httphandler.h \
     lib/handler/audiosyncfilter.h \
     lib/handler/deohandler.h \
     lib/handler/devicehandler.h \
@@ -158,13 +160,32 @@ win32{
     build_pass: CONFIG(debug, debug|release) {
         DESTDIR = $$shell_path($$OUT_PWD/debug)
         LIBS += -L"../../QtAV-Builds/Debug/x64/lib" -lQtAV1 -lQtAVWidgets1
-        #INCLUDEPATH += ../../QtAV-Builds/Debug/x64/include
+        #CONFIG(release, debug|release):
+
+        #include($$PWD/../../HttpServer/HttpServer.pro)
+        #LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/debug -lhttpServer
+        LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/src/debug -lhttpServer
+        INCLUDEPATH += $$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/src/debug
+        DEPENDPATH += $$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/src/debug
+#        TEMPLATE = subdirs
+#        #SOURCE_ROOT += ../../
+#        SUBDIRS += libQtAV
+#        depends += libQtAV
+#        libQtAV.file = ../../QtAV/QtAV.pro
+#        include(../../QtAV/root.pri)
+#        include(../../QtAV/src/libQtAV.pri)
     }
     else: build_pass {
         DESTDIR = $$shell_path($$OUT_PWD/release)
         LIBS += -L$$QT.core.libs -lQtAV1 -lQtAVWidgets1
+        #LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release/release -lhttpServer
+        LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release/src/release -lhttpServer
+        INCLUDEPATH += $$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release/src/release
+        DEPENDPATH += $$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release/src/release
         #INCLUDEPATH += ../../QtAV-Builds/Release/x64/include
     }
+    INCLUDEPATH += $$PWD/../../HttpServer/src
+    include($$PWD/../../HttpServer/3rdparty/qtpromise/qtpromise.pri)
     RC_FILE = XTPlayer.rc
 }
 
@@ -184,7 +205,7 @@ win32{
 #mypackagerule.command = exec my_package_script.sh
 #QMAKE_EXTRA_TARGETS += mypackagerule
 
-copydata.commands = $(COPY_DIR) $$shell_path($$PWD/themes) $$shell_path($$DESTDIR/themes)
+copydata.commands = $(COPY_DIR) $$shell_path($$PWD/themes) $$shell_path($$DESTDIR/themes) | $(COPY_DIR) $$shell_path($$PWD/www) $$shell_path($$DESTDIR/www)
 first.depends = $(first) copydata
 export(first.depends)
 export(copydata.commands)

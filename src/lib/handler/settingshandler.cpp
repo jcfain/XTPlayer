@@ -133,6 +133,11 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     _hideStandAloneFunscriptsInLibrary = settingsToLoadFrom->value("hideStandAloneFunscriptsInLibrary").toBool();
     _skipPlayingSTandAloneFunscriptsInLibrary = settingsToLoadFrom->value("skipPlayingSTandAloneFunscriptsInLibrary").toBool();
 
+    _enableHttpServer = settingsToLoadFrom->value("enableHttpServer").toBool();
+    _httpServerRoot = settingsToLoadFrom->value("httpServerRoot").toString();
+    if(_httpServerRoot.isEmpty())
+        _httpServerRoot = "www";
+
     QList<QVariant> decoderPriorityvarient = settingsToLoadFrom->value("decoderPriority").toList();
     decoderPriority.clear();
     foreach(auto varient, decoderPriorityvarient)
@@ -325,9 +330,11 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         settingsToSaveTo->setValue("skipToMoneyShotSkipsVideo", _skipToMoneyShotSkipsVideo);
         settingsToSaveTo->setValue("skipToMoneyShotStandAloneLoop", _skipToMoneyShotStandAloneLoop);
 
-
         settingsToSaveTo->setValue("hideStandAloneFunscriptsInLibrary", _hideStandAloneFunscriptsInLibrary);
         settingsToSaveTo->setValue("skipPlayingSTandAloneFunscriptsInLibrary", _skipPlayingSTandAloneFunscriptsInLibrary);
+
+        settingsToSaveTo->setValue("enableHttpServer", _enableHttpServer);
+        settingsToSaveTo->setValue("httpServerRoot", _httpServerRoot);
 
         settingsToSaveTo->sync();
 
@@ -1659,6 +1666,29 @@ void SettingsHandler::setSkipPlayingStandAloneFunscriptsInLibrary(bool value)
     settingsChangedEvent(true);
 }
 
+bool SettingsHandler::getEnableHttpServer()
+{
+    return _enableHttpServer;
+}
+
+void SettingsHandler::setEnableHttpServer(bool enable)
+{
+    QMutexLocker locker(&mutex);
+    _enableHttpServer = enable;
+    settingsChangedEvent(true);
+}
+
+QString SettingsHandler::getHttpServerRoot()
+{
+    return _httpServerRoot;
+}
+void SettingsHandler::setHttpServerRoot(QString value)
+{
+    QMutexLocker locker(&mutex);
+    _httpServerRoot = value;
+    settingsChangedEvent(true);
+}
+
 LibraryListItemMetaData258 SettingsHandler::getLibraryListItemMetaData(QString path)
 {
     QMutexLocker locker(&mutex);
@@ -1760,6 +1790,9 @@ bool SettingsHandler::_skipToMoneyShotStandAloneLoop;
 
 bool SettingsHandler::_hideStandAloneFunscriptsInLibrary;
 bool SettingsHandler::_skipPlayingSTandAloneFunscriptsInLibrary;
+
+bool SettingsHandler::_enableHttpServer;
+QString SettingsHandler::_httpServerRoot;
 
 QString SettingsHandler::_hashedPass;
 

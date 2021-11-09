@@ -66,7 +66,7 @@ public:;
 
 private:
     QHBoxLayout* _widgetLayout;
-    AVPlayer* _player;
+    AVPlayer* _player = 0;
     VideoRenderer* _videoRenderer;
     VideoPreviewWidget* _videoPreviewWidget;
     QString _currentFile;

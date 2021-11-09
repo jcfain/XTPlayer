@@ -1,7 +1,8 @@
 #include "videohandler.h"
 VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent),
-    _videoRenderer(0)
+    _player(0), _videoRenderer(0)
 {
+    QtAV::Widgets::registerRenderers();
     LogHandler::Debug("Create QHBoxLayout");
     _widgetLayout = new QHBoxLayout(this);
     _widgetLayout->setMargin(0);
@@ -27,25 +28,24 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent),
 //    }
     setVideoRenderer(SettingsHandler::getSelectedVideoRenderer());
     setDecoderPriority();
-    //_player->setVideoDecoderPriority(QStringList() << "CUDA" << "D3D11" << "DXVA" << "VAAPI" << "VideoToolbox" << "FFmpeg");
-    QVariantHash opt;
-    QVariantHash cuda_opt;
-    cuda_opt["surfaces"] = 20; //key is property name, case sensitive
-    cuda_opt["copyMode"] = "DirectCopy"; // default is "DirectCopy"
-    cuda_opt["flags"] = "Default";
-    cuda_opt["deinterlace"] = "Adaptive";
-    opt["CUDA"] = cuda_opt; //key is decoder name, case sensitive
+//    QVariantHash opt;
+//    QVariantHash cuda_opt;
+//    cuda_opt["surfaces"] = 20; //key is property name, case sensitive
+//    cuda_opt["copyMode"] = "DirectCopy"; // default is "DirectCopy"
+//    cuda_opt["flags"] = "Default";
+//    cuda_opt["deinterlace"] = "Adaptive";
+//    opt["CUDA"] = cuda_opt; //key is decoder name, case sensitive
 
-    QVariantHash va_opt;
-    va_opt["display"] = "X11"; //"GLX", "X11", "DRM"
-    va_opt["copyMode"] = "ZeroCopy"; // "ZeroCopy", "OptimizedCopy", "GenericCopy". Default is "ZeroCopy" if possible
-    opt["VAAPI"] = va_opt; //key is decoder name, case sensitive
+//    QVariantHash va_opt;
+//    va_opt["display"] = "X11"; //"GLX", "X11", "DRM"
+//    va_opt["copyMode"] = "ZeroCopy"; // "ZeroCopy", "OptimizedCopy", "GenericCopy". Default is "ZeroCopy" if possible
+//    opt["VAAPI"] = va_opt; //key is decoder name, case sensitive
 
-    QVariantHash avfmt_opt;
-    avfmt_opt["probesize"] = 4096;
-    avfmt_opt["user_agent"] = "xxx";
-    opt["avformat"] = avfmt_opt;
-    _player->setOptionsForVideoCodec(opt);
+//    QVariantHash avfmt_opt;
+//    avfmt_opt["probesize"] = 4096;
+//    avfmt_opt["user_agent"] = "xxx";
+//    opt["avformat"] = avfmt_opt;
+//    _player->setOptionsForVideoCodec(opt);
 
     _player->setBufferMode(QtAV::BufferMode::BufferBytes);
 
@@ -115,7 +115,7 @@ void VideoHandler::on_media_stop()
 
 bool VideoHandler::isPlaying()
 {
-    return _player->isPlaying();
+    return _player ? _player->isPlaying() : false;
 }
 
 void VideoHandler::play()
@@ -242,9 +242,14 @@ void VideoHandler::setDecoderPriority()
 }
 bool VideoHandler::setVideoRenderer(XVideoRenderer renderer)
 {
-    QtAV::Widgets::registerRenderers();
+    bool wasPlaying = false;
+    if(isPlaying())
+    {
+        wasPlaying = true;
+        stop();
+    }
     QtAV::VideoRendererId vid = QtAVVideoRendererIdMap.value(renderer);
-    VideoRenderer *videoRenderer = new VideoOutput(vid, this);
+    VideoRenderer *videoRenderer = VideoRenderer::create(vid);
     if (!videoRenderer || !videoRenderer->isAvailable() || !videoRenderer->widget())
     {
 //        LogHandler::Debug(" '" + XVideoRendererReverseMap.value(renderer) + "' failed, trying default");
@@ -256,27 +261,56 @@ bool VideoHandler::setVideoRenderer(XVideoRenderer renderer)
 //        }
     }
 
-    if (_videoRenderer && _videoRenderer->widget())
+    videoRenderer->widget()->setParent(this);
+    videoRenderer->widget()->setMouseTracking(true); //mouseMoveEvent without press.
+
+    QWidget* r = 0;
+    if (_videoRenderer)
     {
-        _widgetLayout->removeWidget(_videoRenderer->widget());
-        _videoRenderer->widget()->close();
-//        if (!_videoRenderer->widget()->testAttribute(Qt::WA_DeleteOnClose))
-//        {
-//            delete _videoRenderer->widget();
-//        }
-        delete _videoRenderer;
+        r = _videoRenderer->widget();
+        if(r)
+        {
+            _widgetLayout->removeWidget(r);
+            if (r->testAttribute(Qt::WA_DeleteOnClose)) {
+                r->close();
+            } else {
+                r->close();
+                delete r;
+            }
+            r = 0;
+        }
     }
     _videoRenderer = videoRenderer;
-    _player->setRenderer(_videoRenderer);
     _widgetLayout->addWidget(_videoRenderer->widget());
+
+//    if (mpPlayer->renderer()->id() == VideoRendererId_GLWidget) {
+//        mpVideoEQ->setEngines(QVector<VideoEQConfigPage::Engine>() << VideoEQConfigPage::SWScale << VideoEQConfigPage::GLSL);
+//        mpVideoEQ->setEngine(VideoEQConfigPage::GLSL);
+//    } else if (mpPlayer->renderer()->id() == VideoRendererId_XV) {
+//        mpVideoEQ->setEngines(QVector<VideoEQConfigPage::Engine>() << VideoEQConfigPage::XV);
+//        mpVideoEQ->setEngine(VideoEQConfigPage::XV);
+//    } else {
+//        mpVideoEQ->setEngines(QVector<VideoEQConfigPage::Engine>() << VideoEQConfigPage::SWScale);
+//        mpVideoEQ->setEngine(VideoEQConfigPage::SWScale);
+//    }
+
     if (vid == VideoRendererId_GLWidget || vid == VideoRendererId_GLWidget2 || vid == VideoRendererId_OpenGLWidget || vid == VideoRendererId_XV)
     {
-        _player->renderer()->forcePreferredPixelFormat(true);
+        //_videoRenderer->forcePreferredPixelFormat(false);
+        //qApp->setAttribute(Qt::AA_UseOpenGLES);
+        _videoRenderer->forcePreferredPixelFormat(true);
+        _videoRenderer->setPreferredPixelFormat(VideoFormat::Format_RGB32);
     }
-    else
+    else//SWScale
     {
-        _player->renderer()->forcePreferredPixelFormat(false);
+        _videoRenderer->forcePreferredPixelFormat(true);
+        _videoRenderer->setPreferredPixelFormat(VideoFormat::Format_RGB32);
     }
+    _player->setRenderer(_videoRenderer);
+    _player->renderer()->resizeRenderer(_player->renderer()->rendererSize());
+    _player->renderer()->widget()->resize(_player->renderer()->rendererSize());
+    if(wasPlaying)
+        play();
     return true;
 }
 

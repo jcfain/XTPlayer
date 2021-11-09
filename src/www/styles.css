@@ -1,0 +1,45 @@
+.thumbs-container
+{
+	display: flex;
+	flex-flow: column;
+	padding: 1.54rem;
+}
+body {
+	background-color: black;
+	color: white;
+}
+a {
+	color: white;
+}
+a:visited {
+	color: white;
+}
+a:hover {
+  color: hotpink;
+}
+a:active {
+  color: lightblue;
+}
+.thumbs-body
+{
+	display: flex;
+    flex-flow: row;
+    flex-wrap: wrap;
+	justify-content: center;
+}
+
+.media-item 
+{
+	margin: 5px;
+}
+
+.media-item .name
+{
+    text-overflow: ellipsis;
+}
+
+.mediaLink {
+	display: flex;
+    flex-flow: column nowrap;
+    overflow: hidden;
+}

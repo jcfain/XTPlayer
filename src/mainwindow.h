@@ -52,6 +52,7 @@
 #include "lib/lookup/MediaActions.h"
 #include "lib/tool/xmath.h"
 #include "lib/lookup/enum.h"
+#include "lib/handler/httphandler.h"
 #include <QtCompress/qzipwriter.h>
 #include <QtCompress/qzipreader.h>
 
@@ -264,7 +265,7 @@ private:
     bool funscriptFileSelectorOpen = false;
     bool thumbProcessIsRunning = false;
     bool vrScriptSelectorCanceled = false;
-    QString vrScriptSelectedCanceledPath;
+    QString lastVRScriptPath;
     int thumbNailSearchIterator = 0;
     VideoFrameExtractor* extractor;
     AVPlayer* thumbNailPlayer;
@@ -272,6 +273,7 @@ private:
     bool _editPlaylistMode = false;
     bool _libraryDockMode = false;
     AudioSyncFilter* audioSyncFilter;
+    HttpHandler* _httpHandler = 0;
 
     void saveSingleThumb(const QString& videoFile, const QString& thumbFile, LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
     void startThumbProcess();
