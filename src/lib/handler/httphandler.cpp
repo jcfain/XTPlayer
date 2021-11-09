@@ -76,6 +76,18 @@ HttpPromise HttpHandler::handle(HttpDataPtr data)
         data->response->sendFile("://images/icons/XTP-window-icon.ico", "image/x-icon");
         data->response->setStatus(HttpStatus::Ok);
     }
+    else if(path.contains(":"))
+    {
+        path = path.remove(0,1);
+        QFile file(path);
+        if(file.exists())
+        {
+            data->response->sendFile(path);
+            data->response->setStatus(HttpStatus::Ok);
+        }
+        else
+            data->response->setStatus(HttpStatus::BadRequest);
+    }
     else
     {
         QFile file(root + path);

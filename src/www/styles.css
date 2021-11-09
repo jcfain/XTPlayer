@@ -1,12 +1,10 @@
-.thumbs-container
-{
-	display: flex;
-	flex-flow: column;
-	padding: 1.54rem;
-}
 body {
 	background-color: black;
 	color: white;
+    display: flex;
+    flex-direction: column;
+	margin-right: 1rem;
+    margin-left: 1rem;
 }
 a {
 	color: white;
@@ -19,6 +17,56 @@ a:hover {
 }
 a:active {
   color: lightblue;
+}
+.header {
+	display: flex;
+    flex-flow: nowrap;
+	justify-content: space-between;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+.headerSection {
+	flex-basis: 33%;
+}
+.headerLogoSection {
+	display:flex;
+    justify-content: center;
+}
+.headerLogo {
+	height: 50px;
+    max-width: fit-content;
+}
+.toolBar {
+	display: flex;
+    flex-flow: column;
+    justify-content: center;
+}
+.toolBarGroup {
+	display: flex;
+    justify-content: flex-end;
+}
+.selectLabel {
+	margin-right: 8px;
+    margin-top: 3px;
+}
+select, button, input {
+    border-radius: 5px;
+}
+.refreshButton {
+    margin-left: 8px;
+}
+.refreshButtonImage {
+	width: 16px;
+	height: 16px;
+}
+.thumbs-container
+{
+	display: flex;
+	flex-flow: column;
+	font-family: arial;
+	font-size: 16px;
+	max-height: calc(100vh - 100px);
+	overflow-y: auto;
 }
 .thumbs-body
 {

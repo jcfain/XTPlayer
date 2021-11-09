@@ -6,14 +6,26 @@
     <script src="index.js"></script>
 </head>
 <body>
-<button id="refreshButton" onclick="loadMediaFromServer()">Refresh Media</button>
-<label for="sortBy">Sort by:</label>
-<select name="sortBy" id="sortBy" onchange="sortChange(this)">
-  <option value="nameAsc">Name (asc)</option>
-  <option value="nameDesc">Name (desc)</option>
-  <option value="dateAsc">Date (asc)</option>
-  <option value="dateDesc">Date (desc)</option>
-</select>
+<div class="header">
+	<div class="headerSection"></div>
+	<div class="headerSection headerLogoSection">
+		<img class="headerLogo" src="://images/icons/XTP-window-icon.png"/>
+	</div>
+	<div class="headerSection toolBar">
+		<div class="toolBarGroup">
+			<label class="selectLabel" for="sortBy">Sort by:</label>
+			<select class="select" name="sortBy" id="sortBy" onchange="sortChange(this)">
+			  <option value="nameAsc">Name (asc)</option>
+			  <option value="nameDesc">Name (desc)</option>
+			  <option value="dateAsc">Date (asc)</option>
+			  <option value="dateDesc">Date (desc)</option>
+			</select>
+			<button id="refreshButton" class="refreshButton" onclick="loadMediaFromServer()">
+				<img class="refreshButtonImage" src="://images/icons/reload.svg"/>
+			</button>
+		</div>
+	</div>
+</div>
 <div class="thumbs-container">
 	<div id="mediaList" class="thumbs-body">
 	
