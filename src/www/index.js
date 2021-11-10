@@ -40,6 +40,8 @@ function onVideosLoad(err, mediaList)
 			isStereoscopic: mediaList[i]["isStereoscopic"],
 			isMFS: mediaList[i]["isMFS"]
 		}
+		if(obj.isMFS)
+			obj.name = "(MFS) " + obj.name;
 		mediaListObj.push(obj);
 	}
 	window.localStorage.setItem("mediaList", JSON.stringify(mediaListObj));
@@ -84,10 +86,7 @@ function loadMedia(mediaList) {
 		image.style.objectFit = "contain";
 		image.id = obj.name+"thumb"+i
 		var namenode = document.createElement("div");
-		if(obj.isMFS)
-			namenode.innerText = "(MFS) " + obj.name;
-		else
-			namenode.innerText = obj.name;
+		namenode.innerText = obj.name;
 		namenode.className += "name"
 		
 		divnode.appendChild(anode);
