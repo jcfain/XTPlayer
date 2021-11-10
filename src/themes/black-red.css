@@ -6,6 +6,18 @@ QMainWindow, QDialog, QTabWidget > QWidget, LibraryWindow {
 QSplitter::handle {
     background-color: lightgray;
 }
+QDialog[cssClass="loadingSpinner"] {
+	
+}
+QLabel[cssClass="libraryLoadingSpinner"] {
+	background-color: rgba(0,0,0, 1);
+}
+QLabel[cssClass="libraryLoadingSpinnerText"] {
+	color: red;
+}
+QLabel[cssClass="mediaLoadingSpinner"] {
+	background-color: transparent;
+}
 QProgressBar {
 	color: red;
 }

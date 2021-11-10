@@ -1,21 +1,14 @@
 mediaListObj = [];
-sortByCache = "nameAsc"
+sortByGlobal = "nameAsc"
+showGlobal = "All"
 window.onload = function httpGetAsync(callback)
 {
-	mediaListObj = JSON.parse(window.localStorage.getItem("mediaList"));
-	sortByCache = JSON.parse(window.localStorage.getItem("sortBy"));
-	if(!mediaListObj || mediaListObj.length == 0) {
-		loadMediaFromServer();
-	} else if(!mediaListObj) {
-		mediaListObj = [];
-	} else {
-		sort(sortByCache, false);
-		loadMedia(mediaListObj);
-	}
+	sortByGlobal = JSON.parse(window.localStorage.getItem("sortBy"));
+	showGlobal = JSON.parse(window.localStorage.getItem("show"));
+	loadMediaFromServer();
 }
 
 function loadMediaFromServer() {
-	window.localStorage.setItem("mediaList", JSON.stringify([]));
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', "/media", true);
 	xhr.responseType = 'json';
@@ -43,24 +36,25 @@ function onVideosLoad(err, mediaList)
 			thumbSize: mediaList[i]["thumbSize"],
 			relativePath: mediaList[i]["relativePath"],
 			relativeThumb: mediaList[i]["relativeThumb"],
-			modifiedDate: new Date(mediaList[i]["modifiedDate"])
+			modifiedDate: new Date(mediaList[i]["modifiedDate"]),
+			isStereoscopic: mediaList[i]["isStereoscopic"]
 		}
 		mediaListObj.push(obj);
 	}
 	window.localStorage.setItem("mediaList", JSON.stringify(mediaListObj));
-	sort(sortByCache, false);
-	loadMedia(mediaListObj)
+	sort(sortByGlobal, false);
+	loadMedia(show(showGlobal, false))
   }
 }
 
 function loadMedia(mediaList) {
 	var medialistNode = document.getElementById("mediaList");
 	removeAllChildNodes(medialistNode);
-	if(mediaList.length == 0)
+	if(!mediaList || mediaList.length == 0)
 	{
 		var divnode = document.createElement("div"); 
 		divnode.id = "NoMedia";
-		divnode.innerText = "No media found, it could be still loading";
+		divnode.innerText = "No media found, it may be loading.";
 		medialistNode.appendChild(divnode);
 		return;
 	}
@@ -102,16 +96,20 @@ function removeAllChildNodes(parent) {
         parent.removeChild(parent.firstChild);
     }
 }
+function showChange(selectNode) {
+	sort(sortByGlobal, true);
+	loadMedia(show(selectNode.value, true));
+}
 
 function sortChange(selectNode) {
 	sort(selectNode.value, true);
-	loadMedia(mediaListObj);
+	loadMedia(show(showGlobal, true));
 }
 
-function sort(sortBy, userClick) {
-	if(!sortBy)
-		sortBy = "nameAsc";
-	switch(sortBy) {
+function sort(value, userClick) {
+	if(!value)
+		value = "nameAsc";
+	switch(value) {
 		case "dateDesc":
 			mediaListObj.sort(function(a,b){
 			  return new Date(b.modifiedDate) - new Date(a.modifiedDate);
@@ -148,7 +146,33 @@ function sort(sortBy, userClick) {
 		break;
 	}
 	if(!userClick)
-		document.getElementById("sortBy").value = sortBy;
-	else
-		window.localStorage.setItem("sortBy", JSON.stringify(sortBy));
+		document.getElementById("sortBy").value = value;
+	else {
+		window.localStorage.setItem("sortBy", JSON.stringify(value));
+		sortByGlobal = value;
+	}
+}
+
+function show(value, userClick) {
+	if(!value)
+		value = "All";
+	filteredMedia = [];
+	switch(value) {
+		case "All":
+			filteredMedia = mediaListObj;
+		break;
+		case "3DOnly":
+			filteredMedia = mediaListObj.filter(x => x.isStereoscopic);
+		break;
+		case "2DAndAudioOnly":
+			filteredMedia = mediaListObj.filter(x => !x.isStereoscopic);
+		break;
+	}
+	if(!userClick)
+		document.getElementById("show").value = value;
+	else {
+		window.localStorage.setItem("show", JSON.stringify(value));
+		showGlobal = value;
+	}
+	return filteredMedia;
 }

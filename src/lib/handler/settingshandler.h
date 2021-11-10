@@ -222,7 +222,11 @@ public:
     static bool getEnableHttpServer();
     static void setEnableHttpServer(bool enable);
     static QString getHttpServerRoot();
-    static void setHttpServerRoot(QString enable);
+    static void setHttpServerRoot(QString value);
+    static QString getVRLibrary();
+    static void setVRLibrary(QString value);
+    static qint64 getHTTPChunkSize();
+    static void setHTTPChunkSize(qint64 value);
 
     static void SetChannelMapDefaults();
     static void SetGamepadMapDefaults();
@@ -328,6 +332,8 @@ private:
     static bool _skipPlayingSTandAloneFunscriptsInLibrary;
     static bool _enableHttpServer;
     static QString _httpServerRoot;
+    static qint64 _httpChunkSize;
+    static QString _vrLibrary;
 
     static QHash<QString, bool> _funscriptLoaded;
     static QSettings* settings;

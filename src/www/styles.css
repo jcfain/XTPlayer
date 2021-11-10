@@ -40,14 +40,19 @@ a:active {
 	display: flex;
     flex-flow: column;
     justify-content: center;
+	max-width: 250px;
 }
 .toolBarGroup {
 	display: flex;
     justify-content: flex-end;
+    flex-wrap: wrap;
 }
 .selectLabel {
 	margin-right: 8px;
     margin-top: 3px;
+}
+select {
+	min-width: 132px;
 }
 select, button, input {
     border-radius: 5px;

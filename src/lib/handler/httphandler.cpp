@@ -31,10 +31,11 @@ HttpHandler::~HttpHandler()
 
 }
 
-void HttpHandler::setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems)
+void HttpHandler::setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems)
 {
     _libraryLoaded = loaded;
     _cachedLibraryItems = cachedLibraryItems;
+    _vrLibraryItems = vrLibraryItems;
 }
 
 HttpPromise HttpHandler::handle(HttpDataPtr data)
@@ -76,24 +77,21 @@ HttpPromise HttpHandler::handle(HttpDataPtr data)
         data->response->sendFile("://images/icons/XTP-window-icon.ico", "image/x-icon");
         data->response->setStatus(HttpStatus::Ok);
     }
-    else if(path.contains(":"))
-    {
-        path = path.remove(0,1);
-        QFile file(path);
-        if(file.exists())
-        {
-            data->response->sendFile(path);
-            data->response->setStatus(HttpStatus::Ok);
-        }
-        else
-            data->response->setStatus(HttpStatus::BadRequest);
-    }
     else
     {
-        QFile file(root + path);
+        QString localPath;
+        if(path.startsWith("/:"))
+        {
+            localPath = path.remove(0,1);
+        }
+        else
+        {
+            localPath = root + path;
+        }
+        QFile file(localPath);
         if(file.exists())
         {
-            data->response->sendFile(root + path);
+            data->response->sendFile(localPath);
             data->response->setStatus(HttpStatus::Ok);
         }
         else
@@ -104,13 +102,6 @@ HttpPromise HttpHandler::handle(HttpDataPtr data)
 
 HttpPromise HttpHandler::handleVideoList(HttpDataPtr data)
 {
-//    if(!_libraryLoaded)
-//    {
-//        QtConcurrent::run([this]() {
-//            while(!_libraryLoaded)
-//                thread->sleep(1000);
-//        });
-//    }
     QJsonArray media;
     foreach(auto widgetItem, _cachedLibraryItems)
     {
@@ -118,20 +109,36 @@ HttpPromise HttpHandler::handleVideoList(HttpDataPtr data)
         auto item = widgetItem->getLibraryListItem();
         if(item.type == LibraryListItemType::PlaylistInternal || item.type == LibraryListItemType::FunscriptType)
             continue;
-        object["name"] = item.nameNoExtension;
-        QString relativePath = item.path.replace(SettingsHandler::getSelectedLibrary(), "");
-        object["relativePath"] = QString(QUrl::toPercentEncoding(relativePath));
-        QString relativeThumb = item.thumbFile.isEmpty() ? "://images/icons/error.png" : item.thumbFile.replace(SettingsHandler::getSelectedThumbsDir(), "");
-        object["relativeThumb"] = QString(QUrl::toPercentEncoding(relativeThumb));
-        object["thumbSize"] = SettingsHandler::getThumbSize();
-        object["type"] = item.type;
-        object["duration"] = QJsonValue::fromVariant(item.duration);
-        object["modifiedDate"] = item.modifiedDate.toString(Qt::DateFormat::ISODate);
-        media.append(object);
+        media.append(createMediaObject(item, false));
+    }
+
+    foreach(auto widgetItem, _vrLibraryItems)
+    {
+        QJsonObject object;
+        auto item = widgetItem->getLibraryListItem();
+        if(item.type == LibraryListItemType::PlaylistInternal || item.type == LibraryListItemType::FunscriptType)
+            continue;
+        media.append(createMediaObject(item, true));
     }
 
     data->response->setStatus(HttpStatus::Ok, QJsonDocument(media));
     return HttpPromise::resolve(data);
+}
+
+QJsonObject HttpHandler::createMediaObject(LibraryListItem item, bool stereoscopic)
+{
+    QJsonObject object;
+    object["name"] = item.nameNoExtension;
+    QString relativePath = item.path.replace(SettingsHandler::getSelectedLibrary(), "");
+    object["relativePath"] = QString(QUrl::toPercentEncoding(relativePath));
+    QString relativeThumb = item.thumbFile.isEmpty() ? "://images/icons/error.png" : item.thumbFile.replace(SettingsHandler::getSelectedThumbsDir(), "");
+    object["relativeThumb"] = QString(QUrl::toPercentEncoding(relativeThumb));
+    object["thumbSize"] = SettingsHandler::getThumbSize();
+    object["type"] = item.type;
+    object["duration"] = QJsonValue::fromVariant(item.duration);
+    object["modifiedDate"] = item.modifiedDate.toString(Qt::DateFormat::ISODate);
+    object["isStereoscopic"] = stereoscopic;
+    return object;
 }
 
 HttpPromise HttpHandler::handleThumbFile(HttpDataPtr data)
@@ -191,8 +198,9 @@ HttpPromise HttpHandler::handleVideoStream(HttpDataPtr data)
         }
 
     }
+    qint64 chunkSize = SettingsHandler::getHTTPChunkSize();
     if(!endByte)
-        endByte = startByte + _chunkSize;
+        endByte = startByte + chunkSize;
     if(endByte >= file.bytesAvailable())
         endByte = file.bytesAvailable();
     if(startByte < endByte)
@@ -216,7 +224,7 @@ HttpPromise HttpHandler::handleVideoStream(HttpDataPtr data)
 
         QString mimeType = mimeDatabase.mimeTypeForFile(filename, QMimeDatabase::MatchExtension).name();
         LogHandler::Debug("Video stream read: "+ QString::number(timer.elapsed()));
-        QByteArray* byteArray = new QByteArray(file.read(_chunkSize));
+        QByteArray* byteArray = new QByteArray(file.read(chunkSize));
         QBuffer buffer(byteArray);
         LogHandler::Debug("Video stream open buffer: "+ QString::number(timer.elapsed()));
         if (!buffer.open(QIODevice::ReadOnly))

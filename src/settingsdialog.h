@@ -197,6 +197,12 @@ private slots:
 
     void on_enableHttpServerCheckbox_clicked(bool checked);
 
+    void on_browseHttpRootButton_clicked();
+
+    void on_browseVRLibraryButton_clicked();
+
+    void on_setChunkSizeSpinBox_valueChanged(double value);
+
 private:
 
     Ui::SettingsDialog ui;

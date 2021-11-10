@@ -161,12 +161,14 @@ private slots:
 
     void on_actionStored_DLNA_links_triggered();
 
+
 signals:
     void keyPressed(QKeyEvent * event);
     void change(QEvent * event);
     void sendTCode(QString tcode);
     void prepareLibraryLoad();
     void libraryLoaded();
+    void libraryNotFound();
     void libraryIconResized(QSize newSize);
 //    void scriptNotFound(QString message);
 //    void setLoading(bool loading);
@@ -223,6 +225,7 @@ private:
     QLabel* _videoLoadingLabel;
     QMovie* _videoLoadingMovie;
     QLabel* libraryLoadingLabel;
+    QLabel* libraryLoadingInfoLabel;
     QMovie* libraryLoadingMovie;
     QPushButton* retryConnectionButton;
     QLabel* deoConnectionStatusLabel;
@@ -276,12 +279,15 @@ private:
     HttpHandler* _httpHandler = 0;
 
     void saveSingleThumb(const QString& videoFile, const QString& thumbFile, LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
-    void startThumbProcess();
+    void saveThumb(const QString& videoFile, const QString& thumbFile, LibraryListWidgetItem* qListWidgetItem, qint64 position = 0, bool vrMode = false);
+    void startThumbProcess(bool vrMode = false);
     void stopThumbProcess();
+    void saveNewThumbs(bool vrMode = false);
 
     LibraryListItem createLibraryListItemFromFunscript(QString funscript);
     QList<LibraryListWidgetItem*> cachedLibraryItems;
     QList<LibraryListWidgetItem*> selectedPlaylistItems;
+    QList<LibraryListWidgetItem*> cachedVRItems;
     QString selectedPlaylistName;
     int playingLibraryListIndex;
     LibraryListWidgetItem* playingLibraryListItem = nullptr;
@@ -289,7 +295,8 @@ private:
     LibraryListWidgetItem* selectedLibraryListItem = nullptr;
 
     LibraryListItem getSelectedLibraryListItem();
-    void on_load_library(QString path);
+    void onLibraryNotFound();
+    void on_load_library(QString path, bool vrMode);
     void openWelcomeDialog();
     void backToMainLibrary();
     void loadPlaylistIntoLibrary(QString playlistName, bool autoPlay = false);
@@ -310,8 +317,7 @@ private:
 
     void deviceHome();
     void deviceSwitchedHome();
-    void setLibraryLoading(bool loading);
-    void saveNewThumbs();
+    void setLibraryLoading(bool loading, QString message = nullptr);
     void mediaAction(QString action);
     void toggleFullScreen();
     void toggleLoop();
@@ -320,7 +326,6 @@ private:
     void hideLibrary();
     void showLibrary();
     void setLibraryToolBar();
-    void saveThumb(const QString& videoFile, const QString& thumbFile, LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
     void updateThumbSizeUI(int size);
     void updateLibrarySortUI();
     void updateLibrarySortUI(LibrarySortMode mode);

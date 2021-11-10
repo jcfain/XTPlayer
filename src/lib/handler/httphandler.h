@@ -27,7 +27,7 @@ public:
     HttpPromise handleVideoStream(HttpDataPtr data);
     HttpPromise handleVideoList(HttpDataPtr data);
     HttpPromise handleThumbFile(HttpDataPtr data);
-    void setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems);
+    void setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems);
 
 private:
     HttpServerConfig config;
@@ -35,9 +35,11 @@ private:
     HttpServer* _server;
     QMimeDatabase mimeDatabase;
 
-    qint64 _chunkSize = 1048576;
     bool _libraryLoaded = false;
     QList<LibraryListWidgetItem*> _cachedLibraryItems;
+    QList<LibraryListWidgetItem*> _vrLibraryItems;
+
+    QJsonObject createMediaObject(LibraryListItem libraryListItem, bool stereoscopic);
 
 };
 

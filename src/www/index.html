@@ -13,16 +13,24 @@
 	</div>
 	<div class="headerSection toolBar">
 		<div class="toolBarGroup">
-			<label class="selectLabel" for="sortBy">Sort by:</label>
-			<select class="select" name="sortBy" id="sortBy" onchange="sortChange(this)">
-			  <option value="nameAsc">Name (asc)</option>
-			  <option value="nameDesc">Name (desc)</option>
-			  <option value="dateAsc">Date (asc)</option>
-			  <option value="dateDesc">Date (desc)</option>
-			</select>
-			<button id="refreshButton" class="refreshButton" onclick="loadMediaFromServer()">
+			<label class="selectLabel" for="show">Show:
+				<select name="show" id="show" onchange="showChange(this)">
+				  <option value="All">All</option>
+				  <option value="3DOnly">3D only</option>
+				  <option value="2DAndAudioOnly">2D and audio only</option>
+				</select>
+			</label>
+			<label class="selectLabel" for="sortBy">Sort by:
+				<select name="sortBy" id="sortBy" onchange="sortChange(this)">
+				  <option value="nameAsc">Name (asc)</option>
+				  <option value="nameDesc">Name (desc)</option>
+				  <option value="dateAsc">Date (asc)</option>
+				  <option value="dateDesc">Date (desc)</option>
+				</select>
+			</label>
+<!-- 			<button id="refreshButton" class="refreshButton" onclick="loadMediaFromServer()">
 				<img class="refreshButtonImage" src="://images/icons/reload.svg"/>
-			</button>
+			</button> -->
 		</div>
 	</div>
 </div>

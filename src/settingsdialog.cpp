@@ -242,6 +242,11 @@ void SettingsDialog::setupUi()
         ui.skipToMoneyShotStandAloneLoopCheckBox->setEnabled(skipToMoneyShotPlaysFunscript);
 
         ui.enableHttpServerCheckbox->setChecked(SettingsHandler::getEnableHttpServer());
+        ui.httpServerOptions->setVisible(SettingsHandler::getEnableHttpServer());
+        ui.httpRootLineEdit->setText(SettingsHandler::getHttpServerRoot());
+        ui.vrLibraryLineEdit->setText(SettingsHandler::getVRLibrary());
+        ui.chunkSizeDoubleSpinBox->setValue(SettingsHandler::getHTTPChunkSize() / 1048576);
+        connect(ui.chunkSizeDoubleSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &SettingsDialog::on_setChunkSizeSpinBox_valueChanged);
 
         _interfaceInitialized = true;
     }
@@ -1638,6 +1643,7 @@ void SettingsDialog::on_close_loading_dialog()
 void SettingsDialog::on_showLoneFunscriptsInLibraryCheckbox_clicked(bool checked)
 {
     SettingsHandler::setHideStandAloneFunscriptsInLibrary(checked);
+    ui.httpServerOptions->setVisible(SettingsHandler::getEnableHttpServer());
     SettingsHandler::requestRestart(this);
 }
 
@@ -1678,4 +1684,30 @@ void SettingsDialog::on_enableHttpServerCheckbox_clicked(bool checked)
 {
     SettingsHandler::setEnableHttpServer(checked);
     SettingsHandler::requestRestart(this);
+}
+
+void SettingsDialog::on_browseHttpRootButton_clicked()
+{
+    QString selectedDirectory = QFileDialog::getExistingDirectory(this, tr("Choose HTTP root"), SettingsHandler::getSelectedLibrary());
+    if (selectedDirectory != Q_NULLPTR)
+    {
+        SettingsHandler::setHttpServerRoot(selectedDirectory);
+        ui.httpRootLineEdit->setText(selectedDirectory);
+    }
+}
+
+void SettingsDialog::on_browseVRLibraryButton_clicked()
+{
+    QString selectedDirectory = QFileDialog::getExistingDirectory(this, tr("Choose VR library"), SettingsHandler::getSelectedLibrary());
+    if (selectedDirectory != Q_NULLPTR)
+    {
+        SettingsHandler::setVRLibrary(selectedDirectory);
+        ui.vrLibraryLineEdit->setText(selectedDirectory);
+    }
+}
+
+void SettingsDialog::on_setChunkSizeSpinBox_valueChanged(double value)
+{
+    if(value > 0)
+        SettingsHandler::setHTTPChunkSize(value * 1048576);
 }

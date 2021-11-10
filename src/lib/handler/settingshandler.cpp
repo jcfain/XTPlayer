@@ -137,6 +137,10 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     _httpServerRoot = settingsToLoadFrom->value("httpServerRoot").toString();
     if(_httpServerRoot.isEmpty())
         _httpServerRoot = "www";
+    _vrLibrary = settingsToLoadFrom->value("vrLibrary").toString();
+    _httpChunkSize = settingsToLoadFrom->value("httpChunkSize").toLongLong();
+    if(!_httpChunkSize)
+        _httpChunkSize = 10485760;
 
     QList<QVariant> decoderPriorityvarient = settingsToLoadFrom->value("decoderPriority").toList();
     decoderPriority.clear();
@@ -335,6 +339,8 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
 
         settingsToSaveTo->setValue("enableHttpServer", _enableHttpServer);
         settingsToSaveTo->setValue("httpServerRoot", _httpServerRoot);
+        settingsToSaveTo->setValue("vrLibrary", _vrLibrary);
+        settingsToSaveTo->setValue("httpChunkSize", _httpChunkSize);
 
         settingsToSaveTo->sync();
 
@@ -1689,6 +1695,28 @@ void SettingsHandler::setHttpServerRoot(QString value)
     settingsChangedEvent(true);
 }
 
+qint64 SettingsHandler::getHTTPChunkSize()
+{
+    return _httpChunkSize;
+}
+void SettingsHandler::setHTTPChunkSize(qint64 value)
+{
+    QMutexLocker locker(&mutex);
+    _httpChunkSize = value;
+    settingsChangedEvent(true);
+}
+
+QString SettingsHandler::getVRLibrary()
+{
+    return _vrLibrary;
+}
+void SettingsHandler::setVRLibrary(QString value)
+{
+    QMutexLocker locker(&mutex);
+    _vrLibrary = value;
+    settingsChangedEvent(true);
+}
+
 LibraryListItemMetaData258 SettingsHandler::getLibraryListItemMetaData(QString path)
 {
     QMutexLocker locker(&mutex);
@@ -1793,6 +1821,8 @@ bool SettingsHandler::_skipPlayingSTandAloneFunscriptsInLibrary;
 
 bool SettingsHandler::_enableHttpServer;
 QString SettingsHandler::_httpServerRoot;
+qint64 SettingsHandler::_httpChunkSize;
+QString SettingsHandler::_vrLibrary;
 
 QString SettingsHandler::_hashedPass;
 
