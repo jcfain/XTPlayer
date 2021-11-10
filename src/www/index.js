@@ -37,7 +37,8 @@ function onVideosLoad(err, mediaList)
 			relativePath: mediaList[i]["relativePath"],
 			relativeThumb: mediaList[i]["relativeThumb"],
 			modifiedDate: new Date(mediaList[i]["modifiedDate"]),
-			isStereoscopic: mediaList[i]["isStereoscopic"]
+			isStereoscopic: mediaList[i]["isStereoscopic"],
+			isMFS: mediaList[i]["isMFS"]
 		}
 		mediaListObj.push(obj);
 	}
@@ -73,6 +74,8 @@ function loadMedia(mediaList) {
 		divnode.title = obj.name;
 		var anode = document.createElement("a"); 
 		anode.className += "mediaLink"
+		if(obj.isMFS)
+			anode.className += " mediaLinkMFS"
 		anode.href = "/video"+ obj.relativePath;
 		var image = document.createElement("img"); 
 		image.src = "/thumb/" + obj.relativeThumb;
@@ -81,7 +84,10 @@ function loadMedia(mediaList) {
 		image.style.objectFit = "contain";
 		image.id = obj.name+"thumb"+i
 		var namenode = document.createElement("div");
-		namenode.innerText = obj.name;
+		if(obj.isMFS)
+			namenode.innerText = "(MFS) " + obj.name;
+		else
+			namenode.innerText = obj.name;
 		namenode.className += "name"
 		
 		divnode.appendChild(anode);

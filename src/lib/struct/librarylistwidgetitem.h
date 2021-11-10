@@ -21,8 +21,10 @@ public:
     void updateThumbSize(QSize thumbSize, QString filePath = nullptr);
     virtual LibraryListWidgetItem* clone() const override;
     QSize calculateHintSize(QSize size);
+    bool isMFS();
 private:
     QString _thumbFile;
+    bool _isMFS;
     static LibrarySortMode _sortMode;
     QSize calculateMaxSize(QSize size);
 };

@@ -109,7 +109,7 @@ HttpPromise HttpHandler::handleVideoList(HttpDataPtr data)
         auto item = widgetItem->getLibraryListItem();
         if(item.type == LibraryListItemType::PlaylistInternal || item.type == LibraryListItemType::FunscriptType)
             continue;
-        media.append(createMediaObject(item, false));
+        media.append(createMediaObject(item, false, widgetItem->isMFS()));
     }
 
     foreach(auto widgetItem, _vrLibraryItems)
@@ -118,14 +118,14 @@ HttpPromise HttpHandler::handleVideoList(HttpDataPtr data)
         auto item = widgetItem->getLibraryListItem();
         if(item.type == LibraryListItemType::PlaylistInternal || item.type == LibraryListItemType::FunscriptType)
             continue;
-        media.append(createMediaObject(item, true));
+        media.append(createMediaObject(item, true, widgetItem->isMFS()));
     }
 
     data->response->setStatus(HttpStatus::Ok, QJsonDocument(media));
     return HttpPromise::resolve(data);
 }
 
-QJsonObject HttpHandler::createMediaObject(LibraryListItem item, bool stereoscopic)
+QJsonObject HttpHandler::createMediaObject(LibraryListItem item, bool stereoscopic, bool isMFS)
 {
     QJsonObject object;
     object["name"] = item.nameNoExtension;
@@ -138,6 +138,7 @@ QJsonObject HttpHandler::createMediaObject(LibraryListItem item, bool stereoscop
     object["duration"] = QJsonValue::fromVariant(item.duration);
     object["modifiedDate"] = item.modifiedDate.toString(Qt::DateFormat::ISODate);
     object["isStereoscopic"] = stereoscopic;
+    object["isMFS"] = isMFS;
     return object;
 }
 

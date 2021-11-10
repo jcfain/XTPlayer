@@ -39,7 +39,7 @@ private:
     QList<LibraryListWidgetItem*> _cachedLibraryItems;
     QList<LibraryListWidgetItem*> _vrLibraryItems;
 
-    QJsonObject createMediaObject(LibraryListItem libraryListItem, bool stereoscopic);
+    QJsonObject createMediaObject(LibraryListItem libraryListItem, bool stereoscopic, bool isMFS);
 
 };
 

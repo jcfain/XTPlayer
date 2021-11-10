@@ -28,9 +28,13 @@ a:active {
 .headerSection {
 	flex-basis: 33%;
 }
+.headerSpacer {
+	max-width: 250px;
+}
 .headerLogoSection {
 	display:flex;
     justify-content: center;
+    flex-basis: 95%;
 }
 .headerLogo {
 	height: 50px;
@@ -95,4 +99,7 @@ select, button, input {
 	display: flex;
     flex-flow: column nowrap;
     overflow: hidden;
+}
+.mediaLinkMFS {
+	color: green;
 }

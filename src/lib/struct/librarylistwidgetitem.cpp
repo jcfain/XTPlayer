@@ -3,7 +3,7 @@
 LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem &localData, QListWidget* parent) :
     QListWidgetItem(localData.nameNoExtension, parent)
 {
-    auto mfs = updateToolTip(localData);
+    _isMFS = updateToolTip(localData);
 
     localData.thumbFile = SettingsHandler::getSelectedThumbsDir() + localData.name + ".jpg";
     if(localData.type == LibraryListItemType::Audio)
@@ -15,7 +15,7 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem &localData, QListWi
     _thumbFile = localData.thumbFile;
     int thumbSize = SettingsHandler::getThumbSize();
     updateThumbSize({thumbSize, thumbSize});
-    if (mfs)
+    if (_isMFS)
     {
         setForeground(QColorConstants::Green);
         setText("(MFS) " + localData.nameNoExtension);
@@ -31,6 +31,11 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem &localData, QListWi
 LibraryListWidgetItem::~LibraryListWidgetItem()
 {
 
+}
+
+bool LibraryListWidgetItem::isMFS()
+{
+    return _isMFS;
 }
 
 bool LibraryListWidgetItem::updateToolTip(LibraryListItem localData)
