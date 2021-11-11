@@ -11,17 +11,19 @@
 
 
 #include "settingshandler.h"
+#include "videohandler.h"
 #include "httpServer/httpServer.h"
 #include "httpServer/httpRequestHandler.h"
 #include "httpServer/httpRequestRouter.h"
 #include "../struct/librarylistwidgetitem.h"
+#include "../tool/videoformat.h"
 
 class HttpHandler : public HttpRequestHandler
 {
 signals:
     void streamChange(bool running);
 public:
-    HttpHandler(QObject *parent = nullptr);
+    HttpHandler(VideoHandler* videoHandler, QObject *parent = nullptr);
     ~HttpHandler();
     HttpPromise handle(HttpDataPtr data);
     HttpPromise handleVideoStream(HttpDataPtr data);
@@ -34,6 +36,7 @@ private:
     HttpRequestRouter router;
     HttpServer* _server;
     QMimeDatabase mimeDatabase;
+    VideoHandler* _videoHandler;
 
     bool _libraryLoaded = false;
     QList<LibraryListWidgetItem*> _cachedLibraryItems;

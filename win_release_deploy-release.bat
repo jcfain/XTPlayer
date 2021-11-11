@@ -25,9 +25,11 @@ xcopy %QtDir%libvorbisenc-2.dll %deployDir%
 xcopy %QtDir%libogg-0.dll %deployDir%
 xcopy %QtDir%Qt5OpenGL.dll %deployDir%
 xcopy %QtDir%Qt5Compress.dll %deployDir%
+xcopy ..\build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release\src\release\httpServer.dll %deployDir%
 xcopy .\src\rename_me_for_local_settings.ini %deployDir%
 xcopy "XTP and DeoVR guide.pdf" %deployDir%
 xcopy .\src\XTPlayerDebug.bat %deployDir%
 xcopy .\src\README.txt %deployDir%
+xcopy .\src\www %deployDir%\www /E /H /C /I
 
 pause

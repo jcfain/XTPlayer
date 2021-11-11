@@ -120,7 +120,8 @@ bool VideoHandler::isPlaying()
 
 void VideoHandler::play()
 {
-    _player->play();
+    //_player->play();
+    transcode(_currentFile);
     emit playing();
 }
 
@@ -322,4 +323,60 @@ void VideoHandler::installFilter(AudioFilter* filter)
 void VideoHandler::clearFilters()
 {
     qDeleteAll(_player->videoFilters());
+}
+#include <QtAV/AVTranscoder.h>
+QString VideoHandler::transcode(QString file)
+{
+    QFileInfo fileInfo(file);
+    QString outFile = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + QDir::separator() + fileInfo.fileName();
+    QString hwdev;
+    const bool an = false;//a.arguments().contains(QLatin1String("-an"));
+    qint64 ss = 0;
+    QString fmt;
+    QString cv = QString::fromLatin1("libx264");
+    QString ca = QString::fromLatin1("aac");
+    QVariantHash muxopt, avfopt;
+    avfopt[QString::fromLatin1("segment_time")] = 10;
+    avfopt[QString::fromLatin1("segment_list_size")] = 10;
+    avfopt[QString::fromLatin1("segment_list")] = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + QDir::separator() + "index.m3u8";
+    avfopt[QString::fromLatin1("segment_format")] = QString::fromLatin1("mpegts");
+    muxopt[QString::fromLatin1("avformat")] = avfopt;
+    //AVPlayer player;
+    _player->setFile(file);
+    _player->setFrameRate(10000.0); // as fast as possible. FIXME: why 1000 may block source player?
+    _player->audio()->setBackends(QStringList() << QString::fromLatin1("null"));
+    AVTranscoder avt;
+    if (ss > 0)
+        avt.setStartTime(ss);
+    avt.setMediaSource(_player);
+    avt.setOutputMedia(outFile);
+    avt.setOutputOptions(muxopt);
+    if (!fmt.isEmpty())
+        avt.setOutputFormat(fmt); // segment, image2
+    if (!avt.createVideoEncoder()) {
+        qWarning("Failed to create video encoder");
+        return nullptr;
+    }
+    VideoEncoder *venc = avt.videoEncoder();
+    venc->setCodecName(cv); // "png"
+    venc->setBitRate(1024*1024);
+    if (!hwdev.isEmpty())
+        venc->setProperty("hwdevice", hwdev);
+    if (fmt == QLatin1String("image2"))
+        venc->setPixelFormat(VideoFormat::Format_RGBA32);
+    if (an) {
+        avt.sourcePlayer()->setAudioStream(-1);
+    } else {
+        if (!avt.createAudioEncoder()) {
+            qWarning("Failed to create audio encoder");
+            return nullptr;
+        }
+        AudioEncoder *aenc = avt.audioEncoder();
+        aenc->setCodecName(ca);
+    }
+    //QObject::connect(&avt, &AVTranscoder::started(), qApp, SLOT(quit()));
+    avt.setAsync(true);
+    avt.start(); //start transcoder first
+    _player->play();
+    return outFile;
 }

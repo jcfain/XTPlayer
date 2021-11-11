@@ -102,6 +102,7 @@ HEADERS += \
     lib/tool/boolinq.h \
     lib/tool/simplecrypt.h \
     lib/tool/tcodefactory.h \
+    lib/tool/videoformat.h \
     lib/tool/xmath.h \
     lib/tool/xtimer.h \
     libraryItemSettingsDialog.h \

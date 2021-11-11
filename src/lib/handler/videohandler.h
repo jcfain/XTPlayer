@@ -61,6 +61,7 @@ public:;
     void installFilter(AudioFilter* filter);
     void clearFilters();
 
+    QString  transcode(QString file);
 
     bool setVideoRenderer(XVideoRenderer renderer);
 

@@ -1,8 +1,9 @@
 #include "httphandler.h"
 
-HttpHandler::HttpHandler(QObject *parent):
+HttpHandler::HttpHandler(VideoHandler* videoHandler, QObject *parent):
     HttpRequestHandler(parent)
 {
+    _videoHandler = videoHandler;
     config.port = 80;
     config.requestTimeout = 20;
     config.verbosity = HttpServerConfig::Verbose::All;
@@ -127,6 +128,7 @@ HttpPromise HttpHandler::handleVideoList(HttpDataPtr data)
 
 QJsonObject HttpHandler::createMediaObject(LibraryListItem item, bool stereoscopic, bool isMFS)
 {
+    //VideoFormat videoFormat;
     QJsonObject object;
     object["name"] = item.nameNoExtension;
     QString relativePath = item.path.replace(SettingsHandler::getSelectedLibrary(), "");
@@ -137,8 +139,9 @@ QJsonObject HttpHandler::createMediaObject(LibraryListItem item, bool stereoscop
     object["type"] = item.type;
     object["duration"] = QJsonValue::fromVariant(item.duration);
     object["modifiedDate"] = item.modifiedDate.toString(Qt::DateFormat::ISODate);
-    object["isStereoscopic"] = stereoscopic;
+    object["isStereoscopic"] = stereoscopic; //videoFormat.is3D((SettingsHandler::getSelectedLibrary() + item.path).toLocal8Bit().data()) == VideoFormatResultCode::E_Found3D;
     object["isMFS"] = isMFS;
+    object["hasScript"] = !item.script.isEmpty() || !item.zipFile.isEmpty();
     return object;
 }
 
@@ -165,6 +168,7 @@ HttpPromise HttpHandler::handleVideoStream(HttpDataPtr data)
     LogHandler::Debug("Looking for media in library: " + mediaName);
     // QString filename = "\\\\RASPBERRYPI.local\\STK\\RealTouchScripts\\Alay720P.mp4";
     QString filename = SettingsHandler::getSelectedLibrary() + "/" + mediaName;
+    //filename = _videoHandler->transcode(filename);
     QFile file(filename);
     if (!file.exists())
     {

@@ -13,8 +13,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     ui->setupUi(this);
     loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading Settings...", Qt::AlignBottom, Qt::white);
     SettingsHandler::Load();
-    if(SettingsHandler::getEnableHttpServer())
-        _httpHandler = new HttpHandler();
     _xSettings = new SettingsDialog(this);
     _dlnaScriptLinksDialog = new DLNAScriptLinks(this);
     tcodeHandler = new TCodeHandler();
@@ -111,6 +109,9 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     _mediaGrid->addWidget(videoHandler, 0, 0, 3, 5);
     _mediaGrid->setMargin(0);
     _mediaGrid->setContentsMargins(0,0,0,0);
+
+    if(SettingsHandler::getEnableHttpServer())
+        _httpHandler = new HttpHandler(videoHandler, this);
 
     _syncHandler = new SyncHandler(_xSettings, tcodeHandler, videoHandler, this);
 

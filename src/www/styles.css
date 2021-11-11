@@ -6,29 +6,21 @@ body {
 	margin-right: 1rem;
     margin-left: 1rem;
 }
-a {
-	color: white;
-}
-a:visited {
-	color: white;
-}
-a:hover {
-  color: hotpink;
-}
-a:active {
-  color: lightblue;
-}
 .header {
 	display: flex;
     flex-flow: nowrap;
 	justify-content: space-between;
     margin-top: 1rem;
     margin-bottom: 1rem;
+    height: 50px;
 }
 .headerSection {
 	flex-basis: 33%;
 }
 .headerSpacer {
+	display: flex;
+	flex-flow: column;
+	justify-content: flex-end;
 	max-width: 250px;
 }
 .headerLogoSection {
@@ -74,8 +66,9 @@ select, button, input {
 	flex-flow: column;
 	font-family: arial;
 	font-size: 16px;
-	max-height: calc(100vh - 100px);
+	max-height: calc(100vh - 120px);
 	overflow-y: auto;
+    margin-top: 15px;
 }
 .thumbs-body
 {
@@ -99,7 +92,24 @@ select, button, input {
 	display: flex;
     flex-flow: column nowrap;
     overflow: hidden;
+	color: white;
+}
+.mediaLink:hover {
+  color: hotpink;
+}
+.mediaLink:active {
+  color: lightblue;
 }
 .mediaLinkMFS {
-	color: green;
+	color: chartreuse;
+}
+.mediaLinkNoScript {
+	color: darkgrey;
+}
+.mediaLinkNoScript:hover {
+	color: lightgrey;
+}
+
+.deoVideo {
+	max-height: calc(100vh - 500px);
 }

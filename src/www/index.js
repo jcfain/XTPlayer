@@ -1,11 +1,35 @@
-mediaListObj = [];
-sortByGlobal = "nameAsc"
-showGlobal = "All"
+var mediaListObj = [];
+var thumbsContainerNode;
+var sortByGlobal = "nameAsc";
+var showGlobal = "All";
+var deoVideoNode;
+var deoSourceNode;
+var useDeoWeb = false;
+
 window.onload = function httpGetAsync(callback)
 {
+	thumbsContainerNode = document.getElementById("thumbsContainer");
+/* 	deoVideoNode = document.getElementById("deoVideoPlayer");
+	deoSourceNode = document.getElementById("deoVideoSource");
+	
+	deoVideoNode.addEventListener("end", onVideoStop); */
+	
 	sortByGlobal = JSON.parse(window.localStorage.getItem("sortBy"));
 	showGlobal = JSON.parse(window.localStorage.getItem("show"));
+	useDeoWeb = JSON.parse(window.localStorage.getItem("useDeoWeb"));
+	
+	if(useDeoWeb) {
+		toggleUseDeo(useDeoWeb, false);
+		new ResizeObserver(onResizeDeo).observe(deoVideoNode)
+	}
+	
 	loadMediaFromServer();
+}
+
+function onResizeDeo() {
+	if(useDeoWeb) {
+		thumbsContainerNode.style.maxHeight = "calc(100vh - "+ (+deoVideoNode.offsetHeight + 120) + "px)";
+	}
 }
 
 function loadMediaFromServer() {
@@ -38,13 +62,15 @@ function onVideosLoad(err, mediaList)
 			relativeThumb: mediaList[i]["relativeThumb"],
 			modifiedDate: new Date(mediaList[i]["modifiedDate"]),
 			isStereoscopic: mediaList[i]["isStereoscopic"],
-			isMFS: mediaList[i]["isMFS"]
+			isMFS: mediaList[i]["isMFS"],
+			hasScript: mediaList[i]["hasScript"]
 		}
 		if(obj.isMFS)
 			obj.name = "(MFS) " + obj.name;
 		mediaListObj.push(obj);
 	}
-	window.localStorage.setItem("mediaList", JSON.stringify(mediaListObj));
+	if(useDeoWeb && mediaListObj.length > 0)
+		loadVideo(mediaListObj[0]);
 	sort(sortByGlobal, false);
 	loadMedia(show(showGlobal, false))
   }
@@ -59,11 +85,19 @@ function loadMedia(mediaList) {
 		divnode.id = "NoMedia";
 		divnode.innerText = "No media found, it may be loading.";
 		medialistNode.appendChild(divnode);
+		deoVideoNode.style.display = "none"
 		return;
 	}
 	var noMediaElement = document.getElementById("NoMedia");
 	if(noMediaElement)
 		medialistNode.removeChild(noMediaElement)
+	
+	var createClickHandler = function(obj) { 
+		return function() { 
+			loadVideo(obj); 
+			playVideo(obj); 
+		} 
+	};
 	
 	for(var i=0; i<mediaList.length;i++)
 	{
@@ -78,7 +112,9 @@ function loadMedia(mediaList) {
 		anode.className += "mediaLink"
 		if(obj.isMFS)
 			anode.className += " mediaLinkMFS"
-		anode.href = "/video"+ obj.relativePath;
+		if(!obj.hasScript)
+			anode.className += " mediaLinkNoScript"
+		anode.onclick = createClickHandler(obj);
 		var image = document.createElement("img"); 
 		image.src = "/thumb/" + obj.relativeThumb;
 		image.style.maxWidth = obj.thumbSize + 60 + "px";
@@ -180,4 +216,52 @@ function show(value, userClick) {
 		showGlobal = value;
 	}
 	return filteredMedia;
+}
+
+function onClickUseDeoWebCheckbox(checkbox)
+{
+	toggleUseDeo(checkbox.checked, true);
+}
+
+function toggleUseDeo(value, userClicked)
+{
+	if(userClicked) {
+		useDeoWeb = value;
+		window.localStorage.setItem("useDeoWeb", JSON.stringify(useDeoWeb));
+	}
+	else
+		document.getElementById("useDeoWebCheckbox").checked = value;
+	if(!useDeoWeb)
+	{
+		deoVideoNode.style.display = "none";
+		thumbsContainerNode.style.maxHeight = "";
+	} else {
+		deoVideoNode.style.display = "block";
+		onResizeDeo();
+	}
+}
+
+function loadVideo(obj) {
+	if(useDeoWeb) {
+		deoVideoNode.setAttribute("format", obj.isStereoscopic ? "LR" : "mono");
+		deoSourceNode.setAttribute("src", "/video" + obj.relativePath);
+		deoVideoNode.setAttribute("title", obj.name);
+		deoVideoNode.setAttribute("cover-image", obj.relativeThumb);
+		
+		if(!DEO.isStarted(deoVideoNode))
+			DEO.setVolume(deoVideoNode, 0.3);
+		DEO.play(deoVideoNode);
+	}
+}
+
+function playVideo(obj) {
+	if(useDeoWeb) {
+		DEO.start(deoVideoNode);
+	} else {
+		//window.open("/video"+ obj.relativePath, "_self")
+		window.open("/video"+ obj.relativePath)
+	}
+}
+function onVideoStop() {
+	//deoVideoNode.style.display = "none"
 }
