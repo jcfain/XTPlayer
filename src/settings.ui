@@ -933,6 +933,15 @@ that has no script of the same name.</string>
           <property name="toolTip">
            <string>In MegaBytes: This is the amount of media data sent to the client in byte chunks.</string>
           </property>
+          <property name="suffix">
+           <string extracomment="MB"/>
+          </property>
+          <property name="maximum">
+           <double>99999.990000000005239</double>
+          </property>
+          <property name="value">
+           <double>1.000000000000000</double>
+          </property>
          </widget>
          <widget class="QLabel" name="chunkSizeLabel">
           <property name="geometry">
@@ -945,6 +954,48 @@ that has no script of the same name.</string>
           </property>
           <property name="text">
            <string>Chunk size</string>
+          </property>
+         </widget>
+         <widget class="QSpinBox" name="httpPortSpinBox">
+          <property name="geometry">
+           <rect>
+            <x>250</x>
+            <y>80</y>
+            <width>71</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>65535</number>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_4">
+          <property name="geometry">
+           <rect>
+            <x>220</x>
+            <y>80</y>
+            <width>31</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Port</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_5">
+          <property name="geometry">
+           <rect>
+            <x>180</x>
+            <y>80</y>
+            <width>31</width>
+            <height>21</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>MB</string>
           </property>
          </widget>
         </widget>

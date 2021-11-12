@@ -29,6 +29,7 @@ public:
     HttpPromise handleVideoStream(HttpDataPtr data);
     HttpPromise handleVideoList(HttpDataPtr data);
     HttpPromise handleThumbFile(HttpDataPtr data);
+    HttpPromise handleDeo(HttpDataPtr data);
     void setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems);
 
 private:
@@ -43,6 +44,7 @@ private:
     QList<LibraryListWidgetItem*> _vrLibraryItems;
 
     QJsonObject createMediaObject(LibraryListItem libraryListItem, bool stereoscopic, bool isMFS);
+    QJsonObject createDeoObject(LibraryListItem libraryListItem, bool stereoscopic, QString hostAddress);
 
 };
 

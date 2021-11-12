@@ -141,6 +141,9 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     _httpChunkSize = settingsToLoadFrom->value("httpChunkSize").toLongLong();
     if(!_httpChunkSize)
         _httpChunkSize = 10485760;
+    _httpPort = settingsToLoadFrom->value("httpPort").toInt();
+    if(!_httpPort)
+        _httpPort = 80;
 
     QList<QVariant> decoderPriorityvarient = settingsToLoadFrom->value("decoderPriority").toList();
     decoderPriority.clear();
@@ -341,6 +344,8 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         settingsToSaveTo->setValue("httpServerRoot", _httpServerRoot);
         settingsToSaveTo->setValue("vrLibrary", _vrLibrary);
         settingsToSaveTo->setValue("httpChunkSize", _httpChunkSize);
+        settingsToSaveTo->setValue("httpPort", _httpPort);
+
 
         settingsToSaveTo->sync();
 
@@ -387,8 +392,20 @@ void SettingsHandler::requestRestart(QWidget* parent)
 {
     int value = QMessageBox::question(parent, "Restart Application", "Changes will take effect on application restart.",
                                   "Exit XTP", "Restart now", 0, 1);
+    quit(value);
+}
+void SettingsHandler::askRestart(QWidget* parent, QString message)
+{
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(parent, "Restart?", message,
+                                  QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes)
+        quit(true);
+}
+void SettingsHandler::quit(bool restart)
+{
     QApplication::quit();
-    if(value == 1)
+    if(restart)
         QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
 }
 
@@ -1706,6 +1723,17 @@ void SettingsHandler::setHTTPChunkSize(qint64 value)
     settingsChangedEvent(true);
 }
 
+int SettingsHandler::getHTTPPort()
+{
+    return _httpPort;
+}
+void SettingsHandler::setHTTPPort(int value)
+{
+    QMutexLocker locker(&mutex);
+    _httpPort = value;
+    settingsChangedEvent(true);
+}
+
 QString SettingsHandler::getVRLibrary()
 {
     return _vrLibrary;
@@ -1822,6 +1850,7 @@ bool SettingsHandler::_skipPlayingSTandAloneFunscriptsInLibrary;
 bool SettingsHandler::_enableHttpServer;
 QString SettingsHandler::_httpServerRoot;
 qint64 SettingsHandler::_httpChunkSize;
+int SettingsHandler::_httpPort;
 QString SettingsHandler::_vrLibrary;
 
 QString SettingsHandler::_hashedPass;

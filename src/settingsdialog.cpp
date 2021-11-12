@@ -95,7 +95,7 @@ void SettingsDialog::init(VideoHandler* videoHandler)
 void SettingsDialog::initLive()
 {
     if(_videoHandler->isPlaying())
-        hasVideoPlayed = true;
+        _hasVideoPlayed = true;
     //ui.videoRendererComboBox->setEnabled(!hasVideoPlayed);
     ui.enableMultiplierCheckbox->setChecked(SettingsHandler::getMultiplierEnabled());
     setUpMultiplierUi(SettingsHandler::getMultiplierEnabled());
@@ -111,6 +111,54 @@ void SettingsDialog::initLive()
 //        if(invertedCheckbox != nullptr)
 //            invertedCheckbox->setChecked(SettingsHandler::getChannelInverseChecked(channel));
 //    }
+}
+
+void SettingsDialog::reject()
+{
+    if(_requiresRestart)
+    {
+        _requiresRestart = false;
+        SettingsHandler::askRestart(this, "Some changes made requires a restart.\nWould you like to restart now?");
+    }
+    QDialog::reject();
+}
+
+void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
+{
+    if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::ResetRole)
+    {
+        on_resetAllButton_clicked();
+    }
+    else if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::AcceptRole)
+    {
+        LogHandler::Loading(this, "Saving settings...");
+        QtConcurrent::run([this] ()
+        {
+            SettingsHandler::Save();
+            emit loadingDialogClose();
+        });
+    }
+    else if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::ApplyRole)
+    {
+        if(SettingsHandler::getSettingsChanged())
+        {
+            LogHandler::Loading(this, "Saving settings...");
+            QtConcurrent::run([this] ()
+            {
+                SettingsHandler::Save();
+                emit loadingDialogClose();
+            });
+        }
+    }
+    if(_requiresRestart && (ui.buttonBox->buttonRole(button) == QDialogButtonBox::AcceptRole || ui.buttonBox->buttonRole(button) == QDialogButtonBox::ApplyRole))
+    {
+        _requiresRestart = false;
+        SettingsHandler::askRestart(this, "Some changes made requires a restart.\nWould you like to restart now?");
+        if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::ApplyRole)
+        {
+            QDialog::reject();
+        }
+    }
 }
 
 void SettingsDialog::setupUi()
@@ -243,10 +291,13 @@ void SettingsDialog::setupUi()
 
         ui.enableHttpServerCheckbox->setChecked(SettingsHandler::getEnableHttpServer());
         ui.httpServerOptions->setVisible(SettingsHandler::getEnableHttpServer());
+        ui.httpServerOptions->setVisible(SettingsHandler::getEnableHttpServer());
         ui.httpRootLineEdit->setText(SettingsHandler::getHttpServerRoot());
         ui.vrLibraryLineEdit->setText(SettingsHandler::getVRLibrary());
         ui.chunkSizeDoubleSpinBox->setValue(SettingsHandler::getHTTPChunkSize() / 1048576);
-        connect(ui.chunkSizeDoubleSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &SettingsDialog::on_setChunkSizeSpinBox_valueChanged);
+        ui.httpPortSpinBox->setValue(SettingsHandler::getHTTPPort());
+        connect(ui.chunkSizeDoubleSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &SettingsDialog::on_chunkSizeDouble_valueChanged);
+        connect(ui.httpPortSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_httpPort_valueChanged);
 
         _interfaceInitialized = true;
     }
@@ -1605,36 +1656,6 @@ void SettingsDialog::on_disableTCodeValidationCheckbox_clicked(bool checked)
     SettingsHandler::requestRestart(this);
 }
 
-void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
-{
-    if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::ResetRole)
-    {
-        on_resetAllButton_clicked();
-    }
-    else if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::AcceptRole)
-    {
-        LogHandler::Loading(this, "Saving settings...");
-        QtConcurrent::run([this] ()
-        {
-            SettingsHandler::Save();
-            emit loadingDialogClose();
-        });
-    }
-    else if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::ApplyRole)
-    {
-        if(SettingsHandler::getSettingsChanged())
-        {
-            LogHandler::Loading(this, "Saving settings...");
-            QtConcurrent::run([this] ()
-            {
-                SettingsHandler::Save();
-                emit loadingDialogClose();
-                close();
-            });
-        }
-    }
-}
-
 void SettingsDialog::on_close_loading_dialog()
 {
     LogHandler::LoadingClose();
@@ -1644,7 +1665,7 @@ void SettingsDialog::on_showLoneFunscriptsInLibraryCheckbox_clicked(bool checked
 {
     SettingsHandler::setHideStandAloneFunscriptsInLibrary(checked);
     ui.httpServerOptions->setVisible(SettingsHandler::getEnableHttpServer());
-    SettingsHandler::requestRestart(this);
+    _requiresRestart = true;
 }
 
 void SettingsDialog::on_skipStandAloneFunscriptsInMainLibraryPlaylist_clicked(bool checked)
@@ -1683,7 +1704,8 @@ void SettingsDialog::on_skipToMoneyShotStandAloneLoopCheckBox_clicked(bool check
 void SettingsDialog::on_enableHttpServerCheckbox_clicked(bool checked)
 {
     SettingsHandler::setEnableHttpServer(checked);
-    SettingsHandler::requestRestart(this);
+    ui.httpServerOptions->setVisible(checked);
+    _requiresRestart = true;
 }
 
 void SettingsDialog::on_browseHttpRootButton_clicked()
@@ -1706,8 +1728,30 @@ void SettingsDialog::on_browseVRLibraryButton_clicked()
     }
 }
 
-void SettingsDialog::on_setChunkSizeSpinBox_valueChanged(double value)
+void SettingsDialog::on_httpPort_valueChanged(int value)
 {
-    if(value > 0)
-        SettingsHandler::setHTTPChunkSize(value * 1048576);
+    SettingsHandler::setHTTPPort(value);
+    if(SettingsHandler::getEnableHttpServer())
+        _requiresRestart = true;
+}
+
+void SettingsDialog::on_chunkSizeDouble_valueChanged(double value)
+{
+    SettingsHandler::setHTTPChunkSize(value * 1048576);
+    if(SettingsHandler::getEnableHttpServer())
+        _requiresRestart = true;
+}
+
+void SettingsDialog::on_httpRootLineEdit_textEdited(const QString &selectedDirectory)
+{
+    SettingsHandler::setHttpServerRoot(selectedDirectory);
+    if(SettingsHandler::getEnableHttpServer())
+        _requiresRestart = true;
+}
+
+void SettingsDialog::on_vrLibraryLineEdit_textEdited(const QString &selectedDirectory)
+{
+    SettingsHandler::setVRLibrary(selectedDirectory);
+    if(SettingsHandler::getEnableHttpServer())
+        _requiresRestart = true;
 }

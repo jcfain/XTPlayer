@@ -60,6 +60,8 @@ public:
     PasswordResponse GetLaunchPass();
     bool HasLaunchPass();
 
+    void reject() override;
+
 signals:
     void deviceError(QString error);
     void deviceConnectionChange(ConnectionChangedSignal event);
@@ -201,7 +203,13 @@ private slots:
 
     void on_browseVRLibraryButton_clicked();
 
-    void on_setChunkSizeSpinBox_valueChanged(double value);
+    void on_httpPort_valueChanged(int value);
+
+    void on_chunkSizeDouble_valueChanged(double value);
+
+    void on_httpRootLineEdit_textEdited(const QString &arg1);
+
+    void on_vrLibraryLineEdit_textEdited(const QString &arg1);
 
 private:
 
@@ -248,7 +256,8 @@ private:
     QPushButton* saveAllBtn;
     QPushButton* closeBtn;
     QPushButton* saveBtn;
-    bool hasVideoPlayed = false;
+    bool _hasVideoPlayed = false;
+    bool _requiresRestart = false;
 
     void setDeviceStatusStyle(ConnectionStatus status, DeviceType deviceType, QString message = "");
 

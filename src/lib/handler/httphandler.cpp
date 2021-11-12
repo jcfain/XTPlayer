@@ -4,13 +4,14 @@ HttpHandler::HttpHandler(VideoHandler* videoHandler, QObject *parent):
     HttpRequestHandler(parent)
 {
     _videoHandler = videoHandler;
-    config.port = 80;
+    config.port = SettingsHandler::getHTTPPort();
     config.requestTimeout = 20;
-    config.verbosity = HttpServerConfig::Verbose::All;
+    if(LogHandler::getUserDebug())
+        config.verbosity = HttpServerConfig::Verbose::All;
     config.maxMultipartSize = 512 * 1024 * 1024;
-    config.errorDocumentMap[HttpStatus::NotFound] = "data/404_2.html";
-    config.errorDocumentMap[HttpStatus::InternalServerError] = "data/404_2.html";
-    config.errorDocumentMap[HttpStatus::BadGateway] = "data/404_2.html";
+//    config.errorDocumentMap[HttpStatus::NotFound] = "data/404_2.html";
+//    config.errorDocumentMap[HttpStatus::InternalServerError] = "data/404_2.html";
+//    config.errorDocumentMap[HttpStatus::BadGateway] = "data/404_2.html";
     _server = new HttpServer(config, this);
     _server->listen();
 
@@ -19,6 +20,7 @@ HttpHandler::HttpHandler(VideoHandler* videoHandler, QObject *parent):
     router.addRoute("GET", "^/media", this, &HttpHandler::handleVideoList);
     router.addRoute("GET", "^/thumb/.*$", this, &HttpHandler::handleThumbFile);
     router.addRoute("GET", "^/video/.*$", this, &HttpHandler::handleVideoStream);
+    router.addRoute("GET", "^/deo", this, &HttpHandler::handleDeo);
 //    router.addRoute("GET", "^/users/(\\w*)/?$", this, &HttpHandler::handleGetUsername);
 //    router.addRoute({"GET", "POST"}, "^/gzipTest/?$", this, &HttpHandler::handleGzipTest);
 //    router.addRoute({"GET", "POST"}, "^/formTest/?$", this, &HttpHandler::handleFormTest);
@@ -143,6 +145,70 @@ QJsonObject HttpHandler::createMediaObject(LibraryListItem item, bool stereoscop
     object["isMFS"] = isMFS;
     object["hasScript"] = !item.script.isEmpty() || !item.zipFile.isEmpty();
     return object;
+}
+#include <QHostInfo>
+HttpPromise HttpHandler::handleDeo(HttpDataPtr data)
+{
+    QString hostAddress = "http://" + data->request->headerDefault("Host", "") + "/";
+    QJsonObject root;
+    QJsonArray scenes;
+    QJsonObject library;
+    library["name"] = "XTP Library";
+    QJsonArray list;
+
+    foreach(auto widgetItem, _cachedLibraryItems)
+    {
+        QJsonObject object;
+        auto item = widgetItem->getLibraryListItem();
+        if(item.type == LibraryListItemType::PlaylistInternal || item.type == LibraryListItemType::FunscriptType)
+            continue;
+        list.append(createDeoObject(item, false, hostAddress));
+    }
+
+    foreach(auto widgetItem, _vrLibraryItems)
+    {
+        QJsonObject object;
+        auto item = widgetItem->getLibraryListItem();
+        if(item.type == LibraryListItemType::PlaylistInternal || item.type == LibraryListItemType::FunscriptType)
+            continue;
+        list.append(createDeoObject(item, true, hostAddress));
+    }
+
+    library["list"] = list;
+    scenes.append(library);
+    root["scenes"] = scenes;
+    data->response->setStatus(HttpStatus::Ok, QJsonDocument(root));
+    return HttpPromise::resolve(data);
+}
+
+QJsonObject HttpHandler::createDeoObject(LibraryListItem item, bool stereoscopic, QString hostAddress)
+{
+    QJsonObject root;
+    QJsonArray encodings;
+    QJsonObject encodingsObj;
+    QJsonArray videoSources;
+    QJsonObject videoSource;
+    QString relativePath = item.path.replace(SettingsHandler::getSelectedLibrary() +"/", "");
+//    videoSource["resolution"] = 1080;
+//    videoSource["url"] = hostAddress + "video" + QString(QUrl::toPercentEncoding(relativePath));
+//    videoSources.append(videoSource);
+//    //encodingsObj["name"] = "h264";
+//    encodingsObj["videoSources"] = videoSources;
+//    encodings.append(encodingsObj);
+//    root["encodings"] = encodings;
+
+    root["title"] = item.nameNoExtension;
+    root["video_url"] = hostAddress + "video/" + QString(QUrl::toPercentEncoding(relativePath));
+    //root["id"] = item.nameNoExtension;
+    root["videoLength"] = (int)(item.duration / 1000);
+//    root["is3d"] = true;
+//    root["screenType"] = "sphere";
+//    root["stereoMode"] = stereoscopic ? "tb" : "mono";
+//    root["skipIntro"] = 0;
+    QString relativeThumb = item.thumbFile.isEmpty() ? "://images/icons/error.png" : item.thumbFile.replace(SettingsHandler::getSelectedThumbsDir()+"/", "");
+    root["thumbnailUrl"] = hostAddress + "thumb/" + QString(QUrl::toPercentEncoding(relativeThumb));
+
+    return root;
 }
 
 HttpPromise HttpHandler::handleThumbFile(HttpDataPtr data)

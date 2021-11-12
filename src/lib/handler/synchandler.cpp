@@ -372,23 +372,23 @@ void SyncHandler::syncVRFunscript(QString funscript)
                     //LogHandler::Debug("timer2 - timer1 "+QString::number(timer2-timer1));
     //                LogHandler::Debug("Out timeTracker: "+QString::number(timeTracker));
                     timer1 = timer2;
-                    qint64 currentTime = currentVRPacket.currentTime;
+                    qint64 vrTime = currentVRPacket.currentTime;
                     //LogHandler::Debug("VR time reset: "+QString::number(currentTime));
-                    bool hasRewind = lastVRTime > currentTime;
-                    if (currentTime > timeTracker + 100 || hasRewind)
+                    bool hasRewind = lastVRTime > vrTime;
+                    if (vrTime > timeTracker + 100 || hasRewind)
                     {
-                        lastVRTime = currentTime;
+                        lastVRTime = vrTime;
 //                        LogHandler::Debug("current time reset: " + QString::number(currentTime));
 //                        LogHandler::Debug("timeTracker: " + QString::number(timeTracker));
-                        timeTracker = currentTime;
+                        timeTracker = vrTime;
                     }
                     else
                     {
                         timeTracker++;
-                        currentTime = timeTracker;
+                        vrTime = timeTracker;
                     }
                     //LogHandler::Debug("funscriptHandler->getPosition: "+QString::number(currentTime));
-                    actionPosition = _funscriptHandler->getPosition(currentTime);
+                    actionPosition = _funscriptHandler->getPosition(vrTime);
                     if(actionPosition != nullptr) {
                         _xSettings->setAxisProgressBar(TCodeChannelLookup::Stroke(), actionPosition->pos);
 //                        LogHandler::Debug("actionPosition != nullptr/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////pos: "+QString::number(actionPosition->pos));
@@ -398,7 +398,7 @@ void SyncHandler::syncVRFunscript(QString funscript)
                     }
                     foreach(auto funscriptHandlerOther, _funscriptHandlers)
                     {
-                        auto otherAction = funscriptHandlerOther->getPosition(currentTime);
+                        auto otherAction = funscriptHandlerOther->getPosition(vrTime);
                         if(otherAction != nullptr)
                         {
                             otherActions.insert(funscriptHandlerOther->channel(), otherAction);

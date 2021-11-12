@@ -56,7 +56,9 @@ function onVideosLoad(err, mediaList)
 	for(var i=0; i<mediaList.length;i++)
 	{
 		var obj = {
+			id: mediaList[i]["name"].replace(/^[^a-z]+|[^\w:.-]+/gi, "")+"thumb"+i,
 			name: mediaList[i]["name"],
+			displayName: mediaList[i]["name"],
 			thumbSize: mediaList[i]["thumbSize"],
 			relativePath: mediaList[i]["relativePath"],
 			relativeThumb: mediaList[i]["relativeThumb"],
@@ -66,7 +68,7 @@ function onVideosLoad(err, mediaList)
 			hasScript: mediaList[i]["hasScript"]
 		}
 		if(obj.isMFS)
-			obj.name = "(MFS) " + obj.name;
+			obj.displayName = "(MFS) " + obj.name;
 		mediaListObj.push(obj);
 	}
 	if(useDeoWeb && mediaListObj.length > 0)
@@ -103,7 +105,7 @@ function loadMedia(mediaList) {
 	{
 		var obj = mediaList[i];
 		var divnode = document.createElement("div"); 
-		divnode.id = obj.name+"item"+i
+		divnode.id = obj.id+"item"+i
 		divnode.className += "media-item"
 		divnode.style.width = obj.thumbSize + 60 + "px";
 		divnode.style.height = obj.thumbSize + 25 + "px";
@@ -120,9 +122,9 @@ function loadMedia(mediaList) {
 		image.style.maxWidth = obj.thumbSize + 60 + "px";
 		image.style.maxHeight = obj.thumbSize + "px";
 		image.style.objectFit = "contain";
-		image.id = obj.name+"thumb"+i
+		image.id = obj.id;
 		var namenode = document.createElement("div");
-		namenode.innerText = obj.name;
+		namenode.innerText = obj.displayName;
 		namenode.className += "name"
 		
 		divnode.appendChild(anode);
@@ -163,8 +165,8 @@ function sort(value, userClick) {
 		break;
 		case "nameAsc":
 			mediaListObj.sort(function(a,b){
-			  var nameA = a.name.toUpperCase(); // ignore upper and lowercase
-			  var nameB = b.name.toUpperCase(); // ignore upper and lowercase
+			  var nameA = a.displayName.toUpperCase(); // ignore upper and lowercase
+			  var nameB = b.displayName.toUpperCase(); // ignore upper and lowercase
 			  if (nameA < nameB) {
 				return -1;
 			  }
@@ -175,8 +177,8 @@ function sort(value, userClick) {
 		break;
 		case "nameDesc":
 			mediaListObj.sort(function(a,b){
-			  var nameA = a.name.toUpperCase(); // ignore upper and lowercase
-			  var nameB = b.name.toUpperCase(); // ignore upper and lowercase
+			  var nameA = a.displayName.toUpperCase(); // ignore upper and lowercase
+			  var nameB = b.displayName.toUpperCase(); // ignore upper and lowercase
 			  if (nameB < nameA) {
 				return -1;
 			  }

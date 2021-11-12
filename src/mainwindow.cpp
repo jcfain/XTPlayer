@@ -55,7 +55,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
         foreach(QString arg, arguments)
         {
             if(arg.toLower().startsWith("-debug"))
-                LogHandler::UserDebug(true);
+                LogHandler::setUserDebug(true);
             else if(arg.toLower().startsWith("-reset"))
                 SettingsHandler::Default();
         }

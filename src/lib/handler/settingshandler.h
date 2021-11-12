@@ -227,6 +227,8 @@ public:
     static void setVRLibrary(QString value);
     static qint64 getHTTPChunkSize();
     static void setHTTPChunkSize(qint64 value);
+    static int getHTTPPort();
+    static void setHTTPPort(int value);
 
     static void SetChannelMapDefaults();
     static void SetGamepadMapDefaults();
@@ -240,6 +242,8 @@ public:
     static void Export(QWidget* parent);
     static void Import(QWidget* parent);
     static void requestRestart(QWidget* parent);
+    static void askRestart(QWidget* parent, QString message);
+    static void quit(bool restart);
 
 private:
     SettingsHandler();
@@ -333,6 +337,7 @@ private:
     static bool _enableHttpServer;
     static QString _httpServerRoot;
     static qint64 _httpChunkSize;
+    static int _httpPort;
     static QString _vrLibrary;
 
     static QHash<QString, bool> _funscriptLoaded;

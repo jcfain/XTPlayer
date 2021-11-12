@@ -31,7 +31,7 @@ void LogHandler::Info(QString message)
     {
         QMutexLocker locker(&mutex);
         auto infoMessage = QDateTime::currentDateTime().toString("MM-dd-yyyy_hh-mm-ss-zzz") +" Info: " + message;
-        qDebug() << infoMessage;
+        qInfo() << infoMessage;
 //        userDebugIndex++;
 //        _debugStore.insert(userDebugIndex, infoMessage);
     }
@@ -171,7 +171,7 @@ void LogHandler::DebugHandler(QtMsgType type, const QMessageLogContext &, const 
     _debugStore.insert(userDebugIndex, QDateTime::currentDateTime().toString("MM-dd-yyyy_hh-mm-ss-zzz") + " " + txt);
 }
 
-void LogHandler::UserDebug(bool on)
+void LogHandler::setUserDebug(bool on)
 {
     QMutexLocker locker(&mutex);
     _userDebugMode = on;
@@ -183,6 +183,12 @@ void LogHandler::UserDebug(bool on)
 //    {
 //        qInstallMessageHandler(0);
 //    }
+}
+
+bool LogHandler::getUserDebug()
+{
+    QMutexLocker locker(&mutex);
+    return _userDebugMode;
 }
 
 void LogHandler::ExportDebug()
