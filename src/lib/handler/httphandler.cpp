@@ -73,8 +73,17 @@ HttpPromise HttpHandler::handle(HttpDataPtr data)
     auto path = data->request->uri().path();
     auto root = SettingsHandler::getHttpServerRoot();
     if(path == "/") {
-        data->response->sendFile(root+"/index.html");
-        data->response->setStatus(HttpStatus::Ok);
+        LogHandler::Debug("Sending root index.html");
+        if(!QFileInfo(root+"/index.html").exists())
+        {
+            LogHandler::Debug("file does not exist: "+root+"/index.html");
+            data->response->setStatus(HttpStatus::BadRequest);
+        }
+        else
+        {
+            data->response->sendFile(root+"/index.html");
+            data->response->setStatus(HttpStatus::Ok);
+        }
     }
     else if(path.contains("favicon.ico"))
     {

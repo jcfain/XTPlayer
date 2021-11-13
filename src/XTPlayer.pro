@@ -144,7 +144,12 @@ unix:mac {
 #    images.path = Contents/MacOS
 #    QMAKE_BUNDLE_DATA += images;
 #    #LIBS += -framework QtCompress
+LIBS += -L$$PWD/../../HttpServer/src/build/release -lhttpServer
+INCLUDEPATH += $$PWD/../../HttpServer/src/build/release
+DEPENDPATH += $$PWD/../../HttpServer/src/build/release
+INCLUDEPATH += $$PWD/../../HttpServer/src
 
+include($$PWD/../../HttpServer/3rdparty/qtpromise/qtpromise.pri)
     RPATHDIR *= @loader_path/../Frameworks @executable_path/../Frameworks
     QMAKE_LFLAGS_SONAME = -W1,-install_name,@rpath,
     isEmpty(QMAKE_LFLAGS_RPATH): QMAKE_LFLAGS_RPATH=-Wl,-rpath,

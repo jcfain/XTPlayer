@@ -1442,6 +1442,18 @@ void MainWindow::on_load_library(QString path, bool vrMode)
         emit libraryLoaded();
     else
     {
+        QString vrLibrary = SettingsHandler::getVRLibrary();
+        if(vrLibrary.isEmpty())
+        {
+            emit libraryLoaded();
+            return;
+        }
+        QFileInfo vrLibraryInfo(vrLibrary);
+        if(!vrLibraryInfo.exists())
+        {
+            emit libraryLoaded();
+            return;
+        }
         setLibraryLoading(true, "Loading VR library...");
         on_load_library(SettingsHandler::getVRLibrary(), true);
     }

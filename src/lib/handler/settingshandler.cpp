@@ -136,7 +136,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     _enableHttpServer = settingsToLoadFrom->value("enableHttpServer").toBool();
     _httpServerRoot = settingsToLoadFrom->value("httpServerRoot").toString();
     if(_httpServerRoot.isEmpty())
-        _httpServerRoot = "www";
+        _httpServerRoot = QApplication::applicationDirPath() + "/www";
     _vrLibrary = settingsToLoadFrom->value("vrLibrary").toString();
     _httpChunkSize = settingsToLoadFrom->value("httpChunkSize").toLongLong();
     if(!_httpChunkSize)
