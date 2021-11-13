@@ -135,8 +135,16 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
 
     _enableHttpServer = settingsToLoadFrom->value("enableHttpServer").toBool();
     _httpServerRoot = settingsToLoadFrom->value("httpServerRoot").toString();
-    if(_httpServerRoot.isEmpty())
+    if(_httpServerRoot.isEmpty() || !QDir(_httpServerRoot).exists())
+    {
+#if defined(Q_OS_WIN)
+        _httpServerRoot = "www";
+#elif defined(Q_OS_MAC)
         _httpServerRoot = QApplication::applicationDirPath() + "/www";
+#elif defined(Q_OS_LINUX)
+        _httpServerRoot = "www";
+#endif
+    }
     _vrLibrary = settingsToLoadFrom->value("vrLibrary").toString();
     _httpChunkSize = settingsToLoadFrom->value("httpChunkSize").toLongLong();
     if(!_httpChunkSize)
