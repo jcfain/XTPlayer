@@ -20,7 +20,8 @@ HttpHandler::HttpHandler(VideoHandler* videoHandler, QObject *parent):
     router.addRoute("GET", "^/media", this, &HttpHandler::handleVideoList);
     router.addRoute("GET", "^/thumb/.*$", this, &HttpHandler::handleThumbFile);
     router.addRoute("GET", "^/video/.*$", this, &HttpHandler::handleVideoStream);
-    router.addRoute("GET", "^/deo", this, &HttpHandler::handleDeo);
+    router.addRoute("GET", "^/deoTest", this, &HttpHandler::handleDeo);
+
 //    router.addRoute("GET", "^/users/(\\w*)/?$", this, &HttpHandler::handleGetUsername);
 //    router.addRoute({"GET", "POST"}, "^/gzipTest/?$", this, &HttpHandler::handleGzipTest);
 //    router.addRoute({"GET", "POST"}, "^/formTest/?$", this, &HttpHandler::handleFormTest);
@@ -141,7 +142,7 @@ QJsonObject HttpHandler::createMediaObject(LibraryListItem item, bool stereoscop
     object["type"] = item.type;
     object["duration"] = QJsonValue::fromVariant(item.duration);
     object["modifiedDate"] = item.modifiedDate.toString(Qt::DateFormat::ISODate);
-    object["isStereoscopic"] = stereoscopic; //videoFormat.is3D((SettingsHandler::getSelectedLibrary() + item.path).toLocal8Bit().data()) == VideoFormatResultCode::E_Found3D;
+    object["isStereoscopic"] = getStereoMode(item.path) != "off" || stereoscopic; //videoFormat.is3D((SettingsHandler::getSelectedLibrary() + item.path).toLocal8Bit().data()) == VideoFormatResultCode::E_Found3D;
     object["isMFS"] = isMFS;
     object["hasScript"] = !item.script.isEmpty() || !item.zipFile.isEmpty();
     return object;
@@ -162,7 +163,7 @@ HttpPromise HttpHandler::handleDeo(HttpDataPtr data)
         auto item = widgetItem->getLibraryListItem();
         if(item.type == LibraryListItemType::PlaylistInternal || item.type == LibraryListItemType::FunscriptType)
             continue;
-        list.append(createDeoObject(item, false, hostAddress));
+        list.append(createDeoObject(item, hostAddress));
     }
 
     foreach(auto widgetItem, _vrLibraryItems)
@@ -171,7 +172,7 @@ HttpPromise HttpHandler::handleDeo(HttpDataPtr data)
         auto item = widgetItem->getLibraryListItem();
         if(item.type == LibraryListItemType::PlaylistInternal || item.type == LibraryListItemType::FunscriptType)
             continue;
-        list.append(createDeoObject(item, true, hostAddress));
+        list.append(createDeoObject(item, hostAddress));
     }
 
     library["list"] = list;
@@ -181,14 +182,14 @@ HttpPromise HttpHandler::handleDeo(HttpDataPtr data)
     return HttpPromise::resolve(data);
 }
 
-QJsonObject HttpHandler::createDeoObject(LibraryListItem item, bool stereoscopic, QString hostAddress)
+QJsonObject HttpHandler::createDeoObject(LibraryListItem item, QString hostAddress)
 {
     QJsonObject root;
     QJsonArray encodings;
     QJsonObject encodingsObj;
     QJsonArray videoSources;
     QJsonObject videoSource;
-    QString relativePath = item.path.replace(SettingsHandler::getSelectedLibrary() +"/", "");
+    QString relativePath = item.path.replace(SettingsHandler::getSelectedLibrary(), "");
 //    videoSource["resolution"] = 1080;
 //    videoSource["url"] = hostAddress + "video" + QString(QUrl::toPercentEncoding(relativePath));
 //    videoSources.append(videoSource);
@@ -198,15 +199,16 @@ QJsonObject HttpHandler::createDeoObject(LibraryListItem item, bool stereoscopic
 //    root["encodings"] = encodings;
 
     root["title"] = item.nameNoExtension;
-    root["video_url"] = hostAddress + "video/" + QString(QUrl::toPercentEncoding(relativePath));
+    root["video_url"] = hostAddress + "video/" + relativePath;
     //root["id"] = item.nameNoExtension;
     root["videoLength"] = (int)(item.duration / 1000);
-//    root["is3d"] = true;
-//    root["screenType"] = "sphere";
-//    root["stereoMode"] = stereoscopic ? "tb" : "mono";
+    root["is3d"] = true;
+    root["screenType"] = getScreenType(item.path);
+    //fisheye" - 180 degrees fisheye mesh, mkx200, "mkx200" - 200 degrees fisheye mesh
+    root["stereoMode"] = getStereoMode(item.path);
 //    root["skipIntro"] = 0;
-    QString relativeThumb = item.thumbFile.isEmpty() ? "://images/icons/error.png" : item.thumbFile.replace(SettingsHandler::getSelectedThumbsDir()+"/", "");
-    root["thumbnailUrl"] = hostAddress + "thumb/" + QString(QUrl::toPercentEncoding(relativeThumb));
+    QString relativeThumb = item.thumbFile.isEmpty() ? "://images/icons/error.png" : item.thumbFile.replace(SettingsHandler::getSelectedThumbsDir(), "");
+    root["thumbnailUrl"] = hostAddress + "thumb/" + relativeThumb;
 
     return root;
 }
@@ -317,4 +319,36 @@ HttpPromise HttpHandler::handleVideoStream(HttpDataPtr data)
 
     LogHandler::Debug("Video stream resolve: "+ QString::number(timer.elapsed()));
     return HttpPromise::resolve(data);
+}
+
+QString HttpHandler::getScreenType(QString mediaPath)
+{
+    if(mediaPath.contains("360", Qt::CaseSensitivity::CaseInsensitive))
+        return "360";
+    if(mediaPath.contains("180", Qt::CaseSensitivity::CaseInsensitive))
+        return "180";
+    if(mediaPath.contains("fisheye", Qt::CaseSensitivity::CaseInsensitive))
+        return "fisheye";
+    if(mediaPath.contains("mkx200", Qt::CaseSensitivity::CaseInsensitive))
+        return "mkx200";
+    if(mediaPath.contains("vrca220", Qt::CaseSensitivity::CaseInsensitive))
+        return "vrca220";
+    return "flat";
+}
+
+QString HttpHandler::getStereoMode(QString mediaPath)
+{
+    if(mediaPath.contains("tb", Qt::CaseSensitivity::CaseInsensitive))
+        return "TB";
+    if(mediaPath.contains("sbs", Qt::CaseSensitivity::CaseInsensitive))
+        return "SBS";
+    if(mediaPath.contains("3DH", Qt::CaseSensitivity::CaseInsensitive))
+        return "3DH";
+    if(mediaPath.contains(" lr ", Qt::CaseSensitivity::CaseInsensitive) || mediaPath.contains("_lr", Qt::CaseSensitivity::CaseInsensitive))
+        return "LR";
+    if(mediaPath.contains("OverUnder", Qt::CaseSensitivity::CaseInsensitive))
+        return "OverUnder";
+    if(mediaPath.contains("3DV", Qt::CaseSensitivity::CaseInsensitive))
+        return "3DV";
+    return "off";
 }
