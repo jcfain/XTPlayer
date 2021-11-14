@@ -154,7 +154,6 @@ private slots:
     void onPasswordIncorrect();
     void on_scriptNotFound(QString message);
     void on_noScriptsFound(QString message);
-    void on_setLoading(bool loading);
     void on_playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
 
     void on_actionReload_theme_triggered();
@@ -222,8 +221,6 @@ private:
     bool deviceConnected;
     QLabel* connectionStatusLabel;
     QLabel* gamepadConnectionStatusLabel;
-    QLabel* _videoLoadingLabel;
-    QMovie* _videoLoadingMovie;
     QLabel* libraryLoadingLabel;
     QLabel* libraryLoadingInfoLabel;
     QMovie* libraryLoadingMovie;

@@ -2,39 +2,18 @@
 VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent),
     _player(0), _videoRenderer(0)
 {
+    _parent = parent;
     QtAV::Widgets::registerRenderers();
-    LogHandler::Debug("Create QHBoxLayout");
-    _widgetLayout = new QHBoxLayout(this);
-    _widgetLayout->setMargin(0);
-    setContentsMargins(contentsMargins().left(), contentsMargins().top(), contentsMargins().right(), 0);
-    setLayout(_widgetLayout);
-    //QtAV::setLogLevel(QtAV::LogLevel::LogAll);
-    //new QOpenGLWidget(this);
-    //_videoRenderer = new VideoOutput(this);
-    LogHandler::Debug("Create player");
     _player = new AVPlayer(this);
-    //_player->setFrameRate(23.65);
-    LogHandler::Debug("Create Renderer");
-//    _videoRenderer = new VideoOutput(QtAV::VideoRendererId_GLWidget2, this);
-//    if (!_videoRenderer || !_videoRenderer->isAvailable() || !_videoRenderer->widget())
-//    {
-//        LogHandler::Debug("OpenGLWidget failed, trying default");
-//        _videoRenderer = new VideoOutput(this);
-//        if (!_videoRenderer || !_videoRenderer->isAvailable() || !_videoRenderer->widget())
-//        {
-//            LogHandler::Dialog("QtAV Video renderer is not availabe on your platform!", XLogLevel::Critical);
-//            return;
-//        //}
-//    }
     setVideoRenderer(SettingsHandler::getSelectedVideoRenderer());
     setDecoderPriority();
-//    QVariantHash opt;
-//    QVariantHash cuda_opt;
-//    cuda_opt["surfaces"] = 20; //key is property name, case sensitive
-//    cuda_opt["copyMode"] = "DirectCopy"; // default is "DirectCopy"
-//    cuda_opt["flags"] = "Default";
-//    cuda_opt["deinterlace"] = "Adaptive";
-//    opt["CUDA"] = cuda_opt; //key is decoder name, case sensitive
+    QVariantHash opt;
+    QVariantHash cuda_opt;
+    cuda_opt["surfaces"] = 20; //key is property name, case sensitive
+    cuda_opt["copyMode"] = "DirectCopy"; // default is "DirectCopy"
+    cuda_opt["flags"] = "+genpt";
+    cuda_opt["deinterlace"] = "Adaptive";
+    opt["CUDA"] = cuda_opt; //key is decoder name, case sensitive
 
 //    QVariantHash va_opt;
 //    va_opt["display"] = "X11"; //"GLX", "X11", "DRM"
@@ -45,7 +24,9 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent),
 //    avfmt_opt["probesize"] = 4096;
 //    avfmt_opt["user_agent"] = "xxx";
 //    opt["avformat"] = avfmt_opt;
-//    _player->setOptionsForVideoCodec(opt);
+    auto test = QtAV::avcodecOptions().split('\n');
+    auto test2 = QtAV::avformatOptions().split("\n");;
+    _player->setOptionsForVideoCodec(opt);
 
     _player->setBufferMode(QtAV::BufferMode::BufferBytes);
 
@@ -61,9 +42,67 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent),
     setMinimumWidth(SettingsHandler::getThumbSize());
 }
 
+QStringList idsToNames(QList<VideoDecoderId> ids) {
+    QStringList decs;
+    foreach (int id, ids) {
+        decs.append(QString::fromLatin1(VideoDecoder::name(id)));
+    }
+    return decs;
+}
+
+QList<VideoDecoderId> idsFromNames(const QStringList& names) {
+    QList<VideoDecoderId> decs;
+    foreach (QString name, names) {
+        if (name.isEmpty())
+            continue;
+        VideoDecoderId id = VideoDecoder::id(name.toLatin1().constData());
+        if (id == 0)
+            continue;
+        decs.append(id);
+    }
+    return decs;
+}
+
+void VideoHandler::createLayout(VideoRenderer* videoRenderer)
+{
+    setContentsMargins(contentsMargins().left(), contentsMargins().top(), contentsMargins().right(), 0);
+    LogHandler::Debug("Create player");
+    if(_mediaGrid)
+        delete _mediaGrid;
+    _mediaGrid = new QGridLayout(this);
+    setContentsMargins(contentsMargins().left(), contentsMargins().top(), contentsMargins().right(), 0);
+
+    _mediaGrid->setMargin(0);
+    _mediaGrid->setContentsMargins(0,0,0,0);
+    setLayout(_mediaGrid);
+
+    //audioSyncFilter = new AudioSyncFilter(this);
+    //installFilter(audioSyncFilter);
+
+    if(_videoLoadingMovie)
+        delete _videoLoadingMovie;
+    if(_videoLoadingLabel)
+        delete _videoLoadingLabel;
+    _videoLoadingMovie = new QMovie("://images/Eclipse-1s-loading-200px.gif");
+    _videoLoadingMovie->setProperty("cssClass", "mediaLoadingSpinner");
+    _videoLoadingLabel = new QLabel(this);
+    _videoLoadingLabel->setMovie(_videoLoadingMovie);
+    _videoLoadingLabel->setAttribute(Qt::WA_TransparentForMouseEvents );
+    _videoLoadingLabel->setMaximumSize(200,200);
+    //_videoLoadingLabel->setStyleSheet("* {background: ffffff}");
+    _videoLoadingLabel->setProperty("cssClass", "mediaLoadingSpinner");
+    _videoLoadingLabel->setAlignment(Qt::AlignCenter);
+    setLoading(false);
+
+    _videoRenderer = videoRenderer;
+    _videoRenderer->widget()->setGeometry(_parent->geometry());
+    _mediaGrid->addWidget(_videoRenderer->widget(), 0, 0, 3, 5);
+    _mediaGrid->addWidget(_videoLoadingLabel, 1, 2);
+
+}
 VideoHandler::~VideoHandler()
 {
-    delete _widgetLayout;
+    delete _mediaGrid;
     delete _player;
     delete _videoRenderer;
 }
@@ -120,8 +159,8 @@ bool VideoHandler::isPlaying()
 
 void VideoHandler::play()
 {
-    //_player->play();
-    transcode(_currentFile);
+    _player->play();
+    //transcode(_currentFile);
     emit playing();
 }
 
@@ -219,9 +258,28 @@ qint64 VideoHandler::duration()
     return _player->duration();
 }
 
-QHBoxLayout* VideoHandler::layout()
+QGridLayout* VideoHandler::layout()
 {
-    return _widgetLayout;
+    return _mediaGrid;
+}
+
+void VideoHandler::setLoading(bool loading)
+{
+    on_setLoading(loading);
+}
+
+void VideoHandler::on_setLoading(bool loading)
+{
+    if(loading && _videoLoadingMovie->state() != QMovie::MovieState::Running)
+    {
+        _videoLoadingLabel->show();
+        _videoLoadingMovie->start();
+    }
+    else if(!loading && _videoLoadingMovie->state() == QMovie::MovieState::Running)
+    {
+        _videoLoadingLabel->hide();
+        _videoLoadingMovie->stop();
+    }
 }
 
 void VideoHandler::setDecoderPriority()
@@ -249,6 +307,7 @@ bool VideoHandler::setVideoRenderer(XVideoRenderer renderer)
         wasPlaying = true;
         stop();
     }
+
     QtAV::VideoRendererId vid = QtAVVideoRendererIdMap.value(renderer);
     VideoRenderer *videoRenderer = VideoRenderer::create(vid);
     if (!videoRenderer || !videoRenderer->isAvailable() || !videoRenderer->widget())
@@ -271,7 +330,7 @@ bool VideoHandler::setVideoRenderer(XVideoRenderer renderer)
         r = _videoRenderer->widget();
         if(r)
         {
-            _widgetLayout->removeWidget(r);
+            _mediaGrid->removeWidget(r);
             if (r->testAttribute(Qt::WA_DeleteOnClose)) {
                 r->close();
             } else {
@@ -281,8 +340,8 @@ bool VideoHandler::setVideoRenderer(XVideoRenderer renderer)
             r = 0;
         }
     }
-    _videoRenderer = videoRenderer;
-    _widgetLayout->addWidget(_videoRenderer->widget());
+
+    createLayout(videoRenderer);
 
 //    if (mpPlayer->renderer()->id() == VideoRendererId_GLWidget) {
 //        mpVideoEQ->setEngines(QVector<VideoEQConfigPage::Engine>() << VideoEQConfigPage::SWScale << VideoEQConfigPage::GLSL);
@@ -297,21 +356,22 @@ bool VideoHandler::setVideoRenderer(XVideoRenderer renderer)
 
     if (vid == VideoRendererId_GLWidget || vid == VideoRendererId_GLWidget2 || vid == VideoRendererId_OpenGLWidget || vid == VideoRendererId_XV)
     {
-        //_videoRenderer->forcePreferredPixelFormat(false);
-        //qApp->setAttribute(Qt::AA_UseOpenGLES);
         _videoRenderer->forcePreferredPixelFormat(true);
-        _videoRenderer->setPreferredPixelFormat(VideoFormat::Format_RGB32);
+//        //_videoRenderer->forcePreferredPixelFormat(false);
+//        //qApp->setAttribute(Qt::AA_UseOpenGLES);
+//        _videoRenderer->forcePreferredPixelFormat(true);
+//        _videoRenderer->setPreferredPixelFormat(VideoFormat::Format_RGB32);
     }
     else//SWScale
     {
-        _videoRenderer->forcePreferredPixelFormat(true);
+        _videoRenderer->forcePreferredPixelFormat(false);
         _videoRenderer->setPreferredPixelFormat(VideoFormat::Format_RGB32);
     }
     _player->setRenderer(_videoRenderer);
-    _player->renderer()->resizeRenderer(_player->renderer()->rendererSize());
-    _player->renderer()->widget()->resize(_player->renderer()->rendererSize());
-    if(wasPlaying)
-        play();
+//    _player->renderer()->resizeRenderer(_player->renderer()->rendererSize());
+//    _player->renderer()->widget()->resize(_player->renderer()->rendererSize());
+//    if(wasPlaying)
+//        play();
     return true;
 }
 

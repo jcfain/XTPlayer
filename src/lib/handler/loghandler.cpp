@@ -188,7 +188,7 @@ void LogHandler::setUserDebug(bool on)
 bool LogHandler::getUserDebug()
 {
     QMutexLocker locker(&mutex);
-    return _userDebugMode;
+    return _userDebugMode || _debugMode;
 }
 
 void LogHandler::ExportDebug()

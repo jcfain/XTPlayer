@@ -94,9 +94,9 @@ void SettingsDialog::init(VideoHandler* videoHandler)
 
 void SettingsDialog::initLive()
 {
-    if(_videoHandler->isPlaying())
-        _hasVideoPlayed = true;
-    //ui.videoRendererComboBox->setEnabled(!hasVideoPlayed);
+//    if(_videoHandler->isPlaying())
+//        _hasVideoPlayed = true;
+//    ui.videoRendererComboBox->setEnabled(!_hasVideoPlayed);
     ui.enableMultiplierCheckbox->setChecked(SettingsHandler::getMultiplierEnabled());
     setUpMultiplierUi(SettingsHandler::getMultiplierEnabled());
     ui.disableNoScriptFoundInLibrary->setChecked(SettingsHandler::getDisableNoScriptFound());
@@ -154,10 +154,10 @@ void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
     {
         _requiresRestart = false;
         SettingsHandler::askRestart(this, "Some changes made requires a restart.\nWould you like to restart now?");
-        if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::ApplyRole)
-        {
-            QDialog::reject();
-        }
+    }
+    if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::ApplyRole)
+    {
+        QDialog::reject();
     }
 }
 
@@ -1632,11 +1632,14 @@ void SettingsDialog::on_launchWelcomeDialog_clicked()
 
 void SettingsDialog::on_videoRenderer_textChanged(const QString &value)
 {
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Warning!", "Changing the renderer can cause issues.\nIf you have issues remember your current renderer ("+XVideoRendererReverseMap.value(SettingsHandler::getSelectedVideoRenderer())+")\nSo you can change it back.\nA restart WILL be required.\nChange your renderer?",
+                                  QMessageBox::Yes|QMessageBox::No);
     XVideoRenderer renderer = XVideoRendererMap.value(value);
-    if(_videoHandler->setVideoRenderer(renderer))
+    if(reply == QMessageBox::Yes && _videoHandler->setVideoRenderer(renderer))
     {
         SettingsHandler::setSelectedVideoRenderer(renderer);
-        //SettingsHandler::requestRestart(this);
+        SettingsHandler::requestRestart(this);
     }
     else
     {

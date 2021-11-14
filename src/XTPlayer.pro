@@ -165,7 +165,7 @@ win32{
     #LIBS += -L$$QT.core.libs -lQtAV1 -lQtAVWidgets1
     build_pass: CONFIG(debug, debug|release) {
         DESTDIR = $$shell_path($$OUT_PWD/debug)
-        LIBS += -L"../../QtAV-Builds/Debug/x64/lib" -lQtAV1 -lQtAVWidgets1
+        LIBS += -L$$QT.core.libs -lQtAV1 -lQtAVWidgets1
         #CONFIG(release, debug|release):
 
         #include($$PWD/../../HttpServer/HttpServer.pro)

@@ -55,28 +55,36 @@ public:;
     void setSpeed(qreal speed);
     qint64 position();
     qint64 duration();
-    QHBoxLayout* layout();
+    QGridLayout* layout();
     void setDecoderPriority();
     void showPreview(int position, qint64 time);
     void installFilter(AudioFilter* filter);
     void clearFilters();
+    void setLoading(bool loading);
 
     QString  transcode(QString file);
 
     bool setVideoRenderer(XVideoRenderer renderer);
 
 private:
-    QHBoxLayout* _widgetLayout;
+    QWidget* _parent;
+    QGridLayout* _mediaGrid = 0;
     AVPlayer* _player = 0;
-    VideoRenderer* _videoRenderer;
+    VideoRenderer* _videoRenderer = 0;
     VideoPreviewWidget* _videoPreviewWidget;
     QString _currentFile;
     QMutex _mutex;
     qreal volumeBeforeMute;
+    QLabel* _videoLoadingLabel = 0;
+    QMovie* _videoLoadingMovie = 0;
+
+    void createLayout(VideoRenderer* videoRenderer);
 
     void mouseDoubleClickEvent(QMouseEvent * e) override;
     void mousePressEvent(QMouseEvent * e) override;
     void keyPressEvent(QKeyEvent * e) override;
     void enterEvent(QEvent * e) override;
+
+    void on_setLoading(bool loading);
 };
 #endif // VIDEOHANDLER_H

@@ -230,6 +230,10 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
             locker.unlock();
             MigrateTo263();
         }
+        if(currentVersion < 0.27)
+        {
+            SetupDecoderPriority();
+        }
 
     }
     settingsChangedEvent(false);
@@ -1597,33 +1601,41 @@ void SettingsHandler::setupGamepadButtonMap()
         { gamepadAxisNames.Guide, TCodeChannelLookup::None() }
     };
 }
+
 void SettingsHandler::SetupDecoderPriority()
 {
-#if defined(Q_OS_WIN)
-    decoderPriority =
-    {
-        { "CUDA", true },
-        { "D3D11", true },
-        { "DXVA", true },
-        { "FFmpeg", true },
-        { "VAAPI", true }
-    };
-#elif defined(Q_OS_MAC)
-    decoderPriority =
-    {
-        { "VideoToolbox", true },
-        { "FFmpeg", true },
-        { "VAAPI", true },
-        { "CUDA", true }
-    };
-#elif defined(Q_OS_LINUX)
-    decoderPriority =
-    {
-        { "CUDA", true },
-        { "FFmpeg", true },
-        { "VAAPI", true }
-    };
-#endif
+
+    if(decoderPriority.length() > 0)
+        decoderPriority.clear();
+    QStringList decs;
+    foreach (int id, QtAV::VideoDecoder::registered()) {
+        decoderPriority.append({QString::fromLatin1(QtAV::VideoDecoder::name(id)), true });
+    }
+//#if defined(Q_OS_WIN)
+//    decoderPriority =
+//    {
+//        { "CUDA", true },
+//        { "D3D11", true },
+//        { "DXVA", true },
+//        { "FFmpeg", true },
+//        { "VAAPI", true }
+//    };
+//#elif defined(Q_OS_MAC)
+//    decoderPriority =
+//    {
+//        { "VideoToolbox", true },
+//        { "FFmpeg", true },
+//        { "VAAPI", true },
+//        { "CUDA", true }
+//    };
+//#elif defined(Q_OS_LINUX)
+//    decoderPriority =
+//    {
+//        { "CUDA", true },
+//        { "FFmpeg", true },
+//        { "VAAPI", true }
+//    };
+//#endif
 }
 
 void SettingsHandler::setFunscriptLoaded(QString key, bool loaded)

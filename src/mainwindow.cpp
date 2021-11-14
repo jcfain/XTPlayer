@@ -61,6 +61,14 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
         }
     }
 
+    if(LogHandler::getUserDebug())
+    {
+        qputenv("QTAV_FFMPEG_LOG", "debug");
+        QtAV::setLogLevel(LogLevel::LogAll);
+        //param level can be: quiet, panic, fatal, error, warn, info, verbose, debug, trace
+        QtAV::setFFmpegLogLevel("verbose");
+    }
+
     loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading UI...", Qt::AlignBottom, Qt::white);
 
     qRegisterMetaType<LibraryListItem>();
@@ -113,8 +121,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     if(SettingsHandler::getEnableHttpServer())
         _httpHandler = new HttpHandler(videoHandler, this);
 
-    _syncHandler = new SyncHandler(_xSettings, tcodeHandler, videoHandler, this);
-
     _controlsHomePlaceHolderFrame = new QFrame(this);
     _controlsHomePlaceHolderGrid = new QGridLayout(_controlsHomePlaceHolderFrame);
     _controlsHomePlaceHolderFrame->setLayout(_controlsHomePlaceHolderGrid);
@@ -125,21 +131,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     ui->mediaAndControlsGrid->addWidget(_mediaFrame, 0, 0, 19, 3);
     ui->mediaAndControlsGrid->addWidget(_controlsHomePlaceHolderFrame, 20, 0, 1, 3);
 
-    //audioSyncFilter = new AudioSyncFilter(this);
-    //videoHandler->installFilter(audioSyncFilter);
-
-    _videoLoadingMovie = new QMovie("://images/Eclipse-1s-loading-200px.gif");
-    _videoLoadingMovie->setProperty("cssClass", "mediaLoadingSpinner");
-    _videoLoadingLabel = new QLabel(this);
-    _videoLoadingLabel->setMovie(_videoLoadingMovie);
-    _videoLoadingLabel->setAttribute(Qt::WA_TransparentForMouseEvents );
-    _videoLoadingLabel->setMaximumSize(200,200);
-    //_videoLoadingLabel->setStyleSheet("* {background: ffffff}");
-    _videoLoadingLabel->setProperty("cssClass", "mediaLoadingSpinner");
-    _videoLoadingLabel->setAlignment(Qt::AlignCenter);
-    _mediaGrid->addWidget(_videoLoadingLabel, 1, 2);
-    on_setLoading(false);
-
+    _syncHandler = new SyncHandler(_xSettings, tcodeHandler, videoHandler, this);
     _playerControlsFrame->setVolume(SettingsHandler::getPlayerVolume());
 
     libraryList = new QListWidget(this);
@@ -1838,7 +1830,7 @@ void MainWindow::stopAndPlayMedia(LibraryListItem selectedFileListItem, QString 
             if(playingLibraryListItem != nullptr)
                 updateMetaData(playingLibraryListItem->getLibraryListItem());
             _playerControlsFrame->SetLoop(false);
-            on_setLoading(true);
+            videoHandler->setLoading(true);
             if(videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone())
             {
                 stopMedia();
@@ -1886,7 +1878,7 @@ void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString cust
             QList<QString> invalidScripts;
             deviceHome();
             _playerControlsFrame->SetLoop(false);
-            on_setLoading(true);
+            videoHandler->setLoading(true);
             _syncHandler->stopAll();
 
             if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
@@ -2097,7 +2089,6 @@ void MainWindow::toggleFullScreen()
         _isFullScreen = true;
         //QMainWindow::setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
         _mediaGrid->removeWidget(videoHandler);
-        _mediaGrid->removeWidget(_videoLoadingLabel);
         _controlsHomePlaceHolderGrid->removeWidget(_playerControlsFrame);
 
         placeHolderControlsGrid = new QGridLayout(this);
@@ -2115,7 +2106,6 @@ void MainWindow::toggleFullScreen()
         playerControlsPlaceHolder->setFocusPolicy(Qt::StrongFocus);
         int rows = screenSize.height() / _playerControlsFrame->height();
         ui->fullScreenGrid->addWidget(videoHandler, 0, 0, rows, 5);
-        ui->fullScreenGrid->addWidget(_videoLoadingLabel, (rows / 2) - 1, 2, 2, 1);
         ui->fullScreenGrid->addWidget(playerControlsPlaceHolder, rows - 1, 0, 1, 5);
 
         if(libraryWindow == nullptr || libraryWindow->isHidden())
@@ -2140,7 +2130,6 @@ void MainWindow::toggleFullScreen()
             hideLibrary();
         }
 
-        _videoLoadingLabel->raise();
         _playerControlsFrame->setProperty("cssClass", "fullScreenControls");
         _playerControlsFrame->style()->unpolish(_playerControlsFrame);
         _playerControlsFrame->style()->polish(_playerControlsFrame);
@@ -2161,10 +2150,8 @@ void MainWindow::toggleFullScreen()
         LogHandler::Debug("Before Normal VideoSize: width: "+QString::number(videoHandler->size().width()) + " height: " + QString::number(videoHandler->size().height()));
         ui->fullScreenGrid->removeWidget(videoHandler);
         _mediaGrid->addWidget(videoHandler, 0, 0, 3, 5);
-        _mediaGrid->addWidget(_videoLoadingLabel, 1, 2);
         playerControlsPlaceHolder->layout()->removeWidget(_playerControlsFrame);
         ui->fullScreenGrid->removeWidget(playerControlsPlaceHolder);
-        _videoLoadingLabel->raise();
         _playerControlsFrame->setWindowFlags(Qt::Widget);
         _controlsHomePlaceHolderGrid->addWidget(_playerControlsFrame);
         _playerControlsFrame->setProperty("cssClass", "windowedControls");
@@ -2510,14 +2497,14 @@ void MainWindow::on_standaloneFunscript_start()
 //        _xSettings->getDeoHandler()->dispose();
 //    if(SettingsHandler::getWhirligigEnabled())
 //        _xSettings->getWhirligigHandler()->dispose();
-    on_setLoading(false);
+    videoHandler->setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(true);
 }
 
 void MainWindow::on_standaloneFunscript_stop()
 {
     LogHandler::Debug("Enter on_standaloneFunscript_stop");
-    on_setLoading(false);
+    videoHandler->setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(false);
 }
 
@@ -2532,7 +2519,7 @@ void MainWindow::on_media_start()
     {
         _syncHandler->syncFunscript();
     }
-    on_setLoading(false);
+    videoHandler->setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(true);
     _mediaStopped = false;
 }
@@ -2540,23 +2527,9 @@ void MainWindow::on_media_start()
 void MainWindow::on_media_stop()
 {
     LogHandler::Debug("Enter on_media_stop");
-    on_setLoading(false);
+    videoHandler->setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(false);
     _mediaStopped = true;
-}
-
-void MainWindow::on_setLoading(bool loading)
-{
-    if(loading && _videoLoadingMovie->state() != QMovie::MovieState::Running)
-    {
-        _videoLoadingLabel->show();
-        _videoLoadingMovie->start();
-    }
-    else if(!loading && _videoLoadingMovie->state() == QMovie::MovieState::Running)
-    {
-        _videoLoadingLabel->hide();
-        _videoLoadingMovie->stop();
-    }
 }
 
 void MainWindow::on_scriptNotFound(QString message)
@@ -2781,16 +2754,16 @@ void MainWindow::on_media_statusChanged(MediaStatus status)
         //status = tr("Invalid meida");
         break;
     case BufferingMedia:
-        on_setLoading(true);
+        videoHandler->setLoading(true);
         break;
     case BufferedMedia:
-        on_setLoading(false);
+        videoHandler->setLoading(false);
         break;
     case LoadingMedia:
-        on_setLoading(true);
+        videoHandler->setLoading(true);
         break;
     case LoadedMedia:
-        on_setLoading(false);
+        videoHandler->setLoading(false);
         break;
     case StalledMedia:
 
