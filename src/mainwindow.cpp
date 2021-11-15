@@ -440,6 +440,8 @@ void MainWindow::dispose()
         loadingLibraryFuture.cancel();
         loadingLibraryFuture.waitForFinished();
     }
+    qDeleteAll(cachedVRItems);
+    cachedVRItems.clear();
     //qDeleteAll(funscriptHandlers);
     if(_httpHandler)
         delete _httpHandler;
@@ -1525,8 +1527,10 @@ void MainWindow::stopThumbProcess()
 {
     if(thumbProcessIsRunning)
     {
-        disconnect(extractor, nullptr,  nullptr, nullptr);
-        disconnect(thumbNailPlayer, nullptr,  nullptr, nullptr);
+        disconnect(extractor, &QtAV::VideoFrameExtractor::frameExtracted,  nullptr, nullptr);
+        disconnect(extractor, &QtAV::VideoFrameExtractor::error,  nullptr, nullptr);
+        disconnect(thumbNailPlayer, &AVPlayer::loaded,  nullptr, nullptr);
+        disconnect(thumbNailPlayer, &AVPlayer::error,  nullptr, nullptr);
         thumbNailSearchIterator = 0;
         thumbProcessIsRunning = false;
         delete extractor;
@@ -1534,7 +1538,7 @@ void MainWindow::stopThumbProcess()
     }
 }
 
-void MainWindow::saveSingleThumb(const QString& videoFile, const QString& thumbFile, LibraryListWidgetItem* qListWidgetItem, qint64 position)
+void MainWindow::saveSingleThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position)
 {
     if(!thumbProcessIsRunning)
     {
@@ -1545,7 +1549,7 @@ void MainWindow::saveSingleThumb(const QString& videoFile, const QString& thumbF
         thumbNailPlayer->setAsyncLoad(true);
         extractor->setAsync(true);
     }
-    saveThumb(videoFile, thumbFile, qListWidgetItem, position);
+    saveThumb(qListWidgetItem, position);
 }
 
 void MainWindow::saveNewThumbs(bool vrMode)
@@ -1556,12 +1560,12 @@ void MainWindow::saveNewThumbs(bool vrMode)
         LibraryListWidgetItem* listWidgetItem = vrMode ? cachedVRItems.at(thumbNailSearchIterator) : cachedLibraryItems.at(thumbNailSearchIterator);
         LibraryListItem item = listWidgetItem->getLibraryListItem();
         thumbNailSearchIterator++;
-        QFileInfo thumbInfo(item.thumbFile);
+        QFileInfo thumbInfo(listWidgetItem->getThumbPath());
         if (item.type == LibraryListItemType::Video && !thumbInfo.exists())
         {
             disconnect(extractor, nullptr,  nullptr, nullptr);
             disconnect(thumbNailPlayer, nullptr,  nullptr, nullptr);
-            saveThumb(item.path, item.thumbFile, listWidgetItem, -1, vrMode);
+            saveThumb(listWidgetItem, -1, vrMode);
         }
         else
         {
@@ -1576,49 +1580,67 @@ void MainWindow::saveNewThumbs(bool vrMode)
             startThumbProcess(true);
     }
 }
-void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, LibraryListWidgetItem* cachedListWidgetItem, qint64 position, bool vrMode)
+void MainWindow::saveThumb(LibraryListWidgetItem* cachedListWidgetItem, qint64 position, bool vrMode)
 {
+    LibraryListItem cachedListItem = cachedListWidgetItem->getLibraryListItem();
+    QString videoFile = cachedListItem.path;
+    QString thumbFile = cachedListWidgetItem->getThumbPath();
 //    QIcon thumb;
 //    QPixmap bgPixmap(QApplication::applicationDirPath() + "/themes/loading.png");
 //    QPixmap scaled = bgPixmap.scaled(SettingsHandler::getThumbSize(), Qt::AspectRatioMode::KeepAspectRatio);
 //    thumb.addPixmap(scaled);
 //    qListWidgetItem->setIcon(thumb);
-    LibraryListItem cachedListItem = cachedListWidgetItem->getLibraryListItem();
-    auto text = cachedListWidgetItem->text();
-    auto cachedLibraryListWidgetItem = cachedListWidgetItem->getLibraryListItem();
-    auto libraryListItems = libraryList->findItems(cachedLibraryListWidgetItem.nameNoExtension, Qt::MatchFlag::MatchEndsWith);
+    auto libraryListItems = libraryList->findItems(cachedListItem.nameNoExtension, Qt::MatchFlag::MatchEndsWith);
     LibraryListWidgetItem* libraryListWidgetItem = 0;
     if(libraryListItems.length() > 0)
     {
         libraryListWidgetItem = ((LibraryListWidgetItem*)libraryListItems.first());
-        QIcon thumb;
-        QPixmap bgPixmap("://images/icons/loading_current.png");
-        int thumbSize = SettingsHandler::getThumbSize();
-        QSize size = {thumbSize, thumbSize};
-        QPixmap scaled = bgPixmap.scaled(SettingsHandler::getMaxThumbnailSize(), Qt::AspectRatioMode::KeepAspectRatio);
-        thumb.addPixmap(scaled);
-        libraryListWidgetItem->setIcon(thumb);
-
-
-        auto libraryListItem = libraryListWidgetItem->getLibraryListItem();
+        libraryListWidgetItem->setThumbFileLoading(false);
     }
-
+    cachedListWidgetItem->setThumbFileLoading(false);
     //://images/icons/loading_current.png
     if(cachedListItem.type == LibraryListItemType::Audio || cachedListItem.type == LibraryListItemType::FunscriptType)
     {
-        int thumbSize = SettingsHandler::getThumbSize();
-        QSize size = {thumbSize, thumbSize};
-        cachedListWidgetItem->updateThumbSize(size);
-        if(libraryListWidgetItem)
-        {
-            libraryList->removeItemWidget(libraryListWidgetItem);
-            libraryListWidgetItem->updateThumbSize(size);
-        }
+//        int thumbSize = SettingsHandler::getThumbSize();
+//        QSize size = {thumbSize, thumbSize};
+//        cachedListWidgetItem->updateThumbSize(size);
+//        if(libraryListWidgetItem)
+//        {
+//            libraryList->removeItemWidget(libraryListWidgetItem);
+//            libraryListWidgetItem->updateThumbSize(size);
+//        }
 
         saveNewThumbs(vrMode);
     }
     else
     {
+        // Get the duration and randomize the position with in the video.
+        connect(thumbNailPlayer,
+           &AVPlayer::loaded,
+           thumbNailPlayer,
+           [this, videoFile, position]()
+            {
+               LogHandler::Debug(tr("Loaded video for thumb duration: ") + QString::number(thumbNailPlayer->duration()));
+               qint64 randomPosition = position > 0 ? position : XMath::rand((qint64)1, thumbNailPlayer->duration());
+
+               disconnect(thumbNailPlayer, &AVPlayer::loaded,  nullptr, nullptr);
+               disconnect(thumbNailPlayer, &AVPlayer::error,  nullptr, nullptr);
+               extractor->setSource(videoFile);
+               extractor->setPosition(randomPosition);
+            });
+
+
+        connect(thumbNailPlayer,
+           &AVPlayer::error,
+           thumbNailPlayer,
+           [this, videoFile,  cachedListWidgetItem, libraryListWidgetItem, vrMode](QtAV::AVError er)
+            {
+            QString error = tr("Video load error from: ") + videoFile + tr(" Error: ") + er.ffmpegErrorString();
+               LogHandler::Error(error);
+               saveThumbError(cachedListWidgetItem, libraryListWidgetItem, vrMode, error);
+            });
+
+
         connect(extractor,
            &QtAV::VideoFrameExtractor::frameExtracted,
            extractor,
@@ -1639,22 +1661,23 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, L
                     catch (...) {
                         error = true;
                     }
-                    QString thumbFileTemp = thumbFile;
-                    if (error || img.isNull() || !img.save(thumbFile, nullptr, 15))
+                    QString errorMessage;
+                    bool hasError = error || img.isNull() || !img.save(thumbFile, nullptr, 15);
+                    if (hasError)
                     {
-                       LogHandler::Debug(tr("Error saving thumbnail: ") + thumbFile + tr(" for video: ") + videoFile);
-                       thumbFileTemp = "://images/icons/error.png";
+                       errorMessage = tr("Error saving thumbnail: ") + thumbFile + tr(" for video: ") + videoFile;
+                       LogHandler::Debug(errorMessage);
                     }
-
-                    int thumbSize = SettingsHandler::getThumbSize();
-                    QSize size = {thumbSize, thumbSize};
-                    cachedListWidgetItem->updateThumbSize(size, thumbFileTemp);
+                    cachedListWidgetItem->setThumbFileLoaded(hasError, errorMessage);
                     if(libraryListWidgetItem)
                     {
                         libraryList->removeItemWidget(libraryListWidgetItem);
-                        libraryListWidgetItem->updateThumbSize(size, thumbFileTemp);
+                        libraryListWidgetItem->setThumbFileLoaded(hasError, errorMessage);;
                     }
                 }
+                disconnect(extractor, &QtAV::VideoFrameExtractor::frameExtracted,  nullptr, nullptr);
+                disconnect(extractor, &QtAV::VideoFrameExtractor::error,  nullptr, nullptr);
+
                saveNewThumbs(vrMode);
             });
         connect(extractor,
@@ -1662,66 +1685,34 @@ void MainWindow::saveThumb(const QString& videoFile, const QString& thumbFile, L
            extractor,
            [this, videoFile, cachedListWidgetItem, libraryListWidgetItem, vrMode](const QString &errorMessage)
             {
-
-               LogHandler::Debug(tr("Error extracting image from: ") + videoFile + tr(" Error: ") + errorMessage);
-               auto errorMsg = cachedListWidgetItem->toolTip() + tr("\n\nError: ") + errorMessage;
-
-               auto thumbError = "://images/icons/error.png";
-               cachedListWidgetItem->setToolTip(errorMsg);
-               int thumbSize = SettingsHandler::getThumbSize();
-               QSize size = {thumbSize,thumbSize};
-               cachedListWidgetItem->updateThumbSize(size, thumbError);
-
-               if(libraryListWidgetItem)
-               {
-                   libraryList->removeItemWidget(libraryListWidgetItem);
-                   libraryListWidgetItem->setToolTip(errorMsg);
-                   libraryListWidgetItem->updateThumbSize(size, thumbError);
-               }
-
-               saveNewThumbs(vrMode);
+                QString error = tr("Error extracting image from: ") + videoFile + tr(" Error: ") + errorMessage;
+                LogHandler::Error(error);
+                saveThumbError(cachedListWidgetItem, libraryListWidgetItem, vrMode, error);
             });
-
-        extractor->setSource(videoFile);
 
         thumbNailPlayer->setFile(videoFile);
         thumbNailPlayer->load();
-
-        connect(thumbNailPlayer,
-           &AVPlayer::loaded,
-           thumbNailPlayer,
-           [this, position]()
-            {
-               LogHandler::Debug(tr("Loaded video for thumb duration: ") + QString::number(thumbNailPlayer->duration()));
-               qint64 randomPosition = position > 0 ? position : XMath::rand((qint64)1, thumbNailPlayer->duration());
-               //LogHandler::Debug("randomPosition: " + QString::number(randomPosition));
-               extractor->setPosition(randomPosition);
-            });
-
-        connect(thumbNailPlayer,
-           &AVPlayer::error,
-           thumbNailPlayer,
-           [this, cachedListWidgetItem, libraryListWidgetItem, vrMode](QtAV::AVError er)
-            {
-               LogHandler::Debug(tr("Video load error"));
-               auto errorMsg = cachedListWidgetItem->toolTip() + tr("\n\nError: ") + er.ffmpegErrorString();
-               auto thumbError = "://images/icons/error.png";
-               cachedListWidgetItem->setToolTip(errorMsg);
-               int thumbSize = SettingsHandler::getThumbSize();
-               QSize size = {thumbSize,thumbSize};
-               cachedListWidgetItem->updateThumbSize(size, thumbError);
-
-               if(libraryListWidgetItem)
-               {
-                   libraryList->removeItemWidget(libraryListWidgetItem);
-                   libraryListWidgetItem->setToolTip(errorMsg);
-                   libraryListWidgetItem->updateThumbSize(size, thumbError);
-               }
-
-               disconnect(extractor, nullptr,  nullptr, nullptr);
-               saveNewThumbs(vrMode);
-            });
     }
+}
+
+void MainWindow::saveThumbError(LibraryListWidgetItem* cachedListWidgetItem, LibraryListWidgetItem* libraryListWidgetItem, bool vrMode, QString errorMessage)
+{
+    auto errorMsg = cachedListWidgetItem->toolTip() + tr("\n\nError: ") + errorMessage;
+    cachedListWidgetItem->setToolTip(errorMsg);
+    cachedListWidgetItem->setThumbFileLoaded(true, errorMsg);
+    if(libraryListWidgetItem)
+    {
+        libraryList->removeItemWidget(libraryListWidgetItem);
+        libraryListWidgetItem->setToolTip(errorMsg);
+        libraryListWidgetItem->setThumbFileLoaded(true, errorMsg);
+    }
+
+    disconnect(extractor, &QtAV::VideoFrameExtractor::frameExtracted,  nullptr, nullptr);
+    disconnect(extractor, &QtAV::VideoFrameExtractor::error,  nullptr, nullptr);
+    disconnect(thumbNailPlayer, &AVPlayer::loaded,  nullptr, nullptr);
+    disconnect(thumbNailPlayer, &AVPlayer::error,  nullptr, nullptr);
+
+    saveNewThumbs(vrMode);
 }
 
 void MainWindow::on_actionSelect_library_triggered()
@@ -1759,14 +1750,14 @@ void MainWindow::regenerateThumbNail()
 {
     QListWidgetItem* selectedItem = libraryList->selectedItems().first();
     LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
-    saveSingleThumb(selectedFileListItem.path, selectedFileListItem.thumbFile, (LibraryListWidgetItem*)selectedItem);
+    saveSingleThumb((LibraryListWidgetItem*)selectedItem);
 }
 
 void MainWindow::setThumbNailFromCurrent()
 {
     QListWidgetItem* selectedItem = libraryList->selectedItems().first();
     LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
-    saveSingleThumb(selectedFileListItem.path, selectedFileListItem.thumbFile, (LibraryListWidgetItem*)selectedItem, videoHandler->position());
+    saveSingleThumb((LibraryListWidgetItem*)selectedItem, videoHandler->position());
 }
 
 void MainWindow::on_LibraryList_itemDoubleClicked(QListWidgetItem *item)

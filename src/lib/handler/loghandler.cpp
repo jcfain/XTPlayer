@@ -7,6 +7,7 @@ LogHandler::LogHandler()
 
 void LogHandler::Debug(QString message)
 {
+    message = "XTP DEBUG: " + message;
     if (_debugMode && !_userDebugMode)
     {
         qDebug() << message;
@@ -14,7 +15,7 @@ void LogHandler::Debug(QString message)
     else if(_userDebugMode)
     {
         QMutexLocker locker(&mutex);
-        auto debugMessage = QDateTime::currentDateTime().toString("MM-dd-yyyy_hh-mm-ss-zzz") +" Debug: " + message;
+        auto debugMessage = QDateTime::currentDateTime().toString("MM-dd-yyyy_hh-mm-ss-zzz") + message;
         qDebug() << debugMessage;
 //        userDebugIndex++;
 //        _debugStore.insert(userDebugIndex, debugMessage);
@@ -23,6 +24,7 @@ void LogHandler::Debug(QString message)
 
 void LogHandler::Info(QString message)
 {
+    message = "XTP INFO: " + message;
     if (_debugMode && !_userDebugMode)
     {
         qInfo() << message;
@@ -30,7 +32,7 @@ void LogHandler::Info(QString message)
     else if(_userDebugMode)
     {
         QMutexLocker locker(&mutex);
-        auto infoMessage = QDateTime::currentDateTime().toString("MM-dd-yyyy_hh-mm-ss-zzz") +" Info: " + message;
+        auto infoMessage = QDateTime::currentDateTime().toString("MM-dd-yyyy_hh-mm-ss-zzz") + message;
         qInfo() << infoMessage;
 //        userDebugIndex++;
 //        _debugStore.insert(userDebugIndex, infoMessage);
@@ -39,6 +41,7 @@ void LogHandler::Info(QString message)
 
 void LogHandler::Warn(QString message)
 {
+    message = "XTP WARN: " + message;
     if (_debugMode && !_userDebugMode)
     {
         qWarning() << message;
@@ -46,7 +49,7 @@ void LogHandler::Warn(QString message)
     else if(_userDebugMode)
     {
         QMutexLocker locker(&mutex);
-        auto warnMessage = QDateTime::currentDateTime().toString("MM-dd-yyyy_hh-mm-ss-zzz") +" WARNING: " + message;
+        auto warnMessage = QDateTime::currentDateTime().toString("MM-dd-yyyy_hh-mm-ss-zzz") + message;
         qWarning() << warnMessage;
 //        userDebugIndex++;
 //        _debugStore.insert(userDebugIndex, warnMessage);
@@ -55,6 +58,7 @@ void LogHandler::Warn(QString message)
 
 void LogHandler::Error(QString message)
 {
+    message = "XTP ERROR: " + message;
     if (_debugMode && !_userDebugMode)
     {
         qCritical() << message;
@@ -62,7 +66,7 @@ void LogHandler::Error(QString message)
     else if(_userDebugMode)
     {
         QMutexLocker locker(&mutex);
-        auto criticalMessage = QDateTime::currentDateTime().toString("MM-dd-yyyy_hh-mm-ss-zzz") +" ERROR: " + message;
+        auto criticalMessage = QDateTime::currentDateTime().toString("MM-dd-yyyy_hh-mm-ss-zzz") + message;
         qCritical() << criticalMessage;
 //        userDebugIndex++;
 //        _debugStore.insert(userDebugIndex, criticalMessage);

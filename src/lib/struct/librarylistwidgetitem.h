@@ -18,12 +18,17 @@ public:
     virtual bool operator< (const QListWidgetItem & other) const override;
     bool operator== (const LibraryListWidgetItem & other) const;
     void dropEvent(QDropEvent* event);
-    void updateThumbSize(QSize thumbSize, QString filePath = nullptr);
+    void updateThumbSize(QSize thumbSize);
+    void setThumbFile(QString filePath);
+    void setThumbFileLoading(bool waiting);
+    void setThumbFileLoaded(bool error, QString message = nullptr);
+    QString getThumbPath();
     virtual LibraryListWidgetItem* clone() const override;
     QSize calculateHintSize(QSize size);
     bool isMFS();
 private:
     QString _thumbFile;
+    QSize _thumbSize;
     bool _isMFS;
     static LibrarySortMode _sortMode;
     QSize calculateMaxSize(QSize size);

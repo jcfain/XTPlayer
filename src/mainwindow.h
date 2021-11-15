@@ -275,8 +275,9 @@ private:
     AudioSyncFilter* audioSyncFilter;
     HttpHandler* _httpHandler = 0;
 
-    void saveSingleThumb(const QString& videoFile, const QString& thumbFile, LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
-    void saveThumb(const QString& videoFile, const QString& thumbFile, LibraryListWidgetItem* qListWidgetItem, qint64 position = 0, bool vrMode = false);
+    void saveSingleThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
+    void saveThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0, bool vrMode = false);
+    void saveThumbError(LibraryListWidgetItem* cachedListWidgetItem, LibraryListWidgetItem* libraryListWidgetItem, bool vrMode, QString errorMessage);
     void startThumbProcess(bool vrMode = false);
     void stopThumbProcess();
     void saveNewThumbs(bool vrMode = false);

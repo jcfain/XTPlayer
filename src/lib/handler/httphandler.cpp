@@ -145,7 +145,8 @@ QJsonObject HttpHandler::createMediaObject(LibraryListItem item, bool stereoscop
     object["name"] = item.nameNoExtension;
     QString relativePath = item.path.replace(SettingsHandler::getSelectedLibrary(), "");
     object["relativePath"] = QString(QUrl::toPercentEncoding(relativePath));
-    QString relativeThumb = item.thumbFile.isEmpty() ? "://images/icons/error.png" : item.thumbFile.replace(SettingsHandler::getSelectedThumbsDir(), "");
+    QString thumbFile = item.thumbFile.replace(SettingsHandler::getSelectedThumbsDir(), "");
+    QString relativeThumb = thumbFile;
     object["relativeThumb"] = QString(QUrl::toPercentEncoding(relativeThumb));
     object["thumbSize"] = SettingsHandler::getThumbSize();
     object["type"] = item.type;

@@ -1,31 +1,30 @@
 #include "librarylistwidgetitem.h"
 
-LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem &localData, QListWidget* parent) :
-    QListWidgetItem(localData.nameNoExtension, parent)
+LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem &data, QListWidget* parent) :
+    QListWidgetItem(data.nameNoExtension, parent)
 {
-    _isMFS = updateToolTip(localData);
+    _isMFS = updateToolTip(data);
 
-    localData.thumbFile = SettingsHandler::getSelectedThumbsDir() + localData.name + ".jpg";
-    if(localData.type == LibraryListItemType::Audio)
-        localData.thumbFile = "://images/icons/audio.png";
-    else if(localData.type == LibraryListItemType::PlaylistInternal)
-        localData.thumbFile = "://images/icons/playlist.png";
-    else if(localData.type == LibraryListItemType::FunscriptType)
-        localData.thumbFile = "://images/icons/funscript.png";
-    _thumbFile = localData.thumbFile;
-    int thumbSize = SettingsHandler::getThumbSize();
-    updateThumbSize({thumbSize, thumbSize});
     if (_isMFS)
     {
         setForeground(QColorConstants::Green);
-        setText("(MFS) " + localData.nameNoExtension);
+        setText("(MFS) " + data.nameNoExtension);
     }
     else
-        setText(localData.nameNoExtension);
+        setText(data.nameNoExtension);
     QVariant listItem;
 
-    listItem.setValue(localData);
+    listItem.setValue(data);
     setData(Qt::UserRole, listItem);
+    int thumbSize = SettingsHandler::getThumbSize();
+    _thumbSize = {thumbSize, thumbSize};
+
+    QString thumbPath = getThumbPath();
+    QFileInfo thumbFile = QFileInfo(thumbPath);
+    if(!thumbFile.exists())
+        setThumbFileLoading(true);
+    else
+        setThumbFile(thumbPath);
 }
 
 LibraryListWidgetItem::~LibraryListWidgetItem()
@@ -196,28 +195,16 @@ void LibraryListWidgetItem::setSortMode(LibrarySortMode sortMode)
     _sortMode = sortMode;
 }
 
-void LibraryListWidgetItem::updateThumbSize(QSize thumbSize, QString filePath)
+void LibraryListWidgetItem::updateThumbSize(QSize thumbSize)
 {
-    if(!filePath.isEmpty())
-    {
-        QFileInfo thumbFile = QFileInfo(filePath);
-        if (thumbFile.exists())
-        {
-            _thumbFile = filePath;
-        }
-    }
-    auto data = getLibraryListItem();
-
-
+    _thumbSize = thumbSize;
     QFileInfo thumbFile = QFileInfo(_thumbFile);
-    if(thumbFile.exists())
+    QString thumbFilePath = _thumbFile;
+    if(!thumbFile.exists())
     {
-        data.thumbFile = _thumbFile;
-        QVariant listItem;
-        listItem.setValue(data);
-        setData(Qt::UserRole, listItem);
+        thumbFilePath = "://images/icons/loading.png";
     }
-    QPixmap bgPixmap = QPixmap(!thumbFile.exists() ? "://images/icons/loading.png" : _thumbFile);
+    QPixmap bgPixmap = QPixmap(thumbFilePath);
     QIcon thumb;
     //QSize maxThumbSize = SettingsHandler::getMaxThumbnailSize();
     //int newHeight = round((float)bgPixmap.height() / bgPixmap.width() * 1080);
@@ -237,9 +224,49 @@ void LibraryListWidgetItem::updateThumbSize(QSize thumbSize, QString filePath)
     setTextAlignment(Qt::AlignmentFlag::AlignTop | Qt::AlignmentFlag::AlignHCenter);
 }
 
+void LibraryListWidgetItem::setThumbFile(QString filePath)
+{
+    _thumbFile = filePath;
+    auto data = getLibraryListItem();
+    if(data.type == LibraryListItemType::Audio)
+    {
+        _thumbFile = "://images/icons/audio.png";
+    }
+    else if(data.type == LibraryListItemType::PlaylistInternal)
+    {
+        _thumbFile = "://images/icons/playlist.png";
+    }
+    else if(data.type == LibraryListItemType::FunscriptType)
+    {
+        _thumbFile = "://images/icons/funscript.png";
+    }
+    data.thumbFile = _thumbFile;
+    QVariant listItem;
+    listItem.setValue(data);
+    setData(Qt::UserRole, listItem);
+    updateThumbSize(_thumbSize);
+}
+
+void LibraryListWidgetItem::setThumbFileLoading(bool waiting)
+{
+    setThumbFile(waiting ? "://images/icons/loading.png" : "://images/icons/loading_current.png");
+}
+
+void LibraryListWidgetItem::setThumbFileLoaded(bool error, QString message)
+{
+    setThumbFile(error ? "://images/icons/error.png" : getThumbPath());
+    if(!message.isEmpty())
+        setToolTip(toolTip() + "\n"+ message);
+}
+
 LibraryListWidgetItem* LibraryListWidgetItem::clone() const
 {
    return new LibraryListWidgetItem(*this);
+}
+
+QString LibraryListWidgetItem::getThumbPath()
+{
+    return SettingsHandler::getSelectedThumbsDir() + getLibraryListItem().name + ".jpg";
 }
 
 QSize LibraryListWidgetItem::calculateMaxSize(QSize size)

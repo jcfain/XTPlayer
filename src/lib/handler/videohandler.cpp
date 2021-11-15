@@ -7,13 +7,13 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent),
     _player = new AVPlayer(this);
     setVideoRenderer(SettingsHandler::getSelectedVideoRenderer());
     setDecoderPriority();
-    QVariantHash opt;
-    QVariantHash cuda_opt;
-    cuda_opt["surfaces"] = 20; //key is property name, case sensitive
-    cuda_opt["copyMode"] = "DirectCopy"; // default is "DirectCopy"
-    cuda_opt["flags"] = "+genpt";
-    cuda_opt["deinterlace"] = "Adaptive";
-    opt["CUDA"] = cuda_opt; //key is decoder name, case sensitive
+//    QVariantHash opt;
+//    QVariantHash cuda_opt;
+//    cuda_opt["surfaces"] = 20; //key is property name, case sensitive
+//    cuda_opt["copyMode"] = "DirectCopy"; // default is "DirectCopy"
+//    cuda_opt["flags"] = "+genpt";
+//    cuda_opt["deinterlace"] = "Adaptive";
+//    opt["CUDA"] = cuda_opt; //key is decoder name, case sensitive
 
 //    QVariantHash va_opt;
 //    va_opt["display"] = "X11"; //"GLX", "X11", "DRM"
@@ -24,9 +24,9 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent),
 //    avfmt_opt["probesize"] = 4096;
 //    avfmt_opt["user_agent"] = "xxx";
 //    opt["avformat"] = avfmt_opt;
-    auto test = QtAV::avcodecOptions().split('\n');
-    auto test2 = QtAV::avformatOptions().split("\n");;
-    _player->setOptionsForVideoCodec(opt);
+//    auto test = QtAV::avcodecOptions().split('\n');
+//    auto test2 = QtAV::avformatOptions().split("\n");;
+//    _player->setOptionsForVideoCodec(opt);
 
     _player->setBufferMode(QtAV::BufferMode::BufferBytes);
 
