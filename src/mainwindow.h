@@ -373,6 +373,7 @@ private:
     void onAddBookmark(LibraryListItem libraryListItem, QString name, qint64 currentPosition);
     void processMetaData(LibraryListItem libraryListItem);
     void updateMetaData(LibraryListItem libraryListItem);
+    void processVRMetaData(QString videoPath, QString funscriptPath, qint64 duration);
 };
 extern void startThumbProcess(MainWindow* mainWindow);
 #endif // MAINWINDOW_H

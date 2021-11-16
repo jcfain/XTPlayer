@@ -107,7 +107,7 @@ void DeoHandler::readData()
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(datagram, &error);
-    if (doc.isNull())
+    if (datagram.isEmpty())
     {
         LogHandler::Error("Deo json response error: "+error.errorString());
         LogHandler::Error("datagram: "+datagram);
@@ -124,7 +124,9 @@ void DeoHandler::readData()
         qint64 duration = jsonObject["duration"].toDouble() * 1000;
         qint64 currentTime = jsonObject["currentTime"].toDouble() * 1000;
         float playbackSpeed = jsonObject["playbackSpeed"].toDouble() * 1.0;
-        bool playing = jsonObject["playerState"].toInt() == 0;
+        bool playing = jsonObject["playerState"].toInt();
+        if(playing && _currentTime == currentTime)
+            playing = false;
 //        LogHandler::Debug("Deo path: "+path);
 //        LogHandler::Debug("Deo duration: "+QString::number(duration));
 //        LogHandler::Debug("Deo currentTime------------------------------------------------> "+QString::number(currentTime));

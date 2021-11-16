@@ -103,6 +103,7 @@ void SettingsDialog::initLive()
     if(HasLaunchPass())
         ui.passwordButton->setText("Change password");
     ui.hideWelcomeDialog->setChecked(SettingsHandler::getHideWelcomeScreen());
+    ui.finscriptModifierSpinBox->setValue(FunscriptHandler::getModifier());
 //    auto availableAxis = SettingsHandler::getAvailableAxis();
 //    foreach(auto channel, availableAxis->keys())
 //    {
@@ -1741,8 +1742,6 @@ void SettingsDialog::on_httpPort_valueChanged(int value)
 void SettingsDialog::on_chunkSizeDouble_valueChanged(double value)
 {
     SettingsHandler::setHTTPChunkSize(value * 1048576);
-    if(SettingsHandler::getEnableHttpServer())
-        _requiresRestart = true;
 }
 
 void SettingsDialog::on_httpRootLineEdit_textEdited(const QString &selectedDirectory)
@@ -1757,4 +1756,9 @@ void SettingsDialog::on_vrLibraryLineEdit_textEdited(const QString &selectedDire
     SettingsHandler::setVRLibrary(selectedDirectory);
     if(SettingsHandler::getEnableHttpServer())
         _requiresRestart = true;
+}
+
+void SettingsDialog::on_finscriptModifierSpinBox_valueChanged(int value)
+{
+    FunscriptHandler::setModifier(value);
 }

@@ -257,6 +257,7 @@ void SyncHandler::playStandAlone(QString funscript) {
         _playingStandAloneFunscript = nullptr;
         _xSettings->resetAxisProgressBars();
         _currentTime = 0;
+        emit funscriptEnded();
         LogHandler::Debug("exit play Funscript stand alone thread");
     });
 }
@@ -337,6 +338,7 @@ void SyncHandler::syncFunscript()
 
         _isMediaFunscriptPlaying = false;
         _xSettings->resetAxisProgressBars();
+        emit funscriptEnded();
         LogHandler::Debug("exit syncFunscript");
     });
 }
@@ -347,7 +349,7 @@ void SyncHandler::syncVRFunscript(QString funscript)
     QMutexLocker locker(&_mutex);
     _isVRFunscriptPlaying = true;
     LogHandler::Debug("syncVRFunscript start thread");
-    _funscriptVRFuture = QtConcurrent::run([this]()
+    _funscriptVRFuture = QtConcurrent::run([this, funscript]()
     {
         std::shared_ptr<FunscriptAction> actionPosition;
         QMap<QString, std::shared_ptr<FunscriptAction>> otherActions;
@@ -358,12 +360,18 @@ void SyncHandler::syncVRFunscript(QString funscript)
         qint64 timer1 = 0;
         qint64 timer2 = 0;
         mSecTimer.start();
+        QString videoPath;
+        qint64 duration;
         while (_isVRFunscriptPlaying && _xSettings->getConnectedVRHandler()->isConnected() && !_videoHandler->isPlaying())
         {
             currentVRPacket = _xSettings->getConnectedVRHandler()->getCurrentPacket();
             //timer.start();
             if(!_isPaused && !SettingsHandler::getLiveActionPaused() && _xSettings->isDeviceConnected() && isLoaded() && !currentVRPacket.path.isEmpty() && currentVRPacket.duration > 0 && currentVRPacket.playing)
             {
+                if(videoPath.isEmpty())
+                    videoPath = currentVRPacket.path;
+                if(!duration)
+                    duration = currentVRPacket.duration;
                 //execute once every millisecond
                 if (timer2 - timer1 >= 1)
                 {
@@ -419,6 +427,7 @@ void SyncHandler::syncVRFunscript(QString funscript)
         _xSettings->resetAxisProgressBars();
         QMutexLocker locker(&_mutex);
         _isVRFunscriptPlaying = false;
+        emit funscriptVREnded(videoPath, funscript, duration);
         LogHandler::Debug("exit syncVRFunscript");
     });
 }

@@ -211,6 +211,8 @@ private slots:
 
     void on_vrLibraryLineEdit_textEdited(const QString &arg1);
 
+    void on_finscriptModifierSpinBox_valueChanged(int arg1);
+
 private:
 
     Ui::SettingsDialog ui;

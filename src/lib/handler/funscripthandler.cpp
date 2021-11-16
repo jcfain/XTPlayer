@@ -47,6 +47,7 @@ bool FunscriptHandler::load(QString funscriptString)
 bool FunscriptHandler::load(QByteArray byteArray)
 {
     QMutexLocker locker(&mutex);
+    resetModifier();
     _firstActionExecuted = false;
     _funscriptMax = -1;
     QJsonParseError* error = new QJsonParseError();
@@ -201,7 +202,29 @@ std::shared_ptr<FunscriptAction> FunscriptHandler::getPosition(qint64 millis)
 //        LogHandler::Debug("nextActionIndex: "+ QString::number(nextActionIndex));
         //LogHandler::Debug("nextActionPos: "+ QString::number(funscript->actions.value(nextMillis)));
         qint64 executionMillis = lastActionIndex == -1 ? closestMillis : nextMillis;
-        std::shared_ptr<FunscriptAction> nextAction(new FunscriptAction { _channel, executionMillis, funscript->actions.value(executionMillis), interval, lastActionPos, lastActionSpeed });
+        int pos = funscript->actions.value(executionMillis);
+        if(_modifier != 1)
+        {
+            if(lastActionPos < pos) // up stroke
+            {
+                int distance = round((pos - lastActionPos) / 2.0);
+                if(_modifier > 1)
+                    pos = round(pos + (distance * (_modifier - 1)));
+                else
+                    pos = round(pos - (distance - (distance * _modifier)));
+            }
+            else if(lastActionPos > pos) // down stroke
+            {
+                int distance = round((lastActionPos - pos) / 2.0);
+                if(_modifier > 1)
+                    pos = round(pos - (distance * (_modifier - 1)));
+                else
+                    pos = round(pos + (distance - (distance * _modifier)));
+
+            }
+            pos = XMath::constrain(pos, 0, 100);
+        }
+        std::shared_ptr<FunscriptAction> nextAction(new FunscriptAction { _channel, executionMillis, pos, interval, lastActionPos, lastActionSpeed });
         //LogHandler::Debug("nextAction.speed: "+ QString::number(nextAction->speed));
         lastActionIndex = nextActionIndex;
         lastActionPos = funscript->actions.value(executionMillis);
@@ -252,5 +275,21 @@ void FunscriptHandler::setInverted(bool value)
     _inverted = value;
 }
 
+void FunscriptHandler::setModifier(int percentage)
+{
+    _modifier = percentage / 100.0;
+}
+
+int FunscriptHandler::getModifier()
+{
+    return _modifier * 100.0;
+}
+
+void FunscriptHandler::resetModifier()
+{
+    _modifier = 1.0;
+}
+
+double FunscriptHandler::_modifier = 1;
 bool FunscriptHandler::_inverted = false;
 QMutex FunscriptHandler::mutexStat;

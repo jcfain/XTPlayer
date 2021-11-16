@@ -18,6 +18,8 @@ signals:
     void funscriptStatusChanged(QtAV::MediaStatus status);
     void funscriptStopped();
     void funscriptStarted();
+    void funscriptEnded();
+    void funscriptVREnded(QString videoPath, QString funscriptPath, qint64 duration);
     void togglePaused(bool paused);
 public:
     SyncHandler(SettingsDialog* xSettings, TCodeHandler* tcodeHandler, VideoHandler* videoHandler, QObject *parent = nullptr);

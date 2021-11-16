@@ -47,7 +47,7 @@ private:
     bool _isConnected = false;
     bool _isPlaying = false;
     bool _isSelected = false;
-    quint64 _currentTime;
+    qint64 _currentTime;
 };
 
 #endif // DEOHANDLER_H

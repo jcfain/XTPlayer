@@ -153,6 +153,13 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     if(!_httpPort)
         _httpPort = 80;
 
+    _funscriptOffsetStep = settingsToLoadFrom->value("funscriptOffsetStep").toInt();
+    if(!_funscriptOffsetStep)
+        _funscriptOffsetStep = 100;
+    _funscriptModifierStep = settingsToLoadFrom->value("funscriptModifierStep").toInt();
+    if(!_funscriptModifierStep)
+        _funscriptModifierStep = 5;
+
     QList<QVariant> decoderPriorityvarient = settingsToLoadFrom->value("decoderPriority").toList();
     decoderPriority.clear();
     foreach(auto varient, decoderPriorityvarient)
@@ -358,6 +365,8 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         settingsToSaveTo->setValue("httpChunkSize", _httpChunkSize);
         settingsToSaveTo->setValue("httpPort", _httpPort);
 
+        settingsToSaveTo->setValue("funscriptModifierStep", _funscriptModifierStep);
+        settingsToSaveTo->setValue("funscriptOffsetStep", _funscriptOffsetStep);
 
         settingsToSaveTo->sync();
 
@@ -1765,6 +1774,29 @@ void SettingsHandler::setVRLibrary(QString value)
     settingsChangedEvent(true);
 }
 
+
+void  SettingsHandler::setFunscriptModifierStep(int value)
+{
+    QMutexLocker locker(&mutex);
+    _funscriptModifierStep = value;
+}
+int  SettingsHandler::getFunscriptModifierStep()
+{
+    QMutexLocker locker(&mutex);
+    return _funscriptModifierStep;
+}
+
+void  SettingsHandler::setFunscriptOffsetStep(int value)
+{
+    QMutexLocker locker(&mutex);
+    _funscriptOffsetStep = value;
+}
+int  SettingsHandler::getFunscriptOffsetStep()
+{
+    QMutexLocker locker(&mutex);
+    return _funscriptOffsetStep;
+}
+
 LibraryListItemMetaData258 SettingsHandler::getLibraryListItemMetaData(QString path)
 {
     QMutexLocker locker(&mutex);
@@ -1872,6 +1904,9 @@ QString SettingsHandler::_httpServerRoot;
 qint64 SettingsHandler::_httpChunkSize;
 int SettingsHandler::_httpPort;
 QString SettingsHandler::_vrLibrary;
+
+int SettingsHandler::_funscriptModifierStep;
+int SettingsHandler::_funscriptOffsetStep;
 
 QString SettingsHandler::_hashedPass;
 

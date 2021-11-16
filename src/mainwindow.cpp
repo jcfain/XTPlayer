@@ -821,19 +821,22 @@ void MainWindow::mediaAction(QString action)
     else if (action == actions.ToggleAxisMultiplier)
     {
         bool multiplier = SettingsHandler::getMultiplierEnabled();
-        textToSpeech->say(multiplier ? "Disable multiplier" : "Enable multiplier");
+        if(!SettingsHandler::getDisableSpeechToText())
+            textToSpeech->say(multiplier ? "Disable multiplier" : "Enable multiplier");
         SettingsHandler::setLiveMultiplierEnabled(!multiplier);
     }
     else if (action == actions.ToggleFunscriptInvert)
     {
         bool inverted = FunscriptHandler::getInverted();
-        textToSpeech->say(inverted ? "Funscript normal" : "Funscript inverted");
+        if(!SettingsHandler::getDisableSpeechToText())
+            textToSpeech->say(inverted ? "Funscript normal" : "Funscript inverted");
         FunscriptHandler::setInverted(!inverted);
     }
      else if(action == actions.TogglePauseAllDeviceActions)
      {
          bool paused = SettingsHandler::getLiveActionPaused();
-         textToSpeech->say(paused ? "Resume action" : "Pause action");
+         if(!SettingsHandler::getDisableSpeechToText())
+            textToSpeech->say(paused ? "Resume action" : "Pause action");
          SettingsHandler::setLiveActionPaused(!paused);
      }
      else if (action == actions.SkipToMoneyShot)
@@ -845,6 +848,38 @@ void MainWindow::mediaAction(QString action)
     {
        if (videoHandler->isPaused() || videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone())
            skipToActionBegin();
+    }
+    else if (action == actions.IncreaseFunscriptModifier || action == actions.DecreaseFunscriptModifier)
+    {
+        bool increase = action == actions.IncreaseFunscriptModifier;
+        QString verb = increase ? "Increase" : "Descreas";
+        int modifier = FunscriptHandler::getModifier();
+        int modedModifier = increase ? modifier + SettingsHandler::getFunscriptModifierStep() : modifier - SettingsHandler::getFunscriptModifierStep();
+        if(modedModifier > 0)
+        {
+            FunscriptHandler::setModifier(modedModifier);
+            if(!SettingsHandler::getDisableSpeechToText())
+                textToSpeech->say(verb + " funscript modifier to "+ QString::number(modedModifier) + "percent");
+        }
+        else
+            if(!SettingsHandler::getDisableSpeechToText())
+                textToSpeech->say("Funscript modifier at minimum "+ QString::number(modedModifier) + "percent");
+    }
+    else if (action == actions.IncreaseOffset || action == actions.DecreaseOffset)
+    {
+        if (videoHandler->isPaused() || videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone())
+        {
+           bool increase = action == actions.IncreaseOffset;
+           QString verb = increase ? "Increase" : "Descreas";
+           auto libraryListItem = playingLibraryListItem->getLibraryListItem();
+           auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
+           int newOffset = increase ? libraryListItemMetaData.offset + SettingsHandler::getFunscriptOffsetStep() : libraryListItemMetaData.offset - SettingsHandler::getFunscriptOffsetStep();
+           SettingsHandler::setLiveOffset(newOffset);
+           libraryListItemMetaData.offset = newOffset;
+           SettingsHandler::updateLibraryListItemMetaData(libraryListItemMetaData);
+           if(!SettingsHandler::getDisableSpeechToText())
+               textToSpeech->say(verb + " offset to " + QString::number(newOffset));
+        }
     }
 }
 
@@ -2012,9 +2047,12 @@ void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString cust
 void MainWindow::processMetaData(LibraryListItem libraryListItem)
 {
     auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
-    if(libraryListItemMetaData.lastLoopEnabled && libraryListItemMetaData.lastLoopStart > -1 && libraryListItemMetaData.lastLoopEnd > libraryListItemMetaData.lastLoopStart)
+    if(libraryListItem.type != LibraryListItemType::VR)
     {
-        _playerControlsFrame->SetLoop(true);
+        if(libraryListItemMetaData.lastLoopEnabled && libraryListItemMetaData.lastLoopStart > -1 && libraryListItemMetaData.lastLoopEnd > libraryListItemMetaData.lastLoopStart)
+        {
+            _playerControlsFrame->SetLoop(true);
+        }
     }
     SettingsHandler::setLiveOffset(libraryListItemMetaData.offset);
 }
@@ -2022,12 +2060,15 @@ void MainWindow::processMetaData(LibraryListItem libraryListItem)
 void MainWindow::updateMetaData(LibraryListItem libraryListItem)
 {
     auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
-    libraryListItemMetaData.lastPlayPosition = videoHandler->position();
-    libraryListItemMetaData.lastLoopEnabled = _playerControlsFrame->getAutoLoop();
-    if(libraryListItemMetaData.lastLoopEnabled)
+    if(libraryListItem.type != LibraryListItemType::VR)
     {
-        libraryListItemMetaData.lastLoopStart = _playerControlsFrame->getSeekSliderLowerValue();
-        libraryListItemMetaData.lastLoopEnd = _playerControlsFrame->getSeekSliderUpperValue();
+        libraryListItemMetaData.lastPlayPosition = videoHandler->position();
+        libraryListItemMetaData.lastLoopEnabled = _playerControlsFrame->getAutoLoop();
+        if(libraryListItemMetaData.lastLoopEnabled)
+        {
+            libraryListItemMetaData.lastLoopStart = _playerControlsFrame->getSeekSliderLowerValue();
+            libraryListItemMetaData.lastLoopEnd = _playerControlsFrame->getSeekSliderUpperValue();
+        }
     }
     SettingsHandler::updateLibraryListItemMetaData(libraryListItemMetaData);
 }
@@ -2591,12 +2632,20 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
                 localpath = path.remove("/video/");
             int indexOfSuffix = localpath.lastIndexOf(".");
             QString localFunscriptPath = localpath.replace(indexOfSuffix, localpath.length() - indexOfSuffix, ".funscript");
+            QString localFunscriptZipPath = localpath.replace(indexOfSuffix, localpath.length() - indexOfSuffix, ".zip");
             QString libraryScriptPath = SettingsHandler::getSelectedLibrary() + QDir::separator() + localFunscriptPath;
+            QString libraryScriptZipPath = SettingsHandler::getSelectedLibrary() + QDir::separator() + localFunscriptZipPath;
             QFile libraryFile(libraryScriptPath);
+            QFile libraryZipFile(libraryScriptZipPath);
             if(libraryFile.exists())
             {
                 LogHandler::Debug("onVRMessageRecieved Script found in url path: "+libraryScriptPath);
                 funscriptPath = libraryScriptPath;
+            }
+            else if(libraryZipFile.exists())
+            {
+                LogHandler::Debug("onVRMessageRecieved Script zip found in url path: "+libraryScriptPath);
+                funscriptPath = libraryScriptZipPath;
             }
             else {
                 LogHandler::Debug("onVRMessageRecieved Script not found in url path");
@@ -2621,14 +2670,24 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
         {
             //Check the deo device local video directory for funscript.
             QString tempPath = videoPath;
+            QString tempZipPath = videoPath;
             int indexOfSuffix = tempPath.lastIndexOf(".");
             QString localFunscriptPath = tempPath.replace(indexOfSuffix, tempPath.length() - indexOfSuffix, ".funscript");
+            QString localFunscriptZipPath = tempZipPath.replace(indexOfSuffix, tempZipPath.length() - indexOfSuffix, ".zip");
+            QString libraryScriptPath = SettingsHandler::getSelectedLibrary() + QDir::separator() + localFunscriptPath;
+            QString libraryScriptZipPath = SettingsHandler::getSelectedLibrary() + QDir::separator() + localFunscriptZipPath;
             QFile localFile(localFunscriptPath);
+            QFile libraryZipFile(libraryScriptZipPath);
             LogHandler::Debug("onVRMessageRecieved Searching local path: "+localFunscriptPath);
             if(localFile.exists())
             {
                 LogHandler::Debug("onVRMessageRecieved script found in path of media");
                 funscriptPath = localFunscriptPath;
+            }
+            else if (libraryZipFile.exists())
+            {
+                LogHandler::Debug("onVRMessageRecieved script zip found in path of media");
+                funscriptPath = libraryScriptZipPath;
             }
         }
 
@@ -2637,13 +2696,21 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
             LogHandler::Debug("onVRMessageRecieved funscript not found in app data");
             //Check the user selected library location.
             QString libraryScriptFile = videoFile.fileName().remove(videoFile.fileName().lastIndexOf('.'), videoFile.fileName().length() -  1) + ".funscript";
+            QString libraryScriptZipFile = videoFile.fileName().remove(videoFile.fileName().lastIndexOf('.'), videoFile.fileName().length() -  1) + ".zip";
             LogHandler::Debug("onVRMessageRecieved Searching for file in library root: "+ libraryScriptFile);
             QString libraryScriptPath = SettingsHandler::getSelectedLibrary() + QDir::separator() + libraryScriptFile;
+            QString libraryScriptZipPath = SettingsHandler::getSelectedLibrary() + QDir::separator() + libraryScriptZipFile;
             QFile libraryFile(libraryScriptPath);
+            QFile libraryZipFile(libraryScriptZipPath);
             if(libraryFile.exists())
             {
                 LogHandler::Debug("onVRMessageRecieved Script found in root: "+libraryScriptPath);
                 funscriptPath = libraryScriptPath;
+            }
+            else if(libraryZipFile.exists())
+            {
+                LogHandler::Debug("onVRMessageRecieved Script zip found in root: "+libraryScriptZipPath);
+                funscriptPath = libraryScriptZipPath;
             }
             else {
                 LogHandler::Debug("onVRMessageRecieved Script not found");
@@ -2659,7 +2726,7 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
                 if (!SettingsHandler::getDisableSpeechToText())
                     textToSpeech->say("Script for video playing in VR not found. Please check your computer to select a script.");
                 funscriptFileSelectorOpen = true;
-                funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + videoFile.fileName(), SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
+                funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + videoFile.fileName(), SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript);;Zip (*.zip)");
                 funscriptFileSelectorOpen = false;
                 saveLinkedScript = true;
                 //LogHandler::Debug("funscriptPath: "+funscriptPath);
@@ -2674,6 +2741,7 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
         if(!funscriptPath.isEmpty())
         {
             LogHandler::Debug("Starting sync: "+funscriptPath);
+            processVRMetaData(videoPath, funscriptPath, packet.duration);
             _syncHandler->syncVRFunscript(funscriptPath);
             if(saveLinkedScript)
             {
@@ -2693,6 +2761,32 @@ void MainWindow::onVRMessageRecieved(VRPacket packet)
 //    }
 }
 
+void MainWindow::processVRMetaData(QString videoPath, QString funscriptPath, qint64 duration)
+{
+    QFileInfo videoFile(videoPath);
+    QString fileNameTemp = videoFile.fileName();
+    QString videoPathTemp = videoFile.fileName();
+    QString mediaExtension = "*" + fileNameTemp.remove(0, fileNameTemp.length() - (fileNameTemp.length() - fileNameTemp.lastIndexOf('.')));
+    QString scriptNoExtension = videoPathTemp.remove(videoPathTemp.lastIndexOf('.'), videoPathTemp.length() - 1);
+    QString zipFile;
+    if(funscriptPath.endsWith(".zip"))
+        zipFile = funscriptPath;
+    LibraryListItem item
+    {
+        LibraryListItemType::VR,
+        videoPath, // path
+        videoFile.fileName(), // name
+        scriptNoExtension, //nameNoExtension
+        funscriptPath, // script
+        scriptNoExtension,
+        mediaExtension,
+        SettingsHandler::getSelectedThumbsDir() + videoFile.fileName() + "jpg",
+        zipFile,
+        videoFile.birthTime().date(),
+        (unsigned)duration
+    };
+    processMetaData(item);
+}
 
 void MainWindow::on_gamepad_sendTCode(QString value)
 {

@@ -39,6 +39,10 @@ public:
     void play(QString funscript);
     void stop();
 
+    static void setModifier(int percentage);
+    static void resetModifier();
+    static int getModifier();
+
 
 private:
     static QMutex mutexStat;
@@ -58,6 +62,7 @@ private:
     int n;
     qint64 _funscriptMin = 0;
     qint64 _funscriptMax = -1;
+    static double _modifier;
 };
 
 #endif // FUNSCRIPTHANDLER_H

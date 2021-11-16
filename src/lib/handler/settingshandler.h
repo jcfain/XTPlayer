@@ -230,6 +230,11 @@ public:
     static int getHTTPPort();
     static void setHTTPPort(int value);
 
+    static void setFunscriptModifierStep(int value);
+    static int getFunscriptModifierStep();
+    static void setFunscriptOffsetStep(int value);
+    static int getFunscriptOffsetStep();
+
     static void SetChannelMapDefaults();
     static void SetGamepadMapDefaults();
     static void SetupDecoderPriority();
@@ -339,6 +344,11 @@ private:
     static qint64 _httpChunkSize;
     static int _httpPort;
     static QString _vrLibrary;
+
+
+    static int _funscriptModifierStep;
+    static int _funscriptOffsetStep;
+
 
     static QHash<QString, bool> _funscriptLoaded;
     static QSettings* settings;
