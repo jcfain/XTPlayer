@@ -124,12 +124,11 @@ void DeoHandler::readData()
         qint64 duration = jsonObject["duration"].toDouble() * 1000;
         qint64 currentTime = jsonObject["currentTime"].toDouble() * 1000;
         float playbackSpeed = jsonObject["playbackSpeed"].toDouble() * 1.0;
-        bool playing = jsonObject["playerState"].toInt();
-        if(playing && _currentTime == currentTime)
-            playing = false;
+        bool playing = jsonObject["playerState"].toInt() == 0; // 0 == true? right? I know...
 //        LogHandler::Debug("Deo path: "+path);
 //        LogHandler::Debug("Deo duration: "+QString::number(duration));
 //        LogHandler::Debug("Deo currentTime------------------------------------------------> "+QString::number(currentTime));
+//        LogHandler::Debug("Deo _currentTime------------------------------------------------> "+QString::number(_currentTime));
 //        LogHandler::Debug("Deo playbackSpeed: "+QString::number(playbackSpeed));
 //        LogHandler::Debug("Deo playing: "+QString::number(playing));
         _mutex.lock();

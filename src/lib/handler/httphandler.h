@@ -22,6 +22,7 @@ class HttpHandler : public HttpRequestHandler
 {
 signals:
     void streamChange(bool running);
+    void chunkProcessed(HttpDataPtr data);
 public:
     HttpHandler(VideoHandler* videoHandler, QObject *parent = nullptr);
     ~HttpHandler();

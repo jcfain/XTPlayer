@@ -5,8 +5,10 @@ var showGlobal = "All";
 var deoVideoNode;
 var deoSourceNode;
 var useDeoWeb = false;
-
-window.onload = function httpGetAsync(callback)
+document.addEventListener("DOMContentLoaded", function() {
+  httpGetAsync();
+});
+function httpGetAsync(callback)
 {
 	thumbsContainerNode = document.getElementById("thumbsContainer");
 /* 	deoVideoNode = document.getElementById("deoVideoPlayer");

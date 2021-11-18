@@ -58,15 +58,14 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
                 LogHandler::setUserDebug(true);
             else if(arg.toLower().startsWith("-reset"))
                 SettingsHandler::Default();
+            else if(arg.toLower().startsWith("-debugVideo"))
+            {
+                qputenv("QTAV_FFMPEG_LOG", "debug");
+                QtAV::setLogLevel(LogLevel::LogAll);
+                //param level can be: quiet, panic, fatal, error, warn, info, verbose, debug, trace
+                QtAV::setFFmpegLogLevel("trace");
+            }
         }
-    }
-
-    if(LogHandler::getUserDebug())
-    {
-        qputenv("QTAV_FFMPEG_LOG", "debug");
-        QtAV::setLogLevel(LogLevel::LogAll);
-        //param level can be: quiet, panic, fatal, error, warn, info, verbose, debug, trace
-        QtAV::setFFmpegLogLevel("verbose");
     }
 
     loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading UI...", Qt::AlignBottom, Qt::white);
@@ -852,7 +851,7 @@ void MainWindow::mediaAction(QString action)
     else if (action == actions.IncreaseFunscriptModifier || action == actions.DecreaseFunscriptModifier)
     {
         bool increase = action == actions.IncreaseFunscriptModifier;
-        QString verb = increase ? "Increase" : "Descreas";
+        QString verb = increase ? "Increase" : "Decrease";
         int modifier = FunscriptHandler::getModifier();
         int modedModifier = increase ? modifier + SettingsHandler::getFunscriptModifierStep() : modifier - SettingsHandler::getFunscriptModifierStep();
         if(modedModifier > 0)
@@ -870,7 +869,7 @@ void MainWindow::mediaAction(QString action)
         if (videoHandler->isPaused() || videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone())
         {
            bool increase = action == actions.IncreaseOffset;
-           QString verb = increase ? "Increase" : "Descreas";
+           QString verb = increase ? "Increase" : "Decrease";
            auto libraryListItem = playingLibraryListItem->getLibraryListItem();
            auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
            int newOffset = increase ? libraryListItemMetaData.offset + SettingsHandler::getFunscriptOffsetStep() : libraryListItemMetaData.offset - SettingsHandler::getFunscriptOffsetStep();
@@ -1765,20 +1764,23 @@ void MainWindow::on_actionSelect_library_triggered()
 
 void MainWindow::on_LibraryList_itemClicked(QListWidgetItem *item)
 {
-    auto selectedItem = item->data(Qt::UserRole).value<LibraryListItem>();
-    if((videoHandler->isPlaying() && !videoHandler->isPaused()))
+    if(item)
     {
-        auto playingFile = videoHandler->file();
-        _playerControlsFrame->setPlayIcon(playingFile == selectedItem.path);
+        auto selectedItem = item->data(Qt::UserRole).value<LibraryListItem>();
+        if((videoHandler->isPlaying() && !videoHandler->isPaused()))
+        {
+            auto playingFile = videoHandler->file();
+            _playerControlsFrame->setPlayIcon(playingFile == selectedItem.path);
+        }
+        else if(_syncHandler->isPlayingStandAlone() && !_syncHandler->isPaused())
+        {
+            auto playingFile = _syncHandler->getPlayingStandAloneScript();
+            _playerControlsFrame->setPlayIcon(playingFile == selectedItem.path);
+        }
+        ui->statusbar->showMessage(selectedItem.nameNoExtension);
+        selectedLibraryListItem = (LibraryListWidgetItem*)item;
+        selectedLibraryListIndex = libraryList->currentRow();
     }
-    else if(_syncHandler->isPlayingStandAlone() && !_syncHandler->isPaused())
-    {
-        auto playingFile = _syncHandler->getPlayingStandAloneScript();
-        _playerControlsFrame->setPlayIcon(playingFile == selectedItem.path);
-    }
-    ui->statusbar->showMessage(selectedItem.nameNoExtension);
-    selectedLibraryListItem = (LibraryListWidgetItem*)item;
-    selectedLibraryListIndex = libraryList->currentRow();
 }
 
 void MainWindow::regenerateThumbNail()
@@ -1810,18 +1812,21 @@ void MainWindow::on_LibraryList_itemDoubleClicked(QListWidgetItem *item)
 
 void MainWindow::playFileFromContextMenu()
 {
-    LibraryListItem libraryListItem = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
-    if(libraryListItem.type == LibraryListItemType::Audio || libraryListItem.type == LibraryListItemType::Video || libraryListItem.type == LibraryListItemType::FunscriptType)
+    if(libraryList->count() > 0)
     {
-        stopAndPlayMedia(libraryListItem);
-    }
-    else if(libraryListItem.type == LibraryListItemType::PlaylistInternal)
-    {
-        loadPlaylistIntoLibrary(libraryListItem.nameNoExtension);
-        if(selectedPlaylistItems.length() > 0)
+        LibraryListItem libraryListItem = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
+        if(libraryListItem.type == LibraryListItemType::Audio || libraryListItem.type == LibraryListItemType::Video || libraryListItem.type == LibraryListItemType::FunscriptType)
         {
-            LibraryListItem libraryListItem = setCurrentLibraryRow(0)->getLibraryListItem();
             stopAndPlayMedia(libraryListItem);
+        }
+        else if(libraryListItem.type == LibraryListItemType::PlaylistInternal)
+        {
+            loadPlaylistIntoLibrary(libraryListItem.nameNoExtension);
+            if(selectedPlaylistItems.length() > 0)
+            {
+                LibraryListItem libraryListItem = setCurrentLibraryRow(0)->getLibraryListItem();
+                stopAndPlayMedia(libraryListItem);
+            }
         }
     }
 }
@@ -2313,11 +2318,15 @@ void MainWindow::on_PlayBtn_clicked()
 
 LibraryListWidgetItem* MainWindow::setCurrentLibraryRow(int row)
 {
-    libraryList->setCurrentRow(row);
-    auto item = (LibraryListWidgetItem*)libraryList->item(row);
-    on_LibraryList_itemClicked(item);
-    item->setSelected(true);
-    return item;
+    if(libraryList->count() > 0)
+    {
+        libraryList->setCurrentRow(row);
+        auto item = (LibraryListWidgetItem*)libraryList->item(row);
+        on_LibraryList_itemClicked(item);
+        item->setSelected(true);
+        return item;
+    }
+    return nullptr;
 }
 
 void MainWindow::on_togglePaused(bool paused)
@@ -3164,6 +3173,13 @@ void MainWindow::on_actionAbout_triggered()
                       "<a href='https://github.com/nezticle/qtcompress'>https://github.com/nezticle/qtcompress</a>");
     qtcompressInfo.setAlignment(Qt::AlignHCenter);
     layout.addWidget(&qtcompressInfo);
+    QLabel qthttpServerInfo;
+    qthttpServerInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    qthttpServerInfo.setText("<b>HttpServer</b><br>"
+                      "Copyright (C) 2019 Addison Elliott (MIT)<br>"
+                      "<a href='https://github.com/addisonElliott/HttpServer'>https://github.com/addisonElliott/HttpServer</a>");
+    qthttpServerInfo.setAlignment(Qt::AlignHCenter);
+    layout.addWidget(&qthttpServerInfo);
     aboutWindow.setLayout(&layout);
     aboutWindow.exec();
 }

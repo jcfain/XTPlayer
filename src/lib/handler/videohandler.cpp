@@ -98,7 +98,6 @@ void VideoHandler::createLayout(VideoRenderer* videoRenderer)
     _videoRenderer->widget()->setGeometry(_parent->geometry());
     _mediaGrid->addWidget(_videoRenderer->widget(), 0, 0, 3, 5);
     _mediaGrid->addWidget(_videoLoadingLabel, 1, 2);
-
 }
 VideoHandler::~VideoHandler()
 {

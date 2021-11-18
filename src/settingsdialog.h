@@ -87,6 +87,8 @@ private slots:
     void onRange_valueChanged(QString name, int value);
     void onRange_mouseRelease(QString name);
     void onOffSet_valueChanged(int value);
+    void onOffSetStep_valueChanged(int value);
+    void onRangeModifierStep_valueChanged(int value);
     void on_device_connectionChanged(ConnectionChangedSignal event);
     void on_device_error(QString error);
     void on_deo_connectionChanged(ConnectionChangedSignal event);

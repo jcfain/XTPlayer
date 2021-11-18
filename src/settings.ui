@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1224</width>
-    <height>618</height>
+    <height>657</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -456,7 +456,7 @@
          <x>10</x>
          <y>390</y>
          <width>631</width>
-         <height>141</height>
+         <height>161</height>
         </rect>
        </property>
        <property name="title">
@@ -468,7 +468,7 @@
           <x>10</x>
           <y>30</y>
           <width>611</width>
-          <height>99</height>
+          <height>118</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="skipToMoneyShotGrid">
@@ -521,14 +521,14 @@
       <widget class="QSpinBox" name="finscriptModifierSpinBox">
        <property name="geometry">
         <rect>
-         <x>760</x>
+         <x>780</x>
          <y>410</y>
-         <width>81</width>
+         <width>111</width>
          <height>22</height>
         </rect>
        </property>
        <property name="toolTip">
-        <string>Increases/Decreases the funscript range\n
+        <string>Increases/Decreases the funscript range
 THIS VALUE WILL BR RESET ON SCRIPT CHANGE!</string>
        </property>
        <property name="suffix">
@@ -549,7 +549,7 @@ THIS VALUE WILL BR RESET ON SCRIPT CHANGE!</string>
         <rect>
          <x>660</x>
          <y>410</y>
-         <width>91</width>
+         <width>111</width>
          <height>21</height>
         </rect>
        </property>
@@ -559,6 +559,105 @@ THIS VALUE WILL BR RESET ON SCRIPT CHANGE!</string>
        </property>
        <property name="text">
         <string>Range modifier</string>
+       </property>
+      </widget>
+      <widget class="QSpinBox" name="rangeModifierStepSpinBox">
+       <property name="geometry">
+        <rect>
+         <x>780</x>
+         <y>440</y>
+         <width>111</width>
+         <height>22</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>This sets the step for when changing the range modifier value in from a gamepad or keyboard.</string>
+       </property>
+       <property name="suffix">
+        <string>%</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_5">
+       <property name="geometry">
+        <rect>
+         <x>660</x>
+         <y>440</y>
+         <width>111</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>This sets the step for when changing the range modifier value in from a gamepad or keyboard.</string>
+       </property>
+       <property name="text">
+        <string>Range modifier step</string>
+       </property>
+      </widget>
+      <widget class="QSpinBox" name="offsetSpinboxStep">
+       <property name="geometry">
+        <rect>
+         <x>780</x>
+         <y>500</y>
+         <width>111</width>
+         <height>22</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>This sets the step for when changing the range modifier value in from a gamepad or keyboard.</string>
+       </property>
+       <property name="suffix">
+        <string>ms</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_6">
+       <property name="geometry">
+        <rect>
+         <x>660</x>
+         <y>500</y>
+         <width>111</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>This sets the step for when changing the rang modifier value in from a gamepad or keyboard.</string>
+       </property>
+       <property name="text">
+        <string>Offset step</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_7">
+       <property name="geometry">
+        <rect>
+         <x>660</x>
+         <y>470</y>
+         <width>111</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>This sets the offset for all scripts unless the script has its own offset value.</string>
+       </property>
+       <property name="text">
+        <string>Global offset</string>
+       </property>
+      </widget>
+      <widget class="QSpinBox" name="offsetSpinbox">
+       <property name="geometry">
+        <rect>
+         <x>780</x>
+         <y>470</y>
+         <width>111</width>
+         <height>22</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>This sets the offset for all scripts unless the script has its own offset value.</string>
+       </property>
+       <property name="suffix">
+        <string>ms</string>
+       </property>
+       <property name="maximum">
+        <number>98</number>
        </property>
       </widget>
      </widget>

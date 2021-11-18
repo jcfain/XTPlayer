@@ -300,6 +300,24 @@ void SettingsDialog::setupUi()
         connect(ui.chunkSizeDoubleSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &SettingsDialog::on_chunkSizeDouble_valueChanged);
         connect(ui.httpPortSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_httpPort_valueChanged);
 
+
+        ui.offsetSpinbox->setMinimum(std::numeric_limits<int>::lowest());
+        ui.offsetSpinbox->setMaximum(std::numeric_limits<int>::max());
+        ui.offsetSpinbox->setValue(SettingsHandler::getoffSet());
+        connect(ui.offsetSpinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onOffSet_valueChanged);
+
+        ui.offsetSpinboxStep->setMinimum(std::numeric_limits<int>::lowest());
+        ui.offsetSpinboxStep->setMaximum(std::numeric_limits<int>::max());
+        ui.offsetSpinboxStep->setValue(SettingsHandler::getFunscriptOffsetStep());
+        connect(ui.offsetSpinboxStep, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onOffSetStep_valueChanged);
+
+        ui.rangeModifierStepSpinBox->setMinimum(std::numeric_limits<int>::lowest());
+        ui.rangeModifierStepSpinBox->setMaximum(std::numeric_limits<int>::max());
+        ui.rangeModifierStepSpinBox->setValue(SettingsHandler::getFunscriptModifierStep());
+        connect(ui.rangeModifierStepSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onRangeModifierStep_valueChanged);
+
+
+
         _interfaceInitialized = true;
     }
 }
@@ -648,24 +666,11 @@ void SettingsDialog::setUpTCodeAxis()
 
      setUpMultiplierUi(SettingsHandler::getMultiplierEnabled());
 
-     offSetLabel = new QLabel("Sync offset");
-     offSetLabel->setFont(font);
-     offSetLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-     offSetSpinBox = new QSpinBox(this);
-     offSetSpinBox->setSuffix("ms");
-     offSetSpinBox->setSingleStep(1);
-     offSetSpinBox->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-     offSetSpinBox->setMinimum(std::numeric_limits<int>::lowest());
-     offSetSpinBox->setMaximum(std::numeric_limits<int>::max());
-     offSetSpinBox->setValue(SettingsHandler::getoffSet());
-     ui.RangeSettingsGrid->addWidget(offSetLabel, sliderGridRow, 0);
-     ui.RangeSettingsGrid->addWidget(offSetSpinBox, sliderGridRow + 1,0);
-     connect(offSetSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onOffSet_valueChanged);
 
      QPushButton* zeroOutButton = new QPushButton(this);
      zeroOutButton->setText("All axis home");
      connect(zeroOutButton, & QPushButton::clicked, this, &SettingsDialog::on_tCodeHome_clicked);
-     ui.RangeSettingsGrid->addWidget(zeroOutButton, sliderGridRow + 1, 1);
+     ui.RangeSettingsGrid->addWidget(zeroOutButton, sliderGridRow + 1, 0);
 
      QLabel* xRangeStepLabel = new QLabel(this);
      xRangeStepLabel->setText("Stroke range change step");
@@ -1026,6 +1031,16 @@ void SettingsDialog::onRange_mouseRelease(QString name)
 void SettingsDialog::onOffSet_valueChanged(int value)
 {
     SettingsHandler::setoffSet(value);
+}
+
+void SettingsDialog::onOffSetStep_valueChanged(int value)
+{
+    SettingsHandler::setFunscriptOffsetStep(value);
+}
+
+void SettingsDialog::onRangeModifierStep_valueChanged(int value)
+{
+    SettingsHandler::setFunscriptModifierStep(value);
 }
 
 void SettingsDialog::on_deo_connectionChanged(ConnectionChangedSignal event)
@@ -1634,7 +1649,7 @@ void SettingsDialog::on_launchWelcomeDialog_clicked()
 void SettingsDialog::on_videoRenderer_textChanged(const QString &value)
 {
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "Warning!", "Changing the renderer can cause issues.\nIf you have issues remember your current renderer ("+XVideoRendererReverseMap.value(SettingsHandler::getSelectedVideoRenderer())+")\nSo you can change it back.\nA restart WILL be required.\nChange your renderer?",
+    reply = QMessageBox::question(this, "Warning!", "Changing the renderer can cause issues. Particularly in full screen.\nIf you have issues, REMEMBER your current renderer:\n("+XVideoRendererReverseMap.value(SettingsHandler::getSelectedVideoRenderer())+")\nSo you can change it back. The default renderer is OpenGLWidget.\nA restart WILL be required.\nChange your renderer?",
                                   QMessageBox::Yes|QMessageBox::No);
     XVideoRenderer renderer = XVideoRendererMap.value(value);
     if(reply == QMessageBox::Yes && _videoHandler->setVideoRenderer(renderer))
