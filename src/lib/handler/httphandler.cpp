@@ -19,7 +19,7 @@ HttpHandler::HttpHandler(VideoHandler* videoHandler, QObject *parent):
     router.addRoute("GET", "^/media", this, &HttpHandler::handleVideoList);
     router.addRoute("GET", "^/thumb/.*$", this, &HttpHandler::handleThumbFile);
     router.addRoute("GET", "^/video/.*$", this, &HttpHandler::handleVideoStream);
-    router.addRoute("GET", "^/deoTest", this, &HttpHandler::handleDeo);
+    router.addRoute("GET", "^/deotest", this, &HttpHandler::handleDeo);
 
 //    router.addRoute("GET", "^/users/(\\w*)/?$", this, &HttpHandler::handleGetUsername);
 //    router.addRoute({"GET", "POST"}, "^/gzipTest/?$", this, &HttpHandler::handleGzipTest);

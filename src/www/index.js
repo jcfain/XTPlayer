@@ -306,7 +306,7 @@ function setThumbSize(value, userClick) {
 
 //Settings
 function openSettings() {
-  settingsNode.style.display = "block";
+  settingsNode.style.display = "flex";
 }
 function closeSettings() {
   settingsNode.style.display = "none";

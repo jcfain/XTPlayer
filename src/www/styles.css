@@ -62,12 +62,13 @@ body {
 .modal-content {
     display: flex;
     flex-flow: column;
+    flex-wrap: nowrap;
     align-items: center;
     background-color: black;
-    margin: 15% auto; /* 15% from the top and centered */
+    margin: auto;
     padding: 20px;
     border: 1px solid #888;
-    width: 25%;
+    max-width: 32%;
     border-radius: 25px;
 }
 
@@ -75,6 +76,7 @@ body {
     display: flex;
     flex-flow: row;
     width: 100%;
+    flex-basis: 15%;
 }
 
 .modal-body {
@@ -83,6 +85,8 @@ body {
     align-items: center;
     margin-top: 16px;
     margin-bottom: 16px;
+    flex-basis: 85%;
+    align-items: flex-start;
 }
 .modal-title {
     align-self: center;
@@ -129,7 +133,7 @@ select:hover, button:hover, input:hover {
 .icon-button > img {
     width: 16px;
     height: 16px;
-    padding-top: 3px;
+    margin-top: 3px;
 }
 
 .header-button {
@@ -156,7 +160,6 @@ select:hover, button:hover, input:hover {
 
 .media-item 
 {
-    margin: 5px;
     overflow: hidden;
 }
 .media-item img
@@ -169,7 +172,6 @@ select:hover, button:hover, input:hover {
 -webkit-box-orient: vertical; */
 .media-item .name
 { 
-
     text-overflow: ellipsis;
     flex-basis: 40%;
     text-align: center;
