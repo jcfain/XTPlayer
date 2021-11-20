@@ -2,39 +2,46 @@ var mediaListObj = [];
 var thumbsContainerNode;
 var sortByGlobal = "nameAsc";
 var showGlobal = "All";
-var deoVideoNode;
-var deoSourceNode;
-var useDeoWeb = false;
+var settingsNode;
+var thumbSizeGlobal = 0;
+//var useDeoWeb;
+//var deoVideoNode;
+//var deoSourceNode;
 document.addEventListener("DOMContentLoaded", function() {
-  httpGetAsync();
+  loadPage();
 });
-function httpGetAsync(callback)
+function loadPage()
 {
+	settingsNode = document.getElementById("settingsModal");
 	thumbsContainerNode = document.getElementById("thumbsContainer");
-/* 	deoVideoNode = document.getElementById("deoVideoPlayer");
-	deoSourceNode = document.getElementById("deoVideoSource");
-	
-	deoVideoNode.addEventListener("end", onVideoStop); */
-	
+
 	sortByGlobal = JSON.parse(window.localStorage.getItem("sortBy"));
 	showGlobal = JSON.parse(window.localStorage.getItem("show"));
+	thumbSizeGlobal = JSON.parse(window.localStorage.getItem("thumbSize"));
+/* 	
+	deoVideoNode = document.getElementById("deoVideoPlayer");
+	deoSourceNode = document.getElementById("deoVideoSource");
+	deoVideoNode.addEventListener("end", onVideoStop); 
 	useDeoWeb = JSON.parse(window.localStorage.getItem("useDeoWeb"));
-	
+
 	if(useDeoWeb) {
 		toggleUseDeo(useDeoWeb, false);
 		new ResizeObserver(onResizeDeo).observe(deoVideoNode)
-	}
+	} 
+*/
 	
 	loadMediaFromServer();
 }
 
+/* 
 function onResizeDeo() {
 	if(useDeoWeb) {
 		thumbsContainerNode.style.maxHeight = "calc(100vh - "+ (+deoVideoNode.offsetHeight + 120) + "px)";
 	}
-}
+} 
+*/
 
-function loadMediaFromServer() {
+async function loadMediaFromServer() {
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', "/media", true);
 	xhr.responseType = 'json';
@@ -73,11 +80,18 @@ function onVideosLoad(err, mediaList)
 			obj.displayName = "(MFS) " + obj.name;
 		mediaListObj.push(obj);
 	}
+/* 	
 	if(useDeoWeb && mediaListObj.length > 0)
-		loadVideo(mediaListObj[0]);
+		loadVideo(mediaListObj[0]); 
+*/
+	updateSettingsUI();
+  }
+}
+
+function updateSettingsUI() {
+	setThumbSize(thumbSizeGlobal, false);
 	sort(sortByGlobal, false);
 	loadMedia(show(showGlobal, false))
-  }
 }
 
 function loadMedia(mediaList) {
@@ -89,7 +103,7 @@ function loadMedia(mediaList) {
 		divnode.id = "NoMedia";
 		divnode.innerText = "No media found, it may be loading.";
 		medialistNode.appendChild(divnode);
-		deoVideoNode.style.display = "none"
+		//deoVideoNode.style.display = "none"
 		return;
 	}
 	var noMediaElement = document.getElementById("NoMedia");
@@ -98,19 +112,34 @@ function loadMedia(mediaList) {
 	
 	var createClickHandler = function(obj) { 
 		return function() { 
-			loadVideo(obj); 
+			//loadVideo(obj); 
 			playVideo(obj); 
 		} 
 	};
 	
+	var textHeight = 0
+	var width = 0;
+	var height = 0;
+	var fontSize = 0;
 	for(var i=0; i<mediaList.length;i++)
 	{
 		var obj = mediaList[i];
+		if(!thumbSizeGlobal) {
+			setThumbSize(obj.thumbSize, true);
+			setThumbSize(obj.thumbSize, false);
+		}
+		if(!textHeight)
+		{
+			textHeight = (thumbSizeGlobal * 0.25);
+			width = thumbSizeGlobal + (thumbSizeGlobal * 0.15) + "px";
+			height = thumbSizeGlobal + textHeight + "px";
+			fontSize = (textHeight * 0.4) + "px";
+		}
 		var divnode = document.createElement("div"); 
 		divnode.id = obj.id+"item"+i
 		divnode.className += "media-item"
-		divnode.style.width = obj.thumbSize + 60 + "px";
-		divnode.style.height = obj.thumbSize + 25 + "px";
+		divnode.style.width = width;
+		divnode.style.height = height;
 		divnode.title = obj.name;
 		var anode = document.createElement("a"); 
 		anode.className += "mediaLink"
@@ -118,16 +147,20 @@ function loadMedia(mediaList) {
 			anode.className += " mediaLinkMFS"
 		if(!obj.hasScript)
 			anode.className += " mediaLinkNoScript"
+		anode.style.width = width;
+		anode.style.height = height;
 		anode.onclick = createClickHandler(obj);
 		var image = document.createElement("img"); 
 		image.src = "/thumb/" + obj.relativeThumb;
-		image.style.maxWidth = obj.thumbSize + 60 + "px";
-		image.style.maxHeight = obj.thumbSize + "px";
-		image.style.objectFit = "contain";
+		image.style.maxWidth = thumbSizeGlobal + "px";
+		image.style.maxHeight = thumbSizeGlobal + "px";
 		image.id = obj.id;
 		var namenode = document.createElement("div");
 		namenode.innerText = obj.displayName;
 		namenode.className += "name"
+		namenode.style.width = width;
+		namenode.style.height = textHeight + "px";
+		namenode.style.fontSize = fontSize;
 		
 		divnode.appendChild(anode);
 		anode.appendChild(image);
@@ -140,15 +173,6 @@ function removeAllChildNodes(parent) {
     while (parent.firstChild) {
         parent.removeChild(parent.firstChild);
     }
-}
-function showChange(selectNode) {
-	sort(sortByGlobal, true);
-	loadMedia(show(selectNode.value, true));
-}
-
-function sortChange(selectNode) {
-	sort(selectNode.value, true);
-	loadMedia(show(showGlobal, true));
 }
 
 function sort(value, userClick) {
@@ -222,6 +246,7 @@ function show(value, userClick) {
 	return filteredMedia;
 }
 
+/* 
 function onClickUseDeoWebCheckbox(checkbox)
 {
 	toggleUseDeo(checkbox.checked, true);
@@ -256,16 +281,62 @@ function loadVideo(obj) {
 			DEO.setVolume(deoVideoNode, 0.3);
 		DEO.play(deoVideoNode);
 	}
-}
+} 
+*/
 
 function playVideo(obj) {
-	if(useDeoWeb) {
+/* 	if(useDeoWeb) {
 		DEO.start(deoVideoNode);
-	} else {
-		//window.open("/video"+ obj.relativePath, "_self")
+	} else { */
 		window.open("/video"+ obj.relativePath)
+//	}
+}
+/* function onVideoStop() {
+	deoVideoNode.style.display = "none"
+} */
+function setThumbSize(value, userClick) {
+	if(!userClick) {
+		if(value)
+			document.getElementById("thumbSize").value = value.toString();
+	} else {
+		window.localStorage.setItem("thumbSize", parseInt(value, 10));
+		thumbSizeGlobal = parseInt(value, 10);
 	}
 }
-function onVideoStop() {
-	//deoVideoNode.style.display = "none"
+
+//Settings
+function openSettings() {
+  settingsNode.style.display = "block";
+}
+function closeSettings() {
+  settingsNode.style.display = "none";
+}
+function showChange(selectNode) {
+	sort(sortByGlobal, true);
+	loadMedia(show(selectNode.value, true));
+}
+
+function sortChange(selectNode) {
+	sort(selectNode.value, true);
+	loadMedia(show(showGlobal, true));
+}
+
+function thumbSizeChange(selectNode) {
+	setThumbSize(selectNode.value, true);
+	loadMedia(show(showGlobal, true));
+}
+
+function defaultSettings() {
+	var r = confirm("Are you sure you want to reset ALL settings to default?");
+	if (r) {
+		window.localStorage.clear();
+		window.location.reload();
+	} 
+}
+function deleteSettings() {
+	var r = confirm("Are you sure you want to delete ALL settings from localStorage and close the window?");
+	if (r) {
+		window.localStorage.clear();
+		window.close();
+	} 
 }

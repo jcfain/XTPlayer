@@ -20,26 +20,79 @@
 	</div>
 	<div class="headerSection toolBar">
 		<div class="toolBarGroup">
-			<label class="selectLabel" for="show">Show:
-				<select name="show" id="show" onchange="showChange(this)">
-				  <option value="All">All</option>
-				  <option value="3DOnly">3D only</option>
-				  <option value="2DAndAudioOnly">2D and audio only</option>
-				</select>
-			</label>
-			<label class="selectLabel" for="sortBy">Sort by:
-				<select name="sortBy" id="sortBy" onchange="sortChange(this)">
-				  <option value="nameAsc">Name (asc)</option>
-				  <option value="nameDesc">Name (desc)</option>
-				  <option value="dateAsc">Date (asc)</option>
-				  <option value="dateDesc">Date (desc)</option>
-				</select>
-			</label>
-<!-- 			<button id="refreshButton" class="refreshButton" onclick="loadMediaFromServer()">
-				<img class="refreshButtonImage" src="://images/icons/reload.svg"/>
-			</button> -->
+			<button id="refreshButton" class="header-button icon-button" onclick="loadMediaFromServer()">
+				<img class="buttonImage" src="://images/icons/reload.svg"/>
+			</button>
+			<button id="settingsButton" class="header-button icon-button" onclick="openSettings()">
+				<image class="buttonImage" src="://images/icons/settings.svg"/>
+			</button>
 		</div>
 	</div>
+</div>
+<div id="settingsModal" class="modal">
+  <div class="modal-content">
+	<div class="modal-header">
+		<span class="modal-title">Settings</span>
+		<button class="close-modal icon-button" onclick="closeSettings()">
+			<image class="buttonImage" src="://images/icons/x.svg"/>
+		</button>
+	</div>
+	<div class="modal-body">
+		<div class="toolBar">
+			<div class="toolBarGroup">
+				<div class="formElement">
+					<label for="show">
+						<span class="formLabel">Show</span>
+						<select name="show" id="show" onchange="showChange(this)">
+							<option value="All">All</option>
+							<option value="3DOnly">3D only</option>
+							<option value="2DAndAudioOnly">2D and audio only</option>
+						</select>
+					</label>
+				</div>
+				<div class="formElement">
+					<label for="sortBy">
+						<span class="formLabel">Sort by</span>
+						<select name="sortBy" id="sortBy" onchange="sortChange(this)">
+							<option value="nameAsc">Name (asc)</option>
+							<option value="nameDesc">Name (desc)</option>
+							<option value="dateAsc">Date (asc)</option>
+							<option value="dateDesc">Date (desc)</option>
+						</select>
+					</label>
+				</div>
+				<div class="formElement">
+					<label for="thumbSize">
+						<span class="formLabel">Thumb size</span>
+						<select name="thumbSize" id="thumbSize" onchange="thumbSizeChange(this)">
+							<option value="50">50px</option>
+							<option value="75">75px</option>
+							<option value="100">100px</option>
+							<option value="150">150px</option>
+							<option value="175">175px</option>
+							<option value="200">200px</option>
+							<option value="225">225px</option>
+							<option value="250">250px</option>
+							<option value="275">275px</option>
+							<option value="300">300px</option>
+						</select>
+					</label>
+				</div>
+				<div class="formElement">
+					<button id="defaultSettingsButton" onclick="defaultSettings()">
+						Default All
+					</button>
+				</div>
+<!-- 				<div class="formElement">
+					<button id="defaultSettingsButton" onclick="deleteSettings()">
+						Delete All
+					</button>
+				</div> -->
+			</div>
+		</div>
+	</div>
+  </div>
+
 </div>
 <!-- <deo-video style="display: none;" id="deoVideoPlayer" class="deoVideo">
 	<source id="deoVideoSource"/>

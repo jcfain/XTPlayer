@@ -1,115 +1,202 @@
 body {
-	background-color: black;
-	color: white;
+    background-color: black;
+    color: white;
     display: flex;
     flex-direction: column;
-	margin-right: 1rem;
+    margin-right: 1rem;
     margin-left: 1rem;
+    font-family: sans-serif;
 }
 .header {
-	display: flex;
+    display: flex;
     flex-flow: nowrap;
-	justify-content: space-between;
+    justify-content: space-between;
     margin-top: 1rem;
     margin-bottom: 1rem;
     height: 50px;
 }
 .headerSection {
-	flex-basis: 33%;
+    flex-basis: 33%;
 }
 .headerSpacer {
-	display: flex;
-	flex-flow: column;
-	justify-content: flex-end;
-	max-width: 250px;
+    display: flex;
+    flex-flow: column;
+    justify-content: flex-end;
+    max-width: 250px;
 }
 .headerLogoSection {
-	display:flex;
+    display:flex;
     justify-content: center;
     flex-basis: 95%;
 }
 .headerLogo {
-	height: 50px;
+    height: 50px;
     max-width: fit-content;
 }
 .toolBar {
-	display: flex;
+    display: flex;
     flex-flow: column;
     justify-content: center;
-	max-width: 250px;
+    max-width: 250px;
 }
 .toolBarGroup {
-	display: flex;
+    display: flex;
     justify-content: flex-end;
     flex-wrap: wrap;
 }
-.selectLabel {
-	margin-right: 8px;
-    margin-top: 3px;
+
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    background-color: black;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 25%;
+    border-radius: 25px;
+}
+
+.modal-header {
+    display: flex;
+    flex-flow: row;
+    width: 100%;
+}
+
+.modal-body {
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    margin-top: 16px;
+    margin-bottom: 16px;
+}
+.modal-title {
+    align-self: center;
+    flex-grow: 1;
+    font-size: 20px;
+    font-weight: bold;
+}
+/* The Close Button */
+.close-modal {
+    align-self: center;
+}
+
+.close-modal:hover,
+.close-modal:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.formElement {
+    margin-top: 8px;
+    height: 24px;
+}
+.formElement select, 
+.formElement button, 
+.formElement input {
+    border-radius: 5px;
+    height: 24px;
+}
+.formLabel {
+    margin-right: 8px;
 }
 select {
-	min-width: 132px;
+    min-width: 132px;
 }
-select, button, input {
-    border-radius: 5px;
+select:hover, button:hover, input:hover {
+    background-color: cornflowerblue;
 }
-.refreshButton {
-    margin-left: 8px;
+.icon-button {
+    height: 32px;
+    width: 32px;
+    border-radius: 25px;
 }
-.refreshButtonImage {
-	width: 16px;
-	height: 16px;
+.icon-button > img {
+    width: 16px;
+    height: 16px;
+    padding-top: 3px;
 }
+
+.header-button {
+    margin-left: 4px;
+}
+
 .thumbs-container
 {
-	display: flex;
-	flex-flow: column;
-	font-family: arial;
-	font-size: 16px;
-	max-height: calc(100vh - 120px);
-	overflow-y: auto;
+    display: flex;
+    flex-flow: column;
+    font-family: arial;
+    font-size: 16px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
     margin-top: 15px;
 }
 .thumbs-body
 {
-	display: flex;
+    display: flex;
     flex-flow: row;
     flex-wrap: wrap;
-	justify-content: center;
+    justify-content: center;
 }
 
 .media-item 
 {
-	margin: 5px;
+    margin: 5px;
+    overflow: hidden;
 }
-
-.media-item .name
+.media-item img
 {
+    object-fit: contain;
+    flex-basis: 60%;
+}    
+/* display: -webkit-box;
+-webkit-line-clamp: 3;
+-webkit-box-orient: vertical; */
+.media-item .name
+{ 
+
     text-overflow: ellipsis;
+    flex-basis: 40%;
+    text-align: center;
 }
 
 .mediaLink {
-	display: flex;
+    display: flex;
     flex-flow: column nowrap;
-    overflow: hidden;
-	color: white;
+    align-items: center;
+    color: white;
 }
 .mediaLink:hover {
-  color: hotpink;
+color: hotpink;
 }
 .mediaLink:active {
-  color: lightblue;
+color: lightblue;
 }
 .mediaLinkMFS {
-	color: chartreuse;
+    color: chartreuse;
 }
 .mediaLinkNoScript {
-	color: darkgrey;
+    color: darkgrey;
 }
 .mediaLinkNoScript:hover {
-	color: lightgrey;
+    color: lightgrey;
 }
 
 .deoVideo {
-	max-height: calc(100vh - 500px);
+    max-height: calc(100vh - 500px);
 }
