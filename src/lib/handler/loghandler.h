@@ -43,7 +43,6 @@ private:
     static QString _debugFileName;
     static qint64 userDebugIndex;
     static bool _debugMode;
-    static bool _userDebugMode;
     static QHash<qint64, QString> _debugStore;
     static QDialog* _loadingWidget;
 

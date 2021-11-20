@@ -16,7 +16,6 @@
 #include <QDesktopServices>
 #include <QDirIterator>
 #include <qfloat16.h>
-#include <QtConcurrent/QtConcurrent>
 #include <QFuture>
 #include <QScreen>
 #include <QMovie>

@@ -1073,7 +1073,9 @@ has no script associated with it.</string>
            </rect>
           </property>
           <property name="toolTip">
-           <string>In MegaBytes: This is the amount of media data sent to the client in byte chunks.</string>
+           <string>In MegaBytes: This is the amount of media data sent to the client in byte chunks.
+The higher this is set the longer it will take to buffer but the less times the server 
+will be hit for the next chunk.</string>
           </property>
           <property name="suffix">
            <string>MB</string>

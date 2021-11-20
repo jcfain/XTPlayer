@@ -215,94 +215,90 @@ HttpPromise HttpHandler::handleThumbFile(HttpDataPtr data)
 }
 HttpPromise HttpHandler::handleVideoStream(HttpDataPtr data)
 {
-    QElapsedTimer timer;
-    LogHandler::Debug("Enter Video stream");
-    timer.start();
-    auto match = data->state["match"].value<QRegularExpressionMatch>();
-    QString parameter = match.captured();
-    QString mediaName = parameter.remove("/video/");
-    LogHandler::Debug("Looking for media in library: " + mediaName);
-    QString filename = SettingsHandler::getSelectedLibrary() + "/" + mediaName;
-    //filename = _videoHandler->transcode(filename);
-    QFile file(filename);
-    if (!file.exists())
-    {
-         LogHandler::Error(QString("File does not exist (%1): %2").arg(filename).arg(file.errorString()));
-
-      data->response->setStatus(HttpStatus::NotFound);
-      return HttpPromise::resolve(data);
-    }
-    if (!file.open(QIODevice::ReadOnly))
-    {
+    return HttpPromise::resolve(data).then([this](HttpDataPtr data) {
+        QElapsedTimer timer;
+        LogHandler::Debug("Enter Video stream");
+        timer.start();
+        auto match = data->state["match"].value<QRegularExpressionMatch>();
+        QString parameter = match.captured();
+        QString mediaName = parameter.remove("/video/");
+        LogHandler::Debug("Looking for media in library: " + mediaName);
+        QString filename = SettingsHandler::getSelectedLibrary() + "/" + mediaName;
+        //filename = _videoHandler->transcode(filename);
+        QFile file(filename);
+        if (!file.open(QIODevice::ReadOnly))
+        {
             LogHandler::Error(QString("Unable to open file to be sent (%1): %2").arg(filename).arg(file.errorString()));
-
-        data->response->setStatus(HttpStatus::Forbidden);
-        return HttpPromise::resolve(data);
-    }
-
-    QString range;
-    data->request->header<QString>("range", &range);
-    LogHandler::Debug("Requested range: "+range);
-    QStringList rangeKeyValue = range.split('=');
-    qint64 startByte = 0;
-    qint64 endByte = 0;
-    if(rangeKeyValue.length() > 1)
-    {
-        QStringList rangeEnds = rangeKeyValue[1].split('-');
-        if(rangeEnds.length() > 0)
-        {
-            startByte = rangeEnds[0].toLongLong();
-            if(rangeEnds.length() > 1)
-                endByte = rangeEnds[1].toLongLong();
-        }
-
-    }
-    qint64 chunkSize = SettingsHandler::getHTTPChunkSize();
-    if(!endByte)
-        endByte = startByte + chunkSize;
-    if(endByte >= file.bytesAvailable())
-        endByte = file.bytesAvailable();
-    if(startByte < endByte)
-    {
-        QString requestBytes = "bytes " + QString::number(startByte) + "-" + QString::number(endByte) + "/" + QString::number(file.bytesAvailable() +1);
-        LogHandler::Debug("Request bytes: "+requestBytes);
-        if(startByte)
-        {
-            int numBytes = file.skip(startByte);
-            LogHandler::Debug("Skipped bytes: "+QString::number(numBytes));
-        }
-        data->response->setStatus(HttpStatus::PartialContent);
-        qint64 contentLength = (endByte - startByte) + 1;
-        //LogHandler::Debug("Start bytes: " + QString::number(startByte));
-        //LogHandler::Debug("End bytes: " + QString::number(endByte));
-        //LogHandler::Debug("Content length: " + QString::number(contentLength));
-        data->response->setHeader("Accept-Ranges", "bytes");
-        data->response->setHeader("Content-Range", requestBytes);
-        data->response->setHeader("Content-Length", contentLength);
-
-        QString mimeType = mimeDatabase.mimeTypeForFile(filename, QMimeDatabase::MatchExtension).name();
-        //LogHandler::Debug("Video stream read: "+ QString::number(timer.elapsed()));
-        QByteArray* byteArray = new QByteArray(file.read(chunkSize));
-        QBuffer buffer(byteArray);
-        LogHandler::Debug("Chunk bytes: "+ QString::number(buffer.bytesAvailable()));
-        //LogHandler::Debug("Video stream open buffer: "+ QString::number(timer.elapsed()));
-        if (!buffer.open(QIODevice::ReadOnly))
-        {
-                 LogHandler::Error(QString("Unable to open buffer to be sent (%1): %2").arg(filename).arg(file.errorString()));
-
             data->response->setStatus(HttpStatus::Forbidden);
-            return HttpPromise::resolve(data);
+            return data;
         }
+        qint64 bytesAvailable = file.bytesAvailable();
 
-        //LogHandler::Debug("Video stream send chunk: "+ QString::number(timer.elapsed()));
-        data->response->sendFile(&buffer, mimeType);
-        //LogHandler::Debug("Video stream send chunk finish: "+ QString::number(timer.elapsed()));
-        delete byteArray;
-    }
-    else
-        data->response->setStatus(HttpStatus::Ok);
-    //LogHandler::Debug("Video stream resolve: "+ QString::number(timer.elapsed()));
-    return HttpPromise::resolve(data);
+        QString range;
+        data->request->header<QString>("range", &range);
+        LogHandler::Debug("Requested range: "+range);
+        QStringList rangeKeyValue = range.split('=');
+        qint64 startByte = 0;
+        qint64 endByte = 0;
+        if(rangeKeyValue.length() > 1)
+        {
+            QStringList rangeEnds = rangeKeyValue[1].split('-');
+            if(rangeEnds.length() > 0)
+            {
+                startByte = rangeEnds[0].toLongLong();
+                if(rangeEnds.length() > 1)
+                    endByte = rangeEnds[1].toLongLong();
+            }
+
+        }
+        qint64 chunkSize = SettingsHandler::getHTTPChunkSize();
+        if(!endByte)
+            endByte = startByte + chunkSize;
+        if(endByte >= bytesAvailable)
+            endByte = bytesAvailable;
+        if(startByte < endByte)
+        {
+            QString requestBytes = "bytes " + QString::number(startByte) + "-" + QString::number(endByte) + "/" + QString::number(bytesAvailable +1);
+            LogHandler::Debug("Request bytes: "+requestBytes);
+            if(startByte)
+                file.skip(startByte);
+            QString mimeType = mimeDatabase.mimeTypeForFile(filename, QMimeDatabase::MatchExtension).name();
+            LogHandler::Debug("Video stream read start: "+ QString::number(timer.elapsed()));
+            QByteArray* byteArray = new QByteArray(file.read(chunkSize));
+            LogHandler::Debug("Video stream read end: "+ QString::number(timer.elapsed()));
+            QBuffer buffer(byteArray);
+            //LogHandler::Debug("Chunk bytes: "+ QString::number(buffer.bytesAvailable()));
+            //LogHandler::Debug("Video stream open buffer: "+ QString::number(timer.elapsed()));
+            if (!buffer.open(QIODevice::ReadOnly))
+            {
+                LogHandler::Error(QString("Unable to open buffer to be sent (%1): %2").arg(filename).arg(file.errorString()));
+
+                data->response->setStatus(HttpStatus::Forbidden);
+                delete byteArray;
+                file.close();
+                return data;
+            }
+
+            data->response->setStatus(HttpStatus::PartialContent);
+            qint64 contentLength = (endByte - startByte) + 1;
+            //LogHandler::Debug("Start bytes: " + QString::number(startByte));
+            //LogHandler::Debug("End bytes: " + QString::number(endByte));
+            //LogHandler::Debug("Content length: " + QString::number(contentLength));
+            data->response->setHeader("Accept-Ranges", "bytes");
+            data->response->setHeader("Content-Range", requestBytes);
+            data->response->setHeader("Content-Length", contentLength);
+            //LogHandler::Debug("Video stream send chunk: "+ QString::number(timer.elapsed()));
+            data->response->sendFile(&buffer, mimeType);
+            LogHandler::Debug("Video stream send chunk finish: "+ QString::number(timer.elapsed()));
+            delete byteArray;
+            file.close();
+            return data;
+        }
+        else
+            data->response->setStatus(HttpStatus::Ok);
+        //LogHandler::Debug("Video stream resolve: "+ QString::number(timer.elapsed()));
+        return data;
+    });
 }
 
 QString HttpHandler::getScreenType(QString mediaPath)
