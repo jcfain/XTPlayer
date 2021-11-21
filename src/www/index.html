@@ -11,9 +11,6 @@
 <body>
 <div class="header">
 	<div class="headerSection headerSpacer">
-<!-- 		<label for="useDeoWebCheckbox">Use Deo Web
-			<input id="useDeoWebCheckbox" type="checkbox" onclick="onClickUseDeoWebCheckbox(this)"/>
-		</label> -->
 	</div>
 	<div class="headerSection headerLogoSection">
 		<img class="headerLogo" src="://images/icons/XTP-window-icon.png"/>
@@ -40,6 +37,19 @@
 	<div class="modal-body">
 		<div class="toolBar">
 			<div class="toolBarGroup">
+<!-- 		
+				<div class="formElement">
+					<label for="useDeoWebCheckbox">Use Deo Web
+						<input id="useDeoWebCheckbox" type="checkbox" onclick="onClickUseDeoWebCheckbox(this)"/>
+					</label>
+				</div> 
+			-->
+				<div class="formElement">
+					<label title="If checked, players like DeoVR will not work correctly.&#010;Use only if watching media in a standard web browser." 
+					for="useVideoCheckbox">Use built in video player
+						<input id="useVideoCheckbox" type="checkbox" onclick="onClickUseVideoCheckbox(this)"/>
+					</label>
+				</div>
 				<div class="formElement">
 					<label for="show">
 						<span class="formLabel">Show</span>
@@ -106,6 +116,10 @@
 <!-- <deo-video style="display: none;" id="deoVideoPlayer" class="deoVideo">
 	<source id="deoVideoSource"/>
 </deo-video> -->
+<video controls style="display: none;" id="videoPlayer" class="video">
+	<source id="videoSource"/>
+	Your browser doesn't support HTML5 video tag.
+</video>
 <div id="thumbsContainer" class="thumbs-container">
 	<div id="mediaList" class="thumbs-body">
 	

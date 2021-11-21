@@ -91,7 +91,7 @@ body {
 .modal-title {
     align-self: center;
     flex-grow: 1;
-    font-size: 20px;
+    font-size: 30px;
     font-weight: bold;
 }
 /* The Close Button */
@@ -112,7 +112,7 @@ body {
 }
 .formElement select, 
 .formElement button, 
-.formElement input {
+.formElement input:not([type='checkbox']) {
     border-radius: 5px;
     height: 24px;
 }
@@ -122,7 +122,7 @@ body {
 select {
     min-width: 132px;
 }
-select:hover, button:hover, input:hover {
+select:hover, button:hover, input:not([type='checkbox']):hover {
     background-color: cornflowerblue;
 }
 .icon-button {
@@ -201,4 +201,7 @@ color: lightblue;
 
 .deoVideo {
     max-height: calc(100vh - 500px);
+}
+.video {
+    
 }

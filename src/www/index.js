@@ -4,6 +4,10 @@ var sortByGlobal = "nameAsc";
 var showGlobal = "All";
 var settingsNode;
 var thumbSizeGlobal = 0;
+var videoNode;
+var videoSourceNode;
+var useVideoElement;
+var resizeObserver;
 //var useDeoWeb;
 //var deoVideoNode;
 //var deoSourceNode;
@@ -18,6 +22,20 @@ function loadPage()
 	sortByGlobal = JSON.parse(window.localStorage.getItem("sortBy"));
 	showGlobal = JSON.parse(window.localStorage.getItem("show"));
 	thumbSizeGlobal = JSON.parse(window.localStorage.getItem("thumbSize"));
+	var volume = JSON.parse(window.localStorage.getItem("volume"));
+	useVideoElement = JSON.parse(window.localStorage.getItem("useVideoElement"));
+
+	videoNode = document.getElementById("videoPlayer");
+	videoSourceNode = document.getElementById("videoSource");
+	videoNode.addEventListener("timeupdate", onVideoTimeUpdate); 
+	videoNode.addEventListener("loadeddata", onVideoLoad); 
+	videoNode.addEventListener("play", onVideoPlay); 
+	videoNode.addEventListener("pause", onVideoPause); 
+	videoNode.addEventListener("volumechange", onVolumeChange); 
+	videoNode.volume = volume ? volume : 0.5;
+	
+	toggleUseVideo(useVideoElement, false);
+	
 /* 	
 	deoVideoNode = document.getElementById("deoVideoPlayer");
 	deoSourceNode = document.getElementById("deoVideoSource");
@@ -32,7 +50,9 @@ function loadPage()
 	
 	loadMediaFromServer();
 }
-
+function onResizeVideo() {
+	thumbsContainerNode.style.maxHeight = "calc(100vh - "+ (+videoNode.offsetHeight + 120) + "px)";
+} 
 /* 
 function onResizeDeo() {
 	if(useDeoWeb) {
@@ -69,7 +89,9 @@ function onVideosLoad(err, mediaList)
 			name: mediaList[i]["name"],
 			displayName: mediaList[i]["name"],
 			thumbSize: mediaList[i]["thumbSize"],
+			path: mediaList[i]["path"],
 			relativePath: mediaList[i]["relativePath"],
+			thumb: mediaList[i]["thumb"],
 			relativeThumb: mediaList[i]["relativeThumb"],
 			modifiedDate: new Date(mediaList[i]["modifiedDate"]),
 			isStereoscopic: mediaList[i]["isStereoscopic"],
@@ -273,9 +295,9 @@ function toggleUseDeo(value, userClicked)
 function loadVideo(obj) {
 	if(useDeoWeb) {
 		deoVideoNode.setAttribute("format", obj.isStereoscopic ? "LR" : "mono");
-		deoSourceNode.setAttribute("src", "/video" + obj.relativePath);
+		deoSourceNode.setAttribute("src", "/video/" + obj.relativePath);
 		deoVideoNode.setAttribute("title", obj.name);
-		deoVideoNode.setAttribute("cover-image", obj.relativeThumb);
+		deoVideoNode.setAttribute("cover-image", "/thumb/" + obj.relativeThumb);
 		
 		if(!DEO.isStarted(deoVideoNode))
 			DEO.setVolume(deoVideoNode, 0.3);
@@ -283,13 +305,59 @@ function loadVideo(obj) {
 	}
 } 
 */
+function onClickUseVideoCheckbox(checkbox)
+{
+	toggleUseVideo(checkbox.checked, true);
+}
+function toggleUseVideo(value, userClicked)
+{
+	if(userClicked) {
+		useVideoElement = value;
+		window.localStorage.setItem("useVideoElement", JSON.stringify(value));
+	}
+	else
+		document.getElementById("useVideoCheckbox").checked = value;
+	if(!value) {
+		videoNode.pause();
+		videoNode.style.display = "none";
+		thumbsContainerNode.style.maxHeight = "";
+		if(resizeObserver)
+			resizeObserver.unobserve(videoNode);
+	} else {
+		onResizeVideo();
+		resizeObserver = new ResizeObserver(onResizeVideo);
+		resizeObserver.observe(videoNode);
+	}
+}
 
 function playVideo(obj) {
-/* 	if(useDeoWeb) {
-		DEO.start(deoVideoNode);
-	} else { */
+	if(useVideoElement) {
+		videoNode.style.display = "block";
+		videoSourceNode.setAttribute("src", "/video" + obj.relativePath);
+		videoNode.setAttribute("title", obj.name);
+		videoNode.setAttribute("poster", "/thumb/" + obj.relativeThumb);
+		//videoSourceNode.setAttribute("type", "video/mp4");
+		videoNode.load();
+		videoNode.play();
+	} else { 
 		window.open("/video"+ obj.relativePath)
-//	}
+	}
+}
+function onVideoTimeUpdate(event) {
+	//console.log("Time update: "+ videoNode.currentTime )
+}
+function onVideoLoad(event) {
+	console.log("Data loaded")
+	console.log("Duration: "+ videoNode.duration )
+}
+function onVideoPlay(event) {
+	console.log("Video play")
+}
+function onVideoPause(event) {
+	console.log("Video pause")
+}
+function onVolumeChange() {
+	window.localStorage.setItem("volume", videoNode.volume);
 }
 /* function onVideoStop() {
 	deoVideoNode.style.display = "none"

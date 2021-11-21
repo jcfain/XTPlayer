@@ -44,7 +44,7 @@ private:
     QList<LibraryListWidgetItem*> _cachedLibraryItems;
     QList<LibraryListWidgetItem*> _vrLibraryItems;
 
-    QJsonObject createMediaObject(LibraryListItem libraryListItem, bool stereoscopic, bool isMFS);
+    QJsonObject createMediaObject(LibraryListItem libraryListItem, bool stereoscopic, bool isMFS, QString hostAddress);
     QJsonObject createDeoObject(LibraryListItem libraryListItem, QString hostAddress);
     QString getScreenType(QString mediaPath);
     QString getStereoMode(QString mediaPath);

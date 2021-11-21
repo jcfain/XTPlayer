@@ -94,13 +94,14 @@ HttpPromise HttpHandler::handle(HttpDataPtr data)
 HttpPromise HttpHandler::handleVideoList(HttpDataPtr data)
 {
     QJsonArray media;
+    QString hostAddress = "http://" + data->request->headerDefault("Host", "") + "/";
     foreach(auto widgetItem, _cachedLibraryItems)
     {
         QJsonObject object;
         auto item = widgetItem->getLibraryListItem();
         if(item.type == LibraryListItemType::PlaylistInternal || item.type == LibraryListItemType::FunscriptType)
             continue;
-        media.append(createMediaObject(item, false, widgetItem->isMFS()));
+        media.append(createMediaObject(item, false, widgetItem->isMFS(), hostAddress));
     }
 
     foreach(auto widgetItem, _vrLibraryItems)
@@ -109,22 +110,25 @@ HttpPromise HttpHandler::handleVideoList(HttpDataPtr data)
         auto item = widgetItem->getLibraryListItem();
         if(item.type == LibraryListItemType::PlaylistInternal || item.type == LibraryListItemType::FunscriptType)
             continue;
-        media.append(createMediaObject(item, true, widgetItem->isMFS()));
+        media.append(createMediaObject(item, true, widgetItem->isMFS(), hostAddress));
     }
 
     data->response->setStatus(HttpStatus::Ok, QJsonDocument(media));
     return HttpPromise::resolve(data);
 }
 
-QJsonObject HttpHandler::createMediaObject(LibraryListItem item, bool stereoscopic, bool isMFS)
+QJsonObject HttpHandler::createMediaObject(LibraryListItem item, bool stereoscopic, bool isMFS, QString hostAddress)
 {
     //VideoFormat videoFormat;
     QJsonObject object;
     object["name"] = item.nameNoExtension;
-    QString relativePath = item.path.replace(SettingsHandler::getSelectedLibrary(), "");
-    object["relativePath"] = QString(QUrl::toPercentEncoding(relativePath));
+    QString path = item.path.replace(SettingsHandler::getSelectedLibrary(), "");
+    QString relativePath = item.path.replace(SettingsHandler::getSelectedLibrary() +"/", "");
+    object["path"] = hostAddress + "video/" + QString(QUrl::toPercentEncoding(relativePath));
+    object["relativePath"] = "/" + QString(QUrl::toPercentEncoding(relativePath));
     QString thumbFile = item.thumbFile.replace(SettingsHandler::getSelectedThumbsDir(), "");
     QString relativeThumb = thumbFile;
+    object["thumb"] = hostAddress + "thumb/" + QString(QUrl::toPercentEncoding(relativeThumb));
     object["relativeThumb"] = QString(QUrl::toPercentEncoding(relativeThumb));
     object["thumbSize"] = SettingsHandler::getThumbSize();
     object["type"] = item.type;
