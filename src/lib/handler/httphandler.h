@@ -30,6 +30,8 @@ public:
     HttpPromise handleVideoStream(HttpDataPtr data);
     HttpPromise handleVideoList(HttpDataPtr data);
     HttpPromise handleThumbFile(HttpDataPtr data);
+    HttpPromise handleFunscriptFile(HttpDataPtr data);
+    HttpPromise handleSettings(HttpDataPtr data);
     HttpPromise handleDeo(HttpDataPtr data);
     void setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems);
 

@@ -1269,39 +1269,44 @@ void MainWindow::on_load_library(QString path, bool vrMode)
     {
         thumbDir.mkdir(thumbPath);
     }
-    QStringList videoTypes = QStringList()
-            << "*.mp4"
-            << "*.avi"
-            << "*.mpg"
-            << "*.wmv"
-            << "*.mkv"
-            << "*.webm"
-            << "*.mp2"
-            << "*.mpeg"
-            << "*.mpv"
-            << "*.ogg"
-            << "*.m4p"
-            << "*.m4v"
-            << "*.mov"
-            << "*.qt"
-            << "*.flv"
-            << "*.swf"
-            << "*.avchd";
+//    QStringList videoTypes = QStringList()
+//            << "*.mp4"
+//            << "*.avi"
+//            << "*.mpg"
+//            << "*.wmv"
+//            << "*.mkv"
+//            << "*.webm"
+//            << "*.mp2"
+//            << "*.mpeg"
+//            << "*.mpv"
+//            << "*.ogg"
+//            << "*.m4p"
+//            << "*.m4v"
+//            << "*.mov"
+//            << "*.qt"
+//            << "*.flv"
+//            << "*.swf"
+//            << "*.avchd";
 
-    QStringList audioTypes = QStringList()
-            << "*.m4a"
-            << "*.mp3"
-            << "*.aac"
-            << "*.flac"
-            << "*.wav"
-            << "*.wma";
+//    QStringList audioTypes = QStringList()
+//            << "*.m4a"
+//            << "*.mp3"
+//            << "*.aac"
+//            << "*.flac"
+//            << "*.wav"
+//            << "*.wma";
     QStringList playlistTypes = QStringList()
             << "*.m3u";
 
     QStringList mediaTypes;
+    QStringList videoTypes;
+    QStringList audioTypes;
+    foreach(auto ext, videoHandler->getVideoExtensions())
+        videoTypes.append("*."+ext);
+    foreach(auto ext, videoHandler->getAudioExtensions())
+        audioTypes.append("*."+ext);
     mediaTypes.append(videoTypes);
     mediaTypes.append(audioTypes);
-    //mediaTypes.append(playlistTypes);
     QDirIterator library(path, mediaTypes, QDir::Files, QDirIterator::Subdirectories);
 
     if(!vrMode)

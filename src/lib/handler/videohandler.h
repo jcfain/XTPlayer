@@ -61,6 +61,8 @@ public:;
     void installFilter(AudioFilter* filter);
     void clearFilters();
     void setLoading(bool loading);
+    QStringList getVideoExtensions();
+    QStringList getAudioExtensions();
 
     QString  transcode(QString file);
 

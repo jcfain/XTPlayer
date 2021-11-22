@@ -18,11 +18,16 @@ HttpHandler::HttpHandler(VideoHandler* videoHandler, QObject *parent):
     //router.addRoute("GET", "^/videos/[\\w,\\s-]+\\.[A-Za-z]{3}$", this, &HttpHandler::handleRoot);
     router.addRoute("GET", "^/media", this, &HttpHandler::handleVideoList);
     router.addRoute("GET", "^/thumb/.*$", this, &HttpHandler::handleThumbFile);
-    router.addRoute("GET", "^/video/.*$", this, &HttpHandler::handleVideoStream);
+    router.addRoute("GET", "^/funscript/(.*\\.((funscript)$))?[.]*$", this, &HttpHandler::handleFunscriptFile);
+    QString extensions;
+    extensions += _videoHandler->getVideoExtensions().join("|");
+    extensions += "|";
+    extensions += _videoHandler->getAudioExtensions().join("|");
+    router.addRoute("GET", "^/video/(.*\\.(("+extensions+")$))?[.]*$", this, &HttpHandler::handleVideoStream);
     router.addRoute("GET", "^/deotest", this, &HttpHandler::handleDeo);
+    router.addRoute("GET", "^/settings", this, &HttpHandler::handleSettings);
 
 //    router.addRoute("GET", "^/users/(\\w*)/?$", this, &HttpHandler::handleGetUsername);
-//    router.addRoute({"GET", "POST"}, "^/gzipTest/?$", this, &HttpHandler::handleGzipTest);
 //    router.addRoute({"GET", "POST"}, "^/formTest/?$", this, &HttpHandler::handleFormTest);
 //    router.addRoute("GET", "^/fileTest/(\\d*)/?$", this, &HttpHandler::handleFileTest);
 //    router.addRoute("GET", "^/errorTest/(\\d*)/?$", this, &HttpHandler::handleErrorTest);
@@ -91,6 +96,41 @@ HttpPromise HttpHandler::handle(HttpDataPtr data)
     return HttpPromise::resolve(data);
 }
 
+HttpPromise HttpHandler::handleSettings(HttpDataPtr data) {
+    QJsonObject root;
+    QJsonObject availableAxisJson;
+    auto availableAxis = SettingsHandler::getAvailableAxis();
+    foreach(auto channel, availableAxis->keys()) {
+        QJsonObject value;
+        if(availableAxis->value(channel).Type != AxisType::HalfRange && availableAxis->value(channel).Type != AxisType::None)
+        {
+            value["axisName"] = availableAxis->value(channel).AxisName;
+            value["channel"] = availableAxis->value(channel).Channel;
+            value["damperEnabled"] = availableAxis->value(channel).DamperEnabled;
+            value["damperValue"] = availableAxis->value(channel).DamperValue;
+            value["dimension"] = (int)availableAxis->value(channel).Dimension;
+            value["friendlyName"] = availableAxis->value(channel).FriendlyName;
+            value["inverted"] = availableAxis->value(channel).Inverted;
+            value["linkToRelatedMFS"] = availableAxis->value(channel).LinkToRelatedMFS;
+            value["max"] = availableAxis->value(channel).Max;
+            value["mid"] = availableAxis->value(channel).Mid;
+            value["min"] = availableAxis->value(channel).Min;
+            value["multiplierEnabled"] = availableAxis->value(channel).MultiplierEnabled;
+            value["multiplierValue"] = availableAxis->value(channel).MultiplierValue;
+            value["relatedChannel"] = availableAxis->value(channel).RelatedChannel;
+            value["trackName"] = availableAxis->value(channel).TrackName;
+            value["type"] = (int)availableAxis->value(channel).Type;
+            value["userMax"] = availableAxis->value(channel).UserMax;
+            value["userMid"] = availableAxis->value(channel).UserMid;
+            value["userMin"] = availableAxis->value(channel).UserMin;
+            availableAxisJson[channel] = value;
+        }
+    }
+    root["availableAxis"] = availableAxisJson;
+    data->response->setStatus(HttpStatus::Ok, QJsonDocument(root));
+    return HttpPromise::resolve(data);
+}
+
 HttpPromise HttpHandler::handleVideoList(HttpDataPtr data)
 {
     QJsonArray media;
@@ -125,6 +165,8 @@ QJsonObject HttpHandler::createMediaObject(LibraryListItem item, bool stereoscop
     QString path = item.path.replace(SettingsHandler::getSelectedLibrary(), "");
     QString relativePath = item.path.replace(SettingsHandler::getSelectedLibrary() +"/", "");
     object["path"] = hostAddress + "video/" + QString(QUrl::toPercentEncoding(relativePath));
+    QString scriptNoExtensionRelativePath = item.scriptNoExtension.replace(SettingsHandler::getSelectedLibrary(), "");
+    object["scriptNoExtensionRelativePath"] = "funscript/" + QString(QUrl::toPercentEncoding(scriptNoExtensionRelativePath));
     object["relativePath"] = "/" + QString(QUrl::toPercentEncoding(relativePath));
     QString thumbFile = item.thumbFile.replace(SettingsHandler::getSelectedThumbsDir(), "");
     QString relativeThumb = thumbFile;
@@ -137,6 +179,7 @@ QJsonObject HttpHandler::createMediaObject(LibraryListItem item, bool stereoscop
     object["isStereoscopic"] = getStereoMode(item.path) != "off" || stereoscopic; //videoFormat.is3D((SettingsHandler::getSelectedLibrary() + item.path).toLocal8Bit().data()) == VideoFormatResultCode::E_Found3D;
     object["isMFS"] = isMFS;
     object["hasScript"] = !item.script.isEmpty() || !item.zipFile.isEmpty();
+
     return object;
 }
 #include <QHostInfo>
@@ -205,6 +248,21 @@ QJsonObject HttpHandler::createDeoObject(LibraryListItem item, QString hostAddre
     return root;
 }
 
+HttpPromise HttpHandler::handleFunscriptFile(HttpDataPtr data)
+{
+    auto match = data->state["match"].value<QRegularExpressionMatch>();
+    QString parameter = match.captured();
+    QString funscriptName = parameter.remove("/funscript/");
+    QString filePath = SettingsHandler::getSelectedLibrary() + funscriptName;
+    if(!QFile(filePath).exists())
+    {
+        data->response->setStatus(HttpStatus::NotFound);
+        return HttpPromise::resolve(data);
+    }
+    data->response->sendFile(filePath, "text/json");
+    data->response->setStatus(HttpStatus::Ok);
+    return HttpPromise::resolve(data);
+}
 HttpPromise HttpHandler::handleThumbFile(HttpDataPtr data)
 {
     auto match = data->state["match"].value<QRegularExpressionMatch>();
@@ -266,7 +324,6 @@ HttpPromise HttpHandler::handleVideoStream(HttpDataPtr data)
             LogHandler::Debug("Request bytes: "+requestBytes);
             if(startByte)
                 file.skip(startByte);
-            QString mimeType = mimeDatabase.mimeTypeForFile(filename, QMimeDatabase::MatchExtension).name();
             LogHandler::Debug("Video stream read start: "+ QString::number(timer.elapsed()));
             QByteArray* byteArray = new QByteArray(file.read(chunkSize));
             LogHandler::Debug("Video stream read end: "+ QString::number(timer.elapsed()));
@@ -292,6 +349,7 @@ HttpPromise HttpHandler::handleVideoStream(HttpDataPtr data)
             data->response->setHeader("Content-Range", requestBytes);
             data->response->setHeader("Content-Length", contentLength);
             //LogHandler::Debug("Video stream send chunk: "+ QString::number(timer.elapsed()));
+            QString mimeType = mimeDatabase.mimeTypeForFile(filename, QMimeDatabase::MatchExtension).name();
             data->response->sendFile(&buffer, mimeType);
             LogHandler::Debug("Video stream send chunk finish: "+ QString::number(timer.elapsed()));
             delete byteArray;

@@ -1,4 +1,6 @@
+var remoteUserSettings;
 var mediaListObj = [];
+var playingmediaItem;
 var thumbsContainerNode;
 var sortByGlobal = "nameAsc";
 var showGlobal = "All";
@@ -8,6 +10,12 @@ var videoNode;
 var videoSourceNode;
 var useVideoElement;
 var resizeObserver;
+var webSocket;
+var deviceAddress;
+var funscriptChannels = [];
+var loadedFunscripts;
+var currentChannelIndex = 0;
+var funscriptSyncWorker;
 //var useDeoWeb;
 //var deoVideoNode;
 //var deoSourceNode;
@@ -24,6 +32,11 @@ function loadPage()
 	thumbSizeGlobal = JSON.parse(window.localStorage.getItem("thumbSize"));
 	var volume = JSON.parse(window.localStorage.getItem("volume"));
 	useVideoElement = JSON.parse(window.localStorage.getItem("useVideoElement"));
+	deviceAddress =  JSON.parse(window.localStorage.getItem("webSocketAddress"));
+	if(!deviceAddress)
+		deviceAddress = "tcode.local";
+		
+	document.getElementById("webSocketAddress").value = deviceAddress;
 
 	videoNode = document.getElementById("videoPlayer");
 	videoSourceNode = document.getElementById("videoSource");
@@ -32,6 +45,7 @@ function loadPage()
 	videoNode.addEventListener("play", onVideoPlay); 
 	videoNode.addEventListener("pause", onVideoPause); 
 	videoNode.addEventListener("volumechange", onVolumeChange); 
+	videoNode.addEventListener("ended", onVideoEnd); 
 	videoNode.volume = volume ? volume : 0.5;
 	
 	toggleUseVideo(useVideoElement, false);
@@ -48,8 +62,9 @@ function loadPage()
 	} 
 */
 	
-	loadMediaFromServer();
+	loadSettingsServer();
 }
+
 function onResizeVideo() {
 	thumbsContainerNode.style.maxHeight = "calc(100vh - "+ (+videoNode.offsetHeight + 120) + "px)";
 } 
@@ -61,6 +76,27 @@ function onResizeDeo() {
 } 
 */
 
+async function loadSettingsServer() {
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', "/settings", true);
+	xhr.responseType = 'json';
+	xhr.onload = function() {
+	  var status = xhr.status;
+	  if (status === 200) {
+		remoteUserSettings = xhr.response;
+		funscriptChannels = Object.keys(remoteUserSettings["availableAxis"])
+			.map(function (k) {
+				return remoteUserSettings["availableAxis"][k]["channel"];
+			});
+		funscriptChannels.sort();
+		loadMediaFromServer();
+	  } else {
+		alert("Error getting settings");
+	  }
+	};
+	xhr.send();
+}
+
 async function loadMediaFromServer() {
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', "/media", true);
@@ -68,15 +104,51 @@ async function loadMediaFromServer() {
 	xhr.onload = function() {
 	  var status = xhr.status;
 	  if (status === 200) {
-		onVideosLoad(null, xhr.response);
+		onMediaLoad(null, xhr.response);
 	  } else {
-		onVideosLoad(status, xhr.response);
+		onMediaLoad(status, xhr.response);
 	  }
 	};
 	xhr.send();
 }
 
-function onVideosLoad(err, mediaList)
+async function loadMediaFunscript(path, isMFS) {
+	var channel = funscriptChannels[currentChannelIndex];
+	var trackName = remoteUserSettings["availableAxis"][channel]["trackName"];
+	var xhr = new XMLHttpRequest();
+	var channelPath = trackName === "" ? trackName : "."+trackName;
+	xhr.open('GET', path + channelPath + ".funscript", true);
+	xhr.responseType = 'json';
+	xhr.onload = function() {
+		var status = xhr.status;
+		if (status === 200) {
+			loadedFunscripts.push({"channel": channel, "atList": []});
+			var index = loadedFunscripts.length - 1;
+			var items = xhr.response;
+			for(var i=0; i<items.actions.length;i++)
+			{
+				var item = items.actions[i];
+				var at = item["at"];
+				loadedFunscripts[index][at] = item["pos"];
+				loadedFunscripts[index].atList.push(at);
+			}
+		}
+		currentChannelIndex++;
+		if(currentChannelIndex < funscriptChannels.length)
+		{
+			loadMediaFunscript(path, isMFS);
+		} 
+		else 
+		{
+			currentChannelIndex = 0;
+			videoNode.play();
+			console.log("Funscripts load finish");
+		}
+	};
+	xhr.send();
+}
+
+function onMediaLoad(err, mediaList)
 {
   if (err !== null) {
     alert('Whoops!: ' + err);
@@ -96,7 +168,10 @@ function onVideosLoad(err, mediaList)
 			modifiedDate: new Date(mediaList[i]["modifiedDate"]),
 			isStereoscopic: mediaList[i]["isStereoscopic"],
 			isMFS: mediaList[i]["isMFS"],
-			hasScript: mediaList[i]["hasScript"]
+			hasScript: mediaList[i]["hasScript"],
+			scriptNoExtensionRelativePath: mediaList[i]["scriptNoExtensionRelativePath"],
+			loaded: false,
+			playing: false
 		}
 		if(obj.isMFS)
 			obj.displayName = "(MFS) " + obj.name;
@@ -332,36 +407,53 @@ function toggleUseVideo(value, userClicked)
 
 function playVideo(obj) {
 	if(useVideoElement) {
+		playingmediaItem = obj;
 		videoNode.style.display = "block";
 		videoSourceNode.setAttribute("src", "/video" + obj.relativePath);
 		videoNode.setAttribute("title", obj.name);
 		videoNode.setAttribute("poster", "/thumb/" + obj.relativeThumb);
-		//videoSourceNode.setAttribute("type", "video/mp4");
 		videoNode.load();
-		videoNode.play();
+		loadedFunscripts = [];
+		if(playingmediaItem.hasScript)
+			loadMediaFunscript(playingmediaItem.scriptNoExtensionRelativePath, playingmediaItem.isMFS);
+		else
+			videoNode.play();
+
 	} else { 
 		window.open("/video"+ obj.relativePath)
 	}
 }
 function onVideoTimeUpdate(event) {
-	//console.log("Time update: "+ videoNode.currentTime )
+	if(funscriptSyncWorker)
+		funscriptSyncWorker.postMessage({"command": "setCurrentTime", "currentTime": videoNode.currentTime})
 }
 function onVideoLoad(event) {
 	console.log("Data loaded")
 	console.log("Duration: "+ videoNode.duration )
+	playingmediaItem.loaded = true;
 }
 function onVideoPlay(event) {
 	console.log("Video play")
+	playingmediaItem.playing = true;
+	if(!funscriptSyncWorker && loadedFunscripts && loadedFunscripts.length > 0)
+		startFunscriptSync(loadedFunscripts);
+	if(funscriptSyncWorker)
+		funscriptSyncWorker.postMessage({"command": "setMediaPlayingState", "playingState": true});
 }
 function onVideoPause(event) {
 	console.log("Video pause")
+	playingmediaItem.playing = false;
+	if(funscriptSyncWorker)
+		funscriptSyncWorker.postMessage({"command": "setMediaPlayingState", "playingState": false});
 }
 function onVolumeChange() {
 	window.localStorage.setItem("volume", videoNode.volume);
 }
-/* function onVideoStop() {
-	deoVideoNode.style.display = "none"
-} */
+function onVideoEnd(event) {
+	if(funscriptSyncWorker) {
+		funscriptSyncWorker.postMessage(JSON.stringify({"command": "terminate"}));
+	}
+}
 function setThumbSize(value, userClick) {
 	if(!userClick) {
 		if(value)
@@ -372,13 +464,42 @@ function setThumbSize(value, userClick) {
 	}
 }
 
+function startFunscriptSync() {
+	if (window.Worker) {
+		if(funscriptSyncWorker)
+			funscriptSyncWorker.terminate();
+		funscriptSyncWorker = new Worker('syncFunscript.js');
+		funscriptSyncWorker.postMessage(JSON.stringify({"command": "setRemoteUserSettings", "remoteUserSettings": remoteUserSettings}));
+		funscriptSyncWorker.postMessage(JSON.stringify({"command": "startThread", "funscripts": loadedFunscripts}));
+		funscriptSyncWorker.onmessage = onFunscriptWorkerThreadRecieveMessage;
+	}
+}
+function onFunscriptWorkerThreadRecieveMessage(e) {
+    isMediaFunscriptPlaying = true;
+    var data;
+    if(typeof e.data === "string")
+        data = JSON.parse(e.data);
+    else
+        data = e.data;
+    switch(data["command"]) {
+        case "sendTcode":
+            sendTcode(data["tcode"])
+            break;
+        case "end":
+			funscriptSyncWorker.terminate();
+			funscriptSyncWorker = null;
+            break;
+    }
+}
 //Settings
 function openSettings() {
   settingsNode.style.display = "flex";
 }
+
 function closeSettings() {
   settingsNode.style.display = "none";
 }
+
 function showChange(selectNode) {
 	sort(sortByGlobal, true);
 	loadMedia(show(selectNode.value, true));
@@ -394,6 +515,18 @@ function thumbSizeChange(selectNode) {
 	loadMedia(show(showGlobal, true));
 }
 
+var debouncer;
+function webSocketAddressChange(e) {
+	if(debouncer) {
+		clearTimeout(debouncer);
+	}
+	debouncer = setTimeout(function () {
+		debouncer = null;
+		deviceAddress = document.getElementById("webSocketAddress").value;
+		window.localStorage.setItem("webSocketAddress", value);
+	}, 500);
+}
+
 function defaultSettings() {
 	var r = confirm("Are you sure you want to reset ALL settings to default?");
 	if (r) {
@@ -401,10 +534,35 @@ function defaultSettings() {
 		window.location.reload();
 	} 
 }
+
 function deleteSettings() {
 	var r = confirm("Are you sure you want to delete ALL settings from localStorage and close the window?");
 	if (r) {
 		window.localStorage.clear();
 		window.close();
 	} 
+}
+
+function connectToTcodeDevice() {
+	webSocket = new WebSocket("ws://"+deviceAddress+"/ws");
+	webSocket.onopen = function (event) {
+		webSocket.send("D1");
+	};
+	webSocket.onmessage = function (event) {
+		console.log(event.data);
+		document.getElementById("webSocketStatus").innerHTML = "Connected";
+	}
+	webSocket.onerror = function (event) {
+		console.log(event.data);
+		webSocket = null;
+		document.getElementById("webSocketStatus").innerHTML = "Error";
+	}
+}
+
+function sendTcode(tcode) {
+	console.log("Send tcode: "+tcode);
+	if(webSocket)
+	{
+		webSocket.send(tcode);
+	}
 }

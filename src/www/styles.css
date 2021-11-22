@@ -203,5 +203,5 @@ color: lightblue;
     max-height: calc(100vh - 500px);
 }
 .video {
-    
+    max-height: 35vh;
 }

@@ -4,6 +4,7 @@
     <title>XTP Web</title>
     <link rel="stylesheet" type="text/css" href="styles.css"/>
     <script src="index.js"></script>
+    <script src="syncFunscript.js"></script>
 	
 <!--     <link rel="stylesheet" type="text/css" href="https://s3.deovr.com/version/1/css/styles.css"/>
     <script src="https://s3.deovr.com/version/1/js/bundle.js" async></script> -->
@@ -101,6 +102,18 @@
 					<button id="defaultSettingsButton" onclick="defaultSettings()">
 						Default All
 					</button>
+				</div>
+				<div class="formElement">
+					<label title="Must use WebSocket in ESP32 firmware." 
+						for="useVideoCheckbox">WebSocket ESP32 address
+						<input id="webSocketAddress" oninput="webSocketAddressChange(this)"/>
+						<button id="webSocketAddressConnectButton" onclick="connectToTcodeDevice()">
+							Connect
+						</button>
+					</label>
+					<label id="webSocketStatus">
+						Disconnected
+					</label> 
 				</div>
 <!-- 				<div class="formElement">
 					<button id="defaultSettingsButton" onclick="deleteSettings()">
