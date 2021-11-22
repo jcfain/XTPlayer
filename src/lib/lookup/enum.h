@@ -7,7 +7,8 @@ enum DeviceType
     Network,
     Deo,
     Whirligig,
-    Gamepad
+    Gamepad,
+    XTPWeb
 };
 
 enum ConnectionStatus

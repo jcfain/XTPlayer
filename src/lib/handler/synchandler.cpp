@@ -48,7 +48,6 @@ QList<QString> SyncHandler::load(QString scriptFile)
 {
     LogHandler::Debug("Enter syncHandler load");
     reset();
-    _xSettings->getSelectedDeviceHandler()->sendTCode(_tcodeHandler->getRunningHome());
     if(!scriptFile.isEmpty())
     {
         QFileInfo scriptInfo(scriptFile);
@@ -356,6 +355,7 @@ void SyncHandler::syncVRFunscript(QString funscript)
         VRPacket currentVRPacket;
         qint64 timeTracker = 0;
         qint64 lastVRTime = 0;
+        qint64 lastVRSyncResetTime = 0;
         QElapsedTimer mSecTimer;
         qint64 timer1 = 0;
         qint64 timer2 = 0;
@@ -381,18 +381,16 @@ void SyncHandler::syncVRFunscript(QString funscript)
     //                LogHandler::Debug("Out timeTracker: "+QString::number(timeTracker));
                     timer1 = timer2;
                     qint64 vrTime = currentVRPacket.currentTime;
-                    //LogHandler::Debug("VR time reset: "+QString::number(currentTime));
-                    bool hasRewind = lastVRTime > vrTime;
-                    if (vrTime > timeTracker + 100 || hasRewind)
+                    if(lastVRTime != vrTime)
                     {
+                        //LogHandler::Debug("VR time reset: "+QString::number(currentTime));
                         lastVRTime = vrTime;
-//                        LogHandler::Debug("current time reset: " + QString::number(currentTime));
-//                        LogHandler::Debug("timeTracker: " + QString::number(timeTracker));
                         timeTracker = vrTime;
                     }
                     else
                     {
                         timeTracker++;
+//                        LogHandler::Debug("else: " + QString::number(timeTracker));
                         vrTime = timeTracker;
                     }
                     //LogHandler::Debug("funscriptHandler->getPosition: "+QString::number(currentTime));

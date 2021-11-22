@@ -116,6 +116,9 @@ public:
     static void setWhirligigPort(QString value);
     static void setWhirligigEnabled(bool value);
 
+    static void setXTPWebSyncEnabled(bool value);
+    static bool getXTPWebSyncEnabled();
+
     static void setPlayerVolume(int value);
     static void setoffSet(int value);
 
@@ -289,6 +292,7 @@ private:
     static QString whirligigAddress;
     static QString whirligigPort;
     static bool whirligigEnabled;
+    static bool _xtpWebSyncEnabled;
     static int playerVolume;
     static int offSet;
     static bool _disableSerialTCodeValidation;

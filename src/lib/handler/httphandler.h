@@ -20,9 +20,9 @@
 
 class HttpHandler : public HttpRequestHandler
 {
+    Q_OBJECT
 signals:
-    void streamChange(bool running);
-    void chunkProcessed(HttpDataPtr data);
+    void readyRead(QByteArray data);
 public:
     HttpHandler(VideoHandler* videoHandler, QObject *parent = nullptr);
     ~HttpHandler();
@@ -33,6 +33,7 @@ public:
     HttpPromise handleFunscriptFile(HttpDataPtr data);
     HttpPromise handleSettings(HttpDataPtr data);
     HttpPromise handleDeo(HttpDataPtr data);
+    HttpPromise handleWebTimeUpdate(HttpDataPtr data);
     void setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems);
 
 private:

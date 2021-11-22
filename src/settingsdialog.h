@@ -23,8 +23,10 @@
 #include "lib/handler/udphandler.h"
 #include "lib/handler/deohandler.h"
 #include "lib/handler/whirligighandler.h"
+#include "lib/handler/xtpwebhandler.h"
 #include "lib/handler/gamepadhandler.h"
 #include "lib/handler/funscripthandler.h"
+#include "lib/handler/httphandler.h"
 #include "libraryexclusions.h"
 #include "addchanneldialog.h"
 
@@ -44,6 +46,7 @@ public:
     UdpHandler* getNetworkHandler();
     SerialHandler* getSerialHandler();
     DeoHandler* getDeoHandler();
+    XTPWebHandler* getXTPWebHandler();
     WhirligigHandler* getWhirligigHandler();
     GamepadHandler* getGamepadHandler();
     void setSelectedDeviceHandler(DeviceHandler* device);
@@ -59,6 +62,7 @@ public:
     PasswordResponse CheckPass(QString pass);
     PasswordResponse GetLaunchPass();
     bool HasLaunchPass();
+    void setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems);
 
     void reject() override;
 
@@ -69,6 +73,9 @@ signals:
     void deoDeviceConnectionChange(ConnectionChangedSignal event);
     void whirligigDeviceError(QString error);
     void whirligigDeviceConnectionChange(ConnectionChangedSignal event);
+    void xtpWebDeviceError(QString error);
+    void xtpWebDeviceConnectionChange(ConnectionChangedSignal event);
+
     void gamepadConnectionChange(ConnectionChangedSignal event);
     void TCodeHomeClicked();
     void onAxisValueChange(QString axis, int value);
@@ -95,6 +102,8 @@ private slots:
     void on_deo_error(QString error);
     void on_whirligig_connectionChanged(ConnectionChangedSignal event);
     void on_whirligig_error(QString error);
+    void on_xtpWeb_connectionChanged(ConnectionChangedSignal event);
+    void on_xtpWeb_error(QString error);
     void on_gamepad_connectionChanged(ConnectionChangedSignal event);
 
     void on_SerialOutputCmb_currentIndexChanged(int index);
@@ -215,6 +224,8 @@ private slots:
 
     void on_finscriptModifierSpinBox_valueChanged(int arg1);
 
+    void on_xtpWebHandlerCheckbox_clicked(bool checked);
+
 private:
 
     Ui::SettingsDialog ui;
@@ -223,6 +234,7 @@ private:
     void initNetworkEvent();
     void initDeoEvent();
     void initWhirligigEvent();
+    void initXTPWebEvent();
     void setupUi();
     void setupGamepadMap();
     void setUpMultiplierUi(bool enabled);
@@ -234,17 +246,21 @@ private:
     ConnectionStatus _outDeviceConnectionStatus = ConnectionStatus::Disconnected;
     ConnectionStatus _deoConnectionStatus = ConnectionStatus::Disconnected;
     ConnectionStatus _whirligigConnectionStatus = ConnectionStatus::Disconnected;
+    ConnectionStatus _xtpWebConnectionStatus = ConnectionStatus::Disconnected;
     ConnectionStatus _gamepadConnectionStatus = ConnectionStatus::Disconnected;
     QList<SerialComboboxItem> serialPorts;
     SerialComboboxItem selectedSerialPort;
     DeviceHandler* selectedDeviceHandler;
     VRDeviceHandler* _connectedVRHandler;
     VideoHandler* _videoHandler;
+    HttpHandler* _httpHandler = 0;
     SerialHandler* _serialHandler;
     UdpHandler* _udpHandler;
-    DeoHandler* _deoHandler;
 
+    DeoHandler* _deoHandler;
     WhirligigHandler* _whirligigHandler;
+    XTPWebHandler* _xtpWebHandler;
+
     GamepadHandler* _gamepadHandler;
     QFuture<void> _initFuture;
     ChannelTableViewModel* channelTableViewModel;

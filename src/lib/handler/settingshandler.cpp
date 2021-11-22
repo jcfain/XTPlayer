@@ -82,6 +82,8 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     whirligigPort = whirligigPort.isEmpty() ? "2000" : whirligigPort;
     whirligigEnabled = settingsToLoadFrom->value("whirligigEnabled").toBool();
 
+    _xtpWebSyncEnabled = settingsToLoadFrom->value("xtpWebSyncEnabled").toBool();
+
     libraryView = settingsToLoadFrom->value("libraryView").toInt();
     _librarySortMode = settingsToLoadFrom->value("selectedLibrarySortMode").toInt();
     thumbSize = settingsToLoadFrom->value("thumbSize").toInt();
@@ -278,6 +280,8 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         settingsToSaveTo->setValue("whirligigAddress", whirligigAddress);
         settingsToSaveTo->setValue("whirligigPort", whirligigPort);
         settingsToSaveTo->setValue("whirligigEnabled", whirligigEnabled);
+        settingsToSaveTo->setValue("xtpWebSyncEnabled", _xtpWebSyncEnabled);
+
 
         settingsToSaveTo->setValue("libraryView", libraryView);
         settingsToSaveTo->setValue("selectedLibrarySortMode", _librarySortMode);
@@ -1338,6 +1342,17 @@ bool SettingsHandler::getWhirligigEnabled()
     return whirligigEnabled;
 }
 
+void SettingsHandler::setXTPWebSyncEnabled(bool value)
+{
+    QMutexLocker locker(&mutex);
+    _xtpWebSyncEnabled = value;
+}
+bool SettingsHandler::getXTPWebSyncEnabled()
+{
+    QMutexLocker locker(&mutex);
+    return _xtpWebSyncEnabled;
+}
+
 void SettingsHandler::setPlayerVolume(int value)
 {
     QMutexLocker locker(&mutex);
@@ -1889,6 +1904,7 @@ bool SettingsHandler::deoEnabled;
 QString SettingsHandler::whirligigAddress;
 QString SettingsHandler::whirligigPort;
 bool SettingsHandler::whirligigEnabled;
+bool SettingsHandler::_xtpWebSyncEnabled;
 bool SettingsHandler::defaultReset = false;
 bool SettingsHandler::disableSpeechToText;
 bool SettingsHandler::_disableVRScriptSelect;

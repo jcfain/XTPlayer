@@ -8,7 +8,7 @@ var settingsNode;
 var thumbSizeGlobal = 0;
 var videoNode;
 var videoSourceNode;
-var useVideoElement;
+var externalStreaming;
 var resizeObserver;
 var webSocket;
 var deviceAddress;
@@ -31,12 +31,12 @@ function loadPage()
 	showGlobal = JSON.parse(window.localStorage.getItem("show"));
 	thumbSizeGlobal = JSON.parse(window.localStorage.getItem("thumbSize"));
 	var volume = JSON.parse(window.localStorage.getItem("volume"));
-	useVideoElement = JSON.parse(window.localStorage.getItem("useVideoElement"));
-	deviceAddress =  JSON.parse(window.localStorage.getItem("webSocketAddress"));
-	if(!deviceAddress)
-		deviceAddress = "tcode.local";
+	externalStreaming = JSON.parse(window.localStorage.getItem("externalStreaming"));
+	//deviceAddress =  JSON.parse(window.localStorage.getItem("webSocketAddress"));
+	// if(!deviceAddress)
+	// 	deviceAddress = "tcode.local";
 		
-	document.getElementById("webSocketAddress").value = deviceAddress;
+	//document.getElementById("webSocketAddress").value = deviceAddress;
 
 	videoNode = document.getElementById("videoPlayer");
 	videoSourceNode = document.getElementById("videoSource");
@@ -48,7 +48,7 @@ function loadPage()
 	videoNode.addEventListener("ended", onVideoEnd); 
 	videoNode.volume = volume ? volume : 0.5;
 	
-	toggleUseVideo(useVideoElement, false);
+	toggleExternalStreaming(externalStreaming, false);
 	
 /* 	
 	deoVideoNode = document.getElementById("deoVideoPlayer");
@@ -146,6 +146,13 @@ async function loadMediaFunscript(path, isMFS) {
 		}
 	};
 	xhr.send();
+}
+
+function postMediaState(mediaState) {
+	var xhr = new XMLHttpRequest();
+	xhr.open("POST", "/xtpweb", true);
+	xhr.setRequestHeader('Content-Type', 'application/json');
+	xhr.send(JSON.stringify(mediaState));
 }
 
 function onMediaLoad(err, mediaList)
@@ -380,19 +387,19 @@ function loadVideo(obj) {
 	}
 } 
 */
-function onClickUseVideoCheckbox(checkbox)
+function onClickExternalStreamingCheckbox(checkbox)
 {
-	toggleUseVideo(checkbox.checked, true);
+	toggleExternalStreaming(checkbox.checked, true);
 }
-function toggleUseVideo(value, userClicked)
+function toggleExternalStreaming(value, userClicked)
 {
 	if(userClicked) {
-		useVideoElement = value;
-		window.localStorage.setItem("useVideoElement", JSON.stringify(value));
+		externalStreaming = value;
+		window.localStorage.setItem("externalStreaming", JSON.stringify(value));
 	}
 	else
-		document.getElementById("useVideoCheckbox").checked = value;
-	if(!value) {
+		document.getElementById("externalStreamingCheckbox").checked = value;
+	if(value) {
 		videoNode.pause();
 		videoNode.style.display = "none";
 		thumbsContainerNode.style.maxHeight = "";
@@ -406,26 +413,32 @@ function toggleUseVideo(value, userClicked)
 }
 
 function playVideo(obj) {
-	if(useVideoElement) {
+	if(!externalStreaming) {
 		playingmediaItem = obj;
 		videoNode.style.display = "block";
 		videoSourceNode.setAttribute("src", "/video" + obj.relativePath);
 		videoNode.setAttribute("title", obj.name);
 		videoNode.setAttribute("poster", "/thumb/" + obj.relativeThumb);
 		videoNode.load();
-		loadedFunscripts = [];
-		if(playingmediaItem.hasScript)
-			loadMediaFunscript(playingmediaItem.scriptNoExtensionRelativePath, playingmediaItem.isMFS);
-		else
+		// loadedFunscripts = [];
+		// if(playingmediaItem.hasScript)
+		// 	loadMediaFunscript(playingmediaItem.scriptNoExtensionRelativePath, playingmediaItem.isMFS);
+		// else
 			videoNode.play();
 
 	} else { 
 		window.open("/video"+ obj.relativePath)
 	}
 }
+
+var timer1 = 0;
+var timer2 = Date.now();
 function onVideoTimeUpdate(event) {
-	if(funscriptSyncWorker)
-		funscriptSyncWorker.postMessage({"command": "setCurrentTime", "currentTime": videoNode.currentTime})
+	if (timer2 - timer1 >= 1000) {
+		timer1 = timer2;
+		sendMediaState();
+	}
+	timer2 = Date.now();
 }
 function onVideoLoad(event) {
 	console.log("Data loaded")
@@ -435,24 +448,22 @@ function onVideoLoad(event) {
 function onVideoPlay(event) {
 	console.log("Video play")
 	playingmediaItem.playing = true;
-	if(!funscriptSyncWorker && loadedFunscripts && loadedFunscripts.length > 0)
-		startFunscriptSync(loadedFunscripts);
-	if(funscriptSyncWorker)
-		funscriptSyncWorker.postMessage({"command": "setMediaPlayingState", "playingState": true});
+	// if(!funscriptSyncWorker && loadedFunscripts && loadedFunscripts.length > 0)
+	// 	startFunscriptSync(loadedFunscripts);
+	sendMediaState();
 }
 function onVideoPause(event) {
 	console.log("Video pause")
 	playingmediaItem.playing = false;
-	if(funscriptSyncWorker)
-		funscriptSyncWorker.postMessage({"command": "setMediaPlayingState", "playingState": false});
+	sendMediaState();
 }
 function onVolumeChange() {
 	window.localStorage.setItem("volume", videoNode.volume);
 }
 function onVideoEnd(event) {
-	if(funscriptSyncWorker) {
-		funscriptSyncWorker.postMessage(JSON.stringify({"command": "terminate"}));
-	}
+	// if(funscriptSyncWorker) {
+	// 	funscriptSyncWorker.postMessage(JSON.stringify({"command": "terminate"}));
+	// }
 }
 function setThumbSize(value, userClick) {
 	if(!userClick) {
@@ -469,11 +480,26 @@ function startFunscriptSync() {
 		if(funscriptSyncWorker)
 			funscriptSyncWorker.terminate();
 		funscriptSyncWorker = new Worker('syncFunscript.js');
-		funscriptSyncWorker.postMessage(JSON.stringify({"command": "setRemoteUserSettings", "remoteUserSettings": remoteUserSettings}));
-		funscriptSyncWorker.postMessage(JSON.stringify({"command": "startThread", "funscripts": loadedFunscripts}));
+		funscriptSyncWorker.postMessage(JSON.stringify({
+			"command": "startThread", 
+			"funscripts": loadedFunscripts, 
+			"remoteUserSettings": remoteUserSettings
+		}));
 		funscriptSyncWorker.onmessage = onFunscriptWorkerThreadRecieveMessage;
 	}
 }
+
+function sendMediaState() {
+	console.log("sendMediaState")
+	postMediaState({
+		"path": playingmediaItem.path,
+		"playing": playingmediaItem.playing, 
+		"currentTime": videoNode.currentTime, 
+		"duration": videoNode.duration,
+		"playbackSpeed": videoNode.speed
+	});
+}
+
 function onFunscriptWorkerThreadRecieveMessage(e) {
     isMediaFunscriptPlaying = true;
     var data;
@@ -485,6 +511,9 @@ function onFunscriptWorkerThreadRecieveMessage(e) {
         case "sendTcode":
             sendTcode(data["tcode"])
             break;
+		case "getMediaState":
+			sendMediaState();
+			break;
         case "end":
 			funscriptSyncWorker.terminate();
 			funscriptSyncWorker = null;

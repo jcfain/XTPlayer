@@ -10,6 +10,7 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
     _serialHandler = new SerialHandler(this);
     _udpHandler = new UdpHandler(this);
     _deoHandler = new DeoHandler(this);
+    _xtpWebHandler = new XTPWebHandler(this);
     _whirligigHandler = new WhirligigHandler(this);
     _gamepadHandler = new GamepadHandler(this);
     if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
@@ -29,6 +30,8 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
     connect(_deoHandler, &DeoHandler::errorOccurred, this, &SettingsDialog::on_deo_error);
     connect(_whirligigHandler, &WhirligigHandler::connectionChange, this, &SettingsDialog::on_whirligig_connectionChanged);
     connect(_whirligigHandler, &WhirligigHandler::errorOccurred, this, &SettingsDialog::on_whirligig_error);
+    connect(_xtpWebHandler, &XTPWebHandler::connectionChange, this, &SettingsDialog::on_xtpWeb_connectionChanged);
+    connect(_xtpWebHandler, &XTPWebHandler::errorOccurred, this, &SettingsDialog::on_xtpWeb_error);
     connect(_gamepadHandler, &GamepadHandler::connectionChange, this, &SettingsDialog::on_gamepad_connectionChanged);
     connect(ui.buttonBox, & QDialogButtonBox::clicked, this, &SettingsDialog::on_dialogButtonboxClicked);
     connect(this, &SettingsDialog::loadingDialogClose, this, &SettingsDialog::on_close_loading_dialog);
@@ -50,22 +53,28 @@ void SettingsDialog::dispose()
     _deoHandler->dispose();
     _whirligigHandler->dispose();
     _gamepadHandler->dispose();
+    _xtpWebHandler->dispose();
     if(_initFuture.isRunning())
     {
         //_initFuture.cancel();
         _initFuture.waitForFinished();
     }
     LogHandler::ExportDebug();
+    if(_httpHandler)
+        delete _httpHandler;
     delete _serialHandler;
     delete _udpHandler;
     delete _deoHandler;
     delete _whirligigHandler;
+    delete _xtpWebHandler;;
     delete _gamepadHandler;
 }
 
 void SettingsDialog::init(VideoHandler* videoHandler)
 {
     _videoHandler = videoHandler;
+    if(SettingsHandler::getEnableHttpServer())
+        _httpHandler = new HttpHandler(videoHandler, this);
     setupUi();
     if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
     {
@@ -84,6 +93,11 @@ void SettingsDialog::init(VideoHandler* videoHandler)
     {
         setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceType::Whirligig);
         initWhirligigEvent();
+    }
+    else if(SettingsHandler::getEnableHttpServer() && SettingsHandler::getXTPWebSyncEnabled())
+    {
+        setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceType::XTPWeb);
+        initXTPWebEvent();
     }
     if(SettingsHandler::getGamepadEnabled())
     {
@@ -257,11 +271,23 @@ void SettingsDialog::setupUi()
         }
         enableOrDisableDeviceConnectionUI((DeviceType)SettingsHandler::getSelectedDevice());
         bool deoEnabled = SettingsHandler::getDeoEnabled();
-        ui.deoCheckbox->setChecked(deoEnabled);
-        ui.deoAddressTxt->setEnabled(deoEnabled);
-        ui.deoPortTxt->setEnabled(deoEnabled);
-        ui.deoConnectButton->setEnabled(deoEnabled);
-        ui.whirligigCheckBox->setChecked(SettingsHandler::getWhirligigEnabled());
+        bool whiriligigEnabled = SettingsHandler::getWhirligigEnabled();
+        bool xtpWebEnabled = SettingsHandler::getXTPWebSyncEnabled();
+        if(deoEnabled)
+        {
+            ui.deoCheckbox->setChecked(deoEnabled);
+            on_deoCheckbox_clicked(deoEnabled);
+        } else if(whiriligigEnabled)
+        {
+            ui.whirligigCheckBox->setChecked(whiriligigEnabled);
+            on_whirligigCheckBox_clicked(whiriligigEnabled);
+        }
+        else if(xtpWebEnabled)
+        {
+            ui.xtpWebHandlerCheckbox->setChecked(xtpWebEnabled);
+            on_xtpWebHandlerCheckbox_clicked(xtpWebEnabled);
+        }
+
         ui.gamePadCheckbox->setChecked(SettingsHandler::getGamepadEnabled());
         ui.gamePadMapGroupbox->setHidden(!SettingsHandler::getGamepadEnabled());
         ui.videoIncrementSpinBox->setValue(SettingsHandler::getVideoIncrement());
@@ -695,6 +721,12 @@ void SettingsDialog::setUpMultiplierUi(bool enabled)
         widget->setHidden(!enabled);
 }
 
+void SettingsDialog::setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems)
+{
+    if(_httpHandler)
+        _httpHandler->setLibraryLoaded(loaded, cachedLibraryItems, vrLibraryItems);
+}
+
 void SettingsDialog::setAxisProgressBar(QString axis, int value)
 {
     emit onAxisValueChange(axis, value);
@@ -770,13 +802,17 @@ WhirligigHandler* SettingsDialog::getWhirligigHandler()
 {
     return _whirligigHandler;
 }
+XTPWebHandler* SettingsDialog::getXTPWebHandler()
+{
+    return _xtpWebHandler;
+}
 GamepadHandler* SettingsDialog::getGamepadHandler()
 {
     return _gamepadHandler;
 }
 bool SettingsDialog::isDeviceConnected()
 {
-    return _outDeviceConnectionStatus == ConnectionStatus::Connected;
+    return selectedDeviceHandler->isConnected();
 }
 
 void SettingsDialog::setSelectedDeviceHandler(DeviceHandler* device)
@@ -888,6 +924,17 @@ void SettingsDialog::initWhirligigEvent()
     }
 }
 
+void SettingsDialog::initXTPWebEvent()
+{
+    if (_xtpWebHandler->isConnected())
+    {
+        _xtpWebHandler->dispose();
+    }
+    _xtpWebHandler->init(_httpHandler);
+    _connectedVRHandler = _xtpWebHandler;
+    setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceType::XTPWeb);
+}
+
 void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo)
 {
     serialHandler->init(serialInfo.portName);
@@ -956,6 +1003,12 @@ void SettingsDialog::setDeviceStatusStyle(ConnectionStatus status, DeviceType de
         ui.whirligigStatuslbl->setText(statusUnicode + " " + message);
         ui.whirligigStatuslbl->setFont(font);
         ui.whirligigStatuslbl->setStyleSheet("color: " + statusColor);
+    }
+    else if (deviceType == DeviceType::XTPWeb)
+    {
+        ui.xtpWebStatuslbl->setText(statusUnicode + " " + message);
+        ui.xtpWebStatuslbl->setFont(font);
+        ui.xtpWebStatuslbl->setStyleSheet("color: " + statusColor);
     }
     else if (deviceType == DeviceType::Gamepad)
     {
@@ -1058,6 +1111,10 @@ void SettingsDialog::on_deo_connectionChanged(ConnectionChangedSignal event)
         {
             _whirligigHandler->dispose();
         }
+        if(_xtpWebHandler->isConnected())
+        {
+            _xtpWebHandler->dispose();
+        }
         if (event.status == ConnectionStatus::Connected || event.status == ConnectionStatus::Connecting)
         {
             ui.deoConnectButton->setEnabled(false);
@@ -1147,6 +1204,10 @@ void SettingsDialog::on_whirligig_connectionChanged(ConnectionChangedSignal even
         {
             _deoHandler->dispose();
         }
+        if(_xtpWebHandler->isConnected())
+        {
+            _xtpWebHandler->dispose();
+        }
         if (event.status == ConnectionStatus::Connected || event.status == ConnectionStatus::Connecting)
         {
             ui.whirligigConnectButton->setEnabled(false);
@@ -1164,6 +1225,41 @@ void SettingsDialog::on_whirligig_connectionChanged(ConnectionChangedSignal even
 void SettingsDialog::on_whirligig_error(QString error)
 {
     emit whirligigDeviceError(error);
+}
+
+void SettingsDialog::on_xtpWeb_connectionChanged(ConnectionChangedSignal event)
+{
+    _xtpWebConnectionStatus = event.status;
+    if (event.status == ConnectionStatus::Error)
+    {
+        setDeviceStatusStyle(event.status, event.deviceType, event.message);
+        _connectedVRHandler = nullptr;
+    }
+    else
+    {
+        if(_deoHandler->isConnected())
+        {
+            _deoHandler->dispose();
+        }
+        if(_whirligigHandler->isConnected())
+        {
+            _whirligigHandler->dispose();
+        }
+        if (event.status == ConnectionStatus::Connected || event.status == ConnectionStatus::Connecting)
+        {
+            //ui.whirligigConnectButton->setEnabled(false);
+        }
+        else if(SettingsHandler::getDeoEnabled())
+        {
+            //ui.whirligigConnectButton->setEnabled(true);
+        }
+        setDeviceStatusStyle(event.status, event.deviceType);
+    }
+    emit xtpWebDeviceConnectionChange({event.deviceType, event.status, event.message});
+}
+void SettingsDialog::on_xtpWeb_error(QString error)
+{
+    emit xtpWebDeviceError(error);
 }
 
 VRDeviceHandler* SettingsDialog::getConnectedVRHandler() {
@@ -1280,10 +1376,12 @@ void SettingsDialog::on_deoConnectButton_clicked()
 
 void SettingsDialog::on_deoCheckbox_clicked(bool checked)
 {
-    if(checked && ui.whirligigCheckBox->isChecked())
+    if(checked)
     {
         ui.whirligigCheckBox->setChecked(!checked);
         on_whirligigCheckBox_clicked(!checked);
+        ui.xtpWebHandlerCheckbox->setChecked(!checked);
+        on_xtpWebHandlerCheckbox_clicked(!checked);
     }
     SettingsHandler::setDeoEnabled(checked);
     ui.deoAddressTxt->setEnabled(checked);
@@ -1291,6 +1389,43 @@ void SettingsDialog::on_deoCheckbox_clicked(bool checked)
     ui.deoConnectButton->setEnabled(checked);
     if (!checked)
         _deoHandler->dispose();
+}
+
+void SettingsDialog::on_whirligigCheckBox_clicked(bool checked)
+{
+    if(checked)
+    {
+        ui.deoCheckbox->setChecked(!checked);
+        on_deoCheckbox_clicked(!checked);
+        ui.xtpWebHandlerCheckbox->setChecked(!checked);
+        on_xtpWebHandlerCheckbox_clicked(!checked);
+    }
+    SettingsHandler::setWhirligigEnabled(checked);
+    ui.whirligigConnectButton->setEnabled(checked);
+    if (!checked)
+        _whirligigHandler->dispose();
+}
+
+void SettingsDialog::on_xtpWebHandlerCheckbox_clicked(bool checked)
+{
+    if(!SettingsHandler::getEnableHttpServer()) {
+        LogHandler::Dialog("XTP web is not enabled on the system tab. Set it up and return here afterwards.", XLogLevel::Information);
+        ui.xtpWebHandlerCheckbox->setChecked(false);
+        return;
+    }
+    if(checked)
+    {
+        ui.whirligigCheckBox->setChecked(!checked);
+        on_whirligigCheckBox_clicked(!checked);
+        ui.deoCheckbox->setChecked(!checked);
+        on_deoCheckbox_clicked(!checked);
+    }
+
+    SettingsHandler::setXTPWebSyncEnabled(checked);
+    if (!checked)
+        _xtpWebHandler->dispose();
+    else
+        initXTPWebEvent();
 }
 
 void SettingsDialog::on_checkBox_clicked(bool checked)
@@ -1372,19 +1507,6 @@ void SettingsDialog::on_disableTextToSpeechCheckBox_clicked(bool checked)
 void SettingsDialog::on_invertFunscriptXCheckBox_clicked(bool checked)
 {
     FunscriptHandler::setInverted(checked);
-}
-
-void SettingsDialog::on_whirligigCheckBox_clicked(bool checked)
-{
-    if(checked && ui.deoCheckbox->isChecked())
-    {
-        ui.deoCheckbox->setChecked(!checked);
-        on_deoCheckbox_clicked(!checked);
-    }
-    SettingsHandler::setWhirligigEnabled(checked);
-    ui.whirligigConnectButton->setEnabled(checked);
-    if (!checked)
-        _whirligigHandler->dispose();
 }
 
 void SettingsDialog::on_whirligigConnectButton_clicked()
@@ -1725,6 +1847,8 @@ void SettingsDialog::on_enableHttpServerCheckbox_clicked(bool checked)
     SettingsHandler::setEnableHttpServer(checked);
     ui.httpServerOptions->setVisible(checked);
     _requiresRestart = true;
+    if(!checked)
+        SettingsHandler::setXTPWebSyncEnabled(false);
 }
 
 void SettingsDialog::on_browseHttpRootButton_clicked()

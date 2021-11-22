@@ -117,8 +117,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     _mediaGrid->setMargin(0);
     _mediaGrid->setContentsMargins(0,0,0,0);
 
-    if(SettingsHandler::getEnableHttpServer())
-        _httpHandler = new HttpHandler(videoHandler, this);
 
     _controlsHomePlaceHolderFrame = new QFrame(this);
     _controlsHomePlaceHolderGrid = new QGridLayout(_controlsHomePlaceHolderFrame);
@@ -299,14 +297,17 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     connect(_xSettings, &SettingsDialog::deoDeviceConnectionChange, this, &MainWindow::on_deo_device_connectionChanged);
     connect(_xSettings, &SettingsDialog::deoDeviceError, this, &MainWindow::on_deo_device_error);
-
     connect(_xSettings, &SettingsDialog::whirligigDeviceConnectionChange, this, &MainWindow::on_whirligig_device_connectionChanged);
     connect(_xSettings, &SettingsDialog::whirligigDeviceError, this, &MainWindow::on_whirligig_device_error);
+    connect(_xSettings, &SettingsDialog::xtpWebDeviceConnectionChange, this, &MainWindow::on_xtpWeb_device_connectionChanged);
+    connect(_xSettings, &SettingsDialog::xtpWebDeviceError, this, &MainWindow::on_xtpWeb_device_error);
+
     connect(_xSettings, &SettingsDialog::deviceConnectionChange, this, &MainWindow::on_device_connectionChanged);
     connect(_xSettings, &SettingsDialog::deviceError, this, &MainWindow::on_device_error);
     connect(_xSettings, &SettingsDialog::TCodeHomeClicked, this, &MainWindow::deviceHome);
     connect(_xSettings->getDeoHandler(), &DeoHandler::messageRecieved, this, &MainWindow::onVRMessageRecieved);
     connect(_xSettings->getWhirligigHandler(), &WhirligigHandler::messageRecieved, this, &MainWindow::onVRMessageRecieved);
+    connect(_xSettings->getXTPWebHandler(), &XTPWebHandler::messageRecieved, this, &MainWindow::onVRMessageRecieved);
     connect(_xSettings, &SettingsDialog::gamepadConnectionChange, this, &MainWindow::on_gamepad_connectionChanged);
     connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitTCode, this, &MainWindow::on_gamepad_sendTCode);
     connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitAction, this, &MainWindow::on_gamepad_sendAction);
@@ -442,8 +443,6 @@ void MainWindow::dispose()
     qDeleteAll(cachedVRItems);
     cachedVRItems.clear();
     //qDeleteAll(funscriptHandlers);
-    if(_httpHandler)
-        delete _httpHandler;
     delete tcodeHandler;
     delete videoHandler;
     delete connectionStatusLabel;
@@ -1230,8 +1229,7 @@ void MainWindow::onPrepareLibraryLoad()
     cachedLibraryItems.clear();
     qDeleteAll(cachedVRItems);
     cachedVRItems.clear();
-    if(_httpHandler)
-        _httpHandler->setLibraryLoaded(false, cachedLibraryItems, cachedVRItems);
+    _xSettings->setLibraryLoaded(false, cachedLibraryItems, cachedVRItems);
     libraryList->clear();
     ui->actionReload_library->setDisabled(true);
     ui->actionSelect_library->setDisabled(true);
@@ -1543,8 +1541,7 @@ void MainWindow::onLibraryLoaded()
     ui->actionReload_library->setDisabled(false);
     ui->actionSelect_library->setDisabled(false);
 
-    if(_httpHandler)
-        _httpHandler->setLibraryLoaded(true, cachedLibraryItems, cachedVRItems);
+    _xSettings->setLibraryLoaded(true, cachedLibraryItems, cachedVRItems);
 
     setLibraryLoading(false);
 }
@@ -3106,6 +3103,37 @@ void MainWindow::on_whirligig_device_connectionChanged(ConnectionChangedSignal e
 void MainWindow::on_whirligig_device_error(QString error)
 {
     LogHandler::Dialog("Whirligig error: "+error, XLogLevel::Critical);
+}
+
+void MainWindow::on_xtpWeb_device_connectionChanged(ConnectionChangedSignal event)
+{
+    QString message = "";
+    message += "XTP Web: ";
+    message += " " + event.message;
+    whirligigConnectionStatusLabel->setText(message);
+    whirligigConnectionStatusLabel->show();
+    if(SettingsHandler::getXTPWebSyncEnabled() && (event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected))
+    {
+        deviceHome();
+    }
+    else if(event.status == ConnectionStatus::Connected)
+    {
+        deviceHome();
+        stopMedia();
+    }
+    else if(event.status == ConnectionStatus::Connecting)
+    {
+        whirligigConnectionStatusLabel->show();
+    }
+    else
+    {
+        whirligigConnectionStatusLabel->hide();
+    }
+}
+
+void MainWindow::on_xtpWeb_device_error(QString error)
+{
+    LogHandler::Dialog("XTP Web error: "+error, XLogLevel::Critical);
 }
 
 

@@ -51,7 +51,6 @@
 #include "lib/lookup/MediaActions.h"
 #include "lib/tool/xmath.h"
 #include "lib/lookup/enum.h"
-#include "lib/handler/httphandler.h"
 #include <QtCompress/qzipwriter.h>
 #include <QtCompress/qzipreader.h>
 
@@ -272,7 +271,6 @@ private:
     bool _editPlaylistMode = false;
     bool _libraryDockMode = false;
     AudioSyncFilter* audioSyncFilter;
-    HttpHandler* _httpHandler = 0;
 
     void saveSingleThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
     void saveThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0, bool vrMode = false);
@@ -366,6 +364,8 @@ private:
     void on_deo_device_error(QString error);
     void on_whirligig_device_connectionChanged(ConnectionChangedSignal event);
     void on_whirligig_device_error(QString error);
+    void on_xtpWeb_device_connectionChanged(ConnectionChangedSignal event);
+    void on_xtpWeb_device_error(QString error);
     void donate();
     void showInGraphicalShell(QString path);
     void onSetMoneyShot(LibraryListItem selectedLibraryListItem, qint64 currentPosition);

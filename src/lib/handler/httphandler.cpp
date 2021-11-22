@@ -26,7 +26,7 @@ HttpHandler::HttpHandler(VideoHandler* videoHandler, QObject *parent):
     router.addRoute("GET", "^/video/(.*\\.(("+extensions+")$))?[.]*$", this, &HttpHandler::handleVideoStream);
     router.addRoute("GET", "^/deotest", this, &HttpHandler::handleDeo);
     router.addRoute("GET", "^/settings", this, &HttpHandler::handleSettings);
-
+    router.addRoute("POST", "^/xtpweb", this, &HttpHandler::handleWebTimeUpdate);
 //    router.addRoute("GET", "^/users/(\\w*)/?$", this, &HttpHandler::handleGetUsername);
 //    router.addRoute({"GET", "POST"}, "^/formTest/?$", this, &HttpHandler::handleFormTest);
 //    router.addRoute("GET", "^/fileTest/(\\d*)/?$", this, &HttpHandler::handleFileTest);
@@ -37,6 +37,15 @@ HttpHandler::HttpHandler(VideoHandler* videoHandler, QObject *parent):
 HttpHandler::~HttpHandler()
 {
     delete _server;
+}
+
+HttpPromise HttpHandler::handleWebTimeUpdate(HttpDataPtr data)
+{
+    auto body = data->request->body();
+    LogHandler::Debug("HTTP time sync update: "+QString(body));
+    emit readyRead(body);
+    data->response->setStatus(HttpStatus::Ok);
+    return HttpPromise::resolve(data);
 }
 
 void HttpHandler::setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems)

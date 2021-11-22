@@ -38,6 +38,7 @@ SOURCES += \
     lib/handler/videohandler.cpp \
     lib/handler/vrdevicehandler.cpp \
     lib/handler/whirligighandler.cpp \
+    lib/handler/xtpwebhandler.cpp \
     lib/lookup/tcodechannellookup.cpp \
     lib/struct/channeltablecomboboxdelegate.cpp \
     lib/struct/channeltableviewmodel.cpp \
@@ -70,6 +71,7 @@ HEADERS += \
     lib/handler/videohandler.h \
     lib/handler/vrdevicehandler.h \
     lib/handler/whirligighandler.h \
+    lib/handler/xtpwebhandler.h \
     lib/lookup/AxisNames.h \
     lib/lookup/GamepadAxisNames.h \
     lib/lookup/MediaActions.h \

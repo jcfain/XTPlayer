@@ -46,9 +46,9 @@
 				</div> 
 			-->
 				<div class="formElement">
-					<label title="If checked, players like DeoVR will not work correctly.&#010;Use only if watching media in a standard web browser." 
-					for="useVideoCheckbox">Use built in video player
-						<input id="useVideoCheckbox" type="checkbox" onclick="onClickUseVideoCheckbox(this)"/>
+					<label title="If checked, the media items will open the media&#010;directly instead of the built in media player.&#010;This lets players like DeoVR handle the stream.." 
+					for="externalStreamingCheckbox">DeoVR mode
+						<input id="externalStreamingCheckbox" type="checkbox" onclick="onClickUseVideoCheckbox(this)"/>
 					</label>
 				</div>
 				<div class="formElement">
@@ -103,7 +103,7 @@
 						Default All
 					</button>
 				</div>
-				<div class="formElement">
+<!-- 				<div class="formElement">
 					<label title="Must use WebSocket in ESP32 firmware." 
 						for="useVideoCheckbox">WebSocket ESP32 address
 						<input id="webSocketAddress" oninput="webSocketAddressChange(this)"/>
@@ -114,7 +114,7 @@
 					<label id="webSocketStatus">
 						Disconnected
 					</label> 
-				</div>
+				</div> -->
 <!-- 				<div class="formElement">
 					<button id="defaultSettingsButton" onclick="deleteSettings()">
 						Delete All
