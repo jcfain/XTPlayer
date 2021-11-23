@@ -318,7 +318,6 @@ void SettingsDialog::setupUi()
 
         ui.enableHttpServerCheckbox->setChecked(SettingsHandler::getEnableHttpServer());
         ui.httpServerOptions->setVisible(SettingsHandler::getEnableHttpServer());
-        ui.httpServerOptions->setVisible(SettingsHandler::getEnableHttpServer());
         ui.httpRootLineEdit->setText(SettingsHandler::getHttpServerRoot());
         ui.vrLibraryLineEdit->setText(SettingsHandler::getVRLibrary());
         ui.chunkSizeDoubleSpinBox->setValue(SettingsHandler::getHTTPChunkSize() / 1048576);

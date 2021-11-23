@@ -239,12 +239,12 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
             locker.unlock();
             MigrateTo263();
         }
-        if(currentVersion < 0.27)
+        if(currentVersion < 0.27f)
         {
+            settings->setValue("version", 0.27f);
             SetupDecoderPriority();
             Save();
             Load();
-            LogHandler::Dialog("Due to me learning QtAV your decoder priority has been reset.\nThe available decoders should be retrieved from your system now.\nBesure to check it out in Settings > Video.", XLogLevel::Information);
         }
 
     }
