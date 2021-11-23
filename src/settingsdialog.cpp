@@ -1407,8 +1407,8 @@ void SettingsDialog::on_whirligigCheckBox_clicked(bool checked)
 
 void SettingsDialog::on_xtpWebHandlerCheckbox_clicked(bool checked)
 {
-    if(!SettingsHandler::getEnableHttpServer()) {
-        LogHandler::Dialog("XTP web is not enabled on the system tab. Set it up and return here afterwards.", XLogLevel::Information);
+    if(checked && !SettingsHandler::getEnableHttpServer()) {
+        LogHandler::Dialog("XTP web is not enabled on the 'Web' tab. Set it up and return here afterwards.", XLogLevel::Information);
         ui.xtpWebHandlerCheckbox->setChecked(false);
         return;
     }
