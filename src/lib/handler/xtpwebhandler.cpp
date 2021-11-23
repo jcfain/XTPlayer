@@ -50,9 +50,6 @@ void XTPWebHandler::dispose()
 
 void XTPWebHandler::readData(QByteArray data)
 {
-    //LogHandler::Debug("Deo packet recieved");
-    //LogHandler::Debug("Deo response: "+QString::fromUtf8(datagram));
-
     if(!_isConnected)
     {
         _isConnected = true;
@@ -60,15 +57,10 @@ void XTPWebHandler::readData(QByteArray data)
     }
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(data, &error);
-    if (data.isEmpty())
+    if (doc.isNull())
     {
         LogHandler::Error("XTP Web json response error: "+error.errorString());
         LogHandler::Error("data: "+data);
-        //emit connectionChange({DeviceType::Deo, ConnectionStatus::Error, "Read error: " + error.errorString()});
-//        if(currentPacket != nullptr)
-//        {
-//            currentPacket->playing = false;
-//        }
     }
     else
     {

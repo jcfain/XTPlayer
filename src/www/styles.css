@@ -18,16 +18,12 @@ body {
 .headerSection {
     flex-basis: 33%;
 }
-.headerSpacer {
-    display: flex;
-    flex-flow: column;
-    justify-content: flex-end;
-    max-width: 250px;
-}
 .headerLogoSection {
     display:flex;
     justify-content: center;
-    flex-basis: 95%;
+    flex-basis: 33%;
+    flex-flow: column;
+    align-items: center;
 }
 .headerLogo {
     height: 50px;
@@ -37,12 +33,16 @@ body {
     display: flex;
     flex-flow: column;
     justify-content: center;
-    max-width: 250px;
 }
 .toolBarGroup {
     display: flex;
     justify-content: flex-end;
     flex-wrap: wrap;
+}
+
+.toolBarGroupStart {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
 }
 
 .modal {
@@ -81,12 +81,10 @@ body {
 
 .modal-body {
     display: flex;
-    flex-flow: row;
-    align-items: center;
+    flex-flow: column;
     margin-top: 16px;
     margin-bottom: 16px;
-    flex-basis: 85%;
-    align-items: flex-start;
+    align-items: flex-end;
 }
 .modal-title {
     align-self: center;
@@ -139,16 +137,17 @@ select:hover, button:hover, input:not([type='checkbox']):hover {
 .header-button {
     margin-left: 4px;
 }
-
+.header-button-right {
+    margin-right: 4px;
+}
 .thumbs-container
 {
     display: flex;
     flex-flow: column;
     font-family: arial;
     font-size: 16px;
-    max-height: calc(100vh - 120px);
+    max-height: calc(100vh - 121px);
     overflow-y: auto;
-    margin-top: 15px;
 }
 .thumbs-body
 {
@@ -156,52 +155,99 @@ select:hover, button:hover, input:not([type='checkbox']):hover {
     flex-flow: row;
     flex-wrap: wrap;
     justify-content: center;
+    margin-top: 8px;
+    margin-bottom: 8px;
 }
 
 .media-item 
 {
     overflow: hidden;
+    border-radius: 25px;
+    margin: 5px;
+
 }
 .media-item img
 {
     object-fit: contain;
     flex-basis: 60%;
+    border-radius: 10px;
+    margin-top: 16px;
 }    
-/* display: -webkit-box;
--webkit-line-clamp: 3;
--webkit-box-orient: vertical; */
+
 .media-item .name
 { 
     text-overflow: ellipsis;
     flex-basis: 40%;
     text-align: center;
 }
-
-.mediaLink {
+.media-item:not(.playing-media-item):hover {
+    color: hotpink;
+    box-shadow: -1px 1px 5px 0px hotpink, 1px -1px 5px 0px hotpink, 1px 1px 5px 0px hotpink, -1px -1px 5px 0px hotpink;
+}
+.media-item:not(.playing-media-item):hover a {
+    color: hotpink;
+}
+.media-item-noscript:not(.playing-media-item):hover {
+    color: lightgrey;
+    box-shadow: -1px 1px 5px 0px lightgrey, 1px -1px 5px 0px lightgrey, 1px 1px 5px 0px lightgrey, -1px -1px 5px 0px lightgrey;
+}
+.media-item-noscript:not(.playing-media-item) a  {
+    color: grey;
+}
+.media-item-noscript:not(.playing-media-item):hover a  {
+    color: lightgrey;
+}
+.media-item-mfs:not(.playing-media-item):hover {
+    color: gold;
+    box-shadow: -1px 1px 5px 0px gold, 1px -1px 5px 0px gold, 1px 1px 5px 0px gold, -1px -1px 5px 0px gold;
+}
+.media-item-mfs:not(.playing-media-item) a  {
+    color: chartreuse;
+}
+.media-item-mfs:not(.playing-media-item):hover a  {
+    color: gold;
+}
+.playing-media-item {
+    color: cornflowerblue;
+    box-shadow: -1px 1px 5px 0px cornflowerblue, 1px -1px 5px 0px cornflowerblue, 1px 1px 5px 0px cornflowerblue, -1px -1px 5px 0px cornflowerblue;
+}
+.playing-media-item a {
+    color: cornflowerblue;
+}
+.media-link {
     display: flex;
     flex-flow: column nowrap;
     align-items: center;
     color: white;
 }
-.mediaLink:hover {
-color: hotpink;
-}
-.mediaLink:active {
-color: lightblue;
-}
-.mediaLinkMFS {
-    color: chartreuse;
-}
-.mediaLinkNoScript {
-    color: darkgrey;
-}
-.mediaLinkNoScript:hover {
-    color: lightgrey;
-}
-
-.deoVideo {
+/* .deoVideo {
     max-height: calc(100vh - 500px);
-}
+} */
 .video {
     max-height: 35vh;
+}
+.deviceStatus {
+    text-align: end;
+    font-size: small;
+    margin-bottom: 8px;
+}
+.device-status-disconnected,
+.device-status-error {
+    color: crimson;
+}
+.device-status-connected {
+    color: chartreuse;
+}
+.device-status-connecting {
+    color: yellow;
+}
+.retry-tcode-button {
+    margin-right: 4px;
+    height: 16px;
+    font-size: 10px;
+}
+.refresh-media-button {
+    position: fixed;
+    left: calc(100vw - 75px);
+    top: calc(100vh - 50px);
 }

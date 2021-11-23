@@ -11,16 +11,15 @@
 </head>
 <body>
 <div class="header">
-	<div class="headerSection headerSpacer">
+	<div class="headerSection toolBar">
+		<div class="toolBarGroup toolBarGroupStart">
+		</div>
 	</div>
 	<div class="headerSection headerLogoSection">
 		<img class="headerLogo" src="://images/icons/XTP-window-icon.png"/>
 	</div>
 	<div class="headerSection toolBar">
 		<div class="toolBarGroup">
-			<button id="refreshButton" class="header-button icon-button" onclick="loadMediaFromServer()">
-				<img class="buttonImage" src="://images/icons/reload.svg"/>
-			</button>
 			<button id="settingsButton" class="header-button icon-button" onclick="openSettings()">
 				<image class="buttonImage" src="://images/icons/settings.svg"/>
 			</button>
@@ -36,8 +35,6 @@
 		</button>
 	</div>
 	<div class="modal-body">
-		<div class="toolBar">
-			<div class="toolBarGroup">
 <!-- 		
 				<div class="formElement">
 					<label for="useDeoWebCheckbox">Use Deo Web
@@ -120,8 +117,6 @@
 						Delete All
 					</button>
 				</div> -->
-			</div>
-		</div>
 	</div>
   </div>
 
@@ -133,10 +128,21 @@
 	<source id="videoSource"/>
 	Your browser doesn't support HTML5 video tag.
 </video>
+<div class="toolBar">
+	<div class="toolBarGroup">
+		<button id="deviceConnect" class="retry-tcode-button" style="display: none;" onclick="postDeviceConnectRetry()">
+			Retry
+		</button>
+		<span id="deviceStatus" class="deviceStatus deviceStatusDisconnected">Disconnected</span>
+	</div>
+</div>
 <div id="thumbsContainer" class="thumbs-container">
 	<div id="mediaList" class="thumbs-body">
 	
 	</div>
 </div>
+<button id="refreshButton" title="Refresh the media from XTP" class="refresh-media-button icon-button" onclick="getServerLibrary()">
+	<img class="buttonImage" src="://images/icons/reload.svg"/>
+</button>
 </body>
 </html>

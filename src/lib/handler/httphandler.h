@@ -9,13 +9,13 @@
 #include <QJsonObject>#include <QJsonDocument>
 #include <QJsonValue>
 
-
 #include "settingshandler.h"
 #include "videohandler.h"
 #include "httpServer/httpServer.h"
 #include "httpServer/httpRequestHandler.h"
 #include "httpServer/httpRequestRouter.h"
 #include "../struct/librarylistwidgetitem.h"
+#include "../struct/ConnectionChangedSignal.h"
 #include "../tool/videoformat.h"
 
 class HttpHandler : public HttpRequestHandler
@@ -23,6 +23,10 @@ class HttpHandler : public HttpRequestHandler
     Q_OBJECT
 signals:
     void readyRead(QByteArray data);
+    void connectTCodeDevice();
+public slots:
+    void on_tCodeDeviceConnection_StateChange(ConnectionChangedSignal status);
+
 public:
     HttpHandler(VideoHandler* videoHandler, QObject *parent = nullptr);
     ~HttpHandler();
@@ -32,6 +36,9 @@ public:
     HttpPromise handleThumbFile(HttpDataPtr data);
     HttpPromise handleFunscriptFile(HttpDataPtr data);
     HttpPromise handleSettings(HttpDataPtr data);
+    HttpPromise handleSettingsUpdate(HttpDataPtr data);
+    HttpPromise handleDeviceConnected(HttpDataPtr data);
+    HttpPromise handleConnectDevice(HttpDataPtr data);
     HttpPromise handleDeo(HttpDataPtr data);
     HttpPromise handleWebTimeUpdate(HttpDataPtr data);
     void setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems);
@@ -43,6 +50,7 @@ private:
     QMimeDatabase mimeDatabase;
     VideoHandler* _videoHandler;
 
+    ConnectionChangedSignal _tcodeDeviceStatus = {DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"};
     bool _libraryLoaded = false;
     QList<LibraryListWidgetItem*> _cachedLibraryItems;
     QList<LibraryListWidgetItem*> _vrLibraryItems;

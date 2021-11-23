@@ -13,9 +13,12 @@ var resizeObserver;
 var webSocket;
 var deviceAddress;
 var funscriptChannels = [];
-var loadedFunscripts;
+//var loadedFunscripts;
 var currentChannelIndex = 0;
-var funscriptSyncWorker;
+var deviceConnectionStatusNode;
+var deviceConnectionStatusInterval;
+var deviceConnectionStatusRetryNode;
+//var funscriptSyncWorker;
 //var useDeoWeb;
 //var deoVideoNode;
 //var deoSourceNode;
@@ -47,6 +50,9 @@ function loadPage()
 	videoNode.addEventListener("volumechange", onVolumeChange); 
 	videoNode.addEventListener("ended", onVideoEnd); 
 	videoNode.volume = volume ? volume : 0.5;
+
+	deviceConnectionStatusNode = document.getElementById("deviceStatus");
+	deviceConnectionStatusRetryNode = document.getElementById("deviceConnect");
 	
 	toggleExternalStreaming(externalStreaming, false);
 	
@@ -61,13 +67,15 @@ function loadPage()
 		new ResizeObserver(onResizeDeo).observe(deoVideoNode)
 	} 
 */
+	getServerSettings();
+	userGetDeviceConnectionStatus();
 	
-	loadSettingsServer();
 }
 
 function onResizeVideo() {
-	thumbsContainerNode.style.maxHeight = "calc(100vh - "+ (+videoNode.offsetHeight + 120) + "px)";
+	thumbsContainerNode.style.maxHeight = "calc(100vh - "+ (+videoNode.offsetHeight + 121) + "px)";
 } 
+
 /* 
 function onResizeDeo() {
 	if(useDeoWeb) {
@@ -76,7 +84,7 @@ function onResizeDeo() {
 } 
 */
 
-async function loadSettingsServer() {
+function getServerSettings() {
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', "/settings", true);
 	xhr.responseType = 'json';
@@ -89,7 +97,7 @@ async function loadSettingsServer() {
 				return remoteUserSettings["availableAxis"][k]["channel"];
 			});
 		funscriptChannels.sort();
-		loadMediaFromServer();
+		getServerLibrary();
 	  } else {
 		alert("Error getting settings");
 	  }
@@ -97,7 +105,7 @@ async function loadSettingsServer() {
 	xhr.send();
 }
 
-async function loadMediaFromServer() {
+function getServerLibrary() {
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', "/media", true);
 	xhr.responseType = 'json';
@@ -109,10 +117,78 @@ async function loadMediaFromServer() {
 		onMediaLoad(status, xhr.response);
 	  }
 	};
+	xhr.onerror = function() {
+		alert("Error getting media");
+	};
 	xhr.send();
 }
 
-async function loadMediaFunscript(path, isMFS) {
+function getDeviceConnectionStatus() {
+	if(deviceConnectionStatusInterval)
+		clearTimeout(deviceConnectionStatusInterval);
+	deviceConnectionStatusRetryNode.style.display = "none";
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', "/settings/deviceConnectionStatus", true);
+	xhr.responseType = 'json';
+	xhr.onload = function() {
+	  var status = xhr.status;
+	  if (status === 200) {
+		connectionStatusEvent = xhr.response;
+		if(connectionStatusEvent.status == ConnectionStatus.Connected) {
+			deviceConnectionStatusNode.className = "device-status device-status-connected";
+			deviceConnectionStatusNode.innerText = "TCode: Connected"
+			pollDeviceConnectionStatus(30000);
+		} else if(connectionStatusEvent.status == ConnectionStatus.Connecting) {
+			deviceConnectionStatusNode.className = "device-status device-status-connecting";
+			deviceConnectionStatusNode.innerText = "TCode: Connecting..."
+			pollDeviceConnectionStatus(1000);
+		} else if(connectionStatusEvent.status == ConnectionStatus.Error) {
+			deviceConnectionStatusNode.className = "device-status device-status-error";
+			deviceConnectionStatusNode.innerText = "TCode: Error"
+			deviceConnectionStatusRetryNode.style.display = "block";
+			deviceConnectionStatusNode.title = connectionStatusEvent.message;
+			pollDeviceConnectionStatus(30000);
+		} else if(connectionStatusEvent.status == ConnectionStatus.Disconnected) {
+			deviceConnectionStatusNode.className = "device-status device-status-disconnected";
+			deviceConnectionStatusNode.innerText = "TCode: Disconnected"
+			deviceConnectionStatusRetryNode.style.display = "block";
+			pollDeviceConnectionStatus(30000);
+		}
+	  } else {
+		alert("Error getting device connection status: "+ status);
+		if(deviceConnectionStatusInterval)
+			clearTimeout(deviceConnectionStatusInterval);
+		deviceConnectionStatusRetryNode.style.display = "block";
+	  }
+	};
+	xhr.onerror = function() {
+		var status = xhr.status;
+		alert("Error getting device connection status: "+ status);
+		if(deviceConnectionStatusInterval)
+			clearTimeout(deviceConnectionStatusInterval);
+		deviceConnectionStatusRetryNode.style.display = "block";
+	};
+	xhr.send();
+}
+
+function pollDeviceConnectionStatus(pollInterval) {
+	if(deviceConnectionStatusInterval) {
+		clearTimeout(deviceConnectionStatusInterval);
+		deviceConnectionStatusInterval = null;
+	}
+	deviceConnectionStatusInterval = setTimeout(function () {
+		getDeviceConnectionStatus();
+	}, pollInterval);
+}
+
+function userGetDeviceConnectionStatus() {
+	deviceConnectionStatusNode.className = "device-status device-status-connecting";
+	deviceConnectionStatusNode.innerText = "Getting device connection status..."
+	deviceConnectionStatusNode.title = ""
+	getDeviceConnectionStatus();
+}
+
+function getMediaFunscripts(path, isMFS) {
 	var channel = funscriptChannels[currentChannelIndex];
 	var trackName = remoteUserSettings["availableAxis"][channel]["trackName"];
 	var xhr = new XMLHttpRequest();
@@ -136,7 +212,7 @@ async function loadMediaFunscript(path, isMFS) {
 		currentChannelIndex++;
 		if(currentChannelIndex < funscriptChannels.length)
 		{
-			loadMediaFunscript(path, isMFS);
+			getMediaFunscripts(path, isMFS);
 		} 
 		else 
 		{
@@ -148,11 +224,57 @@ async function loadMediaFunscript(path, isMFS) {
 	xhr.send();
 }
 
+function postServerSettings() {
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', "/settings", true);
+	xhr.setRequestHeader('Content-Type', 'application/json');
+	xhr.onreadystatechange = function() {
+	  if (xhr.readyState === 4) {
+		var status = xhr.status;
+		if (status !== 200) 
+			alert('Error saving server settings: '+status)
+	  }
+	}
+	xhr.onerror = function() {
+		var status = xhr.status;
+		alert('Error saving server settings: '+status)
+	};
+	xhr.send(JSON.stringify(remoteUserSettings));
+}
+
+function postDeviceConnectRetry() {
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', "/settings/connectDevice", true);
+	xhr.onreadystatechange = function() {
+	  if (xhr.readyState === 4) {
+		var status = xhr.status;
+		if (status === 200) 
+			userGetDeviceConnectionStatus();
+		else
+			alert('Error sending retry device connection: '+status)
+	  }
+	}
+	xhr.onerror = function() {
+		var status = xhr.status;
+		alert('Error sending retry device connection: '+status)
+	};
+	xhr.send();
+}
+
 function postMediaState(mediaState) {
 	var xhr = new XMLHttpRequest();
 	xhr.open("POST", "/xtpweb", true);
 	xhr.setRequestHeader('Content-Type', 'application/json');
 	xhr.send(JSON.stringify(mediaState));
+	xhr.oneload = function() {
+		var status = xhr.status;
+		if (status !== 200) 
+			console.log('Error sending mediastate: '+status)
+	};
+	xhr.onerror = function() {
+		var status = xhr.status;
+		console.log('Error sending sending mediastate: '+status)
+	};
 }
 
 function onMediaLoad(err, mediaList)
@@ -164,7 +286,7 @@ function onMediaLoad(err, mediaList)
 	for(var i=0; i<mediaList.length;i++)
 	{
 		var obj = {
-			id: mediaList[i]["name"].replace(/^[^a-z]+|[^\w:.-]+/gi, "")+"thumb"+i,
+			id: mediaList[i]["name"].replace(/^[^a-z]+|[^\w:.-]+/gi, "")+"item"+i,
 			name: mediaList[i]["name"],
 			displayName: mediaList[i]["name"],
 			thumbSize: mediaList[i]["thumbSize"],
@@ -240,19 +362,21 @@ function loadMedia(mediaList) {
 			fontSize = (textHeight * 0.4) + "px";
 		}
 		var divnode = document.createElement("div"); 
-		divnode.id = obj.id+"item"+i
+		divnode.id = obj.id
 		divnode.className += "media-item"
 		divnode.style.width = width;
 		divnode.style.height = height;
 		divnode.title = obj.name;
 		var anode = document.createElement("a"); 
-		anode.className += "mediaLink"
-		if(obj.isMFS)
-			anode.className += " mediaLinkMFS"
-		if(!obj.hasScript)
-			anode.className += " mediaLinkNoScript"
-		anode.style.width = width;
-		anode.style.height = height;
+		anode.className += "media-link"
+		if(obj.isMFS) {
+			divnode.className += " media-item-mfs"
+		}
+		if(!obj.hasScript) {
+			divnode.className += " media-item-noscript"
+		}
+		//anode.style.width = width;
+		//anode.style.height = height;
 		anode.onclick = createClickHandler(obj);
 		var image = document.createElement("img"); 
 		image.src = "/thumb/" + obj.relativeThumb;
@@ -270,6 +394,8 @@ function loadMedia(mediaList) {
 		anode.appendChild(image);
 		anode.appendChild(namenode);
 		medialistNode.appendChild(divnode);
+		if(playingmediaItem && playingmediaItem.id === obj.id)
+			setPlayingMediaItemColor(obj);
 	}
 }
 
@@ -413,8 +539,15 @@ function toggleExternalStreaming(value, userClicked)
 }
 
 function playVideo(obj) {
+	if(playingmediaItem) {
+		if(playingmediaItem.id === obj.id)
+			return;
+		var mediaItemNode = document.getElementById(playingmediaItem.id);
+		mediaItemNode.classList.remove("playing-media-item");
+	}
+	playingmediaItem = obj;
+	setPlayingMediaItemColor(obj);
 	if(!externalStreaming) {
-		playingmediaItem = obj;
 		videoNode.style.display = "block";
 		videoSourceNode.setAttribute("src", "/video" + obj.relativePath);
 		videoNode.setAttribute("title", obj.name);
@@ -430,7 +563,10 @@ function playVideo(obj) {
 		window.open("/video"+ obj.relativePath)
 	}
 }
-
+function setPlayingMediaItemColor(obj) {
+	var mediaItemNode = document.getElementById(obj.id);
+	mediaItemNode.classList.add("playing-media-item");
+}
 var timer1 = 0;
 var timer2 = Date.now();
 function onVideoTimeUpdate(event) {
@@ -464,6 +600,12 @@ function onVideoEnd(event) {
 	// if(funscriptSyncWorker) {
 	// 	funscriptSyncWorker.postMessage(JSON.stringify({"command": "terminate"}));
 	// }
+	var playingIndex = mediaListObj.findIndex(x => x.path === playingmediaItem.path);
+	playingIndex++;
+	if(playingIndex < mediaListObj.length)
+		playVideo(mediaListObj[playingIndex]);
+	else
+		playVideo(mediaListObj[0]);
 }
 function setThumbSize(value, userClick) {
 	if(!userClick) {
@@ -475,22 +617,22 @@ function setThumbSize(value, userClick) {
 	}
 }
 
-function startFunscriptSync() {
-	if (window.Worker) {
-		if(funscriptSyncWorker)
-			funscriptSyncWorker.terminate();
-		funscriptSyncWorker = new Worker('syncFunscript.js');
-		funscriptSyncWorker.postMessage(JSON.stringify({
-			"command": "startThread", 
-			"funscripts": loadedFunscripts, 
-			"remoteUserSettings": remoteUserSettings
-		}));
-		funscriptSyncWorker.onmessage = onFunscriptWorkerThreadRecieveMessage;
-	}
-}
+// function startFunscriptSync() {
+// 	if (window.Worker) {
+// 		if(funscriptSyncWorker)
+// 			funscriptSyncWorker.terminate();
+// 		funscriptSyncWorker = new Worker('syncFunscript.js');
+// 		funscriptSyncWorker.postMessage(JSON.stringify({
+// 			"command": "startThread", 
+// 			"funscripts": loadedFunscripts, 
+// 			"remoteUserSettings": remoteUserSettings
+// 		}));
+// 		funscriptSyncWorker.onmessage = onFunscriptWorkerThreadRecieveMessage;
+// 	}
+// }
 
 function sendMediaState() {
-	console.log("sendMediaState")
+	//console.log("sendMediaState")
 	postMediaState({
 		"path": playingmediaItem.path,
 		"playing": playingmediaItem.playing, 
@@ -568,30 +710,67 @@ function deleteSettings() {
 	var r = confirm("Are you sure you want to delete ALL settings from localStorage and close the window?");
 	if (r) {
 		window.localStorage.clear();
-		window.close();
+		window.close();//Does not work
 	} 
 }
 
-function connectToTcodeDevice() {
-	webSocket = new WebSocket("ws://"+deviceAddress+"/ws");
-	webSocket.onopen = function (event) {
-		webSocket.send("D1");
-	};
-	webSocket.onmessage = function (event) {
-		console.log(event.data);
-		document.getElementById("webSocketStatus").innerHTML = "Connected";
-	}
-	webSocket.onerror = function (event) {
-		console.log(event.data);
-		webSocket = null;
-		document.getElementById("webSocketStatus").innerHTML = "Error";
-	}
+
+DeviceType =
+{
+    Serial: 0,
+    Network: 1,
+    Deo: 2,
+    Whirligig: 3,
+    Gamepad: 4,
+    XTPWeb: 5
+};
+
+ConnectionStatus =
+{
+    Connected: 0,
+    Disconnected: 1,
+    Connecting: 2,
+    Error: 3
+};
+
+ChannelType = 
+{
+    None: 0,
+    Range: 1,
+    Switch: 2,
+    HalfRange: 3
 }
 
-function sendTcode(tcode) {
-	console.log("Send tcode: "+tcode);
-	if(webSocket)
-	{
-		webSocket.send(tcode);
-	}
-}
+AxisDimension =
+{
+    None: 0,
+    Heave: 1,
+    Surge: 2,
+    Sway: 3,
+    Pitch: 4,
+    Roll: 5,
+    Yaw: 6
+};
+// function connectToTcodeDevice() {
+// 	webSocket = new WebSocket("ws://"+deviceAddress+"/ws");
+// 	webSocket.onopen = function (event) {
+// 		webSocket.send("D1");
+// 	};
+// 	webSocket.onmessage = function (event) {
+// 		console.log(event.data);
+// 		document.getElementById("webSocketStatus").innerHTML = "Connected";
+// 	}
+// 	webSocket.onerror = function (event) {
+// 		console.log(event.data);
+// 		webSocket = null;
+// 		document.getElementById("webSocketStatus").innerHTML = "Error";
+// 	}
+// }
+
+// function sendTcode(tcode) {
+// 	console.log("Send tcode: "+tcode);
+// 	if(webSocket)
+// 	{
+// 		webSocket.send(tcode);
+// 	}
+// }

@@ -100,16 +100,14 @@ void DeoHandler::tearDown()
 
 void DeoHandler::readData()
 {
-    //LogHandler::Debug("Deo packet recieved");
     QByteArray datagram = tcpSocket->readAll();
     QByteArray header = datagram.remove(0, 4);
-    //LogHandler::Debug("Deo response: "+QString::fromUtf8(datagram));
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(datagram, &error);
-    if (datagram.isEmpty())
+    if (doc.isNull())
     {
-        LogHandler::Error("Deo json response error: "+error.errorString());
+        LogHandler::Error("Settings json response error: "+error.errorString());
         LogHandler::Error("datagram: "+datagram);
         //emit connectionChange({DeviceType::Deo, ConnectionStatus::Error, "Read error: " + error.errorString()});
 //        if(currentPacket != nullptr)

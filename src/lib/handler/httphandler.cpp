@@ -16,7 +16,7 @@ HttpHandler::HttpHandler(VideoHandler* videoHandler, QObject *parent):
     _server->listen();
 
     //router.addRoute("GET", "^/videos/[\\w,\\s-]+\\.[A-Za-z]{3}$", this, &HttpHandler::handleRoot);
-    router.addRoute("GET", "^/media", this, &HttpHandler::handleVideoList);
+    router.addRoute("GET", "^/media$", this, &HttpHandler::handleVideoList);
     router.addRoute("GET", "^/thumb/.*$", this, &HttpHandler::handleThumbFile);
     router.addRoute("GET", "^/funscript/(.*\\.((funscript)$))?[.]*$", this, &HttpHandler::handleFunscriptFile);
     QString extensions;
@@ -24,14 +24,12 @@ HttpHandler::HttpHandler(VideoHandler* videoHandler, QObject *parent):
     extensions += "|";
     extensions += _videoHandler->getAudioExtensions().join("|");
     router.addRoute("GET", "^/video/(.*\\.(("+extensions+")$))?[.]*$", this, &HttpHandler::handleVideoStream);
-    router.addRoute("GET", "^/deotest", this, &HttpHandler::handleDeo);
-    router.addRoute("GET", "^/settings", this, &HttpHandler::handleSettings);
-    router.addRoute("POST", "^/xtpweb", this, &HttpHandler::handleWebTimeUpdate);
-//    router.addRoute("GET", "^/users/(\\w*)/?$", this, &HttpHandler::handleGetUsername);
-//    router.addRoute({"GET", "POST"}, "^/formTest/?$", this, &HttpHandler::handleFormTest);
-//    router.addRoute("GET", "^/fileTest/(\\d*)/?$", this, &HttpHandler::handleFileTest);
-//    router.addRoute("GET", "^/errorTest/(\\d*)/?$", this, &HttpHandler::handleErrorTest);
-//    router.addRoute("GET", "^/asyncTest/(\\d*)/?$", this, &HttpHandler::handleAsyncTest);
+    router.addRoute("GET", "^/deotest$", this, &HttpHandler::handleDeo);
+    router.addRoute("GET", "^/settings$", this, &HttpHandler::handleSettings);
+    router.addRoute("GET", "^/settings/deviceConnectionStatus$", this, &HttpHandler::handleDeviceConnected);
+    router.addRoute("POST", "^/settings$", this, &HttpHandler::handleSettingsUpdate);
+    router.addRoute("POST", "^/settings/connectDevice$", this, &HttpHandler::handleConnectDevice);
+    router.addRoute("POST", "^/xtpweb$", this, &HttpHandler::handleWebTimeUpdate);
 }
 
 HttpHandler::~HttpHandler()
@@ -44,6 +42,52 @@ HttpPromise HttpHandler::handleWebTimeUpdate(HttpDataPtr data)
     auto body = data->request->body();
     LogHandler::Debug("HTTP time sync update: "+QString(body));
     emit readyRead(body);
+    data->response->setStatus(HttpStatus::Ok);
+    return HttpPromise::resolve(data);
+}
+HttpPromise HttpHandler::handleSettingsUpdate(HttpDataPtr data)
+{
+    auto body = data->request->body();
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(body, &error);
+    if (doc.isEmpty())
+    {
+        LogHandler::Error("XTP Web json response error: "+error.errorString());
+        LogHandler::Error("data: "+body);
+        data->response->setStatus(HttpStatus::BadRequest);
+        return HttpPromise::resolve(data);
+    }
+    else
+    {
+        auto channels = SettingsHandler::getAvailableAxis();
+        foreach(auto channel, channels->keys())
+        {
+            auto value = doc["availableAxis"][channel];
+            ChannelModel channelModel = {
+                value["friendlyName"].toString(),//QString FriendlyName;
+                value["axisName"].toString(),//QString AxisName;
+                value["channel"].toString(),//QString Channel;
+                value["min"].toInt(),//int Min;
+                value["mid"].toInt(),//int Mid;
+                value["max"].toInt(),//int Max;
+                value["userMin"].toInt(),//int UserMin;
+                value["userMid"].toInt(),//int UserMid;
+                value["userMax"].toInt(),//int UserMax;
+                (AxisDimension)(value["dimension"].toInt()),//AxisDimension Dimension;
+                (AxisType)(value["type"].toInt()),//AxisType Type;
+                value["trackName"].toString(),//QString TrackName;
+                value["multiplierEnabled"].toBool(),//bool MultiplierEnabled;
+                float(value["multiplierValue"].toDouble()),//float MultiplierValue;
+                value["damperEnabled"].toBool(),//bool DamperEnabled;
+                float(value["damperValue"].toDouble()),//float DamperValue;
+                value["inverted"].toBool(),//bool Inverted;
+                value["linkToRelatedMFS"].toBool(),//bool LinkToRelatedMFS;
+                value["relatedChannel"].toString()//QString RelatedChannel;
+            };
+            SettingsHandler::setAxis(channel, channelModel);
+        }
+
+    }
     data->response->setStatus(HttpStatus::Ok);
     return HttpPromise::resolve(data);
 }
@@ -137,6 +181,22 @@ HttpPromise HttpHandler::handleSettings(HttpDataPtr data) {
     }
     root["availableAxis"] = availableAxisJson;
     data->response->setStatus(HttpStatus::Ok, QJsonDocument(root));
+    return HttpPromise::resolve(data);
+}
+
+HttpPromise HttpHandler::handleDeviceConnected(HttpDataPtr data)
+{
+    QJsonObject root;
+    root["status"] = _tcodeDeviceStatus.status;
+    root["deviceType"] = _tcodeDeviceStatus.deviceType;
+    root["message"] = _tcodeDeviceStatus.message;
+    data->response->setStatus(HttpStatus::Ok, QJsonDocument(root));
+    return HttpPromise::resolve(data);
+}
+HttpPromise HttpHandler::handleConnectDevice(HttpDataPtr data)
+{
+    emit connectTCodeDevice();
+    data->response->setStatus(HttpStatus::Ok);
     return HttpPromise::resolve(data);
 }
 
@@ -402,4 +462,9 @@ QString HttpHandler::getStereoMode(QString mediaPath)
     if(mediaPath.contains("3DV", Qt::CaseSensitivity::CaseInsensitive))
         return "3DV";
     return "off";
+}
+
+void HttpHandler::on_tCodeDeviceConnection_StateChange(ConnectionChangedSignal status)
+{
+    _tcodeDeviceStatus = status;
 }
