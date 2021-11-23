@@ -127,6 +127,9 @@ FORMS += \
 unix:!mac {
     LIBS += -L$$QT.core.libs -lQtAV -lQtAVWidgets
     QMAKE_RPATHDIR += ../lib
+    LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_0_GCC_64bit-Release/src/debug -lhttpServer
+    INCLUDEPATH += $$PWD/../../build-HttpServer-Desktop_Qt_5_15_0_GCC_64bit-Release/src/debug
+    DEPENDPATH += $$PWD/../../build-HttpServer-Desktop_Qt_5_15_0_GCC_64bit-Release/src/debug
 }
 unix:mac {
 
