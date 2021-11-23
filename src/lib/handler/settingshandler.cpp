@@ -98,6 +98,8 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     _multiplierEnabled = settingsToLoadFrom->value("multiplierEnabled").toBool();
     _liveMultiplierEnabled = _multiplierEnabled;
     QVariantMap availableAxis = settingsToLoadFrom->value("availableAxis").toMap();
+    _availableAxis.clear();
+    _funscriptLoaded.clear();
     foreach(auto axis, availableAxis.keys())
     {
         _availableAxis.insert(axis, availableAxis[axis].value<ChannelModel>());
@@ -109,6 +111,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     _liveXRangeMin = _availableAxis[TCodeChannelLookup::Stroke()].UserMin;
     _liveXRangeMid = _availableAxis[TCodeChannelLookup::Stroke()].UserMid;
     QVariantMap gamepadButtonMap = settingsToLoadFrom->value("gamepadButtonMap").toMap();
+    _gamepadButtonMap.clear();
     foreach(auto button, gamepadButtonMap.keys())
     {
         _gamepadButtonMap.insert(button, gamepadButtonMap[button].toString());
@@ -144,13 +147,13 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
 #elif defined(Q_OS_MAC)
         _httpServerRoot = QApplication::applicationDirPath() + "/www";
 #elif defined(Q_OS_LINUX)
-        _httpServerRoot = "www";
+        _httpServerRoot = QApplication::applicationDirPath() + "/www";
 #endif
     }
     _vrLibrary = settingsToLoadFrom->value("vrLibrary").toString();
     _httpChunkSize = settingsToLoadFrom->value("httpChunkSize").toLongLong();
     if(!_httpChunkSize)
-        _httpChunkSize = 10485760;
+        _httpChunkSize = 5242880;
     _httpPort = settingsToLoadFrom->value("httpPort").toInt();
     if(!_httpPort)
         _httpPort = 80;
@@ -172,13 +175,19 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     _selectedVideoRenderer = (XVideoRenderer)settingsToLoadFrom->value("selectedVideoRenderer").toInt();
 
     auto splitterSizes = settingsToLoadFrom->value("mainWindowPos").toList();
+    int i = 0;
+    _mainWindowPos.clear();
     foreach (auto splitterPos, splitterSizes)
     {
+        if(i==2)//Bandaid. Dont store over two.
+            break;
         _mainWindowPos.append(splitterPos.value<int>());
+        i++;
     }
     _libraryExclusions = settingsToLoadFrom->value("libraryExclusions").value<QList<QString>>();
 
     QVariantMap playlists = settingsToLoadFrom->value("playlists").toMap();
+    _playlists.clear();
     foreach(auto playlist, playlists.keys())
     {
         _playlists.insert(playlist, playlists[playlist].value<QList<LibraryListItem>>());
@@ -192,6 +201,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     }
     else
     {
+        _libraryListItemMetaDatas.clear();
         QVariantHash libraryListItemMetaDatas = settingsToLoadFrom->value("libraryListItemMetaDatas").toHash();
         foreach(auto key, libraryListItemMetaDatas.keys())
         {
@@ -241,6 +251,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
         }
         if(currentVersion < 0.27f)
         {
+            locker.unlock();
             settings->setValue("version", 0.27f);
             SetupDecoderPriority();
             Save();
@@ -331,9 +342,13 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         settingsToSaveTo->setValue("disableNoScriptFound", _disableNoScriptFound);
 
         QList<QVariant> splitterPos;
+        int i = 0;
         foreach(auto pos, _mainWindowPos)
         {
+            if(i==2)//Bandaid. Dont store over two.
+                break;
             splitterPos.append(pos);
+            i++;
         }
         settingsToSaveTo->setValue("mainWindowPos", splitterPos);
 

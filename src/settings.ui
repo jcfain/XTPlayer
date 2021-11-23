@@ -834,6 +834,138 @@ THIS VALUE WILL BR RESET ON SCRIPT CHANGE!</string>
        </property>
       </widget>
      </widget>
+     <widget class="QWidget" name="WebTab">
+      <attribute name="title">
+       <string>Web</string>
+      </attribute>
+      <widget class="QGroupBox" name="httpServerOptions">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>50</y>
+         <width>781</width>
+         <height>241</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>XTP web options</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_6">
+        <item row="3" column="2">
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Port</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="httpRootLabel">
+          <property name="text">
+           <string>Http root directory</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1" colspan="4">
+         <widget class="QLineEdit" name="vrLibraryLineEdit">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QDoubleSpinBox" name="chunkSizeDoubleSpinBox">
+          <property name="toolTip">
+           <string>In MegaBytes: This is the amount of media data sent to the client in byte chunks.
+The higher this is set the longer it will take to buffer but the less times the server 
+will be hit for the next chunk.</string>
+          </property>
+          <property name="suffix">
+           <string>MB</string>
+          </property>
+          <property name="maximum">
+           <double>99999.990000000005239</double>
+          </property>
+          <property name="value">
+           <double>1.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="vrLibraryLabel">
+          <property name="text">
+           <string>VR library</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1" colspan="4">
+         <widget class="QLineEdit" name="httpRootLineEdit">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="chunkSizeLabel">
+          <property name="text">
+           <string>Chunk size</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="3">
+         <widget class="QSpinBox" name="httpPortSpinBox">
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>65535</number>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="5">
+         <widget class="QPushButton" name="browseVRLibraryButton">
+          <property name="text">
+           <string>Browse</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="5">
+         <widget class="QPushButton" name="browseHttpRootButton">
+          <property name="text">
+           <string>Browse</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QCheckBox" name="enableHttpServerCheckbox">
+       <property name="geometry">
+        <rect>
+         <x>12</x>
+         <y>10</y>
+         <width>301</width>
+         <height>23</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Enable XTP web</string>
+       </property>
+      </widget>
+     </widget>
      <widget class="QWidget" name="systemtab">
       <attribute name="title">
        <string>System</string>
@@ -998,138 +1130,6 @@ that has no script of the same name.</string>
         </widget>
        </item>
       </layout>
-     </widget>
-     <widget class="QWidget" name="WebTab">
-      <attribute name="title">
-       <string>Web</string>
-      </attribute>
-      <widget class="QGroupBox" name="httpServerOptions">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>50</y>
-         <width>781</width>
-         <height>241</height>
-        </rect>
-       </property>
-       <property name="title">
-        <string>XTP web options</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_6">
-        <item row="3" column="2">
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>Port</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="httpRootLabel">
-          <property name="text">
-           <string>Http root directory</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1" colspan="4">
-         <widget class="QLineEdit" name="vrLibraryLineEdit">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="1">
-         <widget class="QDoubleSpinBox" name="chunkSizeDoubleSpinBox">
-          <property name="toolTip">
-           <string>In MegaBytes: This is the amount of media data sent to the client in byte chunks.
-The higher this is set the longer it will take to buffer but the less times the server 
-will be hit for the next chunk.</string>
-          </property>
-          <property name="suffix">
-           <string>MB</string>
-          </property>
-          <property name="maximum">
-           <double>99999.990000000005239</double>
-          </property>
-          <property name="value">
-           <double>1.000000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="vrLibraryLabel">
-          <property name="text">
-           <string>VR library</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1" colspan="4">
-         <widget class="QLineEdit" name="httpRootLineEdit">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QLabel" name="chunkSizeLabel">
-          <property name="text">
-           <string>Chunk size</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="3">
-         <widget class="QSpinBox" name="httpPortSpinBox">
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <number>65535</number>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="5">
-         <widget class="QPushButton" name="browseVRLibraryButton">
-          <property name="text">
-           <string>Browse</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="5">
-         <widget class="QPushButton" name="browseHttpRootButton">
-          <property name="text">
-           <string>Browse</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QCheckBox" name="enableHttpServerCheckbox">
-       <property name="geometry">
-        <rect>
-         <x>12</x>
-         <y>10</y>
-         <width>301</width>
-         <height>23</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Enable XTP web</string>
-       </property>
-      </widget>
      </widget>
      <widget class="QWidget" name="helpTab">
       <attribute name="title">
