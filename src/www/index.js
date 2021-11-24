@@ -50,6 +50,13 @@ function loadPage()
 	videoNode.addEventListener("volumechange", onVolumeChange); 
 	videoNode.addEventListener("ended", onVideoEnd); 
 	videoNode.volume = volume ? volume : 0.5;
+	// Fires on load?
+	// videoSourceNode.addEventListener('error', function(event) { 
+	// 	alert("There was an issue loading media.");
+	// }, true);
+	// videoNode.addEventListener('error', function(event) { 
+	// 	alert("There was an issue loading media.");
+	// }, true);
 
 	deviceConnectionStatusNode = document.getElementById("deviceStatus");
 	deviceConnectionStatusRetryNode = document.getElementById("deviceConnect");
@@ -158,6 +165,8 @@ function getDeviceConnectionStatus() {
 		alert("Error getting device connection status: "+ status);
 		if(deviceConnectionStatusInterval)
 			clearTimeout(deviceConnectionStatusInterval);
+		deviceConnectionStatusNode.className = "device-status device-status-error";
+		deviceConnectionStatusNode.innerText = "TCode: Error"
 		deviceConnectionStatusRetryNode.style.display = "block";
 	  }
 	};
@@ -166,6 +175,8 @@ function getDeviceConnectionStatus() {
 		alert("Error getting device connection status: "+ status);
 		if(deviceConnectionStatusInterval)
 			clearTimeout(deviceConnectionStatusInterval);
+		deviceConnectionStatusNode.className = "device-status device-status-error";
+		deviceConnectionStatusNode.innerText = "TCode: Error"
 		deviceConnectionStatusRetryNode.style.display = "block";
 	};
 	xhr.send();
@@ -586,12 +597,14 @@ function onVideoPlay(event) {
 	playingmediaItem.playing = true;
 	// if(!funscriptSyncWorker && loadedFunscripts && loadedFunscripts.length > 0)
 	// 	startFunscriptSync(loadedFunscripts);
-	sendMediaState();
+	//sendMediaState();
 }
 function onVideoPause(event) {
 	console.log("Video pause")
 	playingmediaItem.playing = false;
-	sendMediaState();
+	//setTimeout(function() {
+		sendMediaState();// Sometimes a timeupdate is sent after this event fires?
+	//}, 500);
 }
 function onVolumeChange() {
 	window.localStorage.setItem("volume", videoNode.volume);

@@ -8,6 +8,7 @@
 #include <QJsonArray>
 #include <QJsonObject>#include <QJsonDocument>
 #include <QJsonValue>
+#include <QtConcurrent/QtConcurrent>
 
 #include "settingshandler.h"
 #include "videohandler.h"
