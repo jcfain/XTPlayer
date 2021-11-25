@@ -46,7 +46,8 @@ void XTPWebHandler::dispose()
     LogHandler::Debug("XTP Web: dispose");
     _isConnected = false;
     emit connectionChange({DeviceType::XTPWeb, ConnectionStatus::Disconnected, "Disconnected"});
-    disconnect(_httpHandler, &HttpHandler::readyRead, this, &XTPWebHandler::readData);
+    if(_httpHandler)
+        disconnect(_httpHandler, &HttpHandler::readyRead, this, &XTPWebHandler::readData);
 }
 
 void XTPWebHandler::readData(QByteArray data)

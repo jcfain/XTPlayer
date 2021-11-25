@@ -123,7 +123,7 @@ HttpPromise HttpHandler::handle(HttpDataPtr data)
     }
     else if(path.contains("favicon.ico"))
     {
-        data->response->sendFile("://images/icons/XTP-window-icon.ico", "image/x-icon");
+        data->response->sendFile(root+"/favicon.ico", "image/x-icon");
         data->response->setStatus(HttpStatus::Ok);
     }
     else

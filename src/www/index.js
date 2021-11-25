@@ -1,6 +1,46 @@
+
+var DeviceType =
+{
+    Serial: 0,
+    Network: 1,
+    Deo: 2,
+    Whirligig: 3,
+    Gamepad: 4,
+    XTPWeb: 5
+};
+
+var ConnectionStatus =
+{
+    Connected: 0,
+    Disconnected: 1,
+    Connecting: 2,
+    Error: 3
+};
+
+var ChannelType = 
+{
+    None: 0,
+    Range: 1,
+    Switch: 2,
+    HalfRange: 3
+}
+
+var AxisDimension =
+{
+    None: 0,
+    Heave: 1,
+    Surge: 2,
+    Sway: 3,
+    Pitch: 4,
+    Roll: 5,
+    Yaw: 6
+};
+
+
 var remoteUserSettings;
 var mediaListObj = [];
 var playingmediaItem;
+var playingmediaItemNode;
 var thumbsContainerNode;
 var sortByGlobal = "nameAsc";
 var showGlobal = "All";
@@ -15,13 +55,16 @@ var deviceAddress;
 var funscriptChannels = [];
 //var loadedFunscripts;
 var currentChannelIndex = 0;
-var deviceConnectionStatusNode;
+var connectionStatus = ConnectionStatus.Disconnected;
 var deviceConnectionStatusInterval;
-var deviceConnectionStatusRetryNode;
+var deviceConnectionStatusRetryButtonNode;
+var deviceConnectionStatusRetryButtonImageNode;
 //var funscriptSyncWorker;
 //var useDeoWeb;
 //var deoVideoNode;
 //var deoSourceNode;
+
+
 document.addEventListener("DOMContentLoaded", function() {
   loadPage();
 });
@@ -33,6 +76,9 @@ function loadPage()
 	sortByGlobal = JSON.parse(window.localStorage.getItem("sortBy"));
 	showGlobal = JSON.parse(window.localStorage.getItem("show"));
 	thumbSizeGlobal = JSON.parse(window.localStorage.getItem("thumbSize"));
+/* 	if(!thumbSizeGlobal && window.devicePixelRatio == 2.75) {
+		thumbSizeGlobal = 400;
+	} */
 	var volume = JSON.parse(window.localStorage.getItem("volume"));
 	externalStreaming = JSON.parse(window.localStorage.getItem("externalStreaming"));
 	//deviceAddress =  JSON.parse(window.localStorage.getItem("webSocketAddress"));
@@ -58,9 +104,8 @@ function loadPage()
 	// 	alert("There was an issue loading media.");
 	// }, true);
 
-	deviceConnectionStatusNode = document.getElementById("deviceStatus");
-	deviceConnectionStatusRetryNode = document.getElementById("deviceConnect");
-	
+	deviceConnectionStatusRetryButtonNode = document.getElementById("deviceStatusRetryButton");
+	deviceConnectionStatusRetryButtonImageNode = document.getElementById("connectionStatusIconImage");
 	toggleExternalStreaming(externalStreaming, false);
 	
 /* 	
@@ -80,7 +125,7 @@ function loadPage()
 }
 
 function onResizeVideo() {
-	thumbsContainerNode.style.maxHeight = "calc(100vh - "+ (+videoNode.offsetHeight + 121) + "px)";
+	thumbsContainerNode.style.maxHeight = "calc(100vh - "+ (+videoNode.offsetHeight + 165) + "px)";
 } 
 
 /* 
@@ -130,44 +175,57 @@ function getServerLibrary() {
 	xhr.send();
 }
 
+function setConnectionStatus(level, message) {
+	deviceConnectionStatusRetryButtonNode.title = "TCode status: " + message;
+	deviceConnectionStatusRetryButtonNode.style.cursor = "";
+	deviceConnectionStatusRetryButtonNode.disabled = true;
+	switch(level) {
+		case ConnectionStatus.Disconnected:
+			deviceConnectionStatusRetryButtonNode.style.backgroundColor = "crimson";
+			deviceConnectionStatusRetryButtonNode.style.cursor = "pointer";
+			deviceConnectionStatusRetryButtonNode.disabled = false;
+			deviceConnectionStatusRetryButtonImageNode.src = "://images/icons/x.png";
+			deviceConnectionStatusRetryButtonNode.title += ": Check your devices connection and click this to retry"
+			break;
+		case ConnectionStatus.Connecting:
+			deviceConnectionStatusRetryButtonNode.style.backgroundColor = "yellow";
+			deviceConnectionStatusRetryButtonImageNode.src = "://images/icons/reload.svg";
+			break;
+		case ConnectionStatus.Connected:
+			deviceConnectionStatusRetryButtonNode.style.backgroundColor = "chartreuse";
+			deviceConnectionStatusRetryButtonImageNode.src = "://images/icons/check-mark-black.png";
+			break;
+		case ConnectionStatus.Error:
+			deviceConnectionStatusRetryButtonNode.style.backgroundColor = "red";
+			deviceConnectionStatusRetryButtonNode.style.cursor = "pointer";
+			deviceConnectionStatusRetryButtonNode.disabled = false;
+			deviceConnectionStatusRetryButtonImageNode.src = "://images/icons/error-black.png";
+			deviceConnectionStatusRetryButtonNode.title += ": Check your devices connection and click this to retry"
+			break;
+
+	}
+}
 function getDeviceConnectionStatus() {
 	if(deviceConnectionStatusInterval)
 		clearTimeout(deviceConnectionStatusInterval);
-	deviceConnectionStatusRetryNode.style.display = "none";
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', "/settings/deviceConnectionStatus", true);
 	xhr.responseType = 'json';
 	xhr.onload = function() {
 	  var status = xhr.status;
 	  if (status === 200) {
-		connectionStatusEvent = xhr.response;
-		if(connectionStatusEvent.status == ConnectionStatus.Connected) {
-			deviceConnectionStatusNode.className = "device-status device-status-connected";
-			deviceConnectionStatusNode.innerText = "TCode: Connected"
-			pollDeviceConnectionStatus(30000);
-		} else if(connectionStatusEvent.status == ConnectionStatus.Connecting) {
-			deviceConnectionStatusNode.className = "device-status device-status-connecting";
-			deviceConnectionStatusNode.innerText = "TCode: Connecting..."
+		var connectionStatusEvent = xhr.response;
+		connectionStatus = connectionStatusEvent.status;
+		setConnectionStatus(connectionStatus, connectionStatusEvent.message);
+		pollDeviceConnectionStatus(30000);
+		if(connectionStatus == ConnectionStatus.Connecting) {
 			pollDeviceConnectionStatus(1000);
-		} else if(connectionStatusEvent.status == ConnectionStatus.Error) {
-			deviceConnectionStatusNode.className = "device-status device-status-error";
-			deviceConnectionStatusNode.innerText = "TCode: Error"
-			deviceConnectionStatusRetryNode.style.display = "block";
-			deviceConnectionStatusNode.title = connectionStatusEvent.message;
-			pollDeviceConnectionStatus(30000);
-		} else if(connectionStatusEvent.status == ConnectionStatus.Disconnected) {
-			deviceConnectionStatusNode.className = "device-status device-status-disconnected";
-			deviceConnectionStatusNode.innerText = "TCode: Disconnected"
-			deviceConnectionStatusRetryNode.style.display = "block";
-			pollDeviceConnectionStatus(30000);
 		}
 	  } else {
-		alert("Error getting device connection status: "+ status);
+		alert("Http Error getting device connection status: "+ status);
 		if(deviceConnectionStatusInterval)
 			clearTimeout(deviceConnectionStatusInterval);
-		deviceConnectionStatusNode.className = "device-status device-status-error";
-		deviceConnectionStatusNode.innerText = "TCode: Error"
-		deviceConnectionStatusRetryNode.style.display = "block";
+			setConnectionStatus(ConnectionStatus.Error, "Http Error getting device connection status: "+ status);
 	  }
 	};
 	xhr.onerror = function() {
@@ -175,9 +233,7 @@ function getDeviceConnectionStatus() {
 		alert("Error getting device connection status: "+ status);
 		if(deviceConnectionStatusInterval)
 			clearTimeout(deviceConnectionStatusInterval);
-		deviceConnectionStatusNode.className = "device-status device-status-error";
-		deviceConnectionStatusNode.innerText = "TCode: Error"
-		deviceConnectionStatusRetryNode.style.display = "block";
+			setConnectionStatus(ConnectionStatus.Error, "Error getting device connection status: "+ status);
 	};
 	xhr.send();
 }
@@ -193,10 +249,8 @@ function pollDeviceConnectionStatus(pollInterval) {
 }
 
 function userGetDeviceConnectionStatus() {
-	deviceConnectionStatusNode.className = "device-status device-status-connecting";
-	deviceConnectionStatusNode.innerText = "Getting device connection status..."
-	deviceConnectionStatusNode.title = ""
-	getDeviceConnectionStatus();
+		setConnectionStatus(ConnectionStatus.Connecting, "Getting device connection status...");
+		getDeviceConnectionStatus();
 }
 
 function getMediaFunscripts(path, isMFS) {
@@ -370,7 +424,7 @@ function loadMedia(mediaList) {
 			textHeight = (thumbSizeGlobal * 0.25);
 			width = thumbSizeGlobal + (thumbSizeGlobal * 0.15) + "px";
 			height = thumbSizeGlobal + textHeight + "px";
-			fontSize = (textHeight * 0.4) + "px";
+			fontSize = (textHeight * 0.3) + "px";
 		}
 		var divnode = document.createElement("div"); 
 		divnode.id = obj.id
@@ -406,7 +460,7 @@ function loadMedia(mediaList) {
 		anode.appendChild(namenode);
 		medialistNode.appendChild(divnode);
 		if(playingmediaItem && playingmediaItem.id === obj.id)
-			setPlayingMediaItemColor(obj);
+			setPlayingMediaItem(obj);
 	}
 }
 
@@ -538,8 +592,10 @@ function toggleExternalStreaming(value, userClicked)
 		document.getElementById("externalStreamingCheckbox").checked = value;
 	if(value) {
 		videoNode.pause();
-		videoNode.style.display = "none";
+		videoNode.classList.remove("video-shown");
 		thumbsContainerNode.style.maxHeight = "";
+		if(playingmediaItem) 
+			clearPlayingMediaItem()
 		if(resizeObserver)
 			resizeObserver.unobserve(videoNode);
 	} else {
@@ -550,16 +606,14 @@ function toggleExternalStreaming(value, userClicked)
 }
 
 function playVideo(obj) {
-	if(playingmediaItem) {
-		if(playingmediaItem.id === obj.id)
-			return;
-		var mediaItemNode = document.getElementById(playingmediaItem.id);
-		mediaItemNode.classList.remove("playing-media-item");
-	}
-	playingmediaItem = obj;
-	setPlayingMediaItemColor(obj);
 	if(!externalStreaming) {
-		videoNode.style.display = "block";
+		if(playingmediaItem) {
+			if(playingmediaItem.id === obj.id)
+				return;
+			clearPlayingMediaItem();
+		}
+		setPlayingMediaItem(obj);
+		videoNode.classList.add("video-shown");
 		videoSourceNode.setAttribute("src", "/video" + obj.relativePath);
 		videoNode.setAttribute("title", obj.name);
 		videoNode.setAttribute("poster", "/thumb/" + obj.relativeThumb);
@@ -574,10 +628,18 @@ function playVideo(obj) {
 		window.open("/video"+ obj.relativePath)
 	}
 }
-function setPlayingMediaItemColor(obj) {
-	var mediaItemNode = document.getElementById(obj.id);
-	mediaItemNode.classList.add("playing-media-item");
+
+function setPlayingMediaItem(obj) {
+	playingmediaItem = obj;
+	playingmediaItemNode = document.getElementById(obj.id);
+	playingmediaItemNode.classList.add("media-item-playing");
 }
+function clearPlayingMediaItem() {
+	playingmediaItemNode.classList.remove("media-item-playing");
+	playingmediaItem = null;
+	playingmediaItemNode = null;
+}
+
 var timer1 = 0;
 var timer2 = Date.now();
 function onVideoTimeUpdate(event) {
@@ -646,13 +708,14 @@ function setThumbSize(value, userClick) {
 
 function sendMediaState() {
 	//console.log("sendMediaState")
-	postMediaState({
-		"path": playingmediaItem.path,
-		"playing": playingmediaItem.playing, 
-		"currentTime": videoNode.currentTime, 
-		"duration": videoNode.duration,
-		"playbackSpeed": videoNode.speed
-	});
+	if(playingmediaItem)
+		postMediaState({
+			"path": playingmediaItem.path,
+			"playing": playingmediaItem.playing, 
+			"currentTime": videoNode.currentTime, 
+			"duration": videoNode.duration,
+			"playbackSpeed": videoNode.speed
+		});
 }
 
 function onFunscriptWorkerThreadRecieveMessage(e) {
@@ -677,11 +740,13 @@ function onFunscriptWorkerThreadRecieveMessage(e) {
 }
 //Settings
 function openSettings() {
-  settingsNode.style.display = "flex";
+  settingsNode.style.visibility = "visible";
+  settingsNode.style.opacity = 1;
 }
 
 function closeSettings() {
-  settingsNode.style.display = "none";
+  settingsNode.style.visibility = "hidden";
+  settingsNode.style.opacity = 0;
 }
 
 function showChange(selectNode) {
@@ -726,44 +791,6 @@ function deleteSettings() {
 		window.close();//Does not work
 	} 
 }
-
-
-DeviceType =
-{
-    Serial: 0,
-    Network: 1,
-    Deo: 2,
-    Whirligig: 3,
-    Gamepad: 4,
-    XTPWeb: 5
-};
-
-ConnectionStatus =
-{
-    Connected: 0,
-    Disconnected: 1,
-    Connecting: 2,
-    Error: 3
-};
-
-ChannelType = 
-{
-    None: 0,
-    Range: 1,
-    Switch: 2,
-    HalfRange: 3
-}
-
-AxisDimension =
-{
-    None: 0,
-    Heave: 1,
-    Surge: 2,
-    Sway: 3,
-    Pitch: 4,
-    Roll: 5,
-    Yaw: 6
-};
 // function connectToTcodeDevice() {
 // 	webSocket = new WebSocket("ws://"+deviceAddress+"/ws");
 // 	webSocket.onopen = function (event) {

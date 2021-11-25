@@ -42,5 +42,8 @@
         <file>images/welcome/XTP_welcome-6.png</file>
         <file>images/icons/funscript.png</file>
         <file>images/icons/skipToAction.png</file>
+        <file>images/icons/error-black.png</file>
+        <file>images/icons/check-mark-black.png</file>
+        <file>images/icons/check-mark-green.png</file>
     </qresource>
 </RCC>
