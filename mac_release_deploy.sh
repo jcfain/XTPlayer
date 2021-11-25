@@ -2,7 +2,10 @@ cd build-XTPlayer-Desktop_Qt_5_15_2_clang_64bit-Release
 ~/Qt/5.15.2/clang_64/bin/macdeployqt XTPlayer.app
 cp -R ../src/themes XTPlayer.app/Contents/MacOS/
 cp -R ../src/images XTPlayer.app/Contents/MacOS/
-cp -R ../src/www XTPlayer.app/Contents/MacOS/
+cp ../src/www/index-min.html XTPlayer.app/Contents/MacOS/index.html
+cp ../src/www/index-min.js XTPlayer.app/Contents/MacOS/index.js
+cp ../src/www/styles-min.css XTPlayer.app/Contents/MacOS/styles.css
+cp ../src/www/favicon.ico XTPlayer.app/Contents/MacOS/favicon.ico
 cp ../../HttpServer/src/build/release/libhttpServer.1.0.0.dylib XTPlayer.app/Contents/Frameworks/
 cp ../../HttpServer/src/build/release/libhttpServer.1.0.dylib XTPlayer.app/Contents/Frameworks/
 cp ../../HttpServer/src/build/release/libhttpServer.1.dylib XTPlayer.app/Contents/Frameworks/
