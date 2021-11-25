@@ -61,7 +61,7 @@
 			<image class="buttonImage" src="://images/icons/x.svg"/>
 		</button>
 	</div>
-	<div class="modal-body">
+	<div id="modalBody" class="modal-body">
 <!-- 		
 				<div class="formElement">
 					<label for="useDeoWebCheckbox">Use Deo Web
@@ -123,6 +123,16 @@
 					</select>
 				</div>
 <!-- 				<div class="formElement">
+					<label for="thumbSize">
+						<span class="formLabel">Stroke range</span>
+					</label>
+					<section id="rangeSlider" class="range-slider">
+						<span class="rangeValues"></span>
+						<input value="0" min="0" max="9999" step="1" type="range">
+						<input value="10000" min="1" max="10000" step="1" type="range">
+					</section>
+				</div> -->
+<!-- 				<div class="formElement">
 					<label title="Must use WebSocket in ESP32 firmware." 
 						for="useVideoCheckbox">WebSocket ESP32 address
 					</label>
@@ -137,10 +147,10 @@
 	</div>
 	<div class="modal-footer">
 		<div class="modal-footer-end">
-			<button id="defaultSettingsButton" class="default-settings-button" onclick="defaultSettings()">
-				Default All
+			<button id="defaultSettingsButton" class="default-settings-button" title="Thisa will only reset the local browser settings to default. Your settings stored on the XTP machine will remain." onclick="defaultLocalSettings()">
+				Default Local
 			</button>
-			<!-- <button id="defaultSettingsButton" onclick="deleteSettings()">
+			<!-- <button id="defaultSettingsButton" onclick="deleteLocalSettings()">
 				Delete All
 			</button> -->
 		</div>

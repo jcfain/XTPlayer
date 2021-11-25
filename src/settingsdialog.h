@@ -241,6 +241,9 @@ private:
     void enableOrDisableDeviceConnectionUI(DeviceType deviceType);
     QString encryptPass(QString pass);
     QString decryptPass(QString pass);
+
+    QList<QWidget*> _multiplierWidgets;
+
     LibraryExclusions* _libraryExclusions;
     bool _interfaceInitialized = false;
     ConnectionStatus _outDeviceConnectionStatus = ConnectionStatus::Disconnected;

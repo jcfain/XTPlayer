@@ -127,7 +127,7 @@ body {
 }
 .formElement select, 
 .formElement button, 
-.formElement input:not([type='checkbox']) {
+.formElement input:not([type='checkbox']):not([type='range']) {
     flex-grow: 1;
     border-radius: 5px;
     height: 24px;
@@ -295,7 +295,65 @@ select:hover, button:hover, input:hover {
 }
 
 
+section.range-slider {
+    position: relative;
+    width: 100%;
+    text-align: center;
+}
 
+section.range-slider input {
+    pointer-events: none;
+    position: absolute;
+    overflow: hidden;
+    left: 0;
+    top: 10px;
+    width: 100%;
+    outline: none;
+    margin: 0;
+    padding: 0;
+}
+
+section.range-slider input::-webkit-slider-thumb {
+    pointer-events: all;
+    position: relative;
+    z-index: 1;
+    outline: 0;
+}
+
+section.range-slider input::-moz-range-thumb {
+    pointer-events: all;
+    position: relative;
+    z-index: 10;
+    -moz-appearance: none;
+    width: 9px;
+}
+
+section.range-slider input::-moz-range-track {
+    position: relative;
+    z-index: -1;
+    background-color: rgba(0, 0, 0, 1);
+    border: 0;
+}
+section.range-slider input:last-of-type::-moz-range-track {
+    -moz-appearance: none;
+    background: none transparent;
+    border: 0;
+}
+section.range-slider input[type=range]::-moz-focus-outer {
+    border: 0;
+}
+section.range-label {
+
+}
+section > .range-values {
+    font-size: 10px;
+}
+section > .range-min {
+
+}
+section > .range-max {
+
+}
 
 
 /* @media only screen and (-webkit-min-device-pixel-ratio: 2.75)

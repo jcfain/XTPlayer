@@ -148,7 +148,12 @@ function getServerSettings() {
 			.map(function (k) {
 				return remoteUserSettings["availableAxis"][k]["channel"];
 			});
+		remoteUserSettings.availableAxisArray = Object.keys(remoteUserSettings["availableAxis"])
+			.map(function (k) {
+				return remoteUserSettings["availableAxis"][k];
+			});
 		funscriptChannels.sort();
+		updateSettingsUI();
 		getServerLibrary();
 	  } else {
 		alert("Error getting settings");
@@ -156,7 +161,9 @@ function getServerSettings() {
 	};
 	xhr.send();
 }
-
+function updateSettingsUI() {
+	setupSliders();
+}
 function getServerLibrary() {
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', "/media", true);
@@ -375,11 +382,11 @@ function onMediaLoad(err, mediaList)
 	if(useDeoWeb && mediaListObj.length > 0)
 		loadVideo(mediaListObj[0]); 
 */
-	updateSettingsUI();
+	updateMediaUI();
   }
 }
 
-function updateSettingsUI() {
+function updateMediaUI() {
 	setThumbSize(thumbSizeGlobal, false);
 	sort(sortByGlobal, false);
 	loadMedia(show(showGlobal, false))
@@ -764,6 +771,84 @@ function thumbSizeChange(selectNode) {
 	loadMedia(show(showGlobal, true));
 }
 
+{/* <div class="formElement">
+<label for="thumbSize">
+	<span class="formLabel">Stroke range</span>
+</label>
+<section id="rangeSlider" class="range-slider">
+	<span class="range-values"></span>
+	<input value="0" min="0" max="9999" step="1" type="range">
+	<input value="10000" min="1" max="10000" step="1" type="range">
+</section>
+</div> */}
+function setupSliders() {
+	// Initialize Sliders
+	var availableAxis = remoteUserSettings.availableAxisArray;
+	var modalBody = document.getElementById("modalBody");
+	for(var i=0; i<availableAxis.length; i++) {
+		var channel = availableAxis[i];
+
+		var formElementNode =  document.createElement("div"); 
+		formElementNode.classList.add("formElement");
+
+		var labelNode = document.createElement("label");
+		labelNode.classList.add("range-label")
+		labelNode.innerText = channel.friendlyName;
+		labelNode.for = channel.channel;
+		formElementNode.appendChild(labelNode);
+
+		var sectionNode = document.createElement("section");
+		sectionNode.id = channel.channel;
+		sectionNode.classList.add("range-slider")
+		formElementNode.appendChild(sectionNode);
+
+		var rangeValuesNode = document.createElement("span");
+		rangeValuesNode.classList.add("range-values")
+		sectionNode.appendChild(rangeValuesNode);
+
+		var input1Node = document.createElement("input");
+		input1Node.classList.add("range-min")
+		input1Node.type = "range";
+		input1Node.min = channel.min;
+		input1Node.max = channel.userMax - 1;
+		input1Node.value = channel.userMin;
+
+		var input2Node = document.createElement("input");
+		input2Node.classList.add("range-max")
+		input2Node.type = "range";
+		input2Node.min = channel.userMin + 1;
+		input2Node.max = channel.max;
+		input2Node.value = channel.userMax;
+
+		input1Node.oninput = function(input1Node, input2Node, rangeValuesNode, channel) {
+			var slide1 = parseFloat( input1Node.value );
+			var slide2 = parseFloat( input2Node.value );
+			var slideMid =  Math.round((slide2 + slide1) / 2);
+			rangeValuesNode.innerText = slide1 + " - " + slideMid + " - " + slide2;
+			input1Node.max = slide2 - 1;
+			remoteUserSettings.availableAxis[channel.channel].userMin = slide1;
+			remoteUserSettings.availableAxis[channel.channel].userMid = slideMid;
+		}.bind(input1Node, input1Node, input2Node, rangeValuesNode, channel);
+		
+		input2Node.oninput = function(input1Node, input2Node, rangeValuesNode, channel) {
+			var slide1 = parseFloat( input1Node.value );
+			var slide2 = parseFloat( input2Node.value );
+			var slideMid =  Math.round((slide2 + slide1) / 2);
+			rangeValuesNode.innerText = slide1 + " - " + slideMid + " - " + slide2;
+			input2Node.min = slide1 + 1;
+			remoteUserSettings.availableAxis[channel.channel].userMax = slide2;
+			remoteUserSettings.availableAxis[channel.channel].userMid = slideMid;
+		}.bind(input2Node, input1Node, input2Node, rangeValuesNode, channel);
+
+		sectionNode.appendChild(input1Node);
+		sectionNode.appendChild(input2Node);
+		input1Node.oninput();
+		input2Node.oninput();
+
+		modalBody.appendChild(formElementNode);
+	}
+}
+
 var debouncer;
 function webSocketAddressChange(e) {
 	if(debouncer) {
@@ -776,15 +861,15 @@ function webSocketAddressChange(e) {
 	}, 500);
 }
 
-function defaultSettings() {
-	var r = confirm("Are you sure you want to reset ALL settings to default?");
+function defaultLocalSettings() {
+	var r = confirm("Are you sure you want to reset ALL local settings to default? Note: This only resets the settings in this browser. Your settings stored in XTP will remain.");
 	if (r) {
 		window.localStorage.clear();
 		window.location.reload();
 	} 
 }
 
-function deleteSettings() {
+function deleteLocalSettings() {
 	var r = confirm("Are you sure you want to delete ALL settings from localStorage and close the window?");
 	if (r) {
 		window.localStorage.clear();

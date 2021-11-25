@@ -499,7 +499,7 @@ void SettingsDialog::setupGamepadMap()
     connect(inverseXRoll, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcXRollR2_valueChanged);
     inverseGrid->addWidget(inverseXRoll, 3, 2, Qt::AlignCenter);
 }
-QList<QWidget*> _multiplierWidgets;
+
 void SettingsDialog::setUpTCodeAxis()
 {
     if(_interfaceInitialized)
