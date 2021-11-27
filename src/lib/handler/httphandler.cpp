@@ -30,6 +30,7 @@ HttpHandler::HttpHandler(VideoHandler* videoHandler, QObject *parent):
     router.addRoute("POST", "^/settings$", this, &HttpHandler::handleSettingsUpdate);
     router.addRoute("POST", "^/settings/connectDevice$", this, &HttpHandler::handleConnectDevice);
     router.addRoute("POST", "^/xtpweb$", this, &HttpHandler::handleWebTimeUpdate);
+    router.addRoute("POST", "^/tcode$", this, &HttpHandler::handleTCodeIn);
 }
 
 HttpHandler::~HttpHandler()
@@ -62,6 +63,8 @@ HttpPromise HttpHandler::handleSettingsUpdate(HttpDataPtr data)
         auto channels = SettingsHandler::getAvailableAxis();
         foreach(auto channel, channels->keys())
         {
+            if(channels->value(channel).Type == AxisType::HalfRange || channels->value(channel).Type != AxisType::None)
+                continue;
             auto value = doc["availableAxis"][channel];
             ChannelModel channelModel = {
                 value["friendlyName"].toString(),//QString FriendlyName;
@@ -197,6 +200,17 @@ HttpPromise HttpHandler::handleConnectDevice(HttpDataPtr data)
 {
     emit connectTCodeDevice();
     data->response->setStatus(HttpStatus::Ok);
+    return HttpPromise::resolve(data);
+}
+
+HttpPromise HttpHandler::handleTCodeIn(HttpDataPtr data)
+{
+    data->response->setStatus(HttpStatus::Ok);
+    QString tcodeData(data->request->body());
+    if(!tcodeData.isEmpty())
+        emit tcode(tcodeData);
+    else
+        data->response->setStatus(HttpStatus::BadRequest);
     return HttpPromise::resolve(data);
 }
 

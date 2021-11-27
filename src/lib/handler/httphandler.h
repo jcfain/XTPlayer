@@ -24,6 +24,7 @@ class HttpHandler : public HttpRequestHandler
     Q_OBJECT
 signals:
     void readyRead(QByteArray data);
+    void tcode(QString tcode);
     void connectTCodeDevice();
 public slots:
     void on_tCodeDeviceConnection_StateChange(ConnectionChangedSignal status);
@@ -40,6 +41,7 @@ public:
     HttpPromise handleSettingsUpdate(HttpDataPtr data);
     HttpPromise handleDeviceConnected(HttpDataPtr data);
     HttpPromise handleConnectDevice(HttpDataPtr data);
+    HttpPromise handleTCodeIn(HttpDataPtr data);
     HttpPromise handleDeo(HttpDataPtr data);
     HttpPromise handleWebTimeUpdate(HttpDataPtr data);
     void setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems);

@@ -51,7 +51,7 @@ public:
     GamepadHandler* getGamepadHandler();
     void setSelectedDeviceHandler(DeviceHandler* device);
     DeviceHandler* getSelectedDeviceHandler();
-    VRDeviceHandler* getConnectedVRHandler();
+    VRDeviceHandler* getConnectedVRDeviceHandler();
     bool isDeviceConnected();
     void initDeviceRetry();
     void initDeoRetry();
@@ -63,6 +63,7 @@ public:
     PasswordResponse GetLaunchPass();
     bool HasLaunchPass();
     void setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems);
+    void sendTCode(QString tcode);
 
     void reject() override;
 
@@ -253,8 +254,8 @@ private:
     ConnectionStatus _gamepadConnectionStatus = ConnectionStatus::Disconnected;
     QList<SerialComboboxItem> serialPorts;
     SerialComboboxItem selectedSerialPort;
-    DeviceHandler* selectedDeviceHandler;
-    VRDeviceHandler* _connectedVRHandler;
+    DeviceHandler* selectedDeviceHandler = 0;
+    VRDeviceHandler* _connectedVRHandler = 0;
     VideoHandler* _videoHandler;
     HttpHandler* _httpHandler = 0;
     SerialHandler* _serialHandler;

@@ -76,6 +76,7 @@ void SettingsDialog::init(VideoHandler* videoHandler)
     if(SettingsHandler::getEnableHttpServer())
     {
         _httpHandler = new HttpHandler(videoHandler, this);
+        connect(_httpHandler, &HttpHandler::tcode, this, &SettingsDialog::sendTCode);
         connect(_httpHandler, &HttpHandler::connectTCodeDevice, this, &SettingsDialog::initDeviceRetry);
         connect(this, &SettingsDialog::deviceConnectionChange, _httpHandler, &HttpHandler::on_tCodeDeviceConnection_StateChange);
     }
@@ -824,6 +825,10 @@ void SettingsDialog::setSelectedDeviceHandler(DeviceHandler* device)
     selectedDeviceHandler = device;
 }
 
+VRDeviceHandler* SettingsDialog::getConnectedVRDeviceHandler() {
+    return _connectedVRHandler;
+}
+
 DeviceHandler* SettingsDialog::getSelectedDeviceHandler()
 {
     return selectedDeviceHandler;
@@ -1069,10 +1074,17 @@ void SettingsDialog::onRange_valueChanged(QString name, int value)
     rangeMinLabels.value(name)->setText(QString::number(min));
     rangeMaxLabels.value(name)->setText(QString::number(max));
     mainLabel->setText(channel.FriendlyName + " mid: " + QString::number(XMath::middle(min, max)));
-    if ((!_videoHandler->isPlaying() || _videoHandler->isPaused() || SettingsHandler::getLiveActionPaused()) && !_deoHandler->isPlaying() && getSelectedDeviceHandler()->isRunning())
-    {
-        getSelectedDeviceHandler()->sendTCode(name + QString::number(value).rightJustified(SettingsHandler::getTCodePadding(), '0')+ "S1000");
-    }
+    if ((!_videoHandler->isPlaying() || _videoHandler->isPaused() || SettingsHandler::getLiveActionPaused())
+        && (!_connectedVRHandler || !_connectedVRHandler->isPlaying())
+        && selectedDeviceHandler->isRunning())
+    sendTCode(name + QString::number(value).rightJustified(SettingsHandler::getTCodePadding(), '0')+ "S1000");
+
+}
+
+void SettingsDialog::sendTCode(QString tcode)
+{
+    if(selectedDeviceHandler && selectedDeviceHandler->isConnected())
+        selectedDeviceHandler->sendTCode(tcode);
 }
 
 void SettingsDialog::onRange_mouseRelease(QString name)
@@ -1105,7 +1117,7 @@ void SettingsDialog::on_deo_connectionChanged(ConnectionChangedSignal event)
     _deoConnectionStatus = event.status;
     if (event.status == ConnectionStatus::Error)
     {
-        _connectedVRHandler = nullptr;
+        _connectedVRHandler = 0;
         ui.deoConnectButton->setEnabled(true);
         setDeviceStatusStyle(event.status, event.deviceType, event.message);
     }
@@ -1135,7 +1147,7 @@ void SettingsDialog::on_deo_connectionChanged(ConnectionChangedSignal event)
 
 void SettingsDialog::on_deo_error(QString error)
 {
-    _connectedVRHandler = nullptr;
+    _connectedVRHandler = 0;
     emit deoDeviceError(error);
 }
 void SettingsDialog::on_device_connectionChanged(ConnectionChangedSignal event)
@@ -1200,7 +1212,7 @@ void SettingsDialog::on_whirligig_connectionChanged(ConnectionChangedSignal even
     {
         ui.whirligigConnectButton->setEnabled(true);
         setDeviceStatusStyle(event.status, event.deviceType, event.message);
-        _connectedVRHandler = nullptr;
+        _connectedVRHandler = 0;
     }
     else
     {
@@ -1237,7 +1249,7 @@ void SettingsDialog::on_xtpWeb_connectionChanged(ConnectionChangedSignal event)
     if (event.status == ConnectionStatus::Error)
     {
         setDeviceStatusStyle(event.status, event.deviceType, event.message);
-        _connectedVRHandler = nullptr;
+        _connectedVRHandler = 0;
     }
     else
     {
@@ -1264,10 +1276,6 @@ void SettingsDialog::on_xtpWeb_connectionChanged(ConnectionChangedSignal event)
 void SettingsDialog::on_xtpWeb_error(QString error)
 {
     emit xtpWebDeviceError(error);
-}
-
-VRDeviceHandler* SettingsDialog::getConnectedVRHandler() {
-    return _connectedVRHandler;
 }
 
 void SettingsDialog::on_gamepad_connectionChanged(ConnectionChangedSignal event)

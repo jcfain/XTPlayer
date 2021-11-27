@@ -36,7 +36,8 @@ var AxisDimension =
     Yaw: 6
 };
 
-
+var userAgent;
+var userAgentIsDeo = false;
 var remoteUserSettings;
 var mediaListObj = [];
 var playingmediaItem;
@@ -57,8 +58,8 @@ var funscriptChannels = [];
 var currentChannelIndex = 0;
 var connectionStatus = ConnectionStatus.Disconnected;
 var deviceConnectionStatusInterval;
-var deviceConnectionStatusRetryButtonNode;
-var deviceConnectionStatusRetryButtonImageNode;
+var deviceConnectionStatusRetryButtonNodes;
+var deviceConnectionStatusRetryButtonImageNodes;
 //var funscriptSyncWorker;
 //var useDeoWeb;
 //var deoVideoNode;
@@ -70,6 +71,9 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 function loadPage()
 {
+	getBrowserInformation();
+	userAgentIsDeo = userAgent.indexOf("Deo VR") != -1;
+	setDeoStyles(userAgentIsDeo);
 	settingsNode = document.getElementById("settingsModal");
 	thumbsContainerNode = document.getElementById("thumbsContainer");
 
@@ -104,8 +108,8 @@ function loadPage()
 	// 	alert("There was an issue loading media.");
 	// }, true);
 
-	deviceConnectionStatusRetryButtonNode = document.getElementById("deviceStatusRetryButton");
-	deviceConnectionStatusRetryButtonImageNode = document.getElementById("connectionStatusIconImage");
+	deviceConnectionStatusRetryButtonNodes = document.getElementsByName("deviceStatusRetryButton");
+	deviceConnectionStatusRetryButtonImageNodes = document.getElementsByName("connectionStatusIconImage");
 	toggleExternalStreaming(externalStreaming, false);
 	
 /* 	
@@ -127,7 +131,86 @@ function loadPage()
 function onResizeVideo() {
 	thumbsContainerNode.style.maxHeight = "calc(100vh - "+ (+videoNode.offsetHeight + 165) + "px)";
 } 
-
+function getBrowserInformation() {
+	var nAgt = navigator.userAgent;
+	var browserName;
+	var fullVersion; 
+	var majorVersion;
+	var nameOffset,verOffset,ix;
+	
+	// In Opera, the true version is after "Opera" or after "Version"
+	if ((verOffset=nAgt.indexOf("Opera"))!=-1) {
+	 browserName = "Opera";
+	 fullVersion = nAgt.substring(verOffset+6);
+	 if ((verOffset=nAgt.indexOf("Version"))!=-1) 
+	   fullVersion = nAgt.substring(verOffset+8);
+	}
+	// In MSIE, the true version is after "MSIE" in userAgent
+	else if ((verOffset=nAgt.indexOf("MSIE"))!=-1) {
+	 browserName = "Microsoft Internet Explorer";
+	 fullVersion = nAgt.substring(verOffset+5);
+	}
+	// In Chrome, the true version is after "Chrome" 
+	else if ((verOffset=nAgt.indexOf("Chrome"))!=-1) {
+	 browserName = "Chrome";
+	 fullVersion = nAgt.substring(verOffset+7);
+	}
+	// In Safari, the true version is after "Safari" or after "Version" 
+	else if ((verOffset=nAgt.indexOf("Safari"))!=-1) {
+	 browserName = "Safari";
+	 fullVersion = nAgt.substring(verOffset+7);
+	 if ((verOffset=nAgt.indexOf("Version"))!=-1) 
+	   fullVersion = nAgt.substring(verOffset+8);
+	}
+	// In Firefox, the true version is after "Firefox" 
+	else if ((verOffset=nAgt.indexOf("Firefox"))!=-1) {
+	 browserName = "Firefox";
+	 fullVersion = nAgt.substring(verOffset+8);
+	}
+	// In most other browsers, "name/version" is at the end of userAgent 
+	else if ( (nameOffset=nAgt.lastIndexOf(' ')+1) < 
+			  (verOffset=nAgt.lastIndexOf('/')) ) 
+	{
+	 browserName = nAgt.substring(nameOffset,verOffset);
+	 fullVersion = nAgt.substring(verOffset+1);
+	 if (browserName.toLowerCase()==browserName.toUpperCase()) {
+	  browserName = navigator.appName;
+	 }
+	}
+	// trim the fullVersion string at semicolon/space if present
+	if ((ix=fullVersion.indexOf(";"))!=-1)
+	   fullVersion=fullVersion.substring(0,ix);
+	if ((ix=fullVersion.indexOf(" "))!=-1)
+	   fullVersion=fullVersion.substring(0,ix);
+	
+	majorVersion = parseInt(''+fullVersion,10);
+	if (isNaN(majorVersion)) {
+	 fullVersion  = ''+parseFloat(navigator.appVersion); 
+	 majorVersion = parseInt(navigator.appVersion,10);
+	}
+	
+	var divnode = document.createElement("div"); 
+	divnode.innerHTML = ''
+	 +'Browser name  = '+browserName+'<br>'
+	 +'Full version  = '+fullVersion+'<br>'
+	 +'Major version = '+majorVersion+'<br>'
+	 +'navigator.userAgent = '+navigator.userAgent+'<br>';
+	 userAgent = navigator.userAgent;
+	document.getElementById("browserInfoTab").appendChild(divnode)
+}
+function setDeoStyles(isDeo) {
+	if(isDeo) {
+		var checkboxes = document.querySelectorAll("input[type='checkbox']");
+		for(var i=0;i<checkboxes.length;i++) {
+			checkboxes[i].classList.remove("styled-checkbox")
+		}
+	} else {
+		var checkboxes = document.getElementsByClassName("input[type='checkbox']");
+		for(var i=0;i<checkboxes.length;i++) {
+			checkboxes[i].classList.add("styled-checkbox");
+		}
+	}
+}
 /* 
 function onResizeDeo() {
 	if(useDeoWeb) {
@@ -163,6 +246,7 @@ function getServerSettings() {
 }
 function updateSettingsUI() {
 	setupSliders();
+	document.getElementById("tabLocalTab").onclick();
 }
 function getServerLibrary() {
 	var xhr = new XMLHttpRequest();
@@ -183,33 +267,37 @@ function getServerLibrary() {
 }
 
 function setConnectionStatus(level, message) {
-	deviceConnectionStatusRetryButtonNode.title = "TCode status: " + message;
-	deviceConnectionStatusRetryButtonNode.style.cursor = "";
-	deviceConnectionStatusRetryButtonNode.disabled = true;
-	switch(level) {
-		case ConnectionStatus.Disconnected:
-			deviceConnectionStatusRetryButtonNode.style.backgroundColor = "crimson";
-			deviceConnectionStatusRetryButtonNode.style.cursor = "pointer";
-			deviceConnectionStatusRetryButtonNode.disabled = false;
-			deviceConnectionStatusRetryButtonImageNode.src = "://images/icons/x.png";
-			deviceConnectionStatusRetryButtonNode.title += ": Check your devices connection and click this to retry"
-			break;
-		case ConnectionStatus.Connecting:
-			deviceConnectionStatusRetryButtonNode.style.backgroundColor = "yellow";
-			deviceConnectionStatusRetryButtonImageNode.src = "://images/icons/reload.svg";
-			break;
-		case ConnectionStatus.Connected:
-			deviceConnectionStatusRetryButtonNode.style.backgroundColor = "chartreuse";
-			deviceConnectionStatusRetryButtonImageNode.src = "://images/icons/check-mark-black.png";
-			break;
-		case ConnectionStatus.Error:
-			deviceConnectionStatusRetryButtonNode.style.backgroundColor = "red";
-			deviceConnectionStatusRetryButtonNode.style.cursor = "pointer";
-			deviceConnectionStatusRetryButtonNode.disabled = false;
-			deviceConnectionStatusRetryButtonImageNode.src = "://images/icons/error-black.png";
-			deviceConnectionStatusRetryButtonNode.title += ": Check your devices connection and click this to retry"
-			break;
+	for(var i=0;i<deviceConnectionStatusRetryButtonNodes.length;i++) {
+		var deviceConnectionStatusRetryButtonNode = deviceConnectionStatusRetryButtonNodes[i];
+		var deviceConnectionStatusRetryButtonImageNode = deviceConnectionStatusRetryButtonImageNodes[i];
+		deviceConnectionStatusRetryButtonNode.title = "TCode status: " + message;
+		deviceConnectionStatusRetryButtonNode.style.cursor = "";
+		deviceConnectionStatusRetryButtonNode.disabled = true;
+		switch(level) {
+			case ConnectionStatus.Disconnected:
+				deviceConnectionStatusRetryButtonNode.style.backgroundColor = "crimson";
+				deviceConnectionStatusRetryButtonNode.style.cursor = "pointer";
+				deviceConnectionStatusRetryButtonNode.disabled = false;
+				deviceConnectionStatusRetryButtonImageNode.src = "://images/icons/x.png";
+				deviceConnectionStatusRetryButtonNode.title += ": Check your devices connection and click this to retry"
+				break;
+			case ConnectionStatus.Connecting:
+				deviceConnectionStatusRetryButtonNode.style.backgroundColor = "yellow";
+				deviceConnectionStatusRetryButtonImageNode.src = "://images/icons/reload.svg";
+				break;
+			case ConnectionStatus.Connected:
+				deviceConnectionStatusRetryButtonNode.style.backgroundColor = "chartreuse";
+				deviceConnectionStatusRetryButtonImageNode.src = "://images/icons/check-mark-black.png";
+				break;
+			case ConnectionStatus.Error:
+				deviceConnectionStatusRetryButtonNode.style.backgroundColor = "red";
+				deviceConnectionStatusRetryButtonNode.style.cursor = "pointer";
+				deviceConnectionStatusRetryButtonNode.disabled = false;
+				deviceConnectionStatusRetryButtonImageNode.src = "://images/icons/error-black.png";
+				deviceConnectionStatusRetryButtonNode.title += ": Check your devices connection and click this to retry"
+				break;
 
+		}
 	}
 }
 function getDeviceConnectionStatus() {
@@ -305,6 +393,8 @@ function postServerSettings() {
 		var status = xhr.status;
 		if (status !== 200) 
 			alert('Error saving server settings: '+status)
+		else
+			alert('XTP settings saved!')
 	  }
 	}
 	xhr.onerror = function() {
@@ -345,7 +435,23 @@ function postMediaState(mediaState) {
 	};
 	xhr.onerror = function() {
 		var status = xhr.status;
-		console.log('Error sending sending mediastate: '+status)
+		console.log('Error sending mediastate: '+status)
+	};
+}
+
+function postTCode(tcode) {
+	var xhr = new XMLHttpRequest();
+	xhr.open("POST", "/tcode", true);
+	xhr.setRequestHeader('Content-Type', 'text/plain');
+	xhr.send(tcode);
+	xhr.oneload = function() {
+		var status = xhr.status;
+		if (status !== 200) 
+			console.log('Error sending tcode: '+status)
+	};
+	xhr.onerror = function() {
+		var status = xhr.status;
+		console.log('Error sending tcode: '+status)
 	};
 }
 
@@ -749,11 +855,34 @@ function onFunscriptWorkerThreadRecieveMessage(e) {
 function openSettings() {
   settingsNode.style.visibility = "visible";
   settingsNode.style.opacity = 1;
+  document.getElementById("settingsTabs").style.display = "block";
 }
 
 function closeSettings() {
   settingsNode.style.visibility = "hidden";
   settingsNode.style.opacity = 0;
+  document.getElementById("settingsTabs").style.display = "none";
+}
+
+function tabClick(tab, tabNumber) {
+	var allTabs = document.getElementsByClassName("tab-section-tab")
+	for(var i=0;i<allTabs.length;i++) {
+		if(i==tabNumber)
+			continue;
+		var otherTab = allTabs[i];
+		otherTab.style.backgroundColor = "#5E6B7F";
+	}
+	var allContent = document.getElementsByClassName("tab-content")
+	for(var i=0;i<allContent.length;i++) {
+		if(i==tabNumber)
+			continue;
+		var content = allContent[i];
+		content.style.display = 'none';
+		content.style.opacity = "0";
+	}
+	allContent[tabNumber].style.display = 'block';
+	allContent[tabNumber].style.opacity = "1";
+	tab.style.backgroundColor = '#8DA1BF';
 }
 
 function showChange(selectNode) {
@@ -771,20 +900,11 @@ function thumbSizeChange(selectNode) {
 	loadMedia(show(showGlobal, true));
 }
 
-{/* <div class="formElement">
-<label for="thumbSize">
-	<span class="formLabel">Stroke range</span>
-</label>
-<section id="rangeSlider" class="range-slider">
-	<span class="range-values"></span>
-	<input value="0" min="0" max="9999" step="1" type="range">
-	<input value="10000" min="1" max="10000" step="1" type="range">
-</section>
-</div> */}
+var sendTcodeDebouncer;
 function setupSliders() {
 	// Initialize Sliders
 	var availableAxis = remoteUserSettings.availableAxisArray;
-	var modalBody = document.getElementById("modalBody");
+	var tcodeTab = document.getElementById("tabTCode");
 	for(var i=0; i<availableAxis.length; i++) {
 		var channel = availableAxis[i];
 
@@ -798,8 +918,8 @@ function setupSliders() {
 		formElementNode.appendChild(labelNode);
 
 		var sectionNode = document.createElement("section");
+		sectionNode.classList.add("range-slider");
 		sectionNode.id = channel.channel;
-		sectionNode.classList.add("range-slider")
 		formElementNode.appendChild(sectionNode);
 
 		var rangeValuesNode = document.createElement("span");
@@ -807,45 +927,69 @@ function setupSliders() {
 		sectionNode.appendChild(rangeValuesNode);
 
 		var input1Node = document.createElement("input");
-		input1Node.classList.add("range-min")
 		input1Node.type = "range";
 		input1Node.min = channel.min;
-		input1Node.max = channel.userMax - 1;
+		input1Node.max = channel.max - 1;
 		input1Node.value = channel.userMin;
 
 		var input2Node = document.createElement("input");
-		input2Node.classList.add("range-max")
 		input2Node.type = "range";
-		input2Node.min = channel.userMin + 1;
+		input2Node.min = channel.min + 1;
 		input2Node.max = channel.max;
 		input2Node.value = channel.userMax;
 
+		if(userAgentIsDeo) {
+			formElementNode.style.height ="50px"
+			labelNode.style.height ="50px"
+		} else {
+			input1Node.classList.add("range-input");
+			input2Node.classList.add("range-input");
+		}
 		input1Node.oninput = function(input1Node, input2Node, rangeValuesNode, channel) {
-			var slide1 = parseFloat( input1Node.value );
-			var slide2 = parseFloat( input2Node.value );
+			var slide1 = parseInt( input1Node.value );
+			var slide2 = parseInt( input2Node.value );
 			var slideMid =  Math.round((slide2 + slide1) / 2);
 			rangeValuesNode.innerText = slide1 + " - " + slideMid + " - " + slide2;
-			input1Node.max = slide2 - 1;
+			if(slide2 < slide1) {
+				input2Node.value = slide1 + 1;
+				remoteUserSettings.availableAxis[channel.channel].userMax = input2Node.value;
+			}
 			remoteUserSettings.availableAxis[channel.channel].userMin = slide1;
 			remoteUserSettings.availableAxis[channel.channel].userMid = slideMid;
+			// if(sendTcodeDebouncer)
+			// 	clearTimeout(sendTcodeDebouncer);
+			// sendTcodeDebouncer = setTimeout(function () {
+					postTCode(channel.channel + input1Node.value.toString().padStart(4, '0') + "S2000")
+			// }, 1000);
 		}.bind(input1Node, input1Node, input2Node, rangeValuesNode, channel);
 		
 		input2Node.oninput = function(input1Node, input2Node, rangeValuesNode, channel) {
-			var slide1 = parseFloat( input1Node.value );
-			var slide2 = parseFloat( input2Node.value );
+			var slide1 = parseInt( input1Node.value );
+			var slide2 = parseInt( input2Node.value );
 			var slideMid =  Math.round((slide2 + slide1) / 2);
 			rangeValuesNode.innerText = slide1 + " - " + slideMid + " - " + slide2;
-			input2Node.min = slide1 + 1;
+			if(slide1 > slide2) {
+				input1Node.value = slide2 - 1;
+				remoteUserSettings.availableAxis[channel.channel].userMin = input1Node.value;
+			}
 			remoteUserSettings.availableAxis[channel.channel].userMax = slide2;
 			remoteUserSettings.availableAxis[channel.channel].userMid = slideMid;
+			// if(sendTcodeDebouncer)
+			// 	clearTimeout(sendTcodeDebouncer);
+			// sendTcodeDebouncer = setTimeout(function () {
+					postTCode(channel.channel + input2Node.value.toString().padStart(4, '0') + "S2000")
+			// }, 1000);
 		}.bind(input2Node, input1Node, input2Node, rangeValuesNode, channel);
 
 		sectionNode.appendChild(input1Node);
 		sectionNode.appendChild(input2Node);
-		input1Node.oninput();
-		input2Node.oninput();
 
-		modalBody.appendChild(formElementNode);
+		var slide1 = parseInt( input1Node.value );
+		var slide2 = parseInt( input2Node.value );
+		var slideMid =  Math.round((slide2 + slide1) / 2);
+		rangeValuesNode.innerText = slide1 + " - " + slideMid + " - " + slide2;
+
+		tcodeTab.appendChild(formElementNode);
 	}
 }
 

@@ -37,7 +37,7 @@ bool SyncHandler::isPaused()
 }
 bool SyncHandler::isPlaying()
 {
-    return _isVRFunscriptPlaying || _isMediaFunscriptPlaying || _isStandAloneFunscriptPlaying;
+    return (_isVRFunscriptPlaying || _isMediaFunscriptPlaying || _isStandAloneFunscriptPlaying) && !_isPaused && !SettingsHandler::getLiveActionPaused();
 }
 bool SyncHandler::isPlayingStandAlone()
 {
@@ -362,9 +362,9 @@ void SyncHandler::syncVRFunscript(QString funscript)
         mSecTimer.start();
         QString videoPath;
         qint64 duration;
-        while (_isVRFunscriptPlaying && _xSettings->getConnectedVRHandler()->isConnected() && !_videoHandler->isPlaying())
+        while (_isVRFunscriptPlaying && _xSettings->getConnectedVRDeviceHandler()->isConnected() && !_videoHandler->isPlaying())
         {
-            currentVRPacket = _xSettings->getConnectedVRHandler()->getCurrentPacket();
+            currentVRPacket = _xSettings->getConnectedVRDeviceHandler()->getCurrentPacket();
             //timer.start();
             if(!_isPaused && !SettingsHandler::getLiveActionPaused() && _xSettings->isDeviceConnected() && isLoaded() && !currentVRPacket.path.isEmpty() && currentVRPacket.duration > 0 && currentVRPacket.playing)
             {
