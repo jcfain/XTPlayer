@@ -96,6 +96,9 @@ function loadPage()
 	videoNode.addEventListener("timeupdate", onVideoTimeUpdate); 
 	videoNode.addEventListener("loadeddata", onVideoLoad); 
 	videoNode.addEventListener("play", onVideoPlay); 
+	videoNode.addEventListener("playing", onVideoPlaying); 
+	videoNode.addEventListener("stalled", onVideoStall); 
+	videoNode.addEventListener("waiting", onVideoStall); 
 	videoNode.addEventListener("pause", onVideoPause); 
 	videoNode.addEventListener("volumechange", onVolumeChange); 
 	videoNode.addEventListener("ended", onVideoEnd); 
@@ -772,7 +775,7 @@ function onVideoPlay(event) {
 	playingmediaItem.playing = true;
 	// if(!funscriptSyncWorker && loadedFunscripts && loadedFunscripts.length > 0)
 	// 	startFunscriptSync(loadedFunscripts);
-	//sendMediaState();
+	sendMediaState();
 }
 function onVideoPause(event) {
 	console.log("Video pause")
@@ -780,6 +783,16 @@ function onVideoPause(event) {
 	//setTimeout(function() {
 		sendMediaState();// Sometimes a timeupdate is sent after this event fires?
 	//}, 500);
+}
+function onVideoStall(event) {
+	console.log("Video stall")
+	playingmediaItem.playing = false;
+	sendMediaState();
+}
+function onVideoPlaying(event) {
+	console.log("Video playing")
+	playingmediaItem.playing = true;
+	sendMediaState();
 }
 function onVolumeChange() {
 	window.localStorage.setItem("volume", videoNode.volume);

@@ -1858,7 +1858,7 @@ void SettingsDialog::on_enableHttpServerCheckbox_clicked(bool checked)
 {
     SettingsHandler::setEnableHttpServer(checked);
     ui.httpServerOptions->setVisible(checked);
-    _requiresRestart = true;
+    _requiresRestart = !checked;
     if(!checked)
         SettingsHandler::setXTPWebSyncEnabled(false);
 }
@@ -1870,6 +1870,8 @@ void SettingsDialog::on_browseHttpRootButton_clicked()
     {
         SettingsHandler::setHttpServerRoot(selectedDirectory);
         ui.httpRootLineEdit->setText(selectedDirectory);
+        if(SettingsHandler::getEnableHttpServer())
+            _requiresRestart = true;
     }
 }
 
@@ -1905,8 +1907,6 @@ void SettingsDialog::on_httpRootLineEdit_textEdited(const QString &selectedDirec
 void SettingsDialog::on_vrLibraryLineEdit_textEdited(const QString &selectedDirectory)
 {
     SettingsHandler::setVRLibrary(selectedDirectory);
-    if(SettingsHandler::getEnableHttpServer())
-        _requiresRestart = true;
 }
 
 void SettingsDialog::on_finscriptModifierSpinBox_valueChanged(int value)

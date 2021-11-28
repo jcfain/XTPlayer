@@ -482,17 +482,35 @@ QString HttpHandler::getScreenType(QString mediaPath)
 
 QString HttpHandler::getStereoMode(QString mediaPath)
 {
-    if(mediaPath.contains("tb", Qt::CaseSensitivity::CaseInsensitive))
+    if(mediaPath.contains(" tb", Qt::CaseSensitivity::CaseInsensitive) ||
+        mediaPath.contains("_tb", Qt::CaseSensitivity::CaseInsensitive) ||
+        mediaPath.contains("tb_", Qt::CaseSensitivity::CaseInsensitive) ||
+        mediaPath.contains("tb ", Qt::CaseSensitivity::CaseInsensitive))
         return "TB";
-    if(mediaPath.contains("sbs", Qt::CaseSensitivity::CaseInsensitive))
+    if(mediaPath.contains(" sbs", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("_sbs", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("sbs_", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("sbs ", Qt::CaseSensitivity::CaseInsensitive))
         return "SBS";
-    if(mediaPath.contains("3DH", Qt::CaseSensitivity::CaseInsensitive))
+    if(mediaPath.contains(" 3DH", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("_3DH", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("3DH_", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("3DH ", Qt::CaseSensitivity::CaseInsensitive))
         return "3DH";
-    if(mediaPath.contains(" lr ", Qt::CaseSensitivity::CaseInsensitive) || mediaPath.contains("_lr", Qt::CaseSensitivity::CaseInsensitive))
+    if(mediaPath.contains(" lr", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("_lr", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("lr_", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("lr ", Qt::CaseSensitivity::CaseInsensitive))
         return "LR";
-    if(mediaPath.contains("OverUnder", Qt::CaseSensitivity::CaseInsensitive))
+    if(mediaPath.contains(" OverUnder", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("_OverUnder", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("OverUnder_", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("OverUnder ", Qt::CaseSensitivity::CaseInsensitive))
         return "OverUnder";
-    if(mediaPath.contains("3DV", Qt::CaseSensitivity::CaseInsensitive))
+    if(mediaPath.contains(" 3DV", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("_3DV", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("3DV_", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("3DV ", Qt::CaseSensitivity::CaseInsensitive))
         return "3DV";
     return "off";
 }
