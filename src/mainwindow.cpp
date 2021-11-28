@@ -883,15 +883,11 @@ void MainWindow::mediaAction(QString action)
 
 void MainWindow::deviceHome()
 {
-    auto deviceHandler = _xSettings->getSelectedDeviceHandler();
-    if(deviceHandler != nullptr && _xSettings->isDeviceConnected())
-        deviceHandler->sendTCode(tcodeHandler->getAllHome());
+    _xSettings->sendTCode(tcodeHandler->getAllHome());
 }
 void MainWindow::deviceSwitchedHome()
 {
-    auto deviceHandler = _xSettings->getSelectedDeviceHandler();
-    if(deviceHandler != nullptr && _xSettings->isDeviceConnected())
-        deviceHandler->sendTCode(tcodeHandler->getSwitchedHome());
+    _xSettings->sendTCode(tcodeHandler->getSwitchedHome());
 }
 
 void MainWindow::on_mainwindow_splitterMove(int pos, int index)
@@ -2536,10 +2532,8 @@ QString MainWindow::mSecondFormat(int mSecs)
 void MainWindow::on_standaloneFunscript_start()
 {
     LogHandler::Debug("Enter on_standaloneFunscript_start");
-//    if(SettingsHandler::getDeoEnabled())
-//        _xSettings->getDeoHandler()->dispose();
-//    if(SettingsHandler::getWhirligigEnabled())
-//        _xSettings->getWhirligigHandler()->dispose();
+    if(_xSettings->getConnectedVRDeviceHandler())
+        _xSettings->getConnectedVRDeviceHandler()->dispose();
     videoHandler->setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(true);
 }
@@ -2554,10 +2548,8 @@ void MainWindow::on_standaloneFunscript_stop()
 void MainWindow::on_media_start()
 {
     LogHandler::Debug("Enter on_media_start");
-//    if(SettingsHandler::getDeoEnabled())
-//        _xSettings->getDeoHandler()->dispose();
-//    if(SettingsHandler::getWhirligigEnabled())
-//        _xSettings->getWhirligigHandler()->dispose();
+    if(_xSettings->getConnectedVRDeviceHandler())
+        _xSettings->getConnectedVRDeviceHandler()->dispose();
     if (_syncHandler->isLoaded())
     {
         _syncHandler->syncFunscript();
@@ -2803,10 +2795,10 @@ void MainWindow::on_gamepad_sendTCode(QString value)
 {
     if(_xSettings->isDeviceConnected())
     {
-        if(SettingsHandler::getFunscriptLoaded(
-                TCodeChannelLookup::Stroke()) &&
-                !SettingsHandler::getLiveActionPaused() &&
-                ((videoHandler->isPlaying() && !videoHandler->isPaused()) || _xSettings->getDeoHandler()->isPlaying() || _xSettings->getWhirligigHandler()->isPlaying() || (!_syncHandler->isPaused() && _syncHandler->isPlayingStandAlone()) ))
+        if(SettingsHandler::getFunscriptLoaded( TCodeChannelLookup::Stroke()) &&
+                _syncHandler->isPlaying() &&
+                ((videoHandler->isPlaying() && !videoHandler->isPaused())
+                    || (_xSettings->getConnectedVRDeviceHandler() && _xSettings->getConnectedVRDeviceHandler()->isPlaying())))
         {
             QRegularExpression rx("L0[^\\s]*\\s?");
             value = value.remove(rx);
@@ -2817,7 +2809,7 @@ void MainWindow::on_gamepad_sendTCode(QString value)
             QRegularExpression rx("A1[^\\s]*\\s?");
             value = value.remove(rx);
         }
-        _xSettings->getSelectedDeviceHandler()->sendTCode(value);
+        _xSettings->sendTCode(value);
     }
 }
 

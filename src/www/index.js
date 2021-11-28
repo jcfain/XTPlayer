@@ -1,6 +1,47 @@
+
+var DeviceType =
+{
+    Serial: 0,
+    Network: 1,
+    Deo: 2,
+    Whirligig: 3,
+    Gamepad: 4,
+    XTPWeb: 5
+};
+
+var ConnectionStatus =
+{
+    Connected: 0,
+    Disconnected: 1,
+    Connecting: 2,
+    Error: 3
+};
+
+var ChannelType = 
+{
+    None: 0,
+    Range: 1,
+    Switch: 2,
+    HalfRange: 3
+}
+
+var AxisDimension =
+{
+    None: 0,
+    Heave: 1,
+    Surge: 2,
+    Sway: 3,
+    Pitch: 4,
+    Roll: 5,
+    Yaw: 6
+};
+
+var userAgent;
+var userAgentIsDeo = false;
 var remoteUserSettings;
 var mediaListObj = [];
 var playingmediaItem;
+var playingmediaItemNode;
 var thumbsContainerNode;
 var sortByGlobal = "nameAsc";
 var showGlobal = "All";
@@ -13,23 +54,35 @@ var resizeObserver;
 var webSocket;
 var deviceAddress;
 var funscriptChannels = [];
-var loadedFunscripts;
+//var loadedFunscripts;
 var currentChannelIndex = 0;
-var funscriptSyncWorker;
+var connectionStatus = ConnectionStatus.Disconnected;
+var deviceConnectionStatusInterval;
+var deviceConnectionStatusRetryButtonNodes;
+var deviceConnectionStatusRetryButtonImageNodes;
+//var funscriptSyncWorker;
 //var useDeoWeb;
 //var deoVideoNode;
 //var deoSourceNode;
+
+
 document.addEventListener("DOMContentLoaded", function() {
   loadPage();
 });
 function loadPage()
 {
+	getBrowserInformation();
+	userAgentIsDeo = userAgent.indexOf("Deo VR") != -1;
+	setDeoStyles(userAgentIsDeo);
 	settingsNode = document.getElementById("settingsModal");
 	thumbsContainerNode = document.getElementById("thumbsContainer");
 
 	sortByGlobal = JSON.parse(window.localStorage.getItem("sortBy"));
 	showGlobal = JSON.parse(window.localStorage.getItem("show"));
 	thumbSizeGlobal = JSON.parse(window.localStorage.getItem("thumbSize"));
+/* 	if(!thumbSizeGlobal && window.devicePixelRatio == 2.75) {
+		thumbSizeGlobal = 400;
+	} */
 	var volume = JSON.parse(window.localStorage.getItem("volume"));
 	externalStreaming = JSON.parse(window.localStorage.getItem("externalStreaming"));
 	//deviceAddress =  JSON.parse(window.localStorage.getItem("webSocketAddress"));
@@ -43,11 +96,23 @@ function loadPage()
 	videoNode.addEventListener("timeupdate", onVideoTimeUpdate); 
 	videoNode.addEventListener("loadeddata", onVideoLoad); 
 	videoNode.addEventListener("play", onVideoPlay); 
+	videoNode.addEventListener("playing", onVideoPlaying); 
+	videoNode.addEventListener("stalled", onVideoStall); 
+	videoNode.addEventListener("waiting", onVideoStall); 
 	videoNode.addEventListener("pause", onVideoPause); 
 	videoNode.addEventListener("volumechange", onVolumeChange); 
 	videoNode.addEventListener("ended", onVideoEnd); 
 	videoNode.volume = volume ? volume : 0.5;
-	
+	// Fires on load?
+	// videoSourceNode.addEventListener('error', function(event) { 
+	// 	alert("There was an issue loading media.");
+	// }, true);
+	// videoNode.addEventListener('error', function(event) { 
+	// 	alert("There was an issue loading media.");
+	// }, true);
+
+	deviceConnectionStatusRetryButtonNodes = document.getElementsByName("deviceStatusRetryButton");
+	deviceConnectionStatusRetryButtonImageNodes = document.getElementsByName("connectionStatusIconImage");
 	toggleExternalStreaming(externalStreaming, false);
 	
 /* 	
@@ -61,13 +126,94 @@ function loadPage()
 		new ResizeObserver(onResizeDeo).observe(deoVideoNode)
 	} 
 */
+	getServerSettings();
+	userGetDeviceConnectionStatus();
 	
-	loadSettingsServer();
 }
 
 function onResizeVideo() {
-	thumbsContainerNode.style.maxHeight = "calc(100vh - "+ (+videoNode.offsetHeight + 120) + "px)";
+	thumbsContainerNode.style.maxHeight = "calc(100vh - "+ (+videoNode.offsetHeight + 165) + "px)";
 } 
+function getBrowserInformation() {
+	var nAgt = navigator.userAgent;
+	var browserName;
+	var fullVersion; 
+	var majorVersion;
+	var nameOffset,verOffset,ix;
+	
+	// In Opera, the true version is after "Opera" or after "Version"
+	if ((verOffset=nAgt.indexOf("Opera"))!=-1) {
+	 browserName = "Opera";
+	 fullVersion = nAgt.substring(verOffset+6);
+	 if ((verOffset=nAgt.indexOf("Version"))!=-1) 
+	   fullVersion = nAgt.substring(verOffset+8);
+	}
+	// In MSIE, the true version is after "MSIE" in userAgent
+	else if ((verOffset=nAgt.indexOf("MSIE"))!=-1) {
+	 browserName = "Microsoft Internet Explorer";
+	 fullVersion = nAgt.substring(verOffset+5);
+	}
+	// In Chrome, the true version is after "Chrome" 
+	else if ((verOffset=nAgt.indexOf("Chrome"))!=-1) {
+	 browserName = "Chrome";
+	 fullVersion = nAgt.substring(verOffset+7);
+	}
+	// In Safari, the true version is after "Safari" or after "Version" 
+	else if ((verOffset=nAgt.indexOf("Safari"))!=-1) {
+	 browserName = "Safari";
+	 fullVersion = nAgt.substring(verOffset+7);
+	 if ((verOffset=nAgt.indexOf("Version"))!=-1) 
+	   fullVersion = nAgt.substring(verOffset+8);
+	}
+	// In Firefox, the true version is after "Firefox" 
+	else if ((verOffset=nAgt.indexOf("Firefox"))!=-1) {
+	 browserName = "Firefox";
+	 fullVersion = nAgt.substring(verOffset+8);
+	}
+	// In most other browsers, "name/version" is at the end of userAgent 
+	else if ( (nameOffset=nAgt.lastIndexOf(' ')+1) < 
+			  (verOffset=nAgt.lastIndexOf('/')) ) 
+	{
+	 browserName = nAgt.substring(nameOffset,verOffset);
+	 fullVersion = nAgt.substring(verOffset+1);
+	 if (browserName.toLowerCase()==browserName.toUpperCase()) {
+	  browserName = navigator.appName;
+	 }
+	}
+	// trim the fullVersion string at semicolon/space if present
+	if ((ix=fullVersion.indexOf(";"))!=-1)
+	   fullVersion=fullVersion.substring(0,ix);
+	if ((ix=fullVersion.indexOf(" "))!=-1)
+	   fullVersion=fullVersion.substring(0,ix);
+	
+	majorVersion = parseInt(''+fullVersion,10);
+	if (isNaN(majorVersion)) {
+	 fullVersion  = ''+parseFloat(navigator.appVersion); 
+	 majorVersion = parseInt(navigator.appVersion,10);
+	}
+	
+	var divnode = document.createElement("div"); 
+	divnode.innerHTML = ''
+	 +'Browser name  = '+browserName+'<br>'
+	 +'Full version  = '+fullVersion+'<br>'
+	 +'Major version = '+majorVersion+'<br>'
+	 +'navigator.userAgent = '+navigator.userAgent+'<br>';
+	 userAgent = navigator.userAgent;
+	document.getElementById("browserInfoTab").appendChild(divnode)
+}
+function setDeoStyles(isDeo) {
+	if(isDeo) {
+		var checkboxes = document.querySelectorAll("input[type='checkbox']");
+		for(var i=0;i<checkboxes.length;i++) {
+			checkboxes[i].classList.remove("styled-checkbox")
+		}
+	} else {
+		var checkboxes = document.getElementsByClassName("input[type='checkbox']");
+		for(var i=0;i<checkboxes.length;i++) {
+			checkboxes[i].classList.add("styled-checkbox");
+		}
+	}
+}
 /* 
 function onResizeDeo() {
 	if(useDeoWeb) {
@@ -76,7 +222,7 @@ function onResizeDeo() {
 } 
 */
 
-async function loadSettingsServer() {
+function getServerSettings() {
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', "/settings", true);
 	xhr.responseType = 'json';
@@ -88,16 +234,24 @@ async function loadSettingsServer() {
 			.map(function (k) {
 				return remoteUserSettings["availableAxis"][k]["channel"];
 			});
+		remoteUserSettings.availableAxisArray = Object.keys(remoteUserSettings["availableAxis"])
+			.map(function (k) {
+				return remoteUserSettings["availableAxis"][k];
+			});
 		funscriptChannels.sort();
-		loadMediaFromServer();
+		updateSettingsUI();
+		getServerLibrary();
 	  } else {
 		alert("Error getting settings");
 	  }
 	};
 	xhr.send();
 }
-
-async function loadMediaFromServer() {
+function updateSettingsUI() {
+	setupSliders();
+	document.getElementById("tabLocalTab").onclick();
+}
+function getServerLibrary() {
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', "/media", true);
 	xhr.responseType = 'json';
@@ -109,10 +263,95 @@ async function loadMediaFromServer() {
 		onMediaLoad(status, xhr.response);
 	  }
 	};
+	xhr.onerror = function() {
+		alert("Error getting media");
+	};
 	xhr.send();
 }
 
-async function loadMediaFunscript(path, isMFS) {
+function setConnectionStatus(level, message) {
+	for(var i=0;i<deviceConnectionStatusRetryButtonNodes.length;i++) {
+		var deviceConnectionStatusRetryButtonNode = deviceConnectionStatusRetryButtonNodes[i];
+		var deviceConnectionStatusRetryButtonImageNode = deviceConnectionStatusRetryButtonImageNodes[i];
+		deviceConnectionStatusRetryButtonNode.title = "TCode status: " + message;
+		deviceConnectionStatusRetryButtonNode.style.cursor = "";
+		deviceConnectionStatusRetryButtonNode.disabled = true;
+		switch(level) {
+			case ConnectionStatus.Disconnected:
+				deviceConnectionStatusRetryButtonNode.style.backgroundColor = "crimson";
+				deviceConnectionStatusRetryButtonNode.style.cursor = "pointer";
+				deviceConnectionStatusRetryButtonNode.disabled = false;
+				deviceConnectionStatusRetryButtonImageNode.src = "://images/icons/x.png";
+				deviceConnectionStatusRetryButtonNode.title += ": Check your devices connection and click this to retry"
+				break;
+			case ConnectionStatus.Connecting:
+				deviceConnectionStatusRetryButtonNode.style.backgroundColor = "yellow";
+				deviceConnectionStatusRetryButtonImageNode.src = "://images/icons/reload.svg";
+				break;
+			case ConnectionStatus.Connected:
+				deviceConnectionStatusRetryButtonNode.style.backgroundColor = "chartreuse";
+				deviceConnectionStatusRetryButtonImageNode.src = "://images/icons/check-mark-black.png";
+				break;
+			case ConnectionStatus.Error:
+				deviceConnectionStatusRetryButtonNode.style.backgroundColor = "red";
+				deviceConnectionStatusRetryButtonNode.style.cursor = "pointer";
+				deviceConnectionStatusRetryButtonNode.disabled = false;
+				deviceConnectionStatusRetryButtonImageNode.src = "://images/icons/error-black.png";
+				deviceConnectionStatusRetryButtonNode.title += ": Check your devices connection and click this to retry"
+				break;
+
+		}
+	}
+}
+function getDeviceConnectionStatus() {
+	if(deviceConnectionStatusInterval)
+		clearTimeout(deviceConnectionStatusInterval);
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', "/settings/deviceConnectionStatus", true);
+	xhr.responseType = 'json';
+	xhr.onload = function() {
+	  var status = xhr.status;
+	  if (status === 200) {
+		var connectionStatusEvent = xhr.response;
+		connectionStatus = connectionStatusEvent.status;
+		setConnectionStatus(connectionStatus, connectionStatusEvent.message);
+		pollDeviceConnectionStatus(30000);
+		if(connectionStatus == ConnectionStatus.Connecting) {
+			pollDeviceConnectionStatus(1000);
+		}
+	  } else {
+		alert("Http Error getting device connection status: "+ status);
+		if(deviceConnectionStatusInterval)
+			clearTimeout(deviceConnectionStatusInterval);
+			setConnectionStatus(ConnectionStatus.Error, "Http Error getting device connection status: "+ status);
+	  }
+	};
+	xhr.onerror = function() {
+		var status = xhr.status;
+		alert("Error getting device connection status: "+ status);
+		if(deviceConnectionStatusInterval)
+			clearTimeout(deviceConnectionStatusInterval);
+			setConnectionStatus(ConnectionStatus.Error, "Error getting device connection status: "+ status);
+	};
+	xhr.send();
+}
+
+function pollDeviceConnectionStatus(pollInterval) {
+	if(deviceConnectionStatusInterval) {
+		clearTimeout(deviceConnectionStatusInterval);
+		deviceConnectionStatusInterval = null;
+	}
+	deviceConnectionStatusInterval = setTimeout(function () {
+		getDeviceConnectionStatus();
+	}, pollInterval);
+}
+
+function userGetDeviceConnectionStatus() {
+		setConnectionStatus(ConnectionStatus.Connecting, "Getting device connection status...");
+		getDeviceConnectionStatus();
+}
+
+function getMediaFunscripts(path, isMFS) {
 	var channel = funscriptChannels[currentChannelIndex];
 	var trackName = remoteUserSettings["availableAxis"][channel]["trackName"];
 	var xhr = new XMLHttpRequest();
@@ -136,7 +375,7 @@ async function loadMediaFunscript(path, isMFS) {
 		currentChannelIndex++;
 		if(currentChannelIndex < funscriptChannels.length)
 		{
-			loadMediaFunscript(path, isMFS);
+			getMediaFunscripts(path, isMFS);
 		} 
 		else 
 		{
@@ -148,11 +387,75 @@ async function loadMediaFunscript(path, isMFS) {
 	xhr.send();
 }
 
+function postServerSettings() {
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', "/settings", true);
+	xhr.setRequestHeader('Content-Type', 'application/json');
+	xhr.onreadystatechange = function() {
+	  if (xhr.readyState === 4) {
+		var status = xhr.status;
+		if (status !== 200) 
+			alert('Error saving server settings: '+status)
+		else
+			alert('XTP settings saved!')
+	  }
+	}
+	xhr.onerror = function() {
+		var status = xhr.status;
+		alert('Error saving server settings: '+status)
+	};
+	xhr.send(JSON.stringify(remoteUserSettings));
+}
+
+function postDeviceConnectRetry() {
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', "/settings/connectDevice", true);
+	xhr.onreadystatechange = function() {
+	  if (xhr.readyState === 4) {
+		var status = xhr.status;
+		if (status === 200) 
+			userGetDeviceConnectionStatus();
+		else
+			alert('Error sending retry device connection: '+status)
+	  }
+	}
+	xhr.onerror = function() {
+		var status = xhr.status;
+		alert('Error sending retry device connection: '+status)
+	};
+	xhr.send();
+}
+
 function postMediaState(mediaState) {
 	var xhr = new XMLHttpRequest();
 	xhr.open("POST", "/xtpweb", true);
 	xhr.setRequestHeader('Content-Type', 'application/json');
 	xhr.send(JSON.stringify(mediaState));
+	xhr.oneload = function() {
+		var status = xhr.status;
+		if (status !== 200) 
+			console.log('Error sending mediastate: '+status)
+	};
+	xhr.onerror = function() {
+		var status = xhr.status;
+		console.log('Error sending mediastate: '+status)
+	};
+}
+
+function postTCode(tcode) {
+	var xhr = new XMLHttpRequest();
+	xhr.open("POST", "/tcode", true);
+	xhr.setRequestHeader('Content-Type', 'text/plain');
+	xhr.send(tcode);
+	xhr.oneload = function() {
+		var status = xhr.status;
+		if (status !== 200) 
+			console.log('Error sending tcode: '+status)
+	};
+	xhr.onerror = function() {
+		var status = xhr.status;
+		console.log('Error sending tcode: '+status)
+	};
 }
 
 function onMediaLoad(err, mediaList)
@@ -164,7 +467,7 @@ function onMediaLoad(err, mediaList)
 	for(var i=0; i<mediaList.length;i++)
 	{
 		var obj = {
-			id: mediaList[i]["name"].replace(/^[^a-z]+|[^\w:.-]+/gi, "")+"thumb"+i,
+			id: mediaList[i]["name"].replace(/^[^a-z]+|[^\w:.-]+/gi, "")+"item"+i,
 			name: mediaList[i]["name"],
 			displayName: mediaList[i]["name"],
 			thumbSize: mediaList[i]["thumbSize"],
@@ -188,11 +491,11 @@ function onMediaLoad(err, mediaList)
 	if(useDeoWeb && mediaListObj.length > 0)
 		loadVideo(mediaListObj[0]); 
 */
-	updateSettingsUI();
+	updateMediaUI();
   }
 }
 
-function updateSettingsUI() {
+function updateMediaUI() {
 	setThumbSize(thumbSizeGlobal, false);
 	sort(sortByGlobal, false);
 	loadMedia(show(showGlobal, false))
@@ -237,22 +540,24 @@ function loadMedia(mediaList) {
 			textHeight = (thumbSizeGlobal * 0.25);
 			width = thumbSizeGlobal + (thumbSizeGlobal * 0.15) + "px";
 			height = thumbSizeGlobal + textHeight + "px";
-			fontSize = (textHeight * 0.4) + "px";
+			fontSize = (textHeight * 0.3) + "px";
 		}
 		var divnode = document.createElement("div"); 
-		divnode.id = obj.id+"item"+i
+		divnode.id = obj.id
 		divnode.className += "media-item"
 		divnode.style.width = width;
 		divnode.style.height = height;
 		divnode.title = obj.name;
 		var anode = document.createElement("a"); 
-		anode.className += "mediaLink"
-		if(obj.isMFS)
-			anode.className += " mediaLinkMFS"
-		if(!obj.hasScript)
-			anode.className += " mediaLinkNoScript"
-		anode.style.width = width;
-		anode.style.height = height;
+		anode.className += "media-link"
+		if(obj.isMFS) {
+			divnode.className += " media-item-mfs"
+		}
+		if(!obj.hasScript) {
+			divnode.className += " media-item-noscript"
+		}
+		//anode.style.width = width;
+		//anode.style.height = height;
 		anode.onclick = createClickHandler(obj);
 		var image = document.createElement("img"); 
 		image.src = "/thumb/" + obj.relativeThumb;
@@ -270,6 +575,8 @@ function loadMedia(mediaList) {
 		anode.appendChild(image);
 		anode.appendChild(namenode);
 		medialistNode.appendChild(divnode);
+		if(playingmediaItem && playingmediaItem.id === obj.id)
+			setPlayingMediaItem(obj);
 	}
 }
 
@@ -401,8 +708,10 @@ function toggleExternalStreaming(value, userClicked)
 		document.getElementById("externalStreamingCheckbox").checked = value;
 	if(value) {
 		videoNode.pause();
-		videoNode.style.display = "none";
+		videoNode.classList.remove("video-shown");
 		thumbsContainerNode.style.maxHeight = "";
+		if(playingmediaItem) 
+			clearPlayingMediaItem()
 		if(resizeObserver)
 			resizeObserver.unobserve(videoNode);
 	} else {
@@ -414,8 +723,13 @@ function toggleExternalStreaming(value, userClicked)
 
 function playVideo(obj) {
 	if(!externalStreaming) {
-		playingmediaItem = obj;
-		videoNode.style.display = "block";
+		if(playingmediaItem) {
+			if(playingmediaItem.id === obj.id)
+				return;
+			clearPlayingMediaItem();
+		}
+		setPlayingMediaItem(obj);
+		videoNode.classList.add("video-shown");
 		videoSourceNode.setAttribute("src", "/video" + obj.relativePath);
 		videoNode.setAttribute("title", obj.name);
 		videoNode.setAttribute("poster", "/thumb/" + obj.relativeThumb);
@@ -429,6 +743,17 @@ function playVideo(obj) {
 	} else { 
 		window.open("/video"+ obj.relativePath)
 	}
+}
+
+function setPlayingMediaItem(obj) {
+	playingmediaItem = obj;
+	playingmediaItemNode = document.getElementById(obj.id);
+	playingmediaItemNode.classList.add("media-item-playing");
+}
+function clearPlayingMediaItem() {
+	playingmediaItemNode.classList.remove("media-item-playing");
+	playingmediaItem = null;
+	playingmediaItemNode = null;
 }
 
 var timer1 = 0;
@@ -455,6 +780,18 @@ function onVideoPlay(event) {
 function onVideoPause(event) {
 	console.log("Video pause")
 	playingmediaItem.playing = false;
+	//setTimeout(function() {
+		sendMediaState();// Sometimes a timeupdate is sent after this event fires?
+	//}, 500);
+}
+function onVideoStall(event) {
+	console.log("Video stall")
+	playingmediaItem.playing = false;
+	sendMediaState();
+}
+function onVideoPlaying(event) {
+	console.log("Video playing")
+	playingmediaItem.playing = true;
 	sendMediaState();
 }
 function onVolumeChange() {
@@ -464,6 +801,12 @@ function onVideoEnd(event) {
 	// if(funscriptSyncWorker) {
 	// 	funscriptSyncWorker.postMessage(JSON.stringify({"command": "terminate"}));
 	// }
+	var playingIndex = mediaListObj.findIndex(x => x.path === playingmediaItem.path);
+	playingIndex++;
+	if(playingIndex < mediaListObj.length)
+		playVideo(mediaListObj[playingIndex]);
+	else
+		playVideo(mediaListObj[0]);
 }
 function setThumbSize(value, userClick) {
 	if(!userClick) {
@@ -475,29 +818,30 @@ function setThumbSize(value, userClick) {
 	}
 }
 
-function startFunscriptSync() {
-	if (window.Worker) {
-		if(funscriptSyncWorker)
-			funscriptSyncWorker.terminate();
-		funscriptSyncWorker = new Worker('syncFunscript.js');
-		funscriptSyncWorker.postMessage(JSON.stringify({
-			"command": "startThread", 
-			"funscripts": loadedFunscripts, 
-			"remoteUserSettings": remoteUserSettings
-		}));
-		funscriptSyncWorker.onmessage = onFunscriptWorkerThreadRecieveMessage;
-	}
-}
+// function startFunscriptSync() {
+// 	if (window.Worker) {
+// 		if(funscriptSyncWorker)
+// 			funscriptSyncWorker.terminate();
+// 		funscriptSyncWorker = new Worker('syncFunscript.js');
+// 		funscriptSyncWorker.postMessage(JSON.stringify({
+// 			"command": "startThread", 
+// 			"funscripts": loadedFunscripts, 
+// 			"remoteUserSettings": remoteUserSettings
+// 		}));
+// 		funscriptSyncWorker.onmessage = onFunscriptWorkerThreadRecieveMessage;
+// 	}
+// }
 
 function sendMediaState() {
-	console.log("sendMediaState")
-	postMediaState({
-		"path": playingmediaItem.path,
-		"playing": playingmediaItem.playing, 
-		"currentTime": videoNode.currentTime, 
-		"duration": videoNode.duration,
-		"playbackSpeed": videoNode.speed
-	});
+	//console.log("sendMediaState")
+	if(playingmediaItem)
+		postMediaState({
+			"path": playingmediaItem.path,
+			"playing": playingmediaItem.playing, 
+			"currentTime": videoNode.currentTime, 
+			"duration": videoNode.duration,
+			"playbackSpeed": videoNode.speed
+		});
 }
 
 function onFunscriptWorkerThreadRecieveMessage(e) {
@@ -522,11 +866,36 @@ function onFunscriptWorkerThreadRecieveMessage(e) {
 }
 //Settings
 function openSettings() {
-  settingsNode.style.display = "flex";
+  settingsNode.style.visibility = "visible";
+  settingsNode.style.opacity = 1;
+  document.getElementById("settingsTabs").style.display = "block";
 }
 
 function closeSettings() {
-  settingsNode.style.display = "none";
+  settingsNode.style.visibility = "hidden";
+  settingsNode.style.opacity = 0;
+  document.getElementById("settingsTabs").style.display = "none";
+}
+
+function tabClick(tab, tabNumber) {
+	var allTabs = document.getElementsByClassName("tab-section-tab")
+	for(var i=0;i<allTabs.length;i++) {
+		if(i==tabNumber)
+			continue;
+		var otherTab = allTabs[i];
+		otherTab.style.backgroundColor = "#5E6B7F";
+	}
+	var allContent = document.getElementsByClassName("tab-content")
+	for(var i=0;i<allContent.length;i++) {
+		if(i==tabNumber)
+			continue;
+		var content = allContent[i];
+		content.style.display = 'none';
+		content.style.opacity = "0";
+	}
+	allContent[tabNumber].style.display = 'block';
+	allContent[tabNumber].style.opacity = "1";
+	tab.style.backgroundColor = '#8DA1BF';
 }
 
 function showChange(selectNode) {
@@ -544,6 +913,99 @@ function thumbSizeChange(selectNode) {
 	loadMedia(show(showGlobal, true));
 }
 
+var sendTcodeDebouncer;
+function setupSliders() {
+	// Initialize Sliders
+	var availableAxis = remoteUserSettings.availableAxisArray;
+	var tcodeTab = document.getElementById("tabTCode");
+	for(var i=0; i<availableAxis.length; i++) {
+		var channel = availableAxis[i];
+
+		var formElementNode =  document.createElement("div"); 
+		formElementNode.classList.add("formElement");
+
+		var labelNode = document.createElement("label");
+		labelNode.classList.add("range-label")
+		labelNode.innerText = channel.friendlyName;
+		labelNode.for = channel.channel;
+		formElementNode.appendChild(labelNode);
+
+		var sectionNode = document.createElement("section");
+		sectionNode.classList.add("range-slider");
+		sectionNode.id = channel.channel;
+		formElementNode.appendChild(sectionNode);
+
+		var rangeValuesNode = document.createElement("span");
+		rangeValuesNode.classList.add("range-values")
+		sectionNode.appendChild(rangeValuesNode);
+
+		var input1Node = document.createElement("input");
+		input1Node.type = "range";
+		input1Node.min = channel.min;
+		input1Node.max = channel.max - 1;
+		input1Node.value = channel.userMin;
+
+		var input2Node = document.createElement("input");
+		input2Node.type = "range";
+		input2Node.min = channel.min + 1;
+		input2Node.max = channel.max;
+		input2Node.value = channel.userMax;
+
+		if(userAgentIsDeo) {
+			formElementNode.style.height ="50px"
+			labelNode.style.height ="50px"
+		} else {
+			input1Node.classList.add("range-input");
+			input2Node.classList.add("range-input");
+		}
+		input1Node.oninput = function(input1Node, input2Node, rangeValuesNode, channel) {
+			var slide1 = parseInt( input1Node.value );
+			var slide2 = parseInt( input2Node.value );
+			var slideMid =  Math.round((slide2 + slide1) / 2);
+			rangeValuesNode.innerText = slide1 + " - " + slideMid + " - " + slide2;
+			if(slide2 < slide1) {
+				input2Node.value = slide1 + 1;
+				remoteUserSettings.availableAxis[channel.channel].userMax = input2Node.value;
+			}
+			remoteUserSettings.availableAxis[channel.channel].userMin = slide1;
+			remoteUserSettings.availableAxis[channel.channel].userMid = slideMid;
+			// if(sendTcodeDebouncer)
+			// 	clearTimeout(sendTcodeDebouncer);
+			// sendTcodeDebouncer = setTimeout(function () {
+					postTCode(channel.channel + input1Node.value.toString().padStart(4, '0') + "S2000")
+			// }, 1000);
+		}.bind(input1Node, input1Node, input2Node, rangeValuesNode, channel);
+		
+		input2Node.oninput = function(input1Node, input2Node, rangeValuesNode, channel) {
+			var slide1 = parseInt( input1Node.value );
+			var slide2 = parseInt( input2Node.value );
+			var slideMid =  Math.round((slide2 + slide1) / 2);
+			rangeValuesNode.innerText = slide1 + " - " + slideMid + " - " + slide2;
+			if(slide1 > slide2) {
+				input1Node.value = slide2 - 1;
+				remoteUserSettings.availableAxis[channel.channel].userMin = input1Node.value;
+			}
+			remoteUserSettings.availableAxis[channel.channel].userMax = slide2;
+			remoteUserSettings.availableAxis[channel.channel].userMid = slideMid;
+			// if(sendTcodeDebouncer)
+			// 	clearTimeout(sendTcodeDebouncer);
+			// sendTcodeDebouncer = setTimeout(function () {
+					postTCode(channel.channel + input2Node.value.toString().padStart(4, '0') + "S2000")
+			// }, 1000);
+		}.bind(input2Node, input1Node, input2Node, rangeValuesNode, channel);
+
+		sectionNode.appendChild(input1Node);
+		sectionNode.appendChild(input2Node);
+
+		var slide1 = parseInt( input1Node.value );
+		var slide2 = parseInt( input2Node.value );
+		var slideMid =  Math.round((slide2 + slide1) / 2);
+		rangeValuesNode.innerText = slide1 + " - " + slideMid + " - " + slide2;
+
+		tcodeTab.appendChild(formElementNode);
+	}
+}
+
 var debouncer;
 function webSocketAddressChange(e) {
 	if(debouncer) {
@@ -556,42 +1018,41 @@ function webSocketAddressChange(e) {
 	}, 500);
 }
 
-function defaultSettings() {
-	var r = confirm("Are you sure you want to reset ALL settings to default?");
+function defaultLocalSettings() {
+	var r = confirm("Are you sure you want to reset ALL local settings to default? Note: This only resets the settings in this browser. Your settings stored in XTP will remain.");
 	if (r) {
 		window.localStorage.clear();
 		window.location.reload();
 	} 
 }
 
-function deleteSettings() {
+function deleteLocalSettings() {
 	var r = confirm("Are you sure you want to delete ALL settings from localStorage and close the window?");
 	if (r) {
 		window.localStorage.clear();
-		window.close();
+		window.close();//Does not work
 	} 
 }
+// function connectToTcodeDevice() {
+// 	webSocket = new WebSocket("ws://"+deviceAddress+"/ws");
+// 	webSocket.onopen = function (event) {
+// 		webSocket.send("D1");
+// 	};
+// 	webSocket.onmessage = function (event) {
+// 		console.log(event.data);
+// 		document.getElementById("webSocketStatus").innerHTML = "Connected";
+// 	}
+// 	webSocket.onerror = function (event) {
+// 		console.log(event.data);
+// 		webSocket = null;
+// 		document.getElementById("webSocketStatus").innerHTML = "Error";
+// 	}
+// }
 
-function connectToTcodeDevice() {
-	webSocket = new WebSocket("ws://"+deviceAddress+"/ws");
-	webSocket.onopen = function (event) {
-		webSocket.send("D1");
-	};
-	webSocket.onmessage = function (event) {
-		console.log(event.data);
-		document.getElementById("webSocketStatus").innerHTML = "Connected";
-	}
-	webSocket.onerror = function (event) {
-		console.log(event.data);
-		webSocket = null;
-		document.getElementById("webSocketStatus").innerHTML = "Error";
-	}
-}
-
-function sendTcode(tcode) {
-	console.log("Send tcode: "+tcode);
-	if(webSocket)
-	{
-		webSocket.send(tcode);
-	}
-}
+// function sendTcode(tcode) {
+// 	console.log("Send tcode: "+tcode);
+// 	if(webSocket)
+// 	{
+// 		webSocket.send(tcode);
+// 	}
+// }

@@ -25,7 +25,7 @@ public:
 
 private:
     void readData(QByteArray data);
-    HttpHandler* _httpHandler;
+    HttpHandler* _httpHandler = 0;
     VRPacket* _currentPacket = 0;
     QMutex _mutex;
     NetworkAddress _address;

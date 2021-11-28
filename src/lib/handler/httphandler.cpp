@@ -16,7 +16,7 @@ HttpHandler::HttpHandler(VideoHandler* videoHandler, QObject *parent):
     _server->listen();
 
     //router.addRoute("GET", "^/videos/[\\w,\\s-]+\\.[A-Za-z]{3}$", this, &HttpHandler::handleRoot);
-    router.addRoute("GET", "^/media", this, &HttpHandler::handleVideoList);
+    router.addRoute("GET", "^/media$", this, &HttpHandler::handleVideoList);
     router.addRoute("GET", "^/thumb/.*$", this, &HttpHandler::handleThumbFile);
     router.addRoute("GET", "^/funscript/(.*\\.((funscript)$))?[.]*$", this, &HttpHandler::handleFunscriptFile);
     QString extensions;
@@ -24,14 +24,13 @@ HttpHandler::HttpHandler(VideoHandler* videoHandler, QObject *parent):
     extensions += "|";
     extensions += _videoHandler->getAudioExtensions().join("|");
     router.addRoute("GET", "^/video/(.*\\.(("+extensions+")$))?[.]*$", this, &HttpHandler::handleVideoStream);
-    router.addRoute("GET", "^/deotest", this, &HttpHandler::handleDeo);
-    router.addRoute("GET", "^/settings", this, &HttpHandler::handleSettings);
-    router.addRoute("POST", "^/xtpweb", this, &HttpHandler::handleWebTimeUpdate);
-//    router.addRoute("GET", "^/users/(\\w*)/?$", this, &HttpHandler::handleGetUsername);
-//    router.addRoute({"GET", "POST"}, "^/formTest/?$", this, &HttpHandler::handleFormTest);
-//    router.addRoute("GET", "^/fileTest/(\\d*)/?$", this, &HttpHandler::handleFileTest);
-//    router.addRoute("GET", "^/errorTest/(\\d*)/?$", this, &HttpHandler::handleErrorTest);
-//    router.addRoute("GET", "^/asyncTest/(\\d*)/?$", this, &HttpHandler::handleAsyncTest);
+    router.addRoute("GET", "^/deotest$", this, &HttpHandler::handleDeo);
+    router.addRoute("GET", "^/settings$", this, &HttpHandler::handleSettings);
+    router.addRoute("GET", "^/settings/deviceConnectionStatus$", this, &HttpHandler::handleDeviceConnected);
+    router.addRoute("POST", "^/settings$", this, &HttpHandler::handleSettingsUpdate);
+    router.addRoute("POST", "^/settings/connectDevice$", this, &HttpHandler::handleConnectDevice);
+    router.addRoute("POST", "^/xtpweb$", this, &HttpHandler::handleWebTimeUpdate);
+    router.addRoute("POST", "^/tcode$", this, &HttpHandler::handleTCodeIn);
 }
 
 HttpHandler::~HttpHandler()
@@ -44,6 +43,54 @@ HttpPromise HttpHandler::handleWebTimeUpdate(HttpDataPtr data)
     auto body = data->request->body();
     LogHandler::Debug("HTTP time sync update: "+QString(body));
     emit readyRead(body);
+    data->response->setStatus(HttpStatus::Ok);
+    return HttpPromise::resolve(data);
+}
+HttpPromise HttpHandler::handleSettingsUpdate(HttpDataPtr data)
+{
+    auto body = data->request->body();
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(body, &error);
+    if (doc.isEmpty())
+    {
+        LogHandler::Error("XTP Web json response error: "+error.errorString());
+        LogHandler::Error("data: "+body);
+        data->response->setStatus(HttpStatus::BadRequest);
+        return HttpPromise::resolve(data);
+    }
+    else
+    {
+        auto channels = SettingsHandler::getAvailableAxis();
+        foreach(auto channel, channels->keys())
+        {
+            if(channels->value(channel).Type == AxisType::HalfRange || channels->value(channel).Type != AxisType::None)
+                continue;
+            auto value = doc["availableAxis"][channel];
+            ChannelModel channelModel = {
+                value["friendlyName"].toString(),//QString FriendlyName;
+                value["axisName"].toString(),//QString AxisName;
+                value["channel"].toString(),//QString Channel;
+                value["min"].toInt(),//int Min;
+                value["mid"].toInt(),//int Mid;
+                value["max"].toInt(),//int Max;
+                value["userMin"].toInt(),//int UserMin;
+                value["userMid"].toInt(),//int UserMid;
+                value["userMax"].toInt(),//int UserMax;
+                (AxisDimension)(value["dimension"].toInt()),//AxisDimension Dimension;
+                (AxisType)(value["type"].toInt()),//AxisType Type;
+                value["trackName"].toString(),//QString TrackName;
+                value["multiplierEnabled"].toBool(),//bool MultiplierEnabled;
+                float(value["multiplierValue"].toDouble()),//float MultiplierValue;
+                value["damperEnabled"].toBool(),//bool DamperEnabled;
+                float(value["damperValue"].toDouble()),//float DamperValue;
+                value["inverted"].toBool(),//bool Inverted;
+                value["linkToRelatedMFS"].toBool(),//bool LinkToRelatedMFS;
+                value["relatedChannel"].toString()//QString RelatedChannel;
+            };
+            SettingsHandler::setAxis(channel, channelModel);
+        }
+
+    }
     data->response->setStatus(HttpStatus::Ok);
     return HttpPromise::resolve(data);
 }
@@ -79,7 +126,7 @@ HttpPromise HttpHandler::handle(HttpDataPtr data)
     }
     else if(path.contains("favicon.ico"))
     {
-        data->response->sendFile("://images/icons/XTP-window-icon.ico", "image/x-icon");
+        data->response->sendFile(root+"/favicon.ico", "image/x-icon");
         data->response->setStatus(HttpStatus::Ok);
     }
     else
@@ -137,6 +184,33 @@ HttpPromise HttpHandler::handleSettings(HttpDataPtr data) {
     }
     root["availableAxis"] = availableAxisJson;
     data->response->setStatus(HttpStatus::Ok, QJsonDocument(root));
+    return HttpPromise::resolve(data);
+}
+
+HttpPromise HttpHandler::handleDeviceConnected(HttpDataPtr data)
+{
+    QJsonObject root;
+    root["status"] = _tcodeDeviceStatus.status;
+    root["deviceType"] = _tcodeDeviceStatus.deviceType;
+    root["message"] = _tcodeDeviceStatus.message;
+    data->response->setStatus(HttpStatus::Ok, QJsonDocument(root));
+    return HttpPromise::resolve(data);
+}
+HttpPromise HttpHandler::handleConnectDevice(HttpDataPtr data)
+{
+    emit connectTCodeDevice();
+    data->response->setStatus(HttpStatus::Ok);
+    return HttpPromise::resolve(data);
+}
+
+HttpPromise HttpHandler::handleTCodeIn(HttpDataPtr data)
+{
+    data->response->setStatus(HttpStatus::Ok);
+    QString tcodeData(data->request->body());
+    if(!tcodeData.isEmpty())
+        emit tcode(tcodeData);
+    else
+        data->response->setStatus(HttpStatus::BadRequest);
     return HttpPromise::resolve(data);
 }
 
@@ -284,92 +358,111 @@ HttpPromise HttpHandler::handleThumbFile(HttpDataPtr data)
     data->response->setStatus(HttpStatus::Ok);
     return HttpPromise::resolve(data);
 }
+
 HttpPromise HttpHandler::handleVideoStream(HttpDataPtr data)
 {
-    return HttpPromise::resolve(data).then([this](HttpDataPtr data) {
-        QElapsedTimer timer;
-        LogHandler::Debug("Enter Video stream");
-        timer.start();
-        auto match = data->state["match"].value<QRegularExpressionMatch>();
-        QString parameter = match.captured();
-        QString mediaName = parameter.remove("/video/");
-        LogHandler::Debug("Looking for media in library: " + mediaName);
-        QString filename = SettingsHandler::getSelectedLibrary() + "/" + mediaName;
-        //filename = _videoHandler->transcode(filename);
-        QFile file(filename);
-        if (!file.open(QIODevice::ReadOnly))
+    return QPromise<HttpDataPtr> {[&](
+        const QtPromise::QPromiseResolve<HttpDataPtr> &resolve,
+        const QtPromise::QPromiseReject<HttpDataPtr> &reject)
         {
-            LogHandler::Error(QString("Unable to open file to be sent (%1): %2").arg(filename).arg(file.errorString()));
-            data->response->setStatus(HttpStatus::Forbidden);
-            return data;
-        }
-        qint64 bytesAvailable = file.bytesAvailable();
 
-        QString range;
-        data->request->header<QString>("range", &range);
-        LogHandler::Debug("Requested range: "+range);
-        QStringList rangeKeyValue = range.split('=');
-        qint64 startByte = 0;
-        qint64 endByte = 0;
-        if(rangeKeyValue.length() > 1)
-        {
-            QStringList rangeEnds = rangeKeyValue[1].split('-');
-            if(rangeEnds.length() > 0)
+            QtConcurrent::run([=]()
             {
-                startByte = rangeEnds[0].toLongLong();
-                if(rangeEnds.length() > 1)
-                    endByte = rangeEnds[1].toLongLong();
-            }
+                try
+                {
+                    QElapsedTimer timer;
+                    LogHandler::Debug("Enter Video stream");
+                    timer.start();
+                    auto match = data->state["match"].value<QRegularExpressionMatch>();
+                    QString parameter = match.captured();
+                    QString mediaName = parameter.remove("/video/");
+                    LogHandler::Debug("Looking for media in library: " + mediaName);
+                    QString filename = SettingsHandler::getSelectedLibrary() + "/" + mediaName;
+                    //filename = _videoHandler->transcode(filename);
+                    QFile file(filename);
+                    if (!file.open(QIODevice::ReadOnly))
+                    {
+                        LogHandler::Error(QString("Unable to open file to be sent (%1): %2").arg(filename).arg(file.errorString()));
+                        data->response->setStatus(HttpStatus::Forbidden);
+                        resolve(data);
+                    }
+                    qint64 bytesAvailable = file.bytesAvailable();
 
+                    QString range;
+                    data->request->header<QString>("range", &range);
+                    LogHandler::Debug("Requested range: "+range);
+                    QStringList rangeKeyValue = range.split('=');
+                    qint64 startByte = 0;
+                    qint64 endByte = 0;
+                    if(rangeKeyValue.length() > 1)
+                    {
+                        QStringList rangeEnds = rangeKeyValue[1].split('-');
+                        if(rangeEnds.length() > 0)
+                        {
+                            startByte = rangeEnds[0].toLongLong();
+                            if(rangeEnds.length() > 1)
+                                endByte = rangeEnds[1].toLongLong();
+                        }
+
+                    }
+                    qint64 chunkSize = SettingsHandler::getHTTPChunkSize();
+                    if(!endByte)
+                        endByte = startByte + chunkSize;
+                    if(endByte >= bytesAvailable)
+                        endByte = bytesAvailable;
+                    if(startByte < endByte)
+                    {
+                        QString requestBytes = "bytes " + QString::number(startByte) + "-" + QString::number(endByte) + "/" + QString::number(bytesAvailable +1);
+                        LogHandler::Debug("Request bytes: "+requestBytes);
+                        if(startByte)
+                            file.skip(startByte);
+                        LogHandler::Debug("Video stream read start: "+ QString::number(timer.elapsed()));
+                        QByteArray* byteArray = new QByteArray(file.read(chunkSize));
+                        LogHandler::Debug("Video stream read end: "+ QString::number(timer.elapsed()));
+                        QBuffer buffer(byteArray);
+                        //LogHandler::Debug("Chunk bytes: "+ QString::number(buffer.bytesAvailable()));
+                        //LogHandler::Debug("Video stream open buffer: "+ QString::number(timer.elapsed()));
+                        if (!buffer.open(QIODevice::ReadOnly))
+                        {
+                            LogHandler::Error(QString("Unable to open buffer to be sent (%1): %2").arg(filename).arg(file.errorString()));
+
+                            data->response->setStatus(HttpStatus::Forbidden);
+                            delete byteArray;
+                            file.close();
+                            resolve(data);
+                        }
+
+                        data->response->setStatus(HttpStatus::PartialContent);
+                        qint64 contentLength = (endByte - startByte) + 1;
+                        //LogHandler::Debug("Start bytes: " + QString::number(startByte));
+                        //LogHandler::Debug("End bytes: " + QString::number(endByte));
+                        //LogHandler::Debug("Content length: " + QString::number(contentLength));
+                        data->response->setHeader("Accept-Ranges", "bytes");
+                        data->response->setHeader("Content-Range", requestBytes);
+                        data->response->setHeader("Content-Length", contentLength);
+                        //LogHandler::Debug("Video stream send chunk: "+ QString::number(timer.elapsed()));
+                        QString mimeType = mimeDatabase.mimeTypeForFile(filename, QMimeDatabase::MatchExtension).name();
+                        data->response->sendFile(&buffer, mimeType);
+                        LogHandler::Debug("Video stream send chunk finish: "+ QString::number(timer.elapsed()));
+                        delete byteArray;
+                        file.close();
+
+                        resolve(data);
+                    }
+                    else
+                    {
+                        data->response->setStatus(HttpStatus::Ok);
+                        //LogHandler::Debug("Video stream resolve: "+ QString::number(timer.elapsed()));
+                        resolve(data);
+                    }
+                }
+                catch (...)
+                {
+                    reject(std::current_exception());
+                }
+            });
         }
-        qint64 chunkSize = SettingsHandler::getHTTPChunkSize();
-        if(!endByte)
-            endByte = startByte + chunkSize;
-        if(endByte >= bytesAvailable)
-            endByte = bytesAvailable;
-        if(startByte < endByte)
-        {
-            QString requestBytes = "bytes " + QString::number(startByte) + "-" + QString::number(endByte) + "/" + QString::number(bytesAvailable +1);
-            LogHandler::Debug("Request bytes: "+requestBytes);
-            if(startByte)
-                file.skip(startByte);
-            LogHandler::Debug("Video stream read start: "+ QString::number(timer.elapsed()));
-            QByteArray* byteArray = new QByteArray(file.read(chunkSize));
-            LogHandler::Debug("Video stream read end: "+ QString::number(timer.elapsed()));
-            QBuffer buffer(byteArray);
-            //LogHandler::Debug("Chunk bytes: "+ QString::number(buffer.bytesAvailable()));
-            //LogHandler::Debug("Video stream open buffer: "+ QString::number(timer.elapsed()));
-            if (!buffer.open(QIODevice::ReadOnly))
-            {
-                LogHandler::Error(QString("Unable to open buffer to be sent (%1): %2").arg(filename).arg(file.errorString()));
-
-                data->response->setStatus(HttpStatus::Forbidden);
-                delete byteArray;
-                file.close();
-                return data;
-            }
-
-            data->response->setStatus(HttpStatus::PartialContent);
-            qint64 contentLength = (endByte - startByte) + 1;
-            //LogHandler::Debug("Start bytes: " + QString::number(startByte));
-            //LogHandler::Debug("End bytes: " + QString::number(endByte));
-            //LogHandler::Debug("Content length: " + QString::number(contentLength));
-            data->response->setHeader("Accept-Ranges", "bytes");
-            data->response->setHeader("Content-Range", requestBytes);
-            data->response->setHeader("Content-Length", contentLength);
-            //LogHandler::Debug("Video stream send chunk: "+ QString::number(timer.elapsed()));
-            QString mimeType = mimeDatabase.mimeTypeForFile(filename, QMimeDatabase::MatchExtension).name();
-            data->response->sendFile(&buffer, mimeType);
-            LogHandler::Debug("Video stream send chunk finish: "+ QString::number(timer.elapsed()));
-            delete byteArray;
-            file.close();
-            return data;
-        }
-        else
-            data->response->setStatus(HttpStatus::Ok);
-        //LogHandler::Debug("Video stream resolve: "+ QString::number(timer.elapsed()));
-        return data;
-    });
+    };
 }
 
 QString HttpHandler::getScreenType(QString mediaPath)
@@ -389,17 +482,40 @@ QString HttpHandler::getScreenType(QString mediaPath)
 
 QString HttpHandler::getStereoMode(QString mediaPath)
 {
-    if(mediaPath.contains("tb", Qt::CaseSensitivity::CaseInsensitive))
+    if(mediaPath.contains(" tb", Qt::CaseSensitivity::CaseInsensitive) ||
+        mediaPath.contains("_tb", Qt::CaseSensitivity::CaseInsensitive) ||
+        mediaPath.contains("tb_", Qt::CaseSensitivity::CaseInsensitive) ||
+        mediaPath.contains("tb ", Qt::CaseSensitivity::CaseInsensitive))
         return "TB";
-    if(mediaPath.contains("sbs", Qt::CaseSensitivity::CaseInsensitive))
+    if(mediaPath.contains(" sbs", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("_sbs", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("sbs_", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("sbs ", Qt::CaseSensitivity::CaseInsensitive))
         return "SBS";
-    if(mediaPath.contains("3DH", Qt::CaseSensitivity::CaseInsensitive))
+    if(mediaPath.contains(" 3DH", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("_3DH", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("3DH_", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("3DH ", Qt::CaseSensitivity::CaseInsensitive))
         return "3DH";
-    if(mediaPath.contains(" lr ", Qt::CaseSensitivity::CaseInsensitive) || mediaPath.contains("_lr", Qt::CaseSensitivity::CaseInsensitive))
+    if(mediaPath.contains(" lr", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("_lr", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("lr_", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("lr ", Qt::CaseSensitivity::CaseInsensitive))
         return "LR";
-    if(mediaPath.contains("OverUnder", Qt::CaseSensitivity::CaseInsensitive))
+    if(mediaPath.contains(" OverUnder", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("_OverUnder", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("OverUnder_", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("OverUnder ", Qt::CaseSensitivity::CaseInsensitive))
         return "OverUnder";
-    if(mediaPath.contains("3DV", Qt::CaseSensitivity::CaseInsensitive))
+    if(mediaPath.contains(" 3DV", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("_3DV", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("3DV_", Qt::CaseSensitivity::CaseInsensitive) ||
+            mediaPath.contains("3DV ", Qt::CaseSensitivity::CaseInsensitive))
         return "3DV";
     return "off";
+}
+
+void HttpHandler::on_tCodeDeviceConnection_StateChange(ConnectionChangedSignal status)
+{
+    _tcodeDeviceStatus = status;
 }

@@ -5,28 +5,54 @@
     <link rel="stylesheet" type="text/css" href="styles.css"/>
     <script src="index.js"></script>
     <script src="syncFunscript.js"></script>
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	
 <!--     <link rel="stylesheet" type="text/css" href="https://s3.deovr.com/version/1/css/styles.css"/>
     <script src="https://s3.deovr.com/version/1/js/bundle.js" async></script> -->
 </head>
 <body>
-<div class="header">
-	<div class="headerSection headerSpacer">
+<div id="bodyContainer" class="body-container">
+	<div class="header">
+		<div class="headerSection toolBar">
+			<div class="toolBarGroup">
+				<button name="deviceStatusRetryButton" class="icon-button device-status-retry-button" onclick="postDeviceConnectRetry()">
+					<img name="connectionStatusIconImage" class="buttonImage" src="://images/icons/reload.svg"/>
+				</button>
+			</div>
+		</div>
+		<div class="headerSection headerLogoSection">
+			<img class="headerLogo" src="://images/icons/XTPWeb-logo.png"/>
+		</div>
+		<div class="headerSection toolBar">
+			<div class="toolBarGroup toolBarGroupStart">
+				<button id="settingsButton" class="header-button icon-button" onclick="openSettings()">
+					<image class="buttonImage" src="://images/icons/settings.svg"/>
+				</button>
+			</div>
+		</div>
 	</div>
-	<div class="headerSection headerLogoSection">
-		<img class="headerLogo" src="://images/icons/XTP-window-icon.png"/>
-	</div>
-	<div class="headerSection toolBar">
+	<!-- <deo-video style="display: none;" id="deoVideoPlayer" class="deoVideo">
+		<source id="deoVideoSource"/>
+	</deo-video> -->
+	<video controls id="videoPlayer" class="video">
+		<source id="videoSource"/>
+		Your browser doesn't support HTML5 video tag.
+	</video>
+	<div class="toolBar">
 		<div class="toolBarGroup">
-			<button id="refreshButton" class="header-button icon-button" onclick="loadMediaFromServer()">
-				<img class="buttonImage" src="://images/icons/reload.svg"/>
-			</button>
-			<button id="settingsButton" class="header-button icon-button" onclick="openSettings()">
-				<image class="buttonImage" src="://images/icons/settings.svg"/>
-			</button>
+			
+		</div>
+	</div>
+	<div id="thumbsContainer" class="thumbs-container">
+		<button id="refreshButton" title="Refresh the media from XTP" class="refresh-media-button icon-button" onclick="getServerLibrary()">
+			<img class="buttonImage" src="://images/icons/reload.svg"/>
+		</button>
+		<div id="mediaList" class="thumbs-body">
+		
 		</div>
 	</div>
 </div>
+
 <div id="settingsModal" class="modal">
   <div class="modal-content">
 	<div class="modal-header">
@@ -35,46 +61,51 @@
 			<image class="buttonImage" src="://images/icons/x.svg"/>
 		</button>
 	</div>
-	<div class="modal-body">
-		<div class="toolBar">
-			<div class="toolBarGroup">
+	<div id="modalBody" class="modal-body">
 <!-- 		
 				<div class="formElement">
 					<label for="useDeoWebCheckbox">Use Deo Web
 						<input id="useDeoWebCheckbox" type="checkbox" onclick="onClickUseDeoWebCheckbox(this)"/>
 					</label>
 				</div> 
-			-->
-				<div class="formElement">
-					<label title="If checked, the media items will open the media&#010;directly instead of the built in media player.&#010;This lets players like DeoVR handle the stream.." 
-					for="externalStreamingCheckbox">DeoVR mode
-						<input id="externalStreamingCheckbox" type="checkbox" onclick="onClickUseVideoCheckbox(this)"/>
-					</label>
-				</div>
-				<div class="formElement">
-					<label for="show">
-						<span class="formLabel">Show</span>
+			--> 
+		<section id="settingsTabs" class="tab-section">
+			<button id="tabLocalTab" class="tab-section-tab" onclick="tabClick(this, 0)">Local</button>
+			<button id="tabTCodeTab" class="tab-section-tab" onclick="tabClick(this, 1)">TCode</button>
+			<button id="tabTCodeTab" class="tab-section-tab" onclick="tabClick(this, 2)">Browser info</button>
+
+			<div id="tabLocal" class="tab-content">
+					<div class="formElement">
+						<label title="If checked, the media items will open the media&#010;directly instead of the built in media player.&#010;This lets players like DeoVR handle the stream.." 
+						for="externalStreamingCheckbox">External player
+						</label>
+						<input id="externalStreamingCheckbox" type="checkbox" class="styled-checkbox" onclick="onClickExternalStreamingCheckbox(this)"/>
+					</div>
+					<div class="formElement">
+						<label for="show">
+							<span class="formLabel">Show</span>
+						</label>
 						<select name="show" id="show" onchange="showChange(this)">
 							<option value="All">All</option>
 							<option value="3DOnly">3D only</option>
 							<option value="2DAndAudioOnly">2D and audio only</option>
 						</select>
-					</label>
-				</div>
-				<div class="formElement">
-					<label for="sortBy">
-						<span class="formLabel">Sort by</span>
+					</div>
+					<div class="formElement">
+						<label for="sortBy">
+							<span class="formLabel">Sort by</span>
+						</label>
 						<select name="sortBy" id="sortBy" onchange="sortChange(this)">
 							<option value="nameAsc">Name (asc)</option>
 							<option value="nameDesc">Name (desc)</option>
 							<option value="dateAsc">Date (asc)</option>
 							<option value="dateDesc">Date (desc)</option>
 						</select>
-					</label>
-				</div>
-				<div class="formElement">
-					<label for="thumbSize">
-						<span class="formLabel">Thumb size</span>
+					</div>
+					<div class="formElement">
+						<label for="thumbSize">
+							<span class="formLabel">Thumb size</span>
+						</label>
 						<select name="thumbSize" id="thumbSize" onchange="thumbSizeChange(this)">
 							<option value="50">50px</option>
 							<option value="75">75px</option>
@@ -96,47 +127,54 @@
 							<option value="475">475px</option>
 							<option value="500">500px</option>
 						</select>
+					</div>
+				</div>
+			<div id="tabTCode" class="tab-content"></div>
+			<div id="browserInfoTab" class="tab-content"></div>
+		</section>
+<!-- 				<div class="formElement">
+					<label for="thumbSize">
+						<span class="formLabel">Stroke range</span>
 					</label>
-				</div>
-				<div class="formElement">
-					<button id="defaultSettingsButton" onclick="defaultSettings()">
-						Default All
-					</button>
-				</div>
+					<section id="rangeSlider" class="range-slider">
+						<span class="rangeValues"></span>
+						<input value="0" min="0" max="9999" step="1" type="range">
+						<input value="10000" min="1" max="10000" step="1" type="range">
+					</section>
+				</div> -->
 <!-- 				<div class="formElement">
 					<label title="Must use WebSocket in ESP32 firmware." 
 						for="useVideoCheckbox">WebSocket ESP32 address
-						<input id="webSocketAddress" oninput="webSocketAddressChange(this)"/>
-						<button id="webSocketAddressConnectButton" onclick="connectToTcodeDevice()">
-							Connect
-						</button>
 					</label>
+					<input id="webSocketAddress" oninput="webSocketAddressChange(this)"/>
+					<button id="webSocketAddressConnectButton" onclick="connectToTcodeDevice()">
+						Connect
+					</button>
 					<label id="webSocketStatus">
 						Disconnected
 					</label> 
 				</div> -->
-<!-- 				<div class="formElement">
-					<button id="defaultSettingsButton" onclick="deleteSettings()">
-						Delete All
-					</button>
-				</div> -->
-			</div>
+	</div>
+	<div class="modal-footer">
+		<div class="modal-footer-content">
+			<button name="deviceStatusRetryButton" class="icon-button device-status-retry-button" onclick="postDeviceConnectRetry()">
+				<img name="connectionStatusIconImage" class="buttonImage" src="://images/icons/reload.svg"/>
+			</button>
+		</div>
+		<div class="modal-footer-content">
+			<button id="defaultSettingsButton" title="Thisa will only reset the local browser settings to default. Your settings stored on the XTP machine will remain." onclick="defaultLocalSettings()">
+				Default Local
+			</button>
+			<button id="saveToXTPButton" title="Thisa will save all XTP settings to your XTP machines data storage." onclick="postServerSettings()">
+				Save to XTP
+			</button>
+			<!-- <button id="defaultSettingsButton" onclick="deleteLocalSettings()">
+				Delete All
+			</button> -->
 		</div>
 	</div>
   </div>
 
-</div>
-<!-- <deo-video style="display: none;" id="deoVideoPlayer" class="deoVideo">
-	<source id="deoVideoSource"/>
-</deo-video> -->
-<video controls style="display: none;" id="videoPlayer" class="video">
-	<source id="videoSource"/>
-	Your browser doesn't support HTML5 video tag.
-</video>
-<div id="thumbsContainer" class="thumbs-container">
-	<div id="mediaList" class="thumbs-body">
-	
-	</div>
 </div>
 </body>
 </html>
