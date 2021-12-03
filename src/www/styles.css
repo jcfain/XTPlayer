@@ -15,7 +15,6 @@ body {
     justify-content: space-between;
     margin-top: 1rem;
     margin-bottom: 1rem;
-    height: 64px;
 }
 .headerSection {
     flex-basis: 33%;
@@ -167,14 +166,25 @@ select:hover, button:hover, input:hover {
     background-color: lightblue;
 }
 .icon-button {
-    height: 32px;
-    width: 32px;
-    border-radius: 50%;
+    /* height: 32px; */
+    /* margin: 0; */
+    /* width: 32px; */
+    /* border-radius: 50%; */
+    padding: 8px;
+    border-width: 1px;
+    border-radius: 9999px;
+    display: inline-flex;
+    /* justify-content: center; */
+    /* align-content: center; */
+    border-style: solid;
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.8);
+    transition: background-color 0.25s 0s cubic-bezier(0, 1, 1, 1);
+    cursor: pointer;
 }
 .icon-button > img {
-    width: 16px;
-    height: 16px;
-    margin-top: 3px;
+    width: 1rem;
+    height: 1rem;
 }
 
 .header-button {
@@ -381,6 +391,11 @@ section > .range-values {
 }
 
 
+@media only screen and (-webkit-min-device-pixel-ratio: 2.75)   {
+    .modal-content {
+        width: 100%;
+    }
+}
 /* @media only screen and (-webkit-min-device-pixel-ratio: 2.75)
 or (min-device-width: 375px) 
 and (max-device-width: 812px)

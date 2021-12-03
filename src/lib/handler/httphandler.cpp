@@ -385,6 +385,7 @@ HttpPromise HttpHandler::handleVideoStream(HttpDataPtr data)
                         LogHandler::Error(QString("Unable to open file to be sent (%1): %2").arg(filename).arg(file.errorString()));
                         data->response->setStatus(HttpStatus::Forbidden);
                         resolve(data);
+                        return;
                     }
                     qint64 bytesAvailable = file.bytesAvailable();
 
@@ -405,56 +406,60 @@ HttpPromise HttpHandler::handleVideoStream(HttpDataPtr data)
                         }
 
                     }
+                    LogHandler::Debug("startByte: "+ QString::number(startByte));
+                    LogHandler::Debug("endByte: "+ QString::number(endByte));
                     qint64 chunkSize = SettingsHandler::getHTTPChunkSize();
-                    if(!endByte)
-                        endByte = startByte + chunkSize;
-                    if(endByte >= bytesAvailable)
-                        endByte = bytesAvailable;
-                    if(startByte < endByte)
+                       if((startByte == 0 && endByte == 1) || (endByte && (startByte + endByte) <= chunkSize))
+                           chunkSize = startByte + endByte;
+                       else
+                           endByte = startByte + chunkSize;
+
+                    if (startByte >= bytesAvailable){
+                        data->response->setStatus(HttpStatus::RequestRangeNotSatisfiable);
+                        file.close();
+                        resolve(data);
+                        return;
+                    }
+//                    if(endByte >= bytesAvailable)
+//                        endByte = bytesAvailable;
+                    LogHandler::Debug("chunkSize: "+ QString::number(chunkSize));
+                    QString requestBytes = "bytes " + QString::number(startByte) + "-" + QString::number(endByte) + "/" + QString::number(bytesAvailable +1);
+                    LogHandler::Debug("Request bytes: "+requestBytes);
+                    if(startByte)
+                        file.skip(startByte);
+                    LogHandler::Debug("Video stream read start: "+ QString::number(timer.elapsed()));
+                    QByteArray* byteArray = new QByteArray(file.read(chunkSize));
+                    LogHandler::Debug("Video stream read end: "+ QString::number(timer.elapsed()));
+                    QBuffer buffer(byteArray);
+                    //LogHandler::Debug("Chunk bytes: "+ QString::number(buffer.bytesAvailable()));
+                    //LogHandler::Debug("Video stream open buffer: "+ QString::number(timer.elapsed()));
+                    if (!buffer.open(QIODevice::ReadOnly))
                     {
-                        QString requestBytes = "bytes " + QString::number(startByte) + "-" + QString::number(endByte) + "/" + QString::number(bytesAvailable +1);
-                        LogHandler::Debug("Request bytes: "+requestBytes);
-                        if(startByte)
-                            file.skip(startByte);
-                        LogHandler::Debug("Video stream read start: "+ QString::number(timer.elapsed()));
-                        QByteArray* byteArray = new QByteArray(file.read(chunkSize));
-                        LogHandler::Debug("Video stream read end: "+ QString::number(timer.elapsed()));
-                        QBuffer buffer(byteArray);
-                        //LogHandler::Debug("Chunk bytes: "+ QString::number(buffer.bytesAvailable()));
-                        //LogHandler::Debug("Video stream open buffer: "+ QString::number(timer.elapsed()));
-                        if (!buffer.open(QIODevice::ReadOnly))
-                        {
-                            LogHandler::Error(QString("Unable to open buffer to be sent (%1): %2").arg(filename).arg(file.errorString()));
+                        LogHandler::Error(QString("Unable to open buffer to be sent (%1): %2").arg(filename).arg(file.errorString()));
 
-                            data->response->setStatus(HttpStatus::Forbidden);
-                            delete byteArray;
-                            file.close();
-                            resolve(data);
-                        }
-
-                        data->response->setStatus(HttpStatus::PartialContent);
-                        qint64 contentLength = (endByte - startByte) + 1;
-                        //LogHandler::Debug("Start bytes: " + QString::number(startByte));
-                        //LogHandler::Debug("End bytes: " + QString::number(endByte));
-                        //LogHandler::Debug("Content length: " + QString::number(contentLength));
-                        data->response->setHeader("Accept-Ranges", "bytes");
-                        data->response->setHeader("Content-Range", requestBytes);
-                        data->response->setHeader("Content-Length", contentLength);
-                        //LogHandler::Debug("Video stream send chunk: "+ QString::number(timer.elapsed()));
-                        QString mimeType = mimeDatabase.mimeTypeForFile(filename, QMimeDatabase::MatchExtension).name();
-                        data->response->sendFile(&buffer, mimeType);
-                        LogHandler::Debug("Video stream send chunk finish: "+ QString::number(timer.elapsed()));
+                        data->response->setStatus(HttpStatus::Forbidden);
                         delete byteArray;
                         file.close();
+                        resolve(data);
+                        return;
+                    }
 
-                        resolve(data);
-                    }
-                    else
-                    {
-                        data->response->setStatus(HttpStatus::Ok);
-                        //LogHandler::Debug("Video stream resolve: "+ QString::number(timer.elapsed()));
-                        resolve(data);
-                    }
+                    data->response->setStatus(HttpStatus::PartialContent);
+                    qint64 contentLength = (endByte - startByte) + 1;
+                    //LogHandler::Debug("Start bytes: " + QString::number(startByte));
+                    //LogHandler::Debug("End bytes: " + QString::number(endByte));
+                    //LogHandler::Debug("Content length: " + QString::number(contentLength));
+                    data->response->setHeader("Accept-Ranges", "bytes");
+                    data->response->setHeader("Content-Range", requestBytes);
+                    data->response->setHeader("Content-Length", contentLength);
+                    //LogHandler::Debug("Video stream send chunk: "+ QString::number(timer.elapsed()));
+                    QString mimeType = mimeDatabase.mimeTypeForFile(filename, QMimeDatabase::MatchExtension).name();
+                    data->response->sendFile(&buffer, mimeType);
+                    LogHandler::Debug("Video stream send chunk finish: "+ QString::number(timer.elapsed()));
+                    delete byteArray;
+                    file.close();
+
+                    resolve(data);
                 }
                 catch (...)
                 {
