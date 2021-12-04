@@ -738,7 +738,7 @@ function playVideo(obj) {
 		// if(playingmediaItem.hasScript)
 		// 	loadMediaFunscript(playingmediaItem.scriptNoExtensionRelativePath, playingmediaItem.isMFS);
 		// else
-			videoNode.play();
+			//videoNode.play();
 
 	} else { 
 		window.open("/video"+ obj.relativePath)

@@ -25,7 +25,7 @@
 		</div>
 		<div class="headerSection toolBar">
 			<div class="toolBarGroup toolBarGroupStart">
-				<button id="settingsButton" class="header-button icon-button" onclick="openSettings()">
+				<button id="settingsButton" class="icon-button" onclick="openSettings()">
 					<image class="buttonImage" src="://images/icons/settings.svg"/>
 				</button>
 			</div>
@@ -34,7 +34,7 @@
 	<!-- <deo-video style="display: none;" id="deoVideoPlayer" class="deoVideo">
 		<source id="deoVideoSource"/>
 	</deo-video> -->
-	<video controls id="videoPlayer" class="video">
+	<video playsinline autoplay controls id="videoPlayer" class="video">
 		<source id="videoSource"/>
 		Your browser doesn't support HTML5 video tag.
 	</video>
