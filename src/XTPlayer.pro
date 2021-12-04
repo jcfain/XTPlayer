@@ -127,9 +127,9 @@ FORMS += \
 unix:!mac {
     LIBS += -L$$QT.core.libs -lQtAV -lQtAVWidgets
     QMAKE_RPATHDIR += ../lib
-    LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_0_GCC_64bit-Release/src/debug -lhttpServer
-    INCLUDEPATH += $$PWD/../../build-HttpServer-Desktop_Qt_5_15_0_GCC_64bit-Release/src/debug
-    DEPENDPATH += $$PWD/../../build-HttpServer-Desktop_Qt_5_15_0_GCC_64bit-Release/src/debug
+    LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_0_GCC_64bit-Release/src/release -lhttpServer
+    INCLUDEPATH += $$PWD/../../HttpServer/src
+    DEPENDPATH += $$PWD/../../build-HttpServer-Desktop_Qt_5_15_0_GCC_64bit-Release/src/release
 }
 unix:mac {
 
@@ -154,7 +154,6 @@ INCLUDEPATH += $$PWD/../../HttpServer/src/build/release
 DEPENDPATH += $$PWD/../../HttpServer/src/build/release
 INCLUDEPATH += $$PWD/../../HttpServer/src
 
-include($$PWD/../../HttpServer/3rdparty/qtpromise/qtpromise.pri)
     RPATHDIR *= @loader_path/../Frameworks @executable_path/../Frameworks
     QMAKE_LFLAGS_SONAME = -W1,-install_name,@rpath,
     isEmpty(QMAKE_LFLAGS_RPATH): QMAKE_LFLAGS_RPATH=-Wl,-rpath,
@@ -196,10 +195,10 @@ win32{
         #INCLUDEPATH += ../../QtAV-Builds/Release/x64/include
     }
     INCLUDEPATH += $$PWD/../../HttpServer/src
-    include($$PWD/../../HttpServer/3rdparty/qtpromise/qtpromise.pri)
     RC_FILE = XTPlayer.rc
 }
 
+include($$PWD/../../HttpServer/3rdparty/qtpromise/qtpromise.pri)
 #mkspecs_features.files    = $$PWD/qss/default.qss
 #mkspecs_features.path     = $$OUT_PWD/qss
 #INSTALLS                  += mkspecs_features
