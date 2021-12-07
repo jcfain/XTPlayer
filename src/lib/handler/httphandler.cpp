@@ -1,9 +1,8 @@
 #include "httphandler.h"
 
-HttpHandler::HttpHandler(VideoHandler* videoHandler, QObject *parent):
+HttpHandler::HttpHandler(QObject *parent):
     HttpRequestHandler(parent)
 {
-    _videoHandler = videoHandler;
     config.port = SettingsHandler::getHTTPPort();
     config.requestTimeout = 20;
     if(LogHandler::getUserDebug())
@@ -20,9 +19,9 @@ HttpHandler::HttpHandler(VideoHandler* videoHandler, QObject *parent):
     router.addRoute("GET", "^/thumb/.*$", this, &HttpHandler::handleThumbFile);
     router.addRoute("GET", "^/funscript/(.*\\.((funscript)$))?[.]*$", this, &HttpHandler::handleFunscriptFile);
     QString extensions;
-    extensions += _videoHandler->getVideoExtensions().join("|");
+    extensions += SettingsHandler::getVideoExtensions().join("|");
     extensions += "|";
-    extensions += _videoHandler->getAudioExtensions().join("|");
+    extensions += SettingsHandler::getAudioExtensions().join("|");
     router.addRoute("GET", "^/video/(.*\\.(("+extensions+")$))?[.]*$", this, &HttpHandler::handleVideoStream);
     router.addRoute("GET", "^/deotest$", this, &HttpHandler::handleDeo);
     router.addRoute("GET", "^/settings$", this, &HttpHandler::handleSettings);
@@ -336,6 +335,11 @@ HttpPromise HttpHandler::handleFunscriptFile(HttpDataPtr data)
     auto match = data->state["match"].value<QRegularExpressionMatch>();
     QString parameter = match.captured();
     QString funscriptName = parameter.remove("/funscript/");
+    if(funscriptName.contains("../"))
+    {
+        data->response->setStatus(HttpStatus::Forbidden);
+        return HttpPromise::resolve(data);
+    }
     QString filePath = SettingsHandler::getSelectedLibrary() + funscriptName;
     if(!QFile(filePath).exists())
     {
@@ -351,7 +355,13 @@ HttpPromise HttpHandler::handleThumbFile(HttpDataPtr data)
     auto match = data->state["match"].value<QRegularExpressionMatch>();
     QString parameter = match.captured();
     QString thumbName = parameter.remove("/thumb/");
-    if(thumbName.startsWith(":"))
+    if(thumbName.contains("../"))
+    {
+        data->response->setStatus(HttpStatus::Forbidden);
+        return HttpPromise::resolve(data);
+    }
+
+    if(thumbName.startsWith(":") || thumbName.startsWith(SettingsHandler::getSelectedLibrary()))
         data->response->sendFile(thumbName);
     else
         data->response->sendFile(SettingsHandler::getSelectedThumbsDir() + thumbName);
@@ -376,6 +386,12 @@ HttpPromise HttpHandler::handleVideoStream(HttpDataPtr data)
                     auto match = data->state["match"].value<QRegularExpressionMatch>();
                     QString parameter = match.captured();
                     QString mediaName = parameter.remove("/video/");
+                    if(mediaName.contains("../"))
+                    {
+                        data->response->setStatus(HttpStatus::Forbidden);
+                        resolve(data);
+                        return;
+                    }
                     LogHandler::Debug("Looking for media in library: " + mediaName);
                     QString filename = SettingsHandler::getSelectedLibrary() + "/" + mediaName;
                     //filename = _videoHandler->transcode(filename);

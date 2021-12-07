@@ -30,6 +30,7 @@ SOURCES += \
     lib/handler/funscripthandler.cpp \
     lib/handler/gamepadhandler.cpp \
     lib/handler/loghandler.cpp \
+    lib/handler/medialibraryhandler.cpp \
     lib/handler/serialhandler.cpp \
     lib/handler/settingshandler.cpp \
     lib/handler/synchandler.cpp \
@@ -67,6 +68,7 @@ HEADERS += \
     lib/handler/deohandler.h \
     lib/handler/devicehandler.h \
     lib/handler/gamepadhandler.h \
+    lib/handler/medialibraryhandler.h \
     lib/handler/synchandler.h \
     lib/handler/videohandler.h \
     lib/handler/vrdevicehandler.h \

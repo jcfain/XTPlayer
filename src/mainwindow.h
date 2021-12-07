@@ -43,6 +43,7 @@
 #include "lib/handler/vrdevicehandler.h"
 #include "lib/handler/audiosyncfilter.h"
 #include "lib/handler/synchandler.h"
+#include "lib/handler/medialibraryhandler.h"
 #include "lib/struct/LibraryListItem.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/ConnectionChangedSignal.h"
@@ -207,6 +208,7 @@ private:
     bool _waitForStopFutureCancel = false;
     QProgressBar* bar;
     VideoHandler* videoHandler;
+    MediaLibraryHandler mediaLibraryHandler;
 //    FunscriptHandler* funscriptHandler;
 //    QList<FunscriptHandler*> funscriptHandlers;
     TCodeHandler* tcodeHandler;
@@ -225,8 +227,9 @@ private:
     QPushButton* retryConnectionButton;
     QLabel* deoConnectionStatusLabel;
     QPushButton* deoRetryConnectionButton;
-    QLabel* whirligigConnectionStatusLabel;
-    QPushButton* whirligigRetryConnectionButton;
+    QLabel* vrConnectionStatusLabel;
+    QPushButton* vrRetryConnectionButton;
+    QLabel* xtpWebStatusLabel;
     QListWidget* libraryList;
     QPushButton* backLibraryButton;
     QPushButton* randomizeLibraryButton;
@@ -360,10 +363,8 @@ private:
     void on_standaloneFunscript_stop();
     void on_device_connectionChanged(ConnectionChangedSignal event);
     void on_device_error(QString error);
-    void on_deo_device_connectionChanged(ConnectionChangedSignal event);
-    void on_deo_device_error(QString error);
-    void on_whirligig_device_connectionChanged(ConnectionChangedSignal event);
-    void on_whirligig_device_error(QString error);
+    void on_vr_device_connectionChanged(ConnectionChangedSignal event);
+    void on_vr_device_error(QString error);
     void on_xtpWeb_device_connectionChanged(ConnectionChangedSignal event);
     void on_xtpWeb_device_error(QString error);
     void donate();

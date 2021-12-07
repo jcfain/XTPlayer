@@ -439,35 +439,3 @@ QString VideoHandler::transcode(QString file)
     _player->play();
     return outFile;
 }
-
-QStringList VideoHandler::getVideoExtensions()
-{
-    return QStringList()
-            << "mp4"
-            << "avi"
-            << "mpg"
-            << "wmv"
-            << "mkv"
-            << "webm"
-            << "mp2"
-            << "mpeg"
-            << "mpv"
-            << "ogg"
-            << "m4p"
-            << "m4v"
-            << "mov"
-            << "qt"
-            << "flv"
-            << "swf"
-            << "avchd";
-}
-QStringList VideoHandler::getAudioExtensions()
-{
-    return QStringList()
-            << "m4a"
-            << "mp3"
-            << "aac"
-            << "flac"
-            << "wav"
-            << "wma";
-}

@@ -21,8 +21,7 @@ public:
     void updateThumbSize(QSize thumbSize);
     void setThumbFile(QString filePath);
     void setThumbFileLoading(bool waiting);
-    void setThumbFileLoaded(bool error, QString message = nullptr);
-    QString getThumbPath();
+    void setThumbFileLoaded(bool error, QString message = nullptr, QString path = nullptr);
     virtual LibraryListWidgetItem* clone() const override;
     QSize calculateHintSize(QSize size);
     bool isMFS();

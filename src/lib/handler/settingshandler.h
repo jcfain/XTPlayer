@@ -253,6 +253,38 @@ public:
     static void askRestart(QWidget* parent, QString message);
     static void quit(bool restart);
 
+    static QStringList getVideoExtensions()
+    {
+        return QStringList()
+                << "mp4"
+                << "avi"
+                << "mpg"
+                << "wmv"
+                << "mkv"
+                << "webm"
+                << "mp2"
+                << "mpeg"
+                << "mpv"
+                << "ogg"
+                << "m4p"
+                << "m4v"
+                << "mov"
+                << "qt"
+                << "flv"
+                << "swf"
+                << "avchd";
+    }
+    static QStringList getAudioExtensions()
+    {
+        return QStringList()
+                << "m4a"
+                << "mp3"
+                << "aac"
+                << "flac"
+                << "wav"
+                << "wma";
+    }
+
 private:
     SettingsHandler();
     ~SettingsHandler();

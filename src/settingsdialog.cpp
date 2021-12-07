@@ -75,7 +75,7 @@ void SettingsDialog::init(VideoHandler* videoHandler)
     _videoHandler = videoHandler;
     if(SettingsHandler::getEnableHttpServer())
     {
-        _httpHandler = new HttpHandler(videoHandler, this);
+        _httpHandler = new HttpHandler(this);
         connect(_httpHandler, &HttpHandler::tcode, this, &SettingsDialog::sendTCode);
         connect(_httpHandler, &HttpHandler::connectTCodeDevice, this, &SettingsDialog::initDeviceRetry);
         connect(this, &SettingsDialog::deviceConnectionChange, _httpHandler, &HttpHandler::on_tCodeDeviceConnection_StateChange);

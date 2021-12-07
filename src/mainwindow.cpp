@@ -87,13 +87,16 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     ui->statusbar->addPermanentWidget(deoConnectionStatusLabel);
     ui->statusbar->addPermanentWidget(deoRetryConnectionButton);
 
-    whirligigConnectionStatusLabel = new QLabel(this);
-    whirligigRetryConnectionButton = new QPushButton(this);
-    whirligigRetryConnectionButton->hide();
-    whirligigRetryConnectionButton->setProperty("cssClass", "retryButton");
-    whirligigRetryConnectionButton->setText("Whirligig Retry");
-    ui->statusbar->addPermanentWidget(whirligigConnectionStatusLabel);
-    ui->statusbar->addPermanentWidget(whirligigRetryConnectionButton);
+    vrConnectionStatusLabel = new QLabel(this);
+    vrRetryConnectionButton = new QPushButton(this);
+    vrRetryConnectionButton->hide();
+    vrRetryConnectionButton->setProperty("cssClass", "retryButton");
+    vrRetryConnectionButton->setText("Whirligig Retry");
+    ui->statusbar->addPermanentWidget(vrConnectionStatusLabel);
+    ui->statusbar->addPermanentWidget(vrRetryConnectionButton);
+
+    xtpWebStatusLabel = new QLabel(this);
+    ui->statusbar->addPermanentWidget(xtpWebStatusLabel);
 
     connectionStatusLabel = new QLabel(this);
     connectionStatusLabel->setObjectName("connectionStatusLabel");
@@ -103,6 +106,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     retryConnectionButton->setText("TCode Retry");
     ui->statusbar->addPermanentWidget(connectionStatusLabel);
     ui->statusbar->addPermanentWidget(retryConnectionButton);
+
 
     gamepadConnectionStatusLabel = new QLabel(this);
     ui->statusbar->addPermanentWidget(gamepadConnectionStatusLabel);
@@ -295,10 +299,10 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     connect(libraryWindow, &LibraryWindow::close, this, &MainWindow::onLibraryWindowed_Closed);
 
-    connect(_xSettings, &SettingsDialog::deoDeviceConnectionChange, this, &MainWindow::on_deo_device_connectionChanged);
-    connect(_xSettings, &SettingsDialog::deoDeviceError, this, &MainWindow::on_deo_device_error);
-    connect(_xSettings, &SettingsDialog::whirligigDeviceConnectionChange, this, &MainWindow::on_whirligig_device_connectionChanged);
-    connect(_xSettings, &SettingsDialog::whirligigDeviceError, this, &MainWindow::on_whirligig_device_error);
+    connect(_xSettings, &SettingsDialog::deoDeviceConnectionChange, this, &MainWindow::on_vr_device_connectionChanged);
+    connect(_xSettings, &SettingsDialog::deoDeviceError, this, &MainWindow::on_vr_device_error);
+    connect(_xSettings, &SettingsDialog::whirligigDeviceConnectionChange, this, &MainWindow::on_vr_device_connectionChanged);
+    connect(_xSettings, &SettingsDialog::whirligigDeviceError, this, &MainWindow::on_vr_device_error);
     connect(_xSettings, &SettingsDialog::xtpWebDeviceConnectionChange, this, &MainWindow::on_xtpWeb_device_connectionChanged);
     connect(_xSettings, &SettingsDialog::xtpWebDeviceError, this, &MainWindow::on_xtpWeb_device_error);
 
@@ -1295,9 +1299,9 @@ void MainWindow::on_load_library(QString path, bool vrMode)
     QStringList mediaTypes;
     QStringList videoTypes;
     QStringList audioTypes;
-    foreach(auto ext, videoHandler->getVideoExtensions())
+    foreach(auto ext, SettingsHandler::getVideoExtensions())
         videoTypes.append("*."+ext);
-    foreach(auto ext, videoHandler->getAudioExtensions())
+    foreach(auto ext, SettingsHandler::getAudioExtensions())
         audioTypes.append("*."+ext);
     mediaTypes.append(videoTypes);
     mediaTypes.append(audioTypes);
@@ -1380,6 +1384,7 @@ void MainWindow::on_load_library(QString path, bool vrMode)
             fileinfo.birthTime().date(),
             0
         };
+        item.thumbFile = mediaLibraryHandler.getThumbPath(item);
         LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, vrMode ? nullptr : libraryList);
         if(!vrMode)
             libraryList->addItem(qListWidgetItem);
@@ -1487,7 +1492,7 @@ void MainWindow::on_load_library(QString path, bool vrMode)
 
 }
 
-LibraryListItem createLibraryListItemFromFunscript(QString funscript)
+LibraryListItem MainWindow::createLibraryListItemFromFunscript(QString funscript)
 {
 
     QFileInfo fileinfo(funscript);
@@ -1592,7 +1597,7 @@ void MainWindow::saveNewThumbs(bool vrMode)
         LibraryListWidgetItem* listWidgetItem = vrMode ? cachedVRItems.at(thumbNailSearchIterator) : cachedLibraryItems.at(thumbNailSearchIterator);
         LibraryListItem item = listWidgetItem->getLibraryListItem();
         thumbNailSearchIterator++;
-        QFileInfo thumbInfo(listWidgetItem->getThumbPath());
+        QFileInfo thumbInfo(mediaLibraryHandler.getThumbPath(item));
         if (item.type == LibraryListItemType::Video && !thumbInfo.exists())
         {
             disconnect(extractor, nullptr,  nullptr, nullptr);
@@ -1616,7 +1621,7 @@ void MainWindow::saveThumb(LibraryListWidgetItem* cachedListWidgetItem, qint64 p
 {
     LibraryListItem cachedListItem = cachedListWidgetItem->getLibraryListItem();
     QString videoFile = cachedListItem.path;
-    QString thumbFile = cachedListWidgetItem->getThumbPath();
+    QString thumbFile = mediaLibraryHandler.getThumbPath(cachedListItem);
 //    QIcon thumb;
 //    QPixmap bgPixmap(QApplication::applicationDirPath() + "/themes/loading.png");
 //    QPixmap scaled = bgPixmap.scaled(SettingsHandler::getThumbSize(), Qt::AspectRatioMode::KeepAspectRatio);
@@ -1700,11 +1705,11 @@ void MainWindow::saveThumb(LibraryListWidgetItem* cachedListWidgetItem, qint64 p
                        errorMessage = tr("Error saving thumbnail: ") + thumbFile + tr(" for video: ") + videoFile;
                        LogHandler::Debug(errorMessage);
                     }
-                    cachedListWidgetItem->setThumbFileLoaded(hasError, errorMessage);
+                    cachedListWidgetItem->setThumbFileLoaded(hasError, errorMessage, thumbFile);
                     if(libraryListWidgetItem)
                     {
                         libraryList->removeItemWidget(libraryListWidgetItem);
-                        libraryListWidgetItem->setThumbFileLoaded(hasError, errorMessage);;
+                        libraryListWidgetItem->setThumbFileLoaded(hasError, errorMessage, thumbFile);;
                     }
                 }
                 disconnect(extractor, &QtAV::VideoFrameExtractor::frameExtracted,  nullptr, nullptr);
@@ -3023,78 +3028,43 @@ void MainWindow::on_gamepad_connectionChanged(ConnectionChangedSignal event)
     gamepadConnectionStatusLabel->setToolTip(message);
 }
 
-void MainWindow::on_deo_device_connectionChanged(ConnectionChangedSignal event)
+
+void MainWindow::on_vr_device_connectionChanged(ConnectionChangedSignal event)
 {
     QString message = "";
-    message += "DeoVR: ";
+    message += event.deviceType == DeviceType::Whirligig ? "Whirligig: " : "DeoVR: ";
     message += " " + event.message;
-    deoConnectionStatusLabel->setText(message);
-    if(SettingsHandler::getDeoEnabled() && (event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected))
-    {
-        ui->actionChange_current_deo_script->setEnabled(false);
-        deoRetryConnectionButton->show();
-        deviceHome();
-    }
-    else if(event.status == ConnectionStatus::Connected)
-    {
-        ui->actionChange_current_deo_script->setEnabled(true);
-        deoRetryConnectionButton->hide();
-        deviceHome();
-        stopMedia();
-
-    }
-    else if(event.status == ConnectionStatus::Connecting)
-    {
-        deoConnectionStatusLabel->show();
-    }
-    else
-    {
-        ui->actionChange_current_deo_script->setEnabled(false);
-        deoConnectionStatusLabel->hide();
-        deoRetryConnectionButton->hide();
-    }
-}
-
-void MainWindow::on_deo_device_error(QString error)
-{
-    LogHandler::Dialog("Deo error: "+error, XLogLevel::Critical);
-}
-
-void MainWindow::on_whirligig_device_connectionChanged(ConnectionChangedSignal event)
-{
-    QString message = "";
-    message += "Whirligig: ";
-    message += " " + event.message;
-    whirligigConnectionStatusLabel->setText(message);
+    vrConnectionStatusLabel->setText(message);
     if(SettingsHandler::getWhirligigEnabled() && (event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected))
     {
         ui->actionChange_current_deo_script->setEnabled(false);
-        whirligigRetryConnectionButton->show();
+        vrRetryConnectionButton->show();
         deviceHome();
     }
     else if(event.status == ConnectionStatus::Connected)
     {
         ui->actionChange_current_deo_script->setEnabled(true);
-        whirligigRetryConnectionButton->hide();
+        vrRetryConnectionButton->hide();
         deviceHome();
         stopMedia();
+        _syncHandler->stopAll();
 
     }
     else if(event.status == ConnectionStatus::Connecting)
     {
-        whirligigConnectionStatusLabel->show();
+        vrConnectionStatusLabel->show();
     }
     else
     {
         ui->actionChange_current_deo_script->setEnabled(false);
-        whirligigConnectionStatusLabel->hide();
-        whirligigRetryConnectionButton->hide();
+        vrConnectionStatusLabel->hide();
+        vrRetryConnectionButton->hide();
     }
 }
 
-void MainWindow::on_whirligig_device_error(QString error)
+void MainWindow::on_vr_device_error(QString error)
 {
-    LogHandler::Dialog("Whirligig error: "+error, XLogLevel::Critical);
+    LogHandler::Dialog("VR sync connection error: "+error, XLogLevel::Critical);
 }
 
 void MainWindow::on_xtpWeb_device_connectionChanged(ConnectionChangedSignal event)
@@ -3102,24 +3072,20 @@ void MainWindow::on_xtpWeb_device_connectionChanged(ConnectionChangedSignal even
     QString message = "";
     message += "XTP Web: ";
     message += " " + event.message;
-    whirligigConnectionStatusLabel->setText(message);
-    whirligigConnectionStatusLabel->show();
-    if(SettingsHandler::getXTPWebSyncEnabled() && (event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected))
-    {
-        deviceHome();
-    }
-    else if(event.status == ConnectionStatus::Connected)
+    xtpWebStatusLabel->setText(message);
+    xtpWebStatusLabel->show();
+    if(event.status == ConnectionStatus::Connected)
     {
         deviceHome();
         stopMedia();
     }
     else if(event.status == ConnectionStatus::Connecting)
     {
-        whirligigConnectionStatusLabel->show();
+        xtpWebStatusLabel->show();
     }
     else
     {
-        whirligigConnectionStatusLabel->hide();
+        xtpWebStatusLabel->hide();
     }
 }
 

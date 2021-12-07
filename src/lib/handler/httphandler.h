@@ -6,12 +6,12 @@
 #include <QBuffer>
 #include <QObject>
 #include <QJsonArray>
-#include <QJsonObject>#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonDocument>
 #include <QJsonValue>
 #include <QtConcurrent/QtConcurrent>
 
 #include "settingshandler.h"
-#include "videohandler.h"
 #include "httpServer/httpServer.h"
 #include "httpServer/httpRequestHandler.h"
 #include "httpServer/httpRequestRouter.h"
@@ -30,7 +30,7 @@ public slots:
     void on_tCodeDeviceConnection_StateChange(ConnectionChangedSignal status);
 
 public:
-    HttpHandler(VideoHandler* videoHandler, QObject *parent = nullptr);
+    HttpHandler(QObject *parent = nullptr);
     ~HttpHandler();
     HttpPromise handle(HttpDataPtr data);
     HttpPromise handleVideoStream(HttpDataPtr data);
@@ -51,7 +51,6 @@ private:
     HttpRequestRouter router;
     HttpServer* _server;
     QMimeDatabase mimeDatabase;
-    VideoHandler* _videoHandler;
 
     ConnectionChangedSignal _tcodeDeviceStatus = {DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"};
     bool _libraryLoaded = false;

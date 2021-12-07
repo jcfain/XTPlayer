@@ -3,8 +3,7 @@
 <head>
     <title>XTP Web</title>
     <link rel="stylesheet" type="text/css" href="styles.css"/>
-    <script src="index.js"></script>
-    <script src="syncFunscript.js"></script>
+    <script type="text/javascript" src="index.js"></script>
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	
 <!--     <link rel="stylesheet" type="text/css" href="https://s3.deovr.com/version/1/css/styles.css"/>
@@ -72,7 +71,7 @@
 		<section id="settingsTabs" class="tab-section">
 			<button id="tabLocalTab" class="tab-section-tab" onclick="tabClick(this, 0)">Local</button>
 			<button id="tabTCodeTab" class="tab-section-tab" onclick="tabClick(this, 1)">TCode</button>
-			<button id="tabTCodeTab" class="tab-section-tab" onclick="tabClick(this, 2)">Browser info</button>
+			<button id="tabBrowserInfoTab" class="tab-section-tab" onclick="tabClick(this, 2)">Browser info</button>
 
 			<div id="tabLocal" class="tab-content">
 					<div class="formElement">
@@ -162,10 +161,10 @@
 			</button>
 		</div>
 		<div class="modal-footer-content">
-			<button id="defaultSettingsButton" title="Thisa will only reset the local browser settings to default. Your settings stored on the XTP machine will remain." onclick="defaultLocalSettings()">
+			<button id="defaultSettingsButton" title="This will only reset the local browser settings to default. Your settings stored on the XTP machine will remain." onclick="defaultLocalSettings()">
 				Default Local
 			</button>
-			<button id="saveToXTPButton" title="Thisa will save all XTP settings to your XTP machines data storage." onclick="postServerSettings()">
+			<button id="saveToXTPButton" title="This will save all XTP settings to your XTP machines data storage." onclick="postServerSettings()">
 				Save to XTP
 			</button>
 			<!-- <button id="defaultSettingsButton" onclick="deleteLocalSettings()">

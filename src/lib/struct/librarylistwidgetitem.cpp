@@ -19,7 +19,7 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem &data, QListWidget*
     int thumbSize = SettingsHandler::getThumbSize();
     _thumbSize = {thumbSize, thumbSize};
 
-    QString thumbPath = getThumbPath();
+    QString thumbPath = data.thumbFile;
     QFileInfo thumbFile = QFileInfo(thumbPath);
     if(!thumbFile.exists())
         setThumbFileLoading(true);
@@ -252,9 +252,11 @@ void LibraryListWidgetItem::setThumbFileLoading(bool waiting)
     setThumbFile(waiting ? "://images/icons/loading.png" : "://images/icons/loading_current.png");
 }
 
-void LibraryListWidgetItem::setThumbFileLoaded(bool error, QString message)
+void LibraryListWidgetItem::setThumbFileLoaded(bool error, QString message, QString path)
 {
-    setThumbFile(error ? "://images/icons/error.png" : getThumbPath());
+    if(!path.isEmpty())
+        _thumbFile = path;
+    setThumbFile(error ? "://images/icons/error.png" : _thumbFile);
     if(!message.isEmpty())
         setToolTip(toolTip() + "\n"+ message);
 }
@@ -262,11 +264,6 @@ void LibraryListWidgetItem::setThumbFileLoaded(bool error, QString message)
 LibraryListWidgetItem* LibraryListWidgetItem::clone() const
 {
    return new LibraryListWidgetItem(*this);
-}
-
-QString LibraryListWidgetItem::getThumbPath()
-{
-    return SettingsHandler::getSelectedThumbsDir() + getLibraryListItem().name + ".jpg";
 }
 
 QSize LibraryListWidgetItem::calculateMaxSize(QSize size)
