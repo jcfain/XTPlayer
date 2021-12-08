@@ -1,4 +1,4 @@
-QT += core gui serialport network gamepad texttospeech compress
+QT += core gui serialport network gamepad texttospeech compress websockets
 
 greaterThan(QT_MAJOR_VERSION, 4) {
     QT += widgets avwidgets
@@ -38,6 +38,7 @@ SOURCES += \
     lib/handler/udphandler.cpp \
     lib/handler/videohandler.cpp \
     lib/handler/vrdevicehandler.cpp \
+    lib/handler/websockethandler.cpp \
     lib/handler/whirligighandler.cpp \
     lib/handler/xtpwebhandler.cpp \
     lib/lookup/tcodechannellookup.cpp \
@@ -72,6 +73,7 @@ HEADERS += \
     lib/handler/synchandler.h \
     lib/handler/videohandler.h \
     lib/handler/vrdevicehandler.h \
+    lib/handler/websockethandler.h \
     lib/handler/whirligighandler.h \
     lib/handler/xtpwebhandler.h \
     lib/lookup/AxisNames.h \

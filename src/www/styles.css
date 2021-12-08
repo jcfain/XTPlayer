@@ -127,7 +127,7 @@ body {
 }
 .formElement select, 
 .formElement button, 
-.formElement input:not([type='checkbox']):not([type='range']) {
+.formElement input:not([type='checkbox']):not([type='range']):not([type='radio']) {
     flex-grow: 1;
     border-radius: 5px;
     height: 24px;

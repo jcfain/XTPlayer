@@ -12,6 +12,7 @@
 #include <QtConcurrent/QtConcurrent>
 
 #include "settingshandler.h"
+#include "websockethandler.h"
 #include "httpServer/httpServer.h"
 #include "httpServer/httpRequestHandler.h"
 #include "httpServer/httpRequestRouter.h"
@@ -46,13 +47,14 @@ public:
     HttpPromise handleWebTimeUpdate(HttpDataPtr data);
     void setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems);
 
+    void sendWebSocketTextMessage(QString command, QString message = nullptr);
+
 private:
     HttpServerConfig config;
     HttpRequestRouter router;
     HttpServer* _server;
     QMimeDatabase mimeDatabase;
-
-    ConnectionChangedSignal _tcodeDeviceStatus = {DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"};
+    WebSocketHandler* _webSocketHandler;
     bool _libraryLoaded = false;
     QList<LibraryListWidgetItem*> _cachedLibraryItems;
     QList<LibraryListWidgetItem*> _vrLibraryItems;

@@ -3,6 +3,10 @@
 HttpHandler::HttpHandler(QObject *parent):
     HttpRequestHandler(parent)
 {
+    _webSocketHandler = new WebSocketHandler(this);
+    connect(_webSocketHandler, &WebSocketHandler::connectTCodeDevice, this, &HttpHandler::connectTCodeDevice);
+    connect(_webSocketHandler, &WebSocketHandler::tcode, this, &HttpHandler::tcode);
+
     config.port = SettingsHandler::getHTTPPort();
     config.requestTimeout = 20;
     if(LogHandler::getUserDebug())
@@ -25,16 +29,19 @@ HttpHandler::HttpHandler(QObject *parent):
     router.addRoute("GET", "^/video/(.*\\.(("+extensions+")$))?[.]*$", this, &HttpHandler::handleVideoStream);
     router.addRoute("GET", "^/deotest$", this, &HttpHandler::handleDeo);
     router.addRoute("GET", "^/settings$", this, &HttpHandler::handleSettings);
-    router.addRoute("GET", "^/settings/deviceConnectionStatus$", this, &HttpHandler::handleDeviceConnected);
     router.addRoute("POST", "^/settings$", this, &HttpHandler::handleSettingsUpdate);
-    router.addRoute("POST", "^/settings/connectDevice$", this, &HttpHandler::handleConnectDevice);
     router.addRoute("POST", "^/xtpweb$", this, &HttpHandler::handleWebTimeUpdate);
-    router.addRoute("POST", "^/tcode$", this, &HttpHandler::handleTCodeIn);
 }
 
 HttpHandler::~HttpHandler()
 {
     delete _server;
+    delete _webSocketHandler;
+}
+
+void HttpHandler::sendWebSocketTextMessage(QString command, QString message)
+{
+    _webSocketHandler->sendCommand(command, message);
 }
 
 HttpPromise HttpHandler::handleWebTimeUpdate(HttpDataPtr data)
@@ -189,9 +196,9 @@ HttpPromise HttpHandler::handleSettings(HttpDataPtr data) {
 HttpPromise HttpHandler::handleDeviceConnected(HttpDataPtr data)
 {
     QJsonObject root;
-    root["status"] = _tcodeDeviceStatus.status;
-    root["deviceType"] = _tcodeDeviceStatus.deviceType;
-    root["message"] = _tcodeDeviceStatus.message;
+//    root["status"] = _tcodeDeviceStatus.status;
+//    root["deviceType"] = _tcodeDeviceStatus.deviceType;
+//    root["message"] = _tcodeDeviceStatus.message;
     data->response->setStatus(HttpStatus::Ok, QJsonDocument(root));
     return HttpPromise::resolve(data);
 }
@@ -538,5 +545,6 @@ QString HttpHandler::getStereoMode(QString mediaPath)
 
 void HttpHandler::on_tCodeDeviceConnection_StateChange(ConnectionChangedSignal status)
 {
-    _tcodeDeviceStatus = status;
+    _webSocketHandler->sendDeviceConnectionStatus(status);
 }
+
