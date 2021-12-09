@@ -35,9 +35,18 @@ void WebSocketHandler::sendCommand(QString command, QString message)
 
 void  WebSocketHandler::sendDeviceConnectionStatus(ConnectionChangedSignal status)
 {
-    _tcodeDeviceStatus = status;
     QString messageJson = "{ \"status\": "+QString::number(status.status)+", \"deviceType\": "+QString::number(status.deviceType)+", \"message\": \""+status.message+"\" }";
-    sendCommand("deviceStatus", messageJson);
+    if(status.deviceType == DeviceType::Serial || status.deviceType == DeviceType::Network)
+    {
+        _tcodeDeviceStatus = status;
+        sendCommand("deviceStatus", messageJson);
+    }
+    else
+    {
+        _syncDeviceStatus = status;
+        sendCommand("syncDeviceStatus", messageJson);
+    }
+
 
 }
 void WebSocketHandler::onNewConnection()
@@ -67,15 +76,18 @@ void WebSocketHandler::processTextMessage(QString message)
     else
         LogHandler::Error("Invalid JSON...");
     QString command = json["command"].toString();
-    if (command == "connectDevice") {
+    if (command == "connectTCodeDevice") {
         emit connectTCodeDevice();
     } else if (command == "tcode") {
         QString commandMessage = json["message"].toString();
         emit tcode(commandMessage);
     } else if (command == "connectionStatus") {
         sendDeviceConnectionStatus(_tcodeDeviceStatus);
-    }  else if (command == "connectSync") {
-        //sendDeviceConnectionStatus(_tcodeDeviceStatus);
+    }  else if (command == "connectSyncDevice") {
+        QJsonObject obj = json["message"].toObject();
+        emit connectSyncDevice((DeviceType)obj["deviceType"].toInt(), obj["enabled"].toBool());
+    } else if (command == "syncConnectionStatus") {
+        sendDeviceConnectionStatus(_syncDeviceStatus);
     }
 
 

@@ -6,7 +6,8 @@ var DeviceType =
     Deo: 2,
     Whirligig: 3,
     Gamepad: 4,
-    XTPWeb: 5
+    XTPWeb: 5,
+	None: 6
 };
 
 var ConnectionStatus =
@@ -132,6 +133,7 @@ function loadPage()
 	getServerSettings();
 	
 }
+
 debugMode = true;
 function debug(message) {
 	if(debugMode)
@@ -148,6 +150,22 @@ function sendMessageXTP(command, message) {
 		}
 		websocket.send(JSON.stringify(obj));
 	}
+}
+
+function onSyncDeviceConnectionChange(input, device) {
+	sendMessageXTP("connectSyncDevice", {deviceType: device, enabled: input.checked});
+}
+
+function tcodeDeviceConnectRetry() {
+	sendMessageXTP("connectTCodeDevice");
+}
+
+function userGetDeviceConnectionStatus() {
+	sendMessageXTP("connectionStatus");
+} 
+
+function sendTCode(tcode) {
+	sendMessageXTP("tcode", tcode);
 }
 
 function stopWebSocket() {
@@ -272,8 +290,11 @@ function getServerSettings() {
 	};
 	xhr.send();
 }
+
 function updateSettingsUI() {
 	setupSliders();
+	setupConnectionsTab();
+
 	document.getElementById("tabLocalTab").onclick();
 }
 
@@ -306,6 +327,7 @@ function initWebSocket() {
 		websocket.onopen = function (evt) {
 			debug("CONNECTED");
 			userGetDeviceConnectionStatus();
+			sendMessageXTP("syncConnectionStatus");
 		};
 		websocket.onclose = function (evt) {
 			debug("DISCONNECTED");
@@ -333,22 +355,83 @@ function wsCallBackFunction(evt) {
 		case "syncDeviceStatus":
 			var status = data["message"];
 			var deviceType = status["deviceType"];
-			//setConnectionStatus(status["level"], status["message"])
+			updateSyncStatus(deviceType, status["status"], status["message"])
 			break;
 		case "connectionClosed":
-			alert("XTP was shut down. Connection lost, Restart XTP and refresh the page to reconnect.")
+			alert("Looks like XTP was shut down.\nRestart XTP and refresh the page to reconnect.");
+			break;
+		case "mediaLoaded":
+			getServerLibrary();
 			break;
 	}
 }
 
-function setConnectionStatus(level, message) {
+function updateSyncStatus(deviceType, status, message) {
+	// check &#x2714;
+	// x &#x2718;
+	// triangle ! &#x26A0;
+	var statusImage = ""
+	var statusColor = "";
+	switch (status) {
+		case ConnectionStatus.Connected:
+			statusImage = "://images/icons/check-mark-black.png";
+			statusColor = "chartreuse";
+			break;
+		case ConnectionStatus.Connecting:
+			statusImage = "://images/icons/reload.svg";
+			statusColor = "yellow";
+			break;
+		case ConnectionStatus.Disconnected:
+			statusImage = "://images/icons/x.png";
+			statusColor = "crimson";
+			break;
+		case ConnectionStatus.Error:
+			statusImage = "://images/icons/error-black.png";
+			statusColor = "red";
+			break;
+	}
+	var deoVRStatusImage = document.getElementById("deoVRStatus")
+	var whirligigStatusImage = document.getElementById("whirligigStatus")
+	var xtpWebStatusImage = document.getElementById("xtpWebStatus")
+	var gamepadStatusImage = document.getElementById("gamepadStatus")
+	deoVRStatusImage.src = "";
+	whirligigStatusImage.src = "";
+	xtpWebStatusImage.src = "";
+	gamepadStatusImage.src = "";
+	switch(deviceType) {
+		case DeviceType.Deo:
+			deoVRStatusImage.src = statusImage;
+			deoVRStatusImage.style.backgroundColor = statusColor;
+			deoVRStatusImage.title = message;
+			break;
+		case DeviceType.Whirligig:
+			whirligigStatusImage.src = statusImage;
+			whirligigStatusImage.style.backgroundColor = statusColor;
+			whirligigStatusImage.title = message;
+			break;
+		case DeviceType.XTPWeb:
+			xtpWebStatusImage.src = statusImage;
+			xtpWebStatusImage.style.backgroundColor = statusColor;
+			xtpWebStatusImage.title = message;
+			break;
+		case DeviceType.Gamepad:
+			gamepadStatusImage.src = statusImage;
+			gamepadStatusImage.style.backgroundColor = statusColor;
+			gamepadStatusImage.title = message;
+			break;
+
+	}
+}
+function setConnectionStatus(status, message) {
 	for(var i=0;i<deviceConnectionStatusRetryButtonNodes.length;i++) {
 		var deviceConnectionStatusRetryButtonNode = deviceConnectionStatusRetryButtonNodes[i];
 		var deviceConnectionStatusRetryButtonImageNode = deviceConnectionStatusRetryButtonImageNodes[i];
 		deviceConnectionStatusRetryButtonNode.title = "TCode status: " + message;
 		deviceConnectionStatusRetryButtonNode.style.cursor = "";
 		deviceConnectionStatusRetryButtonNode.disabled = true;
-		switch(level) {
+		var tcodeDeviceSettingsLink = document.getElementById("tcodeDeviceSettingsLink");
+		tcodeDeviceSettingsLink.hidden = true;
+		switch(status) {
 			case ConnectionStatus.Disconnected:
 				deviceConnectionStatusRetryButtonNode.style.backgroundColor = "crimson";
 				deviceConnectionStatusRetryButtonNode.style.cursor = "pointer";
@@ -363,6 +446,10 @@ function setConnectionStatus(level, message) {
 			case ConnectionStatus.Connected:
 				deviceConnectionStatusRetryButtonNode.style.backgroundColor = "chartreuse";
 				deviceConnectionStatusRetryButtonImageNode.src = "://images/icons/check-mark-black.png";
+				if(remoteUserSettings.connection.selectedTCodeDevice == DeviceType.Network) {
+					tcodeDeviceSettingsLink.href = "http://"+remoteUserSettings.connection.networkAddress;
+					tcodeDeviceSettingsLink.hidden = false;
+				}
 				break;
 			case ConnectionStatus.Error:
 				deviceConnectionStatusRetryButtonNode.style.backgroundColor = "red";
@@ -418,11 +505,6 @@ function setConnectionStatus(level, message) {
 	}, pollInterval);
 } */
 
-function userGetDeviceConnectionStatus() {
-/* 		setConnectionStatus(ConnectionStatus.Connecting, "Getting device connection status...");
-		getDeviceConnectionStatus(); */
-		sendMessageXTP("connectionStatus");
-} 
 
 function getMediaFunscripts(path, isMFS) {
 	var channel = funscriptChannels[currentChannelIndex];
@@ -480,26 +562,6 @@ function postServerSettings() {
 	xhr.send(JSON.stringify(remoteUserSettings));
 }
 
-function postDeviceConnectRetry() {
-/* 	var xhr = new XMLHttpRequest();
-	xhr.open('POST', "/settings/connectDevice", true);
-	xhr.onreadystatechange = function() {
-	  if (xhr.readyState === 4) {
-		var status = xhr.status;
-		if (status === 200) 
-			userGetDeviceConnectionStatus();
-		else
-			alert('Error sending retry device connection: '+status)
-	  }
-	}
-	xhr.onerror = function() {
-		var status = xhr.status;
-		alert('Error sending retry device connection: '+status)
-	};
-	xhr.send(); */
-	sendMessageXTP("connectDevice");
-}
-
 function postMediaState(mediaState) {
 	var xhr = new XMLHttpRequest();
 	xhr.open("POST", "/xtpweb", true);
@@ -514,23 +576,6 @@ function postMediaState(mediaState) {
 		var status = xhr.status;
 		console.log('Error sending mediastate: '+status)
 	};
-}
-
-function postTCode(tcode) {
-/* 	var xhr = new XMLHttpRequest();
-	xhr.open("POST", "/tcode", true);
-	xhr.setRequestHeader('Content-Type', 'text/plain');
-	xhr.send(tcode);
-	xhr.oneload = function() {
-		var status = xhr.status;
-		if (status !== 200) 
-			console.log('Error sending tcode: '+status)
-	};
-	xhr.onerror = function() {
-		var status = xhr.status;
-		console.log('Error sending tcode: '+status)
-	}; */
-	sendMessageXTP("tcode", tcode);
 }
 
 function onMediaLoad(err, mediaList)
@@ -579,18 +624,13 @@ function updateMediaUI() {
 function loadMedia(mediaList) {
 	var medialistNode = document.getElementById("mediaList");
 	removeAllChildNodes(medialistNode);
+	var noMediaElement = document.getElementById("noMedia");
 	if(!mediaList || mediaList.length == 0)
-	{
-		var divnode = document.createElement("div"); 
-		divnode.id = "NoMedia";
-		divnode.innerText = "No media found, it may be loading.";
-		medialistNode.appendChild(divnode);
-		//deoVideoNode.style.display = "none"
+	{ 
+		noMediaElement.hidden = false;
 		return;
 	}
-	var noMediaElement = document.getElementById("NoMedia");
-	if(noMediaElement)
-		medialistNode.removeChild(noMediaElement)
+	noMediaElement.hidden = true;
 	
 	var createClickHandler = function(obj) { 
 		return function() { 
@@ -805,7 +845,7 @@ function playVideo(obj) {
 		}
 		setPlayingMediaItem(obj);
 		videoNode.classList.add("video-shown");
-		videoSourceNode.setAttribute("src", "/video" + obj.relativePath);
+		videoSourceNode.setAttribute("src", "/media" + obj.relativePath);
 		videoNode.setAttribute("title", obj.name);
 		videoNode.setAttribute("poster", "/thumb/" + obj.relativeThumb);
 		videoNode.load();
@@ -973,10 +1013,6 @@ function tabClick(tab, tabNumber) {
 	tab.style.backgroundColor = '#8DA1BF';
 }
 
-	function onConnectionChange(input, device) {
-		sendMessageXTP("connectSync", device)
-	}
-
 function showChange(selectNode) {
 	sort(sortByGlobal, true);
 	loadMedia(show(selectNode.value, true));
@@ -1051,7 +1087,7 @@ function setupSliders() {
 			// if(sendTcodeDebouncer)
 			// 	clearTimeout(sendTcodeDebouncer);
 			// sendTcodeDebouncer = setTimeout(function () {
-					postTCode(channel.channel + input1Node.value.toString().padStart(4, '0') + "S2000")
+					sendTCode(channel.channel + input1Node.value.toString().padStart(4, '0') + "S2000")
 			// }, 1000);
 		}.bind(input1Node, input1Node, input2Node, rangeValuesNode, channel);
 		
@@ -1069,7 +1105,7 @@ function setupSliders() {
 			// if(sendTcodeDebouncer)
 			// 	clearTimeout(sendTcodeDebouncer);
 			// sendTcodeDebouncer = setTimeout(function () {
-					postTCode(channel.channel + input2Node.value.toString().padStart(4, '0') + "S2000")
+					sendTCode(channel.channel + input2Node.value.toString().padStart(4, '0') + "S2000")
 			// }, 1000);
 		}.bind(input2Node, input1Node, input2Node, rangeValuesNode, channel);
 
@@ -1083,6 +1119,30 @@ function setupSliders() {
 
 		tcodeTab.appendChild(formElementNode);
 	}
+}
+
+function setupConnectionsTab() {
+/*   
+	connectionSettingsJson["networkAddress"] = SettingsHandler::getServerAddress();
+	connectionSettingsJson["networkPort"] = SettingsHandler::getServerPort();
+	connectionSettingsJson["serialPort"] = SettingsHandler::getSerialPort(); */
+	switch(remoteUserSettings.connection.selectedSyncDevice) {
+		case DeviceType.Deo:
+			document.getElementById("connectionDeoVR").checked = true;
+			break;
+		case DeviceType.Whirligig:
+			document.getElementById("connectionWhirligig").checked = true;
+			break;
+		case DeviceType.XTPWeb:
+			document.getElementById("connectionXTPWeb").checked = true;
+			break;
+		case DeviceType.None:
+			document.getElementById("connectionNone").checked = true;
+			break;
+	}
+	document.getElementById("deoVRAddress").value = remoteUserSettings.connection.deoAddress
+	document.getElementById("deoVRPort").value = remoteUserSettings.connection.deoPort
+	document.getElementById("connectionGamepad").checked = remoteUserSettings.connection.gamePadEnabled;
 }
 
 var debouncer;
@@ -1111,6 +1171,12 @@ function deleteLocalSettings() {
 		window.localStorage.clear();
 		window.close();//Does not work
 	} 
+}
+function onDeoVRAddressChange(input) {
+	remoteUserSettings.connection.deoAddress = input.value;
+}
+function onDeoVRPortChange(input) {
+	remoteUserSettings.connection.deoPort = input.value;
 }
 // function connectToTcodeDevice() {
 // 	webSocket = new WebSocket("ws://"+deviceAddress+"/ws");

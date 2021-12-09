@@ -13,6 +13,7 @@ class WebSocketHandler: public QObject
     Q_OBJECT
 signals:
     void connectTCodeDevice();
+    void connectSyncDevice(DeviceType deviceType, bool checked);
     void tcode(QString tcode);
 public:
     WebSocketHandler(QObject *parent = nullptr);
@@ -24,7 +25,7 @@ private:
     QWebSocketServer *m_pWebSocketServer;
     QList<QWebSocket *> m_clients;
     ConnectionChangedSignal _tcodeDeviceStatus = {DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"};
-
+    ConnectionChangedSignal _syncDeviceStatus = {DeviceType::Serial, ConnectionStatus::Disconnected, "Disconnected"};
 private:
     void closed();
     void onNewConnection();

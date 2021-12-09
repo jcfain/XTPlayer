@@ -14,7 +14,7 @@
 	<div class="header">
 		<div class="headerSection toolBar">
 			<div class="toolBarGroup">
-				<button name="deviceStatusRetryButton" class="icon-button device-status-retry-button" onclick="postDeviceConnectRetry()">
+				<button name="deviceStatusRetryButton" class="icon-button device-status-retry-button" onclick="tcodeDeviceConnectRetry()">
 					<img name="connectionStatusIconImage" class="buttonImage" src="://images/icons/reload.svg"/>
 				</button>
 			</div>
@@ -43,12 +43,15 @@
 		</div>
 	</div>
 	<div id="thumbsContainer" class="thumbs-container">
-		<button id="refreshButton" title="Refresh the media from XTP" class="refresh-media-button icon-button" onclick="getServerLibrary()">
+<!-- 		<button id="refreshButton" title="Refresh the media from XTP" class="refresh-media-button icon-button" onclick="getServerLibrary()">
 			<img class="buttonImage" src="://images/icons/reload.svg"/>
-		</button>
-		<div id="mediaList" class="thumbs-body">
-		
+		</button> -->
+		<div id="noMedia" hidden="true" style="text-align: center;">
+			No media found, it may be loading.<br>
+			Please wait...<br>
+			<image stye="align-self:center;margin=auto;" src="://images/Eclipse-1s-loading-200px.gif" />
 		</div>
+		<div id="mediaList" class="thumbs-body"></div>
 	</div>
 </div>
 
@@ -131,20 +134,30 @@
 			</div>
 			<div id="tabConnections" class="tab-content">
 				<div class="formElement">
+					<label for="connectionNone">None</label>
+					<input id="connectionNone" type="radio" name="connection" onclick="onSyncDeviceConnectionChange(this, 6)"/>
+				</div>
+				<div class="formElement">
 					<label for="connectionDeoVR">DeoVR</label>
-					<input id="connectionDeoVR" type="radio" name="connection" onclick="onConnectionChange(this, 'deovr')"/>
+					<input id="connectionDeoVR" type="radio" name="connection" onclick="onSyncDeviceConnectionChange(this, 2)"/>
+					<image id="deoVRStatus" class="sync-device-status icon-small"></image>
+					<span class="sync-device-input-label">Address</span><input class="sync-device-address" id="deoVRAddress" onchange="onDeoVRAddressChange(this)"></input>
+					<span class="sync-device-input-label">Port</span> <input class="sync-device-port" id="deoVRPort" onchange="onDeoVRPortChange(this)"></input>
 				</div>
 				<div class="formElement">
 					<label for="connectionWhirligig">Whirligig</label>
-					<input id="connectionWhirligig" type="radio" name="connection" onclick="onConnectionChange(this, 'whirligig')"/>
+					<input id="connectionWhirligig" type="radio" name="connection" onclick="onSyncDeviceConnectionChange(this, 3)"/>
+					<image id="whirligigStatus" class="sync-device-status icon-small"></image>
 				</div>
 				<div class="formElement">
 					<label for="connectionXTPWeb">XTP Web</label>
-					<input id="connectionXTPWeb" type="radio" name="connection" onclick="onConnectionChange(this, 'xtpweb')"/>
+					<input id="connectionXTPWeb" type="radio" name="connection" onclick="onSyncDeviceConnectionChange(this, 5)"/>
+					<image id="xtpWebStatus" class="sync-device-status icon-small"></image>
 				</div>
 				<div class="formElement">
 					<label for="connectionGamepad">Gamepad</label>
-					<input id="connectionGamepad" type="checkbox" class="styled-checkbox" onclick="onConnectionChange(this, 'gamepad')"/>
+					<input id="connectionGamepad" type="checkbox" class="styled-checkbox" onclick="onSyncDeviceConnectionChange(this, 4)"/>
+					<image id="gamepadStatus" class="sync-device-status icon-small"></image>
 				</div>
 			</div>
 			<div id="tabTCode" class="tab-content"></div>
@@ -175,9 +188,10 @@
 	</div>
 	<div class="modal-footer">
 		<div class="modal-footer-content">
-			<button name="deviceStatusRetryButton" class="icon-button device-status-retry-button" onclick="postDeviceConnectRetry()">
+			<button name="deviceStatusRetryButton" class="icon-button device-status-retry-button" onclick="tcodeDeviceConnectRetry()">
 				<img name="connectionStatusIconImage" class="buttonImage" src="://images/icons/reload.svg"/>
 			</button>
+			<a id="tcodeDeviceSettingsLink" hidden="true" target="_blank" >TCode device settings</a>
 		</div>
 		<div class="modal-footer-content">
 			<button id="defaultSettingsButton" title="This will only reset the local browser settings to default. Your settings stored on the XTP machine will remain." onclick="defaultLocalSettings()">

@@ -27,8 +27,9 @@ signals:
     void readyRead(QByteArray data);
     void tcode(QString tcode);
     void connectTCodeDevice();
+    void connectSyncDevice(DeviceType deviceType, bool checked);
 public slots:
-    void on_tCodeDeviceConnection_StateChange(ConnectionChangedSignal status);
+    void on_DeviceConnection_StateChange(ConnectionChangedSignal status);
 
 public:
     HttpHandler(QObject *parent = nullptr);

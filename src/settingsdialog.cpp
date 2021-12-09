@@ -78,7 +78,12 @@ void SettingsDialog::init(VideoHandler* videoHandler)
         _httpHandler = new HttpHandler(this);
         connect(_httpHandler, &HttpHandler::tcode, this, &SettingsDialog::sendTCode);
         connect(_httpHandler, &HttpHandler::connectTCodeDevice, this, &SettingsDialog::initDeviceRetry);
-        connect(this, &SettingsDialog::deviceConnectionChange, _httpHandler, &HttpHandler::on_tCodeDeviceConnection_StateChange);
+        connect(this, &SettingsDialog::deviceConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
+        connect(this, &SettingsDialog::deoDeviceConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
+        connect(this, &SettingsDialog::whirligigDeviceConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
+        connect(this, &SettingsDialog::xtpWebDeviceConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
+        connect(this, &SettingsDialog::gamepadConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
+        connect(_httpHandler, &HttpHandler::connectSyncDevice, this, &SettingsDialog::on_xtpWeb_initSyncDevice);
     }
 
     setupUi();
@@ -90,6 +95,15 @@ void SettingsDialog::init(VideoHandler* videoHandler)
     {
         initNetworkEvent();
     }
+    initSyncDevice();
+    if(SettingsHandler::getGamepadEnabled())
+    {
+        setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceType::Gamepad);
+        _gamepadHandler->init();
+    }
+}
+void SettingsDialog::initSyncDevice()
+{
     if(SettingsHandler::getDeoEnabled())
     {
         setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceType::Deo);
@@ -105,13 +119,7 @@ void SettingsDialog::init(VideoHandler* videoHandler)
         setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceType::XTPWeb);
         initXTPWebEvent();
     }
-    if(SettingsHandler::getGamepadEnabled())
-    {
-        setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceType::Gamepad);
-        _gamepadHandler->init();
-    }
 }
-
 void SettingsDialog::initLive()
 {
 //    if(_videoHandler->isPlaying())
@@ -897,6 +905,32 @@ void SettingsDialog::initNetworkEvent()
         ui.networkConnectButton->setEnabled(false);
         NetworkAddress address { SettingsHandler::getServerAddress(), SettingsHandler::getServerPort().toInt() };
         _initFuture = QtConcurrent::run(initNetwork, _udpHandler, address);
+    }
+}
+
+void SettingsDialog::on_xtpWeb_initSyncDevice(DeviceType deviceType, bool checked)
+{
+    if(deviceType == DeviceType::Deo) {
+        ui.deoCheckbox->setChecked(checked);
+        on_deoCheckbox_clicked(checked);
+        on_deoConnectButton_clicked();
+    } else if(deviceType == DeviceType::Whirligig) {
+        ui.whirligigCheckBox->setChecked(checked);
+        on_whirligigCheckBox_clicked(checked);
+        on_whirligigConnectButton_clicked();
+    } else if(deviceType == DeviceType::XTPWeb) {
+        ui.xtpWebHandlerCheckbox->setChecked(checked);
+        on_xtpWebHandlerCheckbox_clicked(checked);
+    } else if(deviceType == DeviceType::Gamepad) {
+        ui.gamePadCheckbox->setChecked(checked);
+        on_gamePadCheckbox_clicked(checked);
+    } else if(deviceType == DeviceType::None) {
+        ui.xtpWebHandlerCheckbox->setChecked(false);
+        on_xtpWebHandlerCheckbox_clicked(false);
+        ui.whirligigCheckBox->setChecked(false);
+        on_whirligigCheckBox_clicked(false);
+        ui.deoCheckbox->setChecked(false);
+        on_deoCheckbox_clicked(false);
     }
 }
 

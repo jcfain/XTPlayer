@@ -226,6 +226,7 @@ private slots:
     void on_finscriptModifierSpinBox_valueChanged(int arg1);
 
     void on_xtpWebHandlerCheckbox_clicked(bool checked);
+    void on_xtpWeb_initSyncDevice(DeviceType deviceType, bool checked);
 
 private:
 
@@ -236,6 +237,7 @@ private:
     void initDeoEvent();
     void initWhirligigEvent();
     void initXTPWebEvent();
+    void initSyncDevice();
     void setupUi();
     void setupGamepadMap();
     void setUpMultiplierUi(bool enabled);

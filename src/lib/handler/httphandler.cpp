@@ -5,6 +5,7 @@ HttpHandler::HttpHandler(QObject *parent):
 {
     _webSocketHandler = new WebSocketHandler(this);
     connect(_webSocketHandler, &WebSocketHandler::connectTCodeDevice, this, &HttpHandler::connectTCodeDevice);
+    connect(_webSocketHandler, &WebSocketHandler::connectSyncDevice, this, &HttpHandler::connectSyncDevice);
     connect(_webSocketHandler, &WebSocketHandler::tcode, this, &HttpHandler::tcode);
 
     config.port = SettingsHandler::getHTTPPort();
@@ -18,15 +19,14 @@ HttpHandler::HttpHandler(QObject *parent):
     _server = new HttpServer(config, this);
     _server->listen();
 
-    //router.addRoute("GET", "^/videos/[\\w,\\s-]+\\.[A-Za-z]{3}$", this, &HttpHandler::handleRoot);
-    router.addRoute("GET", "^/media$", this, &HttpHandler::handleVideoList);
-    router.addRoute("GET", "^/thumb/.*$", this, &HttpHandler::handleThumbFile);
-    router.addRoute("GET", "^/funscript/(.*\\.((funscript)$))?[.]*$", this, &HttpHandler::handleFunscriptFile);
     QString extensions;
     extensions += SettingsHandler::getVideoExtensions().join("|");
     extensions += "|";
     extensions += SettingsHandler::getAudioExtensions().join("|");
-    router.addRoute("GET", "^/video/(.*\\.(("+extensions+")$))?[.]*$", this, &HttpHandler::handleVideoStream);
+    router.addRoute("GET", "^/media/(.*\\.(("+extensions+")$))?[.]*$", this, &HttpHandler::handleVideoStream);
+    router.addRoute("GET", "^/media$", this, &HttpHandler::handleVideoList);
+    router.addRoute("GET", "^/thumb/.*$", this, &HttpHandler::handleThumbFile);
+    router.addRoute("GET", "^/funscript/(.*\\.((funscript)$))?[.]*$", this, &HttpHandler::handleFunscriptFile);
     router.addRoute("GET", "^/deotest$", this, &HttpHandler::handleDeo);
     router.addRoute("GET", "^/settings$", this, &HttpHandler::handleSettings);
     router.addRoute("POST", "^/settings$", this, &HttpHandler::handleSettingsUpdate);
@@ -106,6 +106,7 @@ void HttpHandler::setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> ca
     _libraryLoaded = loaded;
     _cachedLibraryItems = cachedLibraryItems;
     _vrLibraryItems = vrLibraryItems;
+    _webSocketHandler->sendCommand("mediaLoaded");
 }
 
 HttpPromise HttpHandler::handle(HttpDataPtr data)
@@ -189,6 +190,25 @@ HttpPromise HttpHandler::handleSettings(HttpDataPtr data) {
         }
     }
     root["availableAxis"] = availableAxisJson;
+
+    QJsonObject connectionSettingsJson;
+    DeviceType deviceType = DeviceType::None;
+    if(SettingsHandler::getDeoEnabled())
+        deviceType = DeviceType::Deo;
+    else if(SettingsHandler::getWhirligigEnabled())
+        deviceType = DeviceType::Whirligig;
+    else if(SettingsHandler::getXTPWebSyncEnabled())
+        deviceType = DeviceType::XTPWeb;
+    connectionSettingsJson["selectedSyncDevice"] = deviceType;
+    connectionSettingsJson["gamePadEnabled"] = SettingsHandler::getGamepadEnabled();
+    connectionSettingsJson["deoAddress"] = SettingsHandler::getDeoAddress();
+    connectionSettingsJson["deoPort"] = SettingsHandler::getDeoPort();
+    connectionSettingsJson["selectedTCodeDevice"] = SettingsHandler::getSelectedDevice();
+    connectionSettingsJson["networkAddress"] = SettingsHandler::getServerAddress();
+    connectionSettingsJson["networkPort"] = SettingsHandler::getServerPort();
+    connectionSettingsJson["serialPort"] = SettingsHandler::getSerialPort();
+    root["connection"] = connectionSettingsJson;
+
     data->response->setStatus(HttpStatus::Ok, QJsonDocument(root));
     return HttpPromise::resolve(data);
 }
@@ -392,7 +412,7 @@ HttpPromise HttpHandler::handleVideoStream(HttpDataPtr data)
                     timer.start();
                     auto match = data->state["match"].value<QRegularExpressionMatch>();
                     QString parameter = match.captured();
-                    QString mediaName = parameter.remove("/video/");
+                    QString mediaName = parameter.remove("/media/");
                     if(mediaName.contains("../"))
                     {
                         data->response->setStatus(HttpStatus::Forbidden);
@@ -543,8 +563,7 @@ QString HttpHandler::getStereoMode(QString mediaPath)
     return "off";
 }
 
-void HttpHandler::on_tCodeDeviceConnection_StateChange(ConnectionChangedSignal status)
+void HttpHandler::on_DeviceConnection_StateChange(ConnectionChangedSignal status)
 {
     _webSocketHandler->sendDeviceConnectionStatus(status);
 }
-
