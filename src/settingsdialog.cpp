@@ -83,7 +83,7 @@ void SettingsDialog::init(VideoHandler* videoHandler)
         connect(this, &SettingsDialog::whirligigDeviceConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
         connect(this, &SettingsDialog::xtpWebDeviceConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
         connect(this, &SettingsDialog::gamepadConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
-        connect(_httpHandler, &HttpHandler::connectSyncDevice, this, &SettingsDialog::on_xtpWeb_initSyncDevice);
+        connect(_httpHandler, &HttpHandler::connectInputDevice, this, &SettingsDialog::on_xtpWeb_initSyncDevice);
     }
 
     setupUi();
@@ -733,7 +733,11 @@ void SettingsDialog::setUpMultiplierUi(bool enabled)
     foreach(auto widget, _multiplierWidgets)
         widget->setHidden(!enabled);
 }
-
+void SettingsDialog::on_libraryLoading_status(QString message)
+{
+    if(_httpHandler)
+        _httpHandler->sendLibraryLoadingStatus(message);
+}
 void SettingsDialog::setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems)
 {
     if(_httpHandler)

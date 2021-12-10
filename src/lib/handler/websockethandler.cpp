@@ -20,7 +20,7 @@ WebSocketHandler::~WebSocketHandler()
     qDeleteAll(m_clients.begin(), m_clients.end());
 }
 
-void WebSocketHandler::sendCommand(QString command, QString message)
+void WebSocketHandler::sendCommand(QString command, QString message, QWebSocket* client)
 {
     QString commandJson;
     if(message.isEmpty())
@@ -29,22 +29,30 @@ void WebSocketHandler::sendCommand(QString command, QString message)
         commandJson = "{ \"command\": \""+command+"\", \"message\": "+message+" }";
     else
         commandJson = "{ \"command\": \""+command+"\", \"message\": \""+message+"\"}";
-    for (QWebSocket *pClient : qAsConst(m_clients))
+    if(client)
+        client->sendTextMessage(commandJson);
+    else
+        for (QWebSocket *pClient : qAsConst(m_clients))
         pClient->sendTextMessage(commandJson);
 }
 
-void  WebSocketHandler::sendDeviceConnectionStatus(ConnectionChangedSignal status)
+void  WebSocketHandler::sendDeviceConnectionStatus(ConnectionChangedSignal status, QWebSocket* client)
 {
     QString messageJson = "{ \"status\": "+QString::number(status.status)+", \"deviceType\": "+QString::number(status.deviceType)+", \"message\": \""+status.message+"\" }";
     if(status.deviceType == DeviceType::Serial || status.deviceType == DeviceType::Network)
     {
-        _tcodeDeviceStatus = status;
-        sendCommand("deviceStatus", messageJson);
+        _outputDeviceStatus = status;
+        sendCommand("outputDeviceStatus", messageJson, client);
+    }
+    else if(status.deviceType == DeviceType::Gamepad)
+    {
+        _gamepadStatus = status;
+        sendCommand("inputDeviceStatus", messageJson, client);
     }
     else
     {
-        _syncDeviceStatus = status;
-        sendCommand("syncDeviceStatus", messageJson);
+        _inputDeviceStatus = status;
+        sendCommand("inputDeviceStatus", messageJson, client);
     }
 
 
@@ -58,15 +66,20 @@ void WebSocketHandler::onNewConnection()
     connect(pSocket, &QWebSocket::disconnected, this, &WebSocketHandler::socketDisconnected);
 
     m_clients << pSocket;
+    initNewClient(pSocket);
+    emit newWebSocketConnected(pSocket);
 }
-#include <QJsonDocument>
+
+void WebSocketHandler::initNewClient(QWebSocket* client)
+{
+    sendDeviceConnectionStatus(_inputDeviceStatus);
+    sendDeviceConnectionStatus(_gamepadStatus);
+    sendDeviceConnectionStatus(_outputDeviceStatus);
+}
+
 void WebSocketHandler::processTextMessage(QString message)
 {
-    //QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
-    //LogHandler::Debug("WEBSOCKET Message received: " + message);
-
     QJsonObject json;
-
     QJsonDocument doc = QJsonDocument::fromJson(message.toUtf8());
     if(!doc.isNull())
         if(doc.isObject())
@@ -76,23 +89,15 @@ void WebSocketHandler::processTextMessage(QString message)
     else
         LogHandler::Error("Invalid JSON...");
     QString command = json["command"].toString();
-    if (command == "connectTCodeDevice") {
-        emit connectTCodeDevice();
-    } else if (command == "tcode") {
+    if (command == "tcode") {
         QString commandMessage = json["message"].toString();
         emit tcode(commandMessage);
-    } else if (command == "connectionStatus") {
-        sendDeviceConnectionStatus(_tcodeDeviceStatus);
-    }  else if (command == "connectSyncDevice") {
+    } else if (command == "connectOutputDevice") {
+        emit connectOutputDevice();
+    } else if (command == "connectInputDevice") {
         QJsonObject obj = json["message"].toObject();
-        emit connectSyncDevice((DeviceType)obj["deviceType"].toInt(), obj["enabled"].toBool());
-    } else if (command == "syncConnectionStatus") {
-        sendDeviceConnectionStatus(_syncDeviceStatus);
+        emit connectInputDevice((DeviceType)obj["deviceType"].toInt(), obj["enabled"].toBool());
     }
-
-
-//    if (pClient)
-//        pClient->sendTextMessage(message);
 }
 
 void WebSocketHandler::processBinaryMessage(QByteArray message)

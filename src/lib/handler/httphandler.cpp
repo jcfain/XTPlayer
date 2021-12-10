@@ -4,9 +4,10 @@ HttpHandler::HttpHandler(QObject *parent):
     HttpRequestHandler(parent)
 {
     _webSocketHandler = new WebSocketHandler(this);
-    connect(_webSocketHandler, &WebSocketHandler::connectTCodeDevice, this, &HttpHandler::connectTCodeDevice);
-    connect(_webSocketHandler, &WebSocketHandler::connectSyncDevice, this, &HttpHandler::connectSyncDevice);
+    connect(_webSocketHandler, &WebSocketHandler::connectOutputDevice, this, &HttpHandler::connectTCodeDevice);
+    connect(_webSocketHandler, &WebSocketHandler::connectInputDevice, this, &HttpHandler::connectInputDevice);
     connect(_webSocketHandler, &WebSocketHandler::tcode, this, &HttpHandler::tcode);
+    connect(_webSocketHandler, &WebSocketHandler::newWebSocketConnected, this, &HttpHandler::on_webSocketClient_Connected);
 
     config.port = SettingsHandler::getHTTPPort();
     config.requestTimeout = 20;
@@ -39,11 +40,6 @@ HttpHandler::~HttpHandler()
     delete _webSocketHandler;
 }
 
-void HttpHandler::sendWebSocketTextMessage(QString command, QString message)
-{
-    _webSocketHandler->sendCommand(command, message);
-}
-
 HttpPromise HttpHandler::handleWebTimeUpdate(HttpDataPtr data)
 {
     auto body = data->request->body();
@@ -52,6 +48,67 @@ HttpPromise HttpHandler::handleWebTimeUpdate(HttpDataPtr data)
     data->response->setStatus(HttpStatus::Ok);
     return HttpPromise::resolve(data);
 }
+
+HttpPromise HttpHandler::handleSettings(HttpDataPtr data) {
+    QJsonObject root;
+    QJsonObject availableAxisJson;
+    auto availableAxis = SettingsHandler::getAvailableAxis();
+    foreach(auto channel, availableAxis->keys()) {
+        QJsonObject value;
+        if(availableAxis->value(channel).Type != AxisType::HalfRange && availableAxis->value(channel).Type != AxisType::None)
+        {
+            value["axisName"] = availableAxis->value(channel).AxisName;
+            value["channel"] = availableAxis->value(channel).Channel;
+            value["damperEnabled"] = availableAxis->value(channel).DamperEnabled;
+            value["damperValue"] = availableAxis->value(channel).DamperValue;
+            value["dimension"] = (int)availableAxis->value(channel).Dimension;
+            value["friendlyName"] = availableAxis->value(channel).FriendlyName;
+            value["inverted"] = availableAxis->value(channel).Inverted;
+            value["linkToRelatedMFS"] = availableAxis->value(channel).LinkToRelatedMFS;
+            value["max"] = availableAxis->value(channel).Max;
+            value["mid"] = availableAxis->value(channel).Mid;
+            value["min"] = availableAxis->value(channel).Min;
+            value["multiplierEnabled"] = availableAxis->value(channel).MultiplierEnabled;
+            value["multiplierValue"] = availableAxis->value(channel).MultiplierValue;
+            value["relatedChannel"] = availableAxis->value(channel).RelatedChannel;
+            value["trackName"] = availableAxis->value(channel).TrackName;
+            value["type"] = (int)availableAxis->value(channel).Type;
+            value["userMax"] = availableAxis->value(channel).UserMax;
+            value["userMid"] = availableAxis->value(channel).UserMid;
+            value["userMin"] = availableAxis->value(channel).UserMin;
+            availableAxisJson[channel] = value;
+        }
+    }
+    root["availableAxis"] = availableAxisJson;
+
+    QJsonObject connectionSettingsJson;
+    QJsonObject connectionInputSettingsJson;
+    QJsonObject connectionOutputSettingsJson;
+    DeviceType deviceType = DeviceType::None;
+    if(SettingsHandler::getDeoEnabled())
+        deviceType = DeviceType::Deo;
+    else if(SettingsHandler::getWhirligigEnabled())
+        deviceType = DeviceType::Whirligig;
+    else if(SettingsHandler::getXTPWebSyncEnabled())
+        deviceType = DeviceType::XTPWeb;
+    connectionInputSettingsJson["selectedDevice"] = deviceType;
+    connectionInputSettingsJson["gamePadEnabled"] = SettingsHandler::getGamepadEnabled();
+    connectionInputSettingsJson["deoAddress"] = SettingsHandler::getDeoAddress();
+    connectionInputSettingsJson["deoPort"] = SettingsHandler::getDeoPort();
+    connectionSettingsJson["input"] = connectionInputSettingsJson;
+
+    connectionOutputSettingsJson["selectedDevice"] = SettingsHandler::getSelectedDevice();
+    connectionOutputSettingsJson["networkAddress"] = SettingsHandler::getServerAddress();
+    connectionOutputSettingsJson["networkPort"] = SettingsHandler::getServerPort();
+    connectionOutputSettingsJson["serialPort"] = SettingsHandler::getSerialPort();
+    connectionSettingsJson["output"] = connectionOutputSettingsJson;
+
+    root["connection"] = connectionSettingsJson;
+
+    data->response->setStatus(HttpStatus::Ok, QJsonDocument(root));
+    return HttpPromise::resolve(data);
+}
+
 HttpPromise HttpHandler::handleSettingsUpdate(HttpDataPtr data)
 {
     auto body = data->request->body();
@@ -95,18 +152,28 @@ HttpPromise HttpHandler::handleSettingsUpdate(HttpDataPtr data)
             };
             SettingsHandler::setAxis(channel, channelModel);
         }
+        QJsonObject connection = doc["connection"].toObject();
+        QJsonObject input = connection["input"].toObject();
+        QJsonObject output = connection["output"].toObject();
+
+        DeviceType selectedSyncDevice = (DeviceType)input["selectedDevice"].toInt();
+        QString deoAddress = input["deoAddress"].toString();
+        QString deoPort = input["deoPort"].toString();
+        if(deoAddress != SettingsHandler::getDeoAddress() || deoPort != SettingsHandler::getDeoPort())
+        {
+            SettingsHandler::setDeoAddress(deoAddress);
+            SettingsHandler::setDeoPort(deoPort);
+            if(selectedSyncDevice == DeviceType::Deo)
+                emit connectInputDevice(DeviceType::Deo, true);
+        }
+//        output["selectedTCodeDevice"] = SettingsHandler::getSelectedDevice();
+//        output["networkAddress"] = SettingsHandler::getServerAddress();
+//        output["networkPort"] = SettingsHandler::getServerPort();
+//        output["serialPort"] = SettingsHandler::getSerialPort();
 
     }
     data->response->setStatus(HttpStatus::Ok);
     return HttpPromise::resolve(data);
-}
-
-void HttpHandler::setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems)
-{
-    _libraryLoaded = loaded;
-    _cachedLibraryItems = cachedLibraryItems;
-    _vrLibraryItems = vrLibraryItems;
-    _webSocketHandler->sendCommand("mediaLoaded");
 }
 
 HttpPromise HttpHandler::handle(HttpDataPtr data)
@@ -156,60 +223,6 @@ HttpPromise HttpHandler::handle(HttpDataPtr data)
         else
             data->response->setStatus(HttpStatus::BadRequest);
     }
-    return HttpPromise::resolve(data);
-}
-
-HttpPromise HttpHandler::handleSettings(HttpDataPtr data) {
-    QJsonObject root;
-    QJsonObject availableAxisJson;
-    auto availableAxis = SettingsHandler::getAvailableAxis();
-    foreach(auto channel, availableAxis->keys()) {
-        QJsonObject value;
-        if(availableAxis->value(channel).Type != AxisType::HalfRange && availableAxis->value(channel).Type != AxisType::None)
-        {
-            value["axisName"] = availableAxis->value(channel).AxisName;
-            value["channel"] = availableAxis->value(channel).Channel;
-            value["damperEnabled"] = availableAxis->value(channel).DamperEnabled;
-            value["damperValue"] = availableAxis->value(channel).DamperValue;
-            value["dimension"] = (int)availableAxis->value(channel).Dimension;
-            value["friendlyName"] = availableAxis->value(channel).FriendlyName;
-            value["inverted"] = availableAxis->value(channel).Inverted;
-            value["linkToRelatedMFS"] = availableAxis->value(channel).LinkToRelatedMFS;
-            value["max"] = availableAxis->value(channel).Max;
-            value["mid"] = availableAxis->value(channel).Mid;
-            value["min"] = availableAxis->value(channel).Min;
-            value["multiplierEnabled"] = availableAxis->value(channel).MultiplierEnabled;
-            value["multiplierValue"] = availableAxis->value(channel).MultiplierValue;
-            value["relatedChannel"] = availableAxis->value(channel).RelatedChannel;
-            value["trackName"] = availableAxis->value(channel).TrackName;
-            value["type"] = (int)availableAxis->value(channel).Type;
-            value["userMax"] = availableAxis->value(channel).UserMax;
-            value["userMid"] = availableAxis->value(channel).UserMid;
-            value["userMin"] = availableAxis->value(channel).UserMin;
-            availableAxisJson[channel] = value;
-        }
-    }
-    root["availableAxis"] = availableAxisJson;
-
-    QJsonObject connectionSettingsJson;
-    DeviceType deviceType = DeviceType::None;
-    if(SettingsHandler::getDeoEnabled())
-        deviceType = DeviceType::Deo;
-    else if(SettingsHandler::getWhirligigEnabled())
-        deviceType = DeviceType::Whirligig;
-    else if(SettingsHandler::getXTPWebSyncEnabled())
-        deviceType = DeviceType::XTPWeb;
-    connectionSettingsJson["selectedSyncDevice"] = deviceType;
-    connectionSettingsJson["gamePadEnabled"] = SettingsHandler::getGamepadEnabled();
-    connectionSettingsJson["deoAddress"] = SettingsHandler::getDeoAddress();
-    connectionSettingsJson["deoPort"] = SettingsHandler::getDeoPort();
-    connectionSettingsJson["selectedTCodeDevice"] = SettingsHandler::getSelectedDevice();
-    connectionSettingsJson["networkAddress"] = SettingsHandler::getServerAddress();
-    connectionSettingsJson["networkPort"] = SettingsHandler::getServerPort();
-    connectionSettingsJson["serialPort"] = SettingsHandler::getSerialPort();
-    root["connection"] = connectionSettingsJson;
-
-    data->response->setStatus(HttpStatus::Ok, QJsonDocument(root));
     return HttpPromise::resolve(data);
 }
 
@@ -463,8 +476,8 @@ HttpPromise HttpHandler::handleVideoStream(HttpDataPtr data)
                         resolve(data);
                         return;
                     }
-//                    if(endByte >= bytesAvailable)
-//                        endByte = bytesAvailable;
+                    if(endByte > bytesAvailable)
+                        endByte = bytesAvailable;
                     LogHandler::Debug("chunkSize: "+ QString::number(chunkSize));
                     QString requestBytes = "bytes " + QString::number(startByte) + "-" + QString::number(endByte) + "/" + QString::number(bytesAvailable +1);
                     LogHandler::Debug("Request bytes: "+requestBytes);
@@ -561,6 +574,32 @@ QString HttpHandler::getStereoMode(QString mediaPath)
             mediaPath.contains("3DV ", Qt::CaseSensitivity::CaseInsensitive))
         return "3DV";
     return "off";
+}
+
+
+void HttpHandler::sendWebSocketTextMessage(QString command, QString message)
+{
+    _webSocketHandler->sendCommand(command, message);
+}
+
+void HttpHandler::setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems)
+{
+    _libraryLoaded = loaded;
+    _cachedLibraryItems = cachedLibraryItems;
+    _vrLibraryItems = vrLibraryItems;
+    _webSocketHandler->sendCommand(_libraryLoaded ? "mediaLoaded" : "mediaLoading");
+}
+
+void HttpHandler::sendLibraryLoadingStatus(QString message) {
+    _libraryLoadingStatus = message;
+    _webSocketHandler->sendCommand("mediaLoadingStatus", message);
+}
+
+void HttpHandler::on_webSocketClient_Connected(QWebSocket* client)
+{
+    QString command = _libraryLoaded ? "mediaLoaded" : "mediaLoading";
+    client->sendTextMessage("{ \"command\": \""+command+"\"}");
+    client->sendTextMessage("{ \"command\": \"mediaLoadingStatus\", \"message\": "+_libraryLoadingStatus+"}");
 }
 
 void HttpHandler::on_DeviceConnection_StateChange(ConnectionChangedSignal status)

@@ -324,6 +324,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(this, &MainWindow::libraryNotFound, this, &MainWindow::onLibraryNotFound);
     connect(this, &MainWindow::prepareLibraryLoad, this, &MainWindow::onPrepareLibraryLoad);
     connect(this, &MainWindow::libraryIconResized, this, &MainWindow::libraryListSetIconSize);
+    connect(this, &MainWindow::libraryLoadingStatus, this, &MainWindow::setLibraryLoading);
 
     connect(action75_Size, &QAction::triggered, this, &MainWindow::on_action75_triggered);
     connect(action100_Size, &QAction::triggered, this, &MainWindow::on_action100_triggered);
@@ -1213,7 +1214,7 @@ void MainWindow::loadLibraryAsync()
     }
     if(!loadingLibraryFuture.isRunning())
     {
-        setLibraryLoading(true, library.isEmpty() ? "Loading VR library..." : "Loading library...");
+        emit libraryLoadingStatus(true, library.isEmpty() ? "Loading VR library..." : "Loading library...");
         loadingLibraryFuture = QtConcurrent::run([this, library, vrLibrary]() {
             on_load_library(library.isEmpty() ? vrLibrary : library, library.isEmpty());
         });
@@ -1397,7 +1398,7 @@ void MainWindow::on_load_library(QString path, bool vrMode)
 
     if(!vrMode && !SettingsHandler::getHideStandAloneFunscriptsInLibrary())
     {
-        setLibraryLoading(true, "Searching for lone funscripts...");
+        emit libraryLoadingStatus(true, "Searching for lone funscripts...");
         QStringList funscriptTypes = QStringList()
                 << "*.funscript"
                 << "*.zip";
@@ -1486,7 +1487,7 @@ void MainWindow::on_load_library(QString path, bool vrMode)
             emit libraryLoaded();
             return;
         }
-        setLibraryLoading(true, "Loading VR library...");
+        emit libraryLoadingStatus(true, "Loading VR library...");
         on_load_library(SettingsHandler::getVRLibrary(), true);
     }
 
@@ -2606,6 +2607,8 @@ void MainWindow::setLibraryLoading(bool loading, QString message)
     windowedLibraryButton->setDisabled(loading);
     ui->actionSelect_library->setDisabled(loading);
     ui->actionReload_library->setDisabled(loading);
+
+    _xSettings->on_libraryLoading_status(message);
 }
 
 void MainWindow::onVRMessageRecieved(VRPacket packet)

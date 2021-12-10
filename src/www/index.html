@@ -46,10 +46,10 @@
 <!-- 		<button id="refreshButton" title="Refresh the media from XTP" class="refresh-media-button icon-button" onclick="getServerLibrary()">
 			<img class="buttonImage" src="://images/icons/reload.svg"/>
 		</button> -->
-		<div id="noMedia" hidden="true" style="text-align: center;">
-			No media found, it may be loading.<br>
-			Please wait...<br>
-			<image stye="align-self:center;margin=auto;" src="://images/Eclipse-1s-loading-200px.gif" />
+		<div id="noMedia" style="text-align: center;" hidden> No media found</div>
+		<div id="mediaLoading" class="no-media">
+			<div class="loading-spinner"></div>
+			<div id="loadingStatus">Loading...</div>
 		</div>
 		<div id="mediaList" class="thumbs-body"></div>
 	</div>
@@ -135,29 +135,29 @@
 			<div id="tabConnections" class="tab-content">
 				<div class="formElement">
 					<label for="connectionNone">None</label>
-					<input id="connectionNone" type="radio" name="connection" onclick="onSyncDeviceConnectionChange(this, 6)"/>
+					<input id="connectionNone" type="radio" class="styled-radio" name="connection" onclick="onSyncDeviceConnectionChange(this, 6)"/>
 				</div>
 				<div class="formElement">
 					<label for="connectionDeoVR">DeoVR</label>
-					<input id="connectionDeoVR" type="radio" name="connection" onclick="onSyncDeviceConnectionChange(this, 2)"/>
-					<image id="deoVRStatus" class="sync-device-status icon-small"></image>
+					<input id="connectionDeoVR" type="radio" class="styled-radio" name="connection" onclick="onSyncDeviceConnectionChange(this, 2)"/>
+					<img id="deoVRStatus" alt="Disconnected" class="sync-device-status icon-small" title="Disconnected" src="://images/icons/x.svg" style="background-color: crimson;"/>
 					<span class="sync-device-input-label">Address</span><input class="sync-device-address" id="deoVRAddress" onchange="onDeoVRAddressChange(this)"></input>
 					<span class="sync-device-input-label">Port</span> <input class="sync-device-port" id="deoVRPort" onchange="onDeoVRPortChange(this)"></input>
 				</div>
 				<div class="formElement">
 					<label for="connectionWhirligig">Whirligig</label>
-					<input id="connectionWhirligig" type="radio" name="connection" onclick="onSyncDeviceConnectionChange(this, 3)"/>
-					<image id="whirligigStatus" class="sync-device-status icon-small"></image>
+					<input id="connectionWhirligig" type="radio" class="styled-radio" name="connection" onclick="onSyncDeviceConnectionChange(this, 3)"/>
+					<img id="whirligigStatus" alt="Disconnected" class="sync-device-status icon-small" title="Disconnected" src="://images/icons/x.svg" style="background-color: crimson;"/>
 				</div>
 				<div class="formElement">
 					<label for="connectionXTPWeb">XTP Web</label>
-					<input id="connectionXTPWeb" type="radio" name="connection" onclick="onSyncDeviceConnectionChange(this, 5)"/>
-					<image id="xtpWebStatus" class="sync-device-status icon-small"></image>
+					<input id="connectionXTPWeb" type="radio" class="styled-radio" name="connection" onclick="onSyncDeviceConnectionChange(this, 5)"/>
+					<img id="xtpWebStatus" alt="Disconnected" class="sync-device-status icon-small" title="Disconnected" src="://images/icons/x.svg" style="background-color: crimson;"/>
 				</div>
 				<div class="formElement">
 					<label for="connectionGamepad">Gamepad</label>
 					<input id="connectionGamepad" type="checkbox" class="styled-checkbox" onclick="onSyncDeviceConnectionChange(this, 4)"/>
-					<image id="gamepadStatus" class="sync-device-status icon-small"></image>
+					<img id="gamepadStatus" alt="Disconnected" class="sync-device-status icon-small" title="Disconnected" src="://images/icons/x.svg" style="background-color: crimson;"/>
 				</div>
 			</div>
 			<div id="tabTCode" class="tab-content"></div>

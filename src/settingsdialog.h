@@ -63,6 +63,7 @@ public:
     PasswordResponse GetLaunchPass();
     bool HasLaunchPass();
     void setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems);
+    void on_libraryLoading_status(QString message = nullptr);
     void sendTCode(QString tcode);
 
     void reject() override;

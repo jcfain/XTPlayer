@@ -132,7 +132,11 @@ body {
     border-radius: 5px;
     height: 24px;
 }
-
+.styled-radio {
+    width: 20px;
+    height: 20px;
+    margin: 4px 0px;
+}
 .styled-checkbox {
     width: 20px;
     height: 20px;
@@ -410,6 +414,42 @@ section > .range-values {
     margin-right: 5px;
     margin-left: 5px;
 }
+.no-media {
+    text-align: center;
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 50px);
+}
+.loading-spinner {
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+    margin-top: 10px;
+  }
+.loading-spinner:after {
+    content: " ";
+    display: block;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 6px solid #fff;
+    border-color: #fff transparent #fff transparent;
+    animation: loading-spinner 1.2s linear infinite;
+}
+@keyframes loading-spinner {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+  
+
+
+
 @media only screen and (-webkit-min-device-pixel-ratio: 2.75)   {
     .modal-content {
         width: 100%;

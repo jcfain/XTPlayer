@@ -168,6 +168,7 @@ signals:
     void libraryLoaded();
     void libraryNotFound();
     void libraryIconResized(QSize newSize);
+    void libraryLoadingStatus(bool loading, QString state = nullptr);
 //    void scriptNotFound(QString message);
 //    void setLoading(bool loading);
     void playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr, bool audioSync = false);

@@ -27,7 +27,7 @@ signals:
     void readyRead(QByteArray data);
     void tcode(QString tcode);
     void connectTCodeDevice();
-    void connectSyncDevice(DeviceType deviceType, bool checked);
+    void connectInputDevice(DeviceType deviceType, bool checked);
 public slots:
     void on_DeviceConnection_StateChange(ConnectionChangedSignal status);
 
@@ -47,8 +47,10 @@ public:
     HttpPromise handleDeo(HttpDataPtr data);
     HttpPromise handleWebTimeUpdate(HttpDataPtr data);
     void setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems);
+    void sendLibraryLoadingStatus(QString message);
 
     void sendWebSocketTextMessage(QString command, QString message = nullptr);
+    void on_webSocketClient_Connected(QWebSocket* client);
 
 private:
     HttpServerConfig config;
@@ -57,6 +59,7 @@ private:
     QMimeDatabase mimeDatabase;
     WebSocketHandler* _webSocketHandler;
     bool _libraryLoaded = false;
+    QString _libraryLoadingStatus = "Loading...";
     QList<LibraryListWidgetItem*> _cachedLibraryItems;
     QList<LibraryListWidgetItem*> _vrLibraryItems;
 
