@@ -70,8 +70,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading UI...", Qt::AlignBottom, Qt::white);
 
-    qRegisterMetaType<LibraryListItem>();
-    qRegisterMetaTypeStreamOperators<LibraryListItem>();
 
     textToSpeech = new QTextToSpeech(this);
     auto availableVoices = textToSpeech->availableVoices();
@@ -319,12 +317,19 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     _xSettings->init(videoHandler);
 
-    connect(ui->actionReload_library, &QAction::triggered, this, QOverload<>::of(&MainWindow::loadLibraryAsync));
-    connect(this, &MainWindow::libraryLoaded, this, &MainWindow::onLibraryLoaded);
-    connect(this, &MainWindow::libraryNotFound, this, &MainWindow::onLibraryNotFound);
-    connect(this, &MainWindow::prepareLibraryLoad, this, &MainWindow::onPrepareLibraryLoad);
+    connect(ui->actionReload_library, &QAction::triggered, &mediaLibraryHandler, QOverload<>::of(&MediaLibraryHandler::loadLibraryAsync));
+    connect(&mediaLibraryHandler, &MediaLibraryHandler::libraryLoaded, this, &MainWindow::onSetLibraryLoaded);
+    connect(&mediaLibraryHandler, &MediaLibraryHandler::libraryNotFound, this, &MainWindow::onLibraryNotFound);
     connect(this, &MainWindow::libraryIconResized, this, &MainWindow::libraryListSetIconSize);
-    connect(this, &MainWindow::libraryLoadingStatus, this, &MainWindow::setLibraryLoading);
+    connect(&mediaLibraryHandler, &MediaLibraryHandler::libraryLoadingStatus, this, &MainWindow::onLibraryLoadingStatusChange);
+    connect(&mediaLibraryHandler, &MediaLibraryHandler::libraryLoading, this, &MainWindow::onSetLibraryLoading);
+    connect(&mediaLibraryHandler, &MediaLibraryHandler::libraryItemFound, this, &MainWindow::onLibraryItemFound);
+    connect(&mediaLibraryHandler, &MediaLibraryHandler::playListItem, this, &MainWindow::onSetupPlaylistItem);
+    connect(&mediaLibraryHandler, &MediaLibraryHandler::prepareLibraryLoad, this, &MainWindow::onPrepareLibraryLoad);
+    connect(&mediaLibraryHandler, &MediaLibraryHandler::saveThumbError, this, &MainWindow::onSaveThumbError);
+    connect(&mediaLibraryHandler, &MediaLibraryHandler::saveNewThumb, this, &MainWindow::onSaveNewThumb);
+    connect(&mediaLibraryHandler, &MediaLibraryHandler::saveNewThumbLoading, this, &MainWindow::onSaveNewThumbLoading);
+
 
     connect(action75_Size, &QAction::triggered, this, &MainWindow::on_action75_triggered);
     connect(action100_Size, &QAction::triggered, this, &MainWindow::on_action100_triggered);
@@ -399,7 +404,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     changeLibraryDisplayMode(SettingsHandler::getLibraryView());
     loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading Library...", Qt::AlignBottom, Qt::white);
-    loadLibraryAsync();
+    mediaLibraryHandler.loadLibraryAsync();
 
 //    QScreen *screen = this->screen();
 //    QSize screenSize = screen->size();
@@ -429,8 +434,8 @@ void MainWindow::onPasswordIncorrect()
 void MainWindow::dispose()
 {
     deviceSwitchedHome();
-    if(playingLibraryListItem != nullptr)
-        updateMetaData(playingLibraryListItem->getLibraryListItem());
+    if(playingLibraryListItem27 != nullptr)
+        updateMetaData(playingLibraryListItem27->getLibraryListItem());
     SettingsHandler::Save();
     _xSettings->dispose();
 
@@ -439,14 +444,6 @@ void MainWindow::dispose()
         videoHandler->stop();
     }
     _syncHandler->stopAll();
-    if(loadingLibraryFuture.isRunning())
-    {
-        loadingLibraryStop = true;
-        loadingLibraryFuture.cancel();
-        loadingLibraryFuture.waitForFinished();
-    }
-    qDeleteAll(cachedVRItems);
-    cachedVRItems.clear();
     //qDeleteAll(funscriptHandlers);
     delete tcodeHandler;
     delete videoHandler;
@@ -874,7 +871,7 @@ void MainWindow::mediaAction(QString action)
         {
            bool increase = action == actions.IncreaseOffset;
            QString verb = increase ? "Increase" : "Decrease";
-           auto libraryListItem = playingLibraryListItem->getLibraryListItem();
+           auto libraryListItem = playingLibraryListItem27->getLibraryListItem();
            auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
            int newOffset = increase ? libraryListItemMetaData.offset + SettingsHandler::getFunscriptOffsetStep() : libraryListItemMetaData.offset - SettingsHandler::getFunscriptOffsetStep();
            SettingsHandler::setLiveOffset(newOffset);
@@ -1095,7 +1092,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
         QMenu myMenu;
 
         QListWidgetItem* selectedItem = libraryList->selectedItems().first();
-        LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
+        LibraryListItem27 selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
 
         myMenu.addAction(tr("Play"), this, &MainWindow::playFileFromContextMenu);
         if(selectedFileListItem.type == LibraryListItemType::PlaylistInternal)
@@ -1103,7 +1100,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             myMenu.addAction(tr("Open"), this, [this]()
             {
                 QListWidgetItem* selectedItem = libraryList->selectedItems().first();
-                LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
+                LibraryListItem27 selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
                 loadPlaylistIntoLibrary(selectedFileListItem.nameNoExtension);
             });
             myMenu.addAction(tr("Rename..."), this, &MainWindow::renamePlaylist);
@@ -1203,34 +1200,32 @@ void MainWindow::openWelcomeDialog()
     _welcomeDialog->raise();
 }
 
-void MainWindow::loadLibraryAsync()
-{
-    QString library = SettingsHandler::getSelectedLibrary();
-    QString vrLibrary = SettingsHandler::getVRLibrary();
-    if(library.isEmpty() && vrLibrary.isEmpty())
-    {
-        setLibraryLoading(false);
-        return;
-    }
-    if(!loadingLibraryFuture.isRunning())
-    {
-        emit libraryLoadingStatus(true, library.isEmpty() ? "Loading VR library..." : "Loading library...");
-        loadingLibraryFuture = QtConcurrent::run([this, library, vrLibrary]() {
-            on_load_library(library.isEmpty() ? vrLibrary : library, library.isEmpty());
-        });
-    }
-}
+//void MainWindow::loadLibraryAsync()
+//{
+//    QString library = SettingsHandler::getSelectedLibrary();
+//    QString vrLibrary = SettingsHandler::getVRLibrary();
+//    if(library.isEmpty() && vrLibrary.isEmpty())
+//    {
+//        setLibraryLoading(false);
+//        return;
+//    }
+//    if(!loadingLibraryFuture.isRunning())
+//    {
+//        emit libraryLoadingStatus(true, library.isEmpty() ? "Loading VR library..." : "Loading library...");
+//        loadingLibraryFuture = QtConcurrent::run([this, library, vrLibrary]() {
+//            on_load_library(library.isEmpty() ? vrLibrary : library, library.isEmpty());
+//        });
+//    }
+//}
 
 
 void MainWindow::onPrepareLibraryLoad()
 {
     libraryList->setIconSize({SettingsHandler::getThumbSize(),SettingsHandler::getThumbSize()});
-    stopThumbProcess();
     qDeleteAll(cachedLibraryItems);
     cachedLibraryItems.clear();
     qDeleteAll(cachedVRItems);
     cachedVRItems.clear();
-    _xSettings->setLibraryLoaded(false, cachedLibraryItems, cachedVRItems);
     libraryList->clear();
     ui->actionReload_library->setDisabled(true);
     ui->actionSelect_library->setDisabled(true);
@@ -1247,510 +1242,589 @@ void MainWindow::onLibraryNotFound()
     }
 }
 
-void MainWindow::on_load_library(QString path, bool vrMode)
+//void MainWindow::on_load_library(QString path, bool vrMode)
+//{
+//    if (path.isEmpty())
+//    {
+//        return;
+//    }
+//    else
+//    {
+//        QDir directory(path);
+//        if(!directory.exists())
+//        {
+//            emit libraryNotFound();
+//            return;
+//        }
+//    }
+//    QString thumbPath = SettingsHandler::getSelectedThumbsDir();
+//    QDir thumbDir(thumbPath);
+//    if (!thumbDir.exists())
+//    {
+//        thumbDir.mkdir(thumbPath);
+//    }
+////    QStringList videoTypes = QStringList()
+////            << "*.mp4"
+////            << "*.avi"
+////            << "*.mpg"
+////            << "*.wmv"
+////            << "*.mkv"
+////            << "*.webm"
+////            << "*.mp2"
+////            << "*.mpeg"
+////            << "*.mpv"
+////            << "*.ogg"
+////            << "*.m4p"
+////            << "*.m4v"
+////            << "*.mov"
+////            << "*.qt"
+////            << "*.flv"
+////            << "*.swf"
+////            << "*.avchd";
+
+////    QStringList audioTypes = QStringList()
+////            << "*.m4a"
+////            << "*.mp3"
+////            << "*.aac"
+////            << "*.flac"
+////            << "*.wav"
+////            << "*.wma";
+//    QStringList playlistTypes = QStringList()
+//            << "*.m3u";
+
+//    QStringList mediaTypes;
+//    QStringList videoTypes;
+//    QStringList audioTypes;
+//    foreach(auto ext, SettingsHandler::getVideoExtensions())
+//        videoTypes.append("*."+ext);
+//    foreach(auto ext, SettingsHandler::getAudioExtensions())
+//        audioTypes.append("*."+ext);
+//    mediaTypes.append(videoTypes);
+//    mediaTypes.append(audioTypes);
+//    QDirIterator library(path, mediaTypes, QDir::Files, QDirIterator::Subdirectories);
+
+//    if(!vrMode)
+//    {
+//        emit prepareLibraryLoad();
+//        QThread::sleep(1);
+
+//        auto playlists = SettingsHandler::getPlaylists();
+//        foreach(auto playlist, playlists.keys())
+//        {
+//            setupPlaylistItem(playlist);
+//        }
+//    }
+//    QStringList funscriptsWithMedia;
+//    QList<QString> excludedLibraryPaths = SettingsHandler::getLibraryExclusions();
+//    while (library.hasNext())
+//    {
+//        if(loadingLibraryStop)
+//            return;
+//        QFileInfo fileinfo(library.next());
+//        QString fileDir = fileinfo.dir().path();
+//        bool isExcluded = false;
+//        foreach(QString dir, excludedLibraryPaths)
+//        {
+//            if(dir != path && (fileDir.startsWith(dir, Qt::CaseInsensitive)))
+//                isExcluded = true;
+//        }
+//        if (isExcluded)
+//            continue;
+//        QString videoPath = fileinfo.filePath();
+//        QString videoPathTemp = fileinfo.filePath();
+//        QString fileName = fileinfo.fileName();
+//        QString fileNameTemp = fileinfo.fileName();
+//        QString fileNameNoExtension = fileNameTemp.remove(fileNameTemp.lastIndexOf('.'), fileNameTemp.length() -  1);
+//        QString scriptFile = fileNameNoExtension + ".funscript";
+//        QString scriptPath;
+//        QString scriptNoExtension = videoPathTemp.remove(videoPathTemp.lastIndexOf('.'), videoPathTemp.length() - 1);
+//        fileNameTemp = fileinfo.fileName();
+//        QString mediaExtension = "*" + fileNameTemp.remove(0, fileNameTemp.length() - (fileNameTemp.length() - fileNameTemp.lastIndexOf('.')));
+
+//        if (SettingsHandler::getSelectedFunscriptLibrary() == Q_NULLPTR)
+//        {
+//            scriptPath = scriptNoExtension + ".funscript";
+//        }
+//        else
+//        {
+//            scriptNoExtension = SettingsHandler::getSelectedFunscriptLibrary() + QDir::separator() + fileNameNoExtension;
+//            scriptPath = SettingsHandler::getSelectedFunscriptLibrary() + QDir::separator() + scriptFile;
+//        }
+
+//        QFile fpath(scriptPath);
+//        if (!fpath.exists())
+//        {
+//            scriptPath = nullptr;
+//        }
+
+//        LibraryListItemType libratyItemType = LibraryListItemType::Video;
+//        QFileInfo scriptZip(scriptNoExtension + ".zip");
+//        QString zipFile;
+//        if(scriptZip.exists())
+//            zipFile = scriptNoExtension + ".zip";
+//        if(audioTypes.contains(mediaExtension))
+//        {
+//            libratyItemType = LibraryListItemType::Audio;
+//        }
+//        LibraryListItem27 item
+//        {
+//            libratyItemType,
+//            videoPath, // path
+//            fileName, // name
+//            fileNameNoExtension, //nameNoExtension
+//            scriptPath, // script
+//            scriptNoExtension,
+//            mediaExtension,
+//            nullptr,
+//            zipFile,
+//            fileinfo.birthTime().date(),
+//            0
+//        };
+//        item.thumbFile = mediaLibraryHandler.getThumbPath(item);
+//        LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, vrMode ? nullptr : libraryList);
+//        if(!vrMode)
+//            libraryList->addItem(qListWidgetItem);
+//        vrMode ? cachedVRItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone()) : cachedLibraryItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
+//        if(!vrMode && !scriptPath.isEmpty())
+//            funscriptsWithMedia.append(scriptPath);
+//        if(!vrMode && !zipFile.isEmpty())
+//            funscriptsWithMedia.append(zipFile);
+//    }
+
+//    if(!vrMode && !SettingsHandler::getHideStandAloneFunscriptsInLibrary())
+//    {
+//        emit libraryLoadingStatus(true, "Searching for lone funscripts...");
+//        QStringList funscriptTypes = QStringList()
+//                << "*.funscript"
+//                << "*.zip";
+//        mediaTypes.clear();
+//        mediaTypes.append(funscriptTypes);
+//        QDirIterator funscripts(path, mediaTypes, QDir::Files, QDirIterator::Subdirectories);
+//        auto availibleAxis = SettingsHandler::getAvailableAxis();
+//        while (funscripts.hasNext())
+//        {
+//            if(loadingLibraryStop)
+//                return;
+//            QFileInfo fileinfo(funscripts.next());
+//            QString fileName = fileinfo.fileName();
+//            QString fileNameTemp = fileinfo.fileName();
+//            QString scriptPath = fileinfo.filePath();
+//            QString scriptPathTemp = fileinfo.filePath();
+//            QString scriptNoExtension = scriptPathTemp.remove(scriptPathTemp.lastIndexOf('.'), scriptPathTemp.length() - 1);
+//            QString scriptNoExtensionTemp = QString(scriptNoExtension);
+//            if(funscriptsWithMedia.contains(scriptPath, Qt::CaseSensitivity::CaseInsensitive))
+//                continue;
+
+//            QString scriptMFSExt = scriptNoExtensionTemp.remove(0, scriptNoExtensionTemp.length() - (scriptNoExtensionTemp.length() - scriptNoExtensionTemp.lastIndexOf('.')));
+//            bool isMfs = false;
+//            foreach(auto axisName, availibleAxis->keys())
+//            {
+//                auto track = availibleAxis->value(axisName);
+//                if("."+track.TrackName == scriptMFSExt)
+//                {
+//                    isMfs = true;
+//                    break;
+//                }
+//            }
+//            if(isMfs)
+//                continue;
+
+//            QString fileDir = fileinfo.dir().path();
+//            bool isExcluded = false;
+//            foreach(QString dir, excludedLibraryPaths)
+//            {
+//                if(dir != path && (fileDir.startsWith(dir, Qt::CaseInsensitive)))
+//                    isExcluded = true;
+//            }
+//            if (isExcluded)
+//                continue;
+//            QString zipFile = nullptr;
+//            if(scriptPath.endsWith(".zip", Qt::CaseInsensitive))
+//            {
+//                zipFile = scriptPath;
+//            }
+//            fileNameTemp = fileinfo.fileName();
+//            QString fileNameNoExtension = fileNameTemp.remove(fileNameTemp.lastIndexOf('.'), fileNameTemp.length() -  1);
+//            fileNameTemp = fileinfo.fileName();
+//            QString mediaExtension = "*" + fileNameTemp.remove(0, fileNameTemp.length() - (fileNameTemp.length() - fileNameTemp.lastIndexOf('.')));
+//            LibraryListItem27 item
+//            {
+//                LibraryListItemType::FunscriptType,
+//                scriptPath, // path
+//                fileName, // name
+//                fileNameNoExtension, //nameNoExtension
+//                scriptPath, // script
+//                scriptNoExtension,
+//                mediaExtension,
+//                nullptr,
+//                zipFile,
+//                fileinfo.birthTime().date(),
+//                0
+//            };
+//            LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, libraryList);
+//            libraryList->addItem(qListWidgetItem);
+//            cachedLibraryItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
+//        }
+//    }
+//    if(vrMode)
+//        emit libraryLoaded();
+//    else
+//    {
+//        QString vrLibrary = SettingsHandler::getVRLibrary();
+//        if(vrLibrary.isEmpty())
+//        {
+//            emit libraryLoaded();
+//            return;
+//        }
+//        QFileInfo vrLibraryInfo(vrLibrary);
+//        if(!vrLibraryInfo.exists())
+//        {
+//            emit libraryLoaded();
+//            return;
+//        }
+//        emit libraryLoadingStatus(true, "Loading VR library...");
+//        on_load_library(SettingsHandler::getVRLibrary(), true);
+//    }
+
+//}
+
+//LibraryListItem27 MainWindow::createLibraryListItemFromFunscript(QString funscript)
+//{
+
+//    QFileInfo fileinfo(funscript);
+//    QString fileName = fileinfo.fileName();
+//    QString fileNameTemp = fileinfo.fileName();
+//    QString scriptPath = fileinfo.filePath();
+//    QString scriptPathTemp = fileinfo.filePath();
+//    QString scriptNoExtension = scriptPathTemp.remove(scriptPathTemp.lastIndexOf('.'), scriptPathTemp.length() - 1);
+//    QString scriptNoExtensionTemp = QString(scriptNoExtension);
+//    QString fileDir = fileinfo.dir().path();
+//    QString zipFile = nullptr;
+//    if(scriptPath.endsWith(".zip", Qt::CaseInsensitive))
+//    {
+//        zipFile = scriptPath;
+//        scriptPath = nullptr;
+//    }
+//    fileNameTemp = fileinfo.fileName();
+//    QString fileNameNoExtension = fileNameTemp.remove(fileNameTemp.lastIndexOf('.'), fileNameTemp.length() -  1);
+//    fileNameTemp = fileinfo.fileName();
+//    QString mediaExtension = "*" + fileNameTemp.remove(0, fileNameTemp.length() - (fileNameTemp.length() - fileNameTemp.lastIndexOf('.')));
+//    return
+//    {
+//        LibraryListItemType::FunscriptType,
+//        scriptPath, // path
+//        fileName, // name
+//        fileNameNoExtension, //nameNoExtension
+//        scriptPath, // script
+//        fileNameNoExtension,
+//        mediaExtension,
+//        nullptr,
+//        zipFile,
+//        fileinfo.birthTime().date(),
+//        0
+//    };
+//}
+
+void MainWindow::onSetLibraryLoading()
 {
-    if (path.isEmpty())
+    toggleLibraryLoading(true);
+    _xSettings->setLibraryLoading();
+}
+void MainWindow::toggleLibraryLoading(bool loading)
+{
+    if(loading)
     {
-        return;
+        libraryLoadingLabel->show();
+        libraryLoadingMovie->start();
+        libraryLoadingInfoLabel->show();
     }
     else
     {
-        QDir directory(path);
-        if(!directory.exists())
-        {
-            emit libraryNotFound();
-            return;
-        }
+        libraryLoadingLabel->hide();
+        libraryLoadingMovie->stop();
+        libraryLoadingInfoLabel->hide();
+        libraryLoadingInfoLabel->setText("");
     }
-    QString thumbPath = SettingsHandler::getSelectedThumbsDir();
-    QDir thumbDir(thumbPath);
-    if (!thumbDir.exists())
+    randomizeLibraryButton->setDisabled(loading);
+    savePlaylistButton->setDisabled(loading);
+    editPlaylistButton->setDisabled(loading);
+    cancelEditPlaylistButton->setDisabled(loading);
+    windowedLibraryButton->setDisabled(loading);
+    ui->actionSelect_library->setDisabled(loading);
+    ui->actionReload_library->setDisabled(loading);
+
+}
+void MainWindow::onLibraryLoadingStatusChange(QString message)
+{
+    if(!message.isEmpty())
     {
-        thumbDir.mkdir(thumbPath);
+        _xSettings->on_libraryLoading_status(message);
+        libraryLoadingInfoLabel->setText(message);
     }
-//    QStringList videoTypes = QStringList()
-//            << "*.mp4"
-//            << "*.avi"
-//            << "*.mpg"
-//            << "*.wmv"
-//            << "*.mkv"
-//            << "*.webm"
-//            << "*.mp2"
-//            << "*.mpeg"
-//            << "*.mpv"
-//            << "*.ogg"
-//            << "*.m4p"
-//            << "*.m4v"
-//            << "*.mov"
-//            << "*.qt"
-//            << "*.flv"
-//            << "*.swf"
-//            << "*.avchd";
-
-//    QStringList audioTypes = QStringList()
-//            << "*.m4a"
-//            << "*.mp3"
-//            << "*.aac"
-//            << "*.flac"
-//            << "*.wav"
-//            << "*.wma";
-    QStringList playlistTypes = QStringList()
-            << "*.m3u";
-
-    QStringList mediaTypes;
-    QStringList videoTypes;
-    QStringList audioTypes;
-    foreach(auto ext, SettingsHandler::getVideoExtensions())
-        videoTypes.append("*."+ext);
-    foreach(auto ext, SettingsHandler::getAudioExtensions())
-        audioTypes.append("*."+ext);
-    mediaTypes.append(videoTypes);
-    mediaTypes.append(audioTypes);
-    QDirIterator library(path, mediaTypes, QDir::Files, QDirIterator::Subdirectories);
-
-    if(!vrMode)
-    {
-        emit prepareLibraryLoad();
-        QThread::sleep(1);
-
-        auto playlists = SettingsHandler::getPlaylists();
-        foreach(auto playlist, playlists.keys())
-        {
-            setupPlaylistItem(playlist);
-        }
-    }
-    QStringList funscriptsWithMedia;
-    QList<QString> excludedLibraryPaths = SettingsHandler::getLibraryExclusions();
-    while (library.hasNext())
-    {
-        if(loadingLibraryStop)
-            return;
-        QFileInfo fileinfo(library.next());
-        QString fileDir = fileinfo.dir().path();
-        bool isExcluded = false;
-        foreach(QString dir, excludedLibraryPaths)
-        {
-            if(dir != path && (fileDir.startsWith(dir, Qt::CaseInsensitive)))
-                isExcluded = true;
-        }
-        if (isExcluded)
-            continue;
-        QString videoPath = fileinfo.filePath();
-        QString videoPathTemp = fileinfo.filePath();
-        QString fileName = fileinfo.fileName();
-        QString fileNameTemp = fileinfo.fileName();
-        QString fileNameNoExtension = fileNameTemp.remove(fileNameTemp.lastIndexOf('.'), fileNameTemp.length() -  1);
-        QString scriptFile = fileNameNoExtension + ".funscript";
-        QString scriptPath;
-        QString scriptNoExtension = videoPathTemp.remove(videoPathTemp.lastIndexOf('.'), videoPathTemp.length() - 1);
-        fileNameTemp = fileinfo.fileName();
-        QString mediaExtension = "*" + fileNameTemp.remove(0, fileNameTemp.length() - (fileNameTemp.length() - fileNameTemp.lastIndexOf('.')));
-
-        if (SettingsHandler::getSelectedFunscriptLibrary() == Q_NULLPTR)
-        {
-            scriptPath = scriptNoExtension + ".funscript";
-        }
-        else
-        {
-            scriptNoExtension = SettingsHandler::getSelectedFunscriptLibrary() + QDir::separator() + fileNameNoExtension;
-            scriptPath = SettingsHandler::getSelectedFunscriptLibrary() + QDir::separator() + scriptFile;
-        }
-
-        QFile fpath(scriptPath);
-        if (!fpath.exists())
-        {
-            scriptPath = nullptr;
-        }
-
-        LibraryListItemType libratyItemType = LibraryListItemType::Video;
-        QFileInfo scriptZip(scriptNoExtension + ".zip");
-        QString zipFile;
-        if(scriptZip.exists())
-            zipFile = scriptNoExtension + ".zip";
-        if(audioTypes.contains(mediaExtension))
-        {
-            libratyItemType = LibraryListItemType::Audio;
-        }
-        LibraryListItem item
-        {
-            libratyItemType,
-            videoPath, // path
-            fileName, // name
-            fileNameNoExtension, //nameNoExtension
-            scriptPath, // script
-            scriptNoExtension,
-            mediaExtension,
-            nullptr,
-            zipFile,
-            fileinfo.birthTime().date(),
-            0
-        };
-        item.thumbFile = mediaLibraryHandler.getThumbPath(item);
+}
+void MainWindow::onLibraryItemFound(LibraryListItem27 item, bool vrMode)
+{
+//    auto libraryPointer = new LibraryListItem27(item);
+//    QtConcurrent::run([this, libraryPointer, vrMode]() {
         LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, vrMode ? nullptr : libraryList);
         if(!vrMode)
-            libraryList->addItem(qListWidgetItem);
+        libraryList->addItem(qListWidgetItem);
         vrMode ? cachedVRItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone()) : cachedLibraryItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
-        if(!vrMode && !scriptPath.isEmpty())
-            funscriptsWithMedia.append(scriptPath);
-        if(!vrMode && !zipFile.isEmpty())
-            funscriptsWithMedia.append(zipFile);
-    }
-
-    if(!vrMode && !SettingsHandler::getHideStandAloneFunscriptsInLibrary())
-    {
-        emit libraryLoadingStatus(true, "Searching for lone funscripts...");
-        QStringList funscriptTypes = QStringList()
-                << "*.funscript"
-                << "*.zip";
-        mediaTypes.clear();
-        mediaTypes.append(funscriptTypes);
-        QDirIterator funscripts(path, mediaTypes, QDir::Files, QDirIterator::Subdirectories);
-        auto availibleAxis = SettingsHandler::getAvailableAxis();
-        while (funscripts.hasNext())
-        {
-            if(loadingLibraryStop)
-                return;
-            QFileInfo fileinfo(funscripts.next());
-            QString fileName = fileinfo.fileName();
-            QString fileNameTemp = fileinfo.fileName();
-            QString scriptPath = fileinfo.filePath();
-            QString scriptPathTemp = fileinfo.filePath();
-            QString scriptNoExtension = scriptPathTemp.remove(scriptPathTemp.lastIndexOf('.'), scriptPathTemp.length() - 1);
-            QString scriptNoExtensionTemp = QString(scriptNoExtension);
-            if(funscriptsWithMedia.contains(scriptPath, Qt::CaseSensitivity::CaseInsensitive))
-                continue;
-
-            QString scriptMFSExt = scriptNoExtensionTemp.remove(0, scriptNoExtensionTemp.length() - (scriptNoExtensionTemp.length() - scriptNoExtensionTemp.lastIndexOf('.')));
-            bool isMfs = false;
-            foreach(auto axisName, availibleAxis->keys())
-            {
-                auto track = availibleAxis->value(axisName);
-                if("."+track.TrackName == scriptMFSExt)
-                {
-                    isMfs = true;
-                    break;
-                }
-            }
-            if(isMfs)
-                continue;
-
-            QString fileDir = fileinfo.dir().path();
-            bool isExcluded = false;
-            foreach(QString dir, excludedLibraryPaths)
-            {
-                if(dir != path && (fileDir.startsWith(dir, Qt::CaseInsensitive)))
-                    isExcluded = true;
-            }
-            if (isExcluded)
-                continue;
-            QString zipFile = nullptr;
-            if(scriptPath.endsWith(".zip", Qt::CaseInsensitive))
-            {
-                zipFile = scriptPath;
-            }
-            fileNameTemp = fileinfo.fileName();
-            QString fileNameNoExtension = fileNameTemp.remove(fileNameTemp.lastIndexOf('.'), fileNameTemp.length() -  1);
-            fileNameTemp = fileinfo.fileName();
-            QString mediaExtension = "*" + fileNameTemp.remove(0, fileNameTemp.length() - (fileNameTemp.length() - fileNameTemp.lastIndexOf('.')));
-            LibraryListItem item
-            {
-                LibraryListItemType::FunscriptType,
-                scriptPath, // path
-                fileName, // name
-                fileNameNoExtension, //nameNoExtension
-                scriptPath, // script
-                scriptNoExtension,
-                mediaExtension,
-                nullptr,
-                zipFile,
-                fileinfo.birthTime().date(),
-                0
-            };
-            LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, libraryList);
-            libraryList->addItem(qListWidgetItem);
-            cachedLibraryItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
-        }
-    }
-    if(vrMode)
-        emit libraryLoaded();
-    else
-    {
-        QString vrLibrary = SettingsHandler::getVRLibrary();
-        if(vrLibrary.isEmpty())
-        {
-            emit libraryLoaded();
-            return;
-        }
-        QFileInfo vrLibraryInfo(vrLibrary);
-        if(!vrLibraryInfo.exists())
-        {
-            emit libraryLoaded();
-            return;
-        }
-        emit libraryLoadingStatus(true, "Loading VR library...");
-        on_load_library(SettingsHandler::getVRLibrary(), true);
-    }
-
+//        delete libraryPointer;
+//    });
 }
 
-LibraryListItem MainWindow::createLibraryListItemFromFunscript(QString funscript)
-{
-
-    QFileInfo fileinfo(funscript);
-    QString fileName = fileinfo.fileName();
-    QString fileNameTemp = fileinfo.fileName();
-    QString scriptPath = fileinfo.filePath();
-    QString scriptPathTemp = fileinfo.filePath();
-    QString scriptNoExtension = scriptPathTemp.remove(scriptPathTemp.lastIndexOf('.'), scriptPathTemp.length() - 1);
-    QString scriptNoExtensionTemp = QString(scriptNoExtension);
-    QString fileDir = fileinfo.dir().path();
-    QString zipFile = nullptr;
-    if(scriptPath.endsWith(".zip", Qt::CaseInsensitive))
-    {
-        zipFile = scriptPath;
-        scriptPath = nullptr;
-    }
-    fileNameTemp = fileinfo.fileName();
-    QString fileNameNoExtension = fileNameTemp.remove(fileNameTemp.lastIndexOf('.'), fileNameTemp.length() -  1);
-    fileNameTemp = fileinfo.fileName();
-    QString mediaExtension = "*" + fileNameTemp.remove(0, fileNameTemp.length() - (fileNameTemp.length() - fileNameTemp.lastIndexOf('.')));
-    return
-    {
-        LibraryListItemType::FunscriptType,
-        scriptPath, // path
-        fileName, // name
-        fileNameNoExtension, //nameNoExtension
-        scriptPath, // script
-        fileNameNoExtension,
-        mediaExtension,
-        nullptr,
-        zipFile,
-        fileinfo.birthTime().date(),
-        0
-    };
-}
-
-void MainWindow::onLibraryLoaded()
+void MainWindow::onSetLibraryLoaded()
 {
     changeLibraryDisplayMode(SettingsHandler::getLibraryView());
     updateLibrarySortUI();
     updateThumbSizeUI(SettingsHandler::getThumbSize());
     sortLibraryList(SettingsHandler::getLibrarySortMode());
     setThumbSize(SettingsHandler::getThumbSize());
-    startThumbProcess();
     setCurrentLibraryRow(0);
     _playerControlsFrame->setDisabled(false);
     ui->actionReload_library->setDisabled(false);
     ui->actionSelect_library->setDisabled(false);
 
-    _xSettings->setLibraryLoaded(true, cachedLibraryItems, cachedVRItems);
+    _xSettings->setLibraryLoaded(mediaLibraryHandler.getLibraryCache(), mediaLibraryHandler.getVRLibraryCache());
 
-    setLibraryLoading(false);
+    toggleLibraryLoading(false);
 }
 
-void MainWindow::startThumbProcess(bool vrMode)
-{
-    stopThumbProcess();
-    thumbProcessIsRunning = true;
-    extractor = new VideoFrameExtractor(this);
-    thumbNailPlayer = new AVPlayer(this);
-    thumbNailPlayer->setInterruptOnTimeout(true);
-    thumbNailPlayer->setInterruptTimeout(10000);
-    thumbNailPlayer->setAsyncLoad(true);
-    extractor->setAsync(true);
-    saveNewThumbs(vrMode);
-}
+//void MainWindow::startThumbProcess(bool vrMode)
+//{
+//    stopThumbProcess();
+//    thumbProcessIsRunning = true;
+//    extractor = new VideoFrameExtractor(this);
+//    thumbNailPlayer = new AVPlayer(this);
+//    thumbNailPlayer->setInterruptOnTimeout(true);
+//    thumbNailPlayer->setInterruptTimeout(10000);
+//    thumbNailPlayer->setAsyncLoad(true);
+//    extractor->setAsync(true);
+//    saveNewThumbs(vrMode);
+//}
 
-void MainWindow::stopThumbProcess()
-{
-    if(thumbProcessIsRunning)
-    {
-        disconnect(extractor, &QtAV::VideoFrameExtractor::frameExtracted,  nullptr, nullptr);
-        disconnect(extractor, &QtAV::VideoFrameExtractor::error,  nullptr, nullptr);
-        disconnect(thumbNailPlayer, &AVPlayer::loaded,  nullptr, nullptr);
-        disconnect(thumbNailPlayer, &AVPlayer::error,  nullptr, nullptr);
-        thumbNailSearchIterator = 0;
-        thumbProcessIsRunning = false;
-        delete extractor;
-        delete thumbNailPlayer;
-    }
-}
+//void MainWindow::stopThumbProcess()
+//{
+//    if(thumbProcessIsRunning)
+//    {
+//        disconnect(extractor, &QtAV::VideoFrameExtractor::frameExtracted,  nullptr, nullptr);
+//        disconnect(extractor, &QtAV::VideoFrameExtractor::error,  nullptr, nullptr);
+//        disconnect(thumbNailPlayer, &AVPlayer::loaded,  nullptr, nullptr);
+//        disconnect(thumbNailPlayer, &AVPlayer::error,  nullptr, nullptr);
+//        thumbNailSearchIterator = 0;
+//        thumbProcessIsRunning = false;
+//        delete extractor;
+//        delete thumbNailPlayer;
+//    }
+//}
 
-void MainWindow::saveSingleThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position)
-{
-    if(!thumbProcessIsRunning)
-    {
-        extractor = new VideoFrameExtractor(this);
-        thumbNailPlayer = new AVPlayer(this);
-        thumbNailPlayer->setInterruptOnTimeout(true);
-        thumbNailPlayer->setInterruptTimeout(10000);
-        thumbNailPlayer->setAsyncLoad(true);
-        extractor->setAsync(true);
-    }
-    saveThumb(qListWidgetItem, position);
-}
+//void MainWindow::saveSingleThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position)
+//{
+//    if(!thumbProcessIsRunning)
+//    {
+//        extractor = new VideoFrameExtractor(this);
+//        thumbNailPlayer = new AVPlayer(this);
+//        thumbNailPlayer->setInterruptOnTimeout(true);
+//        thumbNailPlayer->setInterruptTimeout(10000);
+//        thumbNailPlayer->setAsyncLoad(true);
+//        extractor->setAsync(true);
+//    }
+//    saveThumb(qListWidgetItem, position);
+//}
 
-void MainWindow::saveNewThumbs(bool vrMode)
-{
-    if (thumbProcessIsRunning && thumbNailSearchIterator < (vrMode ? cachedVRItems.count() : cachedLibraryItems.count()))
-    {
-        //Use a non user modifiable list incase they sort random when getting thumbs.
-        LibraryListWidgetItem* listWidgetItem = vrMode ? cachedVRItems.at(thumbNailSearchIterator) : cachedLibraryItems.at(thumbNailSearchIterator);
-        LibraryListItem item = listWidgetItem->getLibraryListItem();
-        thumbNailSearchIterator++;
-        QFileInfo thumbInfo(mediaLibraryHandler.getThumbPath(item));
-        if (item.type == LibraryListItemType::Video && !thumbInfo.exists())
-        {
-            disconnect(extractor, nullptr,  nullptr, nullptr);
-            disconnect(thumbNailPlayer, nullptr,  nullptr, nullptr);
-            saveThumb(listWidgetItem, -1, vrMode);
-        }
-        else
-        {
+//void MainWindow::saveNewThumbs(bool vrMode)
+//{
+//    if (thumbProcessIsRunning && thumbNailSearchIterator < (vrMode ? cachedVRItems.count() : cachedLibraryItems.count()))
+//    {
+//        //Use a non user modifiable list incase they sort random when getting thumbs.
+//        LibraryListWidgetItem* listWidgetItem = vrMode ? cachedVRItems.at(thumbNailSearchIterator) : cachedLibraryItems.at(thumbNailSearchIterator);
+//        LibraryListItem27 item = listWidgetItem->getLibraryListItem();
+//        thumbNailSearchIterator++;
+//        QFileInfo thumbInfo(mediaLibraryHandler.getThumbPath(item));
+//        if (item.type == LibraryListItemType::Video && !thumbInfo.exists())
+//        {
+//            disconnect(extractor, nullptr,  nullptr, nullptr);
+//            disconnect(thumbNailPlayer, nullptr,  nullptr, nullptr);
+//            saveThumb(listWidgetItem, -1, vrMode);
+//        }
+//        else
+//        {
 
-            saveNewThumbs(vrMode);
-        }
-    }
-    else
-    {
-        stopThumbProcess();
-        if(!vrMode)
-            startThumbProcess(true);
-    }
-}
-void MainWindow::saveThumb(LibraryListWidgetItem* cachedListWidgetItem, qint64 position, bool vrMode)
+//            saveNewThumbs(vrMode);
+//        }
+//    }
+//    else
+//    {
+//        stopThumbProcess();
+//        if(!vrMode)
+//            startThumbProcess(true);
+//    }
+//}
+//void MainWindow::saveThumb(LibraryListWidgetItem* cachedListWidgetItem, qint64 position, bool vrMode)
+//{
+//    LibraryListItem27 cachedListItem = cachedListWidgetItem->getLibraryListItem();
+//    QString videoFile = cachedListItem.path;
+//    QString thumbFile = mediaLibraryHandler.getThumbPath(cachedListItem);
+////    QIcon thumb;
+////    QPixmap bgPixmap(QApplication::applicationDirPath() + "/themes/loading.png");
+////    QPixmap scaled = bgPixmap.scaled(SettingsHandler::getThumbSize(), Qt::AspectRatioMode::KeepAspectRatio);
+////    thumb.addPixmap(scaled);
+////    qListWidgetItem->setIcon(thumb);
+//    auto libraryListItems = libraryList->findItems(cachedListItem.nameNoExtension, Qt::MatchFlag::MatchEndsWith);
+//    LibraryListWidgetItem* libraryListWidgetItem = 0;
+//    if(libraryListItems.length() > 0)
+//    {
+//        libraryListWidgetItem = ((LibraryListWidgetItem*)libraryListItems.first());
+//        libraryListWidgetItem->setThumbFileLoading(false);
+//    }
+//    cachedListWidgetItem->setThumbFileLoading(false);
+//    //://images/icons/loading_current.png
+//    if(cachedListItem.type == LibraryListItemType::Audio || cachedListItem.type == LibraryListItemType::FunscriptType)
+//    {
+////        int thumbSize = SettingsHandler::getThumbSize();
+////        QSize size = {thumbSize, thumbSize};
+////        cachedListWidgetItem->updateThumbSize(size);
+////        if(libraryListWidgetItem)
+////        {
+////            libraryList->removeItemWidget(libraryListWidgetItem);
+////            libraryListWidgetItem->updateThumbSize(size);
+////        }
+
+//        saveNewThumbs(vrMode);
+//    }
+//    else
+//    {
+//        // Get the duration and randomize the position with in the video.
+//        connect(thumbNailPlayer,
+//           &AVPlayer::loaded,
+//           thumbNailPlayer,
+//           [this, videoFile, position]()
+//            {
+//               LogHandler::Debug(tr("Loaded video for thumb duration: ") + QString::number(thumbNailPlayer->duration()));
+//               qint64 randomPosition = position > 0 ? position : XMath::rand((qint64)1, thumbNailPlayer->duration());
+
+//               disconnect(thumbNailPlayer, &AVPlayer::loaded,  nullptr, nullptr);
+//               disconnect(thumbNailPlayer, &AVPlayer::error,  nullptr, nullptr);
+//               extractor->setSource(videoFile);
+//               extractor->setPosition(randomPosition);
+//            });
+
+
+//        connect(thumbNailPlayer,
+//           &AVPlayer::error,
+//           thumbNailPlayer,
+//           [this, videoFile,  cachedListWidgetItem, libraryListWidgetItem, vrMode](QtAV::AVError er)
+//            {
+//            QString error = tr("Video load error from: ") + videoFile + tr(" Error: ") + er.ffmpegErrorString();
+//               LogHandler::Error(error);
+//               saveThumbError(cachedListWidgetItem, libraryListWidgetItem, vrMode, error);
+//            });
+
+
+//        connect(extractor,
+//           &QtAV::VideoFrameExtractor::frameExtracted,
+//           extractor,
+//           [this, videoFile, thumbFile, cachedListWidgetItem, libraryListWidgetItem, vrMode](const QtAV::VideoFrame& frame)
+//            {
+//                if(frame.isValid())
+//                {
+//                    bool error = false;
+//                    QImage img;
+//                    try{
+//                        LogHandler::Debug(tr("Saving thumbnail: ") + thumbFile + tr(" for video: ") + videoFile);
+//                        img = frame.toImage();
+////                        auto vf = VideoFormat::pixelFormatFromImageFormat(QImage::Format_ARGB32);
+////                        auto vf2 = VideoFormat(vf);
+////                        VideoFrame f = frame.to(vf2, {frame.width(), frame.height()}, QRect(0,0,frame.width(), frame.height()));
+////                        QImage img(f.frameDataPtr(), f.width(), f.height(), f.bytesPerLine(0), QImage::Format_ARGB32);
+//                    }
+//                    catch (...) {
+//                        error = true;
+//                    }
+//                    QString errorMessage;
+//                    bool hasError = error || img.isNull() || !img.save(thumbFile, nullptr, 15);
+//                    if (hasError)
+//                    {
+//                       errorMessage = tr("Error saving thumbnail: ") + thumbFile + tr(" for video: ") + videoFile;
+//                       LogHandler::Debug(errorMessage);
+//                    }
+//                    cachedListWidgetItem->setThumbFileLoaded(hasError, errorMessage, thumbFile);
+//                    if(libraryListWidgetItem)
+//                    {
+//                        libraryList->removeItemWidget(libraryListWidgetItem);
+//                        libraryListWidgetItem->setThumbFileLoaded(hasError, errorMessage, thumbFile);;
+//                    }
+//                }
+//                disconnect(extractor, &QtAV::VideoFrameExtractor::frameExtracted,  nullptr, nullptr);
+//                disconnect(extractor, &QtAV::VideoFrameExtractor::error,  nullptr, nullptr);
+
+//               saveNewThumbs(vrMode);
+//            });
+//        connect(extractor,
+//           &QtAV::VideoFrameExtractor::error,
+//           extractor,
+//           [this, videoFile, cachedListWidgetItem, libraryListWidgetItem, vrMode](const QString &errorMessage)
+//            {
+//                QString error = tr("Error extracting image from: ") + videoFile + tr(" Error: ") + errorMessage;
+//                LogHandler::Error(error);
+//                saveThumbError(cachedListWidgetItem, libraryListWidgetItem, vrMode, error);
+//            });
+
+//        thumbNailPlayer->setFile(videoFile);
+//        thumbNailPlayer->load();
+//    }
+//}
+void MainWindow::onSaveNewThumbLoading(LibraryListItem27 item)
 {
-    LibraryListItem cachedListItem = cachedListWidgetItem->getLibraryListItem();
-    QString videoFile = cachedListItem.path;
-    QString thumbFile = mediaLibraryHandler.getThumbPath(cachedListItem);
-//    QIcon thumb;
-//    QPixmap bgPixmap(QApplication::applicationDirPath() + "/themes/loading.png");
-//    QPixmap scaled = bgPixmap.scaled(SettingsHandler::getThumbSize(), Qt::AspectRatioMode::KeepAspectRatio);
-//    thumb.addPixmap(scaled);
-//    qListWidgetItem->setIcon(thumb);
-    auto libraryListItems = libraryList->findItems(cachedListItem.nameNoExtension, Qt::MatchFlag::MatchEndsWith);
-    LibraryListWidgetItem* libraryListWidgetItem = 0;
+    auto libraryListItems = libraryList->findItems(item.nameNoExtension, Qt::MatchFlag::MatchEndsWith);
     if(libraryListItems.length() > 0)
     {
-        libraryListWidgetItem = ((LibraryListWidgetItem*)libraryListItems.first());
+        LibraryListWidgetItem* libraryListWidgetItem = (LibraryListWidgetItem*)libraryListItems.first();
         libraryListWidgetItem->setThumbFileLoading(false);
     }
+
+    LibraryListWidgetItem* cachedListWidgetItem = boolinq::from(cachedLibraryItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
     cachedListWidgetItem->setThumbFileLoading(false);
-    //://images/icons/loading_current.png
-    if(cachedListItem.type == LibraryListItemType::Audio || cachedListItem.type == LibraryListItemType::FunscriptType)
-    {
-//        int thumbSize = SettingsHandler::getThumbSize();
-//        QSize size = {thumbSize, thumbSize};
-//        cachedListWidgetItem->updateThumbSize(size);
-//        if(libraryListWidgetItem)
-//        {
-//            libraryList->removeItemWidget(libraryListWidgetItem);
-//            libraryListWidgetItem->updateThumbSize(size);
-//        }
+}
 
-        saveNewThumbs(vrMode);
-    }
+void MainWindow::onSaveNewThumb(LibraryListItem27 item, bool vrMode, QString errorMessage, QString thumbFile)
+{
+    LibraryListWidgetItem* cachedListWidgetItem;
+    if(!vrMode)
+        cachedListWidgetItem = boolinq::from(cachedLibraryItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
     else
+        cachedListWidgetItem = boolinq::from(cachedVRItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
+    cachedListWidgetItem->setThumbFileLoaded(errorMessage, thumbFile);
+    auto libraryListItems = libraryList->findItems(item.nameNoExtension, Qt::MatchFlag::MatchEndsWith);
+    if(libraryListItems.length() > 0)
     {
-        // Get the duration and randomize the position with in the video.
-        connect(thumbNailPlayer,
-           &AVPlayer::loaded,
-           thumbNailPlayer,
-           [this, videoFile, position]()
-            {
-               LogHandler::Debug(tr("Loaded video for thumb duration: ") + QString::number(thumbNailPlayer->duration()));
-               qint64 randomPosition = position > 0 ? position : XMath::rand((qint64)1, thumbNailPlayer->duration());
-
-               disconnect(thumbNailPlayer, &AVPlayer::loaded,  nullptr, nullptr);
-               disconnect(thumbNailPlayer, &AVPlayer::error,  nullptr, nullptr);
-               extractor->setSource(videoFile);
-               extractor->setPosition(randomPosition);
-            });
-
-
-        connect(thumbNailPlayer,
-           &AVPlayer::error,
-           thumbNailPlayer,
-           [this, videoFile,  cachedListWidgetItem, libraryListWidgetItem, vrMode](QtAV::AVError er)
-            {
-            QString error = tr("Video load error from: ") + videoFile + tr(" Error: ") + er.ffmpegErrorString();
-               LogHandler::Error(error);
-               saveThumbError(cachedListWidgetItem, libraryListWidgetItem, vrMode, error);
-            });
-
-
-        connect(extractor,
-           &QtAV::VideoFrameExtractor::frameExtracted,
-           extractor,
-           [this, videoFile, thumbFile, cachedListWidgetItem, libraryListWidgetItem, vrMode](const QtAV::VideoFrame& frame)
-            {
-                if(frame.isValid())
-                {
-                    bool error = false;
-                    QImage img;
-                    try{
-                        LogHandler::Debug(tr("Saving thumbnail: ") + thumbFile + tr(" for video: ") + videoFile);
-                        img = frame.toImage();
-//                        auto vf = VideoFormat::pixelFormatFromImageFormat(QImage::Format_ARGB32);
-//                        auto vf2 = VideoFormat(vf);
-//                        VideoFrame f = frame.to(vf2, {frame.width(), frame.height()}, QRect(0,0,frame.width(), frame.height()));
-//                        QImage img(f.frameDataPtr(), f.width(), f.height(), f.bytesPerLine(0), QImage::Format_ARGB32);
-                    }
-                    catch (...) {
-                        error = true;
-                    }
-                    QString errorMessage;
-                    bool hasError = error || img.isNull() || !img.save(thumbFile, nullptr, 15);
-                    if (hasError)
-                    {
-                       errorMessage = tr("Error saving thumbnail: ") + thumbFile + tr(" for video: ") + videoFile;
-                       LogHandler::Debug(errorMessage);
-                    }
-                    cachedListWidgetItem->setThumbFileLoaded(hasError, errorMessage, thumbFile);
-                    if(libraryListWidgetItem)
-                    {
-                        libraryList->removeItemWidget(libraryListWidgetItem);
-                        libraryListWidgetItem->setThumbFileLoaded(hasError, errorMessage, thumbFile);;
-                    }
-                }
-                disconnect(extractor, &QtAV::VideoFrameExtractor::frameExtracted,  nullptr, nullptr);
-                disconnect(extractor, &QtAV::VideoFrameExtractor::error,  nullptr, nullptr);
-
-               saveNewThumbs(vrMode);
-            });
-        connect(extractor,
-           &QtAV::VideoFrameExtractor::error,
-           extractor,
-           [this, videoFile, cachedListWidgetItem, libraryListWidgetItem, vrMode](const QString &errorMessage)
-            {
-                QString error = tr("Error extracting image from: ") + videoFile + tr(" Error: ") + errorMessage;
-                LogHandler::Error(error);
-                saveThumbError(cachedListWidgetItem, libraryListWidgetItem, vrMode, error);
-            });
-
-        thumbNailPlayer->setFile(videoFile);
-        thumbNailPlayer->load();
+        LibraryListWidgetItem* libraryListWidgetItem = (LibraryListWidgetItem*)libraryListItems.first();
+        libraryList->removeItemWidget(libraryListWidgetItem);
+        libraryListWidgetItem->setThumbFileLoaded(errorMessage, thumbFile);;
     }
 }
 
-void MainWindow::saveThumbError(LibraryListWidgetItem* cachedListWidgetItem, LibraryListWidgetItem* libraryListWidgetItem, bool vrMode, QString errorMessage)
+void MainWindow::onSaveThumbError(LibraryListItem27 item, bool vrMode, QString errorMessage)
 {
+    LibraryListWidgetItem* cachedListWidgetItem;
+    if(!vrMode)
+        cachedListWidgetItem = boolinq::from(cachedLibraryItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
+    else
+        cachedListWidgetItem = boolinq::from(cachedVRItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
+
     auto errorMsg = cachedListWidgetItem->toolTip() + tr("\n\nError: ") + errorMessage;
     cachedListWidgetItem->setToolTip(errorMsg);
-    cachedListWidgetItem->setThumbFileLoaded(true, errorMsg);
-    if(libraryListWidgetItem)
+    cachedListWidgetItem->setThumbFileLoaded(errorMsg);
+
+    auto libraryListItems = libraryList->findItems(item.nameNoExtension, Qt::MatchFlag::MatchEndsWith);
+    if(libraryListItems.length() > 0)
     {
+        LibraryListWidgetItem* libraryListWidgetItem = (LibraryListWidgetItem*)libraryListItems.first();
         libraryList->removeItemWidget(libraryListWidgetItem);
         libraryListWidgetItem->setToolTip(errorMsg);
-        libraryListWidgetItem->setThumbFileLoaded(true, errorMsg);
+        libraryListWidgetItem->setThumbFileLoaded(errorMsg);
     }
-
-    disconnect(extractor, &QtAV::VideoFrameExtractor::frameExtracted,  nullptr, nullptr);
-    disconnect(extractor, &QtAV::VideoFrameExtractor::error,  nullptr, nullptr);
-    disconnect(thumbNailPlayer, &AVPlayer::loaded,  nullptr, nullptr);
-    disconnect(thumbNailPlayer, &AVPlayer::error,  nullptr, nullptr);
-
-    saveNewThumbs(vrMode);
 }
 
 void MainWindow::on_actionSelect_library_triggered()
@@ -1762,7 +1836,7 @@ void MainWindow::on_actionSelect_library_triggered()
     if (selectedLibrary != Q_NULLPTR)
     {
         SettingsHandler::setSelectedLibrary(selectedLibrary);
-        loadLibraryAsync();
+        mediaLibraryHandler.loadLibraryAsync();
     }
 }
 
@@ -1770,7 +1844,7 @@ void MainWindow::on_LibraryList_itemClicked(QListWidgetItem *item)
 {
     if(item)
     {
-        auto selectedItem = item->data(Qt::UserRole).value<LibraryListItem>();
+        auto selectedItem = item->data(Qt::UserRole).value<LibraryListItem27>();
         if((videoHandler->isPlaying() && !videoHandler->isPaused()))
         {
             auto playingFile = videoHandler->file();
@@ -1782,7 +1856,7 @@ void MainWindow::on_LibraryList_itemClicked(QListWidgetItem *item)
             _playerControlsFrame->setPlayIcon(playingFile == selectedItem.path);
         }
         ui->statusbar->showMessage(selectedItem.nameNoExtension);
-        selectedLibraryListItem = (LibraryListWidgetItem*)item;
+        selectedLibraryListItem27 = (LibraryListWidgetItem*)item;
         selectedLibraryListIndex = libraryList->currentRow();
     }
 }
@@ -1790,23 +1864,23 @@ void MainWindow::on_LibraryList_itemClicked(QListWidgetItem *item)
 void MainWindow::regenerateThumbNail()
 {
     QListWidgetItem* selectedItem = libraryList->selectedItems().first();
-    LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
-    saveSingleThumb((LibraryListWidgetItem*)selectedItem);
+    LibraryListItem27 selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
+    mediaLibraryHandler.saveSingleThumb(selectedFileListItem);
 }
 
 void MainWindow::setThumbNailFromCurrent()
 {
     QListWidgetItem* selectedItem = libraryList->selectedItems().first();
-    LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
-    saveSingleThumb((LibraryListWidgetItem*)selectedItem, videoHandler->position());
+    LibraryListItem27 selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
+    mediaLibraryHandler.saveSingleThumb(selectedFileListItem, videoHandler->position());
 }
 
 void MainWindow::on_LibraryList_itemDoubleClicked(QListWidgetItem *item)
 {
-    auto libraryListItem = item->data(Qt::UserRole).value<LibraryListItem>();
+    auto libraryListItem = item->data(Qt::UserRole).value<LibraryListItem27>();
     if(libraryListItem.type == LibraryListItemType::Audio || libraryListItem.type == LibraryListItemType::Video || libraryListItem.type == LibraryListItemType::FunscriptType)
     {
-        stopAndPlayMedia(item->data(Qt::UserRole).value<LibraryListItem>());
+        stopAndPlayMedia(item->data(Qt::UserRole).value<LibraryListItem27>());
     }
     else if(libraryListItem.type == LibraryListItemType::PlaylistInternal)
     {
@@ -1818,7 +1892,7 @@ void MainWindow::playFileFromContextMenu()
 {
     if(libraryList->count() > 0)
     {
-        LibraryListItem libraryListItem = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
+        LibraryListItem27 libraryListItem = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
         if(libraryListItem.type == LibraryListItemType::Audio || libraryListItem.type == LibraryListItemType::Video || libraryListItem.type == LibraryListItemType::FunscriptType)
         {
             stopAndPlayMedia(libraryListItem);
@@ -1828,7 +1902,7 @@ void MainWindow::playFileFromContextMenu()
             loadPlaylistIntoLibrary(libraryListItem.nameNoExtension);
             if(selectedPlaylistItems.length() > 0)
             {
-                LibraryListItem libraryListItem = setCurrentLibraryRow(0)->getLibraryListItem();
+                LibraryListItem27 LibraryListItem = setCurrentLibraryRow(0)->getLibraryListItem();
                 stopAndPlayMedia(libraryListItem);
             }
         }
@@ -1837,7 +1911,7 @@ void MainWindow::playFileFromContextMenu()
 
 void MainWindow::playFileWithAudioSync()
 {
-    LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
+    LibraryListItem27 selectedFileListItem = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
     stopAndPlayMedia(selectedFileListItem, nullptr, true);
 }
 
@@ -1846,12 +1920,12 @@ void MainWindow::playFileWithCustomScript()
     QString selectedScript = QFileDialog::getOpenFileName(this, tr("Choose script"), SettingsHandler::getSelectedLibrary(), tr("Scripts (*.funscript *.zip)"));
     if (selectedScript != Q_NULLPTR)
     {
-        LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
+        LibraryListItem27 selectedFileListItem = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
         stopAndPlayMedia(selectedFileListItem, selectedScript);
     }
 }
 //Hack because QTAV calls stopped and start out of order
-void MainWindow::stopAndPlayMedia(LibraryListItem selectedFileListItem, QString customScript, bool audioSync)
+void MainWindow::stopAndPlayMedia(LibraryListItem27 selectedFileListItem, QString customScript, bool audioSync)
 {
     QFile file(selectedFileListItem.path);
     if (file.exists())
@@ -1862,8 +1936,8 @@ void MainWindow::stopAndPlayMedia(LibraryListItem selectedFileListItem, QString 
               || !customScript.isEmpty()
               || audioSync)
         {
-            if(playingLibraryListItem != nullptr)
-                updateMetaData(playingLibraryListItem->getLibraryListItem());
+            if(playingLibraryListItem27 != nullptr)
+                updateMetaData(playingLibraryListItem27->getLibraryListItem());
             _playerControlsFrame->SetLoop(false);
             videoHandler->setLoading(true);
             if(videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone())
@@ -1899,7 +1973,7 @@ void MainWindow::stopAndPlayMedia(LibraryListItem selectedFileListItem, QString 
     }
 
 }
-void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString customScript, bool audioSync)
+void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString customScript, bool audioSync)
 {
     QFile file(selectedFileListItem.path);
     if (file.exists())
@@ -2037,10 +2111,10 @@ void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString cust
             }
             else if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
                 videoHandler->play();
-            if(playingLibraryListItem != nullptr)
-                delete playingLibraryListItem;
+            if(playingLibraryListItem27 != nullptr)
+                delete playingLibraryListItem27;
             playingLibraryListIndex = libraryList->currentRow();
-            playingLibraryListItem = (LibraryListWidgetItem*)libraryList->item(playingLibraryListIndex)->clone();
+            playingLibraryListItem27 = (LibraryListWidgetItem*)libraryList->item(playingLibraryListIndex)->clone();
 
             processMetaData(selectedFileListItem);
 
@@ -2053,7 +2127,7 @@ void MainWindow::on_playVideo(LibraryListItem selectedFileListItem, QString cust
     }
 }
 
-void MainWindow::processMetaData(LibraryListItem libraryListItem)
+void MainWindow::processMetaData(LibraryListItem27 libraryListItem)
 {
     auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
     if(libraryListItem.type != LibraryListItemType::VR)
@@ -2066,7 +2140,7 @@ void MainWindow::processMetaData(LibraryListItem libraryListItem)
     SettingsHandler::setLiveOffset(libraryListItemMetaData.offset);
 }
 
-void MainWindow::updateMetaData(LibraryListItem libraryListItem)
+void MainWindow::updateMetaData(LibraryListItem27 libraryListItem)
 {
     auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
     if(libraryListItem.type != LibraryListItemType::VR)
@@ -2296,7 +2370,7 @@ void MainWindow::on_PlayBtn_clicked()
         {
             selectedItem = (LibraryListWidgetItem*)libraryList->selectedItems().first();
         }
-        LibraryListItem selectedFileListItem = selectedItem->getLibraryListItem();
+        LibraryListItem27 selectedFileListItem = selectedItem->getLibraryListItem();
         if(selectedFileListItem.type == LibraryListItemType::PlaylistInternal)
         {
             loadPlaylistIntoLibrary(selectedFileListItem.nameNoExtension, true);
@@ -2431,7 +2505,7 @@ void MainWindow::on_seekSlider_sliderMoved(int position)
     LogHandler::Debug("position: "+ QString::number(position));
     if (!_playerControlsFrame->getAutoLoop())
     {
-        bool isStandAloneFunscriptPlaying = playingLibraryListItem->getLibraryListItem().type == LibraryListItemType::FunscriptType;
+        bool isStandAloneFunscriptPlaying = playingLibraryListItem27->getLibraryListItem().type == LibraryListItemType::FunscriptType;
         qint64 duration = isStandAloneFunscriptPlaying ? _syncHandler->getFunscriptMax() : videoHandler->duration();
         qint64 playerPosition = XMath::mapRange(static_cast<qint64>(position), (qint64)0, (qint64)100, (qint64)0, duration);
 
@@ -2445,7 +2519,7 @@ void MainWindow::on_seekSlider_sliderMoved(int position)
 
 void MainWindow::onLoopRange_valueChanged(int position, int startLoop, int endLoop)
 {
-    bool isStandAloneFunscriptPlaying = playingLibraryListItem->getLibraryListItem().type == LibraryListItemType::FunscriptType;
+    bool isStandAloneFunscriptPlaying = playingLibraryListItem27->getLibraryListItem().type == LibraryListItemType::FunscriptType;
     if(endLoop >= 100)
         endLoop = 99;
     qint64 duration = isStandAloneFunscriptPlaying ? _syncHandler->getFunscriptMax() : videoHandler->duration();
@@ -2473,7 +2547,7 @@ void MainWindow::onLoopRange_valueChanged(int position, int startLoop, int endLo
 
 void MainWindow::on_media_positionChanged(qint64 position)
 {
-    bool isStandAloneFunscriptPlaying = playingLibraryListItem->getLibraryListItem().type == LibraryListItemType::FunscriptType;
+    bool isStandAloneFunscriptPlaying = playingLibraryListItem27->getLibraryListItem().type == LibraryListItemType::FunscriptType;
     qint64 duration = isStandAloneFunscriptPlaying ? _syncHandler->getFunscriptMax() : videoHandler->duration();
     qint64 videoToSliderPosition = XMath::mapRange(position,  (qint64)0, duration, (qint64)0, (qint64)100);
     if (!_playerControlsFrame->getAutoLoop())
@@ -2580,35 +2654,6 @@ void MainWindow::on_scriptNotFound(QString message)
 void MainWindow::on_noScriptsFound(QString message)
 {
     LogHandler::Dialog(message, XLogLevel::Critical);
-}
-void MainWindow::setLibraryLoading(bool loading, QString message)
-{
-    if(loading)
-    {
-        //libraryList->hide();
-        libraryLoadingLabel->show();
-        libraryLoadingMovie->start();
-        if(!message.isEmpty())
-            libraryLoadingInfoLabel->setText(message);
-        libraryLoadingInfoLabel->show();
-    }
-    else
-    {
-        libraryLoadingLabel->hide();
-        libraryLoadingMovie->stop();
-        libraryLoadingInfoLabel->hide();
-        libraryLoadingInfoLabel->setText("");
-        //libraryList->show();
-    }
-    randomizeLibraryButton->setDisabled(loading);
-    savePlaylistButton->setDisabled(loading);
-    editPlaylistButton->setDisabled(loading);
-    cancelEditPlaylistButton->setDisabled(loading);
-    windowedLibraryButton->setDisabled(loading);
-    ui->actionSelect_library->setDisabled(loading);
-    ui->actionReload_library->setDisabled(loading);
-
-    _xSettings->on_libraryLoading_status(message);
 }
 
 void MainWindow::onVRMessageRecieved(VRPacket packet)
@@ -2782,20 +2827,19 @@ void MainWindow::processVRMetaData(QString videoPath, QString funscriptPath, qin
     QString zipFile;
     if(funscriptPath.endsWith(".zip"))
         zipFile = funscriptPath;
-    LibraryListItem item
-    {
-        LibraryListItemType::VR,
-        videoPath, // path
-        videoFile.fileName(), // name
-        scriptNoExtension, //nameNoExtension
-        funscriptPath, // script
-        scriptNoExtension,
-        mediaExtension,
-        SettingsHandler::getSelectedThumbsDir() + videoFile.fileName() + "jpg",
-        zipFile,
-        videoFile.birthTime().date(),
-        (unsigned)duration
-    };
+    LibraryListItem27 item;
+    item.type = LibraryListItemType::VR;
+    item.path = videoPath; // path
+    item.name = videoFile.fileName(); // name
+    item.nameNoExtension = scriptNoExtension; //nameNoExtension
+    item.script = funscriptPath; // script
+    item.scriptNoExtension = scriptNoExtension;
+    item.mediaExtension = mediaExtension;
+    item.thumbFile = mediaLibraryHandler.getThumbPath(item);
+    item.zipFile = zipFile;
+    item.modifiedDate = videoFile.birthTime().date();
+    item.duration = (unsigned)duration;
+    mediaLibraryHandler.updateToolTip(item);
     processMetaData(item);
 }
 
@@ -3321,16 +3365,22 @@ void MainWindow::setThumbSize(int size)
 //        libraryList->setViewMode(QListView::IconMode);
 
 }
-
+bool MainWindow::isLibraryLoading()
+{
+    return mediaLibraryHandler.isLibraryLoading() || loadingLibraryFuture.isRunning();
+}
 void MainWindow::resizeThumbs(int size)
 {
-    if(!loadingLibraryFuture.isRunning())
+    if(!isLibraryLoading())
     {
-        setLibraryLoading(true, "Resizing thumbs...");
+        toggleLibraryLoading(true);
+        onLibraryLoadingStatusChange("Resizing thumbs...");
         loadingLibraryFuture = QtConcurrent::run([this, size]() {
             QSize newSize = {size, size};
             for(int i = 0; i < libraryList->count(); i++)
             {
+                if(loadingLibraryStop)
+                    return;
                 ((LibraryListWidgetItem*)libraryList->item(i))->updateThumbSize(newSize);
             }
             emit libraryIconResized(newSize);
@@ -3341,7 +3391,7 @@ void MainWindow::resizeThumbs(int size)
 void MainWindow::libraryListSetIconSize(QSize newSize)
 {
     libraryList->setIconSize(newSize);
-    setLibraryLoading(false);
+    toggleLibraryLoading(false);
 }
 
 void MainWindow::updateLibrarySortUI()
@@ -3417,9 +3467,10 @@ void MainWindow::sortLibraryList(LibrarySortMode sortMode)
 {
     if(sortMode == LibrarySortMode::RANDOM)
     {
-        if(!loadingLibraryFuture.isRunning())
+        if(!isLibraryLoading())
         {
-            setLibraryLoading(true, "Randomizing...");
+            toggleLibraryLoading(true);
+            onLibraryLoadingStatusChange("Randomizing...");
 
             loadingLibraryFuture = QtConcurrent::run([this]() {
                 //Fisher and Yates algorithm
@@ -3430,28 +3481,40 @@ void MainWindow::sortLibraryList(LibrarySortMode sortMode)
                 int index;
 
                 for (int i = 0; i < n; i++)
+                {
+                    if(loadingLibraryStop)
+                        return;
                     index_arr[i] = 0;
+                }
 
                 for (int i = 0; i < n; i++)
                 {
-                  do
-                  {
-                     index = XMath::rand(0, n);
-                  }
-                  while (index_arr[index] != 0);
-                  index_arr[index] = 1;
-                  arr1.push_back(((LibraryListWidgetItem*)libraryList->item(index)));
+                    if(loadingLibraryStop)
+                        return;
+                    do
+                    {
+                        if(loadingLibraryStop)
+                            return;
+                        index = XMath::rand(0, n);
+                    }
+                    while (index_arr[index] != 0);
+                    index_arr[index] = 1;
+                    arr1.push_back(((LibraryListWidgetItem*)libraryList->item(index)));
                 }
                 while(libraryList->count()>0)
                 {
-                  libraryList->takeItem(0);
+                    if(loadingLibraryStop)
+                        return;
+                    libraryList->takeItem(0);
                 }
                 foreach(auto item, arr1)
                 {
+                    if(loadingLibraryStop)
+                        return;
                     libraryList->addItem(item);
                 }
                 randomizeLibraryButton->show();
-                setLibraryLoading(false);
+                toggleLibraryLoading(false);
             });
         }
     }
@@ -3510,7 +3573,7 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
     {
         connect(_playerControlsFrame, &PlayerControls::loopRangeChanged, this, &MainWindow::onLoopRange_valueChanged);
         videoHandler->setRepeat(-1);
-        auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(playingLibraryListItem->getLibraryListItem().path);
+        auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(playingLibraryListItem27->getLibraryListItem().path);
         if(libraryListItemMetaData.lastLoopStart > -1 && libraryListItemMetaData.lastLoopEnd > libraryListItemMetaData.lastLoopStart)
         {
             QTimer::singleShot(250, this, [this, libraryListItemMetaData]() {
@@ -3523,7 +3586,7 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
         else
         {
             qint64 videoToSliderPosition = XMath::mapRange(videoHandler->position(),  (qint64)0, videoHandler->duration(), (qint64)0, (qint64)100);
-            updateMetaData(playingLibraryListItem->getLibraryListItem());
+            updateMetaData(playingLibraryListItem27->getLibraryListItem());
             _playerControlsFrame->setSeekSliderLowerValue(videoToSliderPosition);
         }
         _playerControlsFrame->setSeekSliderMinimumRange(1);
@@ -3548,7 +3611,7 @@ QString MainWindow::getPlaylistName(bool newPlaylist)
     else
     {
         QListWidgetItem* selectedItem = libraryList->selectedItems().first();
-        LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
+        LibraryListItem27 selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
         playlistName = PlaylistDialog::renamePlaylist(this, selectedFileListItem.nameNoExtension, &ok);
     }
 
@@ -3558,7 +3621,7 @@ QString MainWindow::getPlaylistName(bool newPlaylist)
         if(items.empty())
         {
             SettingsHandler::addNewPlaylist(playlistName);
-            setupPlaylistItem(playlistName);
+            mediaLibraryHandler.setupPlaylistItem(playlistName);
         }
         else
         {
@@ -3568,44 +3631,33 @@ QString MainWindow::getPlaylistName(bool newPlaylist)
     return ok ? playlistName : nullptr;
 }
 
-LibraryListItem MainWindow::setupPlaylistItem(QString playlistName)
+void MainWindow::onSetupPlaylistItem(LibraryListItem27 item)
 {
-    LibraryListItem item
-    {
-        LibraryListItemType::PlaylistInternal,
-        nullptr, // path
-        nullptr, // name
-        playlistName, //nameNoExtension
-        nullptr, // script
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr,
-        QDate::currentDate(),
-        0
-    };
     LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, libraryList);
     libraryList->insertItem(0, qListWidgetItem);
     cachedLibraryItems.push_front(new LibraryListWidgetItem(item));
-    return item;
+    //return item;
 }
 
 void MainWindow::addSelectedLibraryItemToPlaylist(QString playlistName)
 {
     LibraryListWidgetItem* qListWidgetItem = (LibraryListWidgetItem*)(libraryList->findItems(playlistName, Qt::MatchExactly).first());
     QListWidgetItem* selectedItem = libraryList->selectedItems().first();
-    LibraryListItem selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
+    LibraryListItem27 selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
     SettingsHandler::addToPlaylist(playlistName, selectedFileListItem);
-    qListWidgetItem->updateToolTip(selectedFileListItem);
+    mediaLibraryHandler.updateToolTip(selectedFileListItem);
+    qListWidgetItem->setToolTip(selectedFileListItem.toolTip);
 }
 
 void MainWindow::loadPlaylistIntoLibrary(QString playlistName, bool autoPlay)
 {
     if(!thumbProcessIsRunning)
     {
-        if(!loadingLibraryFuture.isRunning())
+        if(!isLibraryLoading())
         {
-            setLibraryLoading(true, "Loading playlist...");
+            toggleLibraryLoading(true);
+            onLibraryLoadingStatusChange("Loading playlist...");
+
             libraryList->clear();
             loadingLibraryFuture = QtConcurrent::run([this, playlistName, autoPlay]() {
                 selectedPlaylistName = playlistName;
@@ -3623,7 +3675,7 @@ void MainWindow::loadPlaylistIntoLibrary(QString playlistName, bool autoPlay)
                 changeLibraryDisplayMode(SettingsHandler::getLibraryView());
                 resizeThumbs(SettingsHandler::getThumbSize());
                 sortLibraryList(LibrarySortMode::NONE);
-                setLibraryLoading(false);
+                toggleLibraryLoading(false);
                 setCurrentLibraryRow(0);
                 if(autoPlay)
                 {
@@ -3653,17 +3705,20 @@ void MainWindow::backToMainLibrary()
     qDeleteAll(selectedPlaylistItems);
     selectedPlaylistItems.clear();
     if(cachedLibraryItems.length() == 0)
-        loadLibraryAsync();
+        mediaLibraryHandler.loadLibraryAsync();
     else
     {
-        if(!loadingLibraryFuture.isRunning())
+        if(!isLibraryLoading())
         {
             //disconnect(libraryList, &QListWidget::itemChanged, 0, 0);
-            setLibraryLoading(true, "Loading library...");
+            toggleLibraryLoading(true);
+            onLibraryLoadingStatusChange("Loading library...");
             libraryList->clear();
             loadingLibraryFuture = QtConcurrent::run([this]() {
                 foreach(auto item, cachedLibraryItems)
                 {
+                    if(loadingLibraryStop)
+                        return;
                     auto name = item->text();
                     libraryList->addItem(item->clone());
                 }
@@ -3675,7 +3730,7 @@ void MainWindow::backToMainLibrary()
 //                changeLibraryDisplayModeAndUpdateThumbSize(SettingsHandler::getLibraryView());
 //                resizeThumbs(SettingsHandler::getThumbSize());
                 sortLibraryList(SettingsHandler::getLibrarySortMode());
-                setLibraryLoading(false);
+                toggleLibraryLoading(false);
                 setCurrentLibraryRow(0);
             });
         }
@@ -3685,10 +3740,10 @@ void MainWindow::backToMainLibrary()
 void MainWindow::savePlaylist()
 {
     QScroller::grabGesture(libraryList->viewport(), QScroller::LeftMouseButtonGesture);
-    QList<LibraryListItem> libraryItems;
+    QList<LibraryListItem27> libraryItems;
     for(int i=0;i<libraryList->count();i++)
     {
-        LibraryListItem libraryListItem = ((LibraryListWidgetItem*)libraryList->item(i))->getLibraryListItem();
+        LibraryListItem27 libraryListItem = ((LibraryListWidgetItem*)libraryList->item(i))->getLibraryListItem();
         if(!libraryListItem.nameNoExtension.isEmpty())
             libraryItems.push_back(libraryListItem);
     }
@@ -3750,14 +3805,14 @@ void MainWindow::renamePlaylist()
     if(renamedPlaylistName != nullptr)
     {
         auto items = libraryList->findItems(renamedPlaylistName, Qt::MatchFixedString);
-        LibraryListItem playlist = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
+        LibraryListItem27 playlist = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
         if(items.empty())
         {
             auto playlists = SettingsHandler::getPlaylists();
             auto storedPlaylist = playlists.value(playlist.nameNoExtension);
             deleteSelectedPlaylist();
             SettingsHandler::updatePlaylist(renamedPlaylistName, storedPlaylist);
-            setupPlaylistItem(renamedPlaylistName);
+            mediaLibraryHandler.setupPlaylistItem(renamedPlaylistName);
         }
         else if(playlist.nameNoExtension != renamedPlaylistName)
         {
@@ -3769,7 +3824,7 @@ void MainWindow::renamePlaylist()
 void MainWindow::deleteSelectedPlaylist()
 {
     LibraryListWidgetItem* selectedItem = (LibraryListWidgetItem*)libraryList->selectedItems().first();
-    LibraryListItem selectedFileListItem = selectedItem->getLibraryListItem();
+    LibraryListItem27 selectedFileListItem = selectedItem->getLibraryListItem();
     SettingsHandler::deletePlaylist(selectedFileListItem.nameNoExtension);
     libraryList->removeItemWidget(selectedItem);
     LibraryListWidgetItem* deleteCache = boolinq::from(cachedLibraryItems).firstOrDefault([selectedItem](const LibraryListWidgetItem* x) { return x->text() == selectedItem->text(); });
@@ -3779,7 +3834,7 @@ void MainWindow::deleteSelectedPlaylist()
 }
 
 
-LibraryListItem MainWindow::getSelectedLibraryListItem()
+LibraryListItem27 MainWindow::getSelectedLibraryListItem27()
 {
     QListWidgetItem* selectedItem = libraryList->selectedItems().first();
     return ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
@@ -3820,13 +3875,13 @@ void MainWindow::showInGraphicalShell(QString path)
 #endif
 }
 
-void MainWindow::onSetMoneyShot(LibraryListItem libraryListItem, qint64 currentPosition)
+void MainWindow::onSetMoneyShot(LibraryListItem27 libraryListItem, qint64 currentPosition)
 {
     auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
     libraryListItemMetaData.moneyShotMillis = currentPosition;
     SettingsHandler::updateLibraryListItemMetaData(libraryListItemMetaData);
 }
-void MainWindow::onAddBookmark(LibraryListItem libraryListItem, QString name, qint64 currentPosition)
+void MainWindow::onAddBookmark(LibraryListItem27 libraryListItem, QString name, qint64 currentPosition)
 {
     auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
     libraryListItemMetaData.bookmarks.append({name, currentPosition});
@@ -3852,8 +3907,8 @@ void MainWindow::skipToMoneyShot()
     {
         if(_playerControlsFrame->getAutoLoop())
             _playerControlsFrame->SetLoop(false);
-        LibraryListItem selectedLibraryListItem = playingLibraryListItem->getLibraryListItem();
-        auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(selectedLibraryListItem.path);
+        LibraryListItem27 selectedLibraryListItem27 = playingLibraryListItem27->getLibraryListItem();
+        auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(selectedLibraryListItem27.path);
         if (libraryListItemMetaData.moneyShotMillis > -1 && libraryListItemMetaData.moneyShotMillis < videoHandler->duration())
         {
             videoHandler->setPosition(libraryListItemMetaData.moneyShotMillis);

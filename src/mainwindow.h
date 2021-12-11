@@ -44,7 +44,7 @@
 #include "lib/handler/audiosyncfilter.h"
 #include "lib/handler/synchandler.h"
 #include "lib/handler/medialibraryhandler.h"
-#include "lib/struct/LibraryListItem.h"
+#include "lib/struct/LibraryListItem27.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/ConnectionChangedSignal.h"
 #include "lib/struct/librarylistwidgetitem.h"
@@ -144,16 +144,16 @@ private slots:
     void on_loopToggleButton_toggled(bool checked);
 
     void onPrepareLibraryLoad();
-    void loadLibraryAsync();
-    void onLibraryLoaded();
+    void onLibraryLoadingStatusChange(QString message);
     void libraryListSetIconSize(QSize newSize);
+    void onLibraryItemFound(LibraryListItem27 item, bool vrMode);
 
     void on_audioLevel_Change(int decibelL, int decibelR);
 
     void onPasswordIncorrect();
     void on_scriptNotFound(QString message);
     void on_noScriptsFound(QString message);
-    void on_playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
+    void on_playVideo(LibraryListItem27 selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
 
     void on_actionReload_theme_triggered();
 
@@ -164,15 +164,16 @@ signals:
     void keyPressed(QKeyEvent * event);
     void change(QEvent * event);
     void sendTCode(QString tcode);
-    void prepareLibraryLoad();
-    void libraryLoaded();
-    void libraryNotFound();
+//    void prepareLibraryLoad();
+//    void libraryLoaded();
+//    void libraryNotFound();
     void libraryIconResized(QSize newSize);
-    void libraryLoadingStatus(bool loading, QString state = nullptr);
+//    void libraryLoadingStatus(bool loading, QString state = nullptr);
+
 //    void scriptNotFound(QString message);
 //    void setLoading(bool loading);
-    void playVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
-    void stopAndPlayVideo(LibraryListItem selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
+    void playVideo(LibraryListItem27 selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
+    void stopAndPlayVideo(LibraryListItem27 selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
 protected:
     virtual void keyPressEvent(QKeyEvent *event) override
     {
@@ -210,8 +211,6 @@ private:
     QProgressBar* bar;
     VideoHandler* videoHandler;
     MediaLibraryHandler mediaLibraryHandler;
-//    FunscriptHandler* funscriptHandler;
-//    QList<FunscriptHandler*> funscriptHandlers;
     TCodeHandler* tcodeHandler;
     bool _isMaximized = false;
     bool _isFullScreen = false;
@@ -276,26 +275,29 @@ private:
     bool _libraryDockMode = false;
     AudioSyncFilter* audioSyncFilter;
 
-    void saveSingleThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
-    void saveThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0, bool vrMode = false);
-    void saveThumbError(LibraryListWidgetItem* cachedListWidgetItem, LibraryListWidgetItem* libraryListWidgetItem, bool vrMode, QString errorMessage);
-    void startThumbProcess(bool vrMode = false);
-    void stopThumbProcess();
-    void saveNewThumbs(bool vrMode = false);
+//    void saveSingleThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
+//    void saveThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0, bool vrMode = false);
+    void onSaveNewThumbLoading(LibraryListItem27 item);
+    void onSaveNewThumb(LibraryListItem27 item, bool vrMode, QString errorMessage, QString thumbFile);
+    void onSaveThumbError(LibraryListItem27 item, bool vrMode, QString errorMessage);
+//    void startThumbProcess(bool vrMode = false);
+//    void stopThumbProcess();
+//    void saveNewThumbs(bool vrMode = false);
 
-    LibraryListItem createLibraryListItemFromFunscript(QString funscript);
+//    LibraryListItem27 createLibraryListItem27FromFunscript(QString funscript);
+    bool isLibraryLoading();
     QList<LibraryListWidgetItem*> cachedLibraryItems;
-    QList<LibraryListWidgetItem*> selectedPlaylistItems;
     QList<LibraryListWidgetItem*> cachedVRItems;
+    QList<LibraryListWidgetItem*> selectedPlaylistItems;
     QString selectedPlaylistName;
     int playingLibraryListIndex;
-    LibraryListWidgetItem* playingLibraryListItem = nullptr;
+    LibraryListWidgetItem* playingLibraryListItem27 = nullptr;
     int selectedLibraryListIndex;
-    LibraryListWidgetItem* selectedLibraryListItem = nullptr;
+    LibraryListWidgetItem* selectedLibraryListItem27 = nullptr;
 
-    LibraryListItem getSelectedLibraryListItem();
+    LibraryListItem27 getSelectedLibraryListItem27();
     void onLibraryNotFound();
-    void on_load_library(QString path, bool vrMode);
+//    void on_load_library(QString path, bool vrMode);
     void openWelcomeDialog();
     void backToMainLibrary();
     void loadPlaylistIntoLibrary(QString playlistName, bool autoPlay = false);
@@ -316,7 +318,9 @@ private:
 
     void deviceHome();
     void deviceSwitchedHome();
-    void setLibraryLoading(bool loading, QString message = nullptr);
+    void onSetLibraryLoaded();
+    void onSetLibraryLoading();
+    void toggleLibraryLoading(bool loading);
     void mediaAction(QString action);
     void toggleFullScreen();
     void toggleLoop();
@@ -333,8 +337,8 @@ private:
     void changeDeoFunscript();
     void turnOffAudioSync();
 
-    void stopAndPlayMedia(LibraryListItem selectedFileListItem, QString customScript = nullptr, bool audioSync = false);
-    //void waitForMediaTostop(LibraryListItem selectedFileListItem, QString customScript = nullptr, bool audioSync = false, bool autoPlay = true);
+    void stopAndPlayMedia(LibraryListItem27 selectedFileListItem, QString customScript = nullptr, bool audioSync = false);
+    //void waitForMediaTostop(LibraryListItem27 selectedFileListItem, QString customScript = nullptr, bool audioSync = false, bool autoPlay = true);
     void initNetworkEvent();
     void initSerialEvent();
     void skipForward();
@@ -349,7 +353,7 @@ private:
 
     bool eventFilter(QObject *obj, QEvent *event) override;
 
-    LibraryListItem setupPlaylistItem(QString name);
+    void onSetupPlaylistItem(LibraryListItem27 item);
     void addSelectedLibraryItemToPlaylist(QString playlistName);
     void setVolumeIcon(int volume);
     void on_seekSlider_sliderMoved(int position);
@@ -370,10 +374,10 @@ private:
     void on_xtpWeb_device_error(QString error);
     void donate();
     void showInGraphicalShell(QString path);
-    void onSetMoneyShot(LibraryListItem selectedLibraryListItem, qint64 currentPosition);
-    void onAddBookmark(LibraryListItem libraryListItem, QString name, qint64 currentPosition);
-    void processMetaData(LibraryListItem libraryListItem);
-    void updateMetaData(LibraryListItem libraryListItem);
+    void onSetMoneyShot(LibraryListItem27 selectedLibraryListItem27, qint64 currentPosition);
+    void onAddBookmark(LibraryListItem27 LibraryListItem27, QString name, qint64 currentPosition);
+    void processMetaData(LibraryListItem27 LibraryListItem27);
+    void updateMetaData(LibraryListItem27 LibraryListItem27);
     void processVRMetaData(QString videoPath, QString funscriptPath, qint64 duration);
 };
 extern void startThumbProcess(MainWindow* mainWindow);

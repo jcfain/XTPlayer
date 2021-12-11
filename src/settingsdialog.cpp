@@ -738,10 +738,15 @@ void SettingsDialog::on_libraryLoading_status(QString message)
     if(_httpHandler)
         _httpHandler->sendLibraryLoadingStatus(message);
 }
-void SettingsDialog::setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems)
+void SettingsDialog::setLibraryLoaded(QList<LibraryListItem27> cachedLibraryItems, QList<LibraryListItem27> vrLibraryItems)
 {
     if(_httpHandler)
-        _httpHandler->setLibraryLoaded(loaded, cachedLibraryItems, vrLibraryItems);
+        _httpHandler->setLibraryLoaded(cachedLibraryItems, vrLibraryItems);
+}
+void SettingsDialog::setLibraryLoading()
+{
+    if(_httpHandler)
+        _httpHandler->setLibraryLoading();
 }
 
 void SettingsDialog::setAxisProgressBar(QString axis, int value)

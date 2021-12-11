@@ -46,7 +46,8 @@ public:
     HttpPromise handleTCodeIn(HttpDataPtr data);
     HttpPromise handleDeo(HttpDataPtr data);
     HttpPromise handleWebTimeUpdate(HttpDataPtr data);
-    void setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems);
+    void setLibraryLoaded(QList<LibraryListItem27> cachedLibraryItems, QList<LibraryListItem27> vrLibraryItems);
+    void setLibraryLoading();
     void sendLibraryLoadingStatus(QString message);
 
     void sendWebSocketTextMessage(QString command, QString message = nullptr);
@@ -60,11 +61,11 @@ private:
     WebSocketHandler* _webSocketHandler;
     bool _libraryLoaded = false;
     QString _libraryLoadingStatus = "Loading...";
-    QList<LibraryListWidgetItem*> _cachedLibraryItems;
-    QList<LibraryListWidgetItem*> _vrLibraryItems;
+    QList<LibraryListItem27> _cachedLibraryItems;
+    QList<LibraryListItem27> _vrLibraryItems;
 
-    QJsonObject createMediaObject(LibraryListItem libraryListItem, bool stereoscopic, bool isMFS, QString hostAddress);
-    QJsonObject createDeoObject(LibraryListItem libraryListItem, QString hostAddress);
+    QJsonObject createMediaObject(LibraryListItem27 libraryListItem, bool stereoscopic, QString hostAddress);
+    QJsonObject createDeoObject(LibraryListItem27 libraryListItem, QString hostAddress);
     QString getScreenType(QString mediaPath);
     QString getStereoMode(QString mediaPath);
 };

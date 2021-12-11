@@ -257,29 +257,27 @@ HttpPromise HttpHandler::handleVideoList(HttpDataPtr data)
 {
     QJsonArray media;
     QString hostAddress = "http://" + data->request->headerDefault("Host", "") + "/";
-    foreach(auto widgetItem, _cachedLibraryItems)
+    foreach(auto item, _cachedLibraryItems)
     {
         QJsonObject object;
-        auto item = widgetItem->getLibraryListItem();
         if(item.type == LibraryListItemType::PlaylistInternal || item.type == LibraryListItemType::FunscriptType)
             continue;
-        media.append(createMediaObject(item, false, widgetItem->isMFS(), hostAddress));
+        media.append(createMediaObject(item, false, hostAddress));
     }
 
-    foreach(auto widgetItem, _vrLibraryItems)
+    foreach(auto item, _vrLibraryItems)
     {
         QJsonObject object;
-        auto item = widgetItem->getLibraryListItem();
         if(item.type == LibraryListItemType::PlaylistInternal || item.type == LibraryListItemType::FunscriptType)
             continue;
-        media.append(createMediaObject(item, true, widgetItem->isMFS(), hostAddress));
+        media.append(createMediaObject(item, true, hostAddress));
     }
 
     data->response->setStatus(HttpStatus::Ok, QJsonDocument(media));
     return HttpPromise::resolve(data);
 }
 
-QJsonObject HttpHandler::createMediaObject(LibraryListItem item, bool stereoscopic, bool isMFS, QString hostAddress)
+QJsonObject HttpHandler::createMediaObject(LibraryListItem27 item, bool stereoscopic, QString hostAddress)
 {
     //VideoFormat videoFormat;
     QJsonObject object;
@@ -299,7 +297,8 @@ QJsonObject HttpHandler::createMediaObject(LibraryListItem item, bool stereoscop
     object["duration"] = QJsonValue::fromVariant(item.duration);
     object["modifiedDate"] = item.modifiedDate.toString(Qt::DateFormat::ISODate);
     object["isStereoscopic"] = getStereoMode(item.path) != "off" || stereoscopic; //videoFormat.is3D((SettingsHandler::getSelectedLibrary() + item.path).toLocal8Bit().data()) == VideoFormatResultCode::E_Found3D;
-    object["isMFS"] = isMFS;
+    object["isMFS"] = item.isMFS;
+    object["tooltip"] = item.toolTip;
     object["hasScript"] = !item.script.isEmpty() || !item.zipFile.isEmpty();
 
     return object;
@@ -314,19 +313,17 @@ HttpPromise HttpHandler::handleDeo(HttpDataPtr data)
     library["name"] = "XTP Library";
     QJsonArray list;
 
-    foreach(auto widgetItem, _cachedLibraryItems)
+    foreach(auto item, _cachedLibraryItems)
     {
         QJsonObject object;
-        auto item = widgetItem->getLibraryListItem();
         if(item.type == LibraryListItemType::PlaylistInternal || item.type == LibraryListItemType::FunscriptType)
             continue;
         list.append(createDeoObject(item, hostAddress));
     }
 
-    foreach(auto widgetItem, _vrLibraryItems)
+    foreach(auto item, _vrLibraryItems)
     {
         QJsonObject object;
-        auto item = widgetItem->getLibraryListItem();
         if(item.type == LibraryListItemType::PlaylistInternal || item.type == LibraryListItemType::FunscriptType)
             continue;
         list.append(createDeoObject(item, hostAddress));
@@ -339,7 +336,7 @@ HttpPromise HttpHandler::handleDeo(HttpDataPtr data)
     return HttpPromise::resolve(data);
 }
 
-QJsonObject HttpHandler::createDeoObject(LibraryListItem item, QString hostAddress)
+QJsonObject HttpHandler::createDeoObject(LibraryListItem27 item, QString hostAddress)
 {
     QJsonObject root;
     QJsonArray encodings;
@@ -582,12 +579,17 @@ void HttpHandler::sendWebSocketTextMessage(QString command, QString message)
     _webSocketHandler->sendCommand(command, message);
 }
 
-void HttpHandler::setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems)
+void HttpHandler::setLibraryLoaded(QList<LibraryListItem27> cachedLibraryItems, QList<LibraryListItem27> vrLibraryItems)
 {
-    _libraryLoaded = loaded;
+    _libraryLoaded = true;
     _cachedLibraryItems = cachedLibraryItems;
     _vrLibraryItems = vrLibraryItems;
-    _webSocketHandler->sendCommand(_libraryLoaded ? "mediaLoaded" : "mediaLoading");
+    _webSocketHandler->sendCommand("mediaLoaded");
+}
+void HttpHandler::setLibraryLoading()
+{
+    _libraryLoaded = false;
+    _webSocketHandler->sendCommand("mediaLoading");
 }
 
 void HttpHandler::sendLibraryLoadingStatus(QString message) {

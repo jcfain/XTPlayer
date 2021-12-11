@@ -4,14 +4,15 @@ const QMap<TCodeVersion, QString> SettingsHandler::SupportedTCodeVersions = {
     {TCodeVersion::v2, "TCode v0.2"},
     {TCodeVersion::v3, "TCode v0.3"}
 };
-const QString SettingsHandler::XTPVersion = "0.271";
-const float SettingsHandler::XTPVersionNum = 0.271f;
+const QString SettingsHandler::XTPVersion = "0.273";
+const float SettingsHandler::XTPVersionNum = 0.273f;
 
 SettingsHandler::SettingsHandler(){}
 SettingsHandler::~SettingsHandler()
 {
     delete settings;
 }
+#include <QJsonArray>
 void SettingsHandler::Load(QSettings* settingsToLoadFrom)
 {
     QMutexLocker locker(&mutex);
@@ -190,7 +191,15 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     _playlists.clear();
     foreach(auto playlist, playlists.keys())
     {
-        _playlists.insert(playlist, playlists[playlist].value<QList<LibraryListItem>>());
+        QVariant variant = playlists.value(playlist);
+        QSequentialIterable playlistArray = variant.value<QSequentialIterable>();
+
+        QList<LibraryListItem27> items;
+        foreach(QVariant item, playlistArray)
+        {
+            items.append(LibraryListItem27::fromVariant(item));
+        }
+        _playlists.insert(playlist, items);
     }
 
     _hashedPass = settingsToLoadFrom->value("userData").toString();
@@ -205,11 +214,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
         QVariantHash libraryListItemMetaDatas = settingsToLoadFrom->value("libraryListItemMetaDatas").toHash();
         foreach(auto key, libraryListItemMetaDatas.keys())
         {
-            _libraryListItemMetaDatas.insert(key, libraryListItemMetaDatas[key].value<LibraryListItemMetaData258>());
-            foreach(auto bookmark, libraryListItemMetaDatas[key].value<LibraryListItemMetaData>().bookmarks)
-                _libraryListItemMetaDatas[key].bookmarks.append(bookmark);
-            foreach(auto funscript, libraryListItemMetaDatas[key].value<LibraryListItemMetaData>().funscripts)
-                _libraryListItemMetaDatas[key].funscripts.append(funscript);
+            _libraryListItemMetaDatas.insert(key, LibraryListItemMetaData258::fromVariant(libraryListItemMetaDatas[key]));
         }
     }
 
@@ -254,6 +259,14 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
             locker.unlock();
             settings->setValue("version", 0.27f);
             SetupDecoderPriority();
+            Save();
+            Load();
+        }
+        if(currentVersion < 0.272f)
+        {
+            locker.unlock();
+            settings->setValue("version", 0.272f);
+            MigrateToQVariant(settingsToLoadFrom);
             Save();
             Load();
         }
@@ -357,7 +370,13 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         QVariantMap playlists;
         foreach(auto playlist, _playlists.keys())
         {
-            playlists.insert(playlist, QVariant::fromValue(_playlists[playlist]));
+            QList<LibraryListItem27> playlistItems = _playlists[playlist];
+            QVariantList varaintList;
+            foreach(auto playlistItem, playlistItems)
+            {
+                varaintList.append(LibraryListItem27::toVariant(playlistItem));
+            }
+            playlists.insert(playlist, varaintList);
         }
         settingsToSaveTo->setValue("playlists", playlists);
         settingsToSaveTo->setValue("userData", _hashedPass);
@@ -365,11 +384,7 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         QVariantHash libraryListItemMetaDatas;
         foreach(auto libraryListItemMetaData, _libraryListItemMetaDatas.keys())
         {
-            libraryListItemMetaDatas.insert(libraryListItemMetaData, QVariant::fromValue(_libraryListItemMetaDatas[libraryListItemMetaData]));
-            foreach(auto bookmark, _libraryListItemMetaDatas[libraryListItemMetaData].bookmarks)
-                libraryListItemMetaDatas[libraryListItemMetaData].value<LibraryListItemMetaData258>().bookmarks.append(bookmark);
-            foreach(auto funscript, _libraryListItemMetaDatas[libraryListItemMetaData].funscripts)
-                libraryListItemMetaDatas[libraryListItemMetaData].value<LibraryListItemMetaData258>().funscripts.append(funscript);
+            libraryListItemMetaDatas.insert(libraryListItemMetaData, LibraryListItemMetaData258::toVariant(_libraryListItemMetaDatas[libraryListItemMetaData]));
         }
         settingsToSaveTo->setValue("libraryListItemMetaDatas", libraryListItemMetaDatas);
 
@@ -628,6 +643,31 @@ void SettingsHandler::MigrateTo263() {
     }
     Save();
     Load();
+}
+
+void SettingsHandler::MigrateToQVariant(QSettings* settingsToLoadFrom)
+{
+    _playlists.clear();
+    QVariantMap playlists = settingsToLoadFrom->value("playlists").toMap();
+    foreach(auto playlist, playlists.keys())
+    {
+        QList<LibraryListItem> list = playlists[playlist].value<QList<LibraryListItem>>();
+        QList<LibraryListItem27> list27;
+        foreach(auto item, list)
+            list27.append(item.toLibraryListItem27());
+        _playlists.insert(playlist, list27);
+    }
+
+    _libraryListItemMetaDatas.clear();
+    QVariantHash libraryListItemMetaDatas = settingsToLoadFrom->value("libraryListItemMetaDatas").toHash();
+    foreach(auto key, libraryListItemMetaDatas.keys())
+    {
+        _libraryListItemMetaDatas.insert(key, libraryListItemMetaDatas[key].value<LibraryListItemMetaData258>());
+        foreach(auto bookmark, libraryListItemMetaDatas[key].value<LibraryListItemMetaData>().bookmarks)
+            _libraryListItemMetaDatas[key].bookmarks.append(bookmark);
+        foreach(auto funscript, libraryListItemMetaDatas[key].value<LibraryListItemMetaData>().funscripts)
+            _libraryListItemMetaDatas[key].funscripts.append(funscript);
+    }
 }
 
 QString SettingsHandler::getSelectedTCodeVersion()
@@ -1540,21 +1580,21 @@ QList<QString> SettingsHandler::getLibraryExclusions()
     return _libraryExclusions;
 }
 
-QMap<QString, QList<LibraryListItem>> SettingsHandler::getPlaylists()
+QMap<QString, QList<LibraryListItem27>> SettingsHandler::getPlaylists()
 {
     return _playlists;
 }
-void SettingsHandler::setPlaylists(QMap<QString, QList<LibraryListItem>> value)
+void SettingsHandler::setPlaylists(QMap<QString, QList<LibraryListItem27>> value)
 {
     _playlists = value;
     settingsChangedEvent(true);
 }
-void SettingsHandler::updatePlaylist(QString name, QList<LibraryListItem> value)
+void SettingsHandler::updatePlaylist(QString name, QList<LibraryListItem27> value)
 {
     _playlists.insert(name, value);
     settingsChangedEvent(true);
 }
-void SettingsHandler::addToPlaylist(QString name, LibraryListItem value)
+void SettingsHandler::addToPlaylist(QString name, LibraryListItem27 value)
 {
     auto playlist = _playlists.value(name);
     playlist.append(value);
@@ -1563,7 +1603,7 @@ void SettingsHandler::addToPlaylist(QString name, LibraryListItem value)
 }
 void SettingsHandler::addNewPlaylist(QString name)
 {
-    QList<LibraryListItem> playlist;
+    QList<LibraryListItem27> playlist;
     _playlists.insert(name, playlist);
     settingsChangedEvent(true);
 }
@@ -1948,5 +1988,5 @@ QList<DecoderModel> SettingsHandler::decoderPriority;
 XVideoRenderer SettingsHandler::_selectedVideoRenderer;
 
 QList<QString> SettingsHandler::_libraryExclusions;
-QMap<QString, QList<LibraryListItem>> SettingsHandler::_playlists;
+QMap<QString, QList<LibraryListItem27>> SettingsHandler::_playlists;
 QHash<QString, LibraryListItemMetaData258> SettingsHandler::_libraryListItemMetaDatas;

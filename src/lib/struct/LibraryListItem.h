@@ -5,14 +5,8 @@
 #include <QDate>
 #include <QVariant>
 #include <QDataStream>
-
-enum LibraryListItemType {
-    PlaylistInternal,
-    Video,
-    Audio,
-    FunscriptType,
-    VR
-};
+#include <QJsonObject>
+#include "LibraryListItem27.h"
 
 struct LibraryListItem
 {
@@ -63,7 +57,20 @@ struct LibraryListItem
        return p1.name == p2.name;
     }
 
+    LibraryListItem27 toLibraryListItem27() {
+        LibraryListItem27 item;
+        item.path = path;
+        item.name = name;
+        item.nameNoExtension = nameNoExtension;
+        item.script = script;
+        item.scriptNoExtension = scriptNoExtension;
+        item.mediaExtension = mediaExtension;
+        item.thumbFile = thumbFile;
+        item.zipFile = zipFile;
+        item.modifiedDate = modifiedDate;
+        item.duration = duration;
+        return item;
+    }
 };
-
 Q_DECLARE_METATYPE(LibraryListItem);
 #endif // LIBRARYLISTITEM_H

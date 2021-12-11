@@ -1,11 +1,10 @@
 #include "librarylistwidgetitem.h"
 
-LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem &data, QListWidget* parent) :
+LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem27 &data, QListWidget* parent) :
     QListWidgetItem(data.nameNoExtension, parent)
 {
-    _isMFS = updateToolTip(data);
-
-    if (_isMFS)
+    setToolTip(data.toolTip);
+    if (data.isMFS)
     {
         setForeground(QColorConstants::Green);
         setText("(MFS) " + data.nameNoExtension);
@@ -32,73 +31,9 @@ LibraryListWidgetItem::~LibraryListWidgetItem()
 
 }
 
-bool LibraryListWidgetItem::isMFS()
+LibraryListItem27 LibraryListWidgetItem::getLibraryListItem()
 {
-    return _isMFS;
-}
-
-bool LibraryListWidgetItem::updateToolTip(LibraryListItem localData)
-{
-    bool mfs = false;
-    QFileInfo scriptInfo(localData.script);
-    QFileInfo zipScriptInfo(localData.zipFile);
-    QString toolTip = localData.nameNoExtension + "\nMedia:";
-    if (localData.type != LibraryListItemType::PlaylistInternal && !scriptInfo.exists() && !zipScriptInfo.exists())
-    {
-        toolTip = localData.path + "\nNo script file of the same name found.\nRight click and Play with funscript.";
-        setForeground(QColorConstants::Gray);
-    }
-    else if (localData.type != LibraryListItemType::PlaylistInternal)
-    {
-        toolTip += "\n";
-        toolTip += localData.path;
-        toolTip += "\n";
-        toolTip += "Scripts:\n";
-        if(zipScriptInfo.exists())
-        {
-            toolTip += localData.zipFile;
-            mfs = true;
-        }
-        else
-        {
-            toolTip += localData.script;
-        }
-        auto availibleAxis = SettingsHandler::getAvailableAxis();
-        foreach(auto axisName, availibleAxis->keys())
-        {
-            auto track = availibleAxis->value(axisName);
-            if(axisName == TCodeChannelLookup::Stroke() || track.Type == AxisType::HalfRange || track.TrackName.isEmpty())
-                continue;
-
-            QString script = localData.scriptNoExtension + "." + track.TrackName + ".funscript";
-            QFileInfo fileInfo(script);
-            if (fileInfo.exists())
-            {
-                mfs = true;
-                toolTip += "\n";
-                toolTip += script;
-            }
-        }
-    }
-    else if (localData.type == LibraryListItemType::PlaylistInternal)
-    {
-        auto playlists = SettingsHandler::getPlaylists();
-        auto playlist = playlists.value(localData.nameNoExtension);
-        for(auto i = 0; i < playlist.length(); i++)
-        {
-            toolTip += "\n";
-            toolTip += QString::number(i + 1);
-            toolTip += ": ";
-            toolTip += playlist[i].nameNoExtension;
-        }
-    }
-    setToolTip(toolTip);
-    return mfs;
-}
-
-LibraryListItem LibraryListWidgetItem::getLibraryListItem()
-{
-    return data(Qt::UserRole).value<LibraryListItem>();
+    return data(Qt::UserRole).value<LibraryListItem27>();
 }
 
 LibraryListItemType LibraryListWidgetItem::getType()
@@ -108,8 +43,8 @@ LibraryListItemType LibraryListWidgetItem::getType()
 
 bool LibraryListWidgetItem::operator< (const QListWidgetItem & other) const
 {
-    LibraryListItem otherData = other.data(Qt::UserRole).value<LibraryListItem>();
-    LibraryListItem thisData = data(Qt::UserRole).value<LibraryListItem>();
+    LibraryListItem27 otherData = other.data(Qt::UserRole).value<LibraryListItem27>();
+    LibraryListItem27 thisData = data(Qt::UserRole).value<LibraryListItem27>();
 
     if(_sortMode != NONE)
     {
@@ -228,18 +163,6 @@ void LibraryListWidgetItem::setThumbFile(QString filePath)
 {
     _thumbFile = filePath;
     auto data = getLibraryListItem();
-    if(data.type == LibraryListItemType::Audio)
-    {
-        _thumbFile = "://images/icons/audio.png";
-    }
-    else if(data.type == LibraryListItemType::PlaylistInternal)
-    {
-        _thumbFile = "://images/icons/playlist.png";
-    }
-    else if(data.type == LibraryListItemType::FunscriptType)
-    {
-        _thumbFile = "://images/icons/funscript.png";
-    }
     data.thumbFile = _thumbFile;
     QVariant listItem;
     listItem.setValue(data);
@@ -252,11 +175,11 @@ void LibraryListWidgetItem::setThumbFileLoading(bool waiting)
     setThumbFile(waiting ? "://images/icons/loading.png" : "://images/icons/loading_current.png");
 }
 
-void LibraryListWidgetItem::setThumbFileLoaded(bool error, QString message, QString path)
+void LibraryListWidgetItem::setThumbFileLoaded(QString message, QString path)
 {
     if(!path.isEmpty())
         _thumbFile = path;
-    setThumbFile(error ? "://images/icons/error.png" : _thumbFile);
+    setThumbFile(!message.isEmpty() ? "://images/icons/error.png" : _thumbFile);
     if(!message.isEmpty())
         setToolTip(toolTip() + "\n"+ message);
 }

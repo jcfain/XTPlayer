@@ -62,7 +62,8 @@ public:
     PasswordResponse CheckPass(QString pass);
     PasswordResponse GetLaunchPass();
     bool HasLaunchPass();
-    void setLibraryLoaded(bool loaded, QList<LibraryListWidgetItem*> cachedLibraryItems, QList<LibraryListWidgetItem*> vrLibraryItems);
+    void setLibraryLoaded(QList<LibraryListItem27> cachedLibraryItems, QList<LibraryListItem27> vrLibraryItems);
+    void setLibraryLoading();
     void on_libraryLoading_status(QString message = nullptr);
     void sendTCode(QString tcode);
 

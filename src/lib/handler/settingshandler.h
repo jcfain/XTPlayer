@@ -20,6 +20,7 @@
 #include "../struct/ChannelModel.h"
 #include "../struct/DecoderModel.h"
 #include "../struct/LibraryListItem.h"
+#include "../struct/LibraryListItem27.h"
 #include "../struct/LibraryListItemMetaData.h"
 #include "../struct/LibraryListItemMetaData258.h"
 
@@ -189,10 +190,10 @@ public:
     static void removeFromLibraryExclusions(QList<int> indexes);
     static QList<QString> getLibraryExclusions();
 
-    static QMap<QString, QList<LibraryListItem>> getPlaylists();
-    static void setPlaylists(QMap<QString, QList<LibraryListItem>> value);
-    static void addToPlaylist(QString name, LibraryListItem value);
-    static void updatePlaylist(QString name, QList<LibraryListItem> value);
+    static QMap<QString, QList<LibraryListItem27>> getPlaylists();
+    static void setPlaylists(QMap<QString, QList<LibraryListItem27>> value);
+    static void addToPlaylist(QString name, LibraryListItem27 value);
+    static void updatePlaylist(QString name, QList<LibraryListItem27> value);
     static void addNewPlaylist(QString name);
     static void deletePlaylist(QString name);
 
@@ -253,6 +254,7 @@ public:
     static void askRestart(QWidget* parent, QString message);
     static void quit(bool restart);
 
+
     static QStringList getVideoExtensions()
     {
         return QStringList()
@@ -300,6 +302,7 @@ private:
     static void MigrateLibraryMetaDataTo258();
     static void MigratrTo2615();
     static void MigrateTo263();
+    static void MigrateToQVariant(QSettings* settingsToLoadFrom);
     static void DeMigrateLibraryMetaDataTo258();
     static QString _appdataLocation;
     static TCodeVersion _selectedTCodeVersion;
@@ -359,7 +362,7 @@ private:
     static QList<DecoderModel> decoderPriority;
     static XVideoRenderer _selectedVideoRenderer;
     static QList<QString> _libraryExclusions;
-    static QMap<QString, QList<LibraryListItem>> _playlists;
+    static QMap<QString, QList<LibraryListItem27>> _playlists;
     static QHash<QString, LibraryListItemMetaData258> _libraryListItemMetaDatas;
 
     static bool _disableVRScriptSelect;
