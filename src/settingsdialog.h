@@ -230,6 +230,10 @@ private slots:
     void on_xtpWebHandlerCheckbox_clicked(bool checked);
     void on_xtpWeb_initSyncDevice(DeviceType deviceType, bool checked);
 
+    void on_useMediaDirectoryCheckbox_clicked(bool checked);
+
+    void on_webSocketPortSpinBox_valueChanged(int arg1);
+
 private:
 
     Ui::SettingsDialog ui;

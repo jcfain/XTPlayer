@@ -40,6 +40,57 @@ HttpHandler::~HttpHandler()
     delete _webSocketHandler;
 }
 
+
+HttpPromise HttpHandler::handle(HttpDataPtr data)
+{
+    bool foundRoute;
+    HttpPromise promise = router.route(data, &foundRoute);
+    if (foundRoute)
+        return promise;
+
+    auto path = data->request->uri().path();
+    auto root = SettingsHandler::getHttpServerRoot();
+    if(path == "/") {
+        LogHandler::Debug("Sending root index.html");
+        if(!QFileInfo(root+"/index.html").exists())
+        {
+            LogHandler::Debug("file does not exist: "+root+"/index.html");
+            data->response->setStatus(HttpStatus::BadRequest);
+        }
+        else
+        {
+            data->response->sendFile(root+"/index.html");
+            data->response->setStatus(HttpStatus::Ok);
+        }
+    }
+    else if(path.contains("favicon.ico"))
+    {
+        data->response->sendFile(root+"/favicon.ico", "image/x-icon");
+        data->response->setStatus(HttpStatus::Ok);
+    }
+    else
+    {
+        QString localPath;
+        if(path.startsWith("/:"))
+        {
+            localPath = path.remove(0,1);
+        }
+        else
+        {
+            localPath = root + path;
+        }
+        QFile file(localPath);
+        if(file.exists())
+        {
+            data->response->sendFile(localPath);
+            data->response->setStatus(HttpStatus::Ok);
+        }
+        else
+            data->response->setStatus(HttpStatus::BadRequest);
+    }
+    return HttpPromise::resolve(data);
+}
+
 HttpPromise HttpHandler::handleWebTimeUpdate(HttpDataPtr data)
 {
     auto body = data->request->body();
@@ -176,56 +227,6 @@ HttpPromise HttpHandler::handleSettingsUpdate(HttpDataPtr data)
     return HttpPromise::resolve(data);
 }
 
-HttpPromise HttpHandler::handle(HttpDataPtr data)
-{
-    bool foundRoute;
-    HttpPromise promise = router.route(data, &foundRoute);
-    if (foundRoute)
-        return promise;
-
-    auto path = data->request->uri().path();
-    auto root = SettingsHandler::getHttpServerRoot();
-    if(path == "/") {
-        LogHandler::Debug("Sending root index.html");
-        if(!QFileInfo(root+"/index.html").exists())
-        {
-            LogHandler::Debug("file does not exist: "+root+"/index.html");
-            data->response->setStatus(HttpStatus::BadRequest);
-        }
-        else
-        {
-            data->response->sendFile(root+"/index.html");
-            data->response->setStatus(HttpStatus::Ok);
-        }
-    }
-    else if(path.contains("favicon.ico"))
-    {
-        data->response->sendFile(root+"/favicon.ico", "image/x-icon");
-        data->response->setStatus(HttpStatus::Ok);
-    }
-    else
-    {
-        QString localPath;
-        if(path.startsWith("/:"))
-        {
-            localPath = path.remove(0,1);
-        }
-        else
-        {
-            localPath = root + path;
-        }
-        QFile file(localPath);
-        if(file.exists())
-        {
-            data->response->sendFile(localPath);
-            data->response->setStatus(HttpStatus::Ok);
-        }
-        else
-            data->response->setStatus(HttpStatus::BadRequest);
-    }
-    return HttpPromise::resolve(data);
-}
-
 HttpPromise HttpHandler::handleDeviceConnected(HttpDataPtr data)
 {
     QJsonObject root;
@@ -282,13 +283,13 @@ QJsonObject HttpHandler::createMediaObject(LibraryListItem27 item, bool stereosc
     //VideoFormat videoFormat;
     QJsonObject object;
     object["name"] = item.nameNoExtension;
-    QString path = item.path.replace(SettingsHandler::getSelectedLibrary(), "");
     QString relativePath = item.path.replace(SettingsHandler::getSelectedLibrary() +"/", "");
-    object["path"] = hostAddress + "video/" + QString(QUrl::toPercentEncoding(relativePath));
+    object["path"] = hostAddress + "media/" + QString(QUrl::toPercentEncoding(relativePath));
+    object["relativePath"] = "/" + QString(QUrl::toPercentEncoding(relativePath));
     QString scriptNoExtensionRelativePath = item.scriptNoExtension.replace(SettingsHandler::getSelectedLibrary(), "");
     object["scriptNoExtensionRelativePath"] = "funscript/" + QString(QUrl::toPercentEncoding(scriptNoExtensionRelativePath));
-    object["relativePath"] = "/" + QString(QUrl::toPercentEncoding(relativePath));
     QString thumbFile = item.thumbFile.replace(SettingsHandler::getSelectedThumbsDir(), "");
+    thumbFile = thumbFile.replace(SettingsHandler::getSelectedLibrary() +"/", "");
     QString relativeThumb = thumbFile;
     object["thumb"] = hostAddress + "thumb/" + QString(QUrl::toPercentEncoding(relativeThumb));
     object["relativeThumb"] = QString(QUrl::toPercentEncoding(relativeThumb));
@@ -371,6 +372,7 @@ HttpPromise HttpHandler::handleFunscriptFile(HttpDataPtr data)
 {
     auto match = data->state["match"].value<QRegularExpressionMatch>();
     QString parameter = match.captured();
+
     QString funscriptName = parameter.remove("/funscript/");
     if(funscriptName.contains("../"))
     {
@@ -398,10 +400,17 @@ HttpPromise HttpHandler::handleThumbFile(HttpDataPtr data)
         return HttpPromise::resolve(data);
     }
 
-    if(thumbName.startsWith(":") || thumbName.startsWith(SettingsHandler::getSelectedLibrary()))
-        data->response->sendFile(thumbName);
+    QString thumbDirFile = SettingsHandler::getSelectedThumbsDir() + thumbName;
+    QString libraryThumbDirFile = SettingsHandler::getSelectedLibrary() + "/" + thumbName;
+    if(thumbName.startsWith(":") || QFileInfo(libraryThumbDirFile).exists())
+        data->response->sendFile(libraryThumbDirFile);
+    else if(QFile(thumbDirFile).exists())
+        data->response->sendFile(thumbDirFile);
     else
-        data->response->sendFile(SettingsHandler::getSelectedThumbsDir() + thumbName);
+    {
+        data->response->setStatus(HttpStatus::NotFound);
+        return HttpPromise::resolve(data);
+    }
     data->response->setStatus(HttpStatus::Ok);
     return HttpPromise::resolve(data);
 }

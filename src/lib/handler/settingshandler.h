@@ -52,6 +52,8 @@ public:
     static QString getSelectedThumbsDir();
     static void setSelectedThumbsDir(QWidget* parent);
     static void setSelectedThumbsDirDefault(QWidget* parent);
+    static void setUseMediaDirForThumbs(bool value);
+    static bool getUseMediaDirForThumbs();
     static QString getSelectedFunscriptLibrary();
     static int getSelectedDevice();
     static QString getSerialPort();
@@ -233,6 +235,8 @@ public:
     static void setHTTPChunkSize(qint64 value);
     static int getHTTPPort();
     static void setHTTPPort(int value);
+    static int getWebSocketPort();
+    static void setWebSocketPort(int value);
 
     static void setFunscriptModifierStep(int value);
     static int getFunscriptModifierStep();
@@ -316,6 +320,7 @@ private:
     static QString selectedLibrary;
     static QString selectedFunscriptLibrary;
     static QString _selectedThumbsDir;
+    static bool _useMediaDirForThumbs;
     static QString selectedFile;
     static int selectedDevice;
     static QString serialPort;
@@ -382,6 +387,7 @@ private:
     static QString _httpServerRoot;
     static qint64 _httpChunkSize;
     static int _httpPort;
+    static int _webSocketPort;
     static QString _vrLibrary;
 
 

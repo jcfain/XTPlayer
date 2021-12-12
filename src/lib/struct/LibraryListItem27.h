@@ -15,8 +15,9 @@ enum LibraryListItemType {
     VR
 };
 
-struct LibraryListItem27
+class LibraryListItem27
 {
+public:
     //    LibraryListItem() {}
     //    LibraryListItem(const LibraryListItem &item)
     //    {
@@ -32,6 +33,7 @@ struct LibraryListItem27
     //        modifiedDate = item.modifiedDate;
     //        duration = item.duration;
     //    }
+    int ID;
     LibraryListItemType type;
     QString path;
     QString name;
@@ -43,11 +45,18 @@ struct LibraryListItem27
     QString zipFile;
     QDate modifiedDate;
     quint64 duration;
+
+    // Live members
     bool isMFS;
     QString toolTip;
+    QString thumbFileLoading = "://images/icons/loading.png";
+    QString thumbFileLoadingCurrent = "://images/icons/loading_current.png";
+    QString thumbFileError = "://images/icons/error.png";
+
     friend QDataStream & operator<<( QDataStream &dataStream, const LibraryListItem27 &object )
     {
-        dataStream << object.type;
+        dataStream << object.ID;
+        dataStream << (int)object.type;
         dataStream << object.path;
         dataStream << object.name;
         dataStream << object.nameNoExtension;
@@ -60,11 +69,14 @@ struct LibraryListItem27
         dataStream << object.duration;
         dataStream << object.isMFS;
         dataStream << object.toolTip;
+        dataStream << object.thumbFileLoading;
+        dataStream << object.thumbFileLoadingCurrent;
         return dataStream;
     }
 
     friend QDataStream & operator>>(QDataStream &dataStream, LibraryListItem27 &object)
     {
+        dataStream >> object.ID;
         dataStream >> object.type;
         dataStream >> object.path;
         dataStream >> object.name;
@@ -78,8 +90,11 @@ struct LibraryListItem27
         dataStream >> object.duration;
         dataStream >> object.isMFS;
         dataStream >> object.toolTip;
+        dataStream >> object.thumbFileLoading;
+        dataStream >> object.thumbFileLoadingCurrent;
         return dataStream;
     }
+
     friend bool operator==(const LibraryListItem27 &p1, const LibraryListItem27 &p2)
     {
        return p1.name == p2.name;
@@ -89,6 +104,7 @@ struct LibraryListItem27
     {
         QJsonObject obj = item.toJsonObject();
         LibraryListItem27 newItem;
+        newItem.ID = obj["id"].toInt();
         newItem.path = obj["path"].toString();
         newItem.duration = obj["path"].toString().toLongLong();
         newItem.mediaExtension = obj["mediaExtension"].toString();
@@ -99,14 +115,15 @@ struct LibraryListItem27
         newItem.scriptNoExtension = obj["scriptNoExtension"].toString();
         newItem.thumbFile = obj["thumbFile"].toString();
         newItem.type = (LibraryListItemType)obj["type"].toInt();
-        newItem.isMFS = obj["isMFS"].toBool();
-        newItem.toolTip = obj["tooltip"].toString();
+//        newItem.isMFS = obj["isMFS"].toBool();
+//        newItem.toolTip = obj["tooltip"].toString();
         return newItem;
     }
 
     static QVariant toVariant(LibraryListItem27 item)
     {
         QJsonObject obj;
+        obj["id"] = item.ID;
         obj["path"] = item.path;
         obj["duration"] = QString::number(item.duration);
         obj["mediaExtension"] = item.mediaExtension;;
@@ -116,11 +133,12 @@ struct LibraryListItem27
         obj["script"] = item.script;
         obj["scriptNoExtension"] = item.scriptNoExtension;
         obj["thumbFile"] = item.thumbFile;
-        obj["type"] = item.type;
-        obj["isMFS"] = item.isMFS;
-        obj["tooltip"] = item.toolTip;
+        obj["type"] = (int)item.type;
+//        obj["isMFS"] = item.isMFS;
+//        obj["tooltip"] = item.toolTip;
         return QVariant::fromValue(obj);
      }
+//    //waiting ? "://images/icons/loading.png" : "://images/icons/loading_current.png"
 };
 Q_DECLARE_METATYPE(LibraryListItem27);
 #endif // LIBRARYLISTITEM27_H

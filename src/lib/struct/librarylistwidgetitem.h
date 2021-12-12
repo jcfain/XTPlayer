@@ -18,9 +18,7 @@ public:
     bool operator== (const LibraryListWidgetItem & other) const;
     void dropEvent(QDropEvent* event);
     void updateThumbSize(QSize thumbSize);
-    void setThumbFile(QString filePath);
-    void setThumbFileLoading(bool waiting);
-    void setThumbFileLoaded(QString message = nullptr, QString path = nullptr);
+    void setThumbFile(QString filePath, QString errorMessage = nullptr);
     virtual LibraryListWidgetItem* clone() const override;
     QSize calculateHintSize(QSize size);
 private:

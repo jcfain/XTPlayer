@@ -59,6 +59,7 @@ struct LibraryListItem
 
     LibraryListItem27 toLibraryListItem27() {
         LibraryListItem27 item;
+        item.type = type;
         item.path = path;
         item.name = name;
         item.nameNoExtension = nameNoExtension;

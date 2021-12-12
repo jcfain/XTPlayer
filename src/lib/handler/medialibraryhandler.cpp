@@ -46,6 +46,7 @@ void MediaLibraryHandler::onPrepareLibraryLoad()
     //_xSettings->setLibraryLoaded(false, cachedLibraryItems, cachedVRItems);
     cachedLibraryItems.clear();
     cachedVRItems.clear();
+    libraryItemIDTracker = 1;
 }
 
 void MediaLibraryHandler::loadLibraryAsync()
@@ -196,6 +197,8 @@ void MediaLibraryHandler::on_load_library(QString path, bool vrMode)
             libratyItemType = LibraryListItemType::Audio;
         }
         LibraryListItem27 item;
+        item.ID = libraryItemIDTracker;
+        libraryItemIDTracker++;
         item.type = libratyItemType,
         item.path = videoPath, // path
         item.name = fileName, // name
@@ -207,8 +210,7 @@ void MediaLibraryHandler::on_load_library(QString path, bool vrMode)
         item.zipFile = zipFile,
         item.modifiedDate = fileinfo.birthTime().date(),
         item.duration = 0;
-        item.thumbFile = getThumbPath(item);
-        updateToolTip(item);
+        setLiveProperties(item);
 
         if(!vrMode && !scriptPath.isEmpty())
             funscriptsWithMedia.append(scriptPath);
@@ -279,6 +281,8 @@ void MediaLibraryHandler::on_load_library(QString path, bool vrMode)
             QString mediaExtension = "*" + fileNameTemp.remove(0, fileNameTemp.length() - (fileNameTemp.length() - fileNameTemp.lastIndexOf('.')));
 
             LibraryListItem27 item;
+            item.ID = libraryItemIDTracker;
+            libraryItemIDTracker++;
             item.type = LibraryListItemType::FunscriptType,
             item.path = scriptPath, // path
             item.name = fileName, // name
@@ -286,11 +290,10 @@ void MediaLibraryHandler::on_load_library(QString path, bool vrMode)
             item.script = scriptPath, // script
             item.scriptNoExtension = scriptNoExtension,
             item.mediaExtension = mediaExtension,
-            item.thumbFile = nullptr,
             item.zipFile = zipFile,
             item.modifiedDate = fileinfo.birthTime().date(),
             item.duration = 0;
-            updateToolTip(item);
+            setLiveProperties(item);
             emit libraryItemFound(item, false);
         }
     }
@@ -345,47 +348,51 @@ LibraryListItem27 MediaLibraryHandler::createLibraryListItemFromFunscript(QStrin
     fileNameTemp = fileinfo.fileName();
     QString mediaExtension = "*" + fileNameTemp.remove(0, fileNameTemp.length() - (fileNameTemp.length() - fileNameTemp.lastIndexOf('.')));
     LibraryListItem27 item;
-    item.type = LibraryListItemType::FunscriptType,
-    item.path = scriptPath, // path
-    item.name = fileName, // name
-    item.nameNoExtension = fileNameNoExtension, //nameNoExtension
-    item.script = scriptPath, // script
-    item.scriptNoExtension = fileNameNoExtension,
-    item.mediaExtension = mediaExtension,
-    item.thumbFile = nullptr,
-    item.zipFile = zipFile,
-    item.modifiedDate = fileinfo.birthTime().date(),
+    item.ID = libraryItemIDTracker;
+    libraryItemIDTracker++;
+    item.type = LibraryListItemType::FunscriptType;
+    item.path = scriptPath; // path
+    item.name = fileName; // name
+    item.nameNoExtension = fileNameNoExtension; //nameNoExtension
+    item.script = scriptPath; // script
+    item.scriptNoExtension = fileNameNoExtension;
+    item.mediaExtension = mediaExtension;
+    item.zipFile = zipFile;
+    item.modifiedDate = fileinfo.birthTime().date();
     item.duration = 0;
-    updateToolTip(item);
+    setLiveProperties(item);
 
     cachedLibraryItems.push_back(item);
     return item;
 }
 
-QString MediaLibraryHandler::getThumbPath(LibraryListItem27 libraryListItem)
-{
-    if(libraryListItem.type == LibraryListItemType::Audio)
-    {
-        return "://images/icons/audio.png";
-    }
-    else if(libraryListItem.type == LibraryListItemType::PlaylistInternal)
-    {
-        return "://images/icons/playlist.png";
-    }
-    else if(libraryListItem.type == LibraryListItemType::FunscriptType)
-    {
-        return "://images/icons/funscript.png";
-    }
-    QStringList imageExtensions;
-    imageExtensions << ".jpg" << ".jpeg" << ".png";
-    QFileInfo mediaInfo(libraryListItem.path);
-    foreach(QString ext, imageExtensions) {
-        QString filepath = mediaInfo.absolutePath() + QDir::separator() + libraryListItem.nameNoExtension + ext;
-        if(QFile(filepath).exists())
-            return filepath;
-    }
-    return SettingsHandler::getSelectedThumbsDir() + libraryListItem.name + ".jpg";
-}
+//QString MediaLibraryHandler::getThumbPath(LibraryListItem27 libraryListItem)
+//{
+//    if(libraryListItem.type == LibraryListItemType::Audio)
+//    {
+//        return "://images/icons/audio.png";
+//    }
+//    else if(libraryListItem.type == LibraryListItemType::PlaylistInternal)
+//    {
+//        return "://images/icons/playlist.png";
+//    }
+//    else if(libraryListItem.type == LibraryListItemType::FunscriptType)
+//    {
+//        return "://images/icons/funscript.png";
+//    }
+//    QStringList imageExtensions;
+//    imageExtensions << ".jpg" << ".jpeg" << ".png";
+//    QFileInfo mediaInfo(libraryListItem.path);
+//    foreach(QString ext, imageExtensions) {
+//        QString filepath = mediaInfo.absolutePath() + QDir::separator() + libraryListItem.nameNoExtension + ext;
+//        if(QFile(filepath).exists())
+//            return filepath;
+//    }
+//    if(SettingsHandler::getUseMediaDirForThumbs())
+//        return QFileInfo(libraryListItem.path).absoluteDir().path() + libraryListItem.nameNoExtension + ".jpg";
+
+//    return SettingsHandler::getSelectedThumbsDir() + libraryListItem.name + ".jpg";
+//}
 
 void MediaLibraryHandler::onLibraryLoaded()
 {
@@ -442,7 +449,7 @@ void MediaLibraryHandler::saveNewThumbs(bool vrMode)
     {
         LibraryListItem27 item = vrMode ? cachedVRItems.at(thumbNailSearchIterator) : cachedLibraryItems.at(thumbNailSearchIterator);
         thumbNailSearchIterator++;
-        QFileInfo thumbInfo(getThumbPath(item));
+        QFileInfo thumbInfo(item.thumbFile);
         if (item.type == LibraryListItemType::Video && !thumbInfo.exists())
         {
             disconnect(extractor, nullptr,  nullptr, nullptr);
@@ -464,7 +471,6 @@ void MediaLibraryHandler::saveNewThumbs(bool vrMode)
 void MediaLibraryHandler::saveThumb(LibraryListItem27 cachedListItem, qint64 position, bool vrMode)
 {
     QString videoFile = cachedListItem.path;
-    QString thumbFile = getThumbPath(cachedListItem);
     //://images/icons/loading_current.png
     if(cachedListItem.type == LibraryListItemType::Audio || cachedListItem.type == LibraryListItemType::FunscriptType)
     {
@@ -474,7 +480,6 @@ void MediaLibraryHandler::saveThumb(LibraryListItem27 cachedListItem, qint64 pos
     {
         if(!vrMode)
             emit saveNewThumbLoading(cachedListItem);
-        cachedListItem.thumbFile = "://images/icons/loading_current.png";
         // Get the duration and randomize the position with in the video.
         connect(thumbNailPlayer,
            &AVPlayer::loaded,
@@ -505,14 +510,14 @@ void MediaLibraryHandler::saveThumb(LibraryListItem27 cachedListItem, qint64 pos
         connect(extractor,
            &QtAV::VideoFrameExtractor::frameExtracted,
            extractor,
-           [this, cachedListItem, videoFile, thumbFile, vrMode](const QtAV::VideoFrame& frame)
+           [this, cachedListItem, videoFile, vrMode](const QtAV::VideoFrame& frame)
             {
                 if(frame.isValid())
                 {
                     bool error = false;
                     QImage img;
                     try{
-                        LogHandler::Debug(tr("Saving thumbnail: ") + thumbFile + tr(" for video: ") + videoFile);
+                        LogHandler::Debug(tr("Saving thumbnail: ") + cachedListItem.thumbFile + tr(" for video: ") + videoFile);
                         img = frame.toImage();
 //                        auto vf = VideoFormat::pixelFormatFromImageFormat(QImage::Format_ARGB32);
 //                        auto vf2 = VideoFormat(vf);
@@ -523,14 +528,14 @@ void MediaLibraryHandler::saveThumb(LibraryListItem27 cachedListItem, qint64 pos
                         error = true;
                     }
                     QString errorMessage;
-                    bool hasError = error || img.isNull() || !img.save(thumbFile, nullptr, 15);
+                    bool hasError = error || img.isNull() || !img.save(cachedListItem.thumbFile, nullptr, 15);
                     if (hasError)
                     {
-                       errorMessage = tr("Error saving thumbnail: ") + thumbFile + tr(" for video: ") + videoFile;
+                       errorMessage = tr("Error saving thumbnail: ") + cachedListItem.thumbFile + tr(" for video: ") + videoFile;
                        LogHandler::Debug(errorMessage);
                     }
 
-                    emit saveNewThumb(cachedListItem, vrMode, errorMessage, thumbFile);
+                    emit saveNewThumb(cachedListItem, vrMode, errorMessage, cachedListItem.thumbFile);
                 }
                 disconnect(extractor, &QtAV::VideoFrameExtractor::frameExtracted,  nullptr, nullptr);
                 disconnect(extractor, &QtAV::VideoFrameExtractor::error,  nullptr, nullptr);
@@ -574,6 +579,8 @@ QList<LibraryListItem27> MediaLibraryHandler::getVRLibraryCache()
 LibraryListItem27 MediaLibraryHandler::setupPlaylistItem(QString playlistName)
 {
     LibraryListItem27 item;
+    item.ID = libraryItemIDTracker;
+    libraryItemIDTracker++;
     item.type = LibraryListItemType::PlaylistInternal;
     item.path = nullptr; // path
     item.name = nullptr; // name
@@ -584,11 +591,53 @@ LibraryListItem27 MediaLibraryHandler::setupPlaylistItem(QString playlistName)
     item.zipFile = nullptr;
     item.modifiedDate = QDate::currentDate();
     item.duration = 0;
-    item.thumbFile = getThumbPath(item);
-    updateToolTip(item);
+    setLiveProperties(item);
     cachedLibraryItems.push_front(item);
     emit playListItem(item);
     return item;
+}
+
+void MediaLibraryHandler::setLiveProperties(LibraryListItem27 &libraryListItem)
+{
+    setThumbPath(libraryListItem);
+    updateToolTip(libraryListItem);
+}
+
+void MediaLibraryHandler::setThumbPath(LibraryListItem27 &libraryListItem)
+{
+    if(libraryListItem.type == LibraryListItemType::Audio)
+    {
+        libraryListItem.thumbFile = "://images/icons/audio.png";
+        return;
+    }
+    else if(libraryListItem.type == LibraryListItemType::PlaylistInternal)
+    {
+        libraryListItem.thumbFile = "://images/icons/playlist.png";
+        return;
+    }
+    else if(libraryListItem.type == LibraryListItemType::FunscriptType)
+    {
+        libraryListItem.thumbFile = "://images/icons/funscript.png";
+        return;
+    }
+    QStringList imageExtensions;
+    imageExtensions << ".jpg" << ".jpeg" << ".png";
+    QFileInfo mediaInfo(libraryListItem.path);
+    foreach(QString ext, imageExtensions) {
+        QString filepath = mediaInfo.absolutePath() + QDir::separator() + libraryListItem.nameNoExtension + ext;
+        if(QFile(filepath).exists())
+        {
+            libraryListItem.thumbFile = filepath;
+            return;
+        }
+    }
+    if(SettingsHandler::getUseMediaDirForThumbs())
+    {
+        libraryListItem.thumbFile = QFileInfo(libraryListItem.path).absoluteDir().path() + libraryListItem.nameNoExtension + ".jpg";
+        return;
+    }
+
+    libraryListItem.thumbFile = SettingsHandler::getSelectedThumbsDir() + libraryListItem.name + ".jpg";
 }
 
 void MediaLibraryHandler::updateToolTip(LibraryListItem27 &localData)

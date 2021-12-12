@@ -40,12 +40,10 @@ public:
     LibraryListItem27 setupPlaylistItem(QString name);
     QList<LibraryListItem27> getLibraryCache();
     QList<LibraryListItem27> getVRLibraryCache();
-    void updateToolTip(LibraryListItem27 &localData);
-
-    //Private?
-    QString getThumbPath(LibraryListItem27 item);
+    void setLiveProperties(LibraryListItem27 &item);
 
 private:
+    int libraryItemIDTracker = 1;
     VideoFrameExtractor* extractor = 0;
     AVPlayer* thumbNailPlayer = 0;
     bool thumbProcessIsRunning = false;
@@ -61,6 +59,8 @@ private:
     void saveThumb(LibraryListItem27 item, qint64 position = 0, bool vrMode = false);
 
     LibraryListItem27 createLibraryListItemFromFunscript(QString funscript);
+    void setThumbPath(LibraryListItem27 &item);
+    void updateToolTip(LibraryListItem27 &item);
 
 
 

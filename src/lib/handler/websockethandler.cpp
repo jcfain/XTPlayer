@@ -5,6 +5,14 @@ WebSocketHandler::WebSocketHandler(QObject *parent):
     m_pWebSocketServer(new QWebSocketServer(QStringLiteral("XTP Websocket"),
                                             QWebSocketServer::NonSecureMode, this))
 {
+//    QNetworkProxy proxy;
+//    proxy.setType(QNetworkProxy::Socks5Proxy);
+    //proxy.setHostName("proxy.example.com");
+//    proxy.setPort(80);
+//    proxy.setUser("username");
+//    proxy.setPassword("password");
+//    QNetworkProxy::setApplicationProxy(proxy);
+//    m_pWebSocketServer->setProxy(proxy);
     if (m_pWebSocketServer->listen(QHostAddress::Any, 8080))
     {
         LogHandler::Debug("Websocket listening on port " +QString::number(8080));

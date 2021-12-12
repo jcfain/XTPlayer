@@ -895,7 +895,7 @@ function playVideo(obj) {
 			//videoNode.play();
 
 	} else { 
-		window.open("/video"+ obj.relativePath)
+		window.open("/media"+ obj.relativePath)
 	}
 }
 

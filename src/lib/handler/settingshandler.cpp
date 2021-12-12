@@ -60,6 +60,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     selectedTheme = selectedTheme.isEmpty() ? QApplication::applicationDirPath() + "/themes/dark.css" : selectedTheme;
     selectedLibrary = settingsToLoadFrom->value("selectedLibrary").toString();
     _selectedThumbsDir = settingsToLoadFrom->value("selectedThumbsDir").toString();
+    _useMediaDirForThumbs = settingsToLoadFrom->value("useMediaDirForThumbs").toBool();
     _hideWelcomeScreen = settingsToLoadFrom->value("hideWelcomeScreen").toBool();
     selectedDevice = settingsToLoadFrom->value("selectedDevice").toInt();
     playerVolume = settingsToLoadFrom->value("playerVolume").toInt();
@@ -158,6 +159,13 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     _httpPort = settingsToLoadFrom->value("httpPort").toInt();
     if(!_httpPort)
         _httpPort = 80;
+    _webSocketPort = settingsToLoadFrom->value("webSocketPort").toInt();
+    if(!_webSocketPort)
+        _webSocketPort = 8080;
+
+    if(_httpPort == _webSocketPort)
+        _webSocketPort  = _httpPort +1;
+
 
     _funscriptOffsetStep = settingsToLoadFrom->value("funscriptOffsetStep").toInt();
     if(!_funscriptOffsetStep)
@@ -290,6 +298,7 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         settingsToSaveTo->setValue("selectedLibrary", selectedLibrary);
         settingsToSaveTo->setValue("selectedTheme", selectedTheme);
         settingsToSaveTo->setValue("selectedThumbsDir", _selectedThumbsDir);
+        settingsToSaveTo->setValue("useMediaDirForThumbs", _useMediaDirForThumbs);
         settingsToSaveTo->setValue("selectedDevice", selectedDevice);
         settingsToSaveTo->setValue("playerVolume", playerVolume);
         settingsToSaveTo->setValue("offSet", offSet);
@@ -864,6 +873,15 @@ void SettingsHandler::setSelectedThumbsDirDefault(QWidget* parent)
 {
     _selectedThumbsDir = nullptr;
     requestRestart(parent);
+}
+void SettingsHandler::setUseMediaDirForThumbs(bool value)
+{
+    QMutexLocker locker(&mutex);
+    _useMediaDirForThumbs = value;
+}
+bool SettingsHandler::getUseMediaDirForThumbs()
+{
+    return _useMediaDirForThumbs;
 }
 int SettingsHandler::getSelectedDevice()
 {
@@ -1835,6 +1853,16 @@ void SettingsHandler::setHTTPPort(int value)
     _httpPort = value;
     settingsChangedEvent(true);
 }
+int SettingsHandler::getWebSocketPort()
+{
+    return _webSocketPort;
+}
+void SettingsHandler::setWebSocketPort(int value)
+{
+    QMutexLocker locker(&mutex);
+    _webSocketPort = value;
+    settingsChangedEvent(true);
+}
 
 QString SettingsHandler::getVRLibrary()
 {
@@ -1917,6 +1945,7 @@ QHash<QString, QVariant> SettingsHandler::deoDnlaFunscriptLookup;
 QString SettingsHandler::selectedTheme;
 QString SettingsHandler::selectedLibrary;
 QString SettingsHandler::_selectedThumbsDir;
+bool SettingsHandler::_useMediaDirForThumbs;
 int SettingsHandler::selectedDevice;
 int SettingsHandler::_librarySortMode;
 int SettingsHandler::playerVolume;
@@ -1977,6 +2006,7 @@ bool SettingsHandler::_enableHttpServer;
 QString SettingsHandler::_httpServerRoot;
 qint64 SettingsHandler::_httpChunkSize;
 int SettingsHandler::_httpPort;
+int SettingsHandler::_webSocketPort;
 QString SettingsHandler::_vrLibrary;
 
 int SettingsHandler::_funscriptModifierStep;

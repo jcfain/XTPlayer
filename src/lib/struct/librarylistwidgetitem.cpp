@@ -20,10 +20,7 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem27 &data, QListWidge
 
     QString thumbPath = data.thumbFile;
     QFileInfo thumbFile = QFileInfo(thumbPath);
-    if(!thumbFile.exists())
-        setThumbFileLoading(true);
-    else
-        setThumbFile(thumbPath);
+    setThumbFile(thumbFile.exists() ? thumbPath : data.thumbFileLoading);
 }
 
 LibraryListWidgetItem::~LibraryListWidgetItem()
@@ -159,29 +156,20 @@ void LibraryListWidgetItem::updateThumbSize(QSize thumbSize)
     setTextAlignment(Qt::AlignmentFlag::AlignTop | Qt::AlignmentFlag::AlignHCenter);
 }
 
-void LibraryListWidgetItem::setThumbFile(QString filePath)
+void LibraryListWidgetItem::setThumbFile(QString filePath, QString errorMessage)
 {
     _thumbFile = filePath;
     auto data = getLibraryListItem();
+    if(!errorMessage.isEmpty())
+    {
+        _thumbFile = data.thumbFileError;
+        setToolTip(toolTip() + "\n"+ errorMessage);
+    }
     data.thumbFile = _thumbFile;
     QVariant listItem;
     listItem.setValue(data);
     setData(Qt::UserRole, listItem);
     updateThumbSize(_thumbSize);
-}
-
-void LibraryListWidgetItem::setThumbFileLoading(bool waiting)
-{
-    setThumbFile(waiting ? "://images/icons/loading.png" : "://images/icons/loading_current.png");
-}
-
-void LibraryListWidgetItem::setThumbFileLoaded(QString message, QString path)
-{
-    if(!path.isEmpty())
-        _thumbFile = path;
-    setThumbFile(!message.isEmpty() ? "://images/icons/error.png" : _thumbFile);
-    if(!message.isEmpty())
-        setToolTip(toolTip() + "\n"+ message);
 }
 
 LibraryListWidgetItem* LibraryListWidgetItem::clone() const

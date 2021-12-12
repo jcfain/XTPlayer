@@ -1796,6 +1796,8 @@ void SettingsDialog::on_thumbDirButton_clicked()
 void SettingsDialog::on_thumbsDirDefaultButton_clicked()
 {
     SettingsHandler::setSelectedThumbsDirDefault(this);
+    ui.useMediaDirectoryCheckbox->setChecked(false);
+    on_useMediaDirectoryCheckbox_clicked(false);
 }
 
 void SettingsDialog::on_disableVRScriptNotFoundCheckbox_stateChanged(int checkState)
@@ -1935,6 +1937,14 @@ void SettingsDialog::on_httpPort_valueChanged(int value)
         _requiresRestart = true;
 }
 
+void SettingsDialog::on_webSocketPortSpinBox_valueChanged(int value)
+{
+    SettingsHandler::setWebSocketPort(value);
+    if(SettingsHandler::getEnableHttpServer())
+        _requiresRestart = true;
+}
+
+
 void SettingsDialog::on_chunkSizeDouble_valueChanged(double value)
 {
     SettingsHandler::setHTTPChunkSize(value * 1048576);
@@ -1955,4 +1965,10 @@ void SettingsDialog::on_vrLibraryLineEdit_textEdited(const QString &selectedDire
 void SettingsDialog::on_finscriptModifierSpinBox_valueChanged(int value)
 {
     FunscriptHandler::setModifier(value);
+}
+
+void SettingsDialog::on_useMediaDirectoryCheckbox_clicked(bool checked)
+{
+    ui.thumbDirButton->setDisabled(checked);
+    SettingsHandler::setUseMediaDirForThumbs(checked);
 }
