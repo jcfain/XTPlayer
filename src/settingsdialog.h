@@ -41,7 +41,7 @@ public:
     SettingsDialog(QWidget* parent = nullptr);
     ~SettingsDialog();
 
-    void init(VideoHandler* videoHandler);
+    void init(VideoHandler* videoHandler, MediaLibraryHandler* mediaLibraryHandler);
     void initLive();
     UdpHandler* getNetworkHandler();
     SerialHandler* getSerialHandler();
@@ -62,9 +62,6 @@ public:
     PasswordResponse CheckPass(QString pass);
     PasswordResponse GetLaunchPass();
     bool HasLaunchPass();
-    void setLibraryLoaded(QList<LibraryListItem27> cachedLibraryItems, QList<LibraryListItem27> vrLibraryItems);
-    void setLibraryLoading();
-    void on_libraryLoading_status(QString message = nullptr);
     void sendTCode(QString tcode);
 
     void reject() override;

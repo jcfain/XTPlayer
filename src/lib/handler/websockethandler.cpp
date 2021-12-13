@@ -44,27 +44,6 @@ void WebSocketHandler::sendCommand(QString command, QString message, QWebSocket*
         pClient->sendTextMessage(commandJson);
 }
 
-void  WebSocketHandler::sendDeviceConnectionStatus(ConnectionChangedSignal status, QWebSocket* client)
-{
-    QString messageJson = "{ \"status\": "+QString::number(status.status)+", \"deviceType\": "+QString::number(status.deviceType)+", \"message\": \""+status.message+"\" }";
-    if(status.deviceType == DeviceType::Serial || status.deviceType == DeviceType::Network)
-    {
-        _outputDeviceStatus = status;
-        sendCommand("outputDeviceStatus", messageJson, client);
-    }
-    else if(status.deviceType == DeviceType::Gamepad)
-    {
-        _gamepadStatus = status;
-        sendCommand("inputDeviceStatus", messageJson, client);
-    }
-    else
-    {
-        _inputDeviceStatus = status;
-        sendCommand("inputDeviceStatus", messageJson, client);
-    }
-
-
-}
 void WebSocketHandler::onNewConnection()
 {
     QWebSocket *pSocket = m_pWebSocketServer->nextPendingConnection();
@@ -131,4 +110,33 @@ void WebSocketHandler::closed()
 {
     QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
     LogHandler::Debug("WEBSOCKET closed: " + pClient->objectName());
+}
+
+void  WebSocketHandler::sendDeviceConnectionStatus(ConnectionChangedSignal status, QWebSocket* client)
+{
+    QString messageJson = "{ \"status\": "+QString::number(status.status)+", \"deviceType\": "+QString::number(status.deviceType)+", \"message\": \""+status.message+"\" }";
+    if(status.deviceType == DeviceType::Serial || status.deviceType == DeviceType::Network)
+    {
+        _outputDeviceStatus = status;
+        sendCommand("outputDeviceStatus", messageJson, client);
+    }
+    else if(status.deviceType == DeviceType::Gamepad)
+    {
+        _gamepadStatus = status;
+        sendCommand("inputDeviceStatus", messageJson, client);
+    }
+    else
+    {
+        _inputDeviceStatus = status;
+        sendCommand("inputDeviceStatus", messageJson, client);
+    }
+}
+void  WebSocketHandler::sendUpdateThumb(QString id, QString thumb, QString errorMessage)
+{
+    QString messageJson;
+    if(errorMessage.isEmpty())
+        messageJson = "{ \"id\": \""+id+"\", \"thumb\": \""+thumb+"\"}";
+    else
+        messageJson = "{ \"id\": \""+id+"\", \"thumb\": \""+thumb+"\", \"errorMessage\": \""+errorMessage+"\"}";
+    sendCommand("updateThumb", messageJson);
 }

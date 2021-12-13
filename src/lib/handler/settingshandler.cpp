@@ -203,9 +203,13 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
         QSequentialIterable playlistArray = variant.value<QSequentialIterable>();
 
         QList<LibraryListItem27> items;
+        int idTracker = 1;
         foreach(QVariant item, playlistArray)
         {
-            items.append(LibraryListItem27::fromVariant(item));
+            auto itemTyped = LibraryListItem27::fromVariant(item);
+            itemTyped.ID = idTracker;
+            items.append(itemTyped);
+            idTracker++;
         }
         _playlists.insert(playlist, items);
     }
@@ -380,12 +384,12 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         foreach(auto playlist, _playlists.keys())
         {
             QList<LibraryListItem27> playlistItems = _playlists[playlist];
-            QVariantList varaintList;
+            QVariantList variantList;
             foreach(auto playlistItem, playlistItems)
             {
-                varaintList.append(LibraryListItem27::toVariant(playlistItem));
+                variantList.append(LibraryListItem27::toVariant(playlistItem));
             }
-            playlists.insert(playlist, varaintList);
+            playlists.insert(playlist, variantList);
         }
         settingsToSaveTo->setValue("playlists", playlists);
         settingsToSaveTo->setValue("userData", _hashedPass);

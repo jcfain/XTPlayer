@@ -16,7 +16,7 @@
 #include "httpServer/httpServer.h"
 #include "httpServer/httpRequestHandler.h"
 #include "httpServer/httpRequestRouter.h"
-#include "../struct/librarylistwidgetitem.h"
+#include "medialibraryhandler.h"
 #include "../struct/ConnectionChangedSignal.h"
 #include "../tool/videoformat.h"
 
@@ -32,7 +32,7 @@ public slots:
     void on_DeviceConnection_StateChange(ConnectionChangedSignal status);
 
 public:
-    HttpHandler(QObject *parent = nullptr);
+    HttpHandler(MediaLibraryHandler* mediaLibraryHandler, QObject *parent = nullptr);
     ~HttpHandler();
     HttpPromise handle(HttpDataPtr data);
     HttpPromise handleVideoStream(HttpDataPtr data);
@@ -46,12 +46,8 @@ public:
     HttpPromise handleTCodeIn(HttpDataPtr data);
     HttpPromise handleDeo(HttpDataPtr data);
     HttpPromise handleWebTimeUpdate(HttpDataPtr data);
-    void setLibraryLoaded(QList<LibraryListItem27> cachedLibraryItems, QList<LibraryListItem27> vrLibraryItems);
-    void setLibraryLoading();
-    void sendLibraryLoadingStatus(QString message);
 
     void sendWebSocketTextMessage(QString command, QString message = nullptr);
-    void on_webSocketClient_Connected(QWebSocket* client);
 
 private:
     HttpServerConfig config;
@@ -59,15 +55,19 @@ private:
     HttpServer* _server;
     QMimeDatabase mimeDatabase;
     WebSocketHandler* _webSocketHandler;
+    MediaLibraryHandler* _mediaLibraryHandler;
     bool _libraryLoaded = false;
     QString _libraryLoadingStatus = "Loading...";
-    QList<LibraryListItem27> _cachedLibraryItems;
-    QList<LibraryListItem27> _vrLibraryItems;
 
     QJsonObject createMediaObject(LibraryListItem27 libraryListItem, bool stereoscopic, QString hostAddress);
     QJsonObject createDeoObject(LibraryListItem27 libraryListItem, QString hostAddress);
     QString getScreenType(QString mediaPath);
     QString getStereoMode(QString mediaPath);
+    void on_webSocketClient_Connected(QWebSocket* client);
+    void onSetLibraryLoaded();
+    void onSetLibraryLoading();
+    void onLibraryLoadingStatusChange(QString message);
+
 };
 
 #endif // HTTPHANDLER_H

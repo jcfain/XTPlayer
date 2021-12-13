@@ -98,6 +98,8 @@ private slots:
     void playFileWithAudioSync();
     void regenerateThumbNail();
     void setThumbNailFromCurrent();
+    void lockThumb();
+    void unlockThumb();
     void onVRMessageRecieved(VRPacket packet);
     void on_gamepad_sendTCode(QString tcode);
     void on_gamepad_sendAction(QString action);
@@ -210,7 +212,7 @@ private:
     bool _waitForStopFutureCancel = false;
     QProgressBar* bar;
     VideoHandler* videoHandler;
-    MediaLibraryHandler mediaLibraryHandler;
+    MediaLibraryHandler* _mediaLibraryHandler;
     TCodeHandler* tcodeHandler;
     bool _isMaximized = false;
     bool _isFullScreen = false;
@@ -278,7 +280,7 @@ private:
 //    void saveSingleThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
 //    void saveThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0, bool vrMode = false);
     void onSaveNewThumbLoading(LibraryListItem27 item);
-    void onSaveNewThumb(LibraryListItem27 item, bool vrMode, QString errorMessage, QString thumbFile);
+    void onSaveNewThumb(LibraryListItem27 item, bool vrMode, QString thumbFile);
     void onSaveThumbError(LibraryListItem27 item, bool vrMode, QString errorMessage);
 //    void startThumbProcess(bool vrMode = false);
 //    void stopThumbProcess();

@@ -70,12 +70,12 @@ void SettingsDialog::dispose()
     delete _gamepadHandler;
 }
 
-void SettingsDialog::init(VideoHandler* videoHandler)
+void SettingsDialog::init(VideoHandler* videoHandler, MediaLibraryHandler* mediaLibraryHandler)
 {
     _videoHandler = videoHandler;
     if(SettingsHandler::getEnableHttpServer())
     {
-        _httpHandler = new HttpHandler(this);
+        _httpHandler = new HttpHandler(mediaLibraryHandler, this);
         connect(_httpHandler, &HttpHandler::tcode, this, &SettingsDialog::sendTCode);
         connect(_httpHandler, &HttpHandler::connectTCodeDevice, this, &SettingsDialog::initDeviceRetry);
         connect(this, &SettingsDialog::deviceConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
@@ -732,21 +732,6 @@ void SettingsDialog::setUpMultiplierUi(bool enabled)
 {
     foreach(auto widget, _multiplierWidgets)
         widget->setHidden(!enabled);
-}
-void SettingsDialog::on_libraryLoading_status(QString message)
-{
-    if(_httpHandler)
-        _httpHandler->sendLibraryLoadingStatus(message);
-}
-void SettingsDialog::setLibraryLoaded(QList<LibraryListItem27> cachedLibraryItems, QList<LibraryListItem27> vrLibraryItems)
-{
-    if(_httpHandler)
-        _httpHandler->setLibraryLoaded(cachedLibraryItems, vrLibraryItems);
-}
-void SettingsDialog::setLibraryLoading()
-{
-    if(_httpHandler)
-        _httpHandler->setLibraryLoading();
 }
 
 void SettingsDialog::setAxisProgressBar(QString axis, int value)

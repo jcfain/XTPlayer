@@ -173,40 +173,56 @@ function sendTCode(tcode) {
 } */
 
 function wsCallBackFunction(evt) {
-	var data = JSON.parse(evt.data);
-	switch(data["command"]) {
-		case "outputDeviceStatus":
-			var status = data["message"];
-			var deviceType = status["deviceType"];
-			setOutputConnectionStatus(status["status"], status["message"]);
-			break;
-		case "inputDeviceStatus":
-			var status = data["message"];
-			var deviceType = status["deviceType"];
-			setInputConnectionStatus(deviceType, status["status"], status["message"]);
-			break;
-		case "connectionClosed":
-			xtpConnected = false;
-			alert("Looks like XTP was shut down.\nRestart XTP and refresh the page to reconnect.");
-			break;
-		case "mediaLoaded":
-			var mediaLoadingElement = document.getElementById("mediaLoading");
-			mediaLoadingElement.style.display = "none"
-			getServerLibrary();
-			break;
-		case "mediaLoading":
-			clearMediaList();
-			var mediaLoadingElement = document.getElementById("mediaLoading");
-			mediaLoadingElement.style.display = "flex"
-			var noMediaElement = document.getElementById("noMedia");
-			noMediaElement.hidden = true;
-		break;
-		case "mediaLoadingStatus":
-			if(data["message"]) {
+	try {
+		var data = JSON.parse(evt.data);
+		switch(data["command"]) {
+			case "outputDeviceStatus":
+				var status = data["message"];
+				var deviceType = status["deviceType"];
+				setOutputConnectionStatus(status["status"], status["message"]);
+				break;
+			case "inputDeviceStatus":
+				var status = data["message"];
+				var deviceType = status["deviceType"];
+				setInputConnectionStatus(deviceType, status["status"], status["message"]);
+				break;
+			case "connectionClosed":
+				xtpConnected = false;
+				alert("Looks like XTP was shut down.\nRestart XTP and refresh the page to reconnect.");
+				break;
+			case "mediaLoaded":
+				var mediaLoadingElement = document.getElementById("mediaLoading");
+				mediaLoadingElement.style.display = "none"
+				getServerLibrary();
+				break;
+			case "mediaLoading":
+				clearMediaList();
+				var mediaLoadingElement = document.getElementById("mediaLoading");
+				mediaLoadingElement.style.display = "flex"
+				var noMediaElement = document.getElementById("noMedia");
+				noMediaElement.hidden = true;
+				break;
+			case "mediaLoadingStatus":
 				var mediaLoadingElement = document.getElementById("loadingStatus");
 				mediaLoadingElement.innerText = data["message"];
-			}
-			break;
+				break;
+			case "updateThumb":
+				var message = data["message"];
+				var mediaElement = document.getElementById(message.id);
+				if(mediaElement) {
+					var imageElement = mediaElement.getElementsByTagName("img")[0];
+					imageElement.src = "/thumb/" + message.thumb + "?"+ new Date().getTime();
+					if(message.errorMessage)
+						imageElement.title = message.errorMessage;
+					var index = mediaListObj.findIndex(x => x.id === message.id);
+					mediaListObj[index].relativeThumb = "/thumb/" + message.thumb;
+				}
+				break;
+				
+		}
+	}
+	catch(e) {
+		console.error(e.toString());
 	}
 }
 
@@ -620,7 +636,7 @@ function onMediaLoad(err, mediaList)
 	for(var i=0; i<mediaList.length;i++)
 	{
 		var obj = {
-			id: mediaList[i]["name"].replace(/^[^a-z]+|[^\w:.-]+/gi, "")+"item"+i,
+			id: mediaList[i]["id"],
 			name: mediaList[i]["name"],
 			displayName: mediaList[i]["name"],
 			thumbSize: mediaList[i]["thumbSize"],
@@ -717,7 +733,7 @@ function loadMedia(mediaList) {
 		image.src = "/thumb/" + obj.relativeThumb;
 		image.style.maxWidth = thumbSizeGlobal + "px";
 		image.style.maxHeight = thumbSizeGlobal + "px";
-		image.id = obj.id;
+		//image.onerror="this.onerror=null;this.src='://images/icons/error.png';"
 		var namenode = document.createElement("div");
 		namenode.innerText = obj.displayName;
 		namenode.className += "name"

@@ -208,7 +208,7 @@
   </widget>
   <action name="actionSelect_library">
    <property name="text">
-    <string>Select library...</string>
+    <string>Select media folder...</string>
    </property>
   </action>
   <action name="actionAbout">
@@ -263,7 +263,7 @@
   </action>
   <action name="actionReload_library">
    <property name="text">
-    <string>Reload library</string>
+    <string>Reload media</string>
    </property>
   </action>
   <action name="actionDownload_URL">

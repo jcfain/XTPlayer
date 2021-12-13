@@ -33,7 +33,6 @@ public:
     //        modifiedDate = item.modifiedDate;
     //        duration = item.duration;
     //    }
-    int ID;
     LibraryListItemType type;
     QString path;
     QString name;
@@ -47,6 +46,7 @@ public:
     quint64 duration;
 
     // Live members
+    QString ID;
     bool isMFS;
     QString toolTip;
     QString thumbFileLoading = "://images/icons/loading.png";
@@ -104,7 +104,7 @@ public:
     {
         QJsonObject obj = item.toJsonObject();
         LibraryListItem27 newItem;
-        newItem.ID = obj["id"].toInt();
+        //newItem.ID = obj["id"].toInt();
         newItem.path = obj["path"].toString();
         newItem.duration = obj["path"].toString().toLongLong();
         newItem.mediaExtension = obj["mediaExtension"].toString();
@@ -123,7 +123,7 @@ public:
     static QVariant toVariant(LibraryListItem27 item)
     {
         QJsonObject obj;
-        obj["id"] = item.ID;
+        //obj["id"] = item.ID;
         obj["path"] = item.path;
         obj["duration"] = QString::number(item.duration);
         obj["mediaExtension"] = item.mediaExtension;;

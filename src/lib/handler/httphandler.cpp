@@ -1,13 +1,26 @@
 #include "httphandler.h"
 
-HttpHandler::HttpHandler(QObject *parent):
+HttpHandler::HttpHandler(MediaLibraryHandler* mediaLibraryHandler, QObject *parent):
     HttpRequestHandler(parent)
 {
+    _mediaLibraryHandler = mediaLibraryHandler;
     _webSocketHandler = new WebSocketHandler(this);
     connect(_webSocketHandler, &WebSocketHandler::connectOutputDevice, this, &HttpHandler::connectTCodeDevice);
     connect(_webSocketHandler, &WebSocketHandler::connectInputDevice, this, &HttpHandler::connectInputDevice);
     connect(_webSocketHandler, &WebSocketHandler::tcode, this, &HttpHandler::tcode);
     connect(_webSocketHandler, &WebSocketHandler::newWebSocketConnected, this, &HttpHandler::on_webSocketClient_Connected);
+
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::libraryLoading, this, &HttpHandler::onSetLibraryLoading);
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::libraryLoadingStatus, this, &HttpHandler::onLibraryLoadingStatusChange);
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::libraryLoaded, this, &HttpHandler::onSetLibraryLoaded);
+
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::saveThumbError, this, [this](LibraryListItem27 item, bool vrMode, QString error) {_webSocketHandler->sendUpdateThumb(item.ID, item.thumbFileError, error);});
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::saveNewThumb, this, [this](LibraryListItem27 item, bool vrMode, QString thumbFile) {
+        QString relativeThumb = thumbFile.replace(SettingsHandler::getSelectedThumbsDir(), "").replace(SettingsHandler::getSelectedLibrary(), "");
+        _webSocketHandler->sendUpdateThumb(item.ID, relativeThumb);
+    });
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::saveNewThumbLoading, this, [this](LibraryListItem27 item) {_webSocketHandler->sendUpdateThumb(item.ID, item.thumbFileLoadingCurrent);});
+    // connect(_mediaLibraryHandler, &MediaLibraryHandler::thumbProcessBegin, this, [this]() {onLibraryLoadingStatusChange("Loading thumbs...");});
 
     config.port = SettingsHandler::getHTTPPort();
     config.requestTimeout = 20;
@@ -258,7 +271,7 @@ HttpPromise HttpHandler::handleVideoList(HttpDataPtr data)
 {
     QJsonArray media;
     QString hostAddress = "http://" + data->request->headerDefault("Host", "") + "/";
-    foreach(auto item, _cachedLibraryItems)
+    foreach(auto item, _mediaLibraryHandler->getLibraryCache())
     {
         QJsonObject object;
         if(item.type == LibraryListItemType::PlaylistInternal || item.type == LibraryListItemType::FunscriptType)
@@ -266,7 +279,7 @@ HttpPromise HttpHandler::handleVideoList(HttpDataPtr data)
         media.append(createMediaObject(item, false, hostAddress));
     }
 
-    foreach(auto item, _vrLibraryItems)
+    foreach(auto item, _mediaLibraryHandler->getVRLibraryCache())
     {
         QJsonObject object;
         if(item.type == LibraryListItemType::PlaylistInternal || item.type == LibraryListItemType::FunscriptType)
@@ -282,6 +295,7 @@ QJsonObject HttpHandler::createMediaObject(LibraryListItem27 item, bool stereosc
 {
     //VideoFormat videoFormat;
     QJsonObject object;
+    object["id"] = item.ID;
     object["name"] = item.nameNoExtension;
     QString relativePath = item.path.replace(SettingsHandler::getSelectedLibrary() +"/", "");
     object["path"] = hostAddress + "media/" + QString(QUrl::toPercentEncoding(relativePath));
@@ -289,7 +303,7 @@ QJsonObject HttpHandler::createMediaObject(LibraryListItem27 item, bool stereosc
     QString scriptNoExtensionRelativePath = item.scriptNoExtension.replace(SettingsHandler::getSelectedLibrary(), "");
     object["scriptNoExtensionRelativePath"] = "funscript/" + QString(QUrl::toPercentEncoding(scriptNoExtensionRelativePath));
     QString thumbFile = item.thumbFile.replace(SettingsHandler::getSelectedThumbsDir(), "");
-    thumbFile = thumbFile.replace(SettingsHandler::getSelectedLibrary() +"/", "");
+    thumbFile = thumbFile.replace(SettingsHandler::getSelectedLibrary(), "");
     QString relativeThumb = thumbFile;
     object["thumb"] = hostAddress + "thumb/" + QString(QUrl::toPercentEncoding(relativeThumb));
     object["relativeThumb"] = QString(QUrl::toPercentEncoding(relativeThumb));
@@ -314,7 +328,7 @@ HttpPromise HttpHandler::handleDeo(HttpDataPtr data)
     library["name"] = "XTP Library";
     QJsonArray list;
 
-    foreach(auto item, _cachedLibraryItems)
+    foreach(auto item, _mediaLibraryHandler->getLibraryCache())
     {
         QJsonObject object;
         if(item.type == LibraryListItemType::PlaylistInternal || item.type == LibraryListItemType::FunscriptType)
@@ -322,7 +336,7 @@ HttpPromise HttpHandler::handleDeo(HttpDataPtr data)
         list.append(createDeoObject(item, hostAddress));
     }
 
-    foreach(auto item, _vrLibraryItems)
+    foreach(auto item, _mediaLibraryHandler->getVRLibraryCache())
     {
         QJsonObject object;
         if(item.type == LibraryListItemType::PlaylistInternal || item.type == LibraryListItemType::FunscriptType)
@@ -399,13 +413,28 @@ HttpPromise HttpHandler::handleThumbFile(HttpDataPtr data)
         data->response->setStatus(HttpStatus::Forbidden);
         return HttpPromise::resolve(data);
     }
-
     QString thumbDirFile = SettingsHandler::getSelectedThumbsDir() + thumbName;
     QString libraryThumbDirFile = SettingsHandler::getSelectedLibrary() + "/" + thumbName;
-    if(thumbName.startsWith(":") || QFileInfo(libraryThumbDirFile).exists())
+    if(thumbName.startsWith(":"))
+    {
+        // System resource thumbs
+        data->response->sendFile(thumbName);
+    }
+    else if(thumbName.startsWith(SettingsHandler::getSelectedLibrary()) && QFileInfo(thumbName).exists())
+    {
+        // Media library thumbs
+        data->response->sendFile(thumbName);
+    }
+    else if(QFileInfo(libraryThumbDirFile).exists())
+    {
+        // VR media thumbs
         data->response->sendFile(libraryThumbDirFile);
-    else if(QFile(thumbDirFile).exists())
+    }
+    else if(QFileInfo(thumbDirFile).exists())
+    {
+        // Global thumb directory thumbs.
         data->response->sendFile(thumbDirFile);
+    }
     else
     {
         data->response->setStatus(HttpStatus::NotFound);
@@ -588,20 +617,18 @@ void HttpHandler::sendWebSocketTextMessage(QString command, QString message)
     _webSocketHandler->sendCommand(command, message);
 }
 
-void HttpHandler::setLibraryLoaded(QList<LibraryListItem27> cachedLibraryItems, QList<LibraryListItem27> vrLibraryItems)
+void HttpHandler::onSetLibraryLoaded()
 {
     _libraryLoaded = true;
-    _cachedLibraryItems = cachedLibraryItems;
-    _vrLibraryItems = vrLibraryItems;
     _webSocketHandler->sendCommand("mediaLoaded");
 }
-void HttpHandler::setLibraryLoading()
+void HttpHandler::onSetLibraryLoading()
 {
     _libraryLoaded = false;
     _webSocketHandler->sendCommand("mediaLoading");
 }
 
-void HttpHandler::sendLibraryLoadingStatus(QString message) {
+void HttpHandler::onLibraryLoadingStatusChange(QString message) {
     _libraryLoadingStatus = message;
     _webSocketHandler->sendCommand("mediaLoadingStatus", message);
 }
@@ -610,7 +637,7 @@ void HttpHandler::on_webSocketClient_Connected(QWebSocket* client)
 {
     QString command = _libraryLoaded ? "mediaLoaded" : "mediaLoading";
     client->sendTextMessage("{ \"command\": \""+command+"\"}");
-    client->sendTextMessage("{ \"command\": \"mediaLoadingStatus\", \"message\": "+_libraryLoadingStatus+"}");
+    client->sendTextMessage("{ \"command\": \"mediaLoadingStatus\", \"message\": \""+_libraryLoadingStatus+"\"}");
 }
 
 void HttpHandler::on_DeviceConnection_StateChange(ConnectionChangedSignal status)
