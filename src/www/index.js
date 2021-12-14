@@ -53,6 +53,7 @@ var sortByGlobal = "nameAsc";
 var showGlobal = "All";
 var settingsNode;
 var thumbSizeGlobal = 0;
+var selectedSyncConnectionGlobal;
 var videoNode;
 var videoSourceNode;
 var externalStreaming;
@@ -87,6 +88,7 @@ function loadPage()
 	sortByGlobal = JSON.parse(window.localStorage.getItem("sortBy"));
 	showGlobal = JSON.parse(window.localStorage.getItem("show"));
 	thumbSizeGlobal = JSON.parse(window.localStorage.getItem("thumbSize"));
+	selectedSyncConnectionGlobal = JSON.parse(window.localStorage.getItem("selectedSyncConnection"));
 /* 	if(!thumbSizeGlobal && window.devicePixelRatio == 2.75) {
 		thumbSizeGlobal = 400;
 	} */
@@ -156,7 +158,8 @@ function sendMessageXTP(command, message) {
 
 function onSyncDeviceConnectionChange(input, device) {
 	selectedInputDevice = device;
-	sendMessageXTP("connectInputDevice", {deviceType: device, enabled: input.checked});
+	sendSyncDeviceConnectionChange(device, input.checked);
+	window.localStorage.setItem("selectedSyncConnection", parseInt(device, 10));
 }
 
 function tcodeDeviceConnectRetry() {
@@ -167,6 +170,9 @@ function sendTCode(tcode) {
 	sendMessageXTP("tcode", tcode);
 }
 
+function sendSyncDeviceConnectionChange(device, checked) {
+	sendMessageXTP("connectInputDevice", {deviceType: device, enabled: checked});
+}
 /* function stopWebSocket() {
 	if (websocket)
 		websocket.close();
@@ -335,12 +341,42 @@ function getServerSettings() {
 			});
 		funscriptChannels.sort();
 		initWebSocket();
-		updateSettingsUI();
 	  } else {
 		alert("Error getting settings");
 	  }
 	};
 	xhr.send();
+}
+
+function initWebSocket() {
+	try {
+		wsUri = "ws://" + window.location.host + ":"+remoteUserSettings.webSocketServerPort;
+		if (typeof MozWebSocket == 'function')
+			WebSocket = MozWebSocket;
+		if ( websocket && websocket.readyState == 1 )
+			websocket.close();
+		websocket = new WebSocket( wsUri );
+		websocket.onopen = function (evt) {
+			xtpConnected = true;
+			debug("CONNECTED");
+			updateSettingsUI();
+		};
+		websocket.onclose = function (evt) {
+			debug("DISCONNECTED");
+			xtpConnected = false;
+		};
+		websocket.onmessage = function (evt) {
+			wsCallBackFunction(evt);
+			debug("MESSAGE RECIEVED: "+ evt.data);
+		};
+		websocket.onerror = function (evt) {
+			alert('ERROR: ' + evt.data + ", Address: "+wsUri);
+			xtpConnected = false;
+		};
+	} catch (exception) {
+		alert('ERROR: ' + exception + ", Address: "+wsUri);
+		xtpConnected = false;
+	}
 }
 
 function updateSettingsUI() {
@@ -366,36 +402,6 @@ function getServerLibrary() {
 		alert("Error getting media");
 	};
 	xhr.send();
-}
-
-function initWebSocket() {
-	try {
-		wsUri = "ws://" + window.location.host + ":8080";
-		if (typeof MozWebSocket == 'function')
-			WebSocket = MozWebSocket;
-		if ( websocket && websocket.readyState == 1 )
-			websocket.close();
-		websocket = new WebSocket( wsUri );
-		websocket.onopen = function (evt) {
-			xtpConnected = true;
-			debug("CONNECTED");
-		};
-		websocket.onclose = function (evt) {
-			debug("DISCONNECTED");
-			xtpConnected = false;
-		};
-		websocket.onmessage = function (evt) {
-			wsCallBackFunction(evt);
-			debug("MESSAGE RECIEVED: "+ evt.data);
-		};
-		websocket.onerror = function (evt) {
-			debug('ERROR: ' + evt.data);
-			xtpConnected = false;
-		};
-	} catch (exception) {
-		debug('ERROR: ' + exception);
-		xtpConnected = false;
-	}
 }
 
 function setInputConnectionStatus(deviceType, status, message) {
@@ -1188,6 +1194,10 @@ function setupConnectionsTab() {
 	connectionSettingsJson["networkPort"] = SettingsHandler::getServerPort();
 	connectionSettingsJson["serialPort"] = SettingsHandler::getSerialPort(); */
 	selectedInputDevice = remoteUserSettings.connection.input.selectedDevice;
+	if(selectedSyncConnectionGlobal && selectedSyncConnectionGlobal != selectedInputDevice) {
+		sendSyncDeviceConnectionChange(selectedSyncConnectionGlobal, true);
+		selectedInputDevice = selectedSyncConnectionGlobal;
+	}
 	switch(selectedInputDevice) {
 		case DeviceType.Deo:
 			document.getElementById("connectionDeoVR").checked = true;

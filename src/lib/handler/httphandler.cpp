@@ -49,8 +49,7 @@ HttpHandler::HttpHandler(MediaLibraryHandler* mediaLibraryHandler, QObject *pare
 
 HttpHandler::~HttpHandler()
 {
-    delete _server;
-    delete _webSocketHandler;
+
 }
 
 
@@ -115,6 +114,8 @@ HttpPromise HttpHandler::handleWebTimeUpdate(HttpDataPtr data)
 
 HttpPromise HttpHandler::handleSettings(HttpDataPtr data) {
     QJsonObject root;
+    root["webSocketServerPort"] = _webSocketHandler->getServerPort();
+
     QJsonObject availableAxisJson;
     auto availableAxis = SettingsHandler::getAvailableAxis();
     foreach(auto channel, availableAxis->keys()) {

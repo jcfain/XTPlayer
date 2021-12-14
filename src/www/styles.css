@@ -4,6 +4,7 @@ body {
     background-color: black;
     color: white;
     font-family: sans-serif;
+    font-family: "Georgia", 'Times New Roman', "Times", "serif", "Lucida Sans Regular", "DejaVu Serif", "Verdana";
 }
 .body-container {
     display: flex;
@@ -132,6 +133,12 @@ body {
     border-radius: 5px;
     height: 24px;
 }
+.formElement label  {
+    height: 24px;
+    flex-basis: 20%;
+    padding-top: 4px;
+    margin-right: 8px;
+}
 .styled-radio {
     width: 20px;
     height: 20px;
@@ -157,11 +164,9 @@ body {
     text-align: center;
 }
 
-.formElement label  {
+button:not(.icon-button):not(.tab-section-tab) {
+    border-radius: 5px;
     height: 24px;
-    flex-basis: 35%;
-    padding-top: 4px;
-    margin-right: 8px;
 }
 select {
     min-width: 132px;

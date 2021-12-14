@@ -664,7 +664,7 @@ void MediaLibraryHandler::setThumbPath(LibraryListItem27 &libraryListItem)
         return;
     }
     QStringList imageExtensions;
-    imageExtensions << ".jpg" << ".jpeg" << ".png";
+    imageExtensions << ".jpg" << ".jpeg" << ".png" << ".jfif" << ".webp";
     QFileInfo mediaInfo(libraryListItem.path);
     foreach(QString ext, imageExtensions) {
         QString filepath = mediaInfo.absolutePath() + QDir::separator() + libraryListItem.nameNoExtension + ext;

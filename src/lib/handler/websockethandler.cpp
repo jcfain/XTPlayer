@@ -13,9 +13,9 @@ WebSocketHandler::WebSocketHandler(QObject *parent):
 //    proxy.setPassword("password");
 //    QNetworkProxy::setApplicationProxy(proxy);
 //    m_pWebSocketServer->setProxy(proxy);
-    if (m_pWebSocketServer->listen(QHostAddress::Any, 8080))
+    if (m_pWebSocketServer->listen())
     {
-        LogHandler::Debug("Websocket listening on port " +QString::number(8080));
+        LogHandler::Debug("Websocket listening on port " + QString::number(m_pWebSocketServer->serverPort()));
         connect(m_pWebSocketServer, &QWebSocketServer::newConnection, this, &WebSocketHandler::onNewConnection);
         connect(m_pWebSocketServer, &QWebSocketServer::closed, this, &WebSocketHandler::closed);
     }
@@ -26,6 +26,23 @@ WebSocketHandler::~WebSocketHandler()
     sendCommand("connectionClosed");
     m_pWebSocketServer->close();
     qDeleteAll(m_clients.begin(), m_clients.end());
+}
+
+QHostAddress WebSocketHandler::getAddress()
+{
+    return m_pWebSocketServer->serverAddress();
+}
+QUrl WebSocketHandler::getUrl()
+{
+    return m_pWebSocketServer->serverUrl();
+}
+QString WebSocketHandler::getServerName()
+{
+    return m_pWebSocketServer->serverName();
+}
+int WebSocketHandler::getServerPort()
+{
+    return m_pWebSocketServer->serverPort();
 }
 
 void WebSocketHandler::sendCommand(QString command, QString message, QWebSocket* client)
@@ -66,6 +83,7 @@ void WebSocketHandler::initNewClient(QWebSocket* client)
 
 void WebSocketHandler::processTextMessage(QString message)
 {
+    LogHandler::Debug("WebSocket text message recieved: "+message);
     QJsonObject json;
     QJsonDocument doc = QJsonDocument::fromJson(message.toUtf8());
     if(!doc.isNull())

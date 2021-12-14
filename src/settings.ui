@@ -40,7 +40,7 @@
    <item row="0" column="0" colspan="2">
     <widget class="QTabWidget" name="settingsTabWidget">
      <property name="currentIndex">
-      <number>4</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="connectionTab">
       <attribute name="title">
@@ -495,7 +495,7 @@
           <x>10</x>
           <y>30</y>
           <width>611</width>
-          <height>118</height>
+          <height>126</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="skipToMoneyShotGrid">
@@ -854,16 +854,6 @@ THIS VALUE WILL BR RESET ON SCRIPT CHANGE!</string>
         <string>XTP web options</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_6">
-        <item row="3" column="2">
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>Web server port</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
         <item row="0" column="0">
          <widget class="QLabel" name="httpRootLabel">
           <property name="text">
@@ -926,16 +916,6 @@ will be hit for the next chunk.</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="3">
-         <widget class="QSpinBox" name="httpPortSpinBox">
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <number>65535</number>
-          </property>
-         </widget>
-        </item>
         <item row="2" column="5">
          <widget class="QPushButton" name="browseVRLibraryButton">
           <property name="text">
@@ -950,24 +930,18 @@ will be hit for the next chunk.</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="4">
-         <widget class="QLabel" name="label_8">
-          <property name="toolTip">
-           <string>This is the port the web site will recieve push notifications on.</string>
-          </property>
+        <item row="3" column="3">
+         <widget class="QLabel" name="label_4">
           <property name="text">
-           <string>WebSocket port</string>
+           <string>Web server port</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
-        <item row="3" column="5">
-         <widget class="QSpinBox" name="webSocketPortSpinBox">
-          <property name="toolTip">
-           <string>This is the port the web site will recieve push notifications on.</string>
-          </property>
+        <item row="3" column="4">
+         <widget class="QSpinBox" name="httpPortSpinBox">
           <property name="minimum">
            <number>1</number>
           </property>

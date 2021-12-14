@@ -20,6 +20,10 @@ signals:
 public:
     WebSocketHandler(QObject *parent = nullptr);
     ~WebSocketHandler();
+    QHostAddress getAddress();
+    QUrl getUrl();
+    QString getServerName();
+    int getServerPort();
     void sendCommand(QString command, QString message = nullptr, QWebSocket* client = 0);
     void sendDeviceConnectionStatus(ConnectionChangedSignal status, QWebSocket* client = 0);
     void sendUpdateThumb(QString id, QString thumb, QString error = nullptr);
