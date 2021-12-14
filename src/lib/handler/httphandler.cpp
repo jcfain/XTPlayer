@@ -298,6 +298,10 @@ QJsonObject HttpHandler::createMediaObject(LibraryListItem27 item, bool stereosc
     QJsonObject object;
     object["id"] = item.ID;
     object["name"] = item.nameNoExtension;
+    if(item.isMFS)
+        object["displayName"] = "(MFS) " + item.nameNoExtension;
+    else
+        object["displayName"] = item.nameNoExtension;
     QString relativePath = item.path.replace(SettingsHandler::getSelectedLibrary() +"/", "");
     object["path"] = hostAddress + "media/" + QString(QUrl::toPercentEncoding(relativePath));
     object["relativePath"] = "/" + QString(QUrl::toPercentEncoding(relativePath));
@@ -316,10 +320,18 @@ QJsonObject HttpHandler::createMediaObject(LibraryListItem27 item, bool stereosc
     object["isMFS"] = item.isMFS;
     object["tooltip"] = item.toolTip;
     object["hasScript"] = !item.script.isEmpty() || !item.zipFile.isEmpty();
+    object["thumbFileLoading"] = item.thumbFileLoading;
+    object["thumbFileLoadingCurrent"] = item.thumbFileLoadingCurrent;
+    object["thumbFileError"] = item.thumbFileError;
+    object["thumbFileExists"] = item.thumbFileExists;
+    object["loaded"] = false;
+    object["playing"] = false;
+    if(item.isMFS)
+        object["displayName"] = "(MFS) " + item.nameNoExtension;
 
     return object;
 }
-#include <QHostInfo>
+
 HttpPromise HttpHandler::handleDeo(HttpDataPtr data)
 {
     QString hostAddress = "http://" + data->request->headerDefault("Host", "") + "/";

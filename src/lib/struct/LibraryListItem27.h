@@ -49,6 +49,7 @@ public:
     QString ID;
     bool isMFS;
     QString toolTip;
+    bool thumbFileExists = false;
     QString thumbFileLoading = "://images/icons/loading.png";
     QString thumbFileLoadingCurrent = "://images/icons/loading_current.png";
     QString thumbFileError = "://images/icons/error.png";

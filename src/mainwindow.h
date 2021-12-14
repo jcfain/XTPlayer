@@ -293,11 +293,11 @@ private:
     QList<LibraryListWidgetItem*> selectedPlaylistItems;
     QString selectedPlaylistName;
     int playingLibraryListIndex;
-    LibraryListWidgetItem* playingLibraryListItem27 = nullptr;
+    LibraryListWidgetItem* playingLibraryListItem = nullptr;
     int selectedLibraryListIndex;
-    LibraryListWidgetItem* selectedLibraryListItem27 = nullptr;
+    LibraryListWidgetItem* selectedLibraryListItem = nullptr;
 
-    LibraryListItem27 getSelectedLibraryListItem27();
+    LibraryListItem27 getSelectedLibraryListItem();
     void onLibraryNotFound();
 //    void on_load_library(QString path, bool vrMode);
     void openWelcomeDialog();

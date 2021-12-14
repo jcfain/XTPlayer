@@ -28,6 +28,9 @@ signals:
     void saveNewThumbLoading(LibraryListItem27 item);
     void saveNewThumb(LibraryListItem27 item, bool vrMode, QString thumbFile);
     void saveThumbError(LibraryListItem27 item, bool vrMode, QString error);
+    void frameExtracted(LibraryListItem27 item, bool vrMode, const QtAV::VideoFrame& frame);
+    void frameExtractedError(LibraryListItem27 item, bool vrMode, const QString &errorMessage);
+    void videoLoadError(LibraryListItem27 item, bool vrMode, QtAV::AVError er);
 public:
     MediaLibraryHandler(QObject* parent = nullptr);
     ~MediaLibraryHandler();
@@ -45,26 +48,27 @@ public:
     void unlockThumb(LibraryListItem27 &item);
 
 private:
-    int libraryItemIDTracker = 1;
-    VideoFrameExtractor* extractor = 0;
-    AVPlayer* thumbNailPlayer = 0;
-    bool thumbProcessIsRunning = false;
-    bool loadingLibraryStop = false;
-    int thumbNailSearchIterator = 0;
-    QList<LibraryListItem27> cachedLibraryItems;
-    QList<LibraryListItem27> cachedVRItems;
-    QFuture<void> loadingLibraryFuture;
+    int _libraryItemIDTracker = 1;
+    VideoFrameExtractor* _extractor = 0;
+    AVPlayer* _thumbNailPlayer = 0;
+    bool _thumbProcessIsRunning = false;
+    bool _loadingLibraryStop = false;
+    int _thumbNailSearchIterator = 0;
+    QList<LibraryListItem27> _cachedLibraryItems;
+    QList<LibraryListItem27> _cachedVRItems;
+    QFuture<void> _loadingLibraryFuture;
+    QTimer _thumbTimeoutTimer;
     QMutex _mutex;
 
     void on_load_library(QString path, bool vrMode);
     void onLibraryLoaded();
-    void saveNewThumbs(bool vrMode = false);
-    void saveThumb(LibraryListItem27 item, qint64 position = 0, bool vrMode = false);
+    //void saveThumbs(QList<LibraryListItem27> items, qint64 position = 0, bool vrMode = false);
     void onPrepareLibraryLoad();
     void onLibraryItemFound(LibraryListItem27 item, bool vrMode);
-    void onSaveThumbError(LibraryListItem27 item, bool vrMode, QString errorMessage);
-    void onSaveThumbSuccess(LibraryListItem27 item, bool vrMode);
+    void onSaveThumb(LibraryListItem27 item, bool vrMode, QString errorMessage = nullptr);
     void setThumbPath(LibraryListItem27 &item);
+    void saveNewThumbs(bool vrMode = false);
+    void saveThumb(LibraryListItem27 item, qint64 position = 0, bool vrMode = false);
     void updateToolTip(LibraryListItem27 &item);
     void assignID(LibraryListItem27 &item);
 

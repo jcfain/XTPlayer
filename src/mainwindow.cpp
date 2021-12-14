@@ -435,8 +435,8 @@ void MainWindow::onPasswordIncorrect()
 void MainWindow::dispose()
 {
     deviceSwitchedHome();
-    if(playingLibraryListItem27 != nullptr)
-        updateMetaData(playingLibraryListItem27->getLibraryListItem());
+    if(playingLibraryListItem != nullptr)
+        updateMetaData(playingLibraryListItem->getLibraryListItem());
     SettingsHandler::Save();
     _xSettings->dispose();
 
@@ -873,7 +873,7 @@ void MainWindow::mediaAction(QString action)
         {
            bool increase = action == actions.IncreaseOffset;
            QString verb = increase ? "Increase" : "Decrease";
-           auto libraryListItem = playingLibraryListItem27->getLibraryListItem();
+           auto libraryListItem = playingLibraryListItem->getLibraryListItem();
            auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
            int newOffset = increase ? libraryListItemMetaData.offset + SettingsHandler::getFunscriptOffsetStep() : libraryListItemMetaData.offset - SettingsHandler::getFunscriptOffsetStep();
            SettingsHandler::setLiveOffset(newOffset);
@@ -1152,16 +1152,29 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             if(selectedFileListItem.type == LibraryListItemType::Video && !selectedFileListItem.thumbFile.contains(".lock."))
             {
                 myMenu.addAction(tr("Regenerate thumbnail"), this, &MainWindow::regenerateThumbNail);
-                myMenu.addAction(tr("Set thumbnail from current"), this, &MainWindow::setThumbNailFromCurrent);
-                myMenu.addAction(tr("Lock thumb"), this, &MainWindow::lockThumb);
+
+                if(playingLibraryListItem && (videoHandler->isPlaying() || videoHandler->isPaused()))
+                {
+                    LibraryListItem27 playingFileListItem = playingLibraryListItem->getLibraryListItem();
+                    if(playingFileListItem.ID == selectedFileListItem.ID)
+                        myMenu.addAction(tr("Set thumbnail from current"), this, &MainWindow::setThumbNailFromCurrent);
+                }
+                if(selectedFileListItem.thumbFileExists)
+                    myMenu.addAction(tr("Lock thumb"), this, &MainWindow::lockThumb);
             }
             else if(selectedFileListItem.type == LibraryListItemType::Video)
             {
-                myMenu.addAction(tr("Unlock thumb"), this, &MainWindow::unlockThumb);
+                if(selectedFileListItem.thumbFileExists)
+                    myMenu.addAction(tr("Unlock thumb"), this, &MainWindow::unlockThumb);
             }
-            myMenu.addAction(tr("Set moneyshot from current"), this, [this, selectedFileListItem] () {
-                onSetMoneyShot(selectedFileListItem, videoHandler->position());
-            });
+            if(playingLibraryListItem && (videoHandler->isPlaying() || videoHandler->isPaused()))
+            {
+                LibraryListItem27 playingFileListItem = playingLibraryListItem->getLibraryListItem();
+                if(playingFileListItem.ID == selectedFileListItem.ID)
+                    myMenu.addAction(tr("Set moneyshot from current"), this, [this, selectedFileListItem] () {
+                        onSetMoneyShot(selectedFileListItem, videoHandler->position());
+                    });
+            }
     //        myMenu.addAction("Add bookmark from current", this, [this, selectedFileListItem] () {
     //            onAddBookmark(selectedFileListItem, "Book mark 1", videoHandler->position());
     //        });
@@ -1857,7 +1870,7 @@ void MainWindow::on_LibraryList_itemClicked(QListWidgetItem *item)
             _playerControlsFrame->setPlayIcon(playingFile == selectedItem.path);
         }
         ui->statusbar->showMessage(selectedItem.nameNoExtension);
-        selectedLibraryListItem27 = (LibraryListWidgetItem*)item;
+        selectedLibraryListItem = (LibraryListWidgetItem*)item;
         selectedLibraryListIndex = libraryList->currentRow();
     }
 }
@@ -1952,8 +1965,8 @@ void MainWindow::stopAndPlayMedia(LibraryListItem27 selectedFileListItem, QStrin
               || !customScript.isEmpty()
               || audioSync)
         {
-            if(playingLibraryListItem27 != nullptr)
-                updateMetaData(playingLibraryListItem27->getLibraryListItem());
+            if(playingLibraryListItem != nullptr)
+                updateMetaData(playingLibraryListItem->getLibraryListItem());
             _playerControlsFrame->SetLoop(false);
             videoHandler->setLoading(true);
             if(videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone())
@@ -2127,10 +2140,10 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
             }
             else if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
                 videoHandler->play();
-            if(playingLibraryListItem27 != nullptr)
-                delete playingLibraryListItem27;
+            if(playingLibraryListItem != nullptr)
+                delete playingLibraryListItem;
             playingLibraryListIndex = libraryList->currentRow();
-            playingLibraryListItem27 = (LibraryListWidgetItem*)libraryList->item(playingLibraryListIndex)->clone();
+            playingLibraryListItem = (LibraryListWidgetItem*)libraryList->item(playingLibraryListIndex)->clone();
 
             processMetaData(selectedFileListItem);
 
@@ -2521,7 +2534,7 @@ void MainWindow::on_seekSlider_sliderMoved(int position)
     LogHandler::Debug("position: "+ QString::number(position));
     if (!_playerControlsFrame->getAutoLoop())
     {
-        bool isStandAloneFunscriptPlaying = playingLibraryListItem27->getLibraryListItem().type == LibraryListItemType::FunscriptType;
+        bool isStandAloneFunscriptPlaying = playingLibraryListItem->getLibraryListItem().type == LibraryListItemType::FunscriptType;
         qint64 duration = isStandAloneFunscriptPlaying ? _syncHandler->getFunscriptMax() : videoHandler->duration();
         qint64 playerPosition = XMath::mapRange(static_cast<qint64>(position), (qint64)0, (qint64)100, (qint64)0, duration);
 
@@ -2535,7 +2548,7 @@ void MainWindow::on_seekSlider_sliderMoved(int position)
 
 void MainWindow::onLoopRange_valueChanged(int position, int startLoop, int endLoop)
 {
-    bool isStandAloneFunscriptPlaying = playingLibraryListItem27->getLibraryListItem().type == LibraryListItemType::FunscriptType;
+    bool isStandAloneFunscriptPlaying = playingLibraryListItem->getLibraryListItem().type == LibraryListItemType::FunscriptType;
     if(endLoop >= 100)
         endLoop = 99;
     qint64 duration = isStandAloneFunscriptPlaying ? _syncHandler->getFunscriptMax() : videoHandler->duration();
@@ -2563,7 +2576,7 @@ void MainWindow::onLoopRange_valueChanged(int position, int startLoop, int endLo
 
 void MainWindow::on_media_positionChanged(qint64 position)
 {
-    bool isStandAloneFunscriptPlaying = playingLibraryListItem27->getLibraryListItem().type == LibraryListItemType::FunscriptType;
+    bool isStandAloneFunscriptPlaying = playingLibraryListItem->getLibraryListItem().type == LibraryListItemType::FunscriptType;
     qint64 duration = isStandAloneFunscriptPlaying ? _syncHandler->getFunscriptMax() : videoHandler->duration();
     qint64 videoToSliderPosition = XMath::mapRange(position,  (qint64)0, duration, (qint64)0, (qint64)100);
     if (!_playerControlsFrame->getAutoLoop())
@@ -3588,7 +3601,7 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
     {
         connect(_playerControlsFrame, &PlayerControls::loopRangeChanged, this, &MainWindow::onLoopRange_valueChanged);
         videoHandler->setRepeat(-1);
-        auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(playingLibraryListItem27->getLibraryListItem().path);
+        auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(playingLibraryListItem->getLibraryListItem().path);
         if(libraryListItemMetaData.lastLoopStart > -1 && libraryListItemMetaData.lastLoopEnd > libraryListItemMetaData.lastLoopStart)
         {
             QTimer::singleShot(250, this, [this, libraryListItemMetaData]() {
@@ -3601,7 +3614,7 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
         else
         {
             qint64 videoToSliderPosition = XMath::mapRange(videoHandler->position(),  (qint64)0, videoHandler->duration(), (qint64)0, (qint64)100);
-            updateMetaData(playingLibraryListItem27->getLibraryListItem());
+            updateMetaData(playingLibraryListItem->getLibraryListItem());
             _playerControlsFrame->setSeekSliderLowerValue(videoToSliderPosition);
         }
         _playerControlsFrame->setSeekSliderMinimumRange(1);
@@ -3846,7 +3859,7 @@ void MainWindow::deleteSelectedPlaylist()
 }
 
 
-LibraryListItem27 MainWindow::getSelectedLibraryListItem27()
+LibraryListItem27 MainWindow::getSelectedLibraryListItem()
 {
     QListWidgetItem* selectedItem = libraryList->selectedItems().first();
     return ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
@@ -3919,7 +3932,7 @@ void MainWindow::skipToMoneyShot()
     {
         if(_playerControlsFrame->getAutoLoop())
             _playerControlsFrame->SetLoop(false);
-        LibraryListItem27 selectedLibraryListItem27 = playingLibraryListItem27->getLibraryListItem();
+        LibraryListItem27 selectedLibraryListItem27 = playingLibraryListItem->getLibraryListItem();
         auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(selectedLibraryListItem27.path);
         if (libraryListItemMetaData.moneyShotMillis > -1 && libraryListItemMetaData.moneyShotMillis < videoHandler->duration())
         {

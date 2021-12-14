@@ -44,7 +44,7 @@ var xtpConnected = false;
 var userAgent;
 var userAgentIsDeo = false;
 var remoteUserSettings;
-var mediaListObj = [];
+var mediaListGlobal = [];
 var filteredMedia = [];
 var playingmediaItem;
 var playingmediaItemNode;
@@ -220,8 +220,9 @@ function wsCallBackFunction(evt) {
 					imageElement.src = "/thumb/" + message.thumb + "?"+ new Date().getTime();
 					if(message.errorMessage)
 						imageElement.title = message.errorMessage;
-					var index = mediaListObj.findIndex(x => x.id === message.id);
-					mediaListObj[index].relativeThumb = "/thumb/" + message.thumb;
+					var index = mediaListGlobal.findIndex(x => x.id === message.id);
+					mediaListGlobal[index].relativeThumb = "/thumb/" + message.thumb;
+					mediaListGlobal[index].thumbFileExists = true;
 				}
 				break;
 				
@@ -393,9 +394,14 @@ function getServerLibrary() {
 	xhr.onload = function() {
 	  var status = xhr.status;
 	  if (status === 200) {
-		onMediaLoad(null, xhr.response);
+		mediaListGlobal = xhr.response;
+		/* 	
+			if(useDeoWeb && mediaListObj.length > 0)
+				loadVideo(mediaListObj[0]); 
+		*/
+		updateMediaUI();
 	  } else {
-		onMediaLoad(status, xhr.response);
+		alert('Error getting media list: ' + err);
 	  }
 	};
 	xhr.onerror = function() {
@@ -632,44 +638,6 @@ function postMediaState(mediaState) {
 	};
 }
 
-function onMediaLoad(err, mediaList)
-{
-  if (err !== null) {
-    alert('Whoops!: ' + err);
-  } else {
-
-	mediaListObj = [];
-	for(var i=0; i<mediaList.length;i++)
-	{
-		var obj = {
-			id: mediaList[i]["id"],
-			name: mediaList[i]["name"],
-			displayName: mediaList[i]["name"],
-			thumbSize: mediaList[i]["thumbSize"],
-			path: mediaList[i]["path"],
-			relativePath: mediaList[i]["relativePath"],
-			thumb: mediaList[i]["thumb"],
-			relativeThumb: mediaList[i]["relativeThumb"],
-			modifiedDate: new Date(mediaList[i]["modifiedDate"]),
-			isStereoscopic: mediaList[i]["isStereoscopic"],
-			isMFS: mediaList[i]["isMFS"],
-			hasScript: mediaList[i]["hasScript"],
-			scriptNoExtensionRelativePath: mediaList[i]["scriptNoExtensionRelativePath"],
-			loaded: false,
-			playing: false
-		}
-		if(obj.isMFS)
-			obj.displayName = "(MFS) " + obj.name;
-		mediaListObj.push(obj);
-	}
-/* 	
-	if(useDeoWeb && mediaListObj.length > 0)
-		loadVideo(mediaListObj[0]); 
-*/
-	updateMediaUI();
-  }
-}
-
 function updateMediaUI() {
 	setThumbSize(thumbSizeGlobal, false);
 	sort(sortByGlobal, false);
@@ -735,11 +703,14 @@ function loadMedia(mediaList) {
 		//anode.style.width = width;
 		//anode.style.height = height;
 		anode.onclick = createClickHandler(obj);
-		var image = document.createElement("img"); 
-		image.src = "/thumb/" + obj.relativeThumb;
+		var image = document.createElement("img");
+		if(obj.thumbFileExists)
+			image.src = "/thumb/" + obj.relativeThumb;
+		else
+			image.src = "/thumb/" + obj.thumbFileLoading;
 		image.style.maxWidth = thumbSizeGlobal + "px";
 		image.style.maxHeight = thumbSizeGlobal + "px";
-		//image.onerror="this.onerror=null;this.src='://images/icons/error.png';"
+		//image.onerror=onThumbLoadError(image, 1)
 		var namenode = document.createElement("div");
 		namenode.innerText = obj.displayName;
 		namenode.className += "name"
@@ -756,6 +727,16 @@ function loadMedia(mediaList) {
 	}
 }
 
+function onThumbLoadError(imageElement, tries) {
+	imageElement.onerror=null;
+	if(tries < 3) {
+		imageElement.src='://images/icons/loading.png';
+		imageElement.onerror=onThumbLoadError(imageElement, 2);
+	} else {
+		imageElement.src='://images/icons/error.png';
+	}
+}
+
 function removeAllChildNodes(parent) {
     while (parent.firstChild) {
         parent.removeChild(parent.firstChild);
@@ -767,17 +748,17 @@ function sort(value, userClick) {
 		value = "nameAsc";
 	switch(value) {
 		case "dateDesc":
-			mediaListObj.sort(function(a,b){
+			mediaListGlobal.sort(function(a,b){
 			  return new Date(b.modifiedDate) - new Date(a.modifiedDate);
 			});
 		break;
 		case "dateAsc":
-			mediaListObj.sort(function(a,b){
+			mediaListGlobal.sort(function(a,b){
 			  return new Date(a.modifiedDate) - new Date(b.modifiedDate);
 			});
 		break;
 		case "nameAsc":
-			mediaListObj.sort(function(a,b){
+			mediaListGlobal.sort(function(a,b){
 			  var nameA = a.displayName.toUpperCase(); // ignore upper and lowercase
 			  var nameB = b.displayName.toUpperCase(); // ignore upper and lowercase
 			  if (nameA < nameB) {
@@ -789,7 +770,7 @@ function sort(value, userClick) {
 			});
 		break;
 		case "nameDesc":
-			mediaListObj.sort(function(a,b){
+			mediaListGlobal.sort(function(a,b){
 			  var nameA = a.displayName.toUpperCase(); // ignore upper and lowercase
 			  var nameB = b.displayName.toUpperCase(); // ignore upper and lowercase
 			  if (nameB < nameA) {
@@ -815,13 +796,13 @@ function show(value, userClick) {
 	var filteredMedia = [];
 	switch(value) {
 		case "All":
-			filteredMedia = mediaListObj;
+			filteredMedia = mediaListGlobal;
 		break;
 		case "3DOnly":
-			filteredMedia = mediaListObj.filter(x => x.isStereoscopic);
+			filteredMedia = mediaListGlobal.filter(x => x.isStereoscopic);
 		break;
 		case "2DAndAudioOnly":
-			filteredMedia = mediaListObj.filter(x => !x.isStereoscopic);
+			filteredMedia = mediaListGlobal.filter(x => !x.isStereoscopic);
 		break;
 	}
 	if(!userClick)

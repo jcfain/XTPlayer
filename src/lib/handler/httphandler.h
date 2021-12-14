@@ -58,6 +58,7 @@ private:
     MediaLibraryHandler* _mediaLibraryHandler;
     bool _libraryLoaded = false;
     QString _libraryLoadingStatus = "Loading...";
+    QMutex _mutex;
 
     QJsonObject createMediaObject(LibraryListItem27 libraryListItem, bool stereoscopic, QString hostAddress);
     QJsonObject createDeoObject(LibraryListItem27 libraryListItem, QString hostAddress);

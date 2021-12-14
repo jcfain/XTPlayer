@@ -3,7 +3,6 @@
 LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem27 &data, QListWidget* parent) :
     QListWidgetItem(data.nameNoExtension, parent)
 {
-    setToolTip(data.toolTip);
     if (data.isMFS)
     {
         setForeground(QColorConstants::Green);
@@ -11,8 +10,19 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem27 &data, QListWidge
     }
     else
         setText(data.nameNoExtension);
-    QVariant listItem;
 
+    QString toolTip = data.toolTip;
+    QFileInfo scriptInfo(data.script);
+    QFileInfo zipScriptInfo(data.zipFile);
+    if (data.type != LibraryListItemType::PlaylistInternal && !scriptInfo.exists() && !zipScriptInfo.exists())
+    {
+        toolTip = data.path + "\nNo script file of the same name found.\nRight click and Play with funscript.";
+        setForeground(QColorConstants::Gray);
+    }
+
+    setToolTip(toolTip);
+
+    QVariant listItem;
     listItem.setValue(data);
     setData(Qt::UserRole, listItem);
     int thumbSize = SettingsHandler::getThumbSize();
@@ -165,10 +175,14 @@ void LibraryListWidgetItem::setThumbFile(QString filePath, QString errorMessage)
         _thumbFile = data.thumbFileError;
         setToolTip(toolTip() + "\n"+ errorMessage);
     }
-    data.thumbFile = _thumbFile;
-    QVariant listItem;
-    listItem.setValue(data);
-    setData(Qt::UserRole, listItem);
+    else if(!_thumbFile.startsWith(":"))
+    {
+        data.thumbFile = _thumbFile;
+        data.thumbFileExists = QFileInfo(_thumbFile).exists();
+        QVariant listItem;
+        listItem.setValue(data);
+        setData(Qt::UserRole, listItem);
+    }
     updateThumbSize(_thumbSize);
 }
 
