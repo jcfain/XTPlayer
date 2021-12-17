@@ -869,10 +869,10 @@ void MainWindow::mediaAction(QString action)
     }
     else if (action == actions.IncreaseOffset || action == actions.DecreaseOffset)
     {
-        if (videoHandler->isPaused() || videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone())
+        bool increase = action == actions.IncreaseOffset;
+        QString verb = increase ? "Increase" : "Decrease";
+        if (_syncHandler->isPlaying())
         {
-           bool increase = action == actions.IncreaseOffset;
-           QString verb = increase ? "Increase" : "Decrease";
            auto libraryListItem = playingLibraryListItem->getLibraryListItem();
            auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
            int newOffset = increase ? libraryListItemMetaData.offset + SettingsHandler::getFunscriptOffsetStep() : libraryListItemMetaData.offset - SettingsHandler::getFunscriptOffsetStep();
@@ -882,6 +882,8 @@ void MainWindow::mediaAction(QString action)
            if(!SettingsHandler::getDisableSpeechToText())
                textToSpeech->say(verb + " offset to " + QString::number(newOffset));
         }
+        else if(!SettingsHandler::getDisableSpeechToText())
+                textToSpeech->say("No script playing to " + verb + " offset.");
     }
 }
 
