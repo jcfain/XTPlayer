@@ -873,14 +873,17 @@ void MainWindow::mediaAction(QString action)
         QString verb = increase ? "Increase" : "Decrease";
         if (_syncHandler->isPlaying())
         {
-           auto libraryListItem = playingLibraryListItem->getLibraryListItem();
-           auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
-           int newOffset = increase ? libraryListItemMetaData.offset + SettingsHandler::getFunscriptOffsetStep() : libraryListItemMetaData.offset - SettingsHandler::getFunscriptOffsetStep();
-           SettingsHandler::setLiveOffset(newOffset);
-           libraryListItemMetaData.offset = newOffset;
-           SettingsHandler::updateLibraryListItemMetaData(libraryListItemMetaData);
-           if(!SettingsHandler::getDisableSpeechToText())
-               textToSpeech->say(verb + " offset to " + QString::number(newOffset));
+           QString path = playingLibraryListItem->getLibraryListItem().path;
+           if(!path.isEmpty())
+           {
+               auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(path);
+               int newOffset = increase ? libraryListItemMetaData.offset + SettingsHandler::getFunscriptOffsetStep() : libraryListItemMetaData.offset - SettingsHandler::getFunscriptOffsetStep();
+               SettingsHandler::setLiveOffset(newOffset);
+               libraryListItemMetaData.offset = newOffset;
+               SettingsHandler::updateLibraryListItemMetaData(libraryListItemMetaData);
+               if(!SettingsHandler::getDisableSpeechToText())
+                   textToSpeech->say(verb + " offset to " + QString::number(newOffset));
+           }
         }
         else if(!SettingsHandler::getDisableSpeechToText())
                 textToSpeech->say("No script playing to " + verb + " offset.");
@@ -2858,7 +2861,7 @@ void MainWindow::processVRMetaData(QString videoPath, QString funscriptPath, qin
     QString zipFile;
     if(funscriptPath.endsWith(".zip"))
         zipFile = funscriptPath;
-    LibraryListItem27 item;
+    LibraryListItem27 item ;
     item.type = LibraryListItemType::VR;
     item.path = videoPath; // path
     item.name = videoFile.fileName(); // name
@@ -2870,6 +2873,7 @@ void MainWindow::processVRMetaData(QString videoPath, QString funscriptPath, qin
     item.modifiedDate = videoFile.birthTime().date();
     item.duration = (unsigned)duration;
     _mediaLibraryHandler->setLiveProperties(item);
+    playingLibraryListItem = new LibraryListWidgetItem(item);
     processMetaData(item);
 }
 
