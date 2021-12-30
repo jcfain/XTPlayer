@@ -4,8 +4,8 @@ const QMap<TCodeVersion, QString> SettingsHandler::SupportedTCodeVersions = {
     {TCodeVersion::v2, "TCode v0.2"},
     {TCodeVersion::v3, "TCode v0.3"}
 };
-const QString SettingsHandler::XTPVersion = "0.273";
-const float SettingsHandler::XTPVersionNum = 0.273f;
+const QString SettingsHandler::XTPVersion = "0.28";
+const float SettingsHandler::XTPVersionNum = 0.28f;
 
 SettingsHandler::SettingsHandler(){}
 SettingsHandler::~SettingsHandler()
@@ -277,7 +277,6 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
         if(currentVersion < 0.272f)
         {
             locker.unlock();
-            settings->setValue("version", 0.272f);
             MigrateToQVariant(settingsToLoadFrom);
             Save();
             Load();
@@ -295,8 +294,10 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         if(settingsToSaveTo == nullptr) {
             settingsToSaveTo = settings;
         }
+        float currentVersion = settingsToSaveTo->value("version").toFloat();
 
-        settingsToSaveTo->setValue("version", XTPVersionNum);
+        if(XTPVersionNum >= currentVersion)
+            settingsToSaveTo->setValue("version", XTPVersionNum);
         settingsToSaveTo->setValue("selectedTCodeVersion", ((int)_selectedTCodeVersion));
         settingsToSaveTo->setValue("hideWelcomeScreen", ((int)_hideWelcomeScreen));
         settingsToSaveTo->setValue("selectedLibrary", selectedLibrary);
