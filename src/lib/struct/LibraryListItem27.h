@@ -116,6 +116,7 @@ public:
         newItem.scriptNoExtension = obj["scriptNoExtension"].toString();
         newItem.thumbFile = obj["thumbFile"].toString();
         newItem.type = (LibraryListItemType)obj["type"].toInt();
+        newItem.zipFile = obj["zipFile"].toString();
 //        newItem.isMFS = obj["isMFS"].toBool();
 //        newItem.toolTip = obj["tooltip"].toString();
         return newItem;
@@ -135,6 +136,7 @@ public:
         obj["scriptNoExtension"] = item.scriptNoExtension;
         obj["thumbFile"] = item.thumbFile;
         obj["type"] = (int)item.type;
+        obj["zipFile"] = item.zipFile;
 //        obj["isMFS"] = item.isMFS;
 //        obj["tooltip"] = item.toolTip;
         return QVariant::fromValue(obj);

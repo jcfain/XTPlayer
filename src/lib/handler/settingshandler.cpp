@@ -278,6 +278,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
         {
             locker.unlock();
             MigrateToQVariant(settingsToLoadFrom);
+            SetupDecoderPriority();
             Save();
             Load();
         }
@@ -291,12 +292,12 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
     QMutexLocker locker(&mutex);
     if (!defaultReset)
     {
-        if(settingsToSaveTo == nullptr) {
+        if(settingsToSaveTo == nullptr)
             settingsToSaveTo = settings;
-        }
+
         float currentVersion = settingsToSaveTo->value("version").toFloat();
 
-        if(XTPVersionNum >= currentVersion)
+        if(XTPVersionNum > currentVersion)
             settingsToSaveTo->setValue("version", XTPVersionNum);
         settingsToSaveTo->setValue("selectedTCodeVersion", ((int)_selectedTCodeVersion));
         settingsToSaveTo->setValue("hideWelcomeScreen", ((int)_hideWelcomeScreen));
@@ -1713,9 +1714,20 @@ void SettingsHandler::SetupDecoderPriority()
     if(decoderPriority.length() > 0)
         decoderPriority.clear();
     QStringList decs;
+    DecoderModel cudaModel;
+    bool hasCuda = false;
     foreach (int id, QtAV::VideoDecoder::registered()) {
-        decoderPriority.append({QString::fromLatin1(QtAV::VideoDecoder::name(id)), true });
+        QString name = QString::fromLatin1(QtAV::VideoDecoder::name(id));
+        if(name == "CUDA")
+        {
+            hasCuda = true;
+            cudaModel = { name, true };
+        }
+        else
+            decoderPriority.append({ name, true });
     }
+    if(hasCuda)
+        decoderPriority.push_front(cudaModel);
 //#if defined(Q_OS_WIN)
 //    decoderPriority =
 //    {
