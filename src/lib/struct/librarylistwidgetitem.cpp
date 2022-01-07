@@ -1,4 +1,5 @@
 #include "librarylistwidgetitem.h"
+#include "../tool/imagefactory.h"
 
 LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem27 &data, QListWidget* parent) :
     QListWidgetItem(data.nameNoExtension, parent)
@@ -146,21 +147,8 @@ void LibraryListWidgetItem::updateThumbSize(QSize thumbSize)
     {
         thumbFilePath = "://images/icons/loading.png";
     }
-    QPixmap bgPixmap = QPixmap(thumbFilePath);
     QIcon thumb;
-    //QSize maxThumbSize = SettingsHandler::getMaxThumbnailSize();
-    //int newHeight = round((float)bgPixmap.height() / bgPixmap.width() * 1080);
-    //QSize newSize = calculateSize(thumbSize);
-    QPixmap scaled = bgPixmap.scaled(thumbSize, Qt::AspectRatioMode::KeepAspectRatio);
-    QSize maxHeight = calculateMaxSize(thumbSize);
-
-    if(scaled.height() > maxHeight.height())
-    {
-        scaled = bgPixmap.scaled(maxHeight, Qt::AspectRatioMode::KeepAspectRatio);
-//        QRect rect(0,0,scaled.width(), newHeight);
-//        scaled = scaled.copy(rect);
-    }
-    thumb.addPixmap(scaled);
+    thumb.addPixmap(ImageFactory::resize(thumbFilePath, thumbSize));
     setIcon(thumb);
     setSizeHint(thumbSize);
     setTextAlignment(Qt::AlignmentFlag::AlignTop | Qt::AlignmentFlag::AlignHCenter);
@@ -189,11 +177,6 @@ void LibraryListWidgetItem::setThumbFile(QString filePath, QString errorMessage)
 LibraryListWidgetItem* LibraryListWidgetItem::clone() const
 {
    return new LibraryListWidgetItem(*this);
-}
-
-QSize LibraryListWidgetItem::calculateMaxSize(QSize size)
-{
-    return {size.width(), (int)round(size.height()-size.height()/3.5)};
 }
 
 QSize LibraryListWidgetItem::calculateHintSize(QSize size)

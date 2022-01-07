@@ -6,6 +6,7 @@
 #include <QVariant>
 #include <QDataStream>
 #include <QJsonObject>
+#include "../lookup/Constants.h"
 
 enum LibraryListItemType {
     PlaylistInternal,
@@ -50,9 +51,9 @@ public:
     bool isMFS;
     QString toolTip;
     bool thumbFileExists = false;
-    QString thumbFileLoading = "://images/icons/loading.png";
-    QString thumbFileLoadingCurrent = "://images/icons/loading_current.png";
-    QString thumbFileError = "://images/icons/error.png";
+    QString thumbFileLoading = LibraryThumbNail::ERROR_IMAGE;// "://images/icons/loading.png";
+    QString thumbFileLoadingCurrent = LibraryThumbNail::LOADING_CURRENT_IMAGE;// "://images/icons/loading_current.png";
+    QString thumbFileError = LibraryThumbNail::LOADING_IMAGE;// "://images/icons/error.png";
 
     friend QDataStream & operator<<( QDataStream &dataStream, const LibraryListItem27 &object )
     {

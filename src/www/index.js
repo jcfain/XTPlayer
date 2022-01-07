@@ -74,9 +74,9 @@ var deviceConnectionStatusRetryButtonImageNodes;
 //var deoSourceNode;
 
 
-document.addEventListener("DOMContentLoaded", function() {
+//document.addEventListener("DOMContentLoaded", function() {
   loadPage();
-});
+//});
 function loadPage()
 {
 	getBrowserInformation();
@@ -708,6 +708,7 @@ function loadMedia(mediaList) {
 			image.src = "/thumb/" + obj.relativeThumb;
 		else
 			image.src = "/thumb/" + obj.thumbFileLoading;
+		image.loading = "lazy"
 		image.style.maxWidth = thumbSizeGlobal + "px";
 		image.style.maxHeight = thumbSizeGlobal + "px";
 		//image.onerror=onThumbLoadError(image, 1)

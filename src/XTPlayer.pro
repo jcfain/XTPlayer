@@ -41,10 +41,12 @@ SOURCES += \
     lib/handler/websockethandler.cpp \
     lib/handler/whirligighandler.cpp \
     lib/handler/xtpwebhandler.cpp \
+    lib/lookup/Constant.cpp \
     lib/lookup/tcodechannellookup.cpp \
     lib/struct/channeltablecomboboxdelegate.cpp \
     lib/struct/channeltableviewmodel.cpp \
     lib/struct/librarylistwidgetitem.cpp \
+    lib/tool/imagefactory.cpp \
     lib/tool/simplecrypt.cpp \
     lib/tool/tcodefactory.cpp \
     lib/tool/xmath.cpp \
@@ -77,6 +79,7 @@ HEADERS += \
     lib/handler/whirligighandler.h \
     lib/handler/xtpwebhandler.h \
     lib/lookup/AxisNames.h \
+    lib/lookup/Constants.h \
     lib/lookup/GamepadAxisNames.h \
     lib/lookup/MediaActions.h \
     lib/lookup/enum.h \
@@ -107,6 +110,7 @@ HEADERS += \
     lib/struct/channeltableviewmodel.h \
     lib/struct/librarylistwidgetitem.h \
     lib/tool/boolinq.h \
+    lib/tool/imagefactory.h \
     lib/tool/simplecrypt.h \
     lib/tool/tcodefactory.h \
     lib/tool/videoformat.h \

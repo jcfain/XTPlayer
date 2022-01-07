@@ -25,7 +25,6 @@ private:
     QString _thumbFile;
     QSize _thumbSize;
     static LibrarySortMode _sortMode;
-    QSize calculateMaxSize(QSize size);
 };
 
 #endif // LIBRARYLISTWIDGETITEM_H

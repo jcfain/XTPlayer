@@ -1,4 +1,5 @@
 #include "httphandler.h"
+#include "../tool/imagefactory.h"
 
 HttpHandler::HttpHandler(MediaLibraryHandler* mediaLibraryHandler, QObject *parent):
     HttpRequestHandler(parent)
@@ -63,21 +64,21 @@ HttpPromise HttpHandler::handle(HttpDataPtr data)
     auto path = data->request->uri().path();
     auto root = SettingsHandler::getHttpServerRoot();
     if(path == "/") {
-        LogHandler::Debug("Sending root index.html");
-        if(!QFileInfo(root+"/index.html").exists())
+        LogHandler::Debug("Sending root index-min.html");
+        if(!QFileInfo(root+"/index-min.html").exists())
         {
-            LogHandler::Debug("file does not exist: "+root+"/index.html");
+            LogHandler::Debug("file does not exist: "+root+"/index-min.html");
             data->response->setStatus(HttpStatus::BadRequest);
         }
         else
         {
-            data->response->sendFile(root+"/index.html");
+            data->response->sendFile(root+"/index-min.html", "text/html", "", -1, Z_DEFAULT_COMPRESSION);
             data->response->setStatus(HttpStatus::Ok);
         }
     }
     else if(path.contains("favicon.ico"))
     {
-        data->response->sendFile(root+"/favicon.ico", "image/x-icon");
+        data->response->sendFile(root+"/favicon.ico", "image/x-icon", "", -1, Z_DEFAULT_COMPRESSION);
         data->response->setStatus(HttpStatus::Ok);
     }
     else
@@ -94,7 +95,8 @@ HttpPromise HttpHandler::handle(HttpDataPtr data)
         QFile file(localPath);
         if(file.exists())
         {
-            data->response->sendFile(localPath);
+            QString mimeType = mimeDatabase.mimeTypeForFile(localPath, QMimeDatabase::MatchExtension).name();
+            data->response->sendFile(localPath, mimeType, "", -1, Z_DEFAULT_COMPRESSION);
             data->response->setStatus(HttpStatus::Ok);
         }
         else
@@ -171,6 +173,7 @@ HttpPromise HttpHandler::handleSettings(HttpDataPtr data) {
     root["connection"] = connectionSettingsJson;
 
     data->response->setStatus(HttpStatus::Ok, QJsonDocument(root));
+    data->response->compressBody();
     return HttpPromise::resolve(data);
 }
 
@@ -241,32 +244,32 @@ HttpPromise HttpHandler::handleSettingsUpdate(HttpDataPtr data)
     return HttpPromise::resolve(data);
 }
 
-HttpPromise HttpHandler::handleDeviceConnected(HttpDataPtr data)
-{
-    QJsonObject root;
-//    root["status"] = _tcodeDeviceStatus.status;
-//    root["deviceType"] = _tcodeDeviceStatus.deviceType;
-//    root["message"] = _tcodeDeviceStatus.message;
-    data->response->setStatus(HttpStatus::Ok, QJsonDocument(root));
-    return HttpPromise::resolve(data);
-}
-HttpPromise HttpHandler::handleConnectDevice(HttpDataPtr data)
-{
-    emit connectTCodeDevice();
-    data->response->setStatus(HttpStatus::Ok);
-    return HttpPromise::resolve(data);
-}
+//HttpPromise HttpHandler::handleDeviceConnected(HttpDataPtr data)
+//{
+//    QJsonObject root;
+////    root["status"] = _tcodeDeviceStatus.status;
+////    root["deviceType"] = _tcodeDeviceStatus.deviceType;
+////    root["message"] = _tcodeDeviceStatus.message;
+//    data->response->setStatus(HttpStatus::Ok, QJsonDocument(root));
+//    return HttpPromise::resolve(data);
+//}
+//HttpPromise HttpHandler::handleConnectDevice(HttpDataPtr data)
+//{
+//    emit connectTCodeDevice();
+//    data->response->setStatus(HttpStatus::Ok);
+//    return HttpPromise::resolve(data);
+//}
 
-HttpPromise HttpHandler::handleTCodeIn(HttpDataPtr data)
-{
-    data->response->setStatus(HttpStatus::Ok);
-    QString tcodeData(data->request->body());
-    if(!tcodeData.isEmpty())
-        emit tcode(tcodeData);
-    else
-        data->response->setStatus(HttpStatus::BadRequest);
-    return HttpPromise::resolve(data);
-}
+//HttpPromise HttpHandler::handleTCodeIn(HttpDataPtr data)
+//{
+//    data->response->setStatus(HttpStatus::Ok);
+//    QString tcodeData(data->request->body());
+//    if(!tcodeData.isEmpty())
+//        emit tcode(tcodeData);
+//    else
+//        data->response->setStatus(HttpStatus::BadRequest);
+//    return HttpPromise::resolve(data);
+//}
 
 HttpPromise HttpHandler::handleVideoList(HttpDataPtr data)
 {
@@ -289,6 +292,7 @@ HttpPromise HttpHandler::handleVideoList(HttpDataPtr data)
     }
 
     data->response->setStatus(HttpStatus::Ok, QJsonDocument(media));
+    data->response->compressBody();
     return HttpPromise::resolve(data);
 }
 
@@ -412,7 +416,7 @@ HttpPromise HttpHandler::handleFunscriptFile(HttpDataPtr data)
         data->response->setStatus(HttpStatus::NotFound);
         return HttpPromise::resolve(data);
     }
-    data->response->sendFile(filePath, "text/json");
+    data->response->sendFile(filePath, "text/json", "", -1, Z_DEFAULT_COMPRESSION);
     data->response->setStatus(HttpStatus::Ok);
     return HttpPromise::resolve(data);
 }
@@ -428,32 +432,36 @@ HttpPromise HttpHandler::handleThumbFile(HttpDataPtr data)
     }
     QString thumbDirFile = SettingsHandler::getSelectedThumbsDir() + thumbName;
     QString libraryThumbDirFile = SettingsHandler::getSelectedLibrary() + "/" + thumbName;
-    if(thumbName.startsWith(":"))
+    QString thumbToSend;
+    if(thumbName.startsWith(":") || (thumbName.startsWith(SettingsHandler::getSelectedLibrary()) && QFileInfo(thumbName).exists()))
     {
         // System resource thumbs
-        data->response->sendFile(thumbName);
-    }
-    else if(thumbName.startsWith(SettingsHandler::getSelectedLibrary()) && QFileInfo(thumbName).exists())
-    {
-        // Media library thumbs
-        data->response->sendFile(thumbName);
+        thumbToSend = thumbName;
     }
     else if(QFileInfo(libraryThumbDirFile).exists())
     {
         // VR media thumbs
-        data->response->sendFile(libraryThumbDirFile);
+        thumbToSend = libraryThumbDirFile;
     }
     else if(QFileInfo(thumbDirFile).exists())
     {
         // Global thumb directory thumbs.
-        data->response->sendFile(thumbDirFile);
+        thumbToSend = thumbDirFile;
     }
     else
     {
         data->response->setStatus(HttpStatus::NotFound);
         return HttpPromise::resolve(data);
     }
+//    QPixmap pixmap = ImageFactory::resize(thumbToSend, {500, 500});
+//    QByteArray* bytes = new QByteArray;
+//    QBuffer* buffer = new QBuffer(bytes);
+//    buffer->open(QIODevice::ReadWrite);
+//    pixmap.save(buffer, "WEBP", 5);
+//    QString mimeType = mimeDatabase.mimeTypeForFile(thumbToSend, QMimeDatabase::MatchExtension).name();
+    data->response->sendFile(thumbToSend, "image/webp", "", -1, Z_DEFAULT_COMPRESSION);
     data->response->setStatus(HttpStatus::Ok);
+    //buffer->deleteLater();
     return HttpPromise::resolve(data);
 }
 
