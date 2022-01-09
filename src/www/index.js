@@ -351,7 +351,7 @@ function getServerSettings() {
 
 function initWebSocket() {
 	try {
-		wsUri = "ws://" + window.location.host + ":"+remoteUserSettings.webSocketServerPort;
+		wsUri = "ws://" + window.location.hostname + ":"+remoteUserSettings.webSocketServerPort;
 		if (typeof MozWebSocket == 'function')
 			WebSocket = MozWebSocket;
 		if ( websocket && websocket.readyState == 1 )

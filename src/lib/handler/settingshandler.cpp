@@ -160,12 +160,6 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     if(!_httpPort)
         _httpPort = 80;
     _webSocketPort = settingsToLoadFrom->value("webSocketPort").toInt();
-    if(!_webSocketPort)
-        _webSocketPort = 8080;
-
-    if(_httpPort == _webSocketPort)
-        _webSocketPort  = _httpPort +1;
-
 
     _funscriptOffsetStep = settingsToLoadFrom->value("funscriptOffsetStep").toInt();
     if(!_funscriptOffsetStep)
@@ -416,6 +410,7 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         settingsToSaveTo->setValue("vrLibrary", _vrLibrary);
         settingsToSaveTo->setValue("httpChunkSize", _httpChunkSize);
         settingsToSaveTo->setValue("httpPort", _httpPort);
+        settingsToSaveTo->setValue("webSocketPort", _webSocketPort);
 
         settingsToSaveTo->setValue("funscriptModifierStep", _funscriptModifierStep);
         settingsToSaveTo->setValue("funscriptOffsetStep", _funscriptOffsetStep);

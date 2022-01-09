@@ -336,8 +336,10 @@ void SettingsDialog::setupUi()
         ui.vrLibraryLineEdit->setText(SettingsHandler::getVRLibrary());
         ui.chunkSizeDoubleSpinBox->setValue(SettingsHandler::getHTTPChunkSize() / 1048576);
         ui.httpPortSpinBox->setValue(SettingsHandler::getHTTPPort());
+        ui.webSocketPortSpinBox->setValue(SettingsHandler::getWebSocketPort());
         connect(ui.chunkSizeDoubleSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &SettingsDialog::on_chunkSizeDouble_valueChanged);
         connect(ui.httpPortSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_httpPort_valueChanged);
+        connect(ui.webSocketPortSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_webSocketPort_valueChanged);
 
 
         ui.offsetSpinbox->setMinimum(std::numeric_limits<int>::lowest());
@@ -1917,16 +1919,10 @@ void SettingsDialog::on_browseVRLibraryButton_clicked()
 
 void SettingsDialog::on_httpPort_valueChanged(int value)
 {
-    SettingsHandler::setHTTPPort(value);
-    if(SettingsHandler::getEnableHttpServer())
-        _requiresRestart = true;
 }
 
-void SettingsDialog::on_webSocketPortSpinBox_valueChanged(int value)
+void SettingsDialog::on_webSocketPort_valueChanged(int value)
 {
-    SettingsHandler::setWebSocketPort(value);
-    if(SettingsHandler::getEnableHttpServer())
-        _requiresRestart = true;
 }
 
 
@@ -1956,4 +1952,30 @@ void SettingsDialog::on_useMediaDirectoryCheckbox_clicked(bool checked)
 {
     ui.thumbDirButton->setDisabled(checked);
     SettingsHandler::setUseMediaDirForThumbs(checked);
+}
+
+void SettingsDialog::on_httpPortSpinBox_editingFinished()
+{
+    int value = ui.httpPortSpinBox->value();
+    if(SettingsHandler::getWebSocketPort() == value) {
+        LogHandler::Dialog("Http port cannot be the same as the Wwb socket port.", XLogLevel::Critical);
+        ui.httpPortSpinBox->setValue(SettingsHandler::getHTTPPort());
+        return;
+    }
+    SettingsHandler::setHTTPPort(value);
+    if(SettingsHandler::getEnableHttpServer())
+        _requiresRestart = true;
+}
+
+void SettingsDialog::on_webSocketPortSpinBox_editingFinished()
+{
+    int value = ui.webSocketPortSpinBox->value();
+    if(SettingsHandler::getHTTPPort() == value) {
+        LogHandler::Dialog("Web socket port cannot be the same as the http port.", XLogLevel::Critical);
+        ui.webSocketPortSpinBox->setValue(SettingsHandler::getWebSocketPort());
+        return;
+    }
+    SettingsHandler::setWebSocketPort(value);
+    if(SettingsHandler::getEnableHttpServer())
+        _requiresRestart = true;
 }

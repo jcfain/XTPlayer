@@ -229,7 +229,11 @@ private slots:
 
     void on_useMediaDirectoryCheckbox_clicked(bool checked);
 
-    void on_webSocketPortSpinBox_valueChanged(int arg1);
+    void on_webSocketPort_valueChanged(int arg1);
+
+    void on_httpPortSpinBox_editingFinished();
+
+    void on_webSocketPortSpinBox_editingFinished();
 
 private:
 

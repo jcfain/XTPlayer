@@ -13,12 +13,14 @@ WebSocketHandler::WebSocketHandler(QObject *parent):
 //    proxy.setPassword("password");
 //    QNetworkProxy::setApplicationProxy(proxy);
 //    m_pWebSocketServer->setProxy(proxy);
-    if (m_pWebSocketServer->listen())
+    if (m_pWebSocketServer->listen(QHostAddress::Any, SettingsHandler::getWebSocketPort()))
     {
         LogHandler::Debug("Websocket listening on port " + QString::number(m_pWebSocketServer->serverPort()));
         connect(m_pWebSocketServer, &QWebSocketServer::newConnection, this, &WebSocketHandler::onNewConnection);
         connect(m_pWebSocketServer, &QWebSocketServer::closed, this, &WebSocketHandler::closed);
     }
+    else
+        LogHandler::Error("Websocket start fail on port: "+QString::number(SettingsHandler::getWebSocketPort()));
 }
 
 WebSocketHandler::~WebSocketHandler()
