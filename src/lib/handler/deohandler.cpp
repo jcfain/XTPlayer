@@ -225,7 +225,9 @@ void DeoHandler::onSocketStateChange (QAbstractSocket::SocketState state)
 //                addressObj.setAddress(_address.address);
 //                tcpSocket->connectToHost(addressObj, _address.port);
                 tearDown();
-                init(_address, _waitTimeout);
+                QTimer::singleShot(2000, [this] () {
+                    init(_address, _waitTimeout);
+                });
             }
             else
             {
