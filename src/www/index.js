@@ -382,6 +382,7 @@ function initWebSocket() {
 
 function updateSettingsUI() {
 	setupSliders();
+	setupMotionModifiers();
 	setupConnectionsTab();
 
 	document.getElementById("tabLocalTab").onclick();
@@ -610,14 +611,13 @@ function postServerSettings() {
 	  if (xhr.readyState === 4) {
 		var status = xhr.status;
 		if (status !== 200) 
-			alert('Error saving server settings: '+status)
+			alert('Error saving server settings: '+xhr.statusText)
 		else
 			alert('XTP settings saved!')
 	  }
 	}
 	xhr.onerror = function() {
-		var status = xhr.status;
-		alert('Error saving server settings: '+status)
+		alert('Error saving server settings: '+xhr.statusText)
 	};
 	xhr.send(JSON.stringify(remoteUserSettings));
 }
@@ -630,11 +630,10 @@ function postMediaState(mediaState) {
 	xhr.oneload = function() {
 		var status = xhr.status;
 		if (status !== 200) 
-			console.log('Error sending mediastate: '+status)
+			console.log('Error sending mediastate: '+xhr.statusText)
 	};
 	xhr.onerror = function() {
-		var status = xhr.status;
-		console.log('Error sending mediastate: '+status)
+		console.log('Error sending mediastate: '+xhr.statusText)
 	};
 }
 
@@ -684,7 +683,7 @@ function loadMedia(mediaList) {
 			textHeight = (thumbSizeGlobal * 0.25);
 			width = thumbSizeGlobal + (thumbSizeGlobal * 0.15) + "px";
 			height = thumbSizeGlobal + textHeight + "px";
-			fontSize = (textHeight * 0.3) + "px";
+			fontSize = (textHeight * 0.35) + "px";
 		}
 		var divnode = document.createElement("div"); 
 		divnode.id = obj.id
@@ -709,8 +708,8 @@ function loadMedia(mediaList) {
 		else
 			image.src = "/thumb/" + obj.thumbFileLoading;
 		image.loading = "lazy"
-		image.style.maxWidth = thumbSizeGlobal + "px";
-		image.style.maxHeight = thumbSizeGlobal + "px";
+		image.style.width = thumbSizeGlobal + "px";
+		image.style.height = thumbSizeGlobal - textHeight  + "px";
 		//image.onerror=onThumbLoadError(image, 1)
 		var namenode = document.createElement("div");
 		namenode.innerText = obj.displayName;
@@ -908,6 +907,7 @@ function setPlayingMediaItem(obj) {
 	playingmediaItemNode = document.getElementById(obj.id);
 	playingmediaItemNode.classList.add("media-item-playing");
 }
+
 function clearPlayingMediaItem() {
 	playingmediaItemNode.classList.remove("media-item-playing");
 	playingmediaItem = null;
@@ -1078,7 +1078,7 @@ function thumbSizeChange(selectNode) {
 }
 
 var sendTcodeDebouncer;
-function setupSliders() {
+async function setupSliders() {
 	// Initialize Sliders
 	var availableAxis = remoteUserSettings.availableAxisArray;
 	var tcodeTab = document.getElementById("tabTCode");
@@ -1170,6 +1170,192 @@ function setupSliders() {
 	}
 }
 
+async function setupMotionModifiers() {
+	var tab = document.getElementById("tabFunscript");
+
+	var formElementNode =  document.createElement("div"); 
+	formElementNode.classList.add("formElement");
+
+	var headerNode = document.createElement("h3");
+	headerNode.innerText = "Motion modifier"
+	var subtextNode = document.createElement("h5");
+	subtextNode.innerText = "Add random motion to other channels"
+
+	var labelNode = document.createElement("label");
+	labelNode.innerText = "Enabled";
+	labelNode.for = "multiplierEnabled"
+
+	var sectionNode = document.createElement("section");
+	sectionNode.classList.add("form-group-section");
+	sectionNode.classList.add("form-group-section-motion");
+	sectionNode.id = "multiplierEnabled";
+
+	var multiplierEnabledNode = document.createElement("input");
+	multiplierEnabledNode.id = "multiplierEnabled";
+	multiplierEnabledNode.type = "checkbox";
+	multiplierEnabledNode.checked = remoteUserSettings.multiplierEnabled;
+
+	multiplierEnabledNode.oninput = function(event) {
+		remoteUserSettings.multiplierEnabled = event.target.checked;
+		toggleMotionModifierState(event.target.checked);
+	}.bind(multiplierEnabledNode);
+
+	sectionNode.appendChild(multiplierEnabledNode);
+
+	var headers = ["Modifier", "Link to MFS", "Speed"]
+	headers.forEach(element => {
+		var gridHeaderNode =  document.createElement("div"); 
+		gridHeaderNode.classList.add("form-group-control");
+		var gridHeaderContentNode =  document.createElement("span"); 
+		gridHeaderContentNode.innerText = element;
+		gridHeaderNode.appendChild(gridHeaderContentNode);
+		sectionNode.appendChild(gridHeaderNode);
+	});
+
+
+	formElementNode.appendChild(labelNode);
+	formElementNode.appendChild(sectionNode);
+	
+	tab.appendChild(headerNode);
+	tab.appendChild(subtextNode);
+	tab.appendChild(formElementNode);
+
+	var availableAxis = remoteUserSettings.availableAxisArray;
+	for(var i=0; i<availableAxis.length; i++) {
+		
+		var channel = availableAxis[i];
+
+		if(channel.dimension === AxisDimension.Heave)
+			continue;
+
+		var formElementNode =  document.createElement("div"); 
+		formElementNode.classList.add("formElement");
+
+		var labelNode = document.createElement("label");
+		labelNode.innerText = channel.friendlyName;
+		labelNode.for = channel.channel;
+		formElementNode.appendChild(labelNode);
+
+
+	/* 	value["damperEnabled"] = availableAxis->value(channel).DamperEnabled;
+		value["damperValue"] = availableAxis->value(channel).DamperValue;
+		value["dimension"] = (int)availableAxis->value(channel).Dimension;
+		value["friendlyName"] = availableAxis->value(channel).FriendlyName;
+		value["inverted"] = availableAxis->value(channel).Inverted;
+		value["linkToRelatedMFS"] = availableAxis->value(channel).LinkToRelatedMFS;
+		value["max"] = availableAxis->value(channel).Max;
+		value["mid"] = availableAxis->value(channel).Mid;
+		value["min"] = availableAxis->value(channel).Min;
+		value["multiplierEnabled"] = availableAxis->value(channel).MultiplierEnabled;
+		value["multiplierValue"] = availableAxis->value(channel).MultiplierValue;
+		value["relatedChannel"] = availableAxis->value(channel).RelatedChannel; */
+
+		var sectionNode = document.createElement("section");
+		sectionNode.setAttribute("name","motionModifierSection");
+		sectionNode.classList.add("form-group-section");
+		sectionNode.classList.add("form-group-section-motion");
+		sectionNode.id = channel.channel;
+
+		var enabledValueNode =  document.createElement("div"); 
+		enabledValueNode.classList.add("form-group-control");
+
+		var multiplierEnabledNode = document.createElement("input");
+		multiplierEnabledNode.setAttribute("name","motionModifierInput");
+		multiplierEnabledNode.type = "checkbox";
+		multiplierEnabledNode.checked = channel.multiplierEnabled;
+
+		multiplierEnabledNode.oninput = function(i, event) {
+			remoteUserSettings.availableAxisArray[i].multiplierEnabled = event.target.checked;
+		}.bind(multiplierEnabledNode, i);
+
+		var multiplierValueNode = document.createElement("input");
+		multiplierValueNode.setAttribute("name","motionModifierInput");
+		multiplierValueNode.value = channel.multiplierValue;
+
+		multiplierValueNode.oninput = function(i, event) {
+			var value = parseFloat(event.target.value);
+			if(value)
+				remoteUserSettings.availableAxisArray[i].multiplierValue = value;
+		}.bind(multiplierValueNode, i);
+
+		enabledValueNode.appendChild(multiplierEnabledNode);
+		enabledValueNode.appendChild(multiplierValueNode);
+		
+		var linkedEnabledValueNode =  document.createElement("div"); 
+		linkedEnabledValueNode.classList.add("form-group-control");
+
+		var linkToRelatedMFSNode = document.createElement("input");
+		linkToRelatedMFSNode.setAttribute("name","motionModifierInput");
+		linkToRelatedMFSNode.type = "checkbox";
+		linkToRelatedMFSNode.checked = channel.linkToRelatedMFS;
+		
+		linkToRelatedMFSNode.oninput = function(i, event) {
+			remoteUserSettings.availableAxisArray[i].linkToRelatedMFS = event.target.checked;
+		}.bind(linkToRelatedMFSNode, i);
+
+
+		var relatedChannelNode = document.createElement("select");
+		relatedChannelNode.setAttribute("name","motionModifierInput");
+		
+		availableAxis.forEach(element => {
+			if(element.channel !== channel.channel) {
+				var relatedChannelOptionNode = document.createElement("option");
+				relatedChannelOptionNode.innerHTML = element.friendlyName
+				relatedChannelOptionNode.value = element.channel
+				relatedChannelNode.appendChild(relatedChannelOptionNode)
+			}
+		});
+		relatedChannelNode.value = channel.relatedChannel;
+
+		relatedChannelNode.oninput = function(i, event) {
+			remoteUserSettings.availableAxisArray[i].relatedChannel = event.target.value;
+		}.bind(relatedChannelNode, i);
+
+		linkedEnabledValueNode.appendChild(linkToRelatedMFSNode);
+		linkedEnabledValueNode.appendChild(relatedChannelNode);
+
+		var damperEnabledValueNode =  document.createElement("div"); 
+		damperEnabledValueNode.classList.add("form-group-control");
+
+		var damperEnabledNode = document.createElement("input");
+		damperEnabledNode.setAttribute("name","motionModifierInput");
+		damperEnabledNode.type = "checkbox";
+		damperEnabledNode.checked = channel.damperEnabled;
+		
+		damperEnabledNode.oninput = function(i, event) {
+			remoteUserSettings.availableAxisArray[i].damperEnabled = event.target.checked;
+		}.bind(damperEnabledNode, i);
+
+		var damperValueNode = document.createElement("input");
+		damperValueNode.setAttribute("name","motionModifierInput");
+		damperValueNode.value = channel.damperValue;
+
+		damperValueNode.oninput = function(i, event) {
+			var value = parseFloat(event.target.value);
+			if(value)
+				remoteUserSettings.availableAxisArray[i].damperValue = value;
+		}.bind(damperValueNode, i);
+
+		damperEnabledValueNode.appendChild(damperEnabledNode);
+		damperEnabledValueNode.appendChild(damperValueNode);
+		
+		sectionNode.appendChild(enabledValueNode);
+		sectionNode.appendChild(linkedEnabledValueNode);
+		sectionNode.appendChild(damperEnabledValueNode);
+
+		formElementNode.appendChild(sectionNode);
+
+		tab.appendChild(formElementNode);
+	}
+	
+	toggleMotionModifierState(remoteUserSettings.multiplierEnabled);
+}
+function toggleMotionModifierState(enabled) {
+	var motionModifierElements = document.getElementsByName("motionModifierInput");
+	motionModifierElements.forEach(element => {
+		element.disabled = !enabled;
+	})
+}
 function setupConnectionsTab() {
 /*   
 	connectionSettingsJson["networkAddress"] = SettingsHandler::getServerAddress();

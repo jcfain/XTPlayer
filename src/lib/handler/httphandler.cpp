@@ -120,7 +120,8 @@ HttpPromise HttpHandler::handleSettings(HttpDataPtr data) {
 
     QJsonObject availableAxisJson;
     auto availableAxis = SettingsHandler::getAvailableAxis();
-    foreach(auto channel, availableAxis->keys()) {
+    foreach(auto channel, availableAxis->keys())
+    {
         QJsonObject value;
         if(availableAxis->value(channel).Type != AxisType::HalfRange && availableAxis->value(channel).Type != AxisType::None)
         {
@@ -147,6 +148,8 @@ HttpPromise HttpHandler::handleSettings(HttpDataPtr data) {
         }
     }
     root["availableAxis"] = availableAxisJson;
+
+    root["multiplierEnabled"] = SettingsHandler::getMultiplierEnabled();
 
     QJsonObject connectionSettingsJson;
     QJsonObject connectionInputSettingsJson;
@@ -194,7 +197,7 @@ HttpPromise HttpHandler::handleSettingsUpdate(HttpDataPtr data)
         auto channels = SettingsHandler::getAvailableAxis();
         foreach(auto channel, channels->keys())
         {
-            if(channels->value(channel).Type == AxisType::HalfRange || channels->value(channel).Type != AxisType::None)
+            if(channels->value(channel).Type == AxisType::HalfRange || channels->value(channel).Type == AxisType::None)
                 continue;
             auto value = doc["availableAxis"][channel];
             ChannelModel channelModel = {
@@ -220,6 +223,9 @@ HttpPromise HttpHandler::handleSettingsUpdate(HttpDataPtr data)
             };
             SettingsHandler::setAxis(channel, channelModel);
         }
+
+        SettingsHandler::setMultiplierEnabled(doc["multiplierEnabled"].toBool());
+
         QJsonObject connection = doc["connection"].toObject();
         QJsonObject input = connection["input"].toObject();
         QJsonObject output = connection["output"].toObject();
