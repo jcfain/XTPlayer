@@ -307,6 +307,7 @@ private:
     static void MigratrTo2615();
     static void MigrateTo263();
     static void MigrateToQVariant(QSettings* settingsToLoadFrom);
+    static void MigrateTo281();
     static void DeMigrateLibraryMetaDataTo258();
     static QString _appdataLocation;
     static TCodeVersion _selectedTCodeVersion;

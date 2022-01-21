@@ -219,9 +219,12 @@ QString TCodeHandler::getSwitchedHome()
 
 void TCodeHandler::getChannelHome(ChannelModel channel, QString &tcode)
 {
+    if(channel.Type == AxisType::HalfRange || channel.Type == AxisType::None || channel.Channel == TCodeChannelLookup::Suck() || channel.Channel == TCodeChannelLookup::SuckPosition()) {
+        return;
+    }
     if(!tcode.isEmpty())
         tcode += " ";
     tcode += channel.Channel;
-    tcode += QString::number(channel.Mid).rightJustified(SettingsHandler::getTCodePadding(), '0');;
+    tcode += QString::number(channel.Mid).rightJustified(SettingsHandler::getTCodePadding(), '0');
     tcode += "S500";
 }

@@ -680,6 +680,11 @@ void SettingsHandler::MigrateToQVariant(QSettings* settingsToLoadFrom)
     }
 }
 
+void SettingsHandler::MigrateTo281()
+{
+
+}
+
 QString SettingsHandler::getSelectedTCodeVersion()
 {
     return SupportedTCodeVersions.value(_selectedTCodeVersion);

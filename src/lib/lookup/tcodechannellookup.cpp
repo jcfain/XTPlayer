@@ -201,12 +201,12 @@ QHash<TCodeVersion, QMap<AxisNames, QString>> TCodeChannelLookup::TCodeVersionMa
             {AxisNames::SwayLeft, L2 + PositiveModifier},
             {AxisNames::SwayRight, L2 + NegativeModifier},
             {AxisNames::Vib, V0},
-            {AxisNames::Suck, A0},
-            {AxisNames::SuckMore, A0 + NegativeModifier},
-            {AxisNames::SuckLess, A0 + PositiveModifier},
-            {AxisNames::SuckPosition, A1},
-            {AxisNames::SuckMorePosition, A1 + NegativeModifier},
-            {AxisNames::SuckLessPosition, A1 + PositiveModifier},
+            {AxisNames::Suck, A1},
+            {AxisNames::SuckMore, A1 + NegativeModifier},
+            {AxisNames::SuckLess, A1 + PositiveModifier},
+            {AxisNames::SuckPosition, A0},
+            {AxisNames::SuckMorePosition, A0 + NegativeModifier},
+            {AxisNames::SuckLessPosition, A0 + PositiveModifier},
             {AxisNames::Lube, A2}
         }
     }
