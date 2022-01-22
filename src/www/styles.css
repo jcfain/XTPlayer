@@ -3,8 +3,7 @@
 body {
     background-color: black;
     color: white;
-    font-family: sans-serif;
-    font-family: "Georgia", 'Times New Roman', "Times", "serif", "Lucida Sans Regular", "DejaVu Serif", "Verdana";
+    font-family:  'sans-serif', "serif", "Lucida Sans Regular", 'Times New Roman', "Times", "DejaVu Serif", "Verdana";
 }
 .body-container {
     display: flex;
@@ -14,8 +13,8 @@ body {
     display: flex;
     flex-wrap: nowrap;
     justify-content: space-between;
-    margin-top: 1rem;
-    margin-bottom: 1rem;
+    margin-top: 16px;
+    margin-bottom: 16px;
 }
 .headerSection {
     flex-basis: 33%;
@@ -45,6 +44,14 @@ body {
 .toolBarGroupStart {
     justify-content: flex-start;
     flex-wrap: nowrap;
+}
+
+.save-status {
+    visibility: hidden;
+    opacity: 0;
+    -webkit-transition: opacity 500ms, visibility 500ms linear;
+    transition: opacity 500ms, visibility 500ms linear;
+    margin-right: 4px;
 }
 
 .modal {
@@ -87,7 +94,7 @@ body {
 }
 
 .modal-body {
-    overflow-y: auto;
+    overflow-y: hidden;
     flex-grow: 1;
     margin-top: 16px;
     margin-bottom: 16px;
@@ -199,12 +206,12 @@ select:hover, button:hover, input:hover {
     cursor: pointer;
 }
 .icon-button > img {
-    width: 1rem;
-    height: 1rem;
+    width: 16px;
+    height: 16px;
 }
 .icon-small {
-    width: 1rem;
-    height: 1rem;
+    width: 16px;
+    height: 16px;
 }
 .header-button {
     margin-left: 4px;
@@ -393,15 +400,18 @@ section > .range-values {
     place-items: center;
 }
 .form-group-section > * {
-    min-width: max-content;
-    max-width: 33%;
+ /*    min-width: max-content;
+    max-width: 33%; */
 }
 
 /* grid-template-columns: 5% 10% 15% 27% 15% 27%; */
 .form-group-section-connection {
     
 }
-.form-group-section-motion {
+.form-group-control-header {
+    
+}
+.form-group-control-header > * {
 
 }
 
@@ -411,7 +421,7 @@ section > .range-values {
     flex-grow: 1;
 }
 .form-group-control > * {
-    min-width: max-content;    
+ /*    min-width: max-content;   */  
 }
 
 /* * {
@@ -425,6 +435,7 @@ section > .range-values {
 .tab-section {
     display: none;
     height: 100%;
+    overflow-y: auto;
 }
 
 .tab-section-tab {
@@ -445,6 +456,25 @@ section > .range-values {
   opacity: 0;
   transition: opacity 500ms, visibility 500ms linear;
   border-top: 2px solid #5E6B7F;
+}
+
+.tab-content-header {
+    margin-top: 12px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid white;
+}
+
+.tab-content-header-main {
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.tab-content-header-eyebrow {
+    font-size: 12px;
+    margin-top: 4px;
+    margin-bottom: 4px;
 }
 
 .sync-device-status {

@@ -40,7 +40,8 @@ var AxisDimension =
 var wsUri;
 var websocket = null;
 var xtpConnected = false;
-
+var xtpFormDirty = false;
+var saveStateNode;
 var userAgent;
 var userAgentIsDeo = false;
 var remoteUserSettings;
@@ -120,6 +121,7 @@ function loadPage()
 	// 	alert("There was an issue loading media.");
 	// }, true);
 
+	saveStateNode = document.getElementById("saveState");
 	deviceConnectionStatusRetryButtonNodes = document.getElementsByName("deviceStatusRetryButton");
 	deviceConnectionStatusRetryButtonImageNodes = document.getElementsByName("connectionStatusIconImage");
 	toggleExternalStreaming(externalStreaming, false);
@@ -611,13 +613,15 @@ function postServerSettings() {
 	  if (xhr.readyState === 4) {
 		var status = xhr.status;
 		if (status !== 200) 
-			alert('Error saving server settings: '+xhr.statusText)
-		else
-			alert('XTP settings saved!')
+			onSaveFail(xhr.statusText);
+		else {
+			onSaveSuccess();
+			markXTPFormClean();
+		}
 	  }
 	}
 	xhr.onerror = function() {
-		alert('Error saving server settings: '+xhr.statusText)
+		onSaveFail(xhr.statusText);
 	};
 	xhr.send(JSON.stringify(remoteUserSettings));
 }
@@ -635,6 +639,24 @@ function postMediaState(mediaState) {
 	xhr.onerror = function() {
 		console.log('Error sending mediastate: '+xhr.statusText)
 	};
+}
+
+function onSaveSuccess() {
+	saveStateNode.style.visibility = "visible";
+	saveStateNode.style.opacity = "1";
+	saveStateNode.style.color = "green";
+	saveStateNode.innerText = "Save success";
+	setTimeout(() => {
+		saveStateNode.style.visibility = "hidden";
+		saveStateNode.style.opacity = "0";
+	}, 5000);
+}
+function onSaveFail(error) {
+	saveStateNode.style.visibility = "visible";
+	saveStateNode.style.opacity = "1";
+	saveStateNode.style.color = "red";
+	saveStateNode.innerText = "Save fail";
+	saveStateNode.title = error;
 }
 
 function updateMediaUI() {
@@ -1137,6 +1159,7 @@ async function setupSliders() {
 			// 	clearTimeout(sendTcodeDebouncer);
 			// sendTcodeDebouncer = setTimeout(function () {
 					sendTCode(channel.channel + input1Node.value.toString().padStart(4, '0') + "S2000")
+			markXTPFormDirty();
 			// }, 1000);
 		}.bind(input1Node, input1Node, input2Node, rangeValuesNode, channel);
 		
@@ -1155,6 +1178,7 @@ async function setupSliders() {
 			// 	clearTimeout(sendTcodeDebouncer);
 			// sendTcodeDebouncer = setTimeout(function () {
 					sendTCode(channel.channel + input2Node.value.toString().padStart(4, '0') + "S2000")
+			markXTPFormDirty();
 			// }, 1000);
 		}.bind(input2Node, input1Node, input2Node, rangeValuesNode, channel);
 
@@ -1176,10 +1200,16 @@ async function setupMotionModifiers() {
 	var formElementNode =  document.createElement("div"); 
 	formElementNode.classList.add("formElement");
 
-	var headerNode = document.createElement("h3");
+	var headerDivNode = document.createElement("div");
+	headerDivNode.classList.add("tab-content-header");
+	var headerNode = document.createElement("div");
 	headerNode.innerText = "Motion modifier"
-	var subtextNode = document.createElement("h5");
+	headerNode.classList.add("tab-content-header-main");
+	var subtextNode = document.createElement("div");
+	subtextNode.classList.add("tab-content-header-eyebrow");
 	subtextNode.innerText = "Add random motion to other channels"
+	headerDivNode.appendChild(headerNode);
+	headerDivNode.appendChild(subtextNode);
 
 	var labelNode = document.createElement("label");
 	labelNode.innerText = "Enabled";
@@ -1187,7 +1217,6 @@ async function setupMotionModifiers() {
 
 	var sectionNode = document.createElement("section");
 	sectionNode.classList.add("form-group-section");
-	sectionNode.classList.add("form-group-section-motion");
 	sectionNode.id = "multiplierEnabled";
 
 	var multiplierEnabledNode = document.createElement("input");
@@ -1198,6 +1227,7 @@ async function setupMotionModifiers() {
 	multiplierEnabledNode.oninput = function(event) {
 		remoteUserSettings.multiplierEnabled = event.target.checked;
 		toggleMotionModifierState(event.target.checked);
+		markXTPFormDirty();
 	}.bind(multiplierEnabledNode);
 
 	sectionNode.appendChild(multiplierEnabledNode);
@@ -1206,6 +1236,7 @@ async function setupMotionModifiers() {
 	headers.forEach(element => {
 		var gridHeaderNode =  document.createElement("div"); 
 		gridHeaderNode.classList.add("form-group-control");
+		gridHeaderNode.classList.add("form-group-control-header");
 		var gridHeaderContentNode =  document.createElement("span"); 
 		gridHeaderContentNode.innerText = element;
 		gridHeaderNode.appendChild(gridHeaderContentNode);
@@ -1216,8 +1247,7 @@ async function setupMotionModifiers() {
 	formElementNode.appendChild(labelNode);
 	formElementNode.appendChild(sectionNode);
 	
-	tab.appendChild(headerNode);
-	tab.appendChild(subtextNode);
+	tab.appendChild(headerDivNode);
 	tab.appendChild(formElementNode);
 
 	var availableAxis = remoteUserSettings.availableAxisArray;
@@ -1241,7 +1271,6 @@ async function setupMotionModifiers() {
 		value["damperValue"] = availableAxis->value(channel).DamperValue;
 		value["dimension"] = (int)availableAxis->value(channel).Dimension;
 		value["friendlyName"] = availableAxis->value(channel).FriendlyName;
-		value["inverted"] = availableAxis->value(channel).Inverted;
 		value["linkToRelatedMFS"] = availableAxis->value(channel).LinkToRelatedMFS;
 		value["max"] = availableAxis->value(channel).Max;
 		value["mid"] = availableAxis->value(channel).Mid;
@@ -1253,7 +1282,6 @@ async function setupMotionModifiers() {
 		var sectionNode = document.createElement("section");
 		sectionNode.setAttribute("name","motionModifierSection");
 		sectionNode.classList.add("form-group-section");
-		sectionNode.classList.add("form-group-section-motion");
 		sectionNode.id = channel.channel;
 
 		var enabledValueNode =  document.createElement("div"); 
@@ -1266,6 +1294,7 @@ async function setupMotionModifiers() {
 
 		multiplierEnabledNode.oninput = function(i, event) {
 			remoteUserSettings.availableAxisArray[i].multiplierEnabled = event.target.checked;
+			markXTPFormDirty();
 		}.bind(multiplierEnabledNode, i);
 
 		var multiplierValueNode = document.createElement("input");
@@ -1274,8 +1303,10 @@ async function setupMotionModifiers() {
 
 		multiplierValueNode.oninput = function(i, event) {
 			var value = parseFloat(event.target.value);
-			if(value)
+			if(value) {
 				remoteUserSettings.availableAxisArray[i].multiplierValue = value;
+				markXTPFormDirty();
+			}
 		}.bind(multiplierValueNode, i);
 
 		enabledValueNode.appendChild(multiplierEnabledNode);
@@ -1291,6 +1322,7 @@ async function setupMotionModifiers() {
 		
 		linkToRelatedMFSNode.oninput = function(i, event) {
 			remoteUserSettings.availableAxisArray[i].linkToRelatedMFS = event.target.checked;
+			markXTPFormDirty();
 		}.bind(linkToRelatedMFSNode, i);
 
 
@@ -1309,6 +1341,7 @@ async function setupMotionModifiers() {
 
 		relatedChannelNode.oninput = function(i, event) {
 			remoteUserSettings.availableAxisArray[i].relatedChannel = event.target.value;
+			markXTPFormDirty();
 		}.bind(relatedChannelNode, i);
 
 		linkedEnabledValueNode.appendChild(linkToRelatedMFSNode);
@@ -1324,6 +1357,7 @@ async function setupMotionModifiers() {
 		
 		damperEnabledNode.oninput = function(i, event) {
 			remoteUserSettings.availableAxisArray[i].damperEnabled = event.target.checked;
+			markXTPFormDirty();
 		}.bind(damperEnabledNode, i);
 
 		var damperValueNode = document.createElement("input");
@@ -1332,8 +1366,10 @@ async function setupMotionModifiers() {
 
 		damperValueNode.oninput = function(i, event) {
 			var value = parseFloat(event.target.value);
-			if(value)
+			if(value) {
 				remoteUserSettings.availableAxisArray[i].damperValue = value;
+				markXTPFormDirty();
+			}
 		}.bind(damperValueNode, i);
 
 		damperEnabledValueNode.appendChild(damperEnabledNode);
@@ -1349,6 +1385,7 @@ async function setupMotionModifiers() {
 	}
 	
 	toggleMotionModifierState(remoteUserSettings.multiplierEnabled);
+	setUpInversionMotionModifier();
 }
 function toggleMotionModifierState(enabled) {
 	var motionModifierElements = document.getElementsByName("motionModifierInput");
@@ -1356,6 +1393,77 @@ function toggleMotionModifierState(enabled) {
 		element.disabled = !enabled;
 	})
 }
+async function setUpInversionMotionModifier() {
+	
+	var tab = document.getElementById("tabFunscript");
+
+	var formElementNode =  document.createElement("div"); 
+	formElementNode.classList.add("formElement");
+
+	var headerDivNode = document.createElement("div");
+	headerDivNode.classList.add("tab-content-header");
+	var subtextNode = document.createElement("div");
+	subtextNode.classList.add("tab-content-header-eyebrow");
+	subtextNode.innerText = "Invert motion of channels"
+	headerDivNode.appendChild(subtextNode);
+
+	tab.appendChild(headerDivNode);
+
+	
+	var availableAxis = remoteUserSettings.availableAxisArray;
+	for(var i=0; i<availableAxis.length; i++) {
+		
+		var channel = availableAxis[i];
+
+		var formElementNode =  document.createElement("div"); 
+		formElementNode.classList.add("formElement");
+
+		var labelNode = document.createElement("label");
+		labelNode.innerText = channel.friendlyName;
+		labelNode.for = channel.channel + "Inverted";
+		formElementNode.appendChild(labelNode);
+
+
+	/* value["inverted"] = availableAxis->value(channel).Inverted; */
+
+		var sectionNode = document.createElement("section");
+		sectionNode.setAttribute("name","motionModifierInvertedSection");
+		sectionNode.classList.add("form-group-section");
+		sectionNode.id = channel.channel + "Inverted";
+
+		var enabledValueNode =  document.createElement("div"); 
+		enabledValueNode.classList.add("form-group-control");
+
+		var invertedEnabledNode = document.createElement("input");
+		invertedEnabledNode.setAttribute("name","motionModifierInputInverted");
+		invertedEnabledNode.type = "checkbox";
+		invertedEnabledNode.checked = channel.inverted;
+
+		invertedEnabledNode.oninput = function(i, event) {
+			remoteUserSettings.availableAxisArray[i].inverted = event.target.checked;
+			markXTPFormDirty();
+		}.bind(invertedEnabledNode, i);
+
+		enabledValueNode.appendChild(invertedEnabledNode);
+		sectionNode.appendChild(enabledValueNode);
+		formElementNode.appendChild(sectionNode);
+		
+		tab.appendChild(formElementNode);
+	}
+}
+
+function markXTPFormDirty() {
+	xtpFormDirty = true;
+	var saveToXTPButton = document.getElementById("saveToXTPButton");
+	saveToXTPButton.disabled = false;
+}
+
+function markXTPFormClean() {
+	xtpFormDirty = false;
+	var saveToXTPButton = document.getElementById("saveToXTPButton");
+	saveToXTPButton.disabled = true;
+}
+
 function setupConnectionsTab() {
 /*   
 	connectionSettingsJson["networkAddress"] = SettingsHandler::getServerAddress();
@@ -1414,9 +1522,11 @@ function deleteLocalSettings() {
 }
 function onDeoVRAddressChange(input) {
 	remoteUserSettings.connection.input.deoAddress = input.value;
+	markXTPFormDirty();
 }
 function onDeoVRPortChange(input) {
 	remoteUserSettings.connection.input.deoPort = input.value;
+	markXTPFormDirty();
 }
 // function connectToTcodeDevice() {
 // 	webSocket = new WebSocket("ws://"+deviceAddress+"/ws");

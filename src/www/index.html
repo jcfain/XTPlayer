@@ -72,15 +72,14 @@
 					</label>
 				</div> 
 			--> 
+		<div class="tab-row">
+			<button id="tabLocalTab" class="tab-section-tab" onclick="tabClick(this, 0)">Local</button>
+			<button id="tabConnectionsTab" class="tab-section-tab" onclick="tabClick(this, 1)">Connections</button>
+			<button id="tabTCodeTab" class="tab-section-tab" onclick="tabClick(this, 2)">TCode</button>
+			<button id="tabFunscriptTab" class="tab-section-tab" onclick="tabClick(this, 3)">Funscript</button>
+			<button id="tabBrowserInfoTab" class="tab-section-tab" onclick="tabClick(this, 4)">Browser info</button>
+		</div>
 		<section id="settingsTabs" class="tab-section">
-			<div class="tab-row">
-				<button id="tabLocalTab" class="tab-section-tab" onclick="tabClick(this, 0)">Local</button>
-				<button id="tabConnectionsTab" class="tab-section-tab" onclick="tabClick(this, 1)">Connections</button>
-				<button id="tabTCodeTab" class="tab-section-tab" onclick="tabClick(this, 2)">TCode</button>
-				<button id="tabFunscriptTab" class="tab-section-tab" onclick="tabClick(this, 3)">Funscript</button>
-				<button id="tabBrowserInfoTab" class="tab-section-tab" onclick="tabClick(this, 4)">Browser info</button>
-			</div>
-
 			<div id="tabLocal" class="tab-content">
 				<div class="formElement">
 					<label title="If checked, the media items will open the media&#010;directly instead of the built in media player.&#010;This lets players like DeoVR handle the stream.." 
@@ -213,10 +212,11 @@
 			<a id="tcodeDeviceSettingsLink" hidden="true" target="_blank" >TCode device settings</a>
 		</div>
 		<div class="modal-footer-content">
+			<span id="saveState" class="save-status"></span>
 			<button id="defaultSettingsButton" title="This will only reset the local browser settings to default. Your settings stored on the XTP machine will remain." onclick="defaultLocalSettings()">
 				Default Local
 			</button>
-			<button id="saveToXTPButton" title="This will save all XTP settings to your XTP machines data storage." onclick="postServerSettings()">
+			<button id="saveToXTPButton" disabled="true" title="This will save all XTP settings to your XTP machines data storage." onclick="postServerSettings()">
 				Save to XTP
 			</button>
 			<!-- <button id="defaultSettingsButton" onclick="deleteLocalSettings()">
