@@ -564,14 +564,14 @@ void SettingsDialog::setUpTCodeAxis()
          rangeLabel->setObjectName(axis.AxisName+"RangeLabel");
          rangeLabel->setFont(font);
          rangeLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-         ui.RangeSettingsGrid->addWidget(rangeLabel, sliderGridRow, 1);
+         ui.RangeSettingsGrid->addWidget(rangeLabel, sliderGridRow, 1, 1, 2, Qt::AlignHCenter | Qt::AlignVCenter);
          rangeLabels.insert(channelName, rangeLabel);
 
          QLabel* rangeMaxLabel = new QLabel(QString::number(userMax));
          rangeMaxLabel->setObjectName(axis.AxisName+"RangeMaxLabel");
          rangeMaxLabel->setFont(font);
          rangeMaxLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-         ui.RangeSettingsGrid->addWidget(rangeMaxLabel, sliderGridRow, 2);
+         ui.RangeSettingsGrid->addWidget(rangeMaxLabel, sliderGridRow, 3);
          rangeMaxLabels.insert(channelName, rangeMaxLabel);
 
          RangeSlider* axisRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, this);
@@ -582,7 +582,7 @@ void SettingsDialog::setUpTCodeAxis()
          axisRangeSlider->SetMinimumRange(1);
          axisRangeSlider->setName(channelName);// Required
          sliderGridRow++;
-         ui.RangeSettingsGrid->addWidget(axisRangeSlider, sliderGridRow,0,1,3);
+         ui.RangeSettingsGrid->addWidget(axisRangeSlider, sliderGridRow,0,1,4);
          rangeSliders.insert(channelName, axisRangeSlider);
          sliderGridRow++;
 
@@ -591,7 +591,7 @@ void SettingsDialog::setUpTCodeAxis()
          funscriptProgressbar->setMinimum(0);
          funscriptProgressbar->setMaximum(100);
          funscriptProgressbar->setMaximumHeight(5);
-         ui.RangeSettingsGrid->addWidget(funscriptProgressbar, sliderGridRow,0,1,3);
+         ui.RangeSettingsGrid->addWidget(funscriptProgressbar, sliderGridRow,0,1,4);
          axisProgressbars.insert(channelName, funscriptProgressbar);
          sliderGridRow++;
 
@@ -707,11 +707,44 @@ void SettingsDialog::setUpTCodeAxis()
 
      setUpMultiplierUi(SettingsHandler::getMultiplierEnabled());
 
+     QLabel* lubePulseAmountLabel = new QLabel(this);
+     lubePulseAmountLabel->setText("Pulse lube amount");
+     lubePulseAmountLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+     QLabel* lubePulseFrequencyLabel = new QLabel(this);
+     lubePulseFrequencyLabel->setText("Pulse lube frequency");
+     lubePulseFrequencyLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+     QCheckBox* lubePulseCheckbox = new QCheckBox("Pulse lube enabled", this);
+     connect(lubePulseCheckbox, &QCheckBox::clicked, this, &SettingsDialog::lubePulseEnabled_valueChanged);
+     lubePulseCheckbox->setChecked(SettingsHandler::getLubePulseEnabled());
+     QSpinBox* libePulseAmountInput = new QSpinBox(this);
+     libePulseAmountInput->setMinimum(0);
+     libePulseAmountInput->setMaximum(SettingsHandler::getChannelUserMax(TCodeChannelLookup::Lube()));
+     libePulseAmountInput->setMinimumWidth(75);
+     libePulseAmountInput->setSingleStep(100);
+     libePulseAmountInput->setValue(SettingsHandler::getLubePulseAmount());
+     libePulseAmountInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+     connect(libePulseAmountInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::lubeAmount_valueChanged);
+     QSpinBox* libePulseFrequencyInput = new QSpinBox(this);
+     libePulseFrequencyInput->setMinimum(0);
+     libePulseFrequencyInput->setMaximum(INT_MAX);
+     libePulseFrequencyInput->setMinimumWidth(75);
+     libePulseFrequencyInput->setSingleStep(500);
+     libePulseFrequencyInput->setSuffix("ms");
+     libePulseFrequencyInput->setValue(SettingsHandler::getLubePulseFrequency());
+     libePulseFrequencyInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+     connect(libePulseFrequencyInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::lubeFrequency_valueChanged);
+     ui.RangeSettingsGrid->addWidget(lubePulseCheckbox, sliderGridRow + 1, 0);
+     ui.RangeSettingsGrid->addWidget(lubePulseAmountLabel, sliderGridRow + 1, 0);
+     lubePulseCheckbox->raise();
+     lubePulseCheckbox->setStyleSheet("* {background: transparent}");
+     ui.RangeSettingsGrid->addWidget(libePulseAmountInput, sliderGridRow + 1, 1);
+     ui.RangeSettingsGrid->addWidget(lubePulseFrequencyLabel, sliderGridRow + 1, 2);
+     ui.RangeSettingsGrid->addWidget(libePulseFrequencyInput, sliderGridRow + 1, 3);
 
      QPushButton* zeroOutButton = new QPushButton(this);
      zeroOutButton->setText("All axis home");
      connect(zeroOutButton, & QPushButton::clicked, this, &SettingsDialog::on_tCodeHome_clicked);
-     ui.RangeSettingsGrid->addWidget(zeroOutButton, sliderGridRow + 1, 0);
+     ui.RangeSettingsGrid->addWidget(zeroOutButton, sliderGridRow + 4, 0);
 
      QLabel* xRangeStepLabel = new QLabel(this);
      xRangeStepLabel->setText("Stroke range change step");
@@ -724,8 +757,8 @@ void SettingsDialog::setUpTCodeAxis()
      xRangeStepInput->setValue(SettingsHandler::getGamepadSpeedIncrement());
      xRangeStepInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
      connect(xRangeStepInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::xRangeStepInput_valueChanged);
-     ui.RangeSettingsGrid->addWidget(xRangeStepLabel, sliderGridRow, 2);
-     ui.RangeSettingsGrid->addWidget(xRangeStepInput, sliderGridRow + 1, 2);
+     ui.RangeSettingsGrid->addWidget(xRangeStepLabel, sliderGridRow + 3, 3);
+     ui.RangeSettingsGrid->addWidget(xRangeStepInput, sliderGridRow + 4, 3);
 
      setupGamepadMap();
 }
@@ -791,6 +824,19 @@ void SettingsDialog::on_speedIncrementInput_valueChanged(int value)
 void SettingsDialog::xRangeStepInput_valueChanged(int value)
 {
     SettingsHandler::setXRangeStep(value);
+}
+
+void SettingsDialog::lubePulseEnabled_valueChanged(bool value)
+{
+    SettingsHandler::setLubePulseEnabled(value);
+}
+void SettingsDialog::lubeFrequency_valueChanged(int value)
+{
+    SettingsHandler::setLubePulseFrequency(value);
+}
+void SettingsDialog::lubeAmount_valueChanged(int value)
+{
+    SettingsHandler::setLubePulseAmount(value);
 }
 
 UdpHandler* SettingsDialog::getNetworkHandler()

@@ -303,6 +303,7 @@ void SyncHandler::syncFunscript()
         std::shared_ptr<FunscriptAction> actionPosition;
         QMap<QString, std::shared_ptr<FunscriptAction>> otherActions;
         QElapsedTimer mSecTimer;
+        qint64 nextPulseTime = SettingsHandler::getLubePulseFrequency();
         qint64 timer1 = 0;
         qint64 timer2 = 0;
         mSecTimer.start();
@@ -330,6 +331,8 @@ void SyncHandler::syncFunscript()
                     if(tcode != nullptr)
                         _xSettings->getSelectedDeviceHandler()->sendTCode(tcode);
                     otherActions.clear();
+
+                    sendPulse(mSecTimer.elapsed(), nextPulseTime);
                 }
             }
             timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
@@ -362,6 +365,7 @@ void SyncHandler::syncVRFunscript(QString funscript)
         mSecTimer.start();
         QString videoPath;
         qint64 duration;
+        qint64 nextPulseTime = SettingsHandler::getLubePulseFrequency();
         while (_isVRFunscriptPlaying && _xSettings->getConnectedVRDeviceHandler()->isConnected() && !_videoHandler->isPlaying())
         {
             currentVRPacket = _xSettings->getConnectedVRDeviceHandler()->getCurrentPacket();
@@ -416,10 +420,12 @@ void SyncHandler::syncVRFunscript(QString funscript)
                         _xSettings->getSelectedDeviceHandler()->sendTCode(tcode);
                     otherActions.clear();
                //     LogHandler::Debug("timer "+QString::number((round(timer.nsecsElapsed()) / 1000000)));
+                    sendPulse(timer1, nextPulseTime);
                 }
                 timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
                 //LogHandler::Debug("timer nsecsElapsed: "+QString::number(timer2));
             }
+
         }
 
         _xSettings->resetAxisProgressBars();
@@ -461,7 +467,7 @@ void SyncHandler::loadMFS(QString scriptFile)
     QString scriptTemp = scriptFile;
     QString scriptFileNoExtension = scriptTemp.remove(scriptTemp.lastIndexOf('.'), scriptTemp.length() -  1);
     QFileInfo scriptFileInfo(scriptFile);
-    QZipReader* zipFile;
+    QZipReader* zipFile = 0;
     if(scriptFile.endsWith(".zip"))
         zipFile = new QZipReader(scriptFile, QIODevice::ReadOnly);
 
@@ -493,6 +499,17 @@ void SyncHandler::loadMFS(QString scriptFile)
            }
         }
     }
-    if(scriptFile.endsWith(".zip"))
+    if(zipFile)
         delete zipFile;
+}
+
+
+void SyncHandler::sendPulse(qint64 currentMsecs, qint64 &nextPulseTime)
+{
+    if(SettingsHandler::getLubePulseEnabled() && currentMsecs >= nextPulseTime)
+    {
+        QString pulseTCode = TCodeChannelLookup::Lube() + QString::number(SettingsHandler::getLubePulseAmount());
+        _xSettings->getSelectedDeviceHandler()->sendTCode(pulseTCode);
+        nextPulseTime = currentMsecs + SettingsHandler::getLubePulseFrequency();
+    }
 }

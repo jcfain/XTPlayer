@@ -139,6 +139,11 @@ private slots:
     void on_speedIncrementInput_valueChanged(int value);
     void xRangeStepInput_valueChanged(int value);
 
+
+    void lubePulseEnabled_valueChanged(bool value);
+    void lubeFrequency_valueChanged(int value);
+    void lubeAmount_valueChanged(int value);
+
     void on_disableTextToSpeechCheckBox_clicked(bool checked);
 
     void on_invertFunscriptXCheckBox_clicked(bool checked);

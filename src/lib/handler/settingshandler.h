@@ -243,6 +243,13 @@ public:
     static void setFunscriptOffsetStep(int value);
     static int getFunscriptOffsetStep();
 
+    static void setLubePulseAmount(int value);
+    static int getLubePulseAmount();
+    static void setLubePulseEnabled(bool value);
+    static bool getLubePulseEnabled();
+    static void setLubePulseFrequency(int value);
+    static int getLubePulseFrequency();
+
     static void SetChannelMapDefaults();
     static void SetGamepadMapDefaults();
     static void SetupDecoderPriority();
@@ -307,6 +314,7 @@ private:
     static void MigratrTo2615();
     static void MigrateTo263();
     static void MigrateToQVariant(QSettings* settingsToLoadFrom);
+    static void MigrateToQVariant2(QSettings* settingsToLoadFrom);
     static void MigrateTo281();
     static void DeMigrateLibraryMetaDataTo258();
     static QString _appdataLocation;
@@ -395,6 +403,10 @@ private:
     static int _funscriptModifierStep;
     static int _funscriptOffsetStep;
 
+    static bool _channelPulseEnabled;
+    static QString _channelPulseChannel;
+    static qint64 _channelPulseFrequency;
+    static int _channelPulseAmount;
 
     static QHash<QString, bool> _funscriptLoaded;
     static QSettings* settings;

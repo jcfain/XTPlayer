@@ -58,6 +58,7 @@ private:
     bool _isPaused = false;
     bool _standAloneLoop;
     qint64 _currentTime = 0;
+    qint64 _currentPulseTime = 0;
     qint64 _seekTime = -1;
     QFuture<void> _funscriptMediaFuture;
     QFuture<void> _funscriptVRFuture;
@@ -70,6 +71,8 @@ private:
     void loadMFS(QString funscript);
     bool loadMFS(QString channel, QString funscript);
     bool loadMFS(QString channel, QByteArray funscript);
+
+    void sendPulse(qint64 currentMsecs, qint64 &nextPulseTime);
 };
 
 #endif // SYNCHANDLER_H

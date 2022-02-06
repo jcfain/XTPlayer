@@ -4,8 +4,8 @@ const QMap<TCodeVersion, QString> SettingsHandler::SupportedTCodeVersions = {
     {TCodeVersion::v2, "TCode v0.2"},
     {TCodeVersion::v3, "TCode v0.3"}
 };
-const QString SettingsHandler::XTPVersion = "0.283";
-const float SettingsHandler::XTPVersionNum = 0.283f;
+const QString SettingsHandler::XTPVersion = "0.284";
+const float SettingsHandler::XTPVersionNum = 0.284f;
 
 SettingsHandler::SettingsHandler(){}
 SettingsHandler::~SettingsHandler()
@@ -105,6 +105,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     foreach(auto axis, availableAxis.keys())
     {
         _availableAxis.insert(axis, availableAxis[axis].value<ChannelModel>());
+        //_availableAxis.insert(axis, ChannelModel::fromVariant(availableAxis["axis"]));
         _funscriptLoaded.insert(axis, false);
         if(!TCodeChannelLookup::ChannelExists(axis))
             TCodeChannelLookup::AddUserAxis(axis);
@@ -168,11 +169,15 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     if(!_funscriptModifierStep)
         _funscriptModifierStep = 5;
 
+    _channelPulseAmount = settingsToLoadFrom->value("channelPulseAmount").toInt();
+    _channelPulseEnabled = settingsToLoadFrom->value("channelPulseEnabled").toBool();
+    _channelPulseFrequency = settingsToLoadFrom->value("channelPulseFrequency").toInt();
+
     QList<QVariant> decoderPriorityvarient = settingsToLoadFrom->value("decoderPriority").toList();
     decoderPriority.clear();
     foreach(auto varient, decoderPriorityvarient)
     {
-        decoderPriority.append(varient.value<DecoderModel>());
+        decoderPriority.append(DecoderModel::fromVariant(varient));
     }
 
     _selectedVideoRenderer = (XVideoRenderer)settingsToLoadFrom->value("selectedVideoRenderer").toInt();
@@ -276,6 +281,13 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
             Save();
             Load();
         }
+        if(currentVersion < 0.284f)
+        {
+            locker.unlock();
+            MigrateToQVariant2(settingsToLoadFrom);
+            Save();
+            Load();
+        }
 
     }
     settingsChangedEvent(false);
@@ -331,7 +343,7 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         QList<QVariant> decoderVarient;
         foreach(auto decoder, decoderPriority)
         {
-            decoderVarient.append(QVariant::fromValue(decoder));
+            decoderVarient.append(DecoderModel::toVariant(decoder));
         }
         settingsToSaveTo->setValue("decoderPriority", decoderVarient);
 
@@ -341,6 +353,7 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         foreach(auto axis, _availableAxis.keys())
         {
             availableAxis.insert(axis, QVariant::fromValue(_availableAxis[axis]));
+            //availableAxis.insert(axis, ChannelModel::toVariant(_availableAxis[axis]));
         }
         settingsToSaveTo->setValue("availableAxis", availableAxis);
 
@@ -414,6 +427,11 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
 
         settingsToSaveTo->setValue("funscriptModifierStep", _funscriptModifierStep);
         settingsToSaveTo->setValue("funscriptOffsetStep", _funscriptOffsetStep);
+
+
+        settingsToSaveTo->setValue("channelPulseAmount", _channelPulseAmount);
+        settingsToSaveTo->setValue("channelPulseEnabled", _channelPulseEnabled);
+        settingsToSaveTo->setValue("channelPulseFrequency", _channelPulseFrequency);
 
         settingsToSaveTo->sync();
 
@@ -677,6 +695,27 @@ void SettingsHandler::MigrateToQVariant(QSettings* settingsToLoadFrom)
             _libraryListItemMetaDatas[key].bookmarks.append(bookmark);
         foreach(auto funscript, libraryListItemMetaDatas[key].value<LibraryListItemMetaData>().funscripts)
             _libraryListItemMetaDatas[key].funscripts.append(funscript);
+    }
+}
+
+void SettingsHandler::MigrateToQVariant2(QSettings* settingsToLoadFrom)
+{
+    // CANT GET TO CONVERT PROBABLY CAUSE THE ENUM TYPES!!!!!!
+//    QVariantMap availableAxis = settingsToLoadFrom->value("availableAxis").toMap();
+//    _availableAxis.clear();
+//    _funscriptLoaded.clear();
+//    foreach(auto axis, availableAxis.keys())
+//    {
+//        _availableAxis.insert(axis, availableAxis[axis].value<ChannelModel>());
+//        _funscriptLoaded.insert(axis, false);
+//        if(!TCodeChannelLookup::ChannelExists(axis))
+//            TCodeChannelLookup::AddUserAxis(axis);
+//    }
+    QList<QVariant> decoderPriorityvarient = settingsToLoadFrom->value("decoderPriority").toList();
+    decoderPriority.clear();
+    foreach(auto varient, decoderPriorityvarient)
+    {
+        decoderPriority.append(varient.value<DecoderModel>());
     }
 }
 
@@ -1915,6 +1954,37 @@ int  SettingsHandler::getFunscriptOffsetStep()
     return _funscriptOffsetStep;
 }
 
+void SettingsHandler::setLubePulseAmount(int value)
+{
+    QMutexLocker locker(&mutex);
+    _channelPulseAmount = value;
+}
+int SettingsHandler::getLubePulseAmount()
+{
+    QMutexLocker locker(&mutex);
+    return _channelPulseAmount;
+}
+void SettingsHandler::setLubePulseEnabled(bool value)
+{
+    QMutexLocker locker(&mutex);
+    _channelPulseEnabled = value;
+}
+bool SettingsHandler::getLubePulseEnabled()
+{
+    QMutexLocker locker(&mutex);
+    return _channelPulseEnabled;
+}
+void SettingsHandler::setLubePulseFrequency(int value)
+{
+    QMutexLocker locker(&mutex);
+    _channelPulseFrequency = value;
+}
+int SettingsHandler::getLubePulseFrequency()
+{
+    QMutexLocker locker(&mutex);
+    return _channelPulseFrequency;
+}
+
 LibraryListItemMetaData258 SettingsHandler::getLibraryListItemMetaData(QString path)
 {
     QMutexLocker locker(&mutex);
@@ -2028,6 +2098,10 @@ QString SettingsHandler::_vrLibrary;
 
 int SettingsHandler::_funscriptModifierStep;
 int SettingsHandler::_funscriptOffsetStep;
+
+bool SettingsHandler::_channelPulseEnabled;
+qint64 SettingsHandler::_channelPulseFrequency;
+int SettingsHandler::_channelPulseAmount;
 
 QString SettingsHandler::_hashedPass;
 

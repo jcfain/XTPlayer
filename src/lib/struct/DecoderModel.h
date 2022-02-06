@@ -4,6 +4,7 @@
 #include <QString>
 #include <QMetaType>
 #include <QDataStream>
+#include <QJsonObject>
 
 struct DecoderModel
 {
@@ -22,6 +23,23 @@ struct DecoderModel
         dataStream >> object.Name;
         dataStream >> object.Enabled;
         return dataStream;
+    }
+
+    static DecoderModel fromVariant(QVariant item)
+    {
+        QJsonObject obj = item.toJsonObject();
+        DecoderModel newItem;
+        newItem.Name = obj["name"].toString();
+        newItem.Enabled = obj["enabled"].toBool();
+        return newItem;
+    }
+
+    static QVariant toVariant(DecoderModel item)
+    {
+        QJsonObject obj;
+        obj["name"] = item.Name;
+        obj["enabled"] = item.Enabled;
+        return QVariant::fromValue(obj);
     }
 };
 Q_DECLARE_METATYPE(DecoderModel);
