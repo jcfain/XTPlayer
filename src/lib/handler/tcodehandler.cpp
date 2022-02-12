@@ -143,7 +143,7 @@ QString TCodeHandler::funscriptToTCode(std::shared_ptr<FunscriptAction> action, 
                     }
                     else
                     {
-                        tcode += QString::number((currentAction->speed > 0 ? currentAction->speed : 500));
+                        tcode += QString::number(currentAction->speed > 0 ? currentAction->speed : 500);
                     }
                 }
 
@@ -226,5 +226,5 @@ void TCodeHandler::getChannelHome(ChannelModel channel, QString &tcode)
         tcode += " ";
     tcode += channel.Channel;
     tcode += QString::number(channel.Mid).rightJustified(SettingsHandler::getTCodePadding(), '0');
-    tcode += "S500";
+    tcode += "S1000";
 }

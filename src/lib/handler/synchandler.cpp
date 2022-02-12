@@ -24,6 +24,12 @@ void SyncHandler::togglePause()
         emit togglePaused(isPaused());
     }
 }
+void SyncHandler::setPause(bool paused)
+{
+    QMutexLocker locker(&_mutex);
+    _isPaused = paused;
+    emit togglePaused(isPaused());
+}
 
 void SyncHandler::setStandAloneLoop(bool enabled)
 {

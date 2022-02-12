@@ -78,12 +78,16 @@ void SettingsDialog::init(VideoHandler* videoHandler, MediaLibraryHandler* media
         _httpHandler = new HttpHandler(mediaLibraryHandler, this);
         connect(_httpHandler, &HttpHandler::tcode, this, &SettingsDialog::sendTCode);
         connect(_httpHandler, &HttpHandler::connectTCodeDevice, this, &SettingsDialog::initDeviceRetry);
+        connect(_httpHandler, &HttpHandler::error, this, [](QString error) {
+            LogHandler::Dialog(error, XLogLevel::Critical);
+        });
         connect(this, &SettingsDialog::deviceConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
         connect(this, &SettingsDialog::deoDeviceConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
         connect(this, &SettingsDialog::whirligigDeviceConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
         connect(this, &SettingsDialog::xtpWebDeviceConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
         connect(this, &SettingsDialog::gamepadConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
         connect(_httpHandler, &HttpHandler::connectInputDevice, this, &SettingsDialog::on_xtpWeb_initSyncDevice);
+        _httpHandler->listen();
     }
 
     setupUi();
@@ -714,17 +718,21 @@ void SettingsDialog::setUpTCodeAxis()
      lubePulseFrequencyLabel->setText("Pulse lube frequency");
      lubePulseFrequencyLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
      QCheckBox* lubePulseCheckbox = new QCheckBox("Pulse lube enabled", this);
+     lubePulseCheckbox->setToolTip("Enable a tcode signal to be sent to the selected channel every n ms");
      connect(lubePulseCheckbox, &QCheckBox::clicked, this, &SettingsDialog::lubePulseEnabled_valueChanged);
      lubePulseCheckbox->setChecked(SettingsHandler::getLubePulseEnabled());
      QSpinBox* libePulseAmountInput = new QSpinBox(this);
+     auto max = SettingsHandler::getAxis(TCodeChannelLookup::Stroke()).Max;
+     libePulseAmountInput->setToolTip("TCode value to be sent to the selected channel between 0-"+QString::number(max));
      libePulseAmountInput->setMinimum(0);
-     libePulseAmountInput->setMaximum(SettingsHandler::getChannelUserMax(TCodeChannelLookup::Lube()));
+     libePulseAmountInput->setMaximum(max);
      libePulseAmountInput->setMinimumWidth(75);
      libePulseAmountInput->setSingleStep(100);
      libePulseAmountInput->setValue(SettingsHandler::getLubePulseAmount());
      libePulseAmountInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
      connect(libePulseAmountInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::lubeAmount_valueChanged);
      QSpinBox* libePulseFrequencyInput = new QSpinBox(this);
+     libePulseFrequencyInput->setToolTip("Time between pulse sent values in milliseconds");
      libePulseFrequencyInput->setMinimum(0);
      libePulseFrequencyInput->setMaximum(INT_MAX);
      libePulseFrequencyInput->setMinimumWidth(75);

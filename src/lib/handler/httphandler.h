@@ -24,6 +24,7 @@ class HttpHandler : public HttpRequestHandler
 {
     Q_OBJECT
 signals:
+    void error(QString error);
     void readyRead(QByteArray data);
     void tcode(QString tcode);
     void connectTCodeDevice();
@@ -34,6 +35,7 @@ public slots:
 public:
     HttpHandler(MediaLibraryHandler* mediaLibraryHandler, QObject *parent = nullptr);
     ~HttpHandler();
+    bool listen();
     HttpPromise handle(HttpDataPtr data);
     HttpPromise handleVideoStream(HttpDataPtr data);
     HttpPromise handleVideoList(HttpDataPtr data);

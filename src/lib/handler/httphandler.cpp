@@ -32,7 +32,6 @@ HttpHandler::HttpHandler(MediaLibraryHandler* mediaLibraryHandler, QObject *pare
 //    config.errorDocumentMap[HttpStatus::InternalServerError] = "data/404_2.html";
 //    config.errorDocumentMap[HttpStatus::BadGateway] = "data/404_2.html";
     _server = new HttpServer(config, this);
-    _server->listen();
 
     QString extensions;
     extensions += SettingsHandler::getVideoExtensions().join("|");
@@ -46,6 +45,14 @@ HttpHandler::HttpHandler(MediaLibraryHandler* mediaLibraryHandler, QObject *pare
     router.addRoute("GET", "^/settings$", this, &HttpHandler::handleSettings);
     router.addRoute("POST", "^/settings$", this, &HttpHandler::handleSettingsUpdate);
     router.addRoute("POST", "^/xtpweb$", this, &HttpHandler::handleWebTimeUpdate);
+}
+bool HttpHandler::listen()
+{
+    if(!_server->listen()) {
+        emit error("Error listening on port "+ QString::number(config.port) + ": " + _server->errorString());
+        return false;
+    }
+    return true;
 }
 
 HttpHandler::~HttpHandler()

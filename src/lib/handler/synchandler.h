@@ -25,6 +25,7 @@ public:
     SyncHandler(SettingsDialog* xSettings, TCodeHandler* tcodeHandler, VideoHandler* videoHandler, QObject *parent = nullptr);
     ~SyncHandler();
     void togglePause();
+    void setPause(bool paused);
     bool isPaused();
     void playStandAlone(QString funscript = nullptr);
     void setStandAloneLoop(bool enabled);

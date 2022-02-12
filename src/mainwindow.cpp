@@ -352,7 +352,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_syncHandler, &SyncHandler::funscriptStatusChanged, this, &MainWindow::on_media_statusChanged, Qt::QueuedConnection);
     connect(_syncHandler, &SyncHandler::funscriptStarted, this, &MainWindow::on_standaloneFunscript_start, Qt::QueuedConnection);
     connect(_syncHandler, &SyncHandler::funscriptStopped, this, &MainWindow::on_standaloneFunscript_stop, Qt::QueuedConnection);
-    connect(_syncHandler, &SyncHandler::togglePaused, this, &MainWindow::on_togglePaused);
 
     connect(videoHandler, &VideoHandler::positionChanged, this, &MainWindow::on_media_positionChanged, Qt::QueuedConnection);
     connect(videoHandler, &VideoHandler::mediaStatusChanged, this, &MainWindow::on_media_statusChanged, Qt::QueuedConnection);
@@ -2444,6 +2443,7 @@ LibraryListWidgetItem* MainWindow::setCurrentLibraryRow(int row)
 void MainWindow::on_togglePaused(bool paused)
 {
     _playerControlsFrame->setPlayIcon(!paused);
+    _syncHandler->setPause(paused);
     if(paused)
         deviceSwitchedHome();
 }
@@ -2678,6 +2678,7 @@ void MainWindow::on_media_stop()
     LogHandler::Debug("Enter on_media_stop");
     videoHandler->setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(false);
+    _syncHandler->stopMediaFunscript();
     _mediaStopped = true;
 }
 

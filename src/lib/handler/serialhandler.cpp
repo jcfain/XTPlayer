@@ -142,7 +142,6 @@ void SerialHandler::run()
 //        if(currentRequest.startsWith("D1"))
 //            QThread::sleep(5);
         // write request
-        LogHandler::Debug("Sending TCode serial: "+ currentRequest);
         const QByteArray requestData = currentRequest.toUtf8();
         serial.write(requestData);
 
