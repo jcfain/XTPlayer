@@ -131,7 +131,7 @@ void SerialHandler::run()
             else
             {
                 serial.clear();
-                if (!SettingsHandler::getDisableSerialTCodeValidation())
+                if (!SettingsHandler::getDisableTCodeValidation())
                 {
                     //serial.setRequestToSend(true);
                     LogHandler::Debug("setDataTerminalReady");
@@ -148,7 +148,7 @@ void SerialHandler::run()
         if (serial.waitForBytesWritten(_waitTimeout))
         {
             serial.flush();
-            if (!SettingsHandler::getDisableSerialTCodeValidation())
+            if (!SettingsHandler::getDisableTCodeValidation())
             {
                 // read response
                 if ((currentPortNameChanged || !_isConnected) && serial.waitForReadyRead(currentWaitTimeout))

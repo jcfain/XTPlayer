@@ -61,8 +61,8 @@ public:
     static QString getServerPort();
     static int getPlayerVolume();
     static int getoffSet();
-    static bool getDisableSerialTCodeValidation();
-    static void setDisableSerialTCodeValidation(bool value);
+    static bool getDisableTCodeValidation();
+    static void setDisableTCodeValidation(bool value);
 
     static int getChannelUserMin(QString channel);
     static int getChannelUserMax(QString channel);
@@ -344,7 +344,7 @@ private:
     static bool _xtpWebSyncEnabled;
     static int playerVolume;
     static int offSet;
-    static bool _disableSerialTCodeValidation;
+    static bool _disableTCodeValidation;
     static QList<int> _mainWindowPos;
 
     static bool _gamePadEnabled;

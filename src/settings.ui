@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1243</width>
+    <width>1262</width>
     <height>685</height>
    </rect>
   </property>
@@ -495,7 +495,7 @@
           <x>10</x>
           <y>30</y>
           <width>611</width>
-          <height>126</height>
+          <height>127</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="skipToMoneyShotGrid">
@@ -1046,8 +1046,11 @@ that has no script of the same name.</string>
        </item>
        <item row="7" column="9">
         <widget class="QCheckBox" name="disableTCodeValidationCheckbox">
+         <property name="toolTip">
+          <string>This will disable the D1 command to verify the device is a TCode device for both Serial and Network connections</string>
+         </property>
          <property name="text">
-          <string>Disable serial TCode validation</string>
+          <string>Disable TCode validation</string>
          </property>
         </widget>
        </item>

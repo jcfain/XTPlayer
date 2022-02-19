@@ -65,7 +65,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     selectedDevice = settingsToLoadFrom->value("selectedDevice").toInt();
     playerVolume = settingsToLoadFrom->value("playerVolume").toInt();
     offSet = settingsToLoadFrom->value("offSet").toInt();
-    _disableSerialTCodeValidation = settingsToLoadFrom->value("disableSerialTCodeValidation").toBool();
+    _disableTCodeValidation = settingsToLoadFrom->value("disableSerialTCodeValidation").toBool();
     selectedFunscriptLibrary = settingsToLoadFrom->value("selectedFunscriptLibrary").toString();
     serialPort = settingsToLoadFrom->value("serialPort").toString();
     serverAddress = settingsToLoadFrom->value("serverAddress").toString();
@@ -314,7 +314,7 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         settingsToSaveTo->setValue("selectedDevice", selectedDevice);
         settingsToSaveTo->setValue("playerVolume", playerVolume);
         settingsToSaveTo->setValue("offSet", offSet);
-        settingsToSaveTo->setValue("disableSerialTCodeValidation", _disableSerialTCodeValidation);
+        settingsToSaveTo->setValue("disableSerialTCodeValidation", _disableTCodeValidation);
         settingsToSaveTo->setValue("selectedFunscriptLibrary", selectedFunscriptLibrary);
         settingsToSaveTo->setValue("serialPort", serialPort);
         settingsToSaveTo->setValue("serverAddress", serverAddress);
@@ -977,13 +977,13 @@ void SettingsHandler::setLiveOffset(int value)
     settingsChangedEvent(true);
 }
 
-bool SettingsHandler::getDisableSerialTCodeValidation()
+bool SettingsHandler::getDisableTCodeValidation()
 {
-    return _disableSerialTCodeValidation;
+    return _disableTCodeValidation;
 }
-void SettingsHandler::setDisableSerialTCodeValidation(bool value)
+void SettingsHandler::setDisableTCodeValidation(bool value)
 {
-    _disableSerialTCodeValidation = value;
+    _disableTCodeValidation = value;
     settingsChangedEvent(true);
 }
 
@@ -2037,7 +2037,7 @@ int SettingsHandler::selectedDevice;
 int SettingsHandler::_librarySortMode;
 int SettingsHandler::playerVolume;
 int SettingsHandler::offSet;
-bool SettingsHandler::_disableSerialTCodeValidation;
+bool SettingsHandler::_disableTCodeValidation;
 
 int SettingsHandler::libraryView = LibraryView::Thumb;
 int SettingsHandler::thumbSize = 175;

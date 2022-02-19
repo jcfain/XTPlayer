@@ -100,33 +100,43 @@ void UdpHandler::run()
             if (!_isConnected)
             {
                 QString version = "V?";
-                if(udpSocketSend->waitForReadyRead(_waitTimeout))
+                if(!SettingsHandler::getDisableTCodeValidation())
                 {
-                    QNetworkDatagram datagram = udpSocketSend->receiveDatagram();
+                    if(udpSocketSend->waitForReadyRead(_waitTimeout))
+                    {
+                        QNetworkDatagram datagram = udpSocketSend->receiveDatagram();
 
-                    QString response = QString(datagram.data());
-                    bool validated = false;
-                    if(response.contains(SettingsHandler::SupportedTCodeVersions.value(TCodeVersion::v2)))
-                    {
-                        version = "V2";
-                        validated = true;
+                        QString response = QString(datagram.data());
+                        bool validated = false;
+                        if(response.contains(SettingsHandler::SupportedTCodeVersions.value(TCodeVersion::v2)))
+                        {
+                            version = "V2";
+                            validated = true;
+                        }
+                        else if (response.contains(SettingsHandler::SupportedTCodeVersions.value(TCodeVersion::v3)))
+                        {
+                            version = "V3";
+                            validated = true;
+                        }
+                        if (validated)
+                        {
+                            emit connectionChange({DeviceType::Network, ConnectionStatus::Connected, "Connected: "+version});
+                            _mutex.lock();
+                            _isConnected = true;
+                            _mutex.unlock();
+                        }
+                        else
+                        {
+                            emit connectionChange({DeviceType::Network, ConnectionStatus::Error, "No " + SettingsHandler::getSelectedTCodeVersion()});
+                        }
                     }
-                    else if (response.contains(SettingsHandler::SupportedTCodeVersions.value(TCodeVersion::v3)))
-                    {
-                        version = "V3";
-                        validated = true;
-                    }
-                    if (validated)
-                    {
-                        emit connectionChange({DeviceType::Network, ConnectionStatus::Connected, "Connected: "+version});
-                        _mutex.lock();
-                        _isConnected = true;
-                        _mutex.unlock();
-                    }
-                    else
-                    {
-                        emit connectionChange({DeviceType::Network, ConnectionStatus::Error, "No " + SettingsHandler::getSelectedTCodeVersion()});
-                    }
+                }
+                else
+                {
+                    emit connectionChange({DeviceType::Network, ConnectionStatus::Connected, "Connected: "+version});
+                    _mutex.lock();
+                    _isConnected = true;
+                    _mutex.unlock();
                 }
             }
         }

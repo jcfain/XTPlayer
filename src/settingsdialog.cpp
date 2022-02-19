@@ -273,7 +273,7 @@ void SettingsDialog::setupUi()
         ui.videoRendererComboBox->setCurrentText(XVideoRendererReverseMap.value(SettingsHandler::getSelectedVideoRenderer()));
         connect(ui.videoRendererComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::on_videoRenderer_textChanged);
 
-        ui.disableTCodeValidationCheckbox->setChecked(SettingsHandler::getDisableSerialTCodeValidation());
+        ui.disableTCodeValidationCheckbox->setChecked(SettingsHandler::getDisableTCodeValidation());
 
         ui.RangeSettingsGrid->setSpacing(5);
 
@@ -1891,7 +1891,7 @@ void SettingsDialog::on_disableTCodeValidationCheckbox_clicked(bool checked)
     {
         LogHandler::Dialog("Make sure to verify the version of TCode firmware installed on your device.", XLogLevel::Warning);
     }
-    SettingsHandler::setDisableSerialTCodeValidation(checked);
+    SettingsHandler::setDisableTCodeValidation(checked);
     SettingsHandler::requestRestart(this);
 }
 
