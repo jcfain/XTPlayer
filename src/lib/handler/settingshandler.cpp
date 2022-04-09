@@ -253,7 +253,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
         if(currentVersion < 0.2581f)
         {
             locker.unlock();
-            setSelectedTCodeVersion();
+            setupAvailableAxis();
         }
         if(currentVersion < 0.2615f)
         {
@@ -495,6 +495,12 @@ void SettingsHandler::quit(bool restart)
         QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
 }
 
+void SettingsHandler::restart()
+{
+    QApplication::quit();
+    QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
+}
+
 void SettingsHandler::Clear()
 {
     QMutexLocker locker(&mutex);
@@ -541,7 +547,6 @@ void SettingsHandler::SetMapDefaults()
 void SettingsHandler::SetChannelMapDefaults()
 {
     setupAvailableAxis();
-    setSelectedTCodeVersion();
     QVariantHash availableAxis;
     foreach(auto axis, _availableAxis.keys())
     {
@@ -654,7 +659,6 @@ void SettingsHandler::MigratrTo2615()
 {
     settings->setValue("version", 0.2615f);
     setupAvailableAxis();
-    setSelectedTCodeVersion();
     Save();
     Load();
     LogHandler::Dialog("Due to a standards update your CHANNEL SETTINGS\nhave been set to default for a new data structure.\nPlease reset your RANGES and MULTIPLIERS settings before using.", XLogLevel::Information);
@@ -734,139 +738,138 @@ void SettingsHandler::setSelectedTCodeVersion(TCodeVersion key)
     if(_selectedTCodeVersion != key)
     {
         _selectedTCodeVersion = key;
-        TCodeChannelLookup::setSelectedTCodeVersion(_selectedTCodeVersion);
-        setSelectedTCodeVersion();
+        setupAvailableAxis();
         emit instance().tcodeVersionChanged();
         settingsChangedEvent(true);
     }
 
 }
 
-void SettingsHandler::setSelectedTCodeVersion()
-{
-    foreach(auto axis, _availableAxis.keys())
-    {
-        if(_selectedTCodeVersion == TCodeVersion::v3)
-        {
-            _availableAxis[axis].Max = 9999;
-            _availableAxis[axis].Mid = _availableAxis[axis].Type == AxisType::Switch ? 0 : 5000;
-            _availableAxis[axis].UserMax = XMath::constrain(XMath::mapRange(_availableAxis[axis].UserMax, 0, 999, 0, 9999), 0 ,9999);
-            _availableAxis[axis].UserMin = XMath::constrain(XMath::mapRange(_availableAxis[axis].UserMin, 0, 999, 0, 9999), 0 ,9999);
-            _availableAxis[axis].UserMid = XMath::constrain(XMath::mapRange(_availableAxis[axis].UserMid, 0, 999, 0, 9999), 0 ,9999);
-        }
-        else
-        {
-            _availableAxis[axis].Max = 999;
-            _availableAxis[axis].Mid = _availableAxis[axis].Type == AxisType::Switch ? 0 : 500;
-            _availableAxis[axis].UserMax = XMath::constrain(XMath::mapRange(_availableAxis[axis].UserMax, 0, 9999, 0, 999), 0 ,999);
-            _availableAxis[axis].UserMin = XMath::constrain(XMath::mapRange(_availableAxis[axis].UserMin, 0, 9999, 0, 999), 0 ,999);
-            _availableAxis[axis].UserMid = XMath::constrain(XMath::mapRange(_availableAxis[axis].UserMid, 0, 9999, 0, 999), 0 ,999);
-        }
-    }
-    _liveXRangeMax = _availableAxis.value(TCodeChannelLookup::Stroke()).UserMax;
-    _liveXRangeMin = _availableAxis.value(TCodeChannelLookup::Stroke()).UserMin;
-    _liveXRangeMid = _availableAxis.value(TCodeChannelLookup::Stroke()).UserMid;
+//void SettingsHandler::migrateTCodeVersion()
+//{
+//    foreach(auto axis, _availableAxis.keys())
+//    {
+//        if(_selectedTCodeVersion == TCodeVersion::v3)
+//        {
+//            _availableAxis[axis].Max = 9999;
+//            _availableAxis[axis].Mid = _availableAxis[axis].Type == AxisType::Switch ? 0 : 5000;
+//            _availableAxis[axis].UserMax = XMath::constrain(XMath::mapRange(_availableAxis[axis].UserMax, 0, 999, 0, 9999), 0 ,9999);
+//            _availableAxis[axis].UserMin = XMath::constrain(XMath::mapRange(_availableAxis[axis].UserMin, 0, 999, 0, 9999), 0 ,9999);
+//            _availableAxis[axis].UserMid = XMath::constrain(XMath::mapRange(_availableAxis[axis].UserMid, 0, 999, 0, 9999), 0 ,9999);
+//        }
+//        else
+//        {
+//            _availableAxis[axis].Max = 999;
+//            _availableAxis[axis].Mid = _availableAxis[axis].Type == AxisType::Switch ? 0 : 500;
+//            _availableAxis[axis].UserMax = XMath::constrain(XMath::mapRange(_availableAxis[axis].UserMax, 0, 9999, 0, 999), 0 ,999);
+//            _availableAxis[axis].UserMin = XMath::constrain(XMath::mapRange(_availableAxis[axis].UserMin, 0, 9999, 0, 999), 0 ,999);
+//            _availableAxis[axis].UserMid = XMath::constrain(XMath::mapRange(_availableAxis[axis].UserMid, 0, 9999, 0, 999), 0 ,999);
+//        }
+//    }
+//    _liveXRangeMax = _availableAxis.value(TCodeChannelLookup::Stroke()).UserMax;
+//    _liveXRangeMin = _availableAxis.value(TCodeChannelLookup::Stroke()).UserMin;
+//    _liveXRangeMid = _availableAxis.value(TCodeChannelLookup::Stroke()).UserMid;
 
-//    ChannelModel suckMoreModel = { "Suck more", TCodeChannelLookup::SuckMore(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::HalfRange, "suck", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeUp() };
-//    ChannelModel suckLessModel = { "Suck less", TCodeChannelLookup::SuckLess(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::HalfRange, "suck", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeDown() };
-    if(_selectedTCodeVersion == TCodeVersion::v3)
-    {
-        auto v2ChannelMap = TCodeChannelLookup::TCodeVersionMap.value(TCodeVersion::v2);
+////    ChannelModel suckMoreModel = { "Suck more", TCodeChannelLookup::SuckMore(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::HalfRange, "suck", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeUp() };
+////    ChannelModel suckLessModel = { "Suck less", TCodeChannelLookup::SuckLess(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::HalfRange, "suck", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeDown() };
+//    if(_selectedTCodeVersion == TCodeVersion::v3)
+//    {
+//        auto v2ChannelMap = TCodeChannelLookup::TCodeVersionMap.value(TCodeVersion::v2);
 
-        auto lubeV2Channel = v2ChannelMap.value(AxisNames::Lube);
-        if(_availableAxis.contains(lubeV2Channel))
-        {
-            _availableAxis.insert(TCodeChannelLookup::Lube(), _availableAxis.value(lubeV2Channel));
-            _availableAxis[TCodeChannelLookup::Lube()].AxisName = TCodeChannelLookup::Lube();
-            _availableAxis[TCodeChannelLookup::Lube()].Channel = TCodeChannelLookup::Lube();
-            _availableAxis.remove(lubeV2Channel);
-        }
+//        auto lubeV2Channel = v2ChannelMap.value(AxisNames::Lube);
+//        if(_availableAxis.contains(lubeV2Channel))
+//        {
+//            _availableAxis.insert(TCodeChannelLookup::Lube(), _availableAxis.value(lubeV2Channel));
+//            _availableAxis[TCodeChannelLookup::Lube()].AxisName = TCodeChannelLookup::Lube();
+//            _availableAxis[TCodeChannelLookup::Lube()].Channel = TCodeChannelLookup::Lube();
+//            _availableAxis.remove(lubeV2Channel);
+//        }
 
-        auto suckV2Channel = v2ChannelMap.value(AxisNames::Suck);
-        if(_availableAxis.contains(suckV2Channel))
-        {
-            _availableAxis.insert(TCodeChannelLookup::Suck(), _availableAxis.value(suckV2Channel));
-            _availableAxis[TCodeChannelLookup::Suck()].AxisName = TCodeChannelLookup::Suck();
-            _availableAxis[TCodeChannelLookup::Suck()].Channel = TCodeChannelLookup::Suck();
-            _availableAxis.remove(suckV2Channel);
-        }
+//        auto suckV2Channel = v2ChannelMap.value(AxisNames::Suck);
+//        if(_availableAxis.contains(suckV2Channel))
+//        {
+//            _availableAxis.insert(TCodeChannelLookup::Suck(), _availableAxis.value(suckV2Channel));
+//            _availableAxis[TCodeChannelLookup::Suck()].AxisName = TCodeChannelLookup::Suck();
+//            _availableAxis[TCodeChannelLookup::Suck()].Channel = TCodeChannelLookup::Suck();
+//            _availableAxis.remove(suckV2Channel);
+//        }
 
-        auto suckMoreV2Channel = v2ChannelMap.value(AxisNames::SuckMore);
-        if(_availableAxis.contains(suckMoreV2Channel))
-        {
-            _availableAxis.insert(TCodeChannelLookup::SuckMore(), _availableAxis.value(suckMoreV2Channel));
-            _availableAxis[TCodeChannelLookup::SuckMore()].AxisName = TCodeChannelLookup::SuckMore();
-            _availableAxis[TCodeChannelLookup::SuckMore()].Channel = TCodeChannelLookup::Suck();
-            _availableAxis.remove(suckMoreV2Channel);
-        }
+//        auto suckMoreV2Channel = v2ChannelMap.value(AxisNames::SuckMore);
+//        if(_availableAxis.contains(suckMoreV2Channel))
+//        {
+//            _availableAxis.insert(TCodeChannelLookup::SuckMore(), _availableAxis.value(suckMoreV2Channel));
+//            _availableAxis[TCodeChannelLookup::SuckMore()].AxisName = TCodeChannelLookup::SuckMore();
+//            _availableAxis[TCodeChannelLookup::SuckMore()].Channel = TCodeChannelLookup::Suck();
+//            _availableAxis.remove(suckMoreV2Channel);
+//        }
 
-        auto suckLessV2Channel = v2ChannelMap.value(AxisNames::SuckLess);
-        if(_availableAxis.contains(suckLessV2Channel))
-        {
-            _availableAxis.insert(TCodeChannelLookup::SuckLess(), _availableAxis.value(suckLessV2Channel));
-            _availableAxis[TCodeChannelLookup::SuckLess()].AxisName = TCodeChannelLookup::SuckLess();
-            _availableAxis[TCodeChannelLookup::SuckLess()].Channel = TCodeChannelLookup::Suck();
-            _availableAxis.remove(suckLessV2Channel);
-        }
+//        auto suckLessV2Channel = v2ChannelMap.value(AxisNames::SuckLess);
+//        if(_availableAxis.contains(suckLessV2Channel))
+//        {
+//            _availableAxis.insert(TCodeChannelLookup::SuckLess(), _availableAxis.value(suckLessV2Channel));
+//            _availableAxis[TCodeChannelLookup::SuckLess()].AxisName = TCodeChannelLookup::SuckLess();
+//            _availableAxis[TCodeChannelLookup::SuckLess()].Channel = TCodeChannelLookup::Suck();
+//            _availableAxis.remove(suckLessV2Channel);
+//        }
 
-        ChannelModel suctionPositionModel = { "Suck manual", TCodeChannelLookup::SuckPosition(), TCodeChannelLookup::SuckPosition(), 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::Range, "suckManual", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Stroke() };
-        ChannelModel suctionMorePositionModel = { "Suck manual more ", TCodeChannelLookup::SuckMorePosition(), TCodeChannelLookup::SuckPosition(), 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::HalfRange, "suckManual", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeUp() };
-        ChannelModel suctionLessPositionModel = { "Suck manual less ", TCodeChannelLookup::SuckLessPosition(), TCodeChannelLookup::SuckPosition(), 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::HalfRange, "suckManual", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeDown() };
-       _availableAxis.insert(TCodeChannelLookup::SuckPosition(), suctionPositionModel);
-       _availableAxis.insert(TCodeChannelLookup::SuckMorePosition(), suctionMorePositionModel);
-       _availableAxis.insert(TCodeChannelLookup::SuckLessPosition(), suctionLessPositionModel);
-    }
-    else
-    {
-        auto v3ChannelMap = TCodeChannelLookup::TCodeVersionMap.value(TCodeVersion::v3);
+//        ChannelModel suctionPositionModel = { "Suck manual", TCodeChannelLookup::SuckPosition(), TCodeChannelLookup::SuckPosition(), 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::Range, "suckManual", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Stroke() };
+//        ChannelModel suctionMorePositionModel = { "Suck manual more ", TCodeChannelLookup::SuckMorePosition(), TCodeChannelLookup::SuckPosition(), 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::HalfRange, "suckManual", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeUp() };
+//        ChannelModel suctionLessPositionModel = { "Suck manual less ", TCodeChannelLookup::SuckLessPosition(), TCodeChannelLookup::SuckPosition(), 0, 5000, 9999, 0, 5000, 9999, AxisDimension::None, AxisType::HalfRange, "suckManual", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeDown() };
+//       _availableAxis.insert(TCodeChannelLookup::SuckPosition(), suctionPositionModel);
+//       _availableAxis.insert(TCodeChannelLookup::SuckMorePosition(), suctionMorePositionModel);
+//       _availableAxis.insert(TCodeChannelLookup::SuckLessPosition(), suctionLessPositionModel);
+//    }
+//    else
+//    {
+//        auto v3ChannelMap = TCodeChannelLookup::TCodeVersionMap.value(TCodeVersion::v3);
 
-        auto lubeV3Channel = v3ChannelMap.value(AxisNames::Lube);
-        if(_availableAxis.contains(lubeV3Channel))
-        {
-            _availableAxis.insert(TCodeChannelLookup::Lube(), _availableAxis.value(lubeV3Channel));
-            _availableAxis[TCodeChannelLookup::Lube()].AxisName = TCodeChannelLookup::Lube();
-            _availableAxis[TCodeChannelLookup::Lube()].Channel = TCodeChannelLookup::Lube();
-            _availableAxis.remove(lubeV3Channel);
-        }
+//        auto lubeV3Channel = v3ChannelMap.value(AxisNames::Lube);
+//        if(_availableAxis.contains(lubeV3Channel))
+//        {
+//            _availableAxis.insert(TCodeChannelLookup::Lube(), _availableAxis.value(lubeV3Channel));
+//            _availableAxis[TCodeChannelLookup::Lube()].AxisName = TCodeChannelLookup::Lube();
+//            _availableAxis[TCodeChannelLookup::Lube()].Channel = TCodeChannelLookup::Lube();
+//            _availableAxis.remove(lubeV3Channel);
+//        }
 
-        auto suckV3Channel = v3ChannelMap.value(AxisNames::Suck);
-        if(_availableAxis.contains(suckV3Channel))
-        {
-            _availableAxis.insert(TCodeChannelLookup::Suck(), _availableAxis.value(suckV3Channel));
-            _availableAxis[TCodeChannelLookup::Suck()].AxisName = TCodeChannelLookup::Suck();
-            _availableAxis[TCodeChannelLookup::Suck()].Channel = TCodeChannelLookup::Suck();
-            _availableAxis.remove(suckV3Channel);
-        }
+//        auto suckV3Channel = v3ChannelMap.value(AxisNames::Suck);
+//        if(_availableAxis.contains(suckV3Channel))
+//        {
+//            _availableAxis.insert(TCodeChannelLookup::Suck(), _availableAxis.value(suckV3Channel));
+//            _availableAxis[TCodeChannelLookup::Suck()].AxisName = TCodeChannelLookup::Suck();
+//            _availableAxis[TCodeChannelLookup::Suck()].Channel = TCodeChannelLookup::Suck();
+//            _availableAxis.remove(suckV3Channel);
+//        }
 
-        auto suckMoreV3Channel = v3ChannelMap.value(AxisNames::SuckMore);
-        if(_availableAxis.contains(suckMoreV3Channel))
-        {
-            _availableAxis.insert(TCodeChannelLookup::SuckMore(), _availableAxis.value(suckMoreV3Channel));
-            _availableAxis[TCodeChannelLookup::SuckMore()].AxisName = TCodeChannelLookup::SuckMore();
-            _availableAxis[TCodeChannelLookup::SuckMore()].Channel = TCodeChannelLookup::Suck();
-            _availableAxis.remove(suckMoreV3Channel);
-        }
+//        auto suckMoreV3Channel = v3ChannelMap.value(AxisNames::SuckMore);
+//        if(_availableAxis.contains(suckMoreV3Channel))
+//        {
+//            _availableAxis.insert(TCodeChannelLookup::SuckMore(), _availableAxis.value(suckMoreV3Channel));
+//            _availableAxis[TCodeChannelLookup::SuckMore()].AxisName = TCodeChannelLookup::SuckMore();
+//            _availableAxis[TCodeChannelLookup::SuckMore()].Channel = TCodeChannelLookup::Suck();
+//            _availableAxis.remove(suckMoreV3Channel);
+//        }
 
-        auto suckLessV3Channel = v3ChannelMap.value(AxisNames::SuckLess);
-        if(_availableAxis.contains(suckLessV3Channel))
-        {
-            _availableAxis.insert(TCodeChannelLookup::SuckLess(), _availableAxis.value(suckLessV3Channel));
-            _availableAxis[TCodeChannelLookup::SuckLess()].AxisName = TCodeChannelLookup::SuckLess();
-            _availableAxis[TCodeChannelLookup::SuckLess()].Channel = TCodeChannelLookup::Suck();
-            _availableAxis.remove(suckLessV3Channel);
-        }
+//        auto suckLessV3Channel = v3ChannelMap.value(AxisNames::SuckLess);
+//        if(_availableAxis.contains(suckLessV3Channel))
+//        {
+//            _availableAxis.insert(TCodeChannelLookup::SuckLess(), _availableAxis.value(suckLessV3Channel));
+//            _availableAxis[TCodeChannelLookup::SuckLess()].AxisName = TCodeChannelLookup::SuckLess();
+//            _availableAxis[TCodeChannelLookup::SuckLess()].Channel = TCodeChannelLookup::Suck();
+//            _availableAxis.remove(suckLessV3Channel);
+//        }
 
-        auto suckPositionV3Channel = v3ChannelMap.value(AxisNames::SuckPosition);
-        _availableAxis.remove(suckPositionV3Channel);
+//        auto suckPositionV3Channel = v3ChannelMap.value(AxisNames::SuckPosition);
+//        _availableAxis.remove(suckPositionV3Channel);
 
-        auto suckMorePositionV3Channel = v3ChannelMap.value(AxisNames::SuckMorePosition);
-        _availableAxis.remove(suckMorePositionV3Channel);
+//        auto suckMorePositionV3Channel = v3ChannelMap.value(AxisNames::SuckMorePosition);
+//        _availableAxis.remove(suckMorePositionV3Channel);
 
-        auto suckLessPositionV3Channel = v3ChannelMap.value(AxisNames::SuckLessPosition);
-        _availableAxis.remove(suckLessPositionV3Channel);
+//        auto suckLessPositionV3Channel = v3ChannelMap.value(AxisNames::SuckLessPosition);
+//        _availableAxis.remove(suckLessPositionV3Channel);
 
-    }
-}
+//    }
+//}
 
 bool SettingsHandler::getHideWelcomeScreen()
 {
@@ -1689,32 +1692,53 @@ void SettingsHandler::SetHashedPass(QString value)
 void SettingsHandler::setupAvailableAxis()
 {
     TCodeChannelLookup::setSelectedTCodeVersion(_selectedTCodeVersion);
+    int max = _selectedTCodeVersion == TCodeVersion::v2 ? 999 : 9999;
+    int mid = _selectedTCodeVersion == TCodeVersion::v2 ? 500 : 5000;
     _availableAxis = {
-        {TCodeChannelLookup::None(), { "None", TCodeChannelLookup::None(), TCodeChannelLookup::None(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::None, "", false, 2.50f, false, 1.0f, false, false, "" } },
-        {TCodeChannelLookup::Stroke(), { "Stroke", TCodeChannelLookup::Stroke(), TCodeChannelLookup::Stroke(), 0, 500, 999, 0, 500, 999, AxisDimension::Heave, AxisType::Range, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Twist() } },
-        {TCodeChannelLookup::StrokeDown(), { "Stroke Down", TCodeChannelLookup::StrokeDown(), TCodeChannelLookup::Stroke(), 0, 500, 999, 0, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::TwistCounterClockwise() } },
-        {TCodeChannelLookup::StrokeUp(), { "Stroke Up", TCodeChannelLookup::StrokeUp(), TCodeChannelLookup::Stroke(), 0, 500, 999, 0, 500, 999, AxisDimension::Heave, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::TwistClockwise() } },
-        {TCodeChannelLookup::Sway(), { "Sway", TCodeChannelLookup::Sway(), TCodeChannelLookup::Sway(), 0, 500, 999, 0, 500, 999, AxisDimension::Sway, AxisType::Range, "sway", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Roll() } },
-        {TCodeChannelLookup::SwayLeft(), { "Sway Left", TCodeChannelLookup::SwayLeft(), TCodeChannelLookup::Sway(), 0, 500, 999, 0, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::RollLeft() } },
-        {TCodeChannelLookup::SwayRight(), { "Sway Right", TCodeChannelLookup::SwayRight(), TCodeChannelLookup::Sway(), 0, 500, 999, 0, 500, 999, AxisDimension::Sway, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::RollRight() } },
-        {TCodeChannelLookup::Surge(), { "Surge", TCodeChannelLookup::Surge(), TCodeChannelLookup::Surge(), 0, 500, 999, 0, 500, 999, AxisDimension::Surge, AxisType::Range, "surge", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Pitch() } },
-        {TCodeChannelLookup::SurgeBack(), { "Surge Back", TCodeChannelLookup::SurgeBack(), TCodeChannelLookup::Surge(), 0, 500, 999, 0, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::PitchBack() } },
-        {TCodeChannelLookup::SurgeForward(), { "Surge Forward", TCodeChannelLookup::SurgeForward(), TCodeChannelLookup::Surge(), 0, 500, 999, 0, 500, 999, AxisDimension::Surge, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::PitchForward() } },
-        {TCodeChannelLookup::Pitch(), { "Pitch", TCodeChannelLookup::Pitch(), TCodeChannelLookup::Pitch(), 0, 500, 999, 0, 500, 999, AxisDimension::Pitch, AxisType::Range, "pitch", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Surge() } },
-        {TCodeChannelLookup::PitchForward(), { "Pitch Forward", TCodeChannelLookup::PitchForward(), TCodeChannelLookup::Pitch(), 0, 500, 999, 0, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::SurgeForward() } },
-        {TCodeChannelLookup::PitchBack(), { "Pitch Back", TCodeChannelLookup::PitchBack(), TCodeChannelLookup::Pitch(), 0, 500, 999, 0, 500, 999, AxisDimension::Pitch, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::SurgeBack() } },
-        {TCodeChannelLookup::Roll(), { "Roll", TCodeChannelLookup::Roll(), TCodeChannelLookup::Roll(), 0, 500, 999, 0, 500, 999, AxisDimension::Roll, AxisType::Range, "roll", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Sway() } },
-        {TCodeChannelLookup::RollLeft(), { "Roll Left", TCodeChannelLookup::RollLeft(), TCodeChannelLookup::Roll(), 0, 500, 999, 0, 500, 999, AxisDimension::Roll, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::SwayLeft() } },
-        {TCodeChannelLookup::RollRight(), { "Roll Right", TCodeChannelLookup::RollRight(), TCodeChannelLookup::Roll(), 0, 500, 999, 0, 500, 999, AxisDimension::Roll, AxisType::HalfRange, "", false, 0.01f, false, 0.2f , false, false, TCodeChannelLookup::SwayRight() } },
-        {TCodeChannelLookup::Twist(), { "Twist", TCodeChannelLookup::Twist(), TCodeChannelLookup::Twist(), 0, 500, 999, 0, 500, 999, AxisDimension::Yaw, AxisType::Range, "twist", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Stroke() } },
-        {TCodeChannelLookup::TwistClockwise(), { "Twist (CW)", TCodeChannelLookup::TwistClockwise(), TCodeChannelLookup::Twist(), 0, 500, 999, 0, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeUp() } },
-        {TCodeChannelLookup::TwistCounterClockwise(), { "Twist (CCW)", TCodeChannelLookup::TwistCounterClockwise(), TCodeChannelLookup::Twist(), 0, 500, 999, 0, 500, 999, AxisDimension::Yaw, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeDown() } },
-        {TCodeChannelLookup::Vib(), { "Vib", TCodeChannelLookup::Vib(), TCodeChannelLookup::Vib(), 0, 0, 999, 0, 0, 999, AxisDimension::None, AxisType::Switch, "vib", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Stroke() } },
-        {TCodeChannelLookup::Lube(), { "Lube", TCodeChannelLookup::Lube(), TCodeChannelLookup::Lube(), 0, 0, 999, 0, 0, 999, AxisDimension::None, AxisType::Switch, "lube", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Stroke() } },
-        {TCodeChannelLookup::Suck(), { "Suck", TCodeChannelLookup::Suck(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::Range, "suck", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Stroke() } },
-        {TCodeChannelLookup::SuckMore(), { "Suck more", TCodeChannelLookup::SuckMore(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::HalfRange, "suck", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeUp() } },
-        {TCodeChannelLookup::SuckLess(), { "Suck less", TCodeChannelLookup::SuckLess(), TCodeChannelLookup::Suck(), 0, 500, 999, 0, 500, 999, AxisDimension::None, AxisType::HalfRange, "suck", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeDown() } }
+        {TCodeChannelLookup::None(), { "None", TCodeChannelLookup::None(), TCodeChannelLookup::None(), 0, mid, max, 0, mid, max, AxisDimension::None, AxisType::None, "", false, 2.50f, false, 1.0f, false, false, "" } },
+        {TCodeChannelLookup::Stroke(), { "Stroke", TCodeChannelLookup::Stroke(), TCodeChannelLookup::Stroke(), 0, mid, max, 0, mid, max, AxisDimension::Heave, AxisType::Range, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Twist() } },
+        {TCodeChannelLookup::StrokeDown(), { "Stroke Down", TCodeChannelLookup::StrokeDown(), TCodeChannelLookup::Stroke(), 0, mid, max, 0, mid, max, AxisDimension::Heave, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::TwistCounterClockwise() } },
+        {TCodeChannelLookup::StrokeUp(), { "Stroke Up", TCodeChannelLookup::StrokeUp(), TCodeChannelLookup::Stroke(), 0, mid, max, 0, mid, max, AxisDimension::Heave, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::TwistClockwise() } },
+        {TCodeChannelLookup::Sway(), { "Sway", TCodeChannelLookup::Sway(), TCodeChannelLookup::Sway(), 0, mid, max, 0, mid, max, AxisDimension::Sway, AxisType::Range, "sway", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Roll() } },
+        {TCodeChannelLookup::SwayLeft(), { "Sway Left", TCodeChannelLookup::SwayLeft(), TCodeChannelLookup::Sway(), 0, mid, max, 0, mid, max, AxisDimension::Sway, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::RollLeft() } },
+        {TCodeChannelLookup::SwayRight(), { "Sway Right", TCodeChannelLookup::SwayRight(), TCodeChannelLookup::Sway(), 0, mid, max, 0, mid, max, AxisDimension::Sway, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::RollRight() } },
+        {TCodeChannelLookup::Surge(), { "Surge", TCodeChannelLookup::Surge(), TCodeChannelLookup::Surge(), 0, mid, max, 0, mid, max, AxisDimension::Surge, AxisType::Range, "surge", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Pitch() } },
+        {TCodeChannelLookup::SurgeBack(), { "Surge Back", TCodeChannelLookup::SurgeBack(), TCodeChannelLookup::Surge(), 0, mid, max, 0, mid, max, AxisDimension::Surge, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::PitchBack() } },
+        {TCodeChannelLookup::SurgeForward(), { "Surge Forward", TCodeChannelLookup::SurgeForward(), TCodeChannelLookup::Surge(), 0, mid, max, 0, mid, max, AxisDimension::Surge, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::PitchForward() } },
+        {TCodeChannelLookup::Pitch(), { "Pitch", TCodeChannelLookup::Pitch(), TCodeChannelLookup::Pitch(), 0, mid, max, 0, mid, max, AxisDimension::Pitch, AxisType::Range, "pitch", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Surge() } },
+        {TCodeChannelLookup::PitchForward(), { "Pitch Forward", TCodeChannelLookup::PitchForward(), TCodeChannelLookup::Pitch(), 0, mid, max, 0, mid, max, AxisDimension::Pitch, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::SurgeForward() } },
+        {TCodeChannelLookup::PitchBack(), { "Pitch Back", TCodeChannelLookup::PitchBack(), TCodeChannelLookup::Pitch(), 0, mid, max, 0, mid, max, AxisDimension::Pitch, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::SurgeBack() } },
+        {TCodeChannelLookup::Roll(), { "Roll", TCodeChannelLookup::Roll(), TCodeChannelLookup::Roll(), 0, mid, max, 0, mid, max, AxisDimension::Roll, AxisType::Range, "roll", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Sway() } },
+        {TCodeChannelLookup::RollLeft(), { "Roll Left", TCodeChannelLookup::RollLeft(), TCodeChannelLookup::Roll(), 0, mid, max, 0, mid, max, AxisDimension::Roll, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::SwayLeft() } },
+        {TCodeChannelLookup::RollRight(), { "Roll Right", TCodeChannelLookup::RollRight(), TCodeChannelLookup::Roll(), 0, mid, max, 0, mid, max, AxisDimension::Roll, AxisType::HalfRange, "", false, 0.01f, false, 0.2f , false, false, TCodeChannelLookup::SwayRight() } },
+        {TCodeChannelLookup::Twist(), { "Twist", TCodeChannelLookup::Twist(), TCodeChannelLookup::Twist(), 0, mid, max, 0, mid, max, AxisDimension::Yaw, AxisType::Range, "twist", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Stroke() } },
+        {TCodeChannelLookup::TwistClockwise(), { "Twist (CW)", TCodeChannelLookup::TwistClockwise(), TCodeChannelLookup::Twist(), 0, mid, max, 0, mid, max, AxisDimension::Yaw, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeUp() } },
+        {TCodeChannelLookup::TwistCounterClockwise(), { "Twist (CCW)", TCodeChannelLookup::TwistCounterClockwise(), TCodeChannelLookup::Twist(), 0, mid, max, 0, mid, max, AxisDimension::Yaw, AxisType::HalfRange, "", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeDown() } },
+        {TCodeChannelLookup::Vib(), { "Vib", TCodeChannelLookup::Vib(), TCodeChannelLookup::Vib(), 0, 0, max, 0, 0, max, AxisDimension::None, AxisType::Switch, "vib", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Stroke() } },
+        {TCodeChannelLookup::Lube(), { "Lube", TCodeChannelLookup::Lube(), TCodeChannelLookup::Lube(), 0, 0, max, 0, 0, max, AxisDimension::None, AxisType::Switch, "lube", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Stroke() } },
+        {TCodeChannelLookup::Suck(), { "Suck", TCodeChannelLookup::Suck(), TCodeChannelLookup::Suck(), 0, mid, max, 0, mid, max, AxisDimension::None, AxisType::Range, "suck", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Stroke() } },
+        {TCodeChannelLookup::SuckMore(), { "Suck more", TCodeChannelLookup::SuckMore(), TCodeChannelLookup::Suck(), 0, mid, max, 0, mid, max, AxisDimension::None, AxisType::HalfRange, "suck", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeUp() } },
+        {TCodeChannelLookup::SuckLess(), { "Suck less", TCodeChannelLookup::SuckLess(), TCodeChannelLookup::Suck(), 0, mid, max, 0, mid, max, AxisDimension::None, AxisType::HalfRange, "suck", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeDown() } }
     };
+    if(_selectedTCodeVersion == TCodeVersion::v3)
+    {
+        ChannelModel suctionPositionModel = { "Suck manual", TCodeChannelLookup::SuckPosition(), TCodeChannelLookup::SuckPosition(), 0, mid, max, 0, mid, max, AxisDimension::None, AxisType::Range, "suckManual", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::Stroke() };
+        ChannelModel suctionMorePositionModel = { "Suck manual more ", TCodeChannelLookup::SuckMorePosition(), TCodeChannelLookup::SuckPosition(), 0, mid, max, 0, mid, max, AxisDimension::None, AxisType::HalfRange, "suckManual", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeUp() };
+        ChannelModel suctionLessPositionModel = { "Suck manual less ", TCodeChannelLookup::SuckLessPosition(), TCodeChannelLookup::SuckPosition(), 0, mid, max, 0, mid, max, AxisDimension::None, AxisType::HalfRange, "suckManual", false, 2.50f, false, 1.0f, false, false, TCodeChannelLookup::StrokeDown() };
+       _availableAxis.insert(TCodeChannelLookup::SuckPosition(), suctionPositionModel);
+       _availableAxis.insert(TCodeChannelLookup::SuckMorePosition(), suctionMorePositionModel);
+       _availableAxis.insert(TCodeChannelLookup::SuckLessPosition(), suctionLessPositionModel);
+    } else {
+        auto v3ChannelMap = TCodeChannelLookup::TCodeVersionMap.value(TCodeVersion::v3);
+        auto suckPositionV3Channel = v3ChannelMap.value(AxisNames::SuckPosition);
+        _availableAxis.remove(suckPositionV3Channel);
+
+        auto suckMorePositionV3Channel = v3ChannelMap.value(AxisNames::SuckMorePosition);
+        _availableAxis.remove(suckMorePositionV3Channel);
+
+        auto suckLessPositionV3Channel = v3ChannelMap.value(AxisNames::SuckLessPosition);
+        _availableAxis.remove(suckLessPositionV3Channel);
+    }
 }
 
 //private

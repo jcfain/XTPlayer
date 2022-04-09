@@ -29,6 +29,7 @@ signals:
     void tcode(QString tcode);
     void connectTCodeDevice();
     void connectInputDevice(DeviceType deviceType, bool checked);
+    void restartService();
 public slots:
     void on_DeviceConnection_StateChange(ConnectionChangedSignal status);
 

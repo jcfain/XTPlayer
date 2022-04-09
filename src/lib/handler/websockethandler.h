@@ -17,6 +17,7 @@ signals:
     void connectInputDevice(DeviceType deviceType, bool checked);
     void tcode(QString tcode);
     void newWebSocketConnected(QWebSocket* client);
+    void restartService();
 public:
     WebSocketHandler(QObject *parent = nullptr);
     ~WebSocketHandler();

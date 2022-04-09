@@ -69,6 +69,7 @@ var selectedInputDevice;
 var deviceConnectionStatusInterval;
 var deviceConnectionStatusRetryButtonNodes;
 var deviceConnectionStatusRetryButtonImageNodes;
+var serverRetryTimeout;
 //var funscriptSyncWorker;
 //var useDeoWeb;
 //var deoVideoNode;
@@ -175,10 +176,13 @@ function sendTCode(tcode) {
 function sendSyncDeviceConnectionChange(device, checked) {
 	sendMessageXTP("connectInputDevice", {deviceType: device, enabled: checked});
 }
-/* function stopWebSocket() {
-	if (websocket)
-		websocket.close();
-} */
+
+function restartXTP() {
+	if (confirm('Are you sure you want restart XTP?')) {
+		sendMessageXTP("restartService");
+		closeSettings();
+  	}
+}
 
 function wsCallBackFunction(evt) {
 	try {
@@ -196,7 +200,8 @@ function wsCallBackFunction(evt) {
 				break;
 			case "connectionClosed":
 				xtpConnected = false;
-				alert("Looks like XTP was shut down.\nRestart XTP and refresh the page to reconnect.");
+				setMediaLoading();
+				setMediaLoadingStatus("Looks like XTP was shut down.\nWaiting for reconnect...");
 				break;
 			case "mediaLoaded":
 				var mediaLoadingElement = document.getElementById("mediaLoading");
@@ -204,15 +209,10 @@ function wsCallBackFunction(evt) {
 				getServerLibrary();
 				break;
 			case "mediaLoading":
-				clearMediaList();
-				var mediaLoadingElement = document.getElementById("mediaLoading");
-				mediaLoadingElement.style.display = "flex"
-				var noMediaElement = document.getElementById("noMedia");
-				noMediaElement.hidden = true;
+				setMediaLoading();
 				break;
 			case "mediaLoadingStatus":
-				var mediaLoadingElement = document.getElementById("loadingStatus");
-				mediaLoadingElement.innerText = data["message"];
+				setMediaLoadingStatus(data["message"]);
 				break;
 			case "updateThumb":
 				var message = data["message"];
@@ -233,6 +233,19 @@ function wsCallBackFunction(evt) {
 	catch(e) {
 		console.error(e.toString());
 	}
+}
+
+function setMediaLoading() {
+	clearMediaList();
+	var mediaLoadingElement = document.getElementById("mediaLoading");
+	mediaLoadingElement.style.display = "flex"
+	var noMediaElement = document.getElementById("noMedia");
+	noMediaElement.hidden = true;
+}
+
+function setMediaLoadingStatus(status) {
+	var mediaLoadingElement = document.getElementById("loadingStatus");
+	mediaLoadingElement.innerText = status;
 }
 
 function onResizeVideo() {
@@ -361,25 +374,36 @@ function initWebSocket() {
 		websocket = new WebSocket( wsUri );
 		websocket.onopen = function (evt) {
 			xtpConnected = true;
+			if(serverRetryTimeout)
+				clearTimeout(serverRetryTimeout);
 			debug("CONNECTED");
 			updateSettingsUI();
-		};
-		websocket.onclose = function (evt) {
-			debug("DISCONNECTED");
-			xtpConnected = false;
 		};
 		websocket.onmessage = function (evt) {
 			wsCallBackFunction(evt);
 			debug("MESSAGE RECIEVED: "+ evt.data);
 		};
-		websocket.onerror = function (evt) {
-			alert('ERROR: ' + evt.data + ", Address: "+wsUri);
+		websocket.onclose = function (evt) {
+			debug("DISCONNECTED");
 			xtpConnected = false;
+			startServerConnectionRetry();
+		};
+		websocket.onerror = function (evt) {
+			console.log('ERROR: ' + evt.data + ", Address: "+wsUri);
+			xtpConnected = false;
+			startServerConnectionRetry();
 		};
 	} catch (exception) {
-		alert('ERROR: ' + exception + ", Address: "+wsUri);
+		console.log('ERROR: ' + exception + ", Address: "+wsUri);
 		xtpConnected = false;
+		startServerConnectionRetry();
 	}
+}
+
+function startServerConnectionRetry() {
+	serverRetryTimeout = setTimeout(() => {
+		initWebSocket();
+	}, 5000);
 }
 
 function updateSettingsUI() {
@@ -604,6 +628,7 @@ function getMediaFunscripts(path, isMFS) {
 	};
 	xhr.send();
 }
+
 
 function postServerSettings() {
 	var xhr = new XMLHttpRequest();

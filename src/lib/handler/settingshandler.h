@@ -44,7 +44,7 @@ public:
     static int getTCodePadding();
     static QString getSelectedTCodeVersion();
     static void setSelectedTCodeVersion(TCodeVersion key);
-    static void setSelectedTCodeVersion();
+    //static void migrateTCodeVersion();
     static QString getDeoDnlaFunscript(QString key);
     static QHash<QString, QVariant> getDeoDnlaFunscripts();
     static QString getSelectedTheme();
@@ -264,6 +264,7 @@ public:
     static void requestRestart(QWidget* parent);
     static void askRestart(QWidget* parent, QString message);
     static void quit(bool restart);
+    static void restart();
 
 
     static QStringList getVideoExtensions()

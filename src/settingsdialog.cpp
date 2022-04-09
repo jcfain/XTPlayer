@@ -87,6 +87,8 @@ void SettingsDialog::init(VideoHandler* videoHandler, MediaLibraryHandler* media
         connect(this, &SettingsDialog::xtpWebDeviceConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
         connect(this, &SettingsDialog::gamepadConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
         connect(_httpHandler, &HttpHandler::connectInputDevice, this, &SettingsDialog::on_xtpWeb_initSyncDevice);
+        connect(_httpHandler, &HttpHandler::restartService, this, &SettingsHandler::restart);
+
         _httpHandler->listen();
     }
 
@@ -758,8 +760,9 @@ void SettingsDialog::setUpTCodeAxis()
      xRangeStepLabel->setText("Stroke range change step");
      xRangeStepLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
      QSpinBox* xRangeStepInput = new QSpinBox(this);
+     xRangeStepInput->setToolTip("The amount to modify the stroke range when using keyboard/gamepad.");
      xRangeStepInput->setMinimum(1);
-     xRangeStepInput->setMaximum(100);
+     xRangeStepInput->setMaximum(INT_MAX);
      xRangeStepInput->setMinimumWidth(75);
      xRangeStepInput->setSingleStep(50);
      xRangeStepInput->setValue(SettingsHandler::getGamepadSpeedIncrement());
@@ -1853,7 +1856,18 @@ void SettingsDialog::on_disableNoScriptFoundInLibrary_stateChanged(int checkStat
 
 void SettingsDialog::on_tCodeVSComboBox_currentIndexChanged(int index)
 {
-    SettingsHandler::setSelectedTCodeVersion(ui.tCodeVersionComboBox->currentData().value<TCodeVersion>());
+    QMessageBox::StandardButton reply = QMessageBox::question(this, "Warning!", "This will reset your ranges and any custom channel settings to default.\nContinue?",
+                                  QMessageBox::Yes|QMessageBox::No);
+    if(reply == QMessageBox::Yes)
+    {
+        SettingsHandler::setSelectedTCodeVersion(ui.tCodeVersionComboBox->currentData().value<TCodeVersion>());
+    }
+    else
+    {
+        disconnect(ui.tCodeVersionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
+        ui.tCodeVersionComboBox->setCurrentText(SettingsHandler::getSelectedTCodeVersion());
+        connect(ui.tCodeVersionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
+    }
 }
 
 void SettingsDialog::on_hideWelcomeDialog_clicked(bool checked)
@@ -1868,8 +1882,7 @@ void SettingsDialog::on_launchWelcomeDialog_clicked()
 
 void SettingsDialog::on_videoRenderer_textChanged(const QString &value)
 {
-    QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "Warning!", "Changing the renderer can cause issues. Particularly in full screen.\nIf you have issues, REMEMBER your current renderer:\n("+XVideoRendererReverseMap.value(SettingsHandler::getSelectedVideoRenderer())+")\nSo you can change it back. The default renderer is OpenGLWidget.\nA restart WILL be required.\nChange your renderer?",
+    QMessageBox::StandardButton reply = QMessageBox::question(this, "Warning!", "Changing the renderer can cause issues. Particularly in full screen.\nIf you have issues, REMEMBER your current renderer:\n("+XVideoRendererReverseMap.value(SettingsHandler::getSelectedVideoRenderer())+")\nSo you can change it back. The default renderer is OpenGLWidget.\nA restart WILL be required.\nChange your renderer?",
                                   QMessageBox::Yes|QMessageBox::No);
     XVideoRenderer renderer = XVideoRendererMap.value(value);
     if(reply == QMessageBox::Yes && _videoHandler->setVideoRenderer(renderer))

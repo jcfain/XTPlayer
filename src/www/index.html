@@ -50,7 +50,7 @@
 		<div id="noMedia" style="text-align: center;" hidden> No media found</div>
 		<div id="mediaLoading" class="no-media">
 			<div class="loading-spinner"></div>
-			<div id="loadingStatus">Loading...</div>
+			<div id="loadingStatus" style="padding-top: 10px;">Loading...</div>
 		</div>
 		<div id="mediaList" class="thumbs-body"></div>
 	</div>
@@ -215,6 +215,9 @@
 			<span id="saveState" class="save-status"></span>
 			<button id="defaultSettingsButton" title="This will only reset the local browser settings to default. Your settings stored on the XTP machine will remain." onclick="defaultLocalSettings()">
 				Default Local
+			</button>
+			<button id="restartXTPButton" title="This will restart XTP" onclick="restartXTP()">
+				Restart XTP
 			</button>
 			<button id="saveToXTPButton" disabled="true" title="This will save all XTP settings to your XTP machines data storage." onclick="postServerSettings()">
 				Save to XTP

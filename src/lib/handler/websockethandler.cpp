@@ -104,6 +104,8 @@ void WebSocketHandler::processTextMessage(QString message)
     } else if (command == "connectInputDevice") {
         QJsonObject obj = json["message"].toObject();
         emit connectInputDevice((DeviceType)obj["deviceType"].toInt(), obj["enabled"].toBool());
+    } else if (command == "restartService") {
+        emit restartService();
     }
 }
 
