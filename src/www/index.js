@@ -70,6 +70,7 @@ var deviceConnectionStatusInterval;
 var deviceConnectionStatusRetryButtonNodes;
 var deviceConnectionStatusRetryButtonImageNodes;
 var serverRetryTimeout;
+var serverRetryTimeoutTries = 0;
 //var funscriptSyncWorker;
 //var useDeoWeb;
 //var deoVideoNode;
@@ -401,9 +402,14 @@ function initWebSocket() {
 }
 
 function startServerConnectionRetry() {
-	serverRetryTimeout = setTimeout(() => {
-		initWebSocket();
-	}, 5000);
+	serverRetryTimeoutTries++;
+	if(serverRetryTimeoutTries < 100) {
+		serverRetryTimeout = setTimeout(() => {
+			initWebSocket();
+		}, 5000);
+	} else {
+		setMediaLoadingStatus("Timed out while looking for server. Please refresh the page when the server started again.")
+	}
 }
 
 function updateSettingsUI() {

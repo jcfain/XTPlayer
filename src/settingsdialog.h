@@ -240,6 +240,8 @@ private slots:
 
     void on_webSocketPortSpinBox_editingFinished();
 
+    void on_httpThumbQualitySpinBox_editingFinished();
+
 private:
 
     Ui::SettingsDialog ui;

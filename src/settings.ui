@@ -847,69 +847,37 @@ THIS VALUE WILL BR RESET ON SCRIPT CHANGE!</string>
          <x>10</x>
          <y>50</y>
          <width>781</width>
-         <height>241</height>
+         <height>271</height>
         </rect>
        </property>
        <property name="title">
         <string>XTP web options</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_6">
-        <item row="2" column="5">
-         <widget class="QPushButton" name="browseVRLibraryButton">
+        <item row="3" column="4">
+         <widget class="QLabel" name="label_8">
           <property name="text">
-           <string>Browse</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="vrLibraryLabel">
-          <property name="text">
-           <string>VR library</string>
+           <string>Web socket port</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
-        <item row="0" column="5">
-         <widget class="QPushButton" name="browseHttpRootButton">
-          <property name="text">
-           <string>Browse</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QLabel" name="chunkSizeLabel">
-          <property name="text">
-           <string>Chunk size</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1" colspan="4">
-         <widget class="QLineEdit" name="httpRootLineEdit">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="1">
-         <widget class="QDoubleSpinBox" name="chunkSizeDoubleSpinBox">
+        <item row="3" column="5">
+         <widget class="QSpinBox" name="webSocketPortSpinBox">
           <property name="toolTip">
-           <string>In MegaBytes: This is the amount of media data sent to the client in byte chunks.
-The higher this is set the longer it will take to buffer but the less times the server 
-will be hit for the next chunk.</string>
-          </property>
-          <property name="suffix">
-           <string>MB</string>
+           <string>0 = auto</string>
           </property>
           <property name="maximum">
-           <double>99999.990000000005239</double>
+           <number>65535</number>
           </property>
-          <property name="value">
-           <double>1.000000000000000</double>
+         </widget>
+        </item>
+        <item row="2" column="1" colspan="4">
+         <widget class="QLineEdit" name="vrLibraryLineEdit">
+          <property name="enabled">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -923,10 +891,30 @@ will be hit for the next chunk.</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="1" colspan="4">
-         <widget class="QLineEdit" name="vrLibraryLineEdit">
-          <property name="enabled">
-           <bool>true</bool>
+        <item row="2" column="0">
+         <widget class="QLabel" name="vrLibraryLabel">
+          <property name="text">
+           <string>VR library</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="chunkSizeLabel">
+          <property name="text">
+           <string>Chunk size</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="5">
+         <widget class="QPushButton" name="browseVRLibraryButton">
+          <property name="text">
+           <string>Browse</string>
           </property>
          </widget>
         </item>
@@ -950,23 +938,67 @@ will be hit for the next chunk.</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="4">
-         <widget class="QLabel" name="label_8">
+        <item row="0" column="5">
+         <widget class="QPushButton" name="browseHttpRootButton">
           <property name="text">
-           <string>Web socket port</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           <string>Browse</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="5">
-         <widget class="QSpinBox" name="webSocketPortSpinBox">
+        <item row="3" column="1">
+         <widget class="QDoubleSpinBox" name="chunkSizeDoubleSpinBox">
           <property name="toolTip">
-           <string>0 = auto</string>
+           <string>In MegaBytes: This is the amount of media data sent to the client in byte chunks.
+The higher this is set the longer it will take to buffer but the less times the server 
+will be hit for the next chunk.</string>
+          </property>
+          <property name="suffix">
+           <string>MB</string>
           </property>
           <property name="maximum">
-           <number>65535</number>
+           <double>99999.990000000005239</double>
+          </property>
+          <property name="value">
+           <double>1.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1" colspan="4">
+         <widget class="QLineEdit" name="httpRootLineEdit">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QSpinBox" name="httpThumbQualitySpinBox">
+          <property name="toolTip">
+           <string>Sets the quality of the thumb nail compression sent to the browser.\nEnter 0 for lowest and 100 for highest. -1 disables compression and sends the image file directly.\nCan be used to improve performance on lower end devices.</string>
+          </property>
+          <property name="minimum">
+           <number>-1</number>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+          <property name="singleStep">
+           <number>5</number>
+          </property>
+          <property name="value">
+           <number>-1</number>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="label_9">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="text">
+           <string>Thumb quality</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>

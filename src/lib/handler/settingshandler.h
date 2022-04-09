@@ -237,6 +237,8 @@ public:
     static void setHTTPPort(int value);
     static int getWebSocketPort();
     static void setWebSocketPort(int value);
+    static int getHttpThumbQuality();
+    static void setHttpThumbQuality(int value);
 
     static void setFunscriptModifierStep(int value);
     static int getFunscriptModifierStep();
@@ -397,6 +399,7 @@ private:
     static QString _httpServerRoot;
     static qint64 _httpChunkSize;
     static int _httpPort;
+    static int _httpThumbQuality;
     static int _webSocketPort;
     static QString _vrLibrary;
 

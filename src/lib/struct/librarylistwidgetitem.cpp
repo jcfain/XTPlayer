@@ -148,7 +148,9 @@ void LibraryListWidgetItem::updateThumbSize(QSize thumbSize)
         thumbFilePath = "://images/icons/loading.png";
     }
     QIcon thumb;
-    thumb.addPixmap(ImageFactory::resize(thumbFilePath, thumbSize));
+    auto resizedImage = ImageFactory::resize(thumbFilePath, thumbSize);
+    thumb.addPixmap(*resizedImage);
+    delete resizedImage;
     setIcon(thumb);
     setSizeHint(thumbSize);
     setTextAlignment(Qt::AlignmentFlag::AlignTop | Qt::AlignmentFlag::AlignHCenter);

@@ -447,17 +447,17 @@ HttpPromise HttpHandler::handleThumbFile(HttpDataPtr data)
     QString thumbDirFile = SettingsHandler::getSelectedThumbsDir() + thumbName;
     QString libraryThumbDirFile = SettingsHandler::getSelectedLibrary() + "/" + thumbName;
     QString thumbToSend;
-    if(thumbName.startsWith(":") || (thumbName.startsWith(SettingsHandler::getSelectedLibrary()) && QFileInfo(thumbName).exists()))
+    if(thumbName.startsWith(":") || (thumbName.startsWith(SettingsHandler::getSelectedLibrary()) && QFileInfo::exists(thumbName)))
     {
         // System resource thumbs
         thumbToSend = thumbName;
     }
-    else if(QFileInfo(libraryThumbDirFile).exists())
+    else if(QFileInfo::exists(libraryThumbDirFile))
     {
         // VR media thumbs
         thumbToSend = libraryThumbDirFile;
     }
-    else if(QFileInfo(thumbDirFile).exists())
+    else if(QFileInfo::exists(thumbDirFile))
     {
         // Global thumb directory thumbs.
         thumbToSend = thumbDirFile;
@@ -467,13 +467,27 @@ HttpPromise HttpHandler::handleThumbFile(HttpDataPtr data)
         data->response->setStatus(HttpStatus::NotFound);
         return HttpPromise::resolve(data);
     }
-//    QPixmap pixmap = ImageFactory::resize(thumbToSend, {500, 500});
-//    QByteArray* bytes = new QByteArray;
-//    QBuffer* buffer = new QBuffer(bytes);
-//    buffer->open(QIODevice::ReadWrite);
-//    pixmap.save(buffer, "WEBP", 5);
-//    QString mimeType = mimeDatabase.mimeTypeForFile(thumbToSend, QMimeDatabase::MatchExtension).name();
-    data->response->sendFile(thumbToSend, "image/webp", "", -1, Z_DEFAULT_COMPRESSION);
+    int quality = SettingsHandler::getHttpThumbQuality();
+    if(quality > -1)
+    {
+        QPixmap* pixmap = ImageFactory::resize(thumbToSend, {500, 500});
+        QByteArray bytes;
+        QBuffer buffer(&bytes);
+        buffer.open(QIODevice::ReadWrite);
+        pixmap->save(&buffer, "WEBP", quality);
+        auto newObj = new QBuffer(&bytes);
+        LogHandler::Debug("Image resized: "+QString::number(bytes.length()));
+        newObj->open(QIODevice::ReadOnly);
+        data->response->sendFile(newObj, "image/webp", "", -1, Z_DEFAULT_COMPRESSION);
+        delete pixmap;
+        buffer.close();
+        newObj->close();
+        delete newObj;
+    }
+    else {
+        QString mimeType = mimeDatabase.mimeTypeForFile(thumbToSend, QMimeDatabase::MatchExtension).name();
+        data->response->sendFile(thumbToSend, mimeType, "", -1, Z_DEFAULT_COMPRESSION);
+    }
     data->response->setStatus(HttpStatus::Ok);
     //buffer->deleteLater();
     return HttpPromise::resolve(data);

@@ -343,9 +343,12 @@ void SettingsDialog::setupUi()
         ui.chunkSizeDoubleSpinBox->setValue(SettingsHandler::getHTTPChunkSize() / 1048576);
         ui.httpPortSpinBox->setValue(SettingsHandler::getHTTPPort());
         ui.webSocketPortSpinBox->setValue(SettingsHandler::getWebSocketPort());
+        ui.httpThumbQualitySpinBox->setValue(SettingsHandler::getHttpThumbQuality());
         connect(ui.chunkSizeDoubleSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &SettingsDialog::on_chunkSizeDouble_valueChanged);
         connect(ui.httpPortSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_httpPort_valueChanged);
         connect(ui.webSocketPortSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_webSocketPort_valueChanged);
+        connect(ui.httpThumbQualitySpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_httpThumbQualitySpinBox_editingFinished);
+
 
 
         ui.offsetSpinbox->setMinimum(std::numeric_limits<int>::lowest());
@@ -2046,3 +2049,9 @@ void SettingsDialog::on_webSocketPortSpinBox_editingFinished()
     if(SettingsHandler::getEnableHttpServer())
         _requiresRestart = true;
 }
+
+void SettingsDialog::on_httpThumbQualitySpinBox_editingFinished()
+{
+    SettingsHandler::setHttpThumbQuality(ui.httpThumbQualitySpinBox->value());
+}
+

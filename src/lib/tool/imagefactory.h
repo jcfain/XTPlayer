@@ -8,7 +8,7 @@ class ImageFactory
 public:
     ImageFactory();
 public:
-    static QPixmap resize(QString filepath, QSize thumbSize);
+    static QPixmap* resize(QString filepath, QSize thumbSize);
 private:
     static QSize calculateMaxSize(QSize size);
 };

@@ -42,7 +42,8 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     _selectedTCodeVersion = (TCodeVersion)(settingsToLoadFrom->value("selectedTCodeVersion").toInt());
     TCodeChannelLookup::setSelectedTCodeVersion(_selectedTCodeVersion);
     float currentVersion = settingsToLoadFrom->value("version").toFloat();
-    if (currentVersion == 0)
+    bool firstLoad = currentVersion == 0;
+    if (firstLoad)
     {
         locker.unlock();
         SetMapDefaults();
@@ -161,6 +162,9 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     if(!_httpPort)
         _httpPort = 80;
     _webSocketPort = settingsToLoadFrom->value("webSocketPort").toInt();
+    _httpThumbQuality = settingsToLoadFrom->value("httpThumbQuality").toInt();
+    if(firstLoad)
+        _httpThumbQuality = -1;
 
     _funscriptOffsetStep = settingsToLoadFrom->value("funscriptOffsetStep").toInt();
     if(!_funscriptOffsetStep)
@@ -214,7 +218,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     }
 
     _hashedPass = settingsToLoadFrom->value("userData").toString();
-    if(currentVersion != 0 && currentVersion < 0.258f)
+    if(!firstLoad && currentVersion < 0.258f)
     {
         locker.unlock();
         MigrateLibraryMetaDataTo258();
@@ -229,7 +233,7 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
         }
     }
 
-    if(currentVersion != 0 )
+    if(!firstLoad)
     {
         if(currentVersion < 0.2f)
         {
@@ -285,6 +289,13 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
         {
             locker.unlock();
             MigrateToQVariant2(settingsToLoadFrom);
+            Save();
+            Load();
+        }
+        if(currentVersion < 0.286f) {
+            locker.unlock();
+            _httpThumbQuality = -1;
+            setupAvailableAxis();
             Save();
             Load();
         }
@@ -424,6 +435,8 @@ void SettingsHandler::Save(QSettings* settingsToSaveTo)
         settingsToSaveTo->setValue("httpChunkSize", _httpChunkSize);
         settingsToSaveTo->setValue("httpPort", _httpPort);
         settingsToSaveTo->setValue("webSocketPort", _webSocketPort);
+        settingsToSaveTo->setValue("httpThumbQuality", _httpThumbQuality);
+
 
         settingsToSaveTo->setValue("funscriptModifierStep", _funscriptModifierStep);
         settingsToSaveTo->setValue("funscriptOffsetStep", _funscriptOffsetStep);
@@ -1943,6 +1956,16 @@ void SettingsHandler::setWebSocketPort(int value)
     _webSocketPort = value;
     settingsChangedEvent(true);
 }
+int SettingsHandler::getHttpThumbQuality()
+{
+    return _httpThumbQuality;
+}
+void SettingsHandler::setHttpThumbQuality(int value)
+{
+    QMutexLocker locker(&mutex);
+    _httpThumbQuality = value;
+    settingsChangedEvent(true);
+}
 
 QString SettingsHandler::getVRLibrary()
 {
@@ -2118,6 +2141,7 @@ QString SettingsHandler::_httpServerRoot;
 qint64 SettingsHandler::_httpChunkSize;
 int SettingsHandler::_httpPort;
 int SettingsHandler::_webSocketPort;
+int SettingsHandler::_httpThumbQuality;
 QString SettingsHandler::_vrLibrary;
 
 int SettingsHandler::_funscriptModifierStep;
