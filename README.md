@@ -6,10 +6,11 @@ XTPlayer is a cross platform TCode media player.
     * Load a folder with videos for easy access.
     * Built in funscript to TCode conversion
     * Load any funscript with any video
-    * Customize the player looks via an "easy" CSS syntax.
-    * Add multipliers to TCode's other axis' via the current funscript pos
+    * Customize the player looks via an "easy" CSS like syntax.
+    * Add psuedo random motion to TCode's other axis' via the current funscript pos
     * Control TCode devices with a gamepad
-    * Sync with DeoVR and Whirligig VR meadi players
+    * Sync with DeoVR/HereSphere and Whirligig VR meadi players
+    * Built in web server for viewing media collection with a variaty of devices.
     * And much more
 
 
