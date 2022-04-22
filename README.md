@@ -3,6 +3,7 @@ XTPlayer is a cross platform TCode media player.
 ![Main window](/main.jpg)
 
 ## Features: 
+    * Sync VR/2d/audio/stand alone funscripts with any robot that runs under the TCode standard V2 or V3 
     * Load a folder with videos for easy access.
     * Built in funscript to TCode conversion
     * Load any funscript with any video
