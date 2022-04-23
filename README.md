@@ -38,6 +38,7 @@ XTPlayer is a cross platform TCode media player.
                * Build from QT Creator
                * Install make and do make install from the output build dir.
                   Note: see "QMake install qtcompress.bat" for details
+          * https://github.com/addisonElliott/HttpServer
       3. Clone/download XTP source
       4. Open the project and build
           
