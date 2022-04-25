@@ -735,41 +735,35 @@ void MainWindow::mediaAction(QString action)
         int xRangeMin = SettingsHandler::getLiveXRangeMin();
         int xRangeStep = SettingsHandler::getXRangeStep();
         int newLiveMaxRange = xRangeMax + xRangeStep;
-        int limitXMax = 0;
         int axisMax = SettingsHandler::getAxis(TCodeChannelLookup::Stroke()).Max;
-        if(newLiveMaxRange < axisMax)
+        bool atMax = false;
+        if(newLiveMaxRange > axisMax)
         {
-            SettingsHandler::setLiveXRangeMax(newLiveMaxRange);
+            atMax = true;
+            newLiveMaxRange = axisMax;
         }
-        else
-        {
-            limitXMax = axisMax;
-            SettingsHandler::setLiveXRangeMax(axisMax);
-        }
+        SettingsHandler::setLiveXRangeMax(newLiveMaxRange);
 
         int newLiveMinRange = xRangeMin - xRangeStep;
         int axisMin = SettingsHandler::getAxis(TCodeChannelLookup::Stroke()).Min;
-        int limitXMin = 0;
-        if(newLiveMinRange > axisMin)
+        bool atMin = false;
+        if(newLiveMinRange < axisMin)
         {
-            SettingsHandler::setLiveXRangeMin(newLiveMinRange);
+            atMin = true;
+            newLiveMinRange = axisMin;
         }
-        else
-        {
-            limitXMin = axisMin;
-            SettingsHandler::setLiveXRangeMin(axisMin);
-        }
+        SettingsHandler::setLiveXRangeMin(newLiveMinRange);
 
         if(!SettingsHandler::getDisableSpeechToText())
         {
-            if (limitXMax && limitXMin)
+            if (atMin && atMax)
                 textToSpeech->say("Increase X at limit");
-            else if (limitXMax)
-                textToSpeech->say("Increase X, "+ QString::number(newLiveMinRange) + ", max at limit");
-            else if (limitXMin)
-                textToSpeech->say("Increase X, "+ QString::number(newLiveMaxRange) + ", min at limit");
+            else if (atMax)
+                textToSpeech->say("Increase X, max at limit, min"+ QString::number(newLiveMinRange));
+            else if (atMin)
+                textToSpeech->say("Increase X, max "+ QString::number(newLiveMaxRange) + ", min at limit");
             else
-                textToSpeech->say("Increase X, "+ QString::number(newLiveMaxRange) + ", "+ QString::number(newLiveMinRange));
+                textToSpeech->say("Increase X, max "+ QString::number(newLiveMaxRange) + ", min "+ QString::number(newLiveMinRange));
         }
 
     }
@@ -779,38 +773,32 @@ void MainWindow::mediaAction(QString action)
         int xRangeMin = SettingsHandler::getLiveXRangeMin();
         int xRangeStep = SettingsHandler::getXRangeStep();
         int newLiveMaxRange = xRangeMax - xRangeStep;
-        int limitXMax = 0;
-        if(newLiveMaxRange > xRangeMin + xRangeStep)
+        bool maxLessThanMin = false;
+        if(newLiveMaxRange < xRangeMin)
         {
-            SettingsHandler::setLiveXRangeMax(newLiveMaxRange);
+            maxLessThanMin = true;
+            newLiveMaxRange = xRangeMin + 1;
         }
-        else
-        {
-            limitXMax = xRangeMin + xRangeStep;
-            SettingsHandler::setLiveXRangeMax(xRangeMin + xRangeStep);
-        }
+        SettingsHandler::setLiveXRangeMax(newLiveMaxRange);
 
         int newLiveMinRange = xRangeMin + xRangeStep;
-        int limitXMin = 0;
-        if(newLiveMinRange < xRangeMax - xRangeStep)
+        bool minGreaterThanMax = false;
+        if(newLiveMinRange > xRangeMax)
         {
-            SettingsHandler::setLiveXRangeMin(newLiveMinRange);
+            minGreaterThanMax = true;
+            newLiveMinRange = xRangeMax - 1;
         }
-        else
-        {
-            limitXMin = xRangeMax - xRangeStep;
-            SettingsHandler::setLiveXRangeMin(xRangeMax - xRangeStep);
-        }
+        SettingsHandler::setLiveXRangeMin(newLiveMinRange);
         if(!SettingsHandler::getDisableSpeechToText())
         {
-            if (limitXMax && limitXMin)
+            if (maxLessThanMin && minGreaterThanMax)
                 textToSpeech->say("Decrease X at limit");
-            else if (limitXMax)
-                textToSpeech->say("Decrease X, "+ QString::number(newLiveMinRange) + ", max at limit");
-            else if (limitXMin)
-                textToSpeech->say("Decrease X, "+ QString::number(newLiveMaxRange) + ", min at limit");
+            else if (maxLessThanMin)
+                textToSpeech->say("Decrease X, max at limit, min "+ QString::number(newLiveMinRange));
+            else if (minGreaterThanMax)
+                textToSpeech->say("Decrease X, max "+ QString::number(newLiveMaxRange) + ", min at limit");
             else
-                textToSpeech->say("Decrease X, "+ QString::number(newLiveMaxRange) + ", "+ QString::number(newLiveMinRange));
+                textToSpeech->say("Decrease X, max "+ QString::number(newLiveMaxRange) + ", min "+ QString::number(newLiveMinRange));
         }
     }
     else if (action == actions.ResetLiveXRange)
