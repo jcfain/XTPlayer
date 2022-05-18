@@ -47,7 +47,6 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
     {
         locker.unlock();
         SetMapDefaults();
-        SetupDecoderPriority();
         QList<QVariant> decoderVarient;
         foreach(auto decoder, decoderPriority)
         {
@@ -273,7 +272,6 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
         {
             locker.unlock();
             settings->setValue("version", 0.27f);
-            SetupDecoderPriority();
             Save();
             Load();
         }
@@ -281,7 +279,6 @@ void SettingsHandler::Load(QSettings* settingsToLoadFrom)
         {
             locker.unlock();
             MigrateToQVariant(settingsToLoadFrom);
-            SetupDecoderPriority();
             Save();
             Load();
         }
@@ -588,7 +585,6 @@ void SettingsHandler::MigrateTo23()
 {
     settings->setValue("version", 0.23f);
     setupAvailableAxis();
-    SetupDecoderPriority();
     Save();
     Load();
     LogHandler::Dialog("Due to a standards update your RANGE settings\nhave been set to default for a new data structure.", XLogLevel::Information);
@@ -1782,53 +1778,6 @@ void SettingsHandler::setupGamepadButtonMap()
         { gamepadAxisNames.Center, TCodeChannelLookup::None() },
         { gamepadAxisNames.Guide, TCodeChannelLookup::None() }
     };
-}
-
-void SettingsHandler::SetupDecoderPriority()
-{
-
-    if(decoderPriority.length() > 0)
-        decoderPriority.clear();
-    QStringList decs;
-    DecoderModel cudaModel;
-    bool hasCuda = false;
-    foreach (int id, QtAV::VideoDecoder::registered()) {
-        QString name = QString::fromLatin1(QtAV::VideoDecoder::name(id));
-        if(name == "CUDA")
-        {
-            hasCuda = true;
-            cudaModel = { name, true };
-        }
-        else
-            decoderPriority.append({ name, true });
-    }
-    if(hasCuda)
-        decoderPriority.push_front(cudaModel);
-//#if defined(Q_OS_WIN)
-//    decoderPriority =
-//    {
-//        { "CUDA", true },
-//        { "D3D11", true },
-//        { "DXVA", true },
-//        { "FFmpeg", true },
-//        { "VAAPI", true }
-//    };
-//#elif defined(Q_OS_MAC)
-//    decoderPriority =
-//    {
-//        { "VideoToolbox", true },
-//        { "FFmpeg", true },
-//        { "VAAPI", true },
-//        { "CUDA", true }
-//    };
-//#elif defined(Q_OS_LINUX)
-//    decoderPriority =
-//    {
-//        { "CUDA", true },
-//        { "FFmpeg", true },
-//        { "VAAPI", true }
-//    };
-//#endif
 }
 
 void SettingsHandler::setFunscriptLoaded(QString key, bool loaded)

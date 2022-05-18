@@ -2,14 +2,13 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QWindow>
 #include <QLabel>
 #include <QFileDialog>
 #include <QProgressBar>
 #include <QListWidgetItem>
 #include <QMessageBox>
 #include <iostream>
-#include <QtAV>
-#include <QtAVWidgets>
 #include <QtGlobal>
 #include <QtConcurrent/QtConcurrent>
 #include <QFuture>
@@ -41,9 +40,9 @@
 #include "lib/handler/tcodehandler.h"
 #include "lib/handler/devicehandler.h"
 #include "lib/handler/vrdevicehandler.h"
-#include "lib/handler/audiosyncfilter.h"
 #include "lib/handler/synchandler.h"
 #include "lib/handler/medialibraryhandler.h"
+#include "lib/handler/xvideopreviewwidget.h"
 #include "lib/struct/LibraryListItem27.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/ConnectionChangedSignal.h"
@@ -205,7 +204,7 @@ private:
     LibraryWindow* libraryWindow;
     QSplashScreen* loadingSplash;
     QTextToSpeech* textToSpeech;
-    VideoPreviewWidget* videoPreviewWidget;
+    XVideoPreviewWidget* _videoPreviewWidget;
     QFuture<void> loadingLibraryFuture;
     bool loadingLibraryStop = false;
     QFuture<void> _waitForStopFuture;
@@ -270,12 +269,9 @@ private:
     bool vrScriptSelectorCanceled = false;
     QString lastVRScriptPath;
     int thumbNailSearchIterator = 0;
-    VideoFrameExtractor* extractor;
-    AVPlayer* thumbNailPlayer;
     QMutex _eventLocker;
     bool _editPlaylistMode = false;
     bool _libraryDockMode = false;
-    AudioSyncFilter* audioSyncFilter;
 
 //    void saveSingleThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
 //    void saveThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0, bool vrMode = false);
@@ -363,7 +359,7 @@ private:
     void on_controls_mouse_enter(QMouseEvent* event);
     void on_media_positionChanged(qint64 position);
     void media_single_click_event(QMouseEvent * event);
-    void on_media_statusChanged(QtAV::MediaStatus status);
+    void on_media_statusChanged(XMediaStatus status);
     void on_media_start();
     void on_media_stop();
     void on_standaloneFunscript_start();

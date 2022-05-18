@@ -2,6 +2,9 @@
 
 #include <QApplication>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -16,6 +19,7 @@ int main(int argc, char *argv[])
     qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
     qRegisterMetaTypeStreamOperators<AxisNames>("AxisNames");
     qRegisterMetaTypeStreamOperators<DecoderModel>("DecoderModel");
+    qRegisterMetaTypeStreamOperators<XMediaStatus>("XMediaStatus");
     qRegisterMetaType<LibraryListItem>();
     qRegisterMetaTypeStreamOperators<LibraryListItem>("LibraryListItem");
     qRegisterMetaTypeStreamOperators<QMap<QString, QList<LibraryListItem>>>("QMap<QString, QList<LibraryListItem>>");

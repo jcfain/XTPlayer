@@ -403,12 +403,12 @@ void MediaLibraryHandler::startThumbProcess(bool vrMode)
     stopThumbProcess();
     LogHandler::Debug("Start thumb process, vrMode: " + QString::number(vrMode));
     _thumbProcessIsRunning = true;
-    _extractor = new VideoFrameExtractor(this);
-    _thumbNailPlayer = new AVPlayer(this);
-    _thumbNailPlayer->setInterruptOnTimeout(true);
-    _thumbNailPlayer->setInterruptTimeout(10000);
-    _thumbNailPlayer->setAsyncLoad(true);
-    _extractor->setAsync(true);
+//    _extractor = new VideoFrameExtractor(this);
+//    _thumbNailPlayer = new AVPlayer(this);
+//    _thumbNailPlayer->setInterruptOnTimeout(true);
+//    _thumbNailPlayer->setInterruptTimeout(10000);
+//    _thumbNailPlayer->setAsyncLoad(true);
+//    _extractor->setAsync(true);
     saveNewThumbs(vrMode);
     emit thumbProcessBegin();
 }
@@ -418,10 +418,10 @@ void MediaLibraryHandler::stopThumbProcess()
     if(_thumbProcessIsRunning)
     {
         LogHandler::Debug("Stop thumb process");
-        disconnect(_extractor, &QtAV::VideoFrameExtractor::frameExtracted,  nullptr, nullptr);
-        disconnect(_extractor, &QtAV::VideoFrameExtractor::error,  nullptr, nullptr);
-        disconnect(_thumbNailPlayer, &AVPlayer::loaded,  nullptr, nullptr);
-        disconnect(_thumbNailPlayer, &AVPlayer::error,  nullptr, nullptr);
+//        disconnect(_extractor, &QtAV::VideoFrameExtractor::frameExtracted,  nullptr, nullptr);
+//        disconnect(_extractor, &QtAV::VideoFrameExtractor::error,  nullptr, nullptr);
+//        disconnect(_thumbNailPlayer, &AVPlayer::loaded,  nullptr, nullptr);
+//        disconnect(_thumbNailPlayer, &AVPlayer::error,  nullptr, nullptr);
         _thumbNailSearchIterator = 0;
         _thumbProcessIsRunning = false;
         if(_thumbTimeoutTimer.isActive())
@@ -429,8 +429,8 @@ void MediaLibraryHandler::stopThumbProcess()
             _thumbTimeoutTimer.stop();
             disconnect(&_thumbTimeoutTimer, &QTimer::timeout, nullptr, nullptr);
         }
-        delete _extractor;
-        delete _thumbNailPlayer;
+//        delete _extractor;
+//        delete _thumbNailPlayer;
     }
 }
 
@@ -438,12 +438,12 @@ void MediaLibraryHandler::saveSingleThumb(LibraryListItem27 item, qint64 positio
 {
     if(!_thumbProcessIsRunning && !item.thumbFile.contains(".lock."))
     {
-        _extractor = new VideoFrameExtractor(this);
-        _thumbNailPlayer = new AVPlayer(this);
-        _thumbNailPlayer->setInterruptOnTimeout(true);
-        _thumbNailPlayer->setInterruptTimeout(10000);
-        _thumbNailPlayer->setAsyncLoad(true);
-        _extractor->setAsync(true);
+//        _extractor = new VideoFrameExtractor(this);
+//        _thumbNailPlayer = new AVPlayer(this);
+//        _thumbNailPlayer->setInterruptOnTimeout(true);
+//        _thumbNailPlayer->setInterruptTimeout(10000);
+//        _thumbNailPlayer->setAsyncLoad(true);
+//        _extractor->setAsync(true);
         saveThumb(item, position);
     }
 }
@@ -457,8 +457,8 @@ void MediaLibraryHandler::saveNewThumbs(bool vrMode)
         QFileInfo thumbInfo(item.thumbFile);
         if (item.type == LibraryListItemType::Video && !thumbInfo.exists())
         {
-            disconnect(_extractor, nullptr,  nullptr, nullptr);
-            disconnect(_thumbNailPlayer, nullptr,  nullptr, nullptr);
+//            disconnect(_extractor, nullptr,  nullptr, nullptr);
+//            disconnect(_thumbNailPlayer, nullptr,  nullptr, nullptr);
             saveThumb(item, -1, vrMode);
         }
         else
@@ -501,61 +501,61 @@ void MediaLibraryHandler::saveThumb(LibraryListItem27 cachedListItem, qint64 pos
         // Get the duration and randomize the position with in the video.
         QString videoFile = cachedListItem.path;
         LogHandler::Debug("Getting thumb: " + cachedListItem.thumbFile);
-        connect(_thumbNailPlayer, &AVPlayer::loaded, _thumbNailPlayer,
-           [this, videoFile, position]()
-            {
-               LogHandler::Debug("Loaded video for thumb. Duration: " + QString::number(_thumbNailPlayer->duration()));
-               qint64 randomPosition = position > 0 ? position : XMath::rand((qint64)1, _thumbNailPlayer->duration());
-               LogHandler::Debug("Extracting at: " + QString::number(randomPosition));
-               _extractor->setSource(videoFile);
-               _extractor->setPosition(randomPosition);
-            });
+//        connect(_thumbNailPlayer, &AVPlayer::loaded, _thumbNailPlayer,
+//           [this, videoFile, position]()
+//            {
+//               LogHandler::Debug("Loaded video for thumb. Duration: " + QString::number(_thumbNailPlayer->duration()));
+//               qint64 randomPosition = position > 0 ? position : XMath::rand((qint64)1, _thumbNailPlayer->duration());
+//               LogHandler::Debug("Extracting at: " + QString::number(randomPosition));
+//               _extractor->setSource(videoFile);
+//               _extractor->setPosition(randomPosition);
+//            });
 
 
-        connect(_thumbNailPlayer, &AVPlayer::error, _thumbNailPlayer,
-           [this, cachedListItem, vrMode](QtAV::AVError er)
-            {
-                QString error = "Video load error from: " + cachedListItem.path + " Error: " + er.ffmpegErrorString();
-                onSaveThumb(cachedListItem, vrMode, error);
-            });
+//        connect(_thumbNailPlayer, &AVPlayer::error, _thumbNailPlayer,
+//           [this, cachedListItem, vrMode](QtAV::AVError er)
+//            {
+//                QString error = "Video load error from: " + cachedListItem.path + " Error: " + er.ffmpegErrorString();
+//                onSaveThumb(cachedListItem, vrMode, error);
+//            });
 
 
-        connect(_extractor, &QtAV::VideoFrameExtractor::frameExtracted, _extractor,
-           [this, cachedListItem, vrMode](const QtAV::VideoFrame& frame)
-            {
-                if(frame.isValid())
-                {
-                    bool error = false;
-                    QImage img;
-                    try{
-                        LogHandler::Debug("Saving thumbnail");
-                        img = frame.toImage();
-                    }
-                    catch (...) {
-                        error = true;
-                    }
-                    QString errorMessage;
-                    bool hasError = error || img.isNull() || !img.save(cachedListItem.thumbFile, nullptr, 15);
-                    if (hasError)
-                    {
-                       onSaveThumb(cachedListItem, vrMode, "Error saving thumbnail");
-                       return;
-                    }
+//        connect(_extractor, &QtAV::VideoFrameExtractor::frameExtracted, _extractor,
+//           [this, cachedListItem, vrMode](const QtAV::VideoFrame& frame)
+//            {
+//                if(frame.isValid())
+//                {
+//                    bool error = false;
+//                    QImage img;
+//                    try{
+//                        LogHandler::Debug("Saving thumbnail");
+//                        img = frame.toImage();
+//                    }
+//                    catch (...) {
+//                        error = true;
+//                    }
+//                    QString errorMessage;
+//                    bool hasError = error || img.isNull() || !img.save(cachedListItem.thumbFile, nullptr, 15);
+//                    if (hasError)
+//                    {
+//                       onSaveThumb(cachedListItem, vrMode, "Error saving thumbnail");
+//                       return;
+//                    }
 
-                }
+//                }
 
-                onSaveThumb(cachedListItem, vrMode);
-            });
+//                onSaveThumb(cachedListItem, vrMode);
+//            });
 
-        connect(_extractor, &QtAV::VideoFrameExtractor::error, _extractor,
-           [this, cachedListItem, vrMode](const QString &errorMessage)
-            {
-                QString error = "Error extracting image from: " + cachedListItem.path + " Error: " + errorMessage;
-                onSaveThumb(cachedListItem, vrMode, error);
-            });
+//        connect(_extractor, &QtAV::VideoFrameExtractor::error, _extractor,
+//           [this, cachedListItem, vrMode](const QString &errorMessage)
+//            {
+//                QString error = "Error extracting image from: " + cachedListItem.path + " Error: " + errorMessage;
+//                onSaveThumb(cachedListItem, vrMode, error);
+//            });
 
-        _thumbNailPlayer->setFile(videoFile);
-        _thumbNailPlayer->load();
+//        _thumbNailPlayer->setFile(videoFile);
+//        _thumbNailPlayer->load();
     }
 }
 

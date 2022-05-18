@@ -161,11 +161,6 @@ private slots:
 
     void on_axisDefaultButton_clicked();
 
-    void on_savePriorityButton_clicked();
-
-    void on_cancelPriorityButton_clicked();
-
-    void on_defaultPriorityButton_clicked();
     void on_tCodeHome_clicked();
 
     void on_axis_valueChange(QString axis, int value);
@@ -192,8 +187,6 @@ private slots:
     void on_hideWelcomeDialog_clicked(bool checked);
 
     void on_launchWelcomeDialog_clicked();
-
-    void on_videoRenderer_textChanged(const QString &value);
 
     void on_disableTCodeValidationCheckbox_clicked(bool checked);
 

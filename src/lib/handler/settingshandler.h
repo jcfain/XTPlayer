@@ -254,7 +254,6 @@ public:
 
     static void SetChannelMapDefaults();
     static void SetGamepadMapDefaults();
-    static void SetupDecoderPriority();
     static void Load(QSettings* settingsToLoadFrom = nullptr);
     static void Save(QSettings* settingsToSaveTo = nullptr);
     static void SaveLinkedFunscripts(QSettings* settingsToSaveTo = nullptr);

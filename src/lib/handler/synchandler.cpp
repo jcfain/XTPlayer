@@ -250,7 +250,7 @@ void SyncHandler::playStandAlone(QString funscript) {
             {
                 _isStandAloneFunscriptPlaying = false;
                 if(!_videoHandler->isPlaying())
-                    emit funscriptStatusChanged(QtAV::MediaStatus::EndOfMedia);
+                    emit funscriptStatusChanged(XMediaStatus::EndOfMedia);
             }
             else if(_standAloneLoop && _currentTime >= funscriptMax)
             {

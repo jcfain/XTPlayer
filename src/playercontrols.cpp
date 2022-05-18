@@ -158,7 +158,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     VolumeSlider->setMinimumSize(QSize(0, 20));
     VolumeSlider->setOrientation(Qt::Horizontal);
     VolumeSlider->setDisabled(false);
-    VolumeSlider->SetRange(0, 1000);
+    VolumeSlider->SetRange(0, 100);
     VolumeSlider->setOption(RangeSlider::Option::RightHandle);
 
     playerControlsGrid->addWidget(VolumeSlider, 2, 8, 1, 2);

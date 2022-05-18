@@ -41,6 +41,7 @@ void LogHandler::Dialog(QString message, XLogLevel level)
 {
     Debug(message);
     QMessageBox messageBox;
+    messageBox.setTextFormat(Qt::RichText);
     switch(level)
     {
         case XLogLevel::Debuging:

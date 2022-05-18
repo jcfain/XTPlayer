@@ -15,7 +15,7 @@ class SyncHandler: public QObject
     Q_OBJECT
 signals:
     void funscriptPositionChanged(qint64 msecs);
-    void funscriptStatusChanged(QtAV::MediaStatus status);
+    void funscriptStatusChanged(XMediaStatus status);
     void funscriptStopped();
     void funscriptStarted();
     void funscriptEnded();

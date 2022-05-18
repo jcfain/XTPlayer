@@ -267,14 +267,6 @@ void SettingsDialog::setupUi()
         ui.deoAddressTxt->setText(SettingsHandler::getDeoAddress());
         ui.deoPortTxt->setText(SettingsHandler::getDeoPort());
 
-        foreach(auto renderer, XVideoRendererMap.keys())
-        {
-            ui.videoRendererComboBox->addItem(renderer);
-        }
-        ui.videoRendererComboBox->setToolTip("WARNING!: May cause issues with interface!\nDue to a bug, this can only be changed before ANY video has been played.");
-        ui.videoRendererComboBox->setCurrentText(XVideoRendererReverseMap.value(SettingsHandler::getSelectedVideoRenderer()));
-        connect(ui.videoRendererComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::on_videoRenderer_textChanged);
-
         ui.disableTCodeValidationCheckbox->setChecked(SettingsHandler::getDisableTCodeValidation());
 
         ui.RangeSettingsGrid->setSpacing(5);
@@ -313,8 +305,6 @@ void SettingsDialog::setupUi()
         ui.videoIncrementSpinBox->setValue(SettingsHandler::getVideoIncrement());
         ui.disableTextToSpeechCheckBox->setChecked(SettingsHandler::getDisableSpeechToText());
         ui.disableVRScriptNotFoundCheckbox->setChecked(SettingsHandler::getDisableVRScriptSelect());
-        //Load user decoder priority. (Too lazy to make a new function sue me...)
-        on_cancelPriorityButton_clicked();
 
         connect(ui.SerialOutputCmb, &QComboBox::currentTextChanged, this, [](const QString value)
         {
@@ -1680,51 +1670,9 @@ void SettingsDialog::on_axisDefaultButton_clicked()
     }
 }
 
-void SettingsDialog::on_savePriorityButton_clicked()
-{
-    QStringList stringList;
-    QList<DecoderModel> models;
-    bool atLeastOneChecked = false;
-    for (int i = 0; i < ui.decoderListWidget->count(); ++i)
-    {
-        bool checked = ui.decoderListWidget->item(i)->checkState() == Qt::CheckState::Checked;
-        if(checked)
-            atLeastOneChecked = true;
-        models.append({ui.decoderListWidget->item(i)->text(), checked});
-        stringList.append(ui.decoderListWidget->item(i)->text());
-    }
-    if(atLeastOneChecked)
-    {
-        SettingsHandler::setDecoderPriority(models);
-        _videoHandler->setDecoderPriority();
-    }
-    else
-    {
-        LogHandler::Dialog("At least one decoder must be checked!", XLogLevel::Critical);
-    }
-}
-
-void SettingsDialog::on_cancelPriorityButton_clicked()
-{
-    ui.decoderListWidget->clear();
-    QStringList stringList;
-    QList<DecoderModel> models = SettingsHandler::getDecoderPriority();
-    foreach (auto model, models)
-        stringList.append(model.Name);
-    ui.decoderListWidget->addItems(stringList);
-    for (int i = 0; i < ui.decoderListWidget->count(); ++i)
-        ui.decoderListWidget->item(i)->setCheckState(models[i].Enabled ? Qt::CheckState::Checked : Qt::CheckState::Unchecked);
-}
-
 void SettingsDialog::on_tCodeHome_clicked()
 {
     emit TCodeHomeClicked();
-}
-
-void SettingsDialog::on_defaultPriorityButton_clicked()
-{
-    SettingsHandler::SetupDecoderPriority();
-    on_cancelPriorityButton_clicked();
 }
 
 void SettingsDialog::on_libraryExclusionsBtn_clicked()
@@ -1881,24 +1829,6 @@ void SettingsDialog::on_hideWelcomeDialog_clicked(bool checked)
 void SettingsDialog::on_launchWelcomeDialog_clicked()
 {
     emit onOpenWelcomeDialog();
-}
-
-void SettingsDialog::on_videoRenderer_textChanged(const QString &value)
-{
-    QMessageBox::StandardButton reply = QMessageBox::question(this, "Warning!", "Changing the renderer can cause issues. Particularly in full screen.\nIf you have issues, REMEMBER your current renderer:\n("+XVideoRendererReverseMap.value(SettingsHandler::getSelectedVideoRenderer())+")\nSo you can change it back. The default renderer is OpenGLWidget.\nA restart WILL be required.\nChange your renderer?",
-                                  QMessageBox::Yes|QMessageBox::No);
-    XVideoRenderer renderer = XVideoRendererMap.value(value);
-    if(reply == QMessageBox::Yes && _videoHandler->setVideoRenderer(renderer))
-    {
-        SettingsHandler::setSelectedVideoRenderer(renderer);
-        SettingsHandler::requestRestart(this);
-    }
-    else
-    {
-        disconnect(ui.videoRendererComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::on_videoRenderer_textChanged);
-        ui.videoRendererComboBox->setCurrentText(XVideoRendererReverseMap.value(SettingsHandler::getSelectedVideoRenderer()));
-        connect(ui.videoRendererComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::on_videoRenderer_textChanged);
-    }
 }
 
 void SettingsDialog::on_disableTCodeValidationCheckbox_clicked(bool checked)

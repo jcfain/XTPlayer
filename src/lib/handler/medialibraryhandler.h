@@ -2,14 +2,11 @@
 #define MEDIALIBRARYHANDLER_H
 
 #include <QObject>
-#include <QtAV>
 #include <QFileInfo>
 #include <QtConcurrent/QtConcurrent>
 
 #include "../handler/settingshandler.h"
 #include "../struct/LibraryListItem.h"
-
-using namespace QtAV;
 
 class MediaLibraryHandler : public QObject
 {
@@ -28,9 +25,9 @@ signals:
     void saveNewThumbLoading(LibraryListItem27 item);
     void saveNewThumb(LibraryListItem27 item, bool vrMode, QString thumbFile);
     void saveThumbError(LibraryListItem27 item, bool vrMode, QString error);
-    void frameExtracted(LibraryListItem27 item, bool vrMode, const QtAV::VideoFrame& frame);
-    void frameExtractedError(LibraryListItem27 item, bool vrMode, const QString &errorMessage);
-    void videoLoadError(LibraryListItem27 item, bool vrMode, QtAV::AVError er);
+//    void frameExtracted(LibraryListItem27 item, bool vrMode, const QtAV::VideoFrame& frame);
+//    void frameExtractedError(LibraryListItem27 item, bool vrMode, const QString &errorMessage);
+//    void videoLoadError(LibraryListItem27 item, bool vrMode, QtAV::AVError er);
 public:
     MediaLibraryHandler(QObject* parent = nullptr);
     ~MediaLibraryHandler();
@@ -49,8 +46,6 @@ public:
 
 private:
     int _libraryItemIDTracker = 1;
-    VideoFrameExtractor* _extractor = 0;
-    AVPlayer* _thumbNailPlayer = 0;
     bool _thumbProcessIsRunning = false;
     bool _loadingLibraryStop = false;
     int _thumbNailSearchIterator = 0;

@@ -1,9 +1,7 @@
-QT += core gui serialport network gamepad texttospeech compress websockets
+QT += core gui serialport network gamepad texttospeech compress websockets multimedia multimediawidgets
 
 greaterThan(QT_MAJOR_VERSION, 4) {
-    QT += widgets avwidgets
-} else {
-  CONFIG += avwidgets
+    QT += widgets
 }
 CONFIG += c++11
 
@@ -24,7 +22,6 @@ SOURCES += \
     addplaylistdialog.cpp \
     dlnascriptlinks.cpp \
     lib/handler/httphandler.cpp \
-    lib/handler/audiosyncfilter.cpp \
     lib/handler/deohandler.cpp \
     lib/handler/devicehandler.cpp \
     lib/handler/funscripthandler.cpp \
@@ -41,6 +38,8 @@ SOURCES += \
     lib/handler/websockethandler.cpp \
     lib/handler/whirligighandler.cpp \
     lib/handler/xtpwebhandler.cpp \
+    lib/handler/xvideopreviewwidget.cpp \
+    lib/handler/xvideosurface.cpp \
     lib/lookup/Constant.cpp \
     lib/lookup/tcodechannellookup.cpp \
     lib/struct/channeltablecomboboxdelegate.cpp \
@@ -67,7 +66,6 @@ HEADERS += \
     addplaylistdialog.h \
     dlnascriptlinks.h \
     lib/handler/httphandler.h \
-    lib/handler/audiosyncfilter.h \
     lib/handler/deohandler.h \
     lib/handler/devicehandler.h \
     lib/handler/gamepadhandler.h \
@@ -78,6 +76,8 @@ HEADERS += \
     lib/handler/websockethandler.h \
     lib/handler/whirligighandler.h \
     lib/handler/xtpwebhandler.h \
+    lib/handler/xvideopreviewwidget.h \
+    lib/handler/xvideosurface.h \
     lib/lookup/AxisNames.h \
     lib/lookup/Constants.h \
     lib/lookup/GamepadAxisNames.h \
@@ -134,7 +134,6 @@ FORMS += \
 
 # LIBS       += -lVLCQtCore -lVLCQtWidgets
 unix:!mac {
-    LIBS += -L$$QT.core.libs -lQtAV -lQtAVWidgets
     QMAKE_RPATHDIR += ../lib
     LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_0_GCC_64bit-Release/src/release -lhttpServer
     INCLUDEPATH += $$PWD/../../HttpServer/src
@@ -142,15 +141,11 @@ unix:!mac {
 }
 unix:mac {
 
-    INCLUDEPATH += $$QT.core.libs/QtAV.framework/Headers
-    INCLUDEPATH += $$QT.core.libs/QtAVWidgets.framework/Headers
 #    #INCLUDEPATH += $$QT.core.libs/QtCompress.framework/Versions/5/Headers
 #    QMAKE_LFLAGS += -F$$QT.core.libs
 ##    RPATHDIR *= @loader_path/../Frameworks
 ##    QMAKE_RPATHDIR += @executable_path/../lib /usr/lib
 ##    QMAKE_RPATHDIR += @loader_path/../Frameworks
-    LIBS += -framework QtAV
-    LIBS += -framework QtAVWidgets
 #    themes.files = $$PWD/themes
 #    themes.path = Contents/MacOS
 #    QMAKE_BUNDLE_DATA += themes;
@@ -178,7 +173,6 @@ win32{
     #LIBS += -L$$QT.core.libs -lQtAV1 -lQtAVWidgets1
     build_pass: CONFIG(debug, debug|release) {
         DESTDIR = $$shell_path($$OUT_PWD/debug)
-        LIBS += -L$$QT.core.libs -lQtAV1 -lQtAVWidgets1
         #CONFIG(release, debug|release):
 
         #include($$PWD/../../HttpServer/HttpServer.pro)
@@ -196,7 +190,6 @@ win32{
     }
     else: build_pass {
         DESTDIR = $$shell_path($$OUT_PWD/release)
-        LIBS += -L$$QT.core.libs -lQtAV1 -lQtAVWidgets1
         #LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release/release -lhttpServer
         LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release/src/release -lhttpServer
         INCLUDEPATH += $$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release/src/release

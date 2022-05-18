@@ -2,8 +2,6 @@
 #define XVIDEORENDERER_H
 #include <QMap>
 #include <QString>
-#include <QtAV>
-#include <QtAVWidgets>
 enum XVideoRenderer {
     OpenGLWidget, // 0
     GLWidget2, // 1
@@ -41,18 +39,5 @@ const QMap<XVideoRenderer, QString> XVideoRendererReverseMap =
     {XVideoRenderer::Widget, "Widget"},
     {XVideoRenderer::X11, "X11"},
     {XVideoRenderer::XV, "XV"},
-};
-const QMap<XVideoRenderer, int> QtAVVideoRendererIdMap =
-{
-    {XVideoRenderer::OpenGLWidget, QtAV::VideoRendererId_OpenGLWidget},
-    {XVideoRenderer::GLWidget2, QtAV::VideoRendererId_GLWidget2},
-    {XVideoRenderer::Direct2D, QtAV::VideoRendererId_Direct2D},
-    {XVideoRenderer::GDI, QtAV::VideoRendererId_GDI},
-    {XVideoRenderer::GLWidget, QtAV::VideoRendererId_GLWidget},
-    {XVideoRenderer::GraphicsItem, QtAV::VideoRendererId_GraphicsItem},
-    {XVideoRenderer::OpenGLWindow, QtAV::VideoRendererId_OpenGLWindow},
-    {XVideoRenderer::Widget, QtAV::VideoRendererId_Widget},
-    {XVideoRenderer::X11, QtAV::VideoRendererId_X11},
-    {XVideoRenderer::XV, QtAV::VideoRendererId_XV}
 };
 #endif // XVIDEORENDERER_H

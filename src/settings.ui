@@ -40,7 +40,7 @@
    <item row="0" column="0" colspan="2">
     <widget class="QTabWidget" name="settingsTabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="connectionTab">
       <attribute name="title">
@@ -695,31 +695,14 @@ THIS VALUE WILL BR RESET ON SCRIPT CHANGE!</string>
       <widget class="QWidget" name="formLayoutWidget">
        <property name="geometry">
         <rect>
-         <x>300</x>
+         <x>10</x>
          <y>30</y>
-         <width>431</width>
+         <width>191</width>
          <height>451</height>
         </rect>
        </property>
        <layout class="QFormLayout" name="formLayout_2">
         <item row="0" column="0">
-         <widget class="QLabel" name="videoRendererLabel">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="text">
-           <string>Video renderer</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QComboBox" name="videoRendererComboBox">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
          <widget class="QLabel" name="label_2">
           <property name="toolTip">
            <string>This sets the value the video will either skip forward or back via shortcuts.</string>
@@ -729,7 +712,7 @@ THIS VALUE WILL BR RESET ON SCRIPT CHANGE!</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
+        <item row="0" column="1">
          <widget class="QSpinBox" name="videoIncrementSpinBox">
           <property name="toolTip">
            <string>This sets the value the video will either skip forward or back via shortcuts.</string>
@@ -746,92 +729,6 @@ THIS VALUE WILL BR RESET ON SCRIPT CHANGE!</string>
          </widget>
         </item>
        </layout>
-      </widget>
-      <widget class="QPushButton" name="savePriorityButton">
-       <property name="geometry">
-        <rect>
-         <x>109</x>
-         <y>461</y>
-         <width>91</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Save Priority</string>
-       </property>
-      </widget>
-      <widget class="QListWidget" name="decoderListWidget">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>30</y>
-         <width>288</width>
-         <height>425</height>
-        </rect>
-       </property>
-       <property name="dragEnabled">
-        <bool>true</bool>
-       </property>
-       <property name="dragDropMode">
-        <enum>QAbstractItemView::InternalMove</enum>
-       </property>
-       <property name="defaultDropAction">
-        <enum>Qt::MoveAction</enum>
-       </property>
-       <property name="alternatingRowColors">
-        <bool>false</bool>
-       </property>
-       <property name="spacing">
-        <number>10</number>
-       </property>
-       <property name="gridSize">
-        <size>
-         <width>0</width>
-         <height>30</height>
-        </size>
-       </property>
-       <property name="selectionRectVisible">
-        <bool>false</bool>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_3">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>11</y>
-         <width>288</width>
-         <height>13</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Decoder priority</string>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="defaultPriorityButton">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>461</y>
-         <width>93</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Default Priority</string>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="cancelPriorityButton">
-       <property name="geometry">
-        <rect>
-         <x>206</x>
-         <y>461</y>
-         <width>92</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Cancel Priority</string>
-       </property>
       </widget>
      </widget>
      <widget class="QWidget" name="WebTab">

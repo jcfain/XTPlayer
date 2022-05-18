@@ -58,13 +58,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
                 LogHandler::setUserDebug(true);
             else if(arg.toLower().startsWith("-reset"))
                 SettingsHandler::Default();
-            else if(arg.toLower().startsWith("-debugVideo"))
-            {
-                qputenv("QTAV_FFMPEG_LOG", "debug");
-                QtAV::setLogLevel(LogLevel::LogAll);
-                //param level can be: quiet, panic, fatal, error, warn, info, verbose, debug, trace
-                QtAV::setFFmpegLogLevel("trace");
-            }
         }
     }
 
@@ -219,9 +212,9 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     libraryViewGroup->addAction(ui->actionList);
     libraryViewGroup->addAction(ui->actionThumbnail);
 
-    videoPreviewWidget = new VideoPreviewWidget(this);
-    videoPreviewWidget->resize(150, 90);
-    videoPreviewWidget->hide();
+    _videoPreviewWidget = new XVideoPreviewWidget(this);
+    _videoPreviewWidget->resize(150, 90);
+    _videoPreviewWidget->hide();
 
     QMenu* submenuSize = ui->menuView->addMenu( "Size" );
     submenuSize->setObjectName("sizeMenu");
@@ -358,6 +351,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(videoHandler, &VideoHandler::started, this, &MainWindow::on_media_start, Qt::QueuedConnection);
     connect(videoHandler, &VideoHandler::stopped, this, &MainWindow::on_media_stop, Qt::QueuedConnection);
     connect(videoHandler, &VideoHandler::togglePaused, this, &MainWindow::on_togglePaused);
+    connect(videoHandler, &VideoHandler::doubleClicked, this, &MainWindow::media_double_click_event);
+    connect(videoHandler, &VideoHandler::rightClicked, this, &MainWindow::media_single_click_event);
 
     connect(_playerControlsFrame, &PlayerControls::seekSliderMoved, this, &MainWindow::on_seekSlider_sliderMoved);
     connect(_playerControlsFrame, &PlayerControls::seekSliderHover, this, &MainWindow::on_seekslider_hover );
@@ -374,10 +369,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_playerControlsFrame, &PlayerControls::skipActionBegin, this, &MainWindow::skipToActionBegin);
     connect(_playerControlsFrame, &PlayerControls::skipBack, this, &MainWindow::on_skipBackButton_clicked);
 
-    //connect(player, static_cast<void(AVPlayer::*)(AVPlayer::Error )>(&AVPlayer::error), this, &MainWindow::on_media_error);
-
-    connect(videoHandler, &VideoHandler::doubleClicked, this, &MainWindow::media_double_click_event);
-    connect(videoHandler, &VideoHandler::rightClicked, this, &MainWindow::media_single_click_event);
     connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
     connect(this, &MainWindow::change, this, &MainWindow::on_mainwindow_change);
     connect(this, &MainWindow::playVideo, this, &MainWindow::on_playVideo);
@@ -450,7 +441,7 @@ void MainWindow::dispose()
     delete videoHandler;
     delete connectionStatusLabel;
     delete retryConnectionButton;
-    delete videoPreviewWidget;
+    delete _videoPreviewWidget;
     delete ui;
 }
 
@@ -2014,95 +2005,14 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
             if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
             {
                 videoHandler->setFile(selectedFileListItem.path);
-                videoPreviewWidget->setFile(selectedFileListItem.path);
-                videoHandler->load();
+                _videoPreviewWidget->setFile(selectedFileListItem.path);
+                //videoHandler->load();
             }
             if(!audioSync)
             {
                 turnOffAudioSync();
-//                QString customScriptNoextension = nullptr;
-//                if (!customScript.isEmpty())
-//                {
-//                    QString customScriptTemp = customScript;
-//                    customScriptNoextension = customScriptTemp.remove(customScriptTemp.lastIndexOf('.'), customScriptTemp.length() -  1);
-//                }
                 scriptFile = customScript.isEmpty() ? selectedFileListItem.zipFile.isEmpty() ? selectedFileListItem.script : selectedFileListItem.zipFile : customScript;
-//                QString scriptFileNoExtension = customScript.isEmpty() ? selectedFileListItem.scriptNoExtension : customScriptNoextension;
-//                QFileInfo scriptFileNoExtensionInfo(scriptFileNoExtension);
-//                QString scriptNameNoextension = nullptr;
-//                scriptNameNoextension = scriptFileNoExtensionInfo.fileName();
-//                QZipReader zipFile(selectedFileListItem.zipFile, QIODevice::ReadOnly);
-//                QZipReader customZipFile(scriptFile, QIODevice::ReadOnly);
-//                QFileInfo scriptFileInfo(scriptFile);
-
                 invalidScripts = _syncHandler->load(scriptFile);
-//                if(scriptFile.endsWith(".funscript") && scriptFileInfo.exists())
-//                {
-//                    if(!_syncHandler->load(scriptFile))
-//                        invalidScripts.append(scriptFile);
-//                }
-//                else if(scriptFile.endsWith(".zip") && customZipFile.isReadable())
-//                {
-//                   QByteArray data = customZipFile.fileData(scriptNameNoextension + ".funscript");
-//                   if (!data.isEmpty())
-//                   {
-//                       if(!_syncHandler->load(data))
-//                           invalidScripts.append("Zip file: " + scriptNameNoextension + ".funscript");
-//                   }
-//                   else
-//                   {
-//                       LogHandler::Dialog(tr("Custom zip file missing main funscript."), XLogLevel::Warning);
-//                   }
-//                }
-//                else if(zipFile.isReadable())
-//                {
-//                    QByteArray data = zipFile.fileData(selectedFileListItem.nameNoExtension + ".funscript");
-//                    if (!data.isEmpty())
-//                    {
-//                        if(!_syncHandler->load(data))
-//                            invalidScripts.append("Zip file: " + selectedFileListItem.nameNoExtension + ".funscript");
-//                    }
-//                    else
-//                    {
-//                        LogHandler::Dialog(tr("Zip file missing main funscript."), XLogLevel::Warning);
-//                    }
-//                }
-
-//                auto availibleAxis = SettingsHandler::getAvailableAxis();
-//                foreach(auto axisName, availibleAxis->keys())
-//                {
-//                    auto track = availibleAxis->value(axisName);
-//                    if(axisName == TCodeChannelLookup::Stroke() || track.Type == AxisType::HalfRange || track.TrackName.isEmpty())
-//                        continue;
-
-//                    QFileInfo fileInfo(scriptFileNoExtension + "." + track.TrackName + ".funscript");
-//                    if(scriptFile.endsWith(".zip") && customZipFile.isReadable())
-//                    {
-//                       QByteArray data = customZipFile.fileData(scriptNameNoextension + "." + track.TrackName  + ".funscript");
-//                       if (!data.isEmpty())
-//                       {
-//                           if(! _syncHandler->loadMFS(axisName, data))
-//                               invalidScripts.append("MFS zip: " + scriptNameNoextension + "." + track.TrackName  + ".funscript");
-//                       }
-//                    }
-//                    else if(fileInfo.exists())
-//                    {
-//                        if(!_syncHandler->loadMFS(axisName, fileInfo.absoluteFilePath()))
-//                            invalidScripts.append("MFS script: " + fileInfo.absoluteFilePath());
-//                    }
-//                    else if(zipFile.isReadable())
-//                    {
-//                       auto trackName = track.TrackName;
-//                       if(trackName.isEmpty())
-//                           continue;
-//                       QByteArray data = zipFile.fileData(selectedFileListItem.nameNoExtension + "." + trackName + ".funscript");
-//                       if (!data.isEmpty())
-//                       {
-//                           if(!_syncHandler->loadMFS(axisName, data))
-//                               invalidScripts.append("MFS zip script: " + selectedFileListItem.nameNoExtension + "." + trackName + ".funscript");
-//                       }
-//                    }
-//                }
             }
             else
             {
@@ -2138,9 +2048,7 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
             playingLibraryListItem = (LibraryListWidgetItem*)libraryList->item(playingLibraryListIndex)->clone();
 
             processMetaData(selectedFileListItem);
-
         }
-
     }
     else
     {
@@ -2498,11 +2406,11 @@ void MainWindow::on_seekslider_hover(int position, int sliderValue)
         //const int w = Config::instance().previewWidth();
         //const int h = Config::instance().previewHeight();
         //videoPreviewWidget->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
-        videoPreviewWidget->setTimestamp(sliderValueTime);
-        videoPreviewWidget->preview();
-        videoPreviewWidget->resize(176, 100);
-        videoPreviewWidget->move(gpos - QPoint(176/2, 100));
-        videoPreviewWidget->show();
+        _videoPreviewWidget->setTimestamp(sliderValueTime);
+        _videoPreviewWidget->preview();
+        _videoPreviewWidget->resize(176, 100);
+        _videoPreviewWidget->move(gpos - QPoint(176/2, 100));
+        _videoPreviewWidget->show();
         //videoPreviewWidget->raise();
         //videoPreviewWidget->activateWindow();
     }
@@ -2510,13 +2418,13 @@ void MainWindow::on_seekslider_hover(int position, int sliderValue)
 
 void MainWindow::on_seekslider_leave()
 {
-    if (!videoPreviewWidget)
+    if (!_videoPreviewWidget)
     {
         return;
     }
-    if (videoPreviewWidget->isVisible())
+    if (_videoPreviewWidget->isVisible())
     {
-        videoPreviewWidget->close();
+        _videoPreviewWidget->close();
     }
 //    delete videoPreviewWidget;
 //    videoPreviewWidget = NULL;
@@ -2903,32 +2811,32 @@ void MainWindow::on_skipBackButton_clicked()
     skipBack();
 }
 
-void MainWindow::on_media_statusChanged(MediaStatus status)
+void MainWindow::on_media_statusChanged(XMediaStatus status)
 {
     switch (status) {
-    case EndOfMedia:
+    case XMediaStatus::EndOfMedia:
         if (!_playerControlsFrame->getAutoLoop())
             skipForward();
     break;
-    case NoMedia:
+    case XMediaStatus::NoMedia:
         //status = tr("No media");
         break;
-    case InvalidMedia:
+    case XMediaStatus::InvalidMedia:
         //status = tr("Invalid meida");
         break;
-    case BufferingMedia:
+    case XMediaStatus::BufferingMedia:
         videoHandler->setLoading(true);
         break;
-    case BufferedMedia:
+    case XMediaStatus::BufferedMedia:
         videoHandler->setLoading(false);
         break;
-    case LoadingMedia:
+    case XMediaStatus::LoadingMedia:
         videoHandler->setLoading(true);
         break;
-    case LoadedMedia:
+    case XMediaStatus::LoadedMedia:
         videoHandler->setLoading(false);
         break;
-    case StalledMedia:
+    case XMediaStatus::StalledMedia:
 
         break;
     default:
