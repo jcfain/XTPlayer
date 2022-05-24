@@ -170,7 +170,7 @@ void VideoHandler::pause()
 void VideoHandler::setFile(QString file)
 {
     _currentFile = file;
-    QUrl mediaUrl(file);
+    QUrl mediaUrl = QUrl::fromLocalFile(file);
     QMediaContent mc(mediaUrl);
     _player->setMedia(mc);
 }

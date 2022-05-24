@@ -135,9 +135,9 @@ FORMS += \
 # LIBS       += -lVLCQtCore -lVLCQtWidgets
 unix:!mac {
     QMAKE_RPATHDIR += ../lib
-    LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_0_GCC_64bit-Release/src/release -lhttpServer
+    LIBS += -L$$PWD/../../HttpServer/src/build/release -lhttpServer
     INCLUDEPATH += $$PWD/../../HttpServer/src
-    DEPENDPATH += $$PWD/../../build-HttpServer-Desktop_Qt_5_15_0_GCC_64bit-Release/src/release
+    DEPENDPATH += $$PWD/../../HttpServer/src/build/release
 }
 unix:mac {
 
