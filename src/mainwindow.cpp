@@ -424,17 +424,16 @@ void MainWindow::onPasswordIncorrect()
 }
 void MainWindow::dispose()
 {
-    deviceSwitchedHome();
     if(playingLibraryListItem != nullptr)
         updateMetaData(playingLibraryListItem->getLibraryListItem());
     SettingsHandler::Save();
-    _xSettings->dispose();
 
     if (videoHandler->isPlaying())
     {
         videoHandler->stop();
     }
     _syncHandler->stopAll();
+    _xSettings->dispose();
     //qDeleteAll(funscriptHandlers);
     delete _mediaLibraryHandler;
     delete tcodeHandler;
