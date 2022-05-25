@@ -6,6 +6,12 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent),
     _player = new QMediaPlayer(this, QMediaPlayer::VideoSurface);
     _player->setVolume(SettingsHandler::getPlayerVolume());
 
+    _thumbPlayer = new QMediaPlayer(this, QMediaPlayer::VideoSurface);
+    _thumbNailVideoSurface = new XVideoSurface(this);
+    _thumbPlayer->setVideoOutput(_thumbNailVideoSurface);
+    _thumbPlayer->setMuted(true);
+    connect(_thumbNailVideoSurface, &XVideoSurface::fnSurfaceStopped, this, &VideoHandler::on_thumbCapture);
+
     connect(_player, &QMediaPlayer::positionChanged, this, &VideoHandler::on_media_positionChanged, Qt::QueuedConnection);
     connect(_player, &QMediaPlayer::mediaStatusChanged, this, &VideoHandler::on_media_statusChanged, Qt::QueuedConnection);
     connect(_player, &QMediaPlayer::stateChanged, this, &VideoHandler::on_media_stateChanged, Qt::QueuedConnection);
@@ -46,8 +52,6 @@ void VideoHandler::createLayout()
     _videoLoadingLabel->setAlignment(Qt::AlignCenter);
     setLoading(false);
 
-    _videoSurface = new XVideoSurface(this);
-    _player->setVideoOutput(_videoSurface);
     _videoWidget = new QVideoWidget(this);
     _player->setVideoOutput(_videoWidget);
     _mediaGrid->addWidget(_videoWidget, 0, 0, 3, 5);
@@ -295,4 +299,17 @@ XMediaState VideoHandler::convertMediaState(QMediaPlayer::State status) {
         case QMediaPlayer::State::StoppedState:
             return XMediaState::Stopped;
     }
+}
+
+void VideoHandler::getThumb(QString videoPath, qint64 time) {
+    QUrl mediaUrl = QUrl::fromLocalFile(videoPath);
+    QMediaContent mc(mediaUrl);
+    _thumbPlayer->setMedia(mc);
+    _thumbPlayer->setPosition(time);
+    _thumbPlayer->play();
+}
+
+void VideoHandler::on_thumbCapture(QPixmap thumb) {
+    _thumbPlayer->stop();
+    emit thumbCaptured(thumb);
 }

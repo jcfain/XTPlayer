@@ -18,7 +18,6 @@ signals:
 public:
     XVideoSurface(QObject *parent = 0);
     void stop();
-private slots:
     void fnClearPixmap();
 private:
     QImage::Format imageFormat;
