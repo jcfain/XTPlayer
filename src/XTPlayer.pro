@@ -38,6 +38,7 @@ SOURCES += \
     lib/handler/websockethandler.cpp \
     lib/handler/whirligighandler.cpp \
     lib/handler/xtpwebhandler.cpp \
+    lib/handler/xvideopreview.cpp \
     lib/handler/xvideopreviewwidget.cpp \
     lib/handler/xvideosurface.cpp \
     lib/lookup/Constant.cpp \
@@ -76,6 +77,7 @@ HEADERS += \
     lib/handler/websockethandler.h \
     lib/handler/whirligighandler.h \
     lib/handler/xtpwebhandler.h \
+    lib/handler/xvideopreview.h \
     lib/handler/xvideopreviewwidget.h \
     lib/handler/xvideosurface.h \
     lib/lookup/AxisNames.h \

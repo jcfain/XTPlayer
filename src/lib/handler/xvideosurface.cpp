@@ -41,6 +41,7 @@ bool XVideoSurface::start(const QVideoSurfaceFormat &format)
         QAbstractVideoSurface::start(format);
         return true;
     } else {
+        emit fnSurfaceError("Format invalid");
         return false;
     }
 }
@@ -62,11 +63,13 @@ bool XVideoSurface::present(const QVideoFrame &frame)
         setError(IncorrectFormatError);
         stop();
 
+        //emit fnSurfaceError("IncorrectFormatError");
         return false;
     } else {
-        if(!imageCaptured.isNull()){
-            emit fnSurfaceStopped(imageCaptured);
-        }
+//        if(!imageCaptured.isNull()){
+//            qDebug() << "image captured: "+ QString::number(frame.endTime());
+//            emit fnSurfaceStopped(imageCaptured);
+//        }
 
         currentFrame = frame;
         if (currentFrame.map(QAbstractVideoBuffer::ReadOnly)) {
@@ -79,6 +82,8 @@ bool XVideoSurface::present(const QVideoFrame &frame)
                     imageFormat);
             if(imageCaptured.isNull()){
                 imageCaptured = QPixmap::fromImage(image.copy(image.rect()));
+                qDebug() << "image captured: "+ QString::number(frame.endTime());
+                emit fnSurfaceStopped(imageCaptured);
             }
             currentFrame.unmap();
         }

@@ -55,7 +55,7 @@ void VideoHandler::createLayout()
     _videoWidget = new QVideoWidget(this);
     _player->setVideoOutput(_videoWidget);
     _mediaGrid->addWidget(_videoWidget, 0, 0, 3, 5);
-    _mediaGrid->addWidget(_videoLoadingLabel, 1, 2);
+    //_mediaGrid->addWidget(_videoLoadingLabel, 1, 2);
     _videoWidget->show();
 }
 

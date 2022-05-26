@@ -6,6 +6,7 @@
 #include <QtConcurrent/QtConcurrent>
 
 #include "../handler/settingshandler.h"
+#include "../handler/xvideopreview.h"
 #include "../struct/LibraryListItem.h"
 
 class MediaLibraryHandler : public QObject
@@ -25,8 +26,8 @@ signals:
     void saveNewThumbLoading(LibraryListItem27 item);
     void saveNewThumb(LibraryListItem27 item, bool vrMode, QString thumbFile);
     void saveThumbError(LibraryListItem27 item, bool vrMode, QString error);
-//    void frameExtracted(LibraryListItem27 item, bool vrMode, const QtAV::VideoFrame& frame);
-//    void frameExtractedError(LibraryListItem27 item, bool vrMode, const QString &errorMessage);
+    void frameExtracted(LibraryListItem27 item, bool vrMode, QPixmap frame);
+    void frameExtractedError(LibraryListItem27 item, bool vrMode, const QString &errorMessage);
 //    void videoLoadError(LibraryListItem27 item, bool vrMode, QtAV::AVError er);
 public:
     MediaLibraryHandler(QObject* parent = nullptr);
@@ -54,6 +55,7 @@ private:
     QFuture<void> _loadingLibraryFuture;
     QTimer _thumbTimeoutTimer;
     QMutex _mutex;
+    XVideoPreview* _extractor = 0;
 
     void on_load_library(QString path, bool vrMode);
     void onLibraryLoaded();

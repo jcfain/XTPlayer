@@ -2,35 +2,32 @@
 #define XVIDEOPREVIEWWIDGET_H
 
 #include <QWidget>
-#include <QMediaPlayer>
-#include "xvideosurface.h"
+#include "xvideopreview.h"
 
 class XVideoPreviewWidget : public QWidget
 {
     Q_OBJECT
+signals:
+    void thumbExtractionError(QString error);
+
 public:
     XVideoPreviewWidget(QWidget* parent);
     void setFile(QString path);
-    void setTimestamp(qint64 pos);
+    void setTimestamp(qint64 time);
     void preview();
 
 protected:
     virtual void closeEvent(QCloseEvent *event) override;
 
 private:
-    QString _file;
-    qint64 _time;
-    XVideoSurface* _thumbNailVideoSurface;
-    QMediaPlayer* _thumbPlayer;
     QGridLayout* _layout;
     QLabel* _label;
-    bool _thumbRetrieving = false;
+    QString _file;
+    qint64 _time;
+    XVideoPreview _videoPreview;
 
-    void getThumb(QString videoPath, qint64 time);
-    void on_thumbCapture(QPixmap thumb);
-    void on_mediaStatusChanged(QMediaPlayer::MediaStatus status);
-    void on_mediaStateChange(QMediaPlayer::State state);
-
+    void on_thumbExtract(QPixmap frame);
+    void on_thumbExtractionError(QString error);
 };
 
 #endif // XVIDEOPREVIEWWIDGET_H

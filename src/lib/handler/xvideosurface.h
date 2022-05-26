@@ -15,6 +15,7 @@ class XVideoSurface : public QAbstractVideoSurface
     Q_OBJECT
 signals:
     void fnSurfaceStopped(QPixmap pix);
+    void fnSurfaceError(QString error);
 public:
     XVideoSurface(QObject *parent = 0);
     void stop();
