@@ -7,8 +7,6 @@
 #include <QMouseEvent>
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/loghandler.h"
-#include "lib/handler/xvideosurface.h"
-#include "lib/lookup/xvideorenderer.h"
 enum XMediaStatus {
     LoadingMedia,
     LoadedMedia,
@@ -50,7 +48,6 @@ signals:
     void playing();
     void stopping();
     void togglePaused(bool paused);
-    void thumbCaptured(QPixmap thumb);
 
 public:;
     VideoHandler(QWidget* parent = 0);
@@ -81,7 +78,7 @@ public:;
     void setLoading(bool loading);
     QStringList getVideoExtensions();
     QStringList getAudioExtensions();
-    void getThumb(QString videoPath, qint64 time);
+    void setFullscreen(bool on);
 
 private:
     QWidget* _parent;
@@ -90,8 +87,6 @@ private:
 //    VideoRenderer* _videoRenderer = 0;
 //    VideoPreviewWidget* _videoPreviewWidget;
     QVideoWidget* _videoWidget;
-    XVideoSurface* _thumbNailVideoSurface;
-    QMediaPlayer* _thumbPlayer;
     QString _currentFile;
     QMutex _mutex;
     qreal volumeBeforeMute;
@@ -107,7 +102,6 @@ private:
     void enterEvent(QEvent * e) override;
 
     void on_setLoading(bool loading);
-    void on_thumbCapture(QPixmap thumb);
     XMediaStatus convertMediaStatus(QMediaPlayer::MediaStatus status);
     XMediaState convertMediaState(QMediaPlayer::State status);
 };

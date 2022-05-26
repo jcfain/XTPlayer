@@ -25,9 +25,12 @@ private:
     QString _file;
     qint64 _time;
     XVideoPreview _videoPreview;
+    QLabel* _videoLoadingLabel = 0;
+    QMovie* _videoLoadingMovie = 0;
 
     void on_thumbExtract(QPixmap frame);
     void on_thumbExtractionError(QString error);
+    void on_setLoading(bool loading);
 };
 
 #endif // XVIDEOPREVIEWWIDGET_H
