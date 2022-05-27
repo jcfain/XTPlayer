@@ -162,6 +162,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     libraryWindow = new LibraryWindow(this);
     libraryWindow->setProperty("id", "libraryWindow");
+    libraryWindow->hide();
 
     randomizeLibraryButton = new QPushButton(this);
     randomizeLibraryButton->setProperty("id", "randomizeLibraryButton");
