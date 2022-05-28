@@ -44,11 +44,11 @@ void VideoHandler::createLayout()
     _videoLoadingLabel->setProperty("cssClass", "mediaLoadingSpinner");
     _videoLoadingLabel->setAlignment(Qt::AlignCenter);
     setLoading(false);
-
     _videoWidget = new QVideoWidget(this);
+    _videoWidget->setStyleSheet("* {background: black}");
     _player->setVideoOutput(_videoWidget);
     _mediaGrid->addWidget(_videoWidget, 0, 0, 3, 5);
-    //_mediaGrid->addWidget(_videoLoadingLabel, 1, 2);
+    _mediaGrid->addWidget(_videoLoadingLabel, 1, 2);
     _videoWidget->show();
     _player->stop();
 }
