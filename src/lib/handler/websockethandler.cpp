@@ -27,7 +27,7 @@ WebSocketHandler::~WebSocketHandler()
 {
     sendCommand("connectionClosed");
     m_pWebSocketServer->close();
-    qDeleteAll(m_clients.begin(), m_clients.end());
+    //qDeleteAll(m_clients.begin(), m_clients.end());
 }
 
 QHostAddress WebSocketHandler::getAddress()

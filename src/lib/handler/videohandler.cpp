@@ -131,7 +131,7 @@ void VideoHandler::on_media_stop()
 
 bool VideoHandler::isPlaying()
 {
-    return _player ? _player->PlayingState == QMediaPlayer::PlayingState : false;
+    return _player ? _player->state() == QMediaPlayer::PlayingState || _player->state() == QMediaPlayer::PausedState : false;
 }
 
 void VideoHandler::load()

@@ -16,8 +16,8 @@ MediaLibraryHandler::~MediaLibraryHandler()
         _loadingLibraryFuture.cancel();
         _loadingLibraryFuture.waitForFinished();
     }
-    if(_extractor)
-        delete _extractor;
+//    if(_extractor)
+//        delete _extractor;
     //    if(thumbNailPlayer)
     //        delete thumbNailPlayer;
     //qDeleteAll(cachedVRItems);

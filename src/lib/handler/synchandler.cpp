@@ -371,6 +371,7 @@ void SyncHandler::syncVRFunscript(QString funscript)
         mSecTimer.start();
         QString videoPath;
         qint64 duration;
+        bool pl = _videoHandler->isPlaying();
         qint64 nextPulseTime = SettingsHandler::getLubePulseFrequency();
         while (_isVRFunscriptPlaying && _xSettings->getConnectedVRDeviceHandler()->isConnected() && !_videoHandler->isPlaying())
         {

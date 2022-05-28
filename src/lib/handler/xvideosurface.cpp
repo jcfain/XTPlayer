@@ -82,7 +82,7 @@ bool XVideoSurface::present(const QVideoFrame &frame)
                     imageFormat);
             if(imageCaptured.isNull()){
                 imageCaptured = QPixmap::fromImage(image.copy(image.rect()));
-                qDebug() << "image captured: "+ QString::number(frame.endTime());
+                //qDebug() << "image captured: "+ QString::number(frame.endTime());
                 emit fnSurfaceStopped(imageCaptured);
             }
             currentFrame.unmap();
