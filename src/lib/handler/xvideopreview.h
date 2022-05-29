@@ -3,6 +3,7 @@
 
 #include <QMediaPlayer>
 #include "xvideosurface.h"
+#include "loghandler.h"
 
 class XVideoPreview : public QObject
 {
@@ -15,20 +16,17 @@ signals:
 
 public:
     XVideoPreview(QObject* parent = nullptr);
-    void extract(QString videoPath, qint64 time);
+    void extract(QString videoPath, qint64 time = -1);
     void load(QString file);
-    void extractLoaded(qint64 time);
 
 private:
     XVideoSurface* _thumbNailVideoSurface;
     QMediaPlayer* _thumbPlayer;
-    bool _thumbRetrieving = false;
     QString _file;
     qint64 _time;
 
-    bool _loadingInfo = false;
-
-    void setUpPlayer();
+    void setUpThumbPlayer();
+    void setUpInfoPlayer();
     void tearDownPlayer();
     void on_thumbCapture(QPixmap thumb);
     void on_mediaStatusChanged(QMediaPlayer::MediaStatus status);

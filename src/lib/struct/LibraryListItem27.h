@@ -51,9 +51,9 @@ public:
     bool isMFS;
     QString toolTip;
     bool thumbFileExists = false;
-    QString thumbFileLoading = LibraryThumbNail::ERROR_IMAGE;// "://images/icons/loading.png";
+    QString thumbFileLoading = LibraryThumbNail::LOADING_IMAGE;// "://images/icons/loading.png";
     QString thumbFileLoadingCurrent = LibraryThumbNail::LOADING_CURRENT_IMAGE;// "://images/icons/loading_current.png";
-    QString thumbFileError = LibraryThumbNail::LOADING_IMAGE;// "://images/icons/error.png";
+    QString thumbFileError = LibraryThumbNail::ERROR_IMAGE;// "://images/icons/error.png";
 
     friend QDataStream & operator<<( QDataStream &dataStream, const LibraryListItem27 &object )
     {

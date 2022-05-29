@@ -446,8 +446,6 @@ void MediaLibraryHandler::saveNewThumbs(bool vrMode)
         QFileInfo thumbInfo(item.thumbFile);
         if (item.type == LibraryListItemType::Video && !thumbInfo.exists())
         {
-            disconnect(_extractor, nullptr,  nullptr, nullptr);
-            disconnect(_extractor, nullptr,  nullptr, nullptr);
             saveThumb(item, -1, vrMode);
         }
         else
@@ -478,9 +476,11 @@ void MediaLibraryHandler::saveThumb(LibraryListItem27 cachedListItem, qint64 pos
     {
         _thumbTimeoutTimer.stop();
         disconnect(&_thumbTimeoutTimer, &QTimer::timeout, nullptr, nullptr);
+        disconnect(_extractor, nullptr,  nullptr, nullptr);
         connect(&_thumbTimeoutTimer, &QTimer::timeout, &_thumbTimeoutTimer, [this, cachedListItem, vrMode]() {
             if(_thumbProcessIsRunning)
             {
+                disconnect(_extractor, nullptr,  nullptr, nullptr);
                 onSaveThumb(cachedListItem, vrMode, "Thumb loading timed out.");
             }
         });
@@ -493,6 +493,7 @@ void MediaLibraryHandler::saveThumb(LibraryListItem27 cachedListItem, qint64 pos
         connect(_extractor, &XVideoPreview::durationChanged, this,
            [this, videoFile, position](qint64 duration)
             {
+               disconnect(_extractor, &XVideoPreview::durationChanged,  nullptr, nullptr);
                LogHandler::Debug("Loaded video for thumb. Duration: " + QString::number(duration));
                qint64 randomPosition = position > 0 ? position : XMath::rand((qint64)1, duration);
                LogHandler::Debug("Extracting at: " + QString::number(randomPosition));
@@ -511,6 +512,8 @@ void MediaLibraryHandler::saveThumb(LibraryListItem27 cachedListItem, qint64 pos
         connect(_extractor, &XVideoPreview::frameExtracted, this,
            [this, cachedListItem, vrMode](QPixmap frame)
             {
+                disconnect(_extractor, &XVideoPreview::frameExtracted,  nullptr, nullptr);
+                disconnect(_extractor, &XVideoPreview::frameExtractionError,  nullptr, nullptr);
                 if(!frame.isNull())
                 {
                     bool error = false;
@@ -538,6 +541,8 @@ void MediaLibraryHandler::saveThumb(LibraryListItem27 cachedListItem, qint64 pos
         connect(_extractor, &XVideoPreview::frameExtractionError, this,
            [this, cachedListItem, vrMode](const QString &errorMessage)
             {
+                disconnect(_extractor, &XVideoPreview::frameExtracted,  nullptr, nullptr);
+                disconnect(_extractor, &XVideoPreview::frameExtractionError,  nullptr, nullptr);
                 QString error = "Error extracting image from: " + cachedListItem.path + " Error: " + errorMessage;
                 onSaveThumb(cachedListItem, vrMode, error);
             });
