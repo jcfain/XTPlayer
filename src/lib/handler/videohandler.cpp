@@ -1,6 +1,6 @@
 #include "videohandler.h"
 VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent),
-    _player(0), _videoWidget(0)
+    _player(0), _fullscreenWidget(0), _videoWidget(0)
 {
     _parent = parent;
     _player = new QMediaPlayer(this, QMediaPlayer::VideoSurface);
@@ -59,18 +59,28 @@ VideoHandler::~VideoHandler()
     delete _mediaGrid;
     delete _player;
     delete _videoWidget;
+    if(_fullscreenWidget)
+        delete _fullscreenWidget;
 }
 void VideoHandler::toggleFullscreen() {
-    if(_videoWidget->isFullScreen())
+    if(!_isFullScreen)
     {
-        _videoWidget->setFullScreen(false);
-        //_mediaGrid->addWidget(_videoWidget, 0, 0);
-        //_videoWidget->setParent(this);
-        //_videoWidget->showNormal();
+        _isFullScreen = true;
+        _fullscreenWidget = new QWidget();
+        _fullscreenWidget->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+        QGridLayout* layout = new QGridLayout(_fullscreenWidget);
+        layout->setContentsMargins(0,0,0,0);
+        layout->setSpacing(0);
+        _fullscreenWidget->setLayout(layout);
+        layout->addWidget(_videoWidget);
+        _fullscreenWidget->showFullScreen();
     }
     else
     {
-        _videoWidget->setFullScreen(true);
+        _isFullScreen = false;
+        _mediaGrid->addWidget(_videoWidget);
+        delete _fullscreenWidget;
+        _fullscreenWidget = 0;
     }
 }
 

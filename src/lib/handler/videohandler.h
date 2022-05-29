@@ -85,6 +85,8 @@ private:
     QWidget* _parent;
     QGridLayout* _mediaGrid = 0;
     QMediaPlayer* _player = 0;
+    bool _isFullScreen = false;
+    QWidget* _fullscreenWidget;
 //    VideoRenderer* _videoRenderer = 0;
 //    VideoPreviewWidget* _videoPreviewWidget;
     XVideoWidget* _videoWidget;
