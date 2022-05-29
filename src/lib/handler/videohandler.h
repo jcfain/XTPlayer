@@ -24,7 +24,7 @@ enum XMediaState {
     Playing,
     Stopped,
 };
-class VideoHandler : public QWidget
+class VideoHandler : public QVideoWidget
 {
     Q_OBJECT
 
@@ -38,7 +38,7 @@ private slots:
 
 signals:
     void doubleClicked(QMouseEvent* e);
-    void rightClicked(QMouseEvent* e);
+    void singleClicked(QMouseEvent* e);
     void keyPressed(QKeyEvent* k);
     void mouseEnter(QEvent* e);
     void positionChanged(int position);
@@ -79,6 +79,7 @@ public:;
     QStringList getVideoExtensions();
     QStringList getAudioExtensions();
     void setFullscreen(bool on);
+    void toggleFullscreen();
 
 private:
     QWidget* _parent;
@@ -86,7 +87,7 @@ private:
     QMediaPlayer* _player = 0;
 //    VideoRenderer* _videoRenderer = 0;
 //    VideoPreviewWidget* _videoPreviewWidget;
-    QVideoWidget* _videoWidget;
+    //QVideoWidget* _videoWidget;
     QString _currentFile;
     QMutex _mutex;
     qreal volumeBeforeMute;

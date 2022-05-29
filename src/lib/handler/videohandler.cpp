@@ -1,6 +1,6 @@
 #include "videohandler.h"
-VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent),
-    _player(0), _videoWidget(0)
+VideoHandler::VideoHandler(QWidget *parent) : QVideoWidget(parent),
+    _player(0)
 {
     _parent = parent;
     _player = new QMediaPlayer(this, QMediaPlayer::VideoSurface);
@@ -32,8 +32,6 @@ void VideoHandler::createLayout()
         delete _videoLoadingMovie;
     if(_videoLoadingLabel)
         delete _videoLoadingLabel;
-    if(_videoWidget)
-        delete _videoWidget;
     _videoLoadingMovie = new QMovie("://images/Eclipse-1s-loading-200px.gif");
     _videoLoadingMovie->setProperty("cssClass", "mediaLoadingSpinner");
     _videoLoadingLabel = new QLabel(this);
@@ -44,12 +42,10 @@ void VideoHandler::createLayout()
     _videoLoadingLabel->setProperty("cssClass", "mediaLoadingSpinner");
     _videoLoadingLabel->setAlignment(Qt::AlignCenter);
     setLoading(false);
-    _videoWidget = new QVideoWidget(this);
-    _videoWidget->setStyleSheet("* {background: black}");
-    _player->setVideoOutput(_videoWidget);
-    _mediaGrid->addWidget(_videoWidget, 0, 0, 3, 5);
-    _mediaGrid->addWidget(_videoLoadingLabel, 1, 2);
-    _videoWidget->show();
+    //_videoWidget = new QVideoWidget(this);
+    setStyleSheet("* {background: black}");
+    _player->setVideoOutput(this);
+    show();
     _player->stop();
 }
 
@@ -57,10 +53,9 @@ VideoHandler::~VideoHandler()
 {
     delete _mediaGrid;
     delete _player;
-    delete _videoWidget;
 }
 void VideoHandler::setFullscreen(bool on) {
-    _videoWidget->setFullScreen(on);
+    setFullScreen(on);
 }
 QString VideoHandler::file()
 {
@@ -73,8 +68,7 @@ void VideoHandler::mouseDoubleClickEvent(QMouseEvent * e)
 }
 void VideoHandler::mousePressEvent(QMouseEvent * e)
 {
-    if(e->button() == Qt::MouseButton::RightButton)
-        emit rightClicked(e);
+    emit singleClicked(e);
 }
 void VideoHandler::keyPressEvent(QKeyEvent * e)
 {
@@ -296,4 +290,8 @@ XMediaState VideoHandler::convertMediaState(QMediaPlayer::State status) {
         case QMediaPlayer::State::StoppedState:
             return XMediaState::Stopped;
     }
+}
+
+void VideoHandler::toggleFullscreen() {
+    setFullScreen(!isFullScreen());
 }
