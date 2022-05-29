@@ -3090,27 +3090,6 @@ void MainWindow::on_actionAbout_triggered()
                    "Source: <a href='https://github.com/qt/qt5/releases/tag/v5.15.0'>https://github.com/qt/qt5/releases/tag/v5.15.0</a>");
     qtInfo.setAlignment(Qt::AlignHCenter);
     layout.addWidget(&qtInfo);
-    QLabel qtAVInfo;
-    qtAVInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    qtAVInfo.setText("<b>QtAV 1.12.0(Aug 17 2020, 22:01:37)</b><br>"
-                     "Multimedia framework base on Qt and FFmpeg.<br>"
-                     "Distributed under the terms of LGPLv2.1 or later.<br>"
-                     "Shanghai University->S3 Graphics->Deepin->PPTV<br>"
-                     "Shanghai, China<br>"
-                     "Copyright (C) 2012-2016 Wang Bin (aka. Lucas Wang)<br>"
-                     "Email: <a href='mailto:wbsecg1@gmail.com'>wbsecg1@gmail.com</a><br>"
-                     "Donate: <a href='http://qtav.org/donate.html'>http://qtav.org/donate.html</a><br>"
-                     "Source: <a href='https://github.com/wang-bin/QtAV'>https://github.com/wang-bin/QtAV</a><br>"
-                     "Home page: <a href='http://qtav.org'>http://qtav.org</a>");
-    qtAVInfo.setAlignment(Qt::AlignHCenter);
-    layout.addWidget(&qtAVInfo);
-    QLabel libAVInfo;
-    libAVInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    libAVInfo.setText("<b>Libav 12.3</b><br>"
-                      "the Libav project under the LGPLv2.1<br>"
-                      "<a href='https://libav.org/download/'>https://libav.org/download/</a>");
-    libAVInfo.setAlignment(Qt::AlignHCenter);
-    layout.addWidget(&libAVInfo);
     QLabel rangeSliderInfo;
     rangeSliderInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
     rangeSliderInfo.setText("<b>Qt-RangeSlider</b><br>"
