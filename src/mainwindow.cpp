@@ -214,7 +214,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     libraryViewGroup->addAction(ui->actionThumbnail);
 
     _videoPreviewWidget = new XVideoPreviewWidget(this);
-    _videoPreviewWidget->resize(150, 90);
     _videoPreviewWidget->hide();
 
     QMenu* submenuSize = ui->menuView->addMenu( "Size" );
@@ -2395,16 +2394,13 @@ void MainWindow::on_seekslider_hover(int position, int sliderValue)
     //    if (!Config::instance().previewEnabled())
     //        return;
 
-    if(videoHandler->isPlaying() || videoHandler->isPaused())
+    if(playingLibraryListItem->getType() == LibraryListItemType::Video && (videoHandler->isPlaying() || videoHandler->isPaused()))
     {
         //const int w = Config::instance().previewWidth();
         //const int h = Config::instance().previewHeight();
         //videoPreviewWidget->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
         _videoPreviewWidget->setTimestamp(sliderValueTime);
-        _videoPreviewWidget->preview();
-        _videoPreviewWidget->resize(176, 100);
-        _videoPreviewWidget->move(gpos - QPoint(176/2, 100));
-        _videoPreviewWidget->show();
+        _videoPreviewWidget->preview(gpos);
         //videoPreviewWidget->raise();
         //videoPreviewWidget->activateWindow();
     }

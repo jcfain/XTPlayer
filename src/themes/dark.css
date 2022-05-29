@@ -8,6 +8,12 @@ QFrame#libraryFrame {
 	border-color: #3e4249;
 	border-radius: 4px;
 }
+QFrame[cssClass="timeLinePreview"] {
+	background-color: rgba(51,54,60, 0.5);
+	border-color: #bec0c1;
+	border-style: inset;
+	border-width: 3px;
+}
 QSplitter::handle {
 	background: #3e4249;
 	margin-left:5px;

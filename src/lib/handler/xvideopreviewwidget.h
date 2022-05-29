@@ -3,8 +3,9 @@
 
 #include <QWidget>
 #include "xvideopreview.h"
+#include "settingshandler.h"
 
-class XVideoPreviewWidget : public QWidget
+class XVideoPreviewWidget : public QFrame
 {
     Q_OBJECT
 signals:
@@ -14,7 +15,7 @@ public:
     XVideoPreviewWidget(QWidget* parent);
     void setFile(QString path);
     void setTimestamp(qint64 time);
-    void preview();
+    void preview(QPoint gpos);
 
 protected:
     virtual void closeEvent(QCloseEvent *event) override;
@@ -27,6 +28,8 @@ private:
     XVideoPreview _videoPreview;
     QLabel* _videoLoadingLabel = 0;
     QMovie* _videoLoadingMovie = 0;
+    QPoint _currentPosition;
+    int _thumbSize = 200;
 
     void on_thumbExtract(QPixmap frame);
     void on_thumbExtractionError(QString error);

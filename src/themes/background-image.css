@@ -9,6 +9,12 @@ QSplitter::handle {
 QDialog[cssClass="loadingSpinner"] {
 	
 }
+QFrame[cssClass="timeLinePreview"] {
+	background-color: rgba(51,54,60, 0.5);
+	border-color: #bec0c1;
+	border-style: inset;
+	border-width: 3px;
+}
 QLabel[cssClass="libraryLoadingSpinner"] {
 	background-color: rgba(128,128,128, 1);
 }
