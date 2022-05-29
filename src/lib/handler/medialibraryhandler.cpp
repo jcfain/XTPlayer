@@ -196,7 +196,7 @@ void MediaLibraryHandler::on_load_library(QString path, bool vrMode)
         item.mediaExtension = mediaExtension,
         item.thumbFile = nullptr,
         item.zipFile = zipFile,
-        item.modifiedDate = fileinfo.birthTime().date(),
+        item.modifiedDate = fileinfo.birthTime().isValid() ? fileinfo.birthTime() : fileinfo.created(),
         item.duration = 0;
         assignID(item);
         setLiveProperties(item);
@@ -279,7 +279,7 @@ void MediaLibraryHandler::on_load_library(QString path, bool vrMode)
             item.scriptNoExtension = scriptNoExtension,
             item.mediaExtension = mediaExtension,
             item.zipFile = zipFile,
-            item.modifiedDate = fileinfo.birthTime().date(),
+            item.modifiedDate = fileinfo.birthTime().isValid() ? fileinfo.birthTime() : fileinfo.created(),
             item.duration = 0;
             assignID(item);
             setLiveProperties(item);
@@ -347,7 +347,7 @@ LibraryListItem27 MediaLibraryHandler::createLibraryListItemFromFunscript(QStrin
     item.scriptNoExtension = fileNameNoExtension;
     item.mediaExtension = mediaExtension;
     item.zipFile = zipFile;
-    item.modifiedDate = fileinfo.birthTime().date();
+    item.modifiedDate = fileinfo.birthTime().isValid() ? fileinfo.birthTime() : fileinfo.created(),
     item.duration = 0;
     assignID(item);
     setLiveProperties(item);
@@ -610,7 +610,7 @@ LibraryListItem27 MediaLibraryHandler::setupPlaylistItem(QString playlistName)
     LibraryListItem27 item;
     item.type = LibraryListItemType::PlaylistInternal;
     item.nameNoExtension = playlistName; //nameNoExtension
-    item.modifiedDate = QDate::currentDate();
+    item.modifiedDate = QDateTime::currentDateTime();
     item.duration = 0;
     assignID(item);
     setLiveProperties(item);

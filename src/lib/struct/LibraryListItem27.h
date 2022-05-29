@@ -43,7 +43,7 @@ public:
     QString mediaExtension;
     QString thumbFile;
     QString zipFile;
-    QDate modifiedDate;
+    QDateTime modifiedDate;
     quint64 duration;
 
     // Live members
@@ -110,7 +110,7 @@ public:
         newItem.path = obj["path"].toString();
         newItem.duration = obj["path"].toString().toLongLong();
         newItem.mediaExtension = obj["mediaExtension"].toString();
-        newItem.modifiedDate = QDate::fromString(obj["modifiedDate"].toString());
+        newItem.modifiedDate = QDateTime::fromString(obj["modifiedDate"].toString());
         newItem.name = obj["name"].toString();
         newItem.nameNoExtension = obj["nameNoExtension"].toString();
         newItem.script = obj["script"].toString();

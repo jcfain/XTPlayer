@@ -2759,7 +2759,7 @@ void MainWindow::processVRMetaData(QString videoPath, QString funscriptPath, qin
     item.scriptNoExtension = scriptNoExtension;
     item.mediaExtension = mediaExtension;
     item.zipFile = zipFile;
-    item.modifiedDate = videoFile.birthTime().date();
+    item.modifiedDate = videoFile.birthTime();
     item.duration = (unsigned)duration;
     _mediaLibraryHandler->setLiveProperties(item);
     playingLibraryListItem = new LibraryListWidgetItem(item);
