@@ -43,6 +43,8 @@ void XVideoPreview::extract(QString file, qint64 time)
     _thumbPlayer->setMedia(mc);
     if(time > -1)
     {
+        _loadingInfo = false;
+        _extracting = true;
         _thumbPlayer->setPosition(_time);
     }
     _thumbPlayer->play();
@@ -51,20 +53,26 @@ void XVideoPreview::extract(QString file, qint64 time)
 void XVideoPreview::load(QString file)
 {
     LogHandler::Debug("load: "+ file);
+    _loadingInfo = true;
     extract(file);
 }
 
 // Private
 void XVideoPreview::on_thumbCapture(QPixmap frame)
 {
-    LogHandler::Debug("on_thumbCapture: "+ _file);
-    emit frameExtracted(frame);
+    if(_extracting) {
+        LogHandler::Debug("on_thumbCapture: "+ _file);
+        _extracting = false;
+        emit frameExtracted(frame);
+    }
 }
 
 void XVideoPreview::on_thumbError(QString error)
 {
-    LogHandler::Debug("on_thumbError: "+ _file);
-    emit frameExtractionError(error);
+    if(_extracting) {
+        LogHandler::Debug("on_thumbError: "+ _file);
+        emit frameExtractionError(error);
+    }
 }
 
 void XVideoPreview::on_mediaStatusChanged(QMediaPlayer::MediaStatus status)
@@ -86,10 +94,11 @@ void XVideoPreview::on_mediaStateChange(QMediaPlayer::State state)
 
 void XVideoPreview::on_durationChanged(qint64 duration)
 {
-    if(duration > 0)
+    if(_loadingInfo && duration > 0)
     {
         LogHandler::Debug("on_durationChanged: "+ _file);
         LogHandler::Debug("on_durationChanged: "+ QString::number(duration));
+        _loadingInfo = false;
         emit durationChanged(duration);
     }
 }

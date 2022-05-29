@@ -24,6 +24,8 @@ private:
     QMediaPlayer* _thumbPlayer;
     QString _file;
     qint64 _time;
+    bool _loadingInfo = false;
+    bool _extracting = false;
 
     void setUpThumbPlayer();
     void setUpInfoPlayer();
