@@ -1,6 +1,6 @@
 #include "videohandler.h"
-VideoHandler::VideoHandler(QWidget *parent) : QVideoWidget(parent),
-    _player(0)
+VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent),
+    _player(0), _videoWidget(0)
 {
     _parent = parent;
     _player = new QMediaPlayer(this, QMediaPlayer::VideoSurface);
@@ -41,44 +41,44 @@ void VideoHandler::createLayout()
     //_videoLoadingLabel->setStyleSheet("* {background: ffffff}");
     _videoLoadingLabel->setProperty("cssClass", "mediaLoadingSpinner");
     _videoLoadingLabel->setAlignment(Qt::AlignCenter);
+    //_mediaGrid->addWidget(_videoLoadingLabel, 0, 0);
     setLoading(false);
-    //_videoWidget = new QVideoWidget(this);
-    setStyleSheet("* {background: black}");
-    _player->setVideoOutput(this);
-    show();
-    _player->stop();
+    if(_videoWidget)
+        delete _videoWidget;
+    _videoWidget = new XVideoWidget(this);
+    connect(_videoWidget, &XVideoWidget::doubleClicked, this, [this](QMouseEvent* e) {emit doubleClicked(e);});
+    connect(_videoWidget, &XVideoWidget::singleClicked, this, [this](QMouseEvent* e) {emit singleClicked(e);});
+    connect(_videoWidget, &XVideoWidget::keyPressed, this, [this](QKeyEvent* e) {emit keyPressed(e);});
+    connect(_videoWidget, &XVideoWidget::mouseEnter, this, [this](QEvent* e) {emit mouseEnter(e);});
+    _mediaGrid->addWidget(_videoWidget);
+    _player->setVideoOutput(_videoWidget);
 }
 
 VideoHandler::~VideoHandler()
 {
     delete _mediaGrid;
     delete _player;
+    delete _videoWidget;
 }
-void VideoHandler::setFullscreen(bool on) {
-    setFullScreen(on);
+void VideoHandler::toggleFullscreen() {
+    if(_videoWidget->isFullScreen())
+    {
+        _videoWidget->setFullScreen(false);
+        //_mediaGrid->addWidget(_videoWidget, 0, 0);
+        //_videoWidget->setParent(this);
+        //_videoWidget->showNormal();
+    }
+    else
+    {
+        _videoWidget->setFullScreen(true);
+    }
 }
+
 QString VideoHandler::file()
 {
     return _currentFile;
 }
 
-void VideoHandler::mouseDoubleClickEvent(QMouseEvent * e)
-{
-    emit doubleClicked(e);
-}
-void VideoHandler::mousePressEvent(QMouseEvent * e)
-{
-    emit singleClicked(e);
-}
-void VideoHandler::keyPressEvent(QKeyEvent * e)
-{
-    emit keyPressed(e);
-}
-
-void VideoHandler::enterEvent(QEvent * e)
-{
-    emit mouseEnter(e);
-}
 
 void VideoHandler::on_media_positionChanged(qint64 position)
 {
@@ -290,8 +290,4 @@ XMediaState VideoHandler::convertMediaState(QMediaPlayer::State status) {
         case QMediaPlayer::State::StoppedState:
             return XMediaState::Stopped;
     }
-}
-
-void VideoHandler::toggleFullscreen() {
-    setFullScreen(!isFullScreen());
 }

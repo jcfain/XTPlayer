@@ -7,6 +7,7 @@
 #include <QMouseEvent>
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/loghandler.h"
+#include "lib/handler/xvideowidget.h"
 enum XMediaStatus {
     LoadingMedia,
     LoadedMedia,
@@ -24,7 +25,7 @@ enum XMediaState {
     Playing,
     Stopped,
 };
-class VideoHandler : public QVideoWidget
+class VideoHandler : public QWidget
 {
     Q_OBJECT
 
@@ -78,7 +79,6 @@ public:;
     void setLoading(bool loading);
     QStringList getVideoExtensions();
     QStringList getAudioExtensions();
-    void setFullscreen(bool on);
     void toggleFullscreen();
 
 private:
@@ -87,7 +87,7 @@ private:
     QMediaPlayer* _player = 0;
 //    VideoRenderer* _videoRenderer = 0;
 //    VideoPreviewWidget* _videoPreviewWidget;
-    //QVideoWidget* _videoWidget;
+    XVideoWidget* _videoWidget;
     QString _currentFile;
     QMutex _mutex;
     qreal volumeBeforeMute;
@@ -96,11 +96,6 @@ private:
     XMediaState _currentState = XMediaState::Stopped;
 
     void createLayout();
-
-    void mouseDoubleClickEvent(QMouseEvent * e) override;
-    void mousePressEvent(QMouseEvent * e) override;
-    void keyPressEvent(QKeyEvent * e) override;
-    void enterEvent(QEvent * e) override;
 
     void on_setLoading(bool loading);
     XMediaStatus convertMediaStatus(QMediaPlayer::MediaStatus status);

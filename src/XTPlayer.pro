@@ -41,6 +41,7 @@ SOURCES += \
     lib/handler/xvideopreview.cpp \
     lib/handler/xvideopreviewwidget.cpp \
     lib/handler/xvideosurface.cpp \
+    lib/handler/xvideowidget.cpp \
     lib/lookup/Constant.cpp \
     lib/lookup/tcodechannellookup.cpp \
     lib/struct/channeltablecomboboxdelegate.cpp \
@@ -80,6 +81,7 @@ HEADERS += \
     lib/handler/xvideopreview.h \
     lib/handler/xvideopreviewwidget.h \
     lib/handler/xvideosurface.h \
+    lib/handler/xvideowidget.h \
     lib/lookup/AxisNames.h \
     lib/lookup/Constants.h \
     lib/lookup/GamepadAxisNames.h \
