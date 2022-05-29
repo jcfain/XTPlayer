@@ -273,6 +273,7 @@ private:
     bool _editPlaylistMode = false;
     bool _libraryDockMode = false;
 
+    void on_settingsMessageRecieve(QString message, XLogLevel logLevel);
 //    void saveSingleThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
 //    void saveThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0, bool vrMode = false);
     void onSaveNewThumbLoading(LibraryListItem27 item);

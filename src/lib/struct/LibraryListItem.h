@@ -68,7 +68,7 @@ struct LibraryListItem
         item.mediaExtension = mediaExtension;
         item.thumbFile = thumbFile;
         item.zipFile = zipFile;
-        item.modifiedDate = modifiedDate.startOfDay();
+        item.modifiedDate = modifiedDate;
         item.duration = duration;
         return item;
     }

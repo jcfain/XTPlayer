@@ -28,7 +28,7 @@ public:
     static void Info(QString message);
     static void Error(QString message);
     static void Warn(QString message);
-    static void Dialog(QString message, XLogLevel level);
+    static void Dialog(QWidget* parent, QString message, XLogLevel level);
     static QString getLevel(XLogLevel level);
     static void setUserDebug(bool on);
     static bool getUserDebug();

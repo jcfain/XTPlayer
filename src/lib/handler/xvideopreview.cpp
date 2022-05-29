@@ -35,6 +35,14 @@ void XVideoPreview::tearDownPlayer()
 void XVideoPreview::extract(QString file, qint64 time)
 {
     _file = file;
+    if(_file.isNull()) {
+        emit frameExtractionError("In valid file path.");
+        return;
+    }
+    if(!QFile::exists(_file)) {
+        emit frameExtractionError("File: "+file+" does not exist.");
+        return;
+    }
     _time = time;
     LogHandler::Debug("extract: "+ file);
     LogHandler::Debug("extract: "+ QString::number(time));
@@ -52,6 +60,12 @@ void XVideoPreview::extract(QString file, qint64 time)
 
 void XVideoPreview::load(QString file)
 {
+    if(_file == file && _lastDuration > 0) {
+        emit durationChanged(_lastDuration);
+        return;
+    } else {
+        _lastDuration = 0;
+    }
     LogHandler::Debug("load: "+ file);
     _loadingInfo = true;
     extract(file);
@@ -99,6 +113,7 @@ void XVideoPreview::on_durationChanged(qint64 duration)
         LogHandler::Debug("on_durationChanged: "+ _file);
         LogHandler::Debug("on_durationChanged: "+ QString::number(duration));
         _loadingInfo = false;
+        _lastDuration = duration;
         emit durationChanged(duration);
     }
 }

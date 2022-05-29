@@ -466,7 +466,7 @@ void SettingsHandler::Export(QWidget* parent)
         QSettings* settingsExport = new QSettings(selectedFile, QSettings::Format::IniFormat);
         Save(settingsExport);
         delete settingsExport;
-        LogHandler::Dialog("Settings saved to "+ selectedFile, XLogLevel::Information);
+        emit instance().messageSend("Settings saved to "+ selectedFile, XLogLevel::Information);
     }
 }
 
@@ -587,7 +587,7 @@ void SettingsHandler::MigrateTo23()
     setupAvailableAxis();
     Save();
     Load();
-    LogHandler::Dialog("Due to a standards update your RANGE settings\nhave been set to default for a new data structure.", XLogLevel::Information);
+    emit instance().messageSend("Due to a standards update your RANGE settings\nhave been set to default for a new data structure.", XLogLevel::Information);
 }
 
 void SettingsHandler::MigrateTo25()
@@ -603,7 +603,7 @@ void SettingsHandler::MigrateTo252()
     setupAvailableAxis();
     Save();
     Load();
-    LogHandler::Dialog("Due to a standards update your CHANNELS\nhave been set to default for a new data structure.\nPlease reset your Multiplier/Range settings before using.", XLogLevel::Information);
+    emit instance().messageSend("Due to a standards update your CHANNELS\nhave been set to default for a new data structure.\nPlease reset your Multiplier/Range settings before using.", XLogLevel::Information);
 }
 void SettingsHandler::MigrateLibraryMetaDataTo258()
 {
@@ -670,7 +670,7 @@ void SettingsHandler::MigratrTo2615()
     setupAvailableAxis();
     Save();
     Load();
-    LogHandler::Dialog("Due to a standards update your CHANNEL SETTINGS\nhave been set to default for a new data structure.\nPlease reset your RANGES and MULTIPLIERS settings before using.", XLogLevel::Information);
+    emit instance().messageSend("Due to a standards update your CHANNEL SETTINGS\nhave been set to default for a new data structure.\nPlease reset your RANGES and MULTIPLIERS settings before using.", XLogLevel::Information);
 }
 
 void SettingsHandler::MigrateTo263() {

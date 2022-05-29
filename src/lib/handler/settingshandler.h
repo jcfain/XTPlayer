@@ -30,6 +30,7 @@ class SettingsHandler: public QObject
 signals:
     void tcodeVersionChanged();
     void settingsChanged(bool dirty);
+    void messageSend(QString message, XLogLevel loglevel);
 
 public:
     static SettingsHandler& instance(){

@@ -26,6 +26,7 @@ private:
     qint64 _time;
     bool _loadingInfo = false;
     bool _extracting = false;
+    qint64 _lastDuration;
 
     void setUpThumbPlayer();
     void setUpInfoPlayer();

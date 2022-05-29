@@ -37,10 +37,10 @@ void LogHandler::Error(QString message)
     }
 }
 
-void LogHandler::Dialog(QString message, XLogLevel level)
+void LogHandler::Dialog(QWidget* parent, QString message, XLogLevel level)
 {
     Debug(message);
-    QMessageBox messageBox;
+    QMessageBox messageBox(parent);
     messageBox.setTextFormat(Qt::RichText);
     switch(level)
     {

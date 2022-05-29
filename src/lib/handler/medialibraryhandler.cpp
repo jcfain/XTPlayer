@@ -196,7 +196,7 @@ void MediaLibraryHandler::on_load_library(QString path, bool vrMode)
         item.mediaExtension = mediaExtension,
         item.thumbFile = nullptr,
         item.zipFile = zipFile,
-        item.modifiedDate = fileinfo.birthTime().isValid() ? fileinfo.birthTime() : fileinfo.created(),
+        item.modifiedDate = fileinfo.birthTime().isValid() ? fileinfo.birthTime().date() : fileinfo.created().date();
         item.duration = 0;
         assignID(item);
         setLiveProperties(item);
@@ -279,7 +279,7 @@ void MediaLibraryHandler::on_load_library(QString path, bool vrMode)
             item.scriptNoExtension = scriptNoExtension,
             item.mediaExtension = mediaExtension,
             item.zipFile = zipFile,
-            item.modifiedDate = fileinfo.birthTime().isValid() ? fileinfo.birthTime() : fileinfo.created(),
+            item.modifiedDate = fileinfo.birthTime().isValid() ? fileinfo.birthTime().date() : fileinfo.created().date();
             item.duration = 0;
             assignID(item);
             setLiveProperties(item);
@@ -347,7 +347,7 @@ LibraryListItem27 MediaLibraryHandler::createLibraryListItemFromFunscript(QStrin
     item.scriptNoExtension = fileNameNoExtension;
     item.mediaExtension = mediaExtension;
     item.zipFile = zipFile;
-    item.modifiedDate = fileinfo.birthTime().isValid() ? fileinfo.birthTime() : fileinfo.created(),
+    item.modifiedDate = fileinfo.birthTime().isValid() ? fileinfo.birthTime().date() : fileinfo.created().date();
     item.duration = 0;
     assignID(item);
     setLiveProperties(item);
@@ -578,7 +578,13 @@ void MediaLibraryHandler::saveThumb(LibraryListItem27 cachedListItem, qint64 pos
 
 void MediaLibraryHandler::onSaveThumb(LibraryListItem27 item, bool vrMode, QString errorMessage)
 {
-    LibraryListItem27 &cachedItem = vrMode ? _cachedVRItems[_cachedVRItems.indexOf(item)] : _cachedLibraryItems[_cachedLibraryItems.indexOf(item)];
+    int cachedIndex = vrMode ? _cachedVRItems.indexOf(item) : _cachedLibraryItems.indexOf(item);
+    if(cachedIndex == -1) {
+        LibraryListItem27 emptyItem;
+        emit saveThumbError(emptyItem, vrMode, "Missing media");
+        return;
+    }
+    LibraryListItem27 &cachedItem = vrMode ? _cachedVRItems[cachedIndex] : _cachedLibraryItems[cachedIndex];
     if(!errorMessage.isEmpty())
     {
         cachedItem.thumbFile = item.thumbFileError;
@@ -610,7 +616,7 @@ LibraryListItem27 MediaLibraryHandler::setupPlaylistItem(QString playlistName)
     LibraryListItem27 item;
     item.type = LibraryListItemType::PlaylistInternal;
     item.nameNoExtension = playlistName; //nameNoExtension
-    item.modifiedDate = QDateTime::currentDateTime();
+    item.modifiedDate = QDateTime::currentDateTime().date();
     item.duration = 0;
     assignID(item);
     setLiveProperties(item);

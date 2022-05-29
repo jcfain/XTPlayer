@@ -15,6 +15,7 @@ int main(int argc, char *argv[])
     }
     #endif
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    qRegisterMetaType<QItemSelection>();
     qRegisterMetaTypeStreamOperators<QList<QString>>("QList<QString>");
     qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
     qRegisterMetaTypeStreamOperators<AxisNames>("AxisNames");

@@ -53,7 +53,7 @@ QString PlaylistDialog::getPlaylistNAme(PlaylistDialog *dialog, bool *ok)
         if(dialog->nameEdit->text().isEmpty())
         {
             isValid = false;
-            LogHandler::Dialog("Playlist name is required!", XLogLevel::Critical);
+            LogHandler::Dialog(dialog, "Playlist name is required!", XLogLevel::Critical);
         }
         if (!isValid)
             *ok = false;
