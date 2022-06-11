@@ -44,6 +44,7 @@ var xtpFormDirty = false;
 var saveStateNode;
 var userAgent;
 var userAgentIsDeo = false;
+var userAgentIsHereSphere = false;
 var remoteUserSettings;
 var mediaListGlobal = [];
 var filteredMedia = [];
@@ -84,6 +85,7 @@ function loadPage()
 {
 	getBrowserInformation();
 	userAgentIsDeo = userAgent.indexOf("Deo VR") != -1;
+	userAgentIsHereSphere = userAgent.indexOf("HereSphere") != -1;
 	setDeoStyles(userAgentIsDeo);
 	settingsNode = document.getElementById("settingsModal");
 	thumbsContainerNode = document.getElementById("thumbsContainer");
@@ -951,7 +953,17 @@ function playVideo(obj) {
 			//videoNode.play();
 
 	} else { 
-		window.open("/media"+ obj.relativePath)
+		if(!userAgentIsHereSphere) {
+			window.open("/media"+ obj.relativePath)
+		} else {
+			var file_path = "/media"+ obj.relativePath;
+			var a = document.createElement('A');
+			a.href = file_path;
+			a.download = file_path;//.substr(file_path.lastIndexOf('/') + 1);
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+		}
 	}
 }
 
