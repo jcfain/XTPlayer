@@ -60,7 +60,7 @@ void DeoHandler::send(const QString &command)
     {
         LogHandler::Debug("Sending to Deo: "+command);
         QByteArray currentRequest("\0\0\0");
-        currentRequest.append(command);
+        currentRequest.append(command.toUtf8());
         tcpSocket->write(currentRequest);
         tcpSocket->waitForBytesWritten();
     }

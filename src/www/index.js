@@ -837,8 +837,12 @@ function sort(value, userClick) {
 			});
 		break;
 	}
-	if(!userClick)
-		document.getElementById("sortBy").value = value;
+	if(!userClick) {
+		//document.getElementById("sortBy").value = value;
+		if(value) {
+			document.getElementById(value.toString()).click();
+		}
+	}
 	else {
 		window.localStorage.setItem("sortBy", JSON.stringify(value));
 		sortByGlobal = value;
@@ -860,9 +864,12 @@ function show(value, userClick) {
 			filteredMedia = mediaListGlobal.filter(x => !x.isStereoscopic);
 		break;
 	}
-	if(!userClick)
-		document.getElementById("show").value = value;
-	else {
+	if(!userClick) {
+		// document.getElementById("show").value = value;
+		if(value) {
+			document.getElementById(value.toString()).click();
+		}
+	} else {
 		window.localStorage.setItem("show", JSON.stringify(value));
 		showGlobal = value;
 	}
@@ -1036,8 +1043,10 @@ function onVideoEnd(event) {
 }
 function setThumbSize(value, userClick) {
 	if(!userClick) {
-		if(value)
-			document.getElementById("thumbSize").value = value.toString();
+		if(value) {
+			document.getElementById(value.toString()).click();
+			// document.getElementById("value.toString()").value = value.toString();
+		}
 	} else {
 		window.localStorage.setItem("thumbSize", parseInt(value, 10));
 		thumbSizeGlobal = parseInt(value, 10);
@@ -1124,20 +1133,20 @@ function tabClick(tab, tabNumber) {
 	tab.style.backgroundColor = '#8DA1BF';
 }
 
-function showChange(selectNode) {
+function showChange(value) {
 	sort(sortByGlobal, true);
-	filteredMedia = show(selectNode.value, true);
+	filteredMedia = show(value, true);
 	loadMedia(filteredMedia);
 }
 
-function sortChange(selectNode) {
-	sort(selectNode.value, true);
+function sortChange(value) {
+	sort(value, true);
 	filteredMedia = show(showGlobal, true);
 	loadMedia(filteredMedia);
 }
 
-function thumbSizeChange(selectNode) {
-	setThumbSize(selectNode.value, true);
+function thumbSizeChange(value) {
+	setThumbSize(value, true);
 	filteredMedia = show(showGlobal, true);
 	loadMedia(filteredMedia);
 }

@@ -153,6 +153,9 @@ input:disabled, textarea:disabled, select:disabled {
     padding-top: 4px;
     margin-right: 8px;
 }
+.formElement .radio-group  {
+    text-align: start;
+}
 .styled-radio {
     width: 20px;
     height: 20px;

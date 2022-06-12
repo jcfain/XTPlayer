@@ -267,6 +267,7 @@ private:
     bool funscriptFileSelectorOpen = false;
     bool thumbProcessIsRunning = false;
     bool vrScriptSelectorCanceled = false;
+    bool vrScriptSelectorRunning = false;
     QString lastVRScriptPath;
     int thumbNailSearchIterator = 0;
     QMutex _eventLocker;

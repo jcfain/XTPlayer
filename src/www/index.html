@@ -47,7 +47,7 @@
 <!-- 		<button id="refreshButton" title="Refresh the media from XTP" class="refresh-media-button icon-button" onclick="getServerLibrary()">
 			<img class="buttonImage" src="://images/icons/reload.svg"/>
 		</button> -->
-		<div id="noMedia" style="text-align: center;" hidden> No media found</div>
+		<div id="noMedia" style="text-align: center;" hidden>No media found</div>
 		<div id="mediaLoading" class="no-media">
 			<div class="loading-spinner"></div>
 			<div id="loadingStatus" style="padding-top: 10px;">Loading...</div>
@@ -85,34 +85,47 @@
 					<label title="If checked, the media items will open the media&#010;directly instead of the built in media player.&#010;This lets players like DeoVR handle the stream.." 
 					for="externalStreamingCheckbox">External player
 					</label>
-					<input id="externalStreamingCheckbox" type="checkbox" class="styled-checkbox" onclick="onClickExternalStreamingCheckbox(this)"/>
+					<input id="externalStreamingCheckbox" type="checkbox" onclick="onClickExternalStreamingCheckbox(this)"/>
 				</div>
 				<div class="formElement">
 					<label for="show">
 						<span class="formLabel">Show</span>
 					</label>
-					<select name="show" id="show" onchange="showChange(this)">
+	<!-- 				<select name="show" id="show" onchange="showChange(this.value)">
 						<option value="All">All</option>
 						<option value="3DOnly">3D only</option>
 						<option value="2DAndAudioOnly">2D and audio only</option>
-					</select>
+					</select> -->
+					
+					<div class="radio-group">
+						<input type="radio" id="All" name="show" value="All"><label for="all" onclick="showChange(this.value)">All</label>
+						<input type="radio" id="3DOnly" name="show" value="3DOnly"><label for="all" onclick="showChange(this.value)">3D only</label>
+						<input type="radio" id="2DAndAudioOnly" name="show" value="2DAndAudioOnly" onclick="showChange(this.value)"><label for="all">2D and audio only</label>
+					</div>
 				</div>
 				<div class="formElement">
 					<label for="sortBy">
 						<span class="formLabel">Sort by</span>
 					</label>
-					<select name="sortBy" id="sortBy" onchange="sortChange(this)">
+	<!-- 				<select name="sortBy" id="sortBy" onchange="sortChange(this.value)">
 						<option value="nameAsc">Name (asc)</option>
 						<option value="nameDesc">Name (desc)</option>
 						<option value="dateAsc">Date (asc)</option>
 						<option value="dateDesc">Date (desc)</option>
-					</select>
+					</select> -->
+					
+					<div class="radio-group">
+						<input type="radio" id="nameAsc" name="sort" value="nameAsc" onclick="sortChange(this.value)" /><label for="sortBy">Name (asc)</label>
+						<input type="radio" id="nameDesc" name="sort" value="nameDesc" onclick="sortChange(this.value)" /><label for="nameDesc">Name (desc)</label>
+						<input type="radio" id="dateAsc" name="sort" value="dateAsc" onclick="sortChange(this.value)" /><label for="dateAsc">Date (asc)</label>
+						<input type="radio" id="dateDesc" name="sort" value="dateDesc" onclick="sortChange(this.value)" /><label for="dateDesc">Date (desc)</label>
+					</div>
 				</div>
 				<div class="formElement">
 					<label for="thumbSize">
 						<span class="formLabel">Thumb size</span>
 					</label>
-					<select name="thumbSize" id="thumbSize" onchange="thumbSizeChange(this)">
+<!-- 					<select name="thumbSize" id="thumbSize" onchange="thumbSizeChange(this.value)">
 						<option value="50">50px</option>
 						<option value="75">75px</option>
 						<option value="100">100px</option>
@@ -132,7 +145,28 @@
 						<option value="450">450px</option>
 						<option value="475">475px</option>
 						<option value="500">500px</option>
-					</select>
+					</select> -->
+					<div class="radio-group">
+						<input type="radio" id="50" name="thumbSize" value="50" onclick="thumbSizeChange(this.value)" /><label for="50">50px</label>
+						<input type="radio" id="75" name="thumbSize" value="75" onclick="thumbSizeChange(this.value)" /><label for="75">75px</label>
+						<input type="radio" id="100" name="thumbSize" value="100" onclick="thumbSizeChange(this.value)" /><label for="100">100px</label>
+						<input type="radio" id="125" name="thumbSize" value="125" onclick="thumbSizeChange(this.value)" /><label for="125">125px</label>
+						<input type="radio" id="150" name="thumbSize" value="150" onclick="thumbSizeChange(this.value)" /><label for="150">150px</label>
+						<input type="radio" id="175" name="thumbSize" value="175" onclick="thumbSizeChange(this.value)" /><label for="175">175px</label>
+						<input type="radio" id="200" name="thumbSize" value="200" onclick="thumbSizeChange(this.value)" /><label for="200">200px</label>
+						<input type="radio" id="225" name="thumbSize" value="225" onclick="thumbSizeChange(this.value)" /><label for="225">225px</label>
+						<input type="radio" id="250" name="thumbSize" value="250" onclick="thumbSizeChange(this.value)" /><label for="250">250px</label>
+						<input type="radio" id="275" name="thumbSize" value="275" onclick="thumbSizeChange(this.value)" /><label for="275">275px</label>
+						<input type="radio" id="300" name="thumbSize" value="300" onclick="thumbSizeChange(this.value)" /><label for="300">300px</label>
+						<input type="radio" id="325" name="thumbSize" value="325" onclick="thumbSizeChange(this.value)" /><label for="325">325px</label>
+						<input type="radio" id="350" name="thumbSize" value="350" onclick="thumbSizeChange(this.value)" /><label for="350">350px</label>
+						<input type="radio" id="375" name="thumbSize" value="375" onclick="thumbSizeChange(this.value)" /><label for="375">375px</label>
+						<input type="radio" id="400" name="thumbSize" value="400" onclick="thumbSizeChange(this.value)" /><label for="400">400px</label>
+						<input type="radio" id="425" name="thumbSize" value="425" onclick="thumbSizeChange(this.value)" /><label for="425">425px</label>
+						<input type="radio" id="450" name="thumbSize" value="450" onclick="thumbSizeChange(this.value)" /><label for="450">450px</label>
+						<input type="radio" id="475" name="thumbSize" value="475" onclick="thumbSizeChange(this.value)" /><label for="475">475px</label>
+						<input type="radio" id="500" name="thumbSize" value="500" onclick="thumbSizeChange(this.value)" /><label for="500">500px</label>
+					</div>
 				</div>
 			</div>
 			<div id="tabConnections" class="tab-content">
@@ -172,7 +206,7 @@
 				<div class="formElement">
 					<label for="connectionGamepad">Gamepad</label>
 					<section class="form-group-section form-group-section-connection">
-						<input id="connectionGamepad" type="checkbox" class="styled-checkbox" onclick="onSyncDeviceConnectionChange(this, 4)"/>
+						<input id="connectionGamepad" type="checkbox" onclick="onSyncDeviceConnectionChange(this, 4)"/>
 						<img id="gamepadStatus" alt="Disconnected" class="sync-device-status icon-small" title="Disconnected" src="://images/icons/x.svg" style="background-color: crimson;"/>
 					</section>
 				</div>
