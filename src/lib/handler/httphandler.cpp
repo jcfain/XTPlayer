@@ -509,7 +509,8 @@ HttpPromise HttpHandler::handleVideoStream(HttpDataPtr data)
                     timer.start();
                     auto match = data->state["match"].value<QRegularExpressionMatch>();
                     QString parameter = match.captured();
-                    QString mediaName = parameter.remove("/media/");
+                    QString apiStr("/media/");
+                    QString mediaName = parameter.replace(parameter.indexOf(apiStr), apiStr.size(), "");
                     if(mediaName.contains("../"))
                     {
                         data->response->setStatus(HttpStatus::Forbidden);
