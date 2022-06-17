@@ -1,8 +1,10 @@
 #ifndef TCODECHANNELLOOKUP_H
 #define TCODECHANNELLOOKUP_H
 #include <QString>
+#include <QMap>
+#include <QHash>
 #include "AxisNames.h"
-#include "../handler/settingshandler.h"
+#include "enum.h"
 
 class TCodeChannelLookup
 {

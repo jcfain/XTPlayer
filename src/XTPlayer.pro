@@ -86,6 +86,7 @@ HEADERS += \
     lib/lookup/Constants.h \
     lib/lookup/GamepadAxisNames.h \
     lib/lookup/MediaActions.h \
+    lib/lookup/XMedia.h \
     lib/lookup/enum.h \
     lib/handler/funscripthandler.h \
     lib/handler/loghandler.h \

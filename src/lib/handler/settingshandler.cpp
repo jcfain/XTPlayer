@@ -4,8 +4,8 @@ const QMap<TCodeVersion, QString> SettingsHandler::SupportedTCodeVersions = {
     {TCodeVersion::v2, "TCode v0.2"},
     {TCodeVersion::v3, "TCode v0.3"}
 };
-const QString SettingsHandler::XTPVersion = "0.31a";
-const float SettingsHandler::XTPVersionNum = 0.31f;
+const QString SettingsHandler::XTPVersion = "0.311a";
+const float SettingsHandler::XTPVersionNum = 0.311f;
 
 SettingsHandler::SettingsHandler(){}
 SettingsHandler::~SettingsHandler()
@@ -16,8 +16,6 @@ SettingsHandler::~SettingsHandler()
 void SettingsHandler::Load(QSettings* settingsToLoadFrom)
 {
     QMutexLocker locker(&mutex);
-    QCoreApplication::setOrganizationName("cUrbSide prOd");
-    QCoreApplication::setApplicationName("XTPlayer");
 
     _appdataLocation = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
     if(_appdataLocation.isEmpty())

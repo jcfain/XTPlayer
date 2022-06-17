@@ -28,6 +28,7 @@ public:
     void setPause(bool paused);
     bool isPaused();
     void playStandAlone(QString funscript = nullptr);
+    void skipToMoneyShot();
     void setStandAloneLoop(bool enabled);
     void syncVRFunscript(QString funscript);
     void syncFunscript();
@@ -45,6 +46,7 @@ public:
     bool isLoaded();
     bool isPlaying();
     bool isPlayingStandAlone();
+    bool isPlayingVR();
     QString getPlayingStandAloneScript();
 private:
     SettingsDialog* _xSettings;

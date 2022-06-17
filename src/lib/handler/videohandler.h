@@ -8,23 +8,7 @@
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/loghandler.h"
 #include "lib/handler/xvideowidget.h"
-enum XMediaStatus {
-    LoadingMedia,
-    LoadedMedia,
-    NoMedia,
-    BufferingMedia,
-    BufferedMedia,
-    UnknownMediaStatus,
-    StalledMedia,
-    InvalidMedia,
-    EndOfMedia
-
-};
-enum XMediaState {
-    Paused,
-    Playing,
-    Stopped,
-};
+#include "lib/lookup/XMedia.h"
 class VideoHandler : public QWidget
 {
     Q_OBJECT

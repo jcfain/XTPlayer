@@ -49,6 +49,10 @@ bool SyncHandler::isPlayingStandAlone()
 {
     return _isStandAloneFunscriptPlaying;
 }
+bool SyncHandler::isPlayingVR()
+{
+    return _isVRFunscriptPlaying;
+}
 
 QList<QString> SyncHandler::load(QString scriptFile)
 {
@@ -177,6 +181,21 @@ QString SyncHandler::getPlayingStandAloneScript()
     return _playingStandAloneFunscript;
 }
 
+void SyncHandler::skipToMoneyShot()
+{
+    QString funscript = SettingsHandler::getSkipToMoneyShotFunscript();
+    if(SettingsHandler::getSkipToMoneyShotPlaysFunscript() && !funscript.isEmpty())
+    {
+        QFile file(funscript);
+        if(file.exists())
+        {
+            stopAll();
+            load(funscript);
+            playStandAlone();
+            setStandAloneLoop(SettingsHandler::getSkipToMoneyShotStandAloneLoop());
+        }
+    }
+}
 void SyncHandler::playStandAlone(QString funscript) {
     LogHandler::Debug("play Funscript stand alone start thread");
     if(!funscript.isEmpty()) //Override standalone funscript. aka: skip to moneyshot

@@ -5,6 +5,9 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     , ui(new Ui::MainWindow)
 {
 
+    QCoreApplication::setOrganizationName("cUrbSide prOd");
+    QCoreApplication::setApplicationName("XTPlayer");
+
     QPixmap pixmap("://images/XTP_Splash.png");
     loadingSplash = new QSplashScreen(pixmap);
     loadingSplash->setStyleSheet("color: white");
@@ -825,7 +828,7 @@ void MainWindow::mediaAction(QString action)
      }
      else if (action == actions.SkipToMoneyShot)
      {
-        if (videoHandler->isPaused() || videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone())
+        if (videoHandler->isPaused() || videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone() || _syncHandler->isPlayingVR())
             skipToMoneyShot();
      }
     else if (action == actions.SkipToAction)
@@ -3886,20 +3889,10 @@ void MainWindow::onAddBookmark(LibraryListItem27 libraryListItem, QString name, 
 }
 void MainWindow::skipToMoneyShot()
 {
-    QString funscript = SettingsHandler::getSkipToMoneyShotFunscript();
-    if(SettingsHandler::getSkipToMoneyShotPlaysFunscript() && !funscript.isEmpty())
-    {
-        QFile file(funscript);
-        if(file.exists())
-        {
-            _syncHandler->stopAll();
-            _syncHandler->load(funscript);
-            _syncHandler->playStandAlone();
-            _syncHandler->setStandAloneLoop(SettingsHandler::getSkipToMoneyShotStandAloneLoop());
-            if(!SettingsHandler::getSkipToMoneyShotSkipsVideo())
-                return;
-        }
-    }
+    _syncHandler->skipToMoneyShot();
+
+    if(!SettingsHandler::getSkipToMoneyShotSkipsVideo())
+        return;
     if(videoHandler->isPlaying())
     {
         if(_playerControlsFrame->getAutoLoop())
