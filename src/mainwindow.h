@@ -192,6 +192,8 @@ private:
 
     Ui::MainWindow *ui;
     QMutex mutex;
+    QString XTPVersion = "0.32a";
+    float XTPVersionNum = 0.32f;
     SettingsDialog* _xSettings;
     SyncHandler* _syncHandler;
     WelcomeDialog* _welcomeDialog;

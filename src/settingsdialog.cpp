@@ -79,7 +79,7 @@ void SettingsDialog::init(VideoHandler* videoHandler, MediaLibraryHandler* media
         connect(_httpHandler, &HttpHandler::tcode, this, &SettingsDialog::sendTCode);
         connect(_httpHandler, &HttpHandler::connectTCodeDevice, this, &SettingsDialog::initDeviceRetry);
         connect(_httpHandler, &HttpHandler::error, this, [this](QString error) {
-            DialogHandler::Dialog(this, error, XLogLevel::Critical);
+            DialogHandler::MessageBox(this, error, XLogLevel::Critical);
         });
         connect(this, &SettingsDialog::deviceConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
         connect(this, &SettingsDialog::deoDeviceConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
@@ -1432,17 +1432,17 @@ void SettingsDialog::on_serialConnectButton_clicked()
     auto portName = selectedSerialPort.portName;
     if(portName.isEmpty())
     {
-        DialogHandler::Dialog(this, "No portname specified", XLogLevel::Critical);
+        DialogHandler::MessageBox(this, "No portname specified", XLogLevel::Critical);
         return;
     }
     else if(ui.SerialOutputCmb->count() == 0)
     {
-        DialogHandler::Dialog(this, "No ports on machine", XLogLevel::Critical);
+        DialogHandler::MessageBox(this, "No ports on machine", XLogLevel::Critical);
         return;
     }
     else if(!boolinq::from(serialPorts).any([portName](const SerialComboboxItem &x) { return x.portName == portName; }))
     {
-        DialogHandler::Dialog(this, "Port: "+ portName + " not found", XLogLevel::Critical);
+        DialogHandler::MessageBox(this, "Port: "+ portName + " not found", XLogLevel::Critical);
         return;
     }
     initSerialEvent();
@@ -1457,7 +1457,7 @@ void SettingsDialog::on_networkConnectButton_clicked()
     }
     else
     {
-        DialogHandler::Dialog(this, "Invalid network address!", XLogLevel::Critical);
+        DialogHandler::MessageBox(this, "Invalid network address!", XLogLevel::Critical);
     }
 }
 
@@ -1472,7 +1472,7 @@ void SettingsDialog::on_deoConnectButton_clicked()
         }
         else
         {
-            DialogHandler::Dialog(this, "Invalid deo vr address!", XLogLevel::Warning);
+            DialogHandler::MessageBox(this, "Invalid deo vr address!", XLogLevel::Warning);
         }
     }
 }
@@ -1512,7 +1512,7 @@ void SettingsDialog::on_whirligigCheckBox_clicked(bool checked)
 void SettingsDialog::on_xtpWebHandlerCheckbox_clicked(bool checked)
 {
     if(checked && !SettingsHandler::getEnableHttpServer()) {
-        DialogHandler::Dialog(this, "XTP web is not enabled on the 'Web' tab. Set it up and return here afterwards.", XLogLevel::Information);
+        DialogHandler::MessageBox(this, "XTP web is not enabled on the 'Web' tab. Set it up and return here afterwards.", XLogLevel::Information);
         ui.xtpWebHandlerCheckbox->setChecked(false);
         return;
     }
@@ -1623,7 +1623,7 @@ void SettingsDialog::on_whirligigConnectButton_clicked()
         }
         else
         {
-            DialogHandler::Dialog(this, "Invalid whirligig address!", XLogLevel::Warning);
+            DialogHandler::MessageBox(this, "Invalid whirligig address!", XLogLevel::Warning);
         }
     }
 }
@@ -1704,7 +1704,7 @@ void SettingsDialog::on_passwordButton_clicked()
          if (ok && !text.isEmpty())
          {
              SettingsHandler::SetHashedPass(encryptPass(text));
-             DialogHandler::Dialog(this, "Password set.", XLogLevel::Information);
+             DialogHandler::MessageBox(this, "Password set.", XLogLevel::Information);
              ui.passwordButton->setText("Change password");
          }
     }
@@ -1733,12 +1733,12 @@ void SettingsDialog::on_passwordButton_clicked()
                         SettingsHandler::SetHashedPass(encryptPass(text));
                         ui.passwordButton->setText("Change password");
                      }
-                     DialogHandler::Dialog(this, "Password changed!", XLogLevel::Information);
+                     DialogHandler::MessageBox(this, "Password changed!", XLogLevel::Information);
                  }
              }
              else
              {
-                 DialogHandler::Dialog(this, "Password incorrect!", XLogLevel::Warning);
+                 DialogHandler::MessageBox(this, "Password incorrect!", XLogLevel::Warning);
              }
          }
     }
@@ -1854,7 +1854,7 @@ void SettingsDialog::on_disableTCodeValidationCheckbox_clicked(bool checked)
 {
     if(checked)
     {
-        DialogHandler::Dialog(this, "Make sure to verify the version of TCode firmware installed on your device.", XLogLevel::Warning);
+        DialogHandler::MessageBox(this, "Make sure to verify the version of TCode firmware installed on your device.", XLogLevel::Warning);
     }
     SettingsHandler::setDisableTCodeValidation(checked);
     requestRestart(this);
@@ -1977,7 +1977,7 @@ void SettingsDialog::on_httpPortSpinBox_editingFinished()
 {
     int value = ui.httpPortSpinBox->value();
     if(SettingsHandler::getWebSocketPort() == value) {
-        DialogHandler::Dialog(this, "Http port cannot be the same as the Wwb socket port.", XLogLevel::Critical);
+        DialogHandler::MessageBox(this, "Http port cannot be the same as the Wwb socket port.", XLogLevel::Critical);
         ui.httpPortSpinBox->setValue(SettingsHandler::getHTTPPort());
         return;
     }
@@ -1990,7 +1990,7 @@ void SettingsDialog::on_webSocketPortSpinBox_editingFinished()
 {
     int value = ui.webSocketPortSpinBox->value();
     if(SettingsHandler::getHTTPPort() == value) {
-        DialogHandler::Dialog(this, "Web socket port cannot be the same as the http port.", XLogLevel::Critical);
+        DialogHandler::MessageBox(this, "Web socket port cannot be the same as the http port.", XLogLevel::Critical);
         ui.webSocketPortSpinBox->setValue(SettingsHandler::getWebSocketPort());
         return;
     }

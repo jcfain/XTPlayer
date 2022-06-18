@@ -6,6 +6,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 {
     QCoreApplication::setOrganizationName("cUrbSide prOd");
     QCoreApplication::setApplicationName("XTPlayer");
+    XTPVersion = "0.32a, XTE: v" + SettingsHandler::XTEVersion;
+    XTPVersionNum = 0.32f;
 
     QPixmap pixmap("://images/XTP_Splash.png");
     loadingSplash = new QSplashScreen(pixmap);
@@ -13,7 +15,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     loadingSplash->show();
 
     ui->setupUi(this);
-    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading Settings...", Qt::AlignBottom, Qt::white);
+    loadingSplash->showMessage("v"+ XTPVersion + "\nLoading Settings...", Qt::AlignBottom, Qt::white);
     SettingsHandler::Load(QApplication::applicationDirPath());
     _xSettings = new SettingsDialog(this);
     _dlnaScriptLinksDialog = new DLNAScriptLinks(this);
@@ -32,13 +34,13 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
             {
                 switch(tries) {
                     case 1:
-                        DialogHandler::Dialog(this, "Wrong!", XLogLevel::Critical);
+                        DialogHandler::MessageBox(this, "Wrong!", XLogLevel::Critical);
                     break;
                     case 2:
-                        DialogHandler::Dialog(this, "Nope!", XLogLevel::Critical);
+                        DialogHandler::MessageBox(this, "Nope!", XLogLevel::Critical);
                     break;
                     case 3:
-                        DialogHandler::Dialog(this, "K thx byyye!", XLogLevel::Critical);
+                        DialogHandler::MessageBox(this, "K thx byyye!", XLogLevel::Critical);
                     break;
                 }
 
@@ -63,7 +65,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
         }
     }
 
-    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading UI...", Qt::AlignBottom, Qt::white);
+    loadingSplash->showMessage("v"+ XTPVersion + "\nLoading UI...", Qt::AlignBottom, Qt::white);
 
 
     textToSpeech = new QTextToSpeech(this);
@@ -392,7 +394,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(deoRetryConnectionButton, &QPushButton::clicked, _xSettings, &SettingsDialog::initDeoRetry);
     connect(QApplication::instance(), &QCoreApplication::aboutToQuit, this, &MainWindow::dispose);
 
-    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nSetting user styles...", Qt::AlignBottom, Qt::white);
+    loadingSplash->showMessage("v"+ XTPVersion + "\nSetting user styles...", Qt::AlignBottom, Qt::white);
     loadTheme(SettingsHandler::getSelectedTheme());
 
     setFocus();
@@ -401,7 +403,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     _appPos = this->pos();
 
     changeLibraryDisplayMode(SettingsHandler::getLibraryView());
-    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading Library...", Qt::AlignBottom, Qt::white);
+    loadingSplash->showMessage("v"+ XTPVersion + "\nLoading Library...", Qt::AlignBottom, Qt::white);
     _mediaLibraryHandler->loadLibraryAsync();
 
 //    QScreen *screen = this->screen();
@@ -412,7 +414,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 //    _playerControlsFrame->setMaximumHeight(minHeight);
 //    _controlsHomePlaceHolderFrame->setMaximumHeight(minHeight);
 
-    loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nStarting Application...", Qt::AlignBottom, Qt::white);
+    loadingSplash->showMessage("v"+ XTPVersion + "\nStarting Application...", Qt::AlignBottom, Qt::white);
     loadingSplash->finish(this);
     if(!SettingsHandler::getHideWelcomeScreen())
     {
@@ -425,7 +427,7 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::on_settingsMessageRecieve(QString message, XLogLevel logLevel) {
-    DialogHandler::Dialog(this, message, logLevel);
+    DialogHandler::MessageBox(this, message, logLevel);
 }
 void MainWindow::onPasswordIncorrect()
 {
@@ -1171,11 +1173,11 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
     //        });
             myMenu.addAction(tr("Reveal in directory"), this, [this, selectedFileListItem] () {
                 if(selectedFileListItem.path.isNull()) {
-                    DialogHandler::Dialog(this, "Invalid media path.", XLogLevel::Critical);
+                    DialogHandler::MessageBox(this, "Invalid media path.", XLogLevel::Critical);
                     return;
                 }
                 if(!QFile::exists(selectedFileListItem.path)) {
-                    DialogHandler::Dialog(this, "Media does not exist.", XLogLevel::Critical);
+                    DialogHandler::MessageBox(this, "Media does not exist.", XLogLevel::Critical);
                     return;
                 }
                 showInGraphicalShell(selectedFileListItem.path);
@@ -1208,7 +1210,7 @@ void MainWindow::changeDeoFunscript()
     }
     else
     {
-        DialogHandler::Dialog(this, tr("No script for current video or no video playing"), XLogLevel::Information);
+        DialogHandler::MessageBox(this, tr("No script for current video or no video playing"), XLogLevel::Information);
     }
 }
 
@@ -1824,7 +1826,7 @@ void MainWindow::onSaveNewThumb(LibraryListItem27 item, bool vrMode, QString thu
 void MainWindow::onSaveThumbError(LibraryListItem27 item, bool vrMode, QString errorMessage)
 {
     if(item.ID.isNull()) {
-        DialogHandler::Dialog(this, "Missing media", XLogLevel::Critical);
+        DialogHandler::MessageBox(this, "Missing media", XLogLevel::Critical);
         return;
     }
     LibraryListWidgetItem* cachedListWidgetItem;
@@ -2048,7 +2050,7 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
                 foreach(auto invalidFunscript, invalidScripts)
                     filesWithLoadingIssues += "* " + invalidFunscript + "\n";
                 filesWithLoadingIssues += "\n\nThis is may be due to an invalid JSON format.\nTry downloading the script again or asking the script maker.\nYou may also find some information running XTP in debug mode.";
-                DialogHandler::Dialog(this, filesWithLoadingIssues, XLogLevel::Critical);
+                DialogHandler::MessageBox(this, filesWithLoadingIssues, XLogLevel::Critical);
             }
             if(!SettingsHandler::getDisableNoScriptFound() && selectedFileListItem.type != LibraryListItemType::FunscriptType && !audioSync && !_syncHandler->isLoaded() && !invalidScripts.contains(scriptFile))
             {
@@ -2073,7 +2075,7 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
     }
     else
     {
-        DialogHandler::Dialog(this, tr("File '") + selectedFileListItem.path + tr("' does not exist!"), XLogLevel::Critical);
+        DialogHandler::MessageBox(this, tr("File '") + selectedFileListItem.path + tr("' does not exist!"), XLogLevel::Critical);
     }
 }
 
@@ -2600,7 +2602,7 @@ void MainWindow::on_scriptNotFound(QString message)
 }
 void MainWindow::on_noScriptsFound(QString message)
 {
-    DialogHandler::Dialog(this, message, XLogLevel::Critical);
+    DialogHandler::MessageBox(this, message, XLogLevel::Critical);
 }
 
 void MainWindow::onVRMessageRecieved(VRPacket packet)
@@ -3075,7 +3077,7 @@ void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
 
 void MainWindow::on_device_error(QString error)
 {
-    DialogHandler::Dialog(this, error, XLogLevel::Critical);
+    DialogHandler::MessageBox(this, error, XLogLevel::Critical);
 }
 
 void MainWindow::on_gamepad_connectionChanged(ConnectionChangedSignal event)
@@ -3138,7 +3140,7 @@ void MainWindow::on_vr_device_connectionChanged(ConnectionChangedSignal event)
 
 void MainWindow::on_vr_device_error(QString error)
 {
-    DialogHandler::Dialog(this, "VR sync connection error: "+error, XLogLevel::Critical);
+    DialogHandler::MessageBox(this, "VR sync connection error: "+error, XLogLevel::Critical);
 }
 
 void MainWindow::on_xtpWeb_device_connectionChanged(ConnectionChangedSignal event)
@@ -3165,69 +3167,14 @@ void MainWindow::on_xtpWeb_device_connectionChanged(ConnectionChangedSignal even
 
 void MainWindow::on_xtpWeb_device_error(QString error)
 {
-    DialogHandler::Dialog(this, "XTP Web error: "+error, XLogLevel::Critical);
+    DialogHandler::MessageBox(this, "XTP Web error: "+error, XLogLevel::Critical);
 }
 
 
 void MainWindow::on_actionAbout_triggered()
 {
-    QDialog aboutWindow;
-    QGridLayout layout;
-    QRect windowRect;
-    windowRect.setSize({300, 200});
-    layout.setGeometry(windowRect);
-    QLabel copyright;
-    copyright.setText("<b>XTPlayer v"+SettingsHandler::XTPVersion + "</b><br>"
-                       + SettingsHandler::getSelectedTCodeVersion() + "<br>"
-                                                "Copyright 2022 Jason C. Fain<br>"
-                                                "Donate: <a href='https://www.patreon.com/Khrull'>https://www.patreon.com/Khrull</a><br>"
-                                                "THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND.");
-    copyright.setAlignment(Qt::AlignHCenter);
-    layout.addWidget(&copyright);
-    QLabel sources;
-    sources.setText("This software uses libraries from:");
-    sources.setAlignment(Qt::AlignHCenter);
-    layout.addWidget(&sources);
-    QLabel qtInfo;
-    qtInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    qtInfo.setText("<b>Qt v5.15.0</b><br>"
-                   "Distributed under the terms of LGPLv3 or later.<br>"
-                   "Source: <a href='https://github.com/qt/qt5/releases/tag/v5.15.0'>https://github.com/qt/qt5/releases/tag/v5.15.0</a>");
-    qtInfo.setAlignment(Qt::AlignHCenter);
-    layout.addWidget(&qtInfo);
-    QLabel rangeSliderInfo;
-    rangeSliderInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    rangeSliderInfo.setText("<b>Qt-RangeSlider</b><br>"
-                      "Copyright (c) 2019 ThisIsClark (MIT)<br>"
-                      "Modifications Copyright (c) 2020 Jason C. Fain<br>"
-                      "<a href='https://github.com/ThisIsClark/Qt-RangeSlider'>https://github.com/ThisIsClark/Qt-RangeSlider</a>");
-    rangeSliderInfo.setAlignment(Qt::AlignHCenter);
-    layout.addWidget(&rangeSliderInfo);
-    QLabel boolinqInfo;
-    boolinqInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    boolinqInfo.setText("<b>boolinq</b><br>"
-                      "Copyright (C) 2019 by Anton Bukov (MIT)<br>"
-                      "<a href='https://github.com/k06a/boolinq'>https://github.com/k06a/boolinq</a>");
-    boolinqInfo.setAlignment(Qt::AlignHCenter);
-    layout.addWidget(&boolinqInfo);
-    QLabel qtcompressInfo;
-    qtcompressInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    qtcompressInfo.setText("<b>qtcompress</b><br>"
-                      "Copyright (C) 2013 Digia Plc (LGPL)<br>"
-                      "<a href='https://github.com/nezticle/qtcompress'>https://github.com/nezticle/qtcompress</a>");
-    qtcompressInfo.setAlignment(Qt::AlignHCenter);
-    layout.addWidget(&qtcompressInfo);
-    QLabel qthttpServerInfo;
-    qthttpServerInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    qthttpServerInfo.setText("<b>HttpServer</b><br>"
-                      "Copyright (C) 2019 Addison Elliott (MIT)<br>"
-                      "<a href='https://github.com/addisonElliott/HttpServer'>https://github.com/addisonElliott/HttpServer</a>");
-    qthttpServerInfo.setAlignment(Qt::AlignHCenter);
-    layout.addWidget(&qthttpServerInfo);
-    aboutWindow.setLayout(&layout);
-    aboutWindow.exec();
+    DialogHandler::ShowAboutDialog(this, XTPVersion, SettingsHandler::XTEVersion, SettingsHandler::getSelectedTCodeVersion());
 }
-//<a href="https://www.vecteezy.com/free-vector/media-player-icons">Media Player Icons Vectors by Vecteezy</a>
 
 void MainWindow::on_actionDonate_triggered()
 {
@@ -3631,7 +3578,7 @@ QString MainWindow::getPlaylistName(bool newPlaylist)
         }
         else
         {
-            DialogHandler::Dialog(this, (tr("Playlist '") + playlistName + tr("' already exists.\nPlease choose another name.")), XLogLevel::Critical);
+            DialogHandler::MessageBox(this, (tr("Playlist '") + playlistName + tr("' already exists.\nPlease choose another name.")), XLogLevel::Critical);
         }
     }
     return ok ? playlistName : nullptr;
@@ -3688,7 +3635,7 @@ void MainWindow::loadPlaylistIntoLibrary(QString playlistName, bool autoPlay)
         }
     }
     else
-        DialogHandler::Dialog(this, tr("Please wait for thumbnails to fully load!"), XLogLevel::Warning);
+        DialogHandler::MessageBox(this, tr("Please wait for thumbnails to fully load!"), XLogLevel::Warning);
 }
 
 void MainWindow::backToMainLibrary()
@@ -3819,7 +3766,7 @@ void MainWindow::renamePlaylist()
         }
         else if(playlist.nameNoExtension != renamedPlaylistName)
         {
-            DialogHandler::Dialog(this, (tr("Playlist '") + renamedPlaylistName + tr("' already exists.\nPlease choose another name.")), XLogLevel::Critical);
+            DialogHandler::MessageBox(this, (tr("Playlist '") + renamedPlaylistName + tr("' already exists.\nPlease choose another name.")), XLogLevel::Critical);
         }
     }
 

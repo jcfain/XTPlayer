@@ -6,7 +6,7 @@ DialogHandler::DialogHandler(QObject *parent)
 
 }
 
-void DialogHandler::Dialog(QWidget* parent, QString message, XLogLevel level)
+void DialogHandler::MessageBox(QWidget* parent, QString message, XLogLevel level)
 {
     LogHandler::Debug(message);
     QMessageBox messageBox(parent);
@@ -26,6 +26,118 @@ void DialogHandler::Dialog(QWidget* parent, QString message, XLogLevel level)
         break;
     }
     messageBox.setFixedSize(500,200);
+}
+
+int DialogHandler::Dialog(QWidget* parent, QLayout* layout, bool modal)
+{
+    if(!_dialog)
+    {
+        _dialog = new QDialog(parent);
+        _dialog->setLayout(layout);
+        if(modal)
+            return _dialog->exec();
+        else
+            _dialog->show();
+    }
+    return -1;
+}
+
+int DialogHandler::Dialog(QWidget* parent, QString message, bool modal)
+{
+    if(!_dialog)
+    {
+        _dialog = new QDialog(parent);
+        QGridLayout* layout = new QGridLayout(_dialog);
+        QLabel* messageLabel = new QLabel(_dialog);
+        messageLabel->setText(message);
+        messageLabel->setTextFormat(Qt::RichText);
+        messageLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
+        messageLabel->setOpenExternalLinks(true);
+        QPushButton* okButton = new QPushButton(_dialog);
+        okButton->setText("Ok");
+        layout->addWidget(messageLabel, 0, 0, 1, 4);
+        layout->addWidget(okButton, 2, 3, 1, 2);
+        connect(okButton, &QPushButton::released, _dialog, &QDialog::accept);
+        _dialog->setModal(modal);
+        _dialog->setLayout(layout);
+        connect(_dialog, &QDialog::accepted, DialogAccepted);
+        connect(_dialog, &QDialog::rejected, DialogRejected);
+        if(modal)
+            return _dialog->exec();
+        else
+            _dialog->show();
+    }
+    return -1;
+}
+
+void DialogHandler::DialogAccepted()
+{
+    delete _dialog;
+    _dialog = 0;
+}
+void DialogHandler::DialogRejected()
+{
+    delete _dialog;
+    _dialog = 0;
+}
+
+void DialogHandler::ShowAboutDialog(QWidget* parent, QString XTPVersion, QString XTEVersion, QString selectedTCodeVersion)
+{
+    //<a href="https://www.vecteezy.com/free-vector/media-player-icons">Media Player Icons Vectors by Vecteezy</a>
+    QGridLayout layout;
+    QRect windowRect;
+    windowRect.setSize({300, 200});
+    layout.setGeometry(windowRect);
+    QLabel copyright;
+    copyright.setText("<b>XTPlayer v"+ XTPVersion + "</b><br>XTE v"
+                      + XTEVersion +"<br>"
+                       + selectedTCodeVersion + "<br>"
+                                                "Copyright 2022 Jason C. Fain<br>"
+                                                "Donate: <a href='https://www.patreon.com/Khrull'>https://www.patreon.com/Khrull</a><br>"
+                                                "THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND.");
+    copyright.setAlignment(Qt::AlignHCenter);
+    layout.addWidget(&copyright);
+    QLabel sources;
+    sources.setText("This software uses libraries from:");
+    sources.setAlignment(Qt::AlignHCenter);
+    layout.addWidget(&sources);
+    QLabel qtInfo;
+    qtInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    qtInfo.setText("<b>Qt v5.15.0</b><br>"
+                   "Distributed under the terms of LGPLv3 or later.<br>"
+                   "Source: <a href='https://github.com/qt/qt5/releases/tag/v5.15.0'>https://github.com/qt/qt5/releases/tag/v5.15.0</a>");
+    qtInfo.setAlignment(Qt::AlignHCenter);
+    layout.addWidget(&qtInfo);
+    QLabel rangeSliderInfo;
+    rangeSliderInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    rangeSliderInfo.setText("<b>Qt-RangeSlider</b><br>"
+                      "Copyright (c) 2019 ThisIsClark (MIT)<br>"
+                      "Modifications Copyright (c) 2020 Jason C. Fain<br>"
+                      "<a href='https://github.com/ThisIsClark/Qt-RangeSlider'>https://github.com/ThisIsClark/Qt-RangeSlider</a>");
+    rangeSliderInfo.setAlignment(Qt::AlignHCenter);
+    layout.addWidget(&rangeSliderInfo);
+    QLabel boolinqInfo;
+    boolinqInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    boolinqInfo.setText("<b>boolinq</b><br>"
+                      "Copyright (C) 2019 by Anton Bukov (MIT)<br>"
+                      "<a href='https://github.com/k06a/boolinq'>https://github.com/k06a/boolinq</a>");
+    boolinqInfo.setAlignment(Qt::AlignHCenter);
+    layout.addWidget(&boolinqInfo);
+    QLabel qtcompressInfo;
+    qtcompressInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    qtcompressInfo.setText("<b>qtcompress</b><br>"
+                      "Copyright (C) 2013 Digia Plc (LGPL)<br>"
+                      "<a href='https://github.com/nezticle/qtcompress'>https://github.com/nezticle/qtcompress</a>");
+    qtcompressInfo.setAlignment(Qt::AlignHCenter);
+    layout.addWidget(&qtcompressInfo);
+    QLabel qthttpServerInfo;
+    qthttpServerInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    qthttpServerInfo.setText("<b>HttpServer</b><br>"
+                      "Copyright (C) 2019 Addison Elliott (MIT)<br>"
+                      "<a href='https://github.com/addisonElliott/HttpServer'>https://github.com/addisonElliott/HttpServer</a>");
+    qthttpServerInfo.setAlignment(Qt::AlignHCenter);
+    layout.addWidget(&qthttpServerInfo);
+    Dialog(parent, &layout);
 }
 
 void DialogHandler::Loading(QWidget* parent, QString message)
@@ -62,3 +174,4 @@ void DialogHandler::LoadingClose()
     delete _loadingWidget;
 }
 QDialog* DialogHandler::_loadingWidget;
+QDialog* DialogHandler::_dialog = 0;

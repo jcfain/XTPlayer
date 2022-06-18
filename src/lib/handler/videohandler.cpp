@@ -101,11 +101,15 @@ void VideoHandler::on_media_statusChanged(QMediaPlayer::MediaStatus status)
     auto xstatus = convertMediaStatus(status);
     emit mediaStatusChanged(xstatus);
     if(xstatus == XMediaStatus::InvalidMedia) {
-        QString errorMessage = "Invalid media error. Maybe you need to install system codecs.\n";
-#ifdef _WIN32
-        errorMessage += "You can use these: <a href=\"http://forum.doom9.org/showthread.php?t=156191\">http://forum.doom9.org/showthread.php?t=156191</a>\nor these\n<a href=\"https://www.codecguide.com/download_kl.htm\">https://www.codecguide.com/download_kl.htm</a>";
+        QString errorMessage = "Invalid media error. Maybe you need to install system codecs.";
+#if defined(Q_OS_WIN)
+        errorMessage += "<br>You can use compatible DirectShow decoders such as<br>K-lite<br><a style='background-color:#D3D3D3;' href=\"https://www.codecguide.com/download_kl.htm\">https://www.codecguide.com/download_kl.htm</a><br>or<br>LAV Filters:<br><a style='background-color:#D3D3D3;' href=\"http://forum.doom9.org/showthread.php?t=156191\">http://forum.doom9.org/showthread.php?t=156191</a>";
+#elif defined(Q_OS_MAC)
+        errorMessage += "";
+#elif defined(Q_OS_LINUX)
+        errorMessage += "<br>You can use your distibutions gstreamer build.";
 #endif
-        DialogHandler::Dialog(this, errorMessage, XLogLevel::Critical);
+        DialogHandler::Dialog(this->parentWidget(), errorMessage);
     }
 }
 
