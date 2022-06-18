@@ -4,7 +4,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
-
     QCoreApplication::setOrganizationName("cUrbSide prOd");
     QCoreApplication::setApplicationName("XTPlayer");
 
@@ -15,7 +14,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     ui->setupUi(this);
     loadingSplash->showMessage("v"+SettingsHandler::XTPVersion + "\nLoading Settings...", Qt::AlignBottom, Qt::white);
-    SettingsHandler::Load();
+    SettingsHandler::Load(QApplication::applicationDirPath());
     _xSettings = new SettingsDialog(this);
     _dlnaScriptLinksDialog = new DLNAScriptLinks(this);
     tcodeHandler = new TCodeHandler();
@@ -33,13 +32,13 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
             {
                 switch(tries) {
                     case 1:
-                        LogHandler::Dialog(this, "Wrong!", XLogLevel::Critical);
+                        DialogHandler::Dialog(this, "Wrong!", XLogLevel::Critical);
                     break;
                     case 2:
-                        LogHandler::Dialog(this, "Nope!", XLogLevel::Critical);
+                        DialogHandler::Dialog(this, "Nope!", XLogLevel::Critical);
                     break;
                     case 3:
-                        LogHandler::Dialog(this, "K thx byyye!", XLogLevel::Critical);
+                        DialogHandler::Dialog(this, "K thx byyye!", XLogLevel::Critical);
                     break;
                 }
 
@@ -126,7 +125,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     ui->mediaAndControlsGrid->addWidget(_mediaFrame, 0, 0, 19, 3);
     ui->mediaAndControlsGrid->addWidget(_controlsHomePlaceHolderFrame, 20, 0, 1, 3);
 
-    _syncHandler = new SyncHandler(_xSettings, tcodeHandler, videoHandler, this);
+    _syncHandler = new SyncHandler(this);
     _playerControlsFrame->setVolume(SettingsHandler::getPlayerVolume());
 
     libraryList = new QListWidget(this);
@@ -284,6 +283,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
         ui->mainFrameSplitter->setSizes(splitterSizes);
 
     connect(&SettingsHandler::instance(), &SettingsHandler::messageSend, this, &MainWindow::on_settingsMessageRecieve);
+    connect(_xSettings, &SettingsDialog::messageSend, this, &MainWindow::on_settingsMessageRecieve);
 
     connect(ui->mainFrameSplitter, &QSplitter::splitterMoved, this, &MainWindow::on_mainwindow_splitterMove);
     connect(backLibraryButton, &QPushButton::clicked, this, &MainWindow::backToMainLibrary);
@@ -303,6 +303,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_xSettings, &SettingsDialog::xtpWebDeviceError, this, &MainWindow::on_xtpWeb_device_error);
 
     connect(_xSettings, &SettingsDialog::deviceConnectionChange, this, &MainWindow::on_device_connectionChanged);
+    connect(_xSettings, &SettingsDialog::deviceConnectionChange, _syncHandler, &SyncHandler::on_device_status_change);
     connect(_xSettings, &SettingsDialog::deviceError, this, &MainWindow::on_device_error);
     connect(_xSettings, &SettingsDialog::TCodeHomeClicked, this, &MainWindow::deviceHome);
     connect(_xSettings->getDeoHandler(), &DeoHandler::messageRecieved, this, &MainWindow::onVRMessageRecieved);
@@ -313,7 +314,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitAction, this, &MainWindow::on_gamepad_sendAction);
     connect(_xSettings, &SettingsDialog::onOpenWelcomeDialog, this, &MainWindow::openWelcomeDialog);
     _mediaLibraryHandler = new MediaLibraryHandler(this);
-    _xSettings->init(videoHandler, _mediaLibraryHandler);
+    _xSettings->init(videoHandler, _mediaLibraryHandler, _syncHandler);
 
     connect(this, &MainWindow::libraryIconResized, this, &MainWindow::libraryListSetIconSize);
 
@@ -424,7 +425,7 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::on_settingsMessageRecieve(QString message, XLogLevel logLevel) {
-    LogHandler::Dialog(this, message, logLevel);
+    DialogHandler::Dialog(this, message, logLevel);
 }
 void MainWindow::onPasswordIncorrect()
 {
@@ -1170,11 +1171,11 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
     //        });
             myMenu.addAction(tr("Reveal in directory"), this, [this, selectedFileListItem] () {
                 if(selectedFileListItem.path.isNull()) {
-                    LogHandler::Dialog(this, "Invalid media path.", XLogLevel::Critical);
+                    DialogHandler::Dialog(this, "Invalid media path.", XLogLevel::Critical);
                     return;
                 }
                 if(!QFile::exists(selectedFileListItem.path)) {
-                    LogHandler::Dialog(this, "Media does not exist.", XLogLevel::Critical);
+                    DialogHandler::Dialog(this, "Media does not exist.", XLogLevel::Critical);
                     return;
                 }
                 showInGraphicalShell(selectedFileListItem.path);
@@ -1207,7 +1208,7 @@ void MainWindow::changeDeoFunscript()
     }
     else
     {
-        LogHandler::Dialog(this, tr("No script for current video or no video playing"), XLogLevel::Information);
+        DialogHandler::Dialog(this, tr("No script for current video or no video playing"), XLogLevel::Information);
     }
 }
 
@@ -1823,7 +1824,7 @@ void MainWindow::onSaveNewThumb(LibraryListItem27 item, bool vrMode, QString thu
 void MainWindow::onSaveThumbError(LibraryListItem27 item, bool vrMode, QString errorMessage)
 {
     if(item.ID.isNull()) {
-        LogHandler::Dialog(this, "Missing media", XLogLevel::Critical);
+        DialogHandler::Dialog(this, "Missing media", XLogLevel::Critical);
         return;
     }
     LibraryListWidgetItem* cachedListWidgetItem;
@@ -2047,7 +2048,7 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
                 foreach(auto invalidFunscript, invalidScripts)
                     filesWithLoadingIssues += "* " + invalidFunscript + "\n";
                 filesWithLoadingIssues += "\n\nThis is may be due to an invalid JSON format.\nTry downloading the script again or asking the script maker.\nYou may also find some information running XTP in debug mode.";
-                LogHandler::Dialog(this, filesWithLoadingIssues, XLogLevel::Critical);
+                DialogHandler::Dialog(this, filesWithLoadingIssues, XLogLevel::Critical);
             }
             if(!SettingsHandler::getDisableNoScriptFound() && selectedFileListItem.type != LibraryListItemType::FunscriptType && !audioSync && !_syncHandler->isLoaded() && !invalidScripts.contains(scriptFile))
             {
@@ -2072,7 +2073,7 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
     }
     else
     {
-        LogHandler::Dialog(this, tr("File '") + selectedFileListItem.path + tr("' does not exist!"), XLogLevel::Critical);
+        DialogHandler::Dialog(this, tr("File '") + selectedFileListItem.path + tr("' does not exist!"), XLogLevel::Critical);
     }
 }
 
@@ -2573,6 +2574,7 @@ void MainWindow::on_media_start()
     LogHandler::Debug("Enter on_media_start");
     if(_xSettings->getConnectedVRDeviceHandler())
         _xSettings->getConnectedVRDeviceHandler()->dispose();
+    _syncHandler->on_local_video_state_change(XMediaState::Playing);
     if (_syncHandler->isLoaded())
     {
         _syncHandler->syncFunscript();
@@ -2585,6 +2587,7 @@ void MainWindow::on_media_start()
 void MainWindow::on_media_stop()
 {
     LogHandler::Debug("Enter on_media_stop");
+    _syncHandler->on_local_video_state_change(XMediaState::Stopped);
     videoHandler->setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(false);
     _syncHandler->stopMediaFunscript();
@@ -2597,7 +2600,7 @@ void MainWindow::on_scriptNotFound(QString message)
 }
 void MainWindow::on_noScriptsFound(QString message)
 {
-    LogHandler::Dialog(this, message, XLogLevel::Critical);
+    DialogHandler::Dialog(this, message, XLogLevel::Critical);
 }
 
 void MainWindow::onVRMessageRecieved(VRPacket packet)
@@ -3072,7 +3075,7 @@ void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
 
 void MainWindow::on_device_error(QString error)
 {
-    LogHandler::Dialog(this, error, XLogLevel::Critical);
+    DialogHandler::Dialog(this, error, XLogLevel::Critical);
 }
 
 void MainWindow::on_gamepad_connectionChanged(ConnectionChangedSignal event)
@@ -3135,7 +3138,7 @@ void MainWindow::on_vr_device_connectionChanged(ConnectionChangedSignal event)
 
 void MainWindow::on_vr_device_error(QString error)
 {
-    LogHandler::Dialog(this, "VR sync connection error: "+error, XLogLevel::Critical);
+    DialogHandler::Dialog(this, "VR sync connection error: "+error, XLogLevel::Critical);
 }
 
 void MainWindow::on_xtpWeb_device_connectionChanged(ConnectionChangedSignal event)
@@ -3162,7 +3165,7 @@ void MainWindow::on_xtpWeb_device_connectionChanged(ConnectionChangedSignal even
 
 void MainWindow::on_xtpWeb_device_error(QString error)
 {
-    LogHandler::Dialog(this, "XTP Web error: "+error, XLogLevel::Critical);
+    DialogHandler::Dialog(this, "XTP Web error: "+error, XLogLevel::Critical);
 }
 
 
@@ -3628,7 +3631,7 @@ QString MainWindow::getPlaylistName(bool newPlaylist)
         }
         else
         {
-            LogHandler::Dialog(this, (tr("Playlist '") + playlistName + tr("' already exists.\nPlease choose another name.")), XLogLevel::Critical);
+            DialogHandler::Dialog(this, (tr("Playlist '") + playlistName + tr("' already exists.\nPlease choose another name.")), XLogLevel::Critical);
         }
     }
     return ok ? playlistName : nullptr;
@@ -3685,7 +3688,7 @@ void MainWindow::loadPlaylistIntoLibrary(QString playlistName, bool autoPlay)
         }
     }
     else
-        LogHandler::Dialog(this, tr("Please wait for thumbnails to fully load!"), XLogLevel::Warning);
+        DialogHandler::Dialog(this, tr("Please wait for thumbnails to fully load!"), XLogLevel::Warning);
 }
 
 void MainWindow::backToMainLibrary()
@@ -3816,7 +3819,7 @@ void MainWindow::renamePlaylist()
         }
         else if(playlist.nameNoExtension != renamedPlaylistName)
         {
-            LogHandler::Dialog(this, (tr("Playlist '") + renamedPlaylistName + tr("' already exists.\nPlease choose another name.")), XLogLevel::Critical);
+            DialogHandler::Dialog(this, (tr("Playlist '") + renamedPlaylistName + tr("' already exists.\nPlease choose another name.")), XLogLevel::Critical);
         }
     }
 
@@ -3871,7 +3874,7 @@ void MainWindow::showInGraphicalShell(QString path)
 //    const QString error = QString::fromLocal8Bit(browserProc.readAllStandardError());
 //    success = success && error.isEmpty();
 //    if (!success)
-//        LogHandler::Dialog(error, XLogLevel::Critical);
+//        DialogHandler::Dialog(error, XLogLevel::Critical);
 #endif
 }
 

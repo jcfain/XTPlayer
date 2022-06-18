@@ -1,11 +1,11 @@
 #ifndef LIBRARYLISTWIDGETITEM_H
 #define LIBRARYLISTWIDGETITEM_H
 #include <QListWidgetItem>
-#include "LibraryListItem27.h"
 #include <QApplication>
 #include <QFileInfo>
-#include "../handler/settingshandler.h"
-#include "../tool/xmath.h"
+#include "lib/handler/settingshandler.h"
+#include "lib/tool/xmath.h"
+#include "lib/struct/LibraryListItem27.h"
 class LibraryListWidgetItem : public QListWidgetItem
 {
 public:

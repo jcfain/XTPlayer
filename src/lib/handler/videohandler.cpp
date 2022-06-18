@@ -105,7 +105,7 @@ void VideoHandler::on_media_statusChanged(QMediaPlayer::MediaStatus status)
 #ifdef _WIN32
         errorMessage += "You can use these: <a href=\"http://forum.doom9.org/showthread.php?t=156191\">http://forum.doom9.org/showthread.php?t=156191</a>\nor these\n<a href=\"https://www.codecguide.com/download_kl.htm\">https://www.codecguide.com/download_kl.htm</a>";
 #endif
-        LogHandler::Dialog(this, errorMessage, XLogLevel::Critical);
+        DialogHandler::Dialog(this, errorMessage, XLogLevel::Critical);
     }
 }
 
@@ -118,6 +118,7 @@ void VideoHandler::on_media_stateChanged(QMediaPlayer::State state)
         on_media_stop();
     }
     _currentState = xstate;
+    emit mediaStateChanged(xstate);
 }
 void VideoHandler::on_media_error(QMediaPlayer::Error error)
 {

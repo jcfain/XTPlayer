@@ -2,8 +2,12 @@
 #define XVIDEOPREVIEWWIDGET_H
 
 #include <QWidget>
-#include "xvideopreview.h"
-#include "settingshandler.h"
+#include <QFrame>
+#include <QGridLayout>
+#include <QLabel>
+#include <QMovie>
+#include "lib/handler/xvideopreview.h"
+#include "lib/handler/settingshandler.h"
 
 class XVideoPreviewWidget : public QFrame
 {

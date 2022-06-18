@@ -80,7 +80,7 @@ ChannelModel AddChannelDialog::getNewChannel(QWidget *parent, bool *ok)
         else if (AxisTypes[dialog->type->currentText()] == AxisType::HalfRange)
         {
             isValid = false;
-            LogHandler::Dialog(parent, "Modifier (+/-) required for half range types!", XLogLevel::Critical);
+            DialogHandler::Dialog(parent, "Modifier (+/-) required for half range types!", XLogLevel::Critical);
         }
         channelModel.AxisName = dialog->channelName->text() + modifier;
         channelModel.Type = AxisTypes[dialog->type->currentText()];
@@ -101,12 +101,12 @@ ChannelModel AddChannelDialog::getNewChannel(QWidget *parent, bool *ok)
         if(SettingsHandler::getAvailableAxis()->contains(channelModel.AxisName))
         {
             isValid = false;
-            LogHandler::Dialog(parent, channelModel.AxisName + " already exists!", XLogLevel::Critical);
+            DialogHandler::Dialog(parent, channelModel.AxisName + " already exists!", XLogLevel::Critical);
         }
         if(channelModel.AxisName.isEmpty())
         {
             isValid = false;
-            LogHandler::Dialog(parent, "Axis name is required!", XLogLevel::Critical);
+            DialogHandler::Dialog(parent, "Axis name is required!", XLogLevel::Critical);
         }
         if (!isValid)
             *ok = false;

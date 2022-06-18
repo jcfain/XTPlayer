@@ -5,9 +5,12 @@
 #include <QMediaPlayer>
 #include <QVideoWidget>
 #include <QMouseEvent>
+#include <QMovie>
+#include <QLabel>
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/loghandler.h"
 #include "lib/handler/xvideowidget.h"
+#include "lib/handler/dialoghandler.h"
 #include "lib/lookup/XMedia.h"
 class VideoHandler : public QWidget
 {
@@ -28,6 +31,7 @@ signals:
     void mouseEnter(QEvent* e);
     void positionChanged(int position);
     void mediaStatusChanged(XMediaStatus status);
+    void mediaStateChanged(XMediaState state);
     void started();
     void stopped();
     void playing();

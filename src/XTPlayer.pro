@@ -21,37 +21,13 @@ SOURCES += \
     addchanneldialog.cpp \
     addplaylistdialog.cpp \
     dlnascriptlinks.cpp \
-    lib/handler/httphandler.cpp \
-    lib/handler/deohandler.cpp \
-    lib/handler/devicehandler.cpp \
-    lib/handler/funscripthandler.cpp \
-    lib/handler/gamepadhandler.cpp \
-    lib/handler/loghandler.cpp \
-    lib/handler/medialibraryhandler.cpp \
-    lib/handler/serialhandler.cpp \
-    lib/handler/settingshandler.cpp \
-    lib/handler/synchandler.cpp \
-    lib/handler/tcodehandler.cpp \
-    lib/handler/udphandler.cpp \
+    lib/handler/dialoghandler.cpp \
     lib/handler/videohandler.cpp \
-    lib/handler/vrdevicehandler.cpp \
-    lib/handler/websockethandler.cpp \
-    lib/handler/whirligighandler.cpp \
-    lib/handler/xtpwebhandler.cpp \
-    lib/handler/xvideopreview.cpp \
     lib/handler/xvideopreviewwidget.cpp \
-    lib/handler/xvideosurface.cpp \
     lib/handler/xvideowidget.cpp \
-    lib/lookup/Constant.cpp \
-    lib/lookup/tcodechannellookup.cpp \
     lib/struct/channeltablecomboboxdelegate.cpp \
     lib/struct/channeltableviewmodel.cpp \
     lib/struct/librarylistwidgetitem.cpp \
-    lib/tool/imagefactory.cpp \
-    lib/tool/simplecrypt.cpp \
-    lib/tool/tcodefactory.cpp \
-    lib/tool/xmath.cpp \
-    lib/tool/xtimer.cpp \
     libraryItemSettingsDialog.cpp \
     libraryexclusions.cpp \
     librarywindow.cpp \
@@ -67,60 +43,13 @@ HEADERS += \
     addchanneldialog.h \
     addplaylistdialog.h \
     dlnascriptlinks.h \
-    lib/handler/httphandler.h \
-    lib/handler/deohandler.h \
-    lib/handler/devicehandler.h \
-    lib/handler/gamepadhandler.h \
-    lib/handler/medialibraryhandler.h \
-    lib/handler/synchandler.h \
+    lib/handler/dialoghandler.h \
     lib/handler/videohandler.h \
-    lib/handler/vrdevicehandler.h \
-    lib/handler/websockethandler.h \
-    lib/handler/whirligighandler.h \
-    lib/handler/xtpwebhandler.h \
-    lib/handler/xvideopreview.h \
     lib/handler/xvideopreviewwidget.h \
-    lib/handler/xvideosurface.h \
     lib/handler/xvideowidget.h \
-    lib/lookup/AxisNames.h \
-    lib/lookup/Constants.h \
-    lib/lookup/GamepadAxisNames.h \
-    lib/lookup/MediaActions.h \
-    lib/lookup/XMedia.h \
-    lib/lookup/enum.h \
-    lib/handler/funscripthandler.h \
-    lib/handler/loghandler.h \
-    lib/handler/loghandler.h \
-    lib/handler/serialhandler.h \
-    lib/handler/settingshandler.h \
-    lib/handler/tcodehandler.h \
-    lib/handler/udphandler.h \
-    lib/lookup/enum.h \
-    lib/lookup/tcodechannellookup.h \
-    lib/lookup/xvideorenderer.h \
-    lib/struct/Bookmark.h \
-    lib/struct/ChannelModel.h \
-    lib/struct/ConnectionChangedSignal.h \
-    lib/struct/DecoderModel.h \
-    lib/struct/Funscript.h \
-    lib/struct/GamepadState.h \
-    lib/struct/LibraryListItem.h \
-    lib/struct/LibraryListItem27.h \
-    lib/struct/LibraryListItemMetaData.h \
-    lib/struct/LibraryListItemMetaData258.h \
-    lib/struct/NetworkAddress.h \
-    lib/struct/SerialComboboxItem.h \
-    lib/struct/VRPacket.h \
     lib/struct/channeltablecomboboxdelegate.h \
     lib/struct/channeltableviewmodel.h \
     lib/struct/librarylistwidgetitem.h \
-    lib/tool/boolinq.h \
-    lib/tool/imagefactory.h \
-    lib/tool/simplecrypt.h \
-    lib/tool/tcodefactory.h \
-    lib/tool/videoformat.h \
-    lib/tool/xmath.h \
-    lib/tool/xtimer.h \
     libraryItemSettingsDialog.h \
     libraryexclusions.h \
     librarywindow.h \
@@ -182,9 +111,8 @@ win32{
 
         #include($$PWD/../../HttpServer/HttpServer.pro)
         #LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/debug -lhttpServer
+        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/debug/ -lXTEngine
         LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/src/debug -lhttpServer
-        INCLUDEPATH += $$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/src/debug
-        DEPENDPATH += $$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/src/debug
 #        TEMPLATE = subdirs
 #        #SOURCE_ROOT += ../../
 #        SUBDIRS += libQtAV
@@ -193,14 +121,14 @@ win32{
 #        include(../../QtAV/root.pri)
 #        include(../../QtAV/src/libQtAV.pri)
     }
-    else: build_pass {
+    else:build_pass:CONFIG(release, debug|release): {
         DESTDIR = $$shell_path($$OUT_PWD/release)
-        #LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release/release -lhttpServer
+        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_MinGW_64_bit-Release/release/ -lXTEngine
         LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release/src/release -lhttpServer
-        INCLUDEPATH += $$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release/src/release
-        DEPENDPATH += $$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release/src/release
         #INCLUDEPATH += ../../QtAV-Builds/Release/x64/include
     }
+    INCLUDEPATH += $$PWD/../../XTEngine/src
+    DEPENDPATH += $$PWD/../../XTEngine/src
     INCLUDEPATH += $$PWD/../../HttpServer/src
     RC_FILE = XTPlayer.rc
 }
@@ -245,3 +173,4 @@ DISTFILES += \
 
 RESOURCES += \
     icons.qrc
+

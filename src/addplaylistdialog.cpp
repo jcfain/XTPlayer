@@ -3,6 +3,7 @@
 #include <QDialogButtonBox>
 #include <QGridLayout>
 #include "lib/handler/loghandler.h"
+#include "lib/handler/dialoghandler.h"
 
 PlaylistDialog::PlaylistDialog(QWidget *parent) : QDialog(parent)
 {
@@ -53,7 +54,7 @@ QString PlaylistDialog::getPlaylistNAme(PlaylistDialog *dialog, bool *ok)
         if(dialog->nameEdit->text().isEmpty())
         {
             isValid = false;
-            LogHandler::Dialog(dialog, "Playlist name is required!", XLogLevel::Critical);
+            DialogHandler::Dialog(dialog, "Playlist name is required!", XLogLevel::Critical);
         }
         if (!isValid)
             *ok = false;

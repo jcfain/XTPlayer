@@ -11,6 +11,9 @@
 #include <QDialogButtonBox>
 #include "lib/struct/ChannelModel.h"
 #include "lib/handler/settingshandler.h"
+#include "lib/handler/dialoghandler.h"
+#include "lib/lookup/TCodeVersion.h"
+
 
 class AddChannelDialog : public QDialog
 {

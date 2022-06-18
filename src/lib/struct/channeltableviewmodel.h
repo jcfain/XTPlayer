@@ -3,8 +3,8 @@
 
 #include <QObject>
 #include <QAbstractTableModel>
-#include "ChannelModel.h"
-#include "../handler/serialhandler.h"
+#include "lib/struct/ChannelModel.h"
+#include "lib/handler/serialhandler.h"
 
 class ChannelTableViewModel : public QAbstractTableModel
 {

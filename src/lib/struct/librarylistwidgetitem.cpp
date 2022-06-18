@@ -1,5 +1,5 @@
 #include "librarylistwidgetitem.h"
-#include "../tool/imagefactory.h"
+#include "lib/tool/imagefactory.h"
 
 LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem27 &data, QListWidget* parent) :
     QListWidgetItem(data.nameNoExtension, parent)

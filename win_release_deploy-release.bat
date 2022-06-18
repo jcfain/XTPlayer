@@ -1,9 +1,12 @@
 SET QtDir=C:\Qt\5.15.2\mingw81_64\bin\
 SET buildDir=.\build-XTPlayer-Desktop_Qt_5_15_2_MinGW_64_bit-Release\
+SET engineBuildDir=..\XTEngine\build-XTEngine-Desktop_Qt_5_15_2_MinGW_64_bit-Release\
 SET deployDir=.\bin\release\
 
 %QtDir%windeployqt %buildDir%release\XTPlayer.exe -dir %deployDir%
+%QtDir%windeployqt %engineBuildDir%release\XTEngine.dll -dir %deployDir%
 xcopy %buildDir%release\XTPlayer.exe %deployDir%
+xcopy ..\XTEngine\build-XTEngine-Desktop_Qt_5_15_2_MinGW_64_bit-Release\release\XTEngine.dll %deployDir%
 xcopy %buildDir%release\themes %deployDir%themes /s /i
 REM xcopy %QtDir%QtAV1.dll %deployDir%
 REM xcopy %QtDir%QtAVWidgets1.dll %deployDir%
@@ -26,14 +29,15 @@ xcopy %QtDir%zlib1.dll %deployDir%
 xcopy %QtDir%Qt5OpenGL.dll %deployDir%
 xcopy %QtDir%Qt5Compress.dll %deployDir%
 xcopy ..\build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release\src\release\httpServer.dll %deployDir%
-xcopy .\src\rename_me_for_local_settings.ini %deployDir%
+xcopy ..\XTEngine\build-XTEngine-Desktop_Qt_5_15_2_MinGW_64_bit-Release\release\XTEngine.dll %deployDir%
+xcopy ..\XTEngine\src\rename_me_for_local_settings.ini %deployDir%
 xcopy "XTP and DeoVR guide.pdf" %deployDir%
 xcopy .\src\XTPlayerDebug.bat %deployDir%
 xcopy .\src\XTPlayerDebugVideo.bat %deployDir%
 xcopy .\src\README.txt %deployDir%
-xcopy .\src\www\index-min.html %deployDir%www\
-xcopy .\src\www\index-min.js %deployDir%www\
-xcopy .\src\www\styles-min.css %deployDir%www\
-xcopy .\src\www\favicon.ico %deployDir%www\
+xcopy ..\XTEngine\src\www\index-min.html %deployDir%www\
+xcopy ..\XTEngine\src\www\index-min.js %deployDir%www\
+xcopy ..\XTEngine\src\www\styles-min.css %deployDir%www\
+xcopy ..\XTEngine\src\www\favicon.ico %deployDir%www\
 
 pause

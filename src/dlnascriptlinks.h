@@ -6,6 +6,7 @@
 #include <QFileDialog>
 #include <QTreeView>
 #include <QPushButton>
+#include <QMessageBox>
 #include <lib/handler/settingshandler.h>
 #include <lib/handler/loghandler.h>
 #include <ui_dlnascriptlinks.h>

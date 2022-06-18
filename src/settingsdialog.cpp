@@ -60,7 +60,6 @@ void SettingsDialog::dispose()
         //_initFuture.cancel();
         _initFuture.waitForFinished();
     }
-    LogHandler::ExportDebug();
     if(_httpHandler)
         delete _httpHandler;
     delete _serialHandler;
@@ -71,7 +70,7 @@ void SettingsDialog::dispose()
     delete _gamepadHandler;
 }
 
-void SettingsDialog::init(VideoHandler* videoHandler, MediaLibraryHandler* mediaLibraryHandler)
+void SettingsDialog::init(VideoHandler* videoHandler, MediaLibraryHandler* mediaLibraryHandler, SyncHandler* syncHandler)
 {
     _videoHandler = videoHandler;
     if(SettingsHandler::getEnableHttpServer())
@@ -80,7 +79,7 @@ void SettingsDialog::init(VideoHandler* videoHandler, MediaLibraryHandler* media
         connect(_httpHandler, &HttpHandler::tcode, this, &SettingsDialog::sendTCode);
         connect(_httpHandler, &HttpHandler::connectTCodeDevice, this, &SettingsDialog::initDeviceRetry);
         connect(_httpHandler, &HttpHandler::error, this, [this](QString error) {
-            LogHandler::Dialog(this, error, XLogLevel::Critical);
+            DialogHandler::Dialog(this, error, XLogLevel::Critical);
         });
         connect(this, &SettingsDialog::deviceConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
         connect(this, &SettingsDialog::deoDeviceConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
@@ -88,10 +87,14 @@ void SettingsDialog::init(VideoHandler* videoHandler, MediaLibraryHandler* media
         connect(this, &SettingsDialog::xtpWebDeviceConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
         connect(this, &SettingsDialog::gamepadConnectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
         connect(_httpHandler, &HttpHandler::connectInputDevice, this, &SettingsDialog::on_xtpWeb_initSyncDevice);
-        connect(_httpHandler, &HttpHandler::restartService, this, &SettingsHandler::restart);
+        connect(_httpHandler, &HttpHandler::restartService, this, &SettingsDialog::restart);
 
         _httpHandler->listen();
     }
+    _syncHandler = syncHandler;
+    connect(_syncHandler, &SyncHandler::channelPositionChange, this, &SettingsDialog::setAxisProgressBar, Qt::QueuedConnection);
+    connect(_syncHandler, &SyncHandler::funscriptEnded, this, &SettingsDialog::resetAxisProgressBars, Qt::QueuedConnection);
+    connect(_syncHandler, &SyncHandler::sendTCode, this, &SettingsDialog::sendTCode, Qt::QueuedConnection);
 
     setupUi();
     if(SettingsHandler::getSelectedDevice() == DeviceType::Serial)
@@ -154,7 +157,7 @@ void SettingsDialog::reject()
     if(_requiresRestart)
     {
         _requiresRestart = false;
-        SettingsHandler::askRestart(this, "Some changes made requires a restart.\nWould you like to restart now?");
+        askRestart(this, "Some changes made requires a restart.\nWould you like to restart now?");
     }
     QDialog::reject();
 }
@@ -167,7 +170,7 @@ void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
     }
     else if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::AcceptRole)
     {
-        LogHandler::Loading(this, "Saving settings...");
+        DialogHandler::Loading(this, "Saving settings...");
         QtConcurrent::run([this] ()
         {
             SettingsHandler::Save();
@@ -178,7 +181,7 @@ void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
     {
         if(SettingsHandler::getSettingsChanged())
         {
-            LogHandler::Loading(this, "Saving settings...");
+            DialogHandler::Loading(this, "Saving settings...");
             QtConcurrent::run([this] ()
             {
                 SettingsHandler::Save();
@@ -189,7 +192,7 @@ void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
     if(_requiresRestart && (ui.buttonBox->buttonRole(button) == QDialogButtonBox::AcceptRole || ui.buttonBox->buttonRole(button) == QDialogButtonBox::ApplyRole))
     {
         _requiresRestart = false;
-        SettingsHandler::askRestart(this, "Some changes made requires a restart.\nWould you like to restart now?");
+        askRestart(this, "Some changes made requires a restart.\nWould you like to restart now?");
     }
     if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::ApplyRole)
     {
@@ -1022,6 +1025,7 @@ void SettingsDialog::initXTPWebEvent()
     }
     _xtpWebHandler->init(_httpHandler);
     _connectedVRHandler = _xtpWebHandler;
+    _syncHandler->on_vr_device_status_change(_connectedVRHandler);
     setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceType::XTPWeb);
 }
 
@@ -1199,6 +1203,7 @@ void SettingsDialog::on_deo_connectionChanged(ConnectionChangedSignal event)
     if (event.status == ConnectionStatus::Error)
     {
         _connectedVRHandler = 0;
+        _syncHandler->on_vr_device_status_change(_connectedVRHandler);
         ui.deoConnectButton->setEnabled(true);
         setDeviceStatusStyle(event.status, event.deviceType, event.message);
     }
@@ -1222,6 +1227,7 @@ void SettingsDialog::on_deo_connectionChanged(ConnectionChangedSignal event)
         }
         setDeviceStatusStyle(event.status, event.deviceType);
         _connectedVRHandler = _deoHandler;
+        _syncHandler->on_vr_device_status_change(_connectedVRHandler);
     }
     emit deoDeviceConnectionChange({event.deviceType, event.status, event.message});
 }
@@ -1229,6 +1235,7 @@ void SettingsDialog::on_deo_connectionChanged(ConnectionChangedSignal event)
 void SettingsDialog::on_deo_error(QString error)
 {
     _connectedVRHandler = 0;
+    _syncHandler->on_vr_device_status_change(_connectedVRHandler);
     emit deoDeviceError(error);
 }
 void SettingsDialog::on_device_connectionChanged(ConnectionChangedSignal event)
@@ -1294,6 +1301,7 @@ void SettingsDialog::on_whirligig_connectionChanged(ConnectionChangedSignal even
         ui.whirligigConnectButton->setEnabled(true);
         setDeviceStatusStyle(event.status, event.deviceType, event.message);
         _connectedVRHandler = 0;
+        _syncHandler->on_vr_device_status_change(_connectedVRHandler);
     }
     else
     {
@@ -1316,6 +1324,7 @@ void SettingsDialog::on_whirligig_connectionChanged(ConnectionChangedSignal even
         setDeviceStatusStyle(event.status, event.deviceType);
     }
     _connectedVRHandler = _whirligigHandler;
+    _syncHandler->on_vr_device_status_change(_connectedVRHandler);
     emit whirligigDeviceConnectionChange({event.deviceType, event.status, event.message});
 }
 
@@ -1331,6 +1340,7 @@ void SettingsDialog::on_xtpWeb_connectionChanged(ConnectionChangedSignal event)
     {
         setDeviceStatusStyle(event.status, event.deviceType, event.message);
         _connectedVRHandler = 0;
+        _syncHandler->on_vr_device_status_change(_connectedVRHandler);
     }
     else
     {
@@ -1422,17 +1432,17 @@ void SettingsDialog::on_serialConnectButton_clicked()
     auto portName = selectedSerialPort.portName;
     if(portName.isEmpty())
     {
-        LogHandler::Dialog(this, "No portname specified", XLogLevel::Critical);
+        DialogHandler::Dialog(this, "No portname specified", XLogLevel::Critical);
         return;
     }
     else if(ui.SerialOutputCmb->count() == 0)
     {
-        LogHandler::Dialog(this, "No ports on machine", XLogLevel::Critical);
+        DialogHandler::Dialog(this, "No ports on machine", XLogLevel::Critical);
         return;
     }
     else if(!boolinq::from(serialPorts).any([portName](const SerialComboboxItem &x) { return x.portName == portName; }))
     {
-        LogHandler::Dialog(this, "Port: "+ portName + " not found", XLogLevel::Critical);
+        DialogHandler::Dialog(this, "Port: "+ portName + " not found", XLogLevel::Critical);
         return;
     }
     initSerialEvent();
@@ -1447,7 +1457,7 @@ void SettingsDialog::on_networkConnectButton_clicked()
     }
     else
     {
-        LogHandler::Dialog(this, "Invalid network address!", XLogLevel::Critical);
+        DialogHandler::Dialog(this, "Invalid network address!", XLogLevel::Critical);
     }
 }
 
@@ -1462,7 +1472,7 @@ void SettingsDialog::on_deoConnectButton_clicked()
         }
         else
         {
-            LogHandler::Dialog(this, "Invalid deo vr address!", XLogLevel::Warning);
+            DialogHandler::Dialog(this, "Invalid deo vr address!", XLogLevel::Warning);
         }
     }
 }
@@ -1502,7 +1512,7 @@ void SettingsDialog::on_whirligigCheckBox_clicked(bool checked)
 void SettingsDialog::on_xtpWebHandlerCheckbox_clicked(bool checked)
 {
     if(checked && !SettingsHandler::getEnableHttpServer()) {
-        LogHandler::Dialog(this, "XTP web is not enabled on the 'Web' tab. Set it up and return here afterwards.", XLogLevel::Information);
+        DialogHandler::Dialog(this, "XTP web is not enabled on the 'Web' tab. Set it up and return here afterwards.", XLogLevel::Information);
         ui.xtpWebHandlerCheckbox->setChecked(false);
         return;
     }
@@ -1613,7 +1623,7 @@ void SettingsDialog::on_whirligigConnectButton_clicked()
         }
         else
         {
-            LogHandler::Dialog(this, "Invalid whirligig address!", XLogLevel::Warning);
+            DialogHandler::Dialog(this, "Invalid whirligig address!", XLogLevel::Warning);
         }
     }
 }
@@ -1694,7 +1704,7 @@ void SettingsDialog::on_passwordButton_clicked()
          if (ok && !text.isEmpty())
          {
              SettingsHandler::SetHashedPass(encryptPass(text));
-             LogHandler::Dialog(this, "Password set.", XLogLevel::Information);
+             DialogHandler::Dialog(this, "Password set.", XLogLevel::Information);
              ui.passwordButton->setText("Change password");
          }
     }
@@ -1723,12 +1733,12 @@ void SettingsDialog::on_passwordButton_clicked()
                         SettingsHandler::SetHashedPass(encryptPass(text));
                         ui.passwordButton->setText("Change password");
                      }
-                     LogHandler::Dialog(this, "Password changed!", XLogLevel::Information);
+                     DialogHandler::Dialog(this, "Password changed!", XLogLevel::Information);
                  }
              }
              else
              {
-                 LogHandler::Dialog(this, "Password incorrect!", XLogLevel::Warning);
+                 DialogHandler::Dialog(this, "Password incorrect!", XLogLevel::Warning);
              }
          }
     }
@@ -1777,21 +1787,29 @@ QString SettingsDialog::decryptPass(QString pass)
 
 void SettingsDialog::on_exportButton_clicked()
 {
-    SettingsHandler::Export(this);
+    Export(this);
 }
 
 void SettingsDialog::on_importButton_clicked()
 {
-    SettingsHandler::Import(this);
+    Import(this);
 }
 
 void SettingsDialog::on_thumbDirButton_clicked()
 {
-    SettingsHandler::setSelectedThumbsDir(this);
+    auto selectedThumbsDir = SettingsHandler::getSelectedThumbsDir();
+   auto customThumbDirExists  = !selectedThumbsDir.isEmpty() && QFileInfo::exists(selectedThumbsDir);
+   QString selectedDir = QFileDialog::getExistingDirectory(this, QFileDialog::tr("Choose thumbnail storage directory"), customThumbDirExists ? selectedThumbsDir : QApplication::applicationDirPath() + "/thumbs/", QFileDialog::ReadOnly);
+   if (selectedDir != Q_NULLPTR)
+   {
+       SettingsHandler::setSelectedThumbsDir(selectedDir);
+       SettingsHandler::Save();
+       requestRestart(this);
+   }
 }
 void SettingsDialog::on_thumbsDirDefaultButton_clicked()
 {
-    SettingsHandler::setSelectedThumbsDirDefault(this);
+    SettingsHandler::setSelectedThumbsDirDefault();
     ui.useMediaDirectoryCheckbox->setChecked(false);
     on_useMediaDirectoryCheckbox_clicked(false);
 }
@@ -1836,15 +1854,15 @@ void SettingsDialog::on_disableTCodeValidationCheckbox_clicked(bool checked)
 {
     if(checked)
     {
-        LogHandler::Dialog(this, "Make sure to verify the version of TCode firmware installed on your device.", XLogLevel::Warning);
+        DialogHandler::Dialog(this, "Make sure to verify the version of TCode firmware installed on your device.", XLogLevel::Warning);
     }
     SettingsHandler::setDisableTCodeValidation(checked);
-    SettingsHandler::requestRestart(this);
+    requestRestart(this);
 }
 
 void SettingsDialog::on_close_loading_dialog()
 {
-    LogHandler::LoadingClose();
+    DialogHandler::LoadingClose();
 }
 
 void SettingsDialog::on_showLoneFunscriptsInLibraryCheckbox_clicked(bool checked)
@@ -1959,7 +1977,7 @@ void SettingsDialog::on_httpPortSpinBox_editingFinished()
 {
     int value = ui.httpPortSpinBox->value();
     if(SettingsHandler::getWebSocketPort() == value) {
-        LogHandler::Dialog(this, "Http port cannot be the same as the Wwb socket port.", XLogLevel::Critical);
+        DialogHandler::Dialog(this, "Http port cannot be the same as the Wwb socket port.", XLogLevel::Critical);
         ui.httpPortSpinBox->setValue(SettingsHandler::getHTTPPort());
         return;
     }
@@ -1972,7 +1990,7 @@ void SettingsDialog::on_webSocketPortSpinBox_editingFinished()
 {
     int value = ui.webSocketPortSpinBox->value();
     if(SettingsHandler::getHTTPPort() == value) {
-        LogHandler::Dialog(this, "Web socket port cannot be the same as the http port.", XLogLevel::Critical);
+        DialogHandler::Dialog(this, "Web socket port cannot be the same as the http port.", XLogLevel::Critical);
         ui.webSocketPortSpinBox->setValue(SettingsHandler::getWebSocketPort());
         return;
     }
@@ -1986,3 +2004,55 @@ void SettingsDialog::on_httpThumbQualitySpinBox_editingFinished()
     SettingsHandler::setHttpThumbQuality(ui.httpThumbQualitySpinBox->value());
 }
 
+void SettingsDialog::Export(QWidget* parent)
+{
+    QString selectedFile = QFileDialog::getSaveFileName(parent, QApplication::applicationDirPath() + "/Save settings ini", "settings_export.ini", "INI Files (*.ini)");
+    if(!selectedFile.isEmpty())
+    {
+        QSettings* settingsExport = new QSettings(selectedFile, QSettings::Format::IniFormat);
+        SettingsHandler::Save(settingsExport);
+        delete settingsExport;
+        emit messageSend("Settings saved to "+ selectedFile, XLogLevel::Information);
+    }
+}
+
+void SettingsDialog::Import(QWidget* parent)
+{
+    QString selectedFile = QFileDialog::getOpenFileName(parent, "Choose settings ini", QApplication::applicationDirPath(), "INI Files (*.ini)");
+    if(!selectedFile.isEmpty())
+    {
+        QSettings* settingsImport = new QSettings(selectedFile, QSettings::Format::IniFormat);
+        SettingsHandler::Load(QApplication::applicationDirPath(), settingsImport);
+        SettingsHandler::Save();
+        SettingsHandler::setSaveOnExit(false);
+        delete settingsImport;
+        requestRestart(parent);
+    }
+}
+
+void SettingsDialog::requestRestart(QWidget* parent)
+{
+    int value = QMessageBox::question(parent, "Restart Application", "Changes will take effect on application restart.",
+                                  "Exit XTP", "Restart now", 0, 1);
+    quit(value);
+}
+void SettingsDialog::askRestart(QWidget* parent, QString message)
+{
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(parent, "Restart?", message,
+                                  QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes)
+        quit(true);
+}
+void SettingsDialog::quit(bool restart)
+{
+    QApplication::quit();
+    if(restart)
+        QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
+}
+
+void SettingsDialog::restart()
+{
+    QApplication::quit();
+    QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
+}

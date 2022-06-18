@@ -27,6 +27,7 @@
 #include "lib/handler/gamepadhandler.h"
 #include "lib/handler/funscripthandler.h"
 #include "lib/handler/httphandler.h"
+#include "lib/handler/synchandler.h"
 #include "libraryexclusions.h"
 #include "addchanneldialog.h"
 
@@ -41,7 +42,7 @@ public:
     SettingsDialog(QWidget* parent = nullptr);
     ~SettingsDialog();
 
-    void init(VideoHandler* videoHandler, MediaLibraryHandler* mediaLibraryHandler);
+    void init(VideoHandler* videoHandler, MediaLibraryHandler* mediaLibraryHandler, SyncHandler* syncHandler);
     void initLive();
     UdpHandler* getNetworkHandler();
     SerialHandler* getSerialHandler();
@@ -64,6 +65,13 @@ public:
     bool HasLaunchPass();
     void sendTCode(QString tcode);
 
+    void Export(QWidget* parent);
+    void Import(QWidget* parent);
+    void requestRestart(QWidget* parent);
+    void askRestart(QWidget* parent, QString message);
+    void quit(bool restart);
+    void restart();
+
     void reject() override;
 
 signals:
@@ -81,6 +89,7 @@ signals:
     void onAxisValueChange(QString axis, int value);
     void onAxisValueReset();
     void onOpenWelcomeDialog();
+    void messageSend(QString message, XLogLevel loglevel);
 
 
 private slots:
@@ -269,6 +278,7 @@ private:
     HttpHandler* _httpHandler = 0;
     SerialHandler* _serialHandler;
     UdpHandler* _udpHandler;
+    SyncHandler* _syncHandler;
 
     DeoHandler* _deoHandler;
     WhirligigHandler* _whirligigHandler;
