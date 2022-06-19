@@ -6,8 +6,9 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 {
     QCoreApplication::setOrganizationName("cUrbSide prOd");
     QCoreApplication::setApplicationName("XTPlayer");
-    XTPVersion = "0.32a, XTE: v" + SettingsHandler::XTEVersion;
+    XTPVersion = QString("0.32a_%1T%2").arg(__DATE__).arg(__TIME__);
     XTPVersionNum = 0.32f;
+    const QString fullVersion = "XTP: v"+ XTPVersion + "\nXTE: v" + SettingsHandler::XTEVersion;
 
     QPixmap pixmap("://images/XTP_Splash.png");
     loadingSplash = new QSplashScreen(pixmap);
@@ -15,7 +16,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     loadingSplash->show();
 
     ui->setupUi(this);
-    loadingSplash->showMessage("v"+ XTPVersion + "\nLoading Settings...", Qt::AlignBottom, Qt::white);
+    loadingSplash->showMessage(fullVersion + "\nLoading Settings...", Qt::AlignBottom, Qt::white);
     SettingsHandler::Load(QApplication::applicationDirPath());
     _xSettings = new SettingsDialog(this);
     _dlnaScriptLinksDialog = new DLNAScriptLinks(this);
@@ -65,7 +66,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
         }
     }
 
-    loadingSplash->showMessage("v"+ XTPVersion + "\nLoading UI...", Qt::AlignBottom, Qt::white);
+    loadingSplash->showMessage(fullVersion + "\nLoading UI...", Qt::AlignBottom, Qt::white);
 
 
     textToSpeech = new QTextToSpeech(this);
@@ -394,7 +395,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(deoRetryConnectionButton, &QPushButton::clicked, _xSettings, &SettingsDialog::initDeoRetry);
     connect(QApplication::instance(), &QCoreApplication::aboutToQuit, this, &MainWindow::dispose);
 
-    loadingSplash->showMessage("v"+ XTPVersion + "\nSetting user styles...", Qt::AlignBottom, Qt::white);
+    loadingSplash->showMessage(fullVersion + "\nSetting user styles...", Qt::AlignBottom, Qt::white);
     loadTheme(SettingsHandler::getSelectedTheme());
 
     setFocus();
@@ -403,7 +404,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     _appPos = this->pos();
 
     changeLibraryDisplayMode(SettingsHandler::getLibraryView());
-    loadingSplash->showMessage("v"+ XTPVersion + "\nLoading Library...", Qt::AlignBottom, Qt::white);
+    loadingSplash->showMessage(fullVersion + "\nLoading Library...", Qt::AlignBottom, Qt::white);
     _mediaLibraryHandler->loadLibraryAsync();
 
 //    QScreen *screen = this->screen();
@@ -414,7 +415,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 //    _playerControlsFrame->setMaximumHeight(minHeight);
 //    _controlsHomePlaceHolderFrame->setMaximumHeight(minHeight);
 
-    loadingSplash->showMessage("v"+ XTPVersion + "\nStarting Application...", Qt::AlignBottom, Qt::white);
+    loadingSplash->showMessage(fullVersion + "\nStarting Application...", Qt::AlignBottom, Qt::white);
     loadingSplash->finish(this);
     if(!SettingsHandler::getHideWelcomeScreen())
     {

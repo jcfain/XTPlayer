@@ -89,9 +89,10 @@ void DialogHandler::ShowAboutDialog(QWidget* parent, QString XTPVersion, QString
     windowRect.setSize({300, 200});
     layout.setGeometry(windowRect);
     QLabel copyright;
-    copyright.setText("<b>XTPlayer v"+ XTPVersion + "</b><br>XTE v"
-                      + XTEVersion +"<br>"
-                       + selectedTCodeVersion + "<br>"
+    copyright.setText("<b>XTPlayer v"+ XTPVersion
+                      + "</b><br><b>XTEngine v" + XTEVersion
+                      + "</b><br>" + selectedTCodeVersion
+                      + "<br>"
                                                 "Copyright 2022 Jason C. Fain<br>"
                                                 "Donate: <a href='https://www.patreon.com/Khrull'>https://www.patreon.com/Khrull</a><br>"
                                                 "THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND.");
