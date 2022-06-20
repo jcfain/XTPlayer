@@ -38,8 +38,8 @@
 #include "lib/handler/loghandler.h"
 #include "lib/handler/funscripthandler.h"
 #include "lib/handler/tcodehandler.h"
-#include "lib/handler/devicehandler.h"
-#include "lib/handler/vrdevicehandler.h"
+#include "lib/handler/outputdevicehandler.h"
+#include "lib/handler/inputdevicehandler.h"
 #include "lib/handler/synchandler.h"
 #include "lib/handler/medialibraryhandler.h"
 #include "lib/handler/connectionhandler.h"
@@ -100,7 +100,7 @@ private slots:
     void setThumbNailFromCurrent();
     void lockThumb();
     void unlockThumb();
-    void onVRMessageRecieved(VRPacket packet);
+    void onFunscriptSearchResult(QString mediaPath, QString funscriptPath, qint64 mediaDuration);
     void on_gamepad_sendTCode(QString tcode);
     void on_gamepad_sendAction(QString action);
     void on_gamepad_connectionChanged(ConnectionChangedSignal event);
@@ -372,7 +372,7 @@ private:
     void on_standaloneFunscript_stop();
     void on_output_device_connectionChanged(ConnectionChangedSignal event);
     void on_device_error(QString error);
-    void on_vr_device_connectionChanged(ConnectionChangedSignal event);
+    void on_input_device_connectionChanged(ConnectionChangedSignal event);
     void on_vr_device_error(QString error);
     void donate();
     void showInGraphicalShell(QString path);

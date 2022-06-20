@@ -249,14 +249,17 @@ void SettingsDialog::setupUi()
         if(deoEnabled)
         {
             ui.deoCheckbox->setChecked(deoEnabled);
+            on_deoCheckbox_clicked(deoEnabled);
         }
         else if(whiriligigEnabled)
         {
             ui.whirligigCheckBox->setChecked(whiriligigEnabled);
+            on_whirligigCheckBox_clicked(whiriligigEnabled);
         }
         else if(xtpWebEnabled)
         {
             ui.xtpWebHandlerCheckbox->setChecked(xtpWebEnabled);
+            on_xtpWebHandlerCheckbox_clicked(xtpWebEnabled);
         }
 
         ui.gamePadCheckbox->setChecked(SettingsHandler::getGamepadEnabled());
@@ -1032,8 +1035,8 @@ void SettingsDialog::onRange_valueChanged(QString name, int value)
     rangeMinLabels.value(name)->setText(QString::number(min));
     rangeMaxLabels.value(name)->setText(QString::number(max));
     mainLabel->setText(channel.FriendlyName + " mid: " + QString::number(XMath::middle(min, max)));
-    DeviceHandler* outputDevice = _connectionHandler->getSelectedOutputDevice();
-    VRDeviceHandler* inputDevice = _connectionHandler->getSelectedInputDevice();
+    OutputDeviceHandler* outputDevice = _connectionHandler->getSelectedOutputDevice();
+    InputDeviceHandler* inputDevice = _connectionHandler->getSelectedInputDevice();
     if ((!_videoHandler->isPlaying() || _videoHandler->isPaused() || SettingsHandler::getLiveActionPaused())
         && (!inputDevice || !inputDevice->isPlaying()) && outputDevice->isRunning())
     {
@@ -1192,17 +1195,27 @@ void SettingsDialog::on_networkConnectButton_clicked()
 
 void SettingsDialog::on_deoConnectButton_clicked()
 {
-    if(SettingsHandler::getSelectedInputDevice() == DeviceName::Deo)
+    if(SettingsHandler::getDeoAddress() != "" && SettingsHandler::getDeoPort() != "" &&
+     SettingsHandler::getDeoAddress() != "0" && SettingsHandler::getDeoPort() != "0")
     {
-        if(SettingsHandler::getDeoAddress() != "" && SettingsHandler::getDeoPort() != "" &&
-         SettingsHandler::getDeoAddress() != "0" && SettingsHandler::getDeoPort() != "0")
-        {
-            initDeoEvent();
-        }
-        else
-        {
-            DialogHandler::MessageBox(this, "Invalid deo vr address!", XLogLevel::Warning);
-        }
+        initDeoEvent();
+    }
+    else
+    {
+        DialogHandler::MessageBox(this, "Invalid deo vr address!", XLogLevel::Warning);
+    }
+}
+
+void SettingsDialog::on_whirligigConnectButton_clicked()
+{
+    if(SettingsHandler::getWhirligigAddress() != "" && SettingsHandler::getWhirligigPort() != "" &&
+     SettingsHandler::getWhirligigAddress() != "0" && SettingsHandler::getWhirligigPort() != "0")
+    {
+        initWhirligigEvent();
+    }
+    else
+    {
+        DialogHandler::MessageBox(this, "Invalid whirligig address!", XLogLevel::Warning);
     }
 }
 
@@ -1211,7 +1224,9 @@ void SettingsDialog::on_deoCheckbox_clicked(bool checked)
     if(checked)
     {
         ui.whirligigCheckBox->setChecked(!checked);
+        on_whirligigCheckBox_clicked(!checked);
         ui.xtpWebHandlerCheckbox->setChecked(!checked);
+        on_xtpWebHandlerCheckbox_clicked(!checked);
     }
     ui.deoAddressTxt->setEnabled(checked);
     ui.deoPortTxt->setEnabled(checked);
@@ -1223,7 +1238,9 @@ void SettingsDialog::on_whirligigCheckBox_clicked(bool checked)
     if(checked)
     {
         ui.deoCheckbox->setChecked(!checked);
+        on_deoCheckbox_clicked(!checked);
         ui.xtpWebHandlerCheckbox->setChecked(!checked);
+        on_xtpWebHandlerCheckbox_clicked(!checked);
     }
     ui.whirligigConnectButton->setEnabled(checked);
 }
@@ -1238,7 +1255,9 @@ void SettingsDialog::on_xtpWebHandlerCheckbox_clicked(bool checked)
     if(checked)
     {
         ui.whirligigCheckBox->setChecked(!checked);
+        on_whirligigCheckBox_clicked(!checked);
         ui.deoCheckbox->setChecked(!checked);
+        on_deoCheckbox_clicked(!checked);
         initXTPWebEvent();
     }
 }
@@ -1318,22 +1337,6 @@ void SettingsDialog::on_disableTextToSpeechCheckBox_clicked(bool checked)
 void SettingsDialog::on_invertFunscriptXCheckBox_clicked(bool checked)
 {
     FunscriptHandler::setInverted(checked);
-}
-
-void SettingsDialog::on_whirligigConnectButton_clicked()
-{
-    if(SettingsHandler::getSelectedInputDevice() == DeviceName::Whirligig)
-    {
-        if(SettingsHandler::getWhirligigAddress() != "" && SettingsHandler::getWhirligigPort() != "" &&
-         SettingsHandler::getWhirligigAddress() != "0" && SettingsHandler::getWhirligigPort() != "0")
-        {
-            initWhirligigEvent();
-        }
-        else
-        {
-            DialogHandler::MessageBox(this, "Invalid whirligig address!", XLogLevel::Warning);
-        }
-    }
 }
 
 void SettingsDialog::on_channelAddButton_clicked()
