@@ -28,12 +28,10 @@
 #include "lib/handler/funscripthandler.h"
 #include "lib/handler/httphandler.h"
 #include "lib/handler/synchandler.h"
+#include "lib/handler/connectionhandler.h"
 #include "libraryexclusions.h"
 #include "addchanneldialog.h"
 
-extern void initSerial(SerialHandler* serialHandler, SerialComboboxItem serialInfo);
-extern void initNetwork(UdpHandler* serialHandler, NetworkAddress address);
-extern void initDeo(DeoHandler* deoHandler, NetworkAddress address);
 
 class SettingsDialog : public QDialog
 {
@@ -42,20 +40,8 @@ public:
     SettingsDialog(QWidget* parent = nullptr);
     ~SettingsDialog();
 
-    void init(VideoHandler* videoHandler, MediaLibraryHandler* mediaLibraryHandler, SyncHandler* syncHandler);
+    void init(VideoHandler* videoHandler, MediaLibraryHandler* mediaLibraryHandler, SyncHandler* syncHandler, ConnectionHandler* connectionHandler);
     void initLive();
-    UdpHandler* getNetworkHandler();
-    SerialHandler* getSerialHandler();
-    DeoHandler* getDeoHandler();
-    XTPWebHandler* getXTPWebHandler();
-    WhirligigHandler* getWhirligigHandler();
-    GamepadHandler* getGamepadHandler();
-    void setSelectedDeviceHandler(DeviceHandler* device);
-    DeviceHandler* getSelectedDeviceHandler();
-    VRDeviceHandler* getConnectedVRDeviceHandler();
-    bool isDeviceConnected();
-    void initDeviceRetry();
-    void initDeoRetry();
     void dispose();
     void setAxisProgressBar(QString axis, int value);
     void resetAxisProgressBars();
@@ -63,7 +49,6 @@ public:
     PasswordResponse CheckPass(QString pass);
     PasswordResponse GetLaunchPass();
     bool HasLaunchPass();
-    void sendTCode(QString tcode);
 
     void Export(QWidget* parent);
     void Import(QWidget* parent);
@@ -75,16 +60,6 @@ public:
     void reject() override;
 
 signals:
-    void deviceError(QString error);
-    void deviceConnectionChange(ConnectionChangedSignal event);
-    void deoDeviceError(QString error);
-    void deoDeviceConnectionChange(ConnectionChangedSignal event);
-    void whirligigDeviceError(QString error);
-    void whirligigDeviceConnectionChange(ConnectionChangedSignal event);
-    void xtpWebDeviceError(QString error);
-    void xtpWebDeviceConnectionChange(ConnectionChangedSignal event);
-
-    void gamepadConnectionChange(ConnectionChangedSignal event);
     void TCodeHomeClicked();
     void onAxisValueChange(QString axis, int value);
     void onAxisValueReset();
@@ -105,15 +80,6 @@ private slots:
     void onOffSet_valueChanged(int value);
     void onOffSetStep_valueChanged(int value);
     void onRangeModifierStep_valueChanged(int value);
-    void on_device_connectionChanged(ConnectionChangedSignal event);
-    void on_device_error(QString error);
-    void on_deo_connectionChanged(ConnectionChangedSignal event);
-    void on_deo_error(QString error);
-    void on_whirligig_connectionChanged(ConnectionChangedSignal event);
-    void on_whirligig_error(QString error);
-    void on_xtpWeb_connectionChanged(ConnectionChangedSignal event);
-    void on_xtpWeb_error(QString error);
-    void on_gamepad_connectionChanged(ConnectionChangedSignal event);
 
     void on_SerialOutputCmb_currentIndexChanged(int index);
 
@@ -232,7 +198,7 @@ private slots:
     void on_finscriptModifierSpinBox_valueChanged(int arg1);
 
     void on_xtpWebHandlerCheckbox_clicked(bool checked);
-    void on_xtpWeb_initSyncDevice(DeviceType deviceType, bool checked);
+    void on_xtpWeb_initSyncDevice(DeviceName deviceName, bool checked);
 
     void on_useMediaDirectoryCheckbox_clicked(bool checked);
 
@@ -244,6 +210,12 @@ private slots:
 
     void on_httpThumbQualitySpinBox_editingFinished();
 
+    void on_gamepad_connectionChanged(ConnectionChangedSignal event);
+    void on_input_device_connectionChanged(ConnectionChangedSignal event);
+    void on_input_device_error(QString error);
+    void on_output_device_connectionChanged(ConnectionChangedSignal event);
+    void on_output_device_error(QString error);
+
 private:
 
     Ui::SettingsDialog ui;
@@ -253,11 +225,11 @@ private:
     void initDeoEvent();
     void initWhirligigEvent();
     void initXTPWebEvent();
-    void initSyncDevice();
+    void initInputDevice();
     void setupUi();
     void setupGamepadMap();
     void setUpMultiplierUi(bool enabled);
-    void enableOrDisableDeviceConnectionUI(DeviceType deviceType);
+    void enableOrDisableDeviceConnectionUI(DeviceName deviceName);
     QString encryptPass(QString pass);
     QString decryptPass(QString pass);
 
@@ -265,27 +237,13 @@ private:
 
     LibraryExclusions* _libraryExclusions;
     bool _interfaceInitialized = false;
-    ConnectionStatus _outDeviceConnectionStatus = ConnectionStatus::Disconnected;
-    ConnectionStatus _deoConnectionStatus = ConnectionStatus::Disconnected;
-    ConnectionStatus _whirligigConnectionStatus = ConnectionStatus::Disconnected;
-    ConnectionStatus _xtpWebConnectionStatus = ConnectionStatus::Disconnected;
-    ConnectionStatus _gamepadConnectionStatus = ConnectionStatus::Disconnected;
     QList<SerialComboboxItem> serialPorts;
     SerialComboboxItem selectedSerialPort;
-    DeviceHandler* selectedDeviceHandler = 0;
-    VRDeviceHandler* _connectedVRHandler = 0;
     VideoHandler* _videoHandler;
     HttpHandler* _httpHandler = 0;
-    SerialHandler* _serialHandler;
-    UdpHandler* _udpHandler;
     SyncHandler* _syncHandler;
+    ConnectionHandler* _connectionHandler;
 
-    DeoHandler* _deoHandler;
-    WhirligigHandler* _whirligigHandler;
-    XTPWebHandler* _xtpWebHandler;
-
-    GamepadHandler* _gamepadHandler;
-    QFuture<void> _initFuture;
     ChannelTableViewModel* channelTableViewModel;
 
     QMap<QString, QLabel*> rangeMinLabels;
@@ -302,8 +260,7 @@ private:
     bool _hasVideoPlayed = false;
     bool _requiresRestart = false;
 
-    void setDeviceStatusStyle(ConnectionStatus status, DeviceType deviceType, QString message = "");
-
+    void setDeviceStatusStyle(ConnectionStatus status, DeviceName deviceName, QString message = "");
 
 signals:
     void loadingDialogClose();

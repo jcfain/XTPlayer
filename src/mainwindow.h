@@ -42,6 +42,7 @@
 #include "lib/handler/vrdevicehandler.h"
 #include "lib/handler/synchandler.h"
 #include "lib/handler/medialibraryhandler.h"
+#include "lib/handler/connectionhandler.h"
 #include "lib/handler/xvideopreviewwidget.h"
 #include "lib/struct/LibraryListItem27.h"
 #include "lib/struct/SerialComboboxItem.h"
@@ -215,6 +216,7 @@ private:
     VideoHandler* videoHandler;
     MediaLibraryHandler* _mediaLibraryHandler;
     TCodeHandler* tcodeHandler;
+    ConnectionHandler* _connectionHandler;
     bool _isMaximized = false;
     bool _isFullScreen = false;
     QSize _videoSize;
@@ -368,12 +370,10 @@ private:
     void on_media_stop();
     void on_standaloneFunscript_start();
     void on_standaloneFunscript_stop();
-    void on_device_connectionChanged(ConnectionChangedSignal event);
+    void on_output_device_connectionChanged(ConnectionChangedSignal event);
     void on_device_error(QString error);
     void on_vr_device_connectionChanged(ConnectionChangedSignal event);
     void on_vr_device_error(QString error);
-    void on_xtpWeb_device_connectionChanged(ConnectionChangedSignal event);
-    void on_xtpWeb_device_error(QString error);
     void donate();
     void showInGraphicalShell(QString path);
     void onSetMoneyShot(LibraryListItem27 selectedLibraryListItem27, qint64 currentPosition);

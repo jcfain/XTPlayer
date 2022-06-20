@@ -298,26 +298,36 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     connect(libraryWindow, &LibraryWindow::close, this, &MainWindow::onLibraryWindowed_Closed);
 
-    connect(_xSettings, &SettingsDialog::deoDeviceConnectionChange, this, &MainWindow::on_vr_device_connectionChanged);
-    connect(_xSettings, &SettingsDialog::deoDeviceError, this, &MainWindow::on_vr_device_error);
-    connect(_xSettings, &SettingsDialog::whirligigDeviceConnectionChange, this, &MainWindow::on_vr_device_connectionChanged);
-    connect(_xSettings, &SettingsDialog::whirligigDeviceError, this, &MainWindow::on_vr_device_error);
-    connect(_xSettings, &SettingsDialog::xtpWebDeviceConnectionChange, this, &MainWindow::on_xtpWeb_device_connectionChanged);
-    connect(_xSettings, &SettingsDialog::xtpWebDeviceError, this, &MainWindow::on_xtpWeb_device_error);
-
-    connect(_xSettings, &SettingsDialog::deviceConnectionChange, this, &MainWindow::on_device_connectionChanged);
-    connect(_xSettings, &SettingsDialog::deviceConnectionChange, _syncHandler, &SyncHandler::on_device_status_change);
-    connect(_xSettings, &SettingsDialog::deviceError, this, &MainWindow::on_device_error);
+    _connectionHandler = new ConnectionHandler(this);
+    connect(_connectionHandler, &ConnectionHandler::inputConnectionChange, this, &MainWindow::on_vr_device_connectionChanged);
+    connect(_connectionHandler, &ConnectionHandler::inputConnectionError, this, &MainWindow::on_vr_device_error);
+    connect(_connectionHandler, &ConnectionHandler::outputConnectionChange, this, &MainWindow::on_output_device_connectionChanged);
+    connect(_connectionHandler, &ConnectionHandler::outputConnectionChange, _syncHandler, &SyncHandler::on_device_status_change);
+    connect(_connectionHandler, &ConnectionHandler::outputConnectionError, this, &MainWindow::on_device_error);
+    connect(_connectionHandler, &ConnectionHandler::messageRecieved, this, &MainWindow::onVRMessageRecieved);
+    connect(_connectionHandler, &ConnectionHandler::gamepadConnectionChange, this, &MainWindow::on_gamepad_connectionChanged);
+    connect(_connectionHandler, &ConnectionHandler::gamepadAction, this, &MainWindow::on_gamepad_sendTCode);
+    connect(_connectionHandler, &ConnectionHandler::gamepadTCode, this, &MainWindow::on_gamepad_sendAction);
+    connect(retryConnectionButton, &QPushButton::clicked, _connectionHandler, [this](bool checked){
+        _connectionHandler->initOutputDevice(SettingsHandler::getSelectedOutputDevice());
+    });
+    connect(deoRetryConnectionButton, &QPushButton::clicked, _connectionHandler, [this](bool checked) {
+        _connectionHandler->initInputDevice(SettingsHandler::getSelectedInputDevice());
+    });
+    //connect(_xSettings, &SettingsDialog::deviceConnectionChange, this, &MainWindow::on_device_connectionChanged);
+    //connect(_xSettings, &SettingsDialog::deviceConnectionChange, _syncHandler, &SyncHandler::on_device_status_change);
+    //connect(_xSettings, &SettingsDialog::deviceError, this, &MainWindow::on_device_error);
+//    connect(_xSettings->getDeoHandler(), &DeoHandler::messageRecieved, this, &MainWindow::onVRMessageRecieved);
+//    connect(_xSettings->getWhirligigHandler(), &WhirligigHandler::messageRecieved, this, &MainWindow::onVRMessageRecieved);
+//    connect(_xSettings->getXTPWebHandler(), &XTPWebHandler::messageRecieved, this, &MainWindow::onVRMessageRecieved);
+    //connect(_xSettings, &SettingsDialog::gamepadConnectionChange, this, &MainWindow::on_gamepad_connectionChanged);
+//    connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitTCode, this, &MainWindow::on_gamepad_sendTCode);
+//    connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitAction, this, &MainWindow::on_gamepad_sendAction);
     connect(_xSettings, &SettingsDialog::TCodeHomeClicked, this, &MainWindow::deviceHome);
-    connect(_xSettings->getDeoHandler(), &DeoHandler::messageRecieved, this, &MainWindow::onVRMessageRecieved);
-    connect(_xSettings->getWhirligigHandler(), &WhirligigHandler::messageRecieved, this, &MainWindow::onVRMessageRecieved);
-    connect(_xSettings->getXTPWebHandler(), &XTPWebHandler::messageRecieved, this, &MainWindow::onVRMessageRecieved);
-    connect(_xSettings, &SettingsDialog::gamepadConnectionChange, this, &MainWindow::on_gamepad_connectionChanged);
-    connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitTCode, this, &MainWindow::on_gamepad_sendTCode);
-    connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitAction, this, &MainWindow::on_gamepad_sendAction);
     connect(_xSettings, &SettingsDialog::onOpenWelcomeDialog, this, &MainWindow::openWelcomeDialog);
     _mediaLibraryHandler = new MediaLibraryHandler(this);
-    _xSettings->init(videoHandler, _mediaLibraryHandler, _syncHandler);
+    _xSettings->init(videoHandler, _mediaLibraryHandler, _syncHandler, _connectionHandler);
+    _connectionHandler->init();
 
     connect(this, &MainWindow::libraryIconResized, this, &MainWindow::libraryListSetIconSize);
 
@@ -354,6 +364,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_syncHandler, &SyncHandler::funscriptStatusChanged, this, &MainWindow::on_media_statusChanged, Qt::QueuedConnection);
     connect(_syncHandler, &SyncHandler::funscriptStarted, this, &MainWindow::on_standaloneFunscript_start, Qt::QueuedConnection);
     connect(_syncHandler, &SyncHandler::funscriptStopped, this, &MainWindow::on_standaloneFunscript_stop, Qt::QueuedConnection);
+    connect(_syncHandler, &SyncHandler::sendTCode, _connectionHandler, &ConnectionHandler::sendTCode, Qt::QueuedConnection);
 
     connect(videoHandler, &VideoHandler::positionChanged, this, &MainWindow::on_media_positionChanged, Qt::QueuedConnection);
     connect(videoHandler, &VideoHandler::mediaStatusChanged, this, &MainWindow::on_media_statusChanged, Qt::QueuedConnection);
@@ -391,8 +402,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(libraryList, &QListWidget::itemDoubleClicked, this, &MainWindow::on_LibraryList_itemDoubleClicked);
     connect(libraryList, &QListWidget::itemClicked, this, &MainWindow::on_LibraryList_itemClicked);
 
-    connect(retryConnectionButton, &QPushButton::clicked, _xSettings, &SettingsDialog::initDeviceRetry);
-    connect(deoRetryConnectionButton, &QPushButton::clicked, _xSettings, &SettingsDialog::initDeoRetry);
     connect(QApplication::instance(), &QCoreApplication::aboutToQuit, this, &MainWindow::dispose);
 
     loadingSplash->showMessage(fullVersion + "\nSetting user styles...", Qt::AlignBottom, Qt::white);
@@ -440,7 +449,9 @@ void MainWindow::dispose()
     if(playingLibraryListItem != nullptr)
         updateMetaData(playingLibraryListItem->getLibraryListItem());
     SettingsHandler::Save();
-
+    loadingLibraryStop = true;
+    _waitForStopFutureCancel = true;
+    _mediaStopped = true;
     if (videoHandler->isPlaying())
     {
         videoHandler->stop();
@@ -881,11 +892,11 @@ void MainWindow::mediaAction(QString action)
 
 void MainWindow::deviceHome()
 {
-    _xSettings->sendTCode(tcodeHandler->getAllHome());
+    _connectionHandler->sendTCode(tcodeHandler->getAllHome());
 }
 void MainWindow::deviceSwitchedHome()
 {
-    _xSettings->sendTCode(tcodeHandler->getSwitchedHome());
+    _connectionHandler->sendTCode(tcodeHandler->getSwitchedHome());
 }
 
 void MainWindow::on_mainwindow_splitterMove(int pos, int index)
@@ -906,7 +917,7 @@ void MainWindow::on_audioLevel_Change(int decibelL,int decibelR)
 //    if (timer2 - timer1 >= 1)
 //    {
 //    timer1 = timer2;
-        if(_xSettings->isDeviceConnected())
+        if(_connectionHandler->isOutputDeviceConnected())
         {
     //        strokerLastUpdate = time;
             auto availibleAxis = SettingsHandler::getAvailableAxis();
@@ -971,7 +982,7 @@ void MainWindow::on_audioLevel_Change(int decibelL,int decibelR)
                 }
             }
             if(!tcode.isEmpty())
-                _xSettings->getSelectedDeviceHandler()->sendTCode(tcode);
+                _connectionHandler->sendTCode(tcode);
         }
         //timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
     //}
@@ -1195,7 +1206,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
 
 void MainWindow::changeDeoFunscript()
 {
-    VRPacket playingPacket = _xSettings->getDeoHandler()->getCurrentPacket();
+    VRPacket playingPacket = _connectionHandler->getSelectedInputDevice()->getCurrentPacket();
     if (playingPacket.path != nullptr)
     {
         QFileInfo videoFile(playingPacket.path);
@@ -2559,8 +2570,8 @@ QString MainWindow::mSecondFormat(int mSecs)
 void MainWindow::on_standaloneFunscript_start()
 {
     LogHandler::Debug("Enter on_standaloneFunscript_start");
-    if(_xSettings->getConnectedVRDeviceHandler())
-        _xSettings->getConnectedVRDeviceHandler()->dispose();
+    if(_connectionHandler->getSelectedInputDevice())
+        _connectionHandler->getSelectedInputDevice()->dispose();
     videoHandler->setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(true);
 }
@@ -2575,8 +2586,8 @@ void MainWindow::on_standaloneFunscript_stop()
 void MainWindow::on_media_start()
 {
     LogHandler::Debug("Enter on_media_start");
-    if(_xSettings->getConnectedVRDeviceHandler())
-        _xSettings->getConnectedVRDeviceHandler()->dispose();
+    if(_connectionHandler->getSelectedInputDevice())
+        _connectionHandler->getSelectedInputDevice()->dispose();
     _syncHandler->on_local_video_state_change(XMediaState::Playing);
     if (_syncHandler->isLoaded())
     {
@@ -2876,12 +2887,12 @@ void MainWindow::processVRMetaData(QString videoPath, QString funscriptPath, qin
 
 void MainWindow::on_gamepad_sendTCode(QString value)
 {
-    if(_xSettings->isDeviceConnected())
+    if(_connectionHandler->isOutputDeviceConnected())
     {
         if(SettingsHandler::getFunscriptLoaded( TCodeChannelLookup::Stroke()) &&
                 _syncHandler->isPlaying() &&
                 ((videoHandler->isPlaying() && !videoHandler->isPaused())
-                    || (_xSettings->getConnectedVRDeviceHandler() && _xSettings->getConnectedVRDeviceHandler()->isPlaying())))
+                    || (_connectionHandler->getSelectedInputDevice() && _connectionHandler->getSelectedInputDevice()->isPlaying())))
         {
             QRegularExpression rx("L0[^\\s]*\\s?");
             value = value.remove(rx);
@@ -2892,7 +2903,7 @@ void MainWindow::on_gamepad_sendTCode(QString value)
             QRegularExpression rx("A1[^\\s]*\\s?");
             value = value.remove(rx);
         }
-        _xSettings->sendTCode(value);
+        _connectionHandler->sendTCode(value);
     }
 }
 
@@ -3042,43 +3053,46 @@ void MainWindow::media_single_click_event(QMouseEvent * event)
     }
 }
 
-void MainWindow::on_device_connectionChanged(ConnectionChangedSignal event)
+void MainWindow::on_output_device_connectionChanged(ConnectionChangedSignal event)
 {
-    deviceConnected = event.status == ConnectionStatus::Connected;
-    if(deviceConnected)
+    if(event.type == DeviceType::Output)
     {
-        connectionStatusLabel->setProperty("cssClass", "connectionStatusConnected");
-        deviceHome();
+        deviceConnected = event.status == ConnectionStatus::Connected;
+        if(deviceConnected)
+        {
+            connectionStatusLabel->setProperty("cssClass", "connectionStatusConnected");
+            deviceHome();
+        }
+        else if(event.status == ConnectionStatus::Connecting)
+            connectionStatusLabel->setProperty("cssClass", "connectionStatusConnecting");
+        QString message = "";
+        if (event.deviceName == DeviceName::Serial)
+        {
+            message += "Serial: ";
+        }
+        else if(event.deviceName == DeviceName::Network)
+        {
+            message += "Network: ";
+        }
+        message += " " + event.message;
+        connectionStatusLabel->setText(message);
+        if(event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected)
+        {
+            retryConnectionButton->show();
+            connectionStatusLabel->setProperty("cssClass", "connectionStatusDisconnected");
+        }
+        else
+        {
+            retryConnectionButton->hide();
+        }
+        connectionStatusLabel->style()->unpolish(connectionStatusLabel);
+        connectionStatusLabel->style()->polish(connectionStatusLabel);
     }
-    else if(event.status == ConnectionStatus::Connecting)
-        connectionStatusLabel->setProperty("cssClass", "connectionStatusConnecting");
-    QString message = "";
-    if (event.deviceType == DeviceType::Serial)
-    {
-        message += "Serial: ";
-    }
-    else if(event.deviceType == DeviceType::Network)
-    {
-        message += "Network: ";
-    }
-    message += " " + event.message;
-    connectionStatusLabel->setText(message);
-    if(event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected)
-    {
-        retryConnectionButton->show();
-        connectionStatusLabel->setProperty("cssClass", "connectionStatusDisconnected");
-    }
-    else
-    {
-        retryConnectionButton->hide();
-    }
-    connectionStatusLabel->style()->unpolish(connectionStatusLabel);
-    connectionStatusLabel->style()->polish(connectionStatusLabel);
 }
 
 void MainWindow::on_device_error(QString error)
 {
-    DialogHandler::MessageBox(this, error, XLogLevel::Critical);
+    //DialogHandler::MessageBox(this, error, XLogLevel::Critical);
 }
 
 void MainWindow::on_gamepad_connectionChanged(ConnectionChangedSignal event)
@@ -3108,69 +3122,46 @@ void MainWindow::on_gamepad_connectionChanged(ConnectionChangedSignal event)
 
 void MainWindow::on_vr_device_connectionChanged(ConnectionChangedSignal event)
 {
-    QString message = "";
-    message += event.deviceType == DeviceType::Whirligig ? "Whirligig: " : "DeoVR/HereSphere: ";
-    message += " " + event.message;
-    vrConnectionStatusLabel->setText(message);
-    if(SettingsHandler::getWhirligigEnabled() && (event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected))
+    if(event.type == DeviceType::Input)
     {
-        ui->actionChange_current_deo_script->setEnabled(false);
-        vrRetryConnectionButton->show();
-        deviceHome();
-    }
-    else if(event.status == ConnectionStatus::Connected)
-    {
-        ui->actionChange_current_deo_script->setEnabled(true);
-        vrRetryConnectionButton->hide();
-        deviceHome();
-        stopMedia();
-        _syncHandler->stopAll();
+        _syncHandler->on_vr_device_status_change(_connectionHandler->getSelectedInputDevice());
+        QString message = "";
+        if(event.deviceName == DeviceName::None) {
+            ui->actionChange_current_deo_script->setEnabled(false);
+            vrConnectionStatusLabel->hide();
+            vrRetryConnectionButton->hide();
+        }
+        else if(event.deviceName == DeviceName::XTPWeb)
+            message += "XTP Web: ";
+        else
+            message += event.deviceName == DeviceName::Whirligig ? "Whirligig: " : "DeoVR/HereSphere: ";
+        message += " " + event.message;
+        vrConnectionStatusLabel->setText(message);
+        if(event.status == ConnectionStatus::Connected)
+        {
+            ui->actionChange_current_deo_script->setEnabled(event.deviceName != DeviceName::XTPWeb);
+            vrRetryConnectionButton->hide();
+            stopMedia();
+            _syncHandler->stopAll();
 
-    }
-    else if(event.status == ConnectionStatus::Connecting)
-    {
-        vrConnectionStatusLabel->show();
-    }
-    else
-    {
-        ui->actionChange_current_deo_script->setEnabled(false);
-        vrConnectionStatusLabel->hide();
-        vrRetryConnectionButton->hide();
+        }
+        else if(event.status == ConnectionStatus::Connecting)
+        {
+            vrConnectionStatusLabel->show();
+        }
+        else
+        {
+            ui->actionChange_current_deo_script->setEnabled(false);
+            vrConnectionStatusLabel->hide();
+            vrRetryConnectionButton->hide();
+        }
     }
 }
 
 void MainWindow::on_vr_device_error(QString error)
 {
-    DialogHandler::MessageBox(this, "VR sync connection error: "+error, XLogLevel::Critical);
+    DialogHandler::MessageBox(this, "Input connection error: "+error, XLogLevel::Critical);
 }
-
-void MainWindow::on_xtpWeb_device_connectionChanged(ConnectionChangedSignal event)
-{
-    QString message = "";
-    message += "XTP Web: ";
-    message += " " + event.message;
-    xtpWebStatusLabel->setText(message);
-    xtpWebStatusLabel->show();
-    if(event.status == ConnectionStatus::Connected)
-    {
-        deviceHome();
-        stopMedia();
-    }
-    else if(event.status == ConnectionStatus::Connecting)
-    {
-        xtpWebStatusLabel->show();
-    }
-    else
-    {
-        xtpWebStatusLabel->hide();
-    }
-}
-
-void MainWindow::on_xtpWeb_device_error(QString error)
-{
-    DialogHandler::MessageBox(this, "XTP Web error: "+error, XLogLevel::Critical);
-}
-
 
 void MainWindow::on_actionAbout_triggered()
 {
@@ -3615,6 +3606,8 @@ void MainWindow::loadPlaylistIntoLibrary(QString playlistName, bool autoPlay)
                 auto playlist = playlists.value(playlistName);
                 foreach(auto item, playlist)
                 {
+                    if(loadingLibraryStop)
+                        return;
                     _mediaLibraryHandler->setLiveProperties(item);
                     LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, libraryList);
                     libraryList->addItem(qListWidgetItem);
