@@ -40,7 +40,7 @@ public:
     SettingsDialog(QWidget* parent = nullptr);
     ~SettingsDialog();
 
-    void init(VideoHandler* videoHandler, MediaLibraryHandler* mediaLibraryHandler, SyncHandler* syncHandler, ConnectionHandler* connectionHandler);
+    void init(VideoHandler* videoHandler, MediaLibraryHandler* mediaLibraryHandler, SyncHandler* syncHandler, TCodeHandler* tcodeHandler, ConnectionHandler* connectionHandler);
     void initLive();
     void dispose();
     void setAxisProgressBar(QString axis, int value);
@@ -243,6 +243,7 @@ private:
     HttpHandler* _httpHandler = 0;
     SyncHandler* _syncHandler;
     ConnectionHandler* _connectionHandler;
+    TCodeHandler* _tcodeHandler;
 
     ChannelTableViewModel* channelTableViewModel;
 

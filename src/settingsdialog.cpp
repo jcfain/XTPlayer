@@ -21,15 +21,14 @@ void SettingsDialog::on_settingsChange(bool dirty)
 void SettingsDialog::dispose()
 {
     _connectionHandler->dispose();
-    if(_httpHandler)
-        delete _httpHandler;
 }
 
-void SettingsDialog::init(VideoHandler* videoHandler, MediaLibraryHandler* mediaLibraryHandler, SyncHandler* syncHandler, ConnectionHandler* connectionHandler)
+void SettingsDialog::init(VideoHandler* videoHandler, MediaLibraryHandler* mediaLibraryHandler, SyncHandler* syncHandler, TCodeHandler* tcodeHandler,  ConnectionHandler* connectionHandler)
 {
     _videoHandler = videoHandler;
     _syncHandler = syncHandler;
     _connectionHandler = connectionHandler;
+    _tcodeHandler = tcodeHandler;
     connect(_connectionHandler, &ConnectionHandler::outputConnectionChange, this, &SettingsDialog::on_output_device_connectionChanged);
     connect(_connectionHandler, &ConnectionHandler::outputConnectionError, this, &SettingsDialog::on_output_device_error);
     connect(_connectionHandler, &ConnectionHandler::inputConnectionChange, this, &SettingsDialog::on_input_device_connectionChanged);
@@ -84,6 +83,9 @@ void SettingsDialog::initInputDevice()
     else if(SettingsHandler::getEnableHttpServer() && deviceName == DeviceName::XTPWeb)
     {
         initXTPWebEvent();
+    }
+    if(SettingsHandler::getGamepadEnabled()) {
+        _connectionHandler->initInputDevice(DeviceName::Gamepad);
     }
 }
 
@@ -584,6 +586,8 @@ void SettingsDialog::setUpTCodeAxis()
                      [this, channelName](bool checked)
                        {
                          SettingsHandler::setMultiplierChecked(channelName, checked);
+                         if(!checked)
+                            _connectionHandler->sendTCode(_tcodeHandler->getChannelHome(channelName));
                        });
              QCheckBox* damperCheckbox = new QCheckBox(this);
              damperCheckbox->setText("Speed");
@@ -1038,7 +1042,7 @@ void SettingsDialog::onRange_valueChanged(QString name, int value)
     OutputDeviceHandler* outputDevice = _connectionHandler->getSelectedOutputDevice();
     InputDeviceHandler* inputDevice = _connectionHandler->getSelectedInputDevice();
     if ((!_videoHandler->isPlaying() || _videoHandler->isPaused() || SettingsHandler::getLiveActionPaused())
-        && (!inputDevice || !inputDevice->isPlaying()) && outputDevice->isRunning())
+        && (!inputDevice || !inputDevice->isPlaying()) && (outputDevice && outputDevice->isRunning()))
     {
         _connectionHandler->sendTCode(name + QString::number(value).rightJustified(SettingsHandler::getTCodePadding(), '0')+ "S1000");
     }

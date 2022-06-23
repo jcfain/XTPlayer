@@ -302,11 +302,10 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_connectionHandler, &ConnectionHandler::inputConnectionChange, this, &MainWindow::on_input_device_connectionChanged);
     connect(_connectionHandler, &ConnectionHandler::inputConnectionError, this, &MainWindow::on_vr_device_error);
     connect(_connectionHandler, &ConnectionHandler::outputConnectionChange, this, &MainWindow::on_output_device_connectionChanged);
-    connect(_connectionHandler, &ConnectionHandler::outputConnectionChange, _syncHandler, &SyncHandler::on_output_device_status_change);
     connect(_connectionHandler, &ConnectionHandler::outputConnectionError, this, &MainWindow::on_device_error);
     connect(_connectionHandler, &ConnectionHandler::gamepadConnectionChange, this, &MainWindow::on_gamepad_connectionChanged);
-    connect(_connectionHandler, &ConnectionHandler::gamepadAction, this, &MainWindow::on_gamepad_sendTCode);
-    connect(_connectionHandler, &ConnectionHandler::gamepadTCode, this, &MainWindow::on_gamepad_sendAction);
+    connect(_connectionHandler, &ConnectionHandler::gamepadAction, this, &MainWindow::on_gamepad_sendAction);
+    connect(_connectionHandler, &ConnectionHandler::gamepadTCode, this, &MainWindow::on_gamepad_sendTCode);
     connect(retryConnectionButton, &QPushButton::clicked, _connectionHandler, [this](bool checked){
         _connectionHandler->initOutputDevice(SettingsHandler::getSelectedOutputDevice());
     });
@@ -326,7 +325,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_xSettings, &SettingsDialog::TCodeHomeClicked, this, &MainWindow::deviceHome);
     connect(_xSettings, &SettingsDialog::onOpenWelcomeDialog, this, &MainWindow::openWelcomeDialog);
     _mediaLibraryHandler = new MediaLibraryHandler(this);
-    _xSettings->init(videoHandler, _mediaLibraryHandler, _syncHandler, _connectionHandler);
+    _xSettings->init(videoHandler, _mediaLibraryHandler, _syncHandler, tcodeHandler, _connectionHandler);
     _connectionHandler->init();
 
     connect(this, &MainWindow::libraryIconResized, this, &MainWindow::libraryListSetIconSize);
@@ -612,7 +611,8 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.FullScreen)
     {
-        toggleFullScreen();
+        if (videoHandler->isPaused() || videoHandler->isPlaying())
+            toggleFullScreen();
     }
     else if(action == actions.Mute)
     {
@@ -635,24 +635,27 @@ void MainWindow::mediaAction(QString action)
     }
     else if(action == actions.VolumeUp)
     {
-        _playerControlsFrame->IncreaseVolume();
+        if (videoHandler->isPaused() || videoHandler->isPlaying())
+            _playerControlsFrame->IncreaseVolume();
     }
     else if(action == actions.VolumeDown)
     {
-        _playerControlsFrame->DecreaseVolume();
+        if (videoHandler->isPaused() || videoHandler->isPlaying())
+            _playerControlsFrame->DecreaseVolume();
     }
     else if(action == actions.Loop)
     {
-        _playerControlsFrame->toggleLoop(videoHandler->duration(), videoHandler->position());
+        if (videoHandler->isPaused() || videoHandler->isPlaying())
+            _playerControlsFrame->toggleLoop(videoHandler->duration(), videoHandler->position());
     }
     else if(action == actions.Rewind)
     {
-        if (videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone())
+        if (videoHandler->isPaused() || videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone())
             rewind();
     }
     else if(action == actions.FastForward )
     {
-        if (videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone())
+        if (videoHandler->isPaused() || videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone())
             fastForward();
     }
     else if(action == actions.TCodeSpeedUp)
@@ -2386,7 +2389,6 @@ void MainWindow::stopMedia()
     {
         _syncHandler->stopStandAloneFunscript();
     }
-    deviceHome();
 }
 
 void MainWindow::on_MuteBtn_toggled(bool checked)
@@ -2652,7 +2654,7 @@ void MainWindow::onFunscriptSearchResult(QString mediaPath, QString funscriptPat
         {
             LogHandler::Debug("Starting sync: "+funscriptPath);
             processVRMetaData(mediaPath, funscriptPath, mediaDuration);
-            _syncHandler->syncInputDeviceFunscript(funscriptPath, _connectionHandler->getSelectedInputDevice());
+            _syncHandler->syncInputDeviceFunscript(funscriptPath);
             if(saveLinkedScript)
             {
                 LogHandler::Debug("Saving script into data: "+funscriptPath);
@@ -2862,6 +2864,7 @@ void MainWindow::on_output_device_connectionChanged(ConnectionChangedSignal even
 {
     if(event.type == DeviceType::Output)
     {
+        _syncHandler->on_output_device_change(_connectionHandler->getSelectedOutputDevice());
         deviceConnected = event.status == ConnectionStatus::Connected;
         if(deviceConnected)
         {
