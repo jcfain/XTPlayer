@@ -198,9 +198,9 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     ui->libraryFrame->setFrameShadow(QFrame::Sunken);
 
-    libraryLoadingMovie = new QMovie("://images/Eclipse-1s-loading-200px.gif");
-    libraryLoadingMovie->setScaledSize({200,200});
     libraryLoadingLabel = new QLabel(this);
+    libraryLoadingMovie = new QMovie("://images/Eclipse-1s-loading-200px.gif", nullptr, libraryLoadingLabel);
+    libraryLoadingMovie->setScaledSize({200,200});
     libraryLoadingLabel->setMovie(libraryLoadingMovie);
     libraryLoadingInfoLabel = new QLabel(this);
     //libraryLoadingLabel->setStyleSheet("* {background-color: rgba(128,128,128, 0.5)}");
@@ -459,6 +459,8 @@ void MainWindow::dispose()
     _syncHandler->stopAll();
     _xSettings->dispose();
     //qDeleteAll(funscriptHandlers);
+    qDeleteAll(cachedVRItems);
+    qDeleteAll(cachedLibraryItems);
     delete _mediaLibraryHandler;
     delete tcodeHandler;
     delete videoHandler;
@@ -1602,9 +1604,9 @@ void MainWindow::onLibraryItemFound(LibraryListItem27 item, bool vrMode)
 //    auto libraryPointer = new LibraryListItem27(item);
 //    QtConcurrent::run([this, libraryPointer, vrMode]() {
         LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, vrMode ? nullptr : libraryList);
-        if(!vrMode)
-        libraryList->addItem(qListWidgetItem);
-        vrMode ? cachedVRItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone()) : cachedLibraryItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
+//        if(!vrMode)
+//            libraryList->addItem(qListWidgetItem);
+        vrMode ? cachedVRItems.push_back(qListWidgetItem) : cachedLibraryItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
 //        delete libraryPointer;
 //    });
 }

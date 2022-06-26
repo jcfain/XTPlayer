@@ -32,9 +32,9 @@ void VideoHandler::createLayout()
         delete _videoLoadingMovie;
     if(_videoLoadingLabel)
         delete _videoLoadingLabel;
-    _videoLoadingMovie = new QMovie("://images/Eclipse-1s-loading-200px.gif");
-    _videoLoadingMovie->setProperty("cssClass", "mediaLoadingSpinner");
     _videoLoadingLabel = new QLabel(this);
+    _videoLoadingMovie = new QMovie("://images/Eclipse-1s-loading-200px.gif", nullptr, _videoLoadingLabel);
+    _videoLoadingMovie->setProperty("cssClass", "mediaLoadingSpinner");
     _videoLoadingLabel->setMovie(_videoLoadingMovie);
     _videoLoadingLabel->setAttribute(Qt::WA_TransparentForMouseEvents );
     _videoLoadingLabel->setMaximumSize(200,200);
