@@ -31,7 +31,7 @@ protected:
 private:
     Ui::welcomedialog *ui;
     int currentIndex = 1;
-    int maxIndex = 6;
+    int maxIndex = 7;
 
     void loadImage(int index);
 };

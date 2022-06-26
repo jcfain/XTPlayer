@@ -44,5 +44,6 @@
         <file>images/icons/check-mark-black.png</file>
         <file>images/icons/check-mark-green.png</file>
         <file>images/icons/XTPWeb-logo.png</file>
+        <file>images/welcome/XTP_welcome-7.png</file>
     </qresource>
 </RCC>

@@ -35,7 +35,7 @@ private:
     QPoint _currentPosition;
     int _thumbSize = 200;
 
-    void on_thumbExtract(QPixmap frame);
+    void on_thumbExtract(QImage frame);
     void on_thumbExtractionError(QString error);
     void on_setLoading(bool loading);
 };

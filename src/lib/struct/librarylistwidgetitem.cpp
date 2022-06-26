@@ -137,7 +137,7 @@ void LibraryListWidgetItem::setSortMode(LibrarySortMode sortMode)
 {
     _sortMode = sortMode;
 }
-
+#include <QPixmapCache>
 void LibraryListWidgetItem::updateThumbSize(QSize thumbSize)
 {
     _thumbSize = thumbSize;
@@ -147,10 +147,9 @@ void LibraryListWidgetItem::updateThumbSize(QSize thumbSize)
     {
         thumbFilePath = "://images/icons/loading.png";
     }
-    QIcon thumb;
-    auto resizedImage = ImageFactory::resize(thumbFilePath, thumbSize);
-    thumb.addPixmap(*resizedImage);
-    delete resizedImage;
+
+    QPixmap resizedImage = ImageFactory::resize(thumbFilePath, thumbSize);
+    QIcon thumb(resizedImage);
     setIcon(thumb);
     setSizeHint(thumbSize);
     setTextAlignment(Qt::AlignmentFlag::AlignTop | Qt::AlignmentFlag::AlignHCenter);

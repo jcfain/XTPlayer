@@ -78,3 +78,5 @@ src/.qmake.stash
 /XTPlayer-release
 XTPlayer*
 src/www/.vscode
+settings_export*
+*.user
