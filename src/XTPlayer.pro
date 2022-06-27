@@ -66,12 +66,23 @@ FORMS += \
     settings.ui \
     welcomedialog.ui
 
-# LIBS       += -lVLCQtCore -lVLCQtWidgets
+unix {
+    DESTDIR = $$shell_path($$OUT_PWD)
+}
 unix:!mac {
-    QMAKE_RPATHDIR += ../lib
-    LIBS += -L$$PWD/../../HttpServer/src/build/release -lhttpServer
+    #QMAKE_RPATHDIR += ../lib
+    INCLUDEPATH += $$PWD/../../XTEngine/src
+    DEPENDPATH += $$PWD/../../XTEngine/src
     INCLUDEPATH += $$PWD/../../HttpServer/src
-    DEPENDPATH += $$PWD/../../HttpServer/src/build/release
+    DEPENDPATH += $$PWD/../../HttpServer/src
+    CONFIG(debug, debug|release) {
+        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_GCC_64bit-Debug/debug -lxtengine
+        LIBS += -L$$PWD/../../HttpServer/src/build/debug -lhttpServer
+    }
+    else:CONFIG(release, debug|release): {
+        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_GCC_64bit-Release/release -lxtengine
+        LIBS += -L$$PWD/../../HttpServer/src/build/release -lhttpServer
+    }
 }
 unix:mac {
 
@@ -100,9 +111,6 @@ INCLUDEPATH += $$PWD/../../HttpServer/src
     }
     ICON = $$PWD/images/icons/XTP-icon.icns
 }
-unix {
-    DESTDIR = $$shell_path($$OUT_PWD)
-}
 win32{
     #LIBS += -L$$QT.core.libs -lQtAV1 -lQtAVWidgets1
     build_pass: CONFIG(debug, debug|release) {
@@ -111,7 +119,7 @@ win32{
 
         #include($$PWD/../../HttpServer/HttpServer.pro)
         #LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/debug -lhttpServer
-        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/debug/ -lXTEngine
+        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/debug -lXTEngine
         LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/src/debug -lhttpServer
 #        TEMPLATE = subdirs
 #        #SOURCE_ROOT += ../../
@@ -123,7 +131,7 @@ win32{
     }
     else:build_pass:CONFIG(release, debug|release): {
         DESTDIR = $$shell_path($$OUT_PWD/release)
-        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_MinGW_64_bit-Release/release/ -lXTEngine
+        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_MinGW_64_bit-Release/release -lXTEngine
         LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release/src/release -lhttpServer
         #INCLUDEPATH += ../../QtAV-Builds/Release/x64/include
     }
