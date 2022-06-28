@@ -3,7 +3,7 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent),
     _player(0), _fullscreenWidget(0), _videoWidget(0)
 {
     _parent = parent;
-    _player = new QMediaPlayer(this, QMediaPlayer::VideoSurface);
+    _player = new QMediaPlayer(this);
     _player->setVolume(SettingsHandler::getPlayerVolume());
     connect(_player, &QMediaPlayer::positionChanged, this, &VideoHandler::on_media_positionChanged, Qt::QueuedConnection);
     connect(_player, &QMediaPlayer::mediaStatusChanged, this, &VideoHandler::on_media_statusChanged, Qt::QueuedConnection);
