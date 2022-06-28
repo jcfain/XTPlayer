@@ -20,7 +20,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     SettingsHandler::Load(QApplication::applicationDirPath());
     _xSettings = new SettingsDialog(this);
     _dlnaScriptLinksDialog = new DLNAScriptLinks(this);
-    tcodeHandler = new TCodeHandler();
+    tcodeHandler = new TCodeHandler(this);
     if(_xSettings->HasLaunchPass()) {
         int tries = 1;
         while(_isPasswordIncorrect != PasswordResponse::CANCEL && _isPasswordIncorrect == PasswordResponse::INCORRECT)
@@ -460,14 +460,14 @@ void MainWindow::dispose()
     _xSettings->dispose();
     //qDeleteAll(funscriptHandlers);
     qDeleteAll(cachedVRItems);
-    qDeleteAll(cachedLibraryItems);
-    delete _mediaLibraryHandler;
-    delete tcodeHandler;
-    delete videoHandler;
-    delete connectionStatusLabel;
-    delete retryConnectionButton;
-    delete _videoPreviewWidget;
-    delete ui;
+    //qDeleteAll(cachedLibraryItems);
+//    delete _mediaLibraryHandler;
+//    delete tcodeHandler;
+//    delete videoHandler;
+//    delete connectionStatusLabel;
+//    delete retryConnectionButton;
+//    delete _videoPreviewWidget;
+    //delete ui;
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)

@@ -150,7 +150,9 @@ void LibraryListWidgetItem::updateThumbSize(QSize thumbSize)
 
     QPixmap resizedImage = ImageFactory::resize(thumbFilePath, thumbSize);
     QIcon thumb(resizedImage);
+    resizedImage = QPixmap();
     setIcon(thumb);
+    thumb = QIcon();
     setSizeHint(thumbSize);
     setTextAlignment(Qt::AlignmentFlag::AlignTop | Qt::AlignmentFlag::AlignHCenter);
 }
