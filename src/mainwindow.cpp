@@ -428,7 +428,9 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     loadingSplash->finish(this);
     if(!SettingsHandler::getHideWelcomeScreen())
     {
-        openWelcomeDialog();
+        QTimer::singleShot(500, [this](){
+            openWelcomeDialog();
+        });
     }
 }
 MainWindow::~MainWindow()
@@ -1238,6 +1240,7 @@ void MainWindow::openWelcomeDialog()
     _welcomeDialog = new WelcomeDialog(this);
     _welcomeDialog->show();
     _welcomeDialog->raise();
+    _welcomeDialog->activateWindow();
 }
 void MainWindow::closeWelcomeDialog()
 {

@@ -8,7 +8,7 @@ WelcomeDialog::WelcomeDialog(QWidget *parent) :
     ui->setupUi(this);
     setModal(false);
 #ifdef Q_OS_MAC
-    setModal(true);// Less than Ideal workaround...
+    //setModal(true);// Less than Ideal workaround...
     //setWindowState((windowState() & ~Qt::WindowMinimized) | Qt::WindowActive);
     //raise();
 #endif
