@@ -1737,7 +1737,7 @@ void SettingsDialog::Import(QWidget* parent)
     if(!selectedFile.isEmpty())
     {
         QSettings* settingsImport = new QSettings(selectedFile, QSettings::Format::IniFormat);
-        SettingsHandler::Load(QApplication::applicationDirPath(), settingsImport);
+        SettingsHandler::Load(settingsImport);
         SettingsHandler::Save();
         SettingsHandler::setSaveOnExit(false);
         delete settingsImport;

@@ -17,7 +17,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     ui->setupUi(this);
     loadingSplash->showMessage(fullVersion + "\nLoading Settings...", Qt::AlignBottom, Qt::white);
-    SettingsHandler::Load(QApplication::applicationDirPath());
+    SettingsHandler::Load();
     _xSettings = new SettingsDialog(this);
     _dlnaScriptLinksDialog = new DLNAScriptLinks(this);
     tcodeHandler = new TCodeHandler(this);
