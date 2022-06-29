@@ -55,6 +55,7 @@ void XVideoPreviewWidget::preview(QPoint gpos) {
 void XVideoPreviewWidget::on_thumbExtract(QImage frame) {
     _label->setToolTip("");
     auto scaled = QPixmap::fromImage(frame.scaled(_thumbSize,_thumbSize,Qt::KeepAspectRatio));
+    frame = QImage();
     resize(scaled.width(), scaled.height());
     move(_currentPosition - QPoint(scaled.width()/2, scaled.height()));
     _label->setPixmap(scaled);
