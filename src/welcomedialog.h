@@ -11,7 +11,8 @@ class welcomedialog;
 class WelcomeDialog : public QDialog
 {
     Q_OBJECT
-
+signals:
+    void close();
 public:
     explicit WelcomeDialog(QWidget *parent = nullptr);
     ~WelcomeDialog();

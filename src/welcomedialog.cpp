@@ -7,11 +7,17 @@ WelcomeDialog::WelcomeDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     setModal(false);
+#ifdef Q_OS_MAC
+    setModal(true);// Less than Ideal workaround...
+    //setWindowState((windowState() & ~Qt::WindowMinimized) | Qt::WindowActive);
+    //raise();
+#endif
 
 }
 
 WelcomeDialog::~WelcomeDialog()
 {
+    emit close();
     delete ui;
 }
 void WelcomeDialog::showEvent(QShowEvent *ev)
@@ -49,6 +55,7 @@ void WelcomeDialog::loadImage(int index)
     ui->welcomeImageLabel->setAlignment(Qt::AlignCenter);
     // set a scaled pixmap to a w x h window keeping its aspect ratio
     ui->welcomeImageLabel->setPixmap(pixmap.scaled(w,h,Qt::KeepAspectRatio));
+    pixmap = QPixmap();
 }
 void WelcomeDialog::on_buttonBox_accepted()
 {

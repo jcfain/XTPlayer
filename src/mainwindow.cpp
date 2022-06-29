@@ -446,6 +446,7 @@ void MainWindow::onPasswordIncorrect()
 }
 void MainWindow::dispose()
 {
+    closeWelcomeDialog();
     if(playingLibraryListItem != nullptr)
         updateMetaData(playingLibraryListItem->getLibraryListItem());
     SettingsHandler::Save();
@@ -1238,7 +1239,13 @@ void MainWindow::openWelcomeDialog()
     _welcomeDialog->show();
     _welcomeDialog->raise();
 }
+void MainWindow::closeWelcomeDialog()
+{
+    if(_welcomeDialog) {
+        _welcomeDialog->close();
+    }
 
+}
 //void MainWindow::loadLibraryAsync()
 //{
 //    QString library = SettingsHandler::getSelectedLibrary();

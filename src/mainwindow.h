@@ -197,7 +197,7 @@ private:
     float XTPVersionNum = 0.32f;
     SettingsDialog* _xSettings;
     SyncHandler* _syncHandler;
-    WelcomeDialog* _welcomeDialog;
+    WelcomeDialog* _welcomeDialog = 0;
     DLNAScriptLinks* _dlnaScriptLinksDialog;
     QFrame* _controlsHomePlaceHolderFrame;
     QGridLayout* _controlsHomePlaceHolderGrid;
@@ -303,6 +303,7 @@ private:
     void onLibraryNotFound();
 //    void on_load_library(QString path, bool vrMode);
     void openWelcomeDialog();
+    void closeWelcomeDialog();
     void backToMainLibrary();
     void loadPlaylistIntoLibrary(QString playlistName, bool autoPlay = false);
     void media_double_click_event(QMouseEvent * event);

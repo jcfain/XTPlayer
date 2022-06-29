@@ -98,10 +98,18 @@ unix:mac {
 #    images.path = Contents/MacOS
 #    QMAKE_BUNDLE_DATA += images;
 #    #LIBS += -framework QtCompress
-LIBS += -L$$PWD/../../HttpServer/src/build/release -lhttpServer
-INCLUDEPATH += $$PWD/../../HttpServer/src/build/release
-DEPENDPATH += $$PWD/../../HttpServer/src/build/release
-INCLUDEPATH += $$PWD/../../HttpServer/src
+    INCLUDEPATH += $$PWD/../../XTEngine/src
+    DEPENDPATH += $$PWD/../../XTEngine/src
+    DEPENDPATH += $$PWD/../../HttpServer/src
+    INCLUDEPATH += $$PWD/../../HttpServer/src
+    CONFIG(debug, debug|release) {
+        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_clang_64bit-Debug/debug -lxtengine
+        LIBS += -L$$PWD/../../HttpServer/src/build/debug -lhttpServer
+    }
+    else:CONFIG(release, debug|release): {
+        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_clang_64bit-Release/release -lxtengine
+        LIBS += -L$$PWD/../../HttpServer/src/build/release -lhttpServer
+    }
 
     RPATHDIR *= @loader_path/../Frameworks @executable_path/../Frameworks
     QMAKE_LFLAGS_SONAME = -W1,-install_name,@rpath,
