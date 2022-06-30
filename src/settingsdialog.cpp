@@ -373,7 +373,8 @@ void SettingsDialog::setupGamepadMap()
             variant.setValue(channel);
             mapComboBox->addItem(channel.FriendlyName, variant);
         }
-        auto gameMap = gamepadMap->value(button);
+        auto gameMapList = gamepadMap->value(button);
+        auto gameMap = gameMapList.empty() ? TCodeChannelLookup::None() : gameMapList.first();
 
         if (availableAxis->contains(gameMap))
             mapComboBox->setCurrentText(availableAxis->value(gameMap).FriendlyName);
@@ -433,7 +434,10 @@ void SettingsDialog::setupGamepadMap()
                             if (button == "None")
                                 continue;
                             auto mapComboBox = ui.gamePadMapGroupbox->findChild<QComboBox*>(button);
-                            auto gameMap = gamepadMap->value(button);
+
+                            auto gameMapList = gamepadMap->value(button);
+                            auto gameMap = gameMapList.empty() ? TCodeChannelLookup::None() : gameMapList.first();
+
                             if (availableAxis->contains(gameMap))
                                 mapComboBox->setCurrentText(availableAxis->value(gameMap).FriendlyName);
                             else
