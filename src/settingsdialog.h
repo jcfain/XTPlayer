@@ -10,6 +10,7 @@
 #include <QCryptographicHash>
 #include <QInputDialog>
 #include "CustomControls/rangeslider.h"
+#include "inputmapwidget.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/channeltableviewmodel.h"
 #include "lib/struct/channeltablecomboboxdelegate.h"
@@ -244,6 +245,7 @@ private:
     SyncHandler* _syncHandler;
     ConnectionHandler* _connectionHandler;
     TCodeHandler* _tcodeHandler;
+    InputMapWidget* _inputMapWidget;
 
     ChannelTableViewModel* channelTableViewModel;
 

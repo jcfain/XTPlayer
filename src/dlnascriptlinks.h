@@ -4,7 +4,6 @@
 #include <QObject>
 #include <QWidget>
 #include <QFileDialog>
-#include <QTreeView>
 #include <QPushButton>
 #include <QMessageBox>
 #include <lib/handler/settingshandler.h>

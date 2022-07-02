@@ -21,6 +21,7 @@ SOURCES += \
     addchanneldialog.cpp \
     addplaylistdialog.cpp \
     dlnascriptlinks.cpp \
+    inputmapwidget.cpp \
     lib/handler/dialoghandler.cpp \
     lib/handler/videohandler.cpp \
     lib/handler/xvideopreviewwidget.cpp \
@@ -43,6 +44,7 @@ HEADERS += \
     addchanneldialog.h \
     addplaylistdialog.h \
     dlnascriptlinks.h \
+    inputmapwidget.h \
     lib/handler/dialoghandler.h \
     lib/handler/videohandler.h \
     lib/handler/xvideopreviewwidget.h \

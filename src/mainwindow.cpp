@@ -6,8 +6,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 {
     QCoreApplication::setOrganizationName("cUrbSide prOd");
     QCoreApplication::setApplicationName("XTPlayer");
-    XTPVersion = QString("0.32a_%1T%2").arg(__DATE__).arg(__TIME__);
-    XTPVersionNum = 0.32f;
+    XTPVersion = QString("0.321a_%1T%2").arg(__DATE__).arg(__TIME__);
+    XTPVersionNum = 0.321f;
     const QString fullVersion = "XTP: v"+ XTPVersion + "\nXTE: v" + SettingsHandler::XTEVersion;
 
     QPixmap pixmap("://images/XTP_Splash.png");
@@ -2072,18 +2072,6 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
                 //connect(audioSyncFilter, &AudioSyncFilter::levelChanged, this, &MainWindow::on_audioLevel_Change);
             }
             QString filesWithLoadingIssues = "";
-            if(!invalidScripts.empty())
-            {
-                filesWithLoadingIssues += "The following scripts had issues loading:\n\n";
-                foreach(auto invalidFunscript, invalidScripts)
-                    filesWithLoadingIssues += "* " + invalidFunscript + "\n";
-                filesWithLoadingIssues += "\n\nThis is may be due to an invalid JSON format.\nTry downloading the script again or asking the script maker.\nYou may also find some information running XTP in debug mode.";
-                DialogHandler::MessageBox(this, filesWithLoadingIssues, XLogLevel::Critical);
-            }
-            if(!SettingsHandler::getDisableNoScriptFound() && selectedFileListItem.type != LibraryListItemType::FunscriptType && !audioSync && !_syncHandler->isLoaded() && !invalidScripts.contains(scriptFile))
-            {
-                on_scriptNotFound(scriptFile);
-            }
             if(selectedFileListItem.type == LibraryListItemType::FunscriptType && _syncHandler->isLoaded())
                 _syncHandler->playStandAlone();
             else if(selectedFileListItem.type == LibraryListItemType::FunscriptType && !_syncHandler->isLoaded())
@@ -2099,6 +2087,18 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
             playingLibraryListItem = (LibraryListWidgetItem*)libraryList->item(playingLibraryListIndex)->clone();
 
             processMetaData(selectedFileListItem);
+            if(!invalidScripts.empty())
+            {
+                filesWithLoadingIssues += "The following scripts had issues loading:\n\n";
+                foreach(auto invalidFunscript, invalidScripts)
+                    filesWithLoadingIssues += "* " + invalidFunscript + "\n";
+                filesWithLoadingIssues += "\n\nThis is may be due to an invalid JSON format.\nTry downloading the script again or asking the script maker.\nYou may also find some information running XTP in debug mode.";
+                DialogHandler::MessageBox(this, filesWithLoadingIssues, XLogLevel::Critical);
+            }
+            if(!SettingsHandler::getDisableNoScriptFound() && selectedFileListItem.type != LibraryListItemType::FunscriptType && !audioSync && !_syncHandler->isLoaded() && !invalidScripts.contains(scriptFile))
+            {
+                on_scriptNotFound(scriptFile);
+            }
         }
     }
     else

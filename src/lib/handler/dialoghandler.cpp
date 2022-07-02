@@ -42,7 +42,7 @@ int DialogHandler::Dialog(QWidget* parent, QLayout* layout, bool modal)
     return -1;
 }
 
-int DialogHandler::Dialog(QWidget* parent, QString message, bool modal)
+int DialogHandler::Dialog(QWidget* parent, QString message, bool modal, bool showAccept)
 {
     if(!_dialog)
     {
@@ -53,14 +53,16 @@ int DialogHandler::Dialog(QWidget* parent, QString message, bool modal)
         messageLabel->setTextFormat(Qt::RichText);
         messageLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
         messageLabel->setOpenExternalLinks(true);
-        QPushButton* okButton = new QPushButton(_dialog);
-        okButton->setText("Ok");
         layout->addWidget(messageLabel, 0, 0, 1, 4);
-        layout->addWidget(okButton, 2, 3, 1, 2);
-        connect(okButton, &QPushButton::released, _dialog, &QDialog::accept);
+        if(showAccept) {
+            QPushButton* okButton = new QPushButton(_dialog);
+            okButton->setText("Ok");
+            layout->addWidget(okButton, 2, 3, 1, 2);
+            connect(okButton, &QPushButton::released, _dialog, &QDialog::accept);
+            connect(_dialog, &QDialog::accepted, DialogAccepted);
+        }
         _dialog->setModal(modal);
         _dialog->setLayout(layout);
-        connect(_dialog, &QDialog::accepted, DialogAccepted);
         connect(_dialog, &QDialog::rejected, DialogRejected);
         if(modal)
             return _dialog->exec();
@@ -69,16 +71,21 @@ int DialogHandler::Dialog(QWidget* parent, QString message, bool modal)
     }
     return -1;
 }
-
+void DialogHandler::DialogClose()
+{
+    if(_dialog) {
+        _dialog->close();
+        delete _dialog;
+        _dialog = 0;
+    }
+}
 void DialogHandler::DialogAccepted()
 {
-    delete _dialog;
-    _dialog = 0;
+    DialogClose();
 }
 void DialogHandler::DialogRejected()
 {
-    delete _dialog;
-    _dialog = 0;
+    DialogClose();
 }
 
 void DialogHandler::ShowAboutDialog(QWidget* parent, QString XTPVersion, QString XTEVersion, QString selectedTCodeVersion)

@@ -330,152 +330,155 @@ void SettingsDialog::setupGamepadMap()
 {
     if(_interfaceInitialized)
     {
-        QLayoutItem *child;
-        while ((child = ui.gamePadMapGridLayout->takeAt(0)) != 0)
-        {
-            //setParent is NULL, preventing the interface from disappearing after deletion.
-            if(child->widget())
-            {
-                child->widget()->setParent(NULL);
-            }
+//        QLayoutItem *child;
+//        while ((child = ui.gamePadMapGridLayout->takeAt(0)) != 0)
+//        {
+//            //setParent is NULL, preventing the interface from disappearing after deletion.
+//            if(child->widget())
+//            {
+//                child->widget()->setParent(NULL);
+//            }
 
-            delete child;
-        }
+//            delete child;
+//        }
+        delete _inputMapWidget;
     }
-    auto gamepadMap = SettingsHandler::getGamePadMap();
-    auto availableAxis = SettingsHandler::getAvailableAxis();
-    auto tcodeChannels = TCodeChannelLookup::GetSelectedVersionMap();
-    MediaActions actions;
-    int rowIterator = 0;
-    int columnIterator = 0;
-    int maxRows = 4;//6 total
-    foreach(auto button, gamepadMap->keys())
-    {
-        if (button == "None")
-            continue;
-        QLabel* mapLabel = new QLabel(this);
-        mapLabel->setText(button);
-        QComboBox* mapComboBox = new QComboBox(this);
-        mapComboBox->setObjectName(button);
-        foreach(auto axis, tcodeChannels.keys())
-        {
-            auto channel = availableAxis->value(TCodeChannelLookup::ToString(axis));
-            QVariant variant;
-            variant.setValue(channel);
-            mapComboBox->addItem(channel.FriendlyName, variant);
-        }
-        foreach(auto action, actions.Values.keys())
-        {
-            ChannelModel channel;
-            channel.AxisName = action;
-            channel.FriendlyName = actions.Values.value(action);
-            QVariant variant;
-            variant.setValue(channel);
-            mapComboBox->addItem(channel.FriendlyName, variant);
-        }
-        auto gameMapList = gamepadMap->value(button);
-        auto gameMap = gameMapList.empty() ? TCodeChannelLookup::None() : gameMapList.first();
+    _inputMapWidget = new InputMapWidget(_connectionHandler, this);
+    ui.gamePadMapGridLayout->addWidget(_inputMapWidget);
+//    auto gamepadMap = SettingsHandler::getGamePadMap();
+//    auto availableAxis = SettingsHandler::getAvailableAxis();
+//    auto tcodeChannels = TCodeChannelLookup::GetSelectedVersionMap();
+//    MediaActions actions;
+//    int rowIterator = 0;
+//    int columnIterator = 0;
+//    int maxRows = 4;//6 total
+//    foreach(auto button, gamepadMap->keys())
+//    {
+//        if (button == "None")
+//            continue;
+//        QLabel* mapLabel = new QLabel(this);
+//        mapLabel->setText(button);
+//        QComboBox* mapComboBox = new QComboBox(this);
+//        mapComboBox->setObjectName(button);
+//        foreach(auto axis, tcodeChannels.keys())
+//        {
+//            auto channel = availableAxis->value(TCodeChannelLookup::ToString(axis));
+//            QVariant variant;
+//            variant.setValue(channel);
+//            mapComboBox->addItem(channel.FriendlyName, variant);
+//        }
+//        foreach(auto action, actions.Values.keys())
+//        {
+//            ChannelModel channel;
+//            channel.AxisName = action;
+//            channel.FriendlyName = actions.Values.value(action);
+//            QVariant variant;
+//            variant.setValue(channel);
+//            mapComboBox->addItem(channel.FriendlyName, variant);
+//        }
+//        auto gameMapList = gamepadMap->value(button);
+//        auto gameMap = gameMapList.empty() ? TCodeChannelLookup::None() : gameMapList.first();
 
-        if (availableAxis->contains(gameMap))
-            mapComboBox->setCurrentText(availableAxis->value(gameMap).FriendlyName);
-        else
-            mapComboBox->setCurrentText(actions.Values.value(gameMap));
+//        if (availableAxis->contains(gameMap))
+//            mapComboBox->setCurrentText(availableAxis->value(gameMap).FriendlyName);
+//        else
+//            mapComboBox->setCurrentText(actions.Values.value(gameMap));
 
-        ui.gamePadMapGridLayout->addWidget(mapLabel, rowIterator, columnIterator, Qt::AlignRight);
-        ui.gamePadMapGridLayout->addWidget(mapComboBox, rowIterator, columnIterator + 1, Qt::AlignLeft);
+//        ui.gamePadMapGridLayout->addWidget(mapLabel, rowIterator, columnIterator, Qt::AlignRight);
+//        ui.gamePadMapGridLayout->addWidget(mapComboBox, rowIterator, columnIterator + 1, Qt::AlignLeft);
 
-        connect(mapComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
-                [this, mapComboBox, gamepadMap, button](int index)
-                  {
-                        ChannelModel selectedChannel = mapComboBox->currentData().value<ChannelModel>();
-                        SettingsHandler::setGamePadMapButton(button, selectedChannel.AxisName);
-                  });
-        if (rowIterator <= maxRows)
-            rowIterator++;
-        else
-        {
-            rowIterator = 0;
-            columnIterator += 2;
-        }
-    }
-    QGridLayout* inverseGrid = new QGridLayout(this);
-    QFrame* inverseFrame = new QFrame(this);
-    inverseFrame->setLayout(inverseGrid);
-    ui.gamePadMapGridLayout->addWidget(inverseFrame, maxRows + 2, 0, 1, columnIterator + 2);
+//        connect(mapComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+//                [this, mapComboBox, gamepadMap, button](int index)
+//                  {
+//                        ChannelModel selectedChannel = mapComboBox->currentData().value<ChannelModel>();
+//                        SettingsHandler::setGamePadMapButton(button, selectedChannel.AxisName);
+//                  });
+//        if (rowIterator <= maxRows)
+//            rowIterator++;
+//        else
+//        {
+//            rowIterator = 0;
+//            columnIterator += 2;
+//        }
+//    }
+//    QGridLayout* inverseGrid = new QGridLayout(this);
+//    QFrame* inverseFrame = new QFrame(this);
+//    inverseFrame->setLayout(inverseGrid);
+//    ui.gamePadMapGridLayout->addWidget(inverseFrame, maxRows + 2, 0, 1, columnIterator + 2);
 
-    QLabel* speedLabel = new QLabel(this);
-    speedLabel->setText("Speed");
-    speedLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-    QSpinBox* speedInput = new QSpinBox(this);
-    speedInput->setMinimum(1);
-    speedInput->setMaximum(std::numeric_limits<int>::max());
-    speedInput->setMinimumWidth(75);
-    speedInput->setSuffix("ms");
-    speedInput->setSingleStep(100);
-    speedInput->setValue(SettingsHandler::getGamepadSpeed());
-    speedInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-    connect(speedInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_speedInput_valueChanged);
-    inverseGrid->addWidget(speedLabel, 0, 0, Qt::AlignCenter);
-    inverseGrid->addWidget(speedInput, 1, 0, Qt::AlignCenter);
+//    QLabel* speedLabel = new QLabel(this);
+//    speedLabel->setText("Speed");
+//    speedLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+//    QSpinBox* speedInput = new QSpinBox(this);
+//    speedInput->setMinimum(1);
+//    speedInput->setMaximum(std::numeric_limits<int>::max());
+//    speedInput->setMinimumWidth(75);
+//    speedInput->setSuffix("ms");
+//    speedInput->setSingleStep(100);
+//    speedInput->setValue(SettingsHandler::getGamepadSpeed());
+//    speedInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+//    connect(speedInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_speedInput_valueChanged);
+//    inverseGrid->addWidget(speedLabel, 0, 0, Qt::AlignCenter);
+//    inverseGrid->addWidget(speedInput, 1, 0, Qt::AlignCenter);
 
-    QPushButton* resetGamepadMap = new QPushButton("Reset gamepad map", this);
-    connect(resetGamepadMap, &QPushButton::clicked, this,
-            [this, gamepadMap, availableAxis]()
-              {
-                    QMessageBox::StandardButton reply;
-                    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset the gamepad map?",
-                                                  QMessageBox::Yes|QMessageBox::No);
-                    if (reply == QMessageBox::Yes)
-                    {
-                        MediaActions actions;
-                        SettingsHandler::SetGamepadMapDefaults();
-                        foreach(auto button, gamepadMap->keys())
-                        {
-                            if (button == "None")
-                                continue;
-                            auto mapComboBox = ui.gamePadMapGroupbox->findChild<QComboBox*>(button);
+//    QPushButton* resetGamepadMap = new QPushButton("Reset gamepad map", this);
+//    connect(resetGamepadMap, &QPushButton::clicked, this,
+//            [this, gamepadMap, availableAxis]()
+//              {
+//                    QMessageBox::StandardButton reply;
+//                    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset the gamepad map?",
+//                                                  QMessageBox::Yes|QMessageBox::No);
+//                    if (reply == QMessageBox::Yes)
+//                    {
+//                        MediaActions actions;
+//                        SettingsHandler::SetGamepadMapDefaults();
+//                        foreach(auto button, gamepadMap->keys())
+//                        {
+//                            if (button == "None")
+//                                continue;
+//                            auto mapComboBox = ui.gamePadMapGroupbox->findChild<QComboBox*>(button);
 
-                            auto gameMapList = gamepadMap->value(button);
-                            auto gameMap = gameMapList.empty() ? TCodeChannelLookup::None() : gameMapList.first();
+//                            auto gameMapList = gamepadMap->value(button);
+//                            auto gameMap = gameMapList.empty() ? TCodeChannelLookup::None() : gameMapList.first();
 
-                            if (availableAxis->contains(gameMap))
-                                mapComboBox->setCurrentText(availableAxis->value(gameMap).FriendlyName);
-                            else
-                                mapComboBox->setCurrentText(actions.Values.value(gameMap));
-                        }
-                    }
-              });
-    inverseGrid->addWidget(resetGamepadMap, 1, 1, Qt::AlignCenter);
+//                            if (availableAxis->contains(gameMap))
+//                                mapComboBox->setCurrentText(availableAxis->value(gameMap).FriendlyName);
+//                            else
+//                                mapComboBox->setCurrentText(actions.Values.value(gameMap));
+//                        }
+//                    }
+//              });
+//    inverseGrid->addWidget(resetGamepadMap, 1, 1, Qt::AlignCenter);
 
-    QLabel* speedIncrementLabel = new QLabel(this);
-    speedIncrementLabel->setText("Speed change step");
-    speedIncrementLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-    QSpinBox* speedIncrmentInput = new QSpinBox(this);
-    speedIncrmentInput->setMinimum(1);
-    speedIncrmentInput->setMaximum(std::numeric_limits<int>::max());
-    speedIncrmentInput->setMinimumWidth(75);
-    speedIncrmentInput->setSingleStep(100);
-    speedIncrmentInput->setValue(SettingsHandler::getGamepadSpeedIncrement());
-    speedIncrmentInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-    connect(speedIncrmentInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_speedIncrementInput_valueChanged);
-    inverseGrid->addWidget(speedIncrementLabel, 0, 2, Qt::AlignCenter);
-    inverseGrid->addWidget(speedIncrmentInput, 1, 2, Qt::AlignCenter);
+//    QLabel* speedIncrementLabel = new QLabel(this);
+//    speedIncrementLabel->setText("Speed change step");
+//    speedIncrementLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+//    QSpinBox* speedIncrmentInput = new QSpinBox(this);
+//    speedIncrmentInput->setMinimum(1);
+//    speedIncrmentInput->setMaximum(std::numeric_limits<int>::max());
+//    speedIncrmentInput->setMinimumWidth(75);
+//    speedIncrmentInput->setSingleStep(100);
+//    speedIncrmentInput->setValue(SettingsHandler::getGamepadSpeedIncrement());
+//    speedIncrmentInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+//    connect(speedIncrmentInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_speedIncrementInput_valueChanged);
+//    inverseGrid->addWidget(speedIncrementLabel, 0, 2, Qt::AlignCenter);
+//    inverseGrid->addWidget(speedIncrmentInput, 1, 2, Qt::AlignCenter);
 
-    QCheckBox* inverseX = new QCheckBox(this);
-    inverseX->setText("Inverse Stroke");
-    inverseX->setChecked(SettingsHandler::getInverseTcXL0());
-    connect(inverseX, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcXL0_valueChanged);
-    inverseGrid->addWidget(inverseX, 3, 0, Qt::AlignCenter);
-    QCheckBox* inverseYRoll = new QCheckBox(this);
-    inverseYRoll->setText("Inverse Roll");
-    inverseYRoll->setChecked(SettingsHandler::getInverseTcYRollR1());
-    connect(inverseYRoll, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcYRollR1_valueChanged);
-    inverseGrid->addWidget(inverseYRoll, 3, 1, Qt::AlignCenter);
-    QCheckBox* inverseXRoll = new QCheckBox(this);
-    inverseXRoll->setText("Inverse Pitch");
-    inverseXRoll->setChecked(SettingsHandler::getInverseTcXRollR2());
-    connect(inverseXRoll, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcXRollR2_valueChanged);
-    inverseGrid->addWidget(inverseXRoll, 3, 2, Qt::AlignCenter);
+//    QCheckBox* inverseX = new QCheckBox(this);
+//    inverseX->setText("Inverse Stroke");
+//    inverseX->setChecked(SettingsHandler::getInverseTcXL0());
+//    connect(inverseX, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcXL0_valueChanged);
+//    inverseGrid->addWidget(inverseX, 3, 0, Qt::AlignCenter);
+//    QCheckBox* inverseYRoll = new QCheckBox(this);
+//    inverseYRoll->setText("Inverse Roll");
+//    inverseYRoll->setChecked(SettingsHandler::getInverseTcYRollR1());
+//    connect(inverseYRoll, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcYRollR1_valueChanged);
+//    inverseGrid->addWidget(inverseYRoll, 3, 1, Qt::AlignCenter);
+//    QCheckBox* inverseXRoll = new QCheckBox(this);
+//    inverseXRoll->setText("Inverse Pitch");
+//    inverseXRoll->setChecked(SettingsHandler::getInverseTcXRollR2());
+//    connect(inverseXRoll, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcXRollR2_valueChanged);
+//    inverseGrid->addWidget(inverseXRoll, 3, 2, Qt::AlignCenter);
 }
 
 void SettingsDialog::setUpTCodeAxis()
@@ -735,6 +738,7 @@ void SettingsDialog::setUpTCodeAxis()
      ui.RangeSettingsGrid->addWidget(xRangeStepInput, sliderGridRow + 4, 3);
 
      setupGamepadMap();
+
 }
 
 void SettingsDialog::setUpMultiplierUi(bool enabled)
