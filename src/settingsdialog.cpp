@@ -752,6 +752,12 @@ void SettingsDialog::setAxisProgressBar(QString axis, int value)
     emit onAxisValueChange(axis, value);
 }
 
+void SettingsDialog::send_websocket_message(QString command, QString message)
+{
+    if(_httpHandler)
+        _httpHandler->sendWebSocketTextMessage(command, message);
+}
+
 void SettingsDialog::on_axis_valueChange(QString axis, int value)
 {
     if (ui.settingsTabWidget->currentWidget() == ui.tcodeTab)

@@ -36,33 +36,35 @@ InputMapWidget::InputMapWidget(ConnectionHandler* connectionHandler, QWidget *pa
 void InputMapWidget::setUpData()
 {
     //disconnect(_tableWidget, &QTableWidget::itemChanged, this, &DLNAScriptLinks::on_tableWidget_Changed);
-    _tableWidget->setSortingEnabled(false);
-    QMap<QString, QStringList>* gamepadMap = SettingsHandler::getGamePadMap();
-    QMap<QString, QStringList> inverseGamePadMap;
-    foreach (auto key, gamepadMap->keys())
-    {
-        QStringList actions = gamepadMap->value(key);
-        foreach(auto action, actions) {
-            QStringList existingKeys;
-            if(inverseGamePadMap.contains(action)) {
-                existingKeys = inverseGamePadMap.value(action);
-            }
-            existingKeys << key;
-            inverseGamePadMap.insert(action, existingKeys);
+
+    QList<QPair<QString, QString>> actions;
+    QMap<QString, QStringList> gamepadMap = SettingsHandler::getGamePadMap();
+    QMap<QString, QStringList> inverseGamePadMap = SettingsHandler::getGamePadMapInverse();
+
+    auto tcodeVersionMap = TCodeChannelLookup::GetSelectedVersionMap();
+    auto availableAxis = SettingsHandler::getAvailableAxis();
+    for(auto __begin = tcodeVersionMap.begin(), __end = tcodeVersionMap.end();  __begin != __end; ++__begin) {
+        if(__begin.key() != AxisName::None) {
+            auto channel = availableAxis->value(TCodeChannelLookup::ToString(__begin.key()));
+            actions.append({channel.AxisName, "TCode: " + channel.FriendlyName});
         }
     }
 
-    auto tcodeVersionMap = TCodeChannelLookup::GetSelectedVersionMap();
-    MediaActions mediaActions;
-    _tableWidget->setRowCount(mediaActions.Values.count());
+    MediaActions actionsMap;
+    for(auto __begin = actionsMap.Values.begin(), __end = actionsMap.Values.end();  __begin != __end; ++__begin) {
+        actions.append({__begin.key(), "Media: " + __begin.value()});
+    }
+
+    _tableWidget->setRowCount(actions.count());
     int row = 0;
-    foreach (auto key, mediaActions.Values.keys())
+    foreach(auto actionKeyValue, actions)
     {
-        QString gamePadKeys = inverseGamePadMap.value(key).join(", ");
-        QString actionKey = mediaActions.Values.value(key);
-        QTableWidgetItem *actionName = new QTableWidgetItem(actionKey);
-        actionName->setFlags(actionName->flags() & ~Qt::ItemIsEditable);
-        _tableWidget->setItem(row, _COLUMNS::ACTION_NAME, actionName);
+        QString action = actionKeyValue.first;
+        QString actionName = actionKeyValue.second;
+        QString gamePadKeys = inverseGamePadMap.value(action).join(", ");
+        QTableWidgetItem *actionNameTableItem = new QTableWidgetItem(actionName);
+        actionNameTableItem->setFlags(actionNameTableItem->flags() & ~Qt::ItemIsEditable);
+        _tableWidget->setItem(row, _COLUMNS::ACTION_NAME, actionNameTableItem);
         QTableWidgetItem *gamepad = new QTableWidgetItem(gamePadKeys);
         gamepad->setFlags(gamepad->flags() & ~Qt::ItemIsEditable);
         _tableWidget->setItem(row, _COLUMNS::GAMEPAD, gamepad);
@@ -74,19 +76,19 @@ void InputMapWidget::setUpData()
         QHBoxLayout *layoutBrowse = new QHBoxLayout(editWidget);
         QPushButton* editButton = new QPushButton(this);
         editButton->setText("Edit");
-        editButton->setObjectName(key);
+        editButton->setObjectName(action);
         editButton->setMaximumWidth(150);
         layoutBrowse->addWidget(editButton);
         layoutBrowse->setAlignment(Qt::AlignCenter); //set Alignment layout
         layoutBrowse->setContentsMargins(4,4,4,4);
-        connect(editButton, &QPushButton::clicked, this, [this, key, actionKey, gamepadMap]() {
+        connect(editButton, &QPushButton::clicked, this, [this, action, actionName, gamepadMap]() {
             if(_connectionHandler->getGamepadHandler()->isConnected()) {
-                connect(_connectionHandler->getGamepadHandler(), &GamepadHandler::onListenForInputRecieve, this, [this, key, actionKey, gamepadMap](QString button) {
-                    auto items = _tableWidget->findItems(actionKey, Qt::MatchFlag::MatchExactly);
+                connect(_connectionHandler->getGamepadHandler(), &GamepadHandler::onListenForInputRecieve, this, [this, action, actionName, gamepadMap](QString button) {
+                    auto items = _tableWidget->findItems(actionName, Qt::MatchFlag::MatchExactly);
                     auto item = items.first();
                     auto gamepadItem = _tableWidget->item(item->row(), _COLUMNS::GAMEPAD);
-                    auto buttonMapValues = gamepadMap->value(button);
-                    if (buttonMapValues.contains(key))
+                    auto buttonMapValues = gamepadMap.value(button);
+                    if (buttonMapValues.contains(action))
                     {
                         auto text = gamepadItem->text();
                         if(!text.isEmpty()) {
@@ -97,12 +99,12 @@ void InputMapWidget::setUpData()
                             else
                                 gamepadItem->setText(text.trimmed().remove(button));
                         }
-                        SettingsHandler::removeGamePadMapButton(button, key);
+                        SettingsHandler::removeGamePadMapButton(button, action);
                     }
                     else
                     {
                         gamepadItem->setText(gamepadItem->text().isEmpty() ? button : gamepadItem->text() + ", " + button);
-                        SettingsHandler::setGamePadMapButton(button, key);
+                        SettingsHandler::setGamePadMapButton(button, action);
                     }
                     tableWidget_Changed(gamepadItem);
                 });
@@ -111,6 +113,8 @@ void InputMapWidget::setUpData()
                     disconnect(_connectionHandler->getGamepadHandler(), &GamepadHandler::onListenForInputRecieve, nullptr, nullptr);
                 }
             }
+            else
+                DialogHandler::Dialog(this, "No gamepad connected!");
         });
         _tableWidget->setCellWidget(row, _COLUMNS::EDIT, editWidget);
         row++;

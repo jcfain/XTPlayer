@@ -667,8 +667,7 @@ void MainWindow::mediaAction(QString action)
     {
         int newGamepadSpeed = SettingsHandler::getLiveGamepadSpeed() + SettingsHandler::getGamepadSpeedIncrement();
         SettingsHandler::setLiveGamepadSpeed(newGamepadSpeed);
-        if(!SettingsHandler::getDisableSpeechToText())
-            textToSpeech->say("Raise speed "+ QString::number(newGamepadSpeed));
+        onText_to_speech("Raise speed "+ QString::number(newGamepadSpeed));
     }
     else if(action == actions.TCodeSpeedDown)
     {
@@ -676,10 +675,9 @@ void MainWindow::mediaAction(QString action)
         if (newGamepadSpeed > 0)
         {
             SettingsHandler::setLiveGamepadSpeed(newGamepadSpeed);
-            if(!SettingsHandler::getDisableSpeechToText())
-                textToSpeech->say("Lower speed "+ QString::number(newGamepadSpeed));
-        } else if(!SettingsHandler::getDisableSpeechToText())
-                textToSpeech->say("Lower speed at minimum");
+            onText_to_speech("Lower speed "+ QString::number(newGamepadSpeed));
+        } else
+            onText_to_speech("Lower speed at minimum");
     }
     else if(action == actions.IncreaseXLowerRange)
     {
@@ -689,14 +687,12 @@ void MainWindow::mediaAction(QString action)
         if(newLiveRange < xRangeMax - xRangeStep)
         {
             SettingsHandler::setLiveXRangeMin(newLiveRange);
-            if(!SettingsHandler::getDisableSpeechToText())
-                textToSpeech->say("Raise X min to "+ QString::number(newLiveRange));
+            onText_to_speech("Raise X min to "+ QString::number(newLiveRange));
         }
         else
         {
             SettingsHandler::setLiveXRangeMin(xRangeMax - xRangeStep);
-            if(!SettingsHandler::getDisableSpeechToText())
-                textToSpeech->say("X Min limit reached");
+            onText_to_speech("X Min limit reached");
         }
     }
     else if(action == actions.DecreaseXLowerRange)
@@ -706,14 +702,12 @@ void MainWindow::mediaAction(QString action)
         if(newLiveRange > axisMin)
         {
             SettingsHandler::setLiveXRangeMin(newLiveRange);
-            if(!SettingsHandler::getDisableSpeechToText())
-                textToSpeech->say("Lower X min to "+ QString::number(newLiveRange));
+            onText_to_speech("Lower X min to "+ QString::number(newLiveRange));
         }
         else
         {
             SettingsHandler::setLiveXRangeMin(axisMin);
-            if(!SettingsHandler::getDisableSpeechToText())
-                textToSpeech->say("Low X min limit reached");
+            onText_to_speech("Low X min limit reached");
         }
     }
     else if(action == actions.IncreaseXUpperRange)
@@ -723,14 +717,12 @@ void MainWindow::mediaAction(QString action)
         if(newLiveRange < axisMax)
         {
             SettingsHandler::setLiveXRangeMax(newLiveRange);
-            if(!SettingsHandler::getDisableSpeechToText())
-                textToSpeech->say("Raise X max to "+ QString::number(newLiveRange));
+            onText_to_speech("Raise X max to "+ QString::number(newLiveRange));
         }
         else
         {
             SettingsHandler::setLiveXRangeMax(axisMax);
-            if(!SettingsHandler::getDisableSpeechToText())
-                textToSpeech->say("High X max limit reached");
+            onText_to_speech("High X max limit reached");
         }
     }
     else if(action == actions.DecreaseXUpperRange)
@@ -741,14 +733,12 @@ void MainWindow::mediaAction(QString action)
         if(newLiveRange > xRangeMin + xRangeStep)
         {
             SettingsHandler::setLiveXRangeMax(newLiveRange);
-            if(!SettingsHandler::getDisableSpeechToText())
-                textToSpeech->say("Lower X max to "+ QString::number(newLiveRange));
+            onText_to_speech("Lower X max to "+ QString::number(newLiveRange));
         }
         else
         {
             SettingsHandler::setLiveXRangeMax(xRangeMin + xRangeStep);
-            if(!SettingsHandler::getDisableSpeechToText())
-                textToSpeech->say("Low X max limit reached");
+            onText_to_speech("Low X max limit reached");
         }
     }
     else if (action == actions.IncreaseXRange)
@@ -776,17 +766,14 @@ void MainWindow::mediaAction(QString action)
         }
         SettingsHandler::setLiveXRangeMin(newLiveMinRange);
 
-        if(!SettingsHandler::getDisableSpeechToText())
-        {
-            if (atMin && atMax)
-                textToSpeech->say("Increase X at limit");
-            else if (atMax)
-                textToSpeech->say("Increase X, max at limit, min"+ QString::number(newLiveMinRange));
-            else if (atMin)
-                textToSpeech->say("Increase X, max "+ QString::number(newLiveMaxRange) + ", min at limit");
-            else
-                textToSpeech->say("Increase X, max "+ QString::number(newLiveMaxRange) + ", min "+ QString::number(newLiveMinRange));
-        }
+        if (atMin && atMax)
+            onText_to_speech("Increase X at limit");
+        else if (atMax)
+            onText_to_speech("Increase X, max at limit, min"+ QString::number(newLiveMinRange));
+        else if (atMin)
+            onText_to_speech("Increase X, max "+ QString::number(newLiveMaxRange) + ", min at limit");
+        else
+            onText_to_speech("Increase X, max "+ QString::number(newLiveMaxRange) + ", min "+ QString::number(newLiveMinRange));
 
     }
     else if (action == actions.DecreaseXRange)
@@ -811,43 +798,37 @@ void MainWindow::mediaAction(QString action)
             newLiveMinRange = xRangeMax - 1;
         }
         SettingsHandler::setLiveXRangeMin(newLiveMinRange);
-        if(!SettingsHandler::getDisableSpeechToText())
-        {
-            if (maxLessThanMin && minGreaterThanMax)
-                textToSpeech->say("Decrease X at limit");
-            else if (maxLessThanMin)
-                textToSpeech->say("Decrease X, max at limit, min "+ QString::number(newLiveMinRange));
-            else if (minGreaterThanMax)
-                textToSpeech->say("Decrease X, max "+ QString::number(newLiveMaxRange) + ", min at limit");
-            else
-                textToSpeech->say("Decrease X, max "+ QString::number(newLiveMaxRange) + ", min "+ QString::number(newLiveMinRange));
-        }
+        if (maxLessThanMin && minGreaterThanMax)
+            onText_to_speech("Decrease X at limit");
+        else if (maxLessThanMin)
+            onText_to_speech("Decrease X, max at limit, min "+ QString::number(newLiveMinRange));
+        else if (minGreaterThanMax)
+            onText_to_speech("Decrease X, max "+ QString::number(newLiveMaxRange) + ", min at limit");
+        else
+            onText_to_speech("Decrease X, max "+ QString::number(newLiveMaxRange) + ", min "+ QString::number(newLiveMinRange));
+
     }
     else if (action == actions.ResetLiveXRange)
     {
-        if(!SettingsHandler::getDisableSpeechToText())
-            textToSpeech->say("Resetting X range");
+        onText_to_speech("Resetting X range");
         SettingsHandler::resetLiveXRange();
     }
     else if (action == actions.ToggleAxisMultiplier)
     {
         bool multiplier = SettingsHandler::getMultiplierEnabled();
-        if(!SettingsHandler::getDisableSpeechToText())
-            textToSpeech->say(multiplier ? "Disable multiplier" : "Enable multiplier");
+        onText_to_speech(multiplier ? "Disable multiplier" : "Enable multiplier");
         SettingsHandler::setLiveMultiplierEnabled(!multiplier);
     }
     else if (action == actions.ToggleFunscriptInvert)
     {
         bool inverted = FunscriptHandler::getInverted();
-        if(!SettingsHandler::getDisableSpeechToText())
-            textToSpeech->say(inverted ? "Funscript normal" : "Funscript inverted");
+        onText_to_speech(inverted ? "Funscript normal" : "Funscript inverted");
         FunscriptHandler::setInverted(!inverted);
     }
      else if(action == actions.TogglePauseAllDeviceActions)
      {
          bool paused = SettingsHandler::getLiveActionPaused();
-         if(!SettingsHandler::getDisableSpeechToText())
-            textToSpeech->say(paused ? "Resume action" : "Pause action");
+         onText_to_speech(paused ? "Resume action" : "Pause action");
          SettingsHandler::setLiveActionPaused(!paused);
      }
      else if (action == actions.SkipToMoneyShot)
@@ -869,12 +850,10 @@ void MainWindow::mediaAction(QString action)
         if(modedModifier > 0)
         {
             FunscriptHandler::setModifier(modedModifier);
-            if(!SettingsHandler::getDisableSpeechToText())
-                textToSpeech->say(verb + " funscript modifier to "+ QString::number(modedModifier) + "percent");
+            onText_to_speech(verb + " funscript modifier to "+ QString::number(modedModifier) + "percent");
         }
         else
-            if(!SettingsHandler::getDisableSpeechToText())
-                textToSpeech->say("Funscript modifier at minimum "+ QString::number(modedModifier) + "percent");
+            onText_to_speech("Funscript modifier at minimum "+ QString::number(modedModifier) + "percent");
     }
     else if (action == actions.IncreaseOffset || action == actions.DecreaseOffset)
     {
@@ -890,13 +869,18 @@ void MainWindow::mediaAction(QString action)
                SettingsHandler::setLiveOffset(newOffset);
                libraryListItemMetaData.offset = newOffset;
                SettingsHandler::updateLibraryListItemMetaData(libraryListItemMetaData);
-               if(!SettingsHandler::getDisableSpeechToText())
-                   textToSpeech->say(verb + " offset to " + QString::number(newOffset));
+               onText_to_speech(verb + " offset to " + QString::number(newOffset));
            }
         }
-        else if(!SettingsHandler::getDisableSpeechToText())
-                textToSpeech->say("No script playing to " + verb + " offset.");
+        else
+            onText_to_speech("No script playing to " + verb + " offset.");
     }
+}
+
+void MainWindow::onText_to_speech(QString message) {
+    if(!SettingsHandler::getDisableSpeechToText())
+        textToSpeech->say(message);
+    _xSettings->send_websocket_message("textToSpeech", message);
 }
 
 void MainWindow::deviceHome()
@@ -2647,8 +2631,7 @@ void MainWindow::onFunscriptSearchResult(QString mediaPath, QString funscriptPat
             if(!SettingsHandler::getDisableVRScriptSelect())
             {
                 LogHandler::Debug("onVRMessageRecieved Enter no scripts found. Ask user");
-                if (!SettingsHandler::getDisableSpeechToText())
-                    textToSpeech->say("Script for video playing in VR not found. Please check your computer to select a script.");
+                onText_to_speech("Script for video playing in VR not found. Please check your computer to select a script.");
                 funscriptFileSelectorOpen = true;
                 funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + mediaPath, SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript);;Zip (*.zip)");
                 funscriptFileSelectorOpen = false;

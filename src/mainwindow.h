@@ -160,6 +160,7 @@ private slots:
     void on_actionReload_theme_triggered();
 
     void on_actionStored_DLNA_links_triggered();
+    void onText_to_speech(QString message);
 
 
 signals:

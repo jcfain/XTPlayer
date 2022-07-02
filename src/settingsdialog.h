@@ -66,7 +66,8 @@ signals:
     void onAxisValueReset();
     void onOpenWelcomeDialog();
     void messageSend(QString message, XLogLevel loglevel);
-
+public slots:
+    void send_websocket_message(QString command, QString message);
 
 private slots:
     void on_serialOutputRdo_clicked();

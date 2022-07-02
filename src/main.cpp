@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     qRegisterMetaType<QItemSelection>();
     qRegisterMetaTypeStreamOperators<QList<QString>>("QList<QString>");
     qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
-    qRegisterMetaTypeStreamOperators<AxisNames>("AxisNames");
+    qRegisterMetaTypeStreamOperators<AxisName>("AxisName");
     qRegisterMetaTypeStreamOperators<DecoderModel>("DecoderModel");
     qRegisterMetaTypeStreamOperators<XMediaStatus>("XMediaStatus");
     qRegisterMetaType<LibraryListItem>();
