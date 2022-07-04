@@ -8,9 +8,9 @@ cqtdeployer -bin $binDirectory clear -libDir $librDirectory -qmake $qmakeDirecto
 mkdir $targetDirectory/bin/themes
 cp -R src/themes/ $targetDirectory/bin/
 mkdir $targetDirectory/bin/www
-cp src/www/index-min.html $targetDirectory/bin/www/
-cp src/www/index-min.js $targetDirectory/bin/www/
-cp src/www/styles-min.css $targetDirectory/bin/www/
+cp src/www/*-min.html $targetDirectory/bin/www/
+cp src/www/*-min.js $targetDirectory/bin/www/
+cp src/www/*-min.css $targetDirectory/bin/www/
 cp src/www/favicon.ico $targetDirectory/bin/www/
 cp -R Deploy/lib/* $targetDirectory/lib
 cp src/rename_me_for_local_settings.ini $targetDirectory/bin

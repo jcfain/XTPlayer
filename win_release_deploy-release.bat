@@ -34,9 +34,9 @@ xcopy "XTP and DeoVR guide.pdf" %deployDir%
 xcopy .\src\XTPlayerDebug.bat %deployDir%
 xcopy .\src\XTPlayerDebugVideo.bat %deployDir%
 xcopy .\src\README.txt %deployDir%
-xcopy ..\XTEngine\src\www\index-min.html %deployDir%www\
-xcopy ..\XTEngine\src\www\index-min.js %deployDir%www\
-xcopy ..\XTEngine\src\www\styles-min.css %deployDir%www\
+xcopy ..\XTEngine\src\www\*-min.html %deployDir%www\
+xcopy ..\XTEngine\src\www\*-min.js %deployDir%www\
+xcopy ..\XTEngine\src\www\*-min.css %deployDir%www\
 xcopy ..\XTEngine\src\www\favicon.ico %deployDir%www\
 
 pause
