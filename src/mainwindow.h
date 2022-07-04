@@ -349,7 +349,7 @@ private:
     void initSerialEvent();
     void skipForward();
     void skipToMoneyShot();
-    void skipToActionBegin();
+    void skipToNextAction();
     void skipBack();
     void rewind();
     void fastForward();
@@ -373,9 +373,7 @@ private:
     void on_standaloneFunscript_start();
     void on_standaloneFunscript_stop();
     void on_output_device_connectionChanged(ConnectionChangedSignal event);
-    void on_device_error(QString error);
     void on_input_device_connectionChanged(ConnectionChangedSignal event);
-    void on_vr_device_error(QString error);
     void donate();
     void showInGraphicalShell(QString path);
     void onSetMoneyShot(LibraryListItem27 selectedLibraryListItem27, qint64 currentPosition);

@@ -20,7 +20,7 @@ signals:
     void volumeChanged(int value);
     void skipForward();
     void skipToMoneyShot();
-    void skipActionBegin();
+    void skipToNextAction();
     void skipBack();
     void fullscreenToggled();
     void settingsClicked();

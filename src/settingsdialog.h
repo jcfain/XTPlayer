@@ -66,8 +66,11 @@ signals:
     void onAxisValueReset();
     void onOpenWelcomeDialog();
     void messageSend(QString message, XLogLevel loglevel);
+    void skipToMoneyShot();
+    void skipToNextAction();
+
 public slots:
-    void send_websocket_message(QString command, QString message);
+    void send_websocket_message(QString command, QString message = nullptr);
 
 private slots:
     void on_serialOutputRdo_clicked();
@@ -214,9 +217,7 @@ private slots:
 
     void on_gamepad_connectionChanged(ConnectionChangedSignal event);
     void on_input_device_connectionChanged(ConnectionChangedSignal event);
-    void on_input_device_error(QString error);
     void on_output_device_connectionChanged(ConnectionChangedSignal event);
-    void on_output_device_error(QString error);
 
 private:
 

@@ -6,8 +6,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 {
     QCoreApplication::setOrganizationName("cUrbSide prOd");
     QCoreApplication::setApplicationName("XTPlayer");
-    XTPVersion = QString("0.321a_%1T%2").arg(__DATE__).arg(__TIME__);
-    XTPVersionNum = 0.321f;
+    XTPVersion = QString("0.323a_%1T%2").arg(__DATE__).arg(__TIME__);
+    XTPVersionNum = 0.323f;
     const QString fullVersion = "XTP: v"+ XTPVersion + "\nXTE: v" + SettingsHandler::XTEVersion;
 
     QPixmap pixmap("://images/XTP_Splash.png");
@@ -300,9 +300,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     _connectionHandler = new ConnectionHandler(this);
     connect(_connectionHandler, &ConnectionHandler::inputConnectionChange, this, &MainWindow::on_input_device_connectionChanged);
-    connect(_connectionHandler, &ConnectionHandler::inputConnectionError, this, &MainWindow::on_vr_device_error);
     connect(_connectionHandler, &ConnectionHandler::outputConnectionChange, this, &MainWindow::on_output_device_connectionChanged);
-    connect(_connectionHandler, &ConnectionHandler::outputConnectionError, this, &MainWindow::on_device_error);
     connect(_connectionHandler, &ConnectionHandler::gamepadConnectionChange, this, &MainWindow::on_gamepad_connectionChanged);
     connect(_connectionHandler, &ConnectionHandler::gamepadAction, this, &MainWindow::on_gamepad_sendAction);
     connect(_connectionHandler, &ConnectionHandler::gamepadTCode, this, &MainWindow::on_gamepad_sendTCode);
@@ -324,6 +322,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 //    connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitAction, this, &MainWindow::on_gamepad_sendAction);
     connect(_xSettings, &SettingsDialog::TCodeHomeClicked, this, &MainWindow::deviceHome);
     connect(_xSettings, &SettingsDialog::onOpenWelcomeDialog, this, &MainWindow::openWelcomeDialog);
+    connect(_xSettings, &SettingsDialog::skipToMoneyShot, this, &MainWindow::skipToMoneyShot);
+    connect(_xSettings, &SettingsDialog::skipToNextAction, this, &MainWindow::skipToNextAction);
     _mediaLibraryHandler = new MediaLibraryHandler(this);
     _xSettings->init(videoHandler, _mediaLibraryHandler, _syncHandler, tcodeHandler, _connectionHandler);
     _connectionHandler->init();
@@ -387,7 +387,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_playerControlsFrame, &PlayerControls::stopClicked, this, &MainWindow::stopMedia);
     connect(_playerControlsFrame, &PlayerControls::skipForward, this, &MainWindow::on_skipForwardButton_clicked);
     connect(_playerControlsFrame, &PlayerControls::skipToMoneyShot, this, &MainWindow::skipToMoneyShot);
-    connect(_playerControlsFrame, &PlayerControls::skipActionBegin, this, &MainWindow::skipToActionBegin);
+    connect(_playerControlsFrame, &PlayerControls::skipToNextAction, this, &MainWindow::skipToNextAction);
     connect(_playerControlsFrame, &PlayerControls::skipBack, this, &MainWindow::on_skipBackButton_clicked);
 
     connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
@@ -833,13 +833,11 @@ void MainWindow::mediaAction(QString action)
      }
      else if (action == actions.SkipToMoneyShot)
      {
-        if (videoHandler->isPaused() || videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone() || _syncHandler->isPlayingVR())
-            skipToMoneyShot();
+        skipToMoneyShot();
      }
     else if (action == actions.SkipToAction)
     {
-       if (videoHandler->isPaused() || videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone())
-           skipToActionBegin();
+        skipToNextAction();
     }
     else if (action == actions.IncreaseFunscriptModifier || action == actions.DecreaseFunscriptModifier)
     {
@@ -2569,8 +2567,8 @@ QString MainWindow::mSecondFormat(int mSecs)
 void MainWindow::on_standaloneFunscript_start()
 {
     LogHandler::Debug("Enter on_standaloneFunscript_start");
-    if(_connectionHandler->getSelectedInputDevice())
-        _connectionHandler->getSelectedInputDevice()->dispose();
+//    if(_connectionHandler->getSelectedInputDevice())
+//        _connectionHandler->getSelectedInputDevice()->dispose();
     videoHandler->setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(true);
 }
@@ -2621,7 +2619,7 @@ void MainWindow::onFunscriptSearchResult(QString mediaPath, QString funscriptPat
 //    if(_syncHandler->isPlaying())
 //        return;
 
-    if (!funscriptFileSelectorOpen)
+    if (!funscriptFileSelectorOpen && _connectionHandler->isOutputDeviceConnected())
     {
         bool saveLinkedScript = false;
 
@@ -2630,7 +2628,7 @@ void MainWindow::onFunscriptSearchResult(QString mediaPath, QString funscriptPat
         {
             if(!SettingsHandler::getDisableVRScriptSelect())
             {
-                LogHandler::Debug("onVRMessageRecieved Enter no scripts found. Ask user");
+                LogHandler::Debug("onFunscriptSearchResult Enter no scripts found. Ask user");
                 onText_to_speech("Script for video playing in VR not found. Please check your computer to select a script.");
                 funscriptFileSelectorOpen = true;
                 funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + mediaPath, SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript);;Zip (*.zip)");
@@ -2893,11 +2891,6 @@ void MainWindow::on_output_device_connectionChanged(ConnectionChangedSignal even
     }
 }
 
-void MainWindow::on_device_error(QString error)
-{
-    //DialogHandler::MessageBox(this, error, XLogLevel::Critical);
-}
-
 void MainWindow::on_gamepad_connectionChanged(ConnectionChangedSignal event)
 {
     QString message = "";
@@ -2940,7 +2933,10 @@ void MainWindow::on_input_device_connectionChanged(ConnectionChangedSignal event
             message += event.deviceName == DeviceName::Whirligig ? "Whirligig: " : "DeoVR/HereSphere: ";
         message += " " + event.message;
         vrConnectionStatusLabel->setText(message);
-        if(event.status == ConnectionStatus::Connected)
+
+        if(event.status == ConnectionStatus::Error) {
+            DialogHandler::MessageBox(this, "Input connection error: "+event.message, XLogLevel::Critical);
+        } else if(event.status == ConnectionStatus::Connected)
         {
             ui->actionChange_current_deo_script->setEnabled(event.deviceName != DeviceName::XTPWeb);
             vrRetryConnectionButton->hide();
@@ -2959,11 +2955,6 @@ void MainWindow::on_input_device_connectionChanged(ConnectionChangedSignal event
             vrRetryConnectionButton->hide();
         }
     }
-}
-
-void MainWindow::on_vr_device_error(QString error)
-{
-    DialogHandler::MessageBox(this, "Input connection error: "+error, XLogLevel::Critical);
 }
 
 void MainWindow::on_actionAbout_triggered()
@@ -3634,9 +3625,11 @@ void MainWindow::onAddBookmark(LibraryListItem27 libraryListItem, QString name, 
     libraryListItemMetaData.bookmarks.append({name, currentPosition});
     SettingsHandler::updateLibraryListItemMetaData(libraryListItemMetaData);
 }
+
 void MainWindow::skipToMoneyShot()
 {
     _syncHandler->skipToMoneyShot();
+    _xSettings->send_websocket_message("skipToMoneyShot");
 
     if(!SettingsHandler::getSkipToMoneyShotSkipsVideo())
         return;
@@ -3652,28 +3645,31 @@ void MainWindow::skipToMoneyShot()
         }
         else
         {
-            qint64 last30PercentOfduration = videoHandler->duration() - videoHandler->duration() * .1;
-            videoHandler->setPosition(last30PercentOfduration);
+            videoHandler->setPosition(videoHandler->duration() - (videoHandler->duration() * .1));
         }
     }
 }
 
-void MainWindow::skipToActionBegin()
+void MainWindow::skipToNextAction()
 {
     if(_syncHandler->isLoaded())
     {
         if(_playerControlsFrame->getAutoLoop())
             _playerControlsFrame->SetLoop(false);
-        qint64 min = _syncHandler->getFunscriptMin();
-        if(min > 1500)
+        qint64 nextActionMillis = _syncHandler->getFunscriptNext();
+        if(nextActionMillis > 1500)
         {
             if(videoHandler->isPlaying())
             {
-                videoHandler->setPosition(min - 1000);
+                videoHandler->setPosition(nextActionMillis - 1000);
             }
             else if(_syncHandler->isPlayingStandAlone())
             {
-                _syncHandler->setFunscriptTime(min - 1000);
+                _syncHandler->setFunscriptTime(nextActionMillis - 1000);
+            }
+            else
+            {
+                _xSettings->send_websocket_message("skipToNextAction", QString::number((nextActionMillis / 1000) - 1, 'f', 1));
             }
         }
     }

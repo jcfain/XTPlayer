@@ -30,9 +30,7 @@ void SettingsDialog::init(VideoHandler* videoHandler, MediaLibraryHandler* media
     _connectionHandler = connectionHandler;
     _tcodeHandler = tcodeHandler;
     connect(_connectionHandler, &ConnectionHandler::outputConnectionChange, this, &SettingsDialog::on_output_device_connectionChanged);
-    connect(_connectionHandler, &ConnectionHandler::outputConnectionError, this, &SettingsDialog::on_output_device_error);
     connect(_connectionHandler, &ConnectionHandler::inputConnectionChange, this, &SettingsDialog::on_input_device_connectionChanged);
-    connect(_connectionHandler, &ConnectionHandler::inputConnectionError, this, &SettingsDialog::on_input_device_error);
     connect(_connectionHandler, &ConnectionHandler::gamepadConnectionChange, this, &SettingsDialog::on_gamepad_connectionChanged);
     connect(_syncHandler, &SyncHandler::channelPositionChange, this, &SettingsDialog::setAxisProgressBar, Qt::QueuedConnection);
     connect(_syncHandler, &SyncHandler::funscriptEnded, this, &SettingsDialog::resetAxisProgressBars, Qt::QueuedConnection);
@@ -48,6 +46,8 @@ void SettingsDialog::init(VideoHandler* videoHandler, MediaLibraryHandler* media
         connect(_connectionHandler, &ConnectionHandler::connectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
         connect(_httpHandler, &HttpHandler::connectInputDevice, this, &SettingsDialog::on_xtpWeb_initSyncDevice);
         connect(_httpHandler, &HttpHandler::restartService, this, &SettingsDialog::restart);
+        connect(_httpHandler, &HttpHandler::skipToMoneyShot, this, &SettingsDialog::skipToMoneyShot);
+        connect(_httpHandler, &HttpHandler::skipToNextAction, this, &SettingsDialog::skipToNextAction);
 
         _httpHandler->listen();
     }
@@ -1099,11 +1099,6 @@ void SettingsDialog::on_input_device_connectionChanged(ConnectionChangedSignal e
     setDeviceStatusStyle(event.status, event.deviceName, event.message);
 }
 
-void SettingsDialog::on_input_device_error(QString error)
-{
-    setDeviceStatusStyle(ConnectionStatus::Error, DeviceName::Whirligig, error);
-}
-
 void SettingsDialog::on_output_device_connectionChanged(ConnectionChangedSignal event)
 {
     if (event.deviceName == DeviceName::Serial)
@@ -1121,18 +1116,6 @@ void SettingsDialog::on_gamepad_connectionChanged(ConnectionChangedSignal event)
 {
     setDeviceStatusStyle(event.status, event.deviceName);
     SettingsHandler::setLiveGamepadConnected(event.status == ConnectionStatus::Connected);
-}
-
-void SettingsDialog::on_output_device_error(QString error)
-{
-    if (SettingsHandler::getSelectedOutputDevice() == DeviceName::Serial)
-    {
-        ui.serialConnectButton->setEnabled(true);
-    }
-    else if (SettingsHandler::getSelectedOutputDevice() == DeviceName::Network)
-    {
-        ui.networkConnectButton->setEnabled(true);
-    }
 }
 
 void SettingsDialog::on_SerialOutputCmb_currentIndexChanged(int index)
@@ -1195,6 +1178,7 @@ void SettingsDialog::on_serialConnectButton_clicked()
         DialogHandler::MessageBox(this, "Port: "+ portName + " not found", XLogLevel::Critical);
         return;
     }
+    SettingsHandler::setSerialPort(portName);
     initSerialEvent();
 }
 

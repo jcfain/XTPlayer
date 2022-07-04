@@ -22,7 +22,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToActionButton->setObjectName(QString::fromUtf8("skipToActionButton"));
     skipToActionButton->setProperty("cssClass", "playerControlButton");
     skipToActionButton->setMinimumSize(QSize(0, 15));
-    skipToActionButton->setToolTip("Skips to 1 second before the funscript starts changing position.");
+    skipToActionButton->setToolTip("Skips to 1 second before the next funscript action.");
     QIcon iconActionBegin;
     iconActionBegin.addFile(QString::fromUtf8(":/images/icons/skipToAction.png"), QSize(), QIcon::Normal, QIcon::Off);
     skipToActionButton->setIcon(iconActionBegin);
@@ -184,7 +184,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     connect(_stopBtn, &QPushButton::clicked, this, [this]() {emit stopClicked();});
     connect(skipForwardButton, &QPushButton::clicked, this, [this]() {emit skipForward();});
     connect(skipToMoneyShotButton, &QPushButton::clicked, this, [this]() {emit skipToMoneyShot();});
-    connect(skipToActionButton, &QPushButton::clicked, this, [this]() {emit skipActionBegin();});
+    connect(skipToActionButton, &QPushButton::clicked, this, [this]() {emit skipToNextAction();});
     connect(skipBackButton, &QPushButton::clicked, this, [this]() {emit skipBack();});
     connect(fullScreenBtn, &QPushButton::clicked, this, [this]() {emit fullscreenToggled();});
     connect(settingsButton, &QPushButton::clicked, this, [this]() {emit settingsClicked();});
