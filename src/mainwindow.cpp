@@ -816,8 +816,38 @@ void MainWindow::mediaAction(QString action)
     else if (action == actions.ToggleAxisMultiplier)
     {
         bool multiplier = SettingsHandler::getMultiplierEnabled();
-        onText_to_speech(multiplier ? "Disable multiplier" : "Enable multiplier");
+        onText_to_speech(multiplier ? "Disable random motion" : "Enable random motion");
         SettingsHandler::setLiveMultiplierEnabled(!multiplier);
+    }
+    else if (action == actions.ToggleChannelRollMultiplier)
+    {
+        bool multiplier = SettingsHandler::getMultiplierChecked(TCodeChannelLookup::Roll());
+        SettingsHandler::setMultiplierChecked(TCodeChannelLookup::Roll(), !multiplier);
+        onText_to_speech(multiplier ? "Disable roll multiplier" : "Enable roll motion");
+    }
+    else if (action == actions.ToggleChannelPitchMultiplier)
+    {
+        bool multiplier = SettingsHandler::getMultiplierChecked(TCodeChannelLookup::Pitch());
+        SettingsHandler::setMultiplierChecked(TCodeChannelLookup::Pitch(), !multiplier);
+        onText_to_speech(multiplier ? "Disable pitch multiplier" : "Enable pitch motion");
+    }
+    else if (action == actions.ToggleChannelSurgeMultiplier)
+    {
+        bool multiplier = SettingsHandler::getMultiplierChecked(TCodeChannelLookup::Surge());
+        SettingsHandler::setMultiplierChecked(TCodeChannelLookup::Surge(), !multiplier);
+        onText_to_speech(multiplier ? "Disable surge multiplier" : "Enable surge motion");
+    }
+    else if (action == actions.ToggleChannelSwayMultiplier)
+    {
+        bool multiplier = SettingsHandler::getMultiplierChecked(TCodeChannelLookup::Sway());
+        SettingsHandler::setMultiplierChecked(TCodeChannelLookup::Sway(), !multiplier);
+        onText_to_speech(multiplier ? "Disable sway multiplier" : "Enable sway motion");
+    }
+    else if (action == actions.ToggleChannelTwistMultiplier)
+    {
+        bool multiplier = SettingsHandler::getMultiplierChecked(TCodeChannelLookup::Twist());
+        SettingsHandler::setMultiplierChecked(TCodeChannelLookup::Twist(), !multiplier);
+        onText_to_speech(multiplier ? "Disable twist multiplier" : "Enable twist motion");
     }
     else if (action == actions.ToggleFunscriptInvert)
     {
