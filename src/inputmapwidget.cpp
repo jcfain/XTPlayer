@@ -43,10 +43,8 @@ void InputMapWidget::setUpData()
     auto tcodeVersionMap = TCodeChannelLookup::GetSelectedVersionMap();
     auto availableAxis = SettingsHandler::getAvailableAxis();
     for(auto __begin = tcodeVersionMap.begin(), __end = tcodeVersionMap.end();  __begin != __end; ++__begin) {
-        if(__begin.key() != AxisName::None) {
-            auto channel = availableAxis->value(TCodeChannelLookup::ToString(__begin.key()));
-            actions.append({channel.AxisName, "Channel: " + channel.FriendlyName});
-        }
+        auto channel = availableAxis->value(TCodeChannelLookup::ToString(__begin.key()));
+        actions.append({channel.AxisName, "Channel: " + channel.FriendlyName});
     }
 
     MediaActions actionsMap;

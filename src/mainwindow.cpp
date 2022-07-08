@@ -869,6 +869,12 @@ void MainWindow::mediaAction(QString action)
     {
         skipToNextAction();
     }
+    else if(action == actions.ToggleSkipToMoneyShotPlaysFunscript) {
+        auto enabled = !SettingsHandler::getSkipToMoneyShotPlaysFunscript();
+        QString verb = enabled ? "Enable" : "Disable";
+        SettingsHandler::setSkipToMoneyShotPlaysFunscript(enabled);
+        onText_to_speech(verb + " plays funscript.");
+    }
     else if (action == actions.IncreaseFunscriptModifier || action == actions.DecreaseFunscriptModifier)
     {
         bool increase = action == actions.IncreaseFunscriptModifier;

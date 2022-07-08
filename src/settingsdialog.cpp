@@ -635,7 +635,7 @@ void SettingsDialog::setUpTCodeAxis()
              foreach(auto axis, tcodeChannels.keys())
              {
                  auto channel = SettingsHandler::getAxis(TCodeChannelLookup::ToString(axis));
-                 if(channel.AxisName == channelName || channel.Type == AxisType::HalfRange || channel.AxisName == TCodeChannelLookup::None())
+                 if(channel.AxisName == channelName || channel.Type == AxisType::HalfRange)
                      continue;
                  QVariant variant;
                  variant.setValue(channel);
@@ -1369,7 +1369,7 @@ void SettingsDialog::on_channelDeleteButton_clicked()
             {
                 const auto model = row.model();
                 const auto channelData = ((ChannelTableViewModel*)model)->getRowData(row.row());
-                if (channelData == nullptr || channelData->AxisName == TCodeChannelLookup::None())
+                if (channelData == nullptr)
                     continue;
                 channelsToDelete << channelData->AxisName;
             }
