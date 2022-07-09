@@ -17,10 +17,9 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     ui->setupUi(this);
     loadingSplash->showMessage(fullVersion + "\nLoading Settings...", Qt::AlignBottom, Qt::white);
+
     SettingsHandler::Load();
     _xSettings = new SettingsDialog(this);
-    _dlnaScriptLinksDialog = new DLNAScriptLinks(this);
-    tcodeHandler = new TCodeHandler(this);
     if(_xSettings->HasLaunchPass()) {
         int tries = 1;
         while(_isPasswordIncorrect != PasswordResponse::CANCEL && _isPasswordIncorrect == PasswordResponse::INCORRECT)
@@ -64,6 +63,29 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
             else if(arg.toLower().startsWith("-reset"))
                 SettingsHandler::Default();
         }
+    }
+
+    _dlnaScriptLinksDialog = new DLNAScriptLinks(this);
+    tcodeHandler = new TCodeHandler(this);
+    _settingsActionHandler = new SettingsActionHandler(this);
+    _mediaLibraryHandler = new MediaLibraryHandler(this);
+    _connectionHandler = new ConnectionHandler(this);
+    if(SettingsHandler::getEnableHttpServer())
+    {
+        _httpHandler = new HttpHandler(_mediaLibraryHandler, this);
+        connect(_httpHandler, &HttpHandler::tcode, _connectionHandler, &ConnectionHandler::sendTCode);
+        connect(_httpHandler, &HttpHandler::connectOutputDevice, _connectionHandler, &ConnectionHandler::initOutputDevice);
+        connect(_httpHandler, &HttpHandler::error, this, [this](QString error) {
+            DialogHandler::MessageBox(this, error, XLogLevel::Critical);
+        });
+        connect(_httpHandler, &HttpHandler::xtpWebPacketRecieve, _connectionHandler, &ConnectionHandler::inputMessageSend);
+        connect(_connectionHandler, &ConnectionHandler::connectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
+        connect(_httpHandler, &HttpHandler::connectInputDevice, _xSettings, &SettingsDialog::on_xtpWeb_initSyncDevice);
+        connect(_httpHandler, &HttpHandler::restartService, _xSettings, &SettingsDialog::restart);
+        connect(_httpHandler, &HttpHandler::skipToMoneyShot, this, &MainWindow::skipToMoneyShot);
+        connect(_httpHandler, &HttpHandler::skipToNextAction, this, &MainWindow::skipToNextAction);
+
+        _httpHandler->listen();
     }
 
     loadingSplash->showMessage(fullVersion + "\nLoading UI...", Qt::AlignBottom, Qt::white);
@@ -298,11 +320,10 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     connect(libraryWindow, &LibraryWindow::close, this, &MainWindow::onLibraryWindowed_Closed);
 
-    _connectionHandler = new ConnectionHandler(this);
     connect(_connectionHandler, &ConnectionHandler::inputConnectionChange, this, &MainWindow::on_input_device_connectionChanged);
     connect(_connectionHandler, &ConnectionHandler::outputConnectionChange, this, &MainWindow::on_output_device_connectionChanged);
     connect(_connectionHandler, &ConnectionHandler::gamepadConnectionChange, this, &MainWindow::on_gamepad_connectionChanged);
-    connect(_connectionHandler, &ConnectionHandler::gamepadAction, this, &MainWindow::on_gamepad_sendAction);
+    connect(_connectionHandler, &ConnectionHandler::gamepadAction, _settingsActionHandler, &SettingsActionHandler::media_action);
     connect(_connectionHandler, &ConnectionHandler::gamepadTCode, this, &MainWindow::on_gamepad_sendTCode);
     connect(retryConnectionButton, &QPushButton::clicked, _connectionHandler, [this](bool checked){
         _connectionHandler->initOutputDevice(SettingsHandler::getSelectedOutputDevice());
@@ -311,6 +332,9 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
         _connectionHandler->initInputDevice(SettingsHandler::getSelectedInputDevice());
     });
     connect(_connectionHandler, &ConnectionHandler::messageRecieved, _syncHandler, &SyncHandler::searchForFunscript);
+
+
+    connect(_settingsActionHandler, &SettingsActionHandler::actionExecuted, this, &MainWindow::mediaAction);
     //connect(_xSettings, &SettingsDialog::deviceConnectionChange, this, &MainWindow::on_device_connectionChanged);
     //connect(_xSettings, &SettingsDialog::deviceConnectionChange, _syncHandler, &SyncHandler::on_device_status_change);
     //connect(_xSettings, &SettingsDialog::deviceError, this, &MainWindow::on_device_error);
@@ -324,8 +348,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_xSettings, &SettingsDialog::onOpenWelcomeDialog, this, &MainWindow::openWelcomeDialog);
     connect(_xSettings, &SettingsDialog::skipToMoneyShot, this, &MainWindow::skipToMoneyShot);
     connect(_xSettings, &SettingsDialog::skipToNextAction, this, &MainWindow::skipToNextAction);
-    _mediaLibraryHandler = new MediaLibraryHandler(this);
-    _xSettings->init(videoHandler, _mediaLibraryHandler, _syncHandler, tcodeHandler, _connectionHandler);
+
+    _xSettings->init(videoHandler, _syncHandler, tcodeHandler, _connectionHandler);
     _connectionHandler->init();
 
     connect(this, &MainWindow::libraryIconResized, this, &MainWindow::libraryListSetIconSize);
@@ -514,85 +538,90 @@ void MainWindow::on_key_press(QKeyEvent * event)
         case Qt::Key_Enter:
         case Qt::Key_MediaPause:
         case Qt::Key_MediaTogglePlayPause:
-            mediaAction(actions.TogglePause);
+            _settingsActionHandler->media_action(actions.TogglePause);
             break;
         case Qt::Key_1:
         case Qt::Key_F11:
-            mediaAction(actions.FullScreen);
+            _settingsActionHandler->media_action(actions.FullScreen);
             break;
         case Qt::Key_M:
         case Qt::Key_2:
-            mediaAction(actions.Mute);
+            _settingsActionHandler->media_action(actions.Mute);
             break;
         case Qt::Key_MediaStop:
         case Qt::Key_Escape:
-            mediaAction(actions.Stop);
+            _settingsActionHandler->media_action(actions.Stop);
             break;
         case Qt::Key_MediaNext:
         case Qt::Key_E:
-            mediaAction(actions.Next);
+            _settingsActionHandler->media_action(actions.Next);
             break;
         case Qt::Key_MediaPrevious:
         case Qt::Key_Q:
-            mediaAction(actions.Back);
+            _settingsActionHandler->media_action(actions.Back);
             break;
         case Qt::Key_VolumeUp:
         case Qt::Key_W:
-            mediaAction(actions.VolumeUp);
+            _settingsActionHandler->media_action(actions.VolumeUp);
             break;
         case Qt::Key_VolumeDown:
         case Qt::Key_S:
-            mediaAction(actions.VolumeDown);
+            _settingsActionHandler->media_action(actions.VolumeDown);
             break;
         case Qt::Key_L:
         case Qt::Key_C:
-            mediaAction(actions.Loop);
+            _settingsActionHandler->media_action(actions.Loop);
             break;
         case Qt::Key_A:
-            mediaAction(actions.Rewind);
+            _settingsActionHandler->media_action(actions.Rewind);
             break;
         case Qt::Key_D:
-            mediaAction(actions.FastForward);
+            _settingsActionHandler->media_action(actions.FastForward);
             break;
         case Qt::Key_X:
-            mediaAction(actions.IncreaseXRange);
+            _settingsActionHandler->media_action(actions.IncreaseXRange);
             break;
         case Qt::Key_Z:
-            mediaAction(actions.DecreaseXRange);
+            _settingsActionHandler->media_action(actions.DecreaseXRange);
             break;
         case Qt::Key_F:
-            mediaAction(actions.DecreaseXUpperRange);
+            _settingsActionHandler->media_action(actions.DecreaseXUpperRange);
             break;
         case Qt::Key_R:
-            mediaAction(actions.IncreaseXUpperRange);
+            _settingsActionHandler->media_action(actions.IncreaseXUpperRange);
             break;
         case Qt::Key_G:
-            mediaAction(actions.DecreaseXLowerRange);
+            _settingsActionHandler->media_action(actions.DecreaseXLowerRange);
             break;
         case Qt::Key_T:
-            mediaAction(actions.IncreaseXLowerRange);
+            _settingsActionHandler->media_action(actions.IncreaseXLowerRange);
             break;
         case Qt::Key_Control:
-            mediaAction(actions.ResetLiveXRange);
+            _settingsActionHandler->media_action(actions.ResetLiveXRange);
             break;
         case Qt::Key_I:
-            mediaAction(actions.ToggleFunscriptInvert);
+            _settingsActionHandler->media_action(actions.ToggleFunscriptInvert);
             break;
         case Qt::Key_V:
-            mediaAction(actions.ToggleAxisMultiplier);
+            _settingsActionHandler->media_action(actions.ToggleAxisMultiplier);
             break;
          case Qt::Key_P:
-             mediaAction(actions.TogglePauseAllDeviceActions);
+             _settingsActionHandler->media_action(actions.TogglePauseAllDeviceActions);
              break;
          case Qt::Key_J:
-             mediaAction(actions.SkipToMoneyShot);
+             _settingsActionHandler->media_action(actions.SkipToMoneyShot);
              break;
          case Qt::Key_K:
-             mediaAction(actions.SkipToAction);
+             _settingsActionHandler->media_action(actions.SkipToAction);
              break;
     }
 }
-void MainWindow::mediaAction(QString action)
+/**
+ * @brief MainWindow::mediaAction Called from SettingsActionHandler::actionExecuted signal.
+ * @param action the NediaAction value executed
+ * @param actionText the speech text
+ */
+void MainWindow::mediaAction(QString action, QString actionText)
 {
     MediaActions actions;
     if (action == actions.TogglePause)
@@ -663,231 +692,13 @@ void MainWindow::mediaAction(QString action)
         if (videoHandler->isPaused() || videoHandler->isPlaying() || _syncHandler->isPlayingStandAlone())
             fastForward();
     }
-    else if(action == actions.TCodeSpeedUp)
+    else if (action == actions.SkipToMoneyShot)
     {
-        int newGamepadSpeed = SettingsHandler::getLiveGamepadSpeed() + SettingsHandler::getGamepadSpeedIncrement();
-        SettingsHandler::setLiveGamepadSpeed(newGamepadSpeed);
-        onText_to_speech("Raise speed "+ QString::number(newGamepadSpeed));
-    }
-    else if(action == actions.TCodeSpeedDown)
-    {
-        int newGamepadSpeed = SettingsHandler::getLiveGamepadSpeed() - SettingsHandler::getGamepadSpeedIncrement();
-        if (newGamepadSpeed > 0)
-        {
-            SettingsHandler::setLiveGamepadSpeed(newGamepadSpeed);
-            onText_to_speech("Lower speed "+ QString::number(newGamepadSpeed));
-        } else
-            onText_to_speech("Lower speed at minimum");
-    }
-    else if(action == actions.IncreaseXLowerRange)
-    {
-        int xRangeStep = SettingsHandler::getXRangeStep();
-        int newLiveRange = SettingsHandler::getLiveXRangeMin() + SettingsHandler::getXRangeStep();
-        int xRangeMax = SettingsHandler::getLiveXRangeMax();
-        if(newLiveRange < xRangeMax - xRangeStep)
-        {
-            SettingsHandler::setLiveXRangeMin(newLiveRange);
-            onText_to_speech("Raise X min to "+ QString::number(newLiveRange));
-        }
-        else
-        {
-            SettingsHandler::setLiveXRangeMin(xRangeMax - xRangeStep);
-            onText_to_speech("X Min limit reached");
-        }
-    }
-    else if(action == actions.DecreaseXLowerRange)
-    {
-        int newLiveRange = SettingsHandler::getLiveXRangeMin() - SettingsHandler::getXRangeStep();
-        int axisMin = SettingsHandler::getAxis(TCodeChannelLookup::Stroke()).Min;
-        if(newLiveRange > axisMin)
-        {
-            SettingsHandler::setLiveXRangeMin(newLiveRange);
-            onText_to_speech("Lower X min to "+ QString::number(newLiveRange));
-        }
-        else
-        {
-            SettingsHandler::setLiveXRangeMin(axisMin);
-            onText_to_speech("Low X min limit reached");
-        }
-    }
-    else if(action == actions.IncreaseXUpperRange)
-    {
-        int newLiveRange = SettingsHandler::getLiveXRangeMax() + SettingsHandler::getXRangeStep();
-        int axisMax = SettingsHandler::getAxis(TCodeChannelLookup::Stroke()).Max;
-        if(newLiveRange < axisMax)
-        {
-            SettingsHandler::setLiveXRangeMax(newLiveRange);
-            onText_to_speech("Raise X max to "+ QString::number(newLiveRange));
-        }
-        else
-        {
-            SettingsHandler::setLiveXRangeMax(axisMax);
-            onText_to_speech("High X max limit reached");
-        }
-    }
-    else if(action == actions.DecreaseXUpperRange)
-    {
-        int xRangeStep = SettingsHandler::getXRangeStep();
-        int newLiveRange = SettingsHandler::getLiveXRangeMax() - xRangeStep;
-        int xRangeMin = SettingsHandler::getLiveXRangeMin();
-        if(newLiveRange > xRangeMin + xRangeStep)
-        {
-            SettingsHandler::setLiveXRangeMax(newLiveRange);
-            onText_to_speech("Lower X max to "+ QString::number(newLiveRange));
-        }
-        else
-        {
-            SettingsHandler::setLiveXRangeMax(xRangeMin + xRangeStep);
-            onText_to_speech("Low X max limit reached");
-        }
-    }
-    else if (action == actions.IncreaseXRange)
-    {
-        int xRangeMax = SettingsHandler::getLiveXRangeMax();
-        int xRangeMin = SettingsHandler::getLiveXRangeMin();
-        int xRangeStep = SettingsHandler::getXRangeStep();
-        int newLiveMaxRange = xRangeMax + xRangeStep;
-        int axisMax = SettingsHandler::getAxis(TCodeChannelLookup::Stroke()).Max;
-        bool atMax = false;
-        if(newLiveMaxRange > axisMax)
-        {
-            atMax = true;
-            newLiveMaxRange = axisMax;
-        }
-        SettingsHandler::setLiveXRangeMax(newLiveMaxRange);
-
-        int newLiveMinRange = xRangeMin - xRangeStep;
-        int axisMin = SettingsHandler::getAxis(TCodeChannelLookup::Stroke()).Min;
-        bool atMin = false;
-        if(newLiveMinRange < axisMin)
-        {
-            atMin = true;
-            newLiveMinRange = axisMin;
-        }
-        SettingsHandler::setLiveXRangeMin(newLiveMinRange);
-
-        if (atMin && atMax)
-            onText_to_speech("Increase X at limit");
-        else if (atMax)
-            onText_to_speech("Increase X, max at limit, min"+ QString::number(newLiveMinRange));
-        else if (atMin)
-            onText_to_speech("Increase X, max "+ QString::number(newLiveMaxRange) + ", min at limit");
-        else
-            onText_to_speech("Increase X, max "+ QString::number(newLiveMaxRange) + ", min "+ QString::number(newLiveMinRange));
-
-    }
-    else if (action == actions.DecreaseXRange)
-    {
-        int xRangeMax = SettingsHandler::getLiveXRangeMax();
-        int xRangeMin = SettingsHandler::getLiveXRangeMin();
-        int xRangeStep = SettingsHandler::getXRangeStep();
-        int newLiveMaxRange = xRangeMax - xRangeStep;
-        bool maxLessThanMin = false;
-        if(newLiveMaxRange < xRangeMin)
-        {
-            maxLessThanMin = true;
-            newLiveMaxRange = xRangeMin + 1;
-        }
-        SettingsHandler::setLiveXRangeMax(newLiveMaxRange);
-
-        int newLiveMinRange = xRangeMin + xRangeStep;
-        bool minGreaterThanMax = false;
-        if(newLiveMinRange > xRangeMax)
-        {
-            minGreaterThanMax = true;
-            newLiveMinRange = xRangeMax - 1;
-        }
-        SettingsHandler::setLiveXRangeMin(newLiveMinRange);
-        if (maxLessThanMin && minGreaterThanMax)
-            onText_to_speech("Decrease X at limit");
-        else if (maxLessThanMin)
-            onText_to_speech("Decrease X, max at limit, min "+ QString::number(newLiveMinRange));
-        else if (minGreaterThanMax)
-            onText_to_speech("Decrease X, max "+ QString::number(newLiveMaxRange) + ", min at limit");
-        else
-            onText_to_speech("Decrease X, max "+ QString::number(newLiveMaxRange) + ", min "+ QString::number(newLiveMinRange));
-
-    }
-    else if (action == actions.ResetLiveXRange)
-    {
-        onText_to_speech("Resetting X range");
-        SettingsHandler::resetLiveXRange();
-    }
-    else if (action == actions.ToggleAxisMultiplier)
-    {
-        bool multiplier = SettingsHandler::getMultiplierEnabled();
-        onText_to_speech(multiplier ? "Disable random motion" : "Enable random motion");
-        SettingsHandler::setLiveMultiplierEnabled(!multiplier);
-    }
-    else if (action == actions.ToggleChannelRollMultiplier)
-    {
-        bool multiplier = SettingsHandler::getMultiplierChecked(TCodeChannelLookup::Roll());
-        SettingsHandler::setMultiplierChecked(TCodeChannelLookup::Roll(), !multiplier);
-        onText_to_speech(multiplier ? "Disable roll multiplier" : "Enable roll motion");
-    }
-    else if (action == actions.ToggleChannelPitchMultiplier)
-    {
-        bool multiplier = SettingsHandler::getMultiplierChecked(TCodeChannelLookup::Pitch());
-        SettingsHandler::setMultiplierChecked(TCodeChannelLookup::Pitch(), !multiplier);
-        onText_to_speech(multiplier ? "Disable pitch multiplier" : "Enable pitch motion");
-    }
-    else if (action == actions.ToggleChannelSurgeMultiplier)
-    {
-        bool multiplier = SettingsHandler::getMultiplierChecked(TCodeChannelLookup::Surge());
-        SettingsHandler::setMultiplierChecked(TCodeChannelLookup::Surge(), !multiplier);
-        onText_to_speech(multiplier ? "Disable surge multiplier" : "Enable surge motion");
-    }
-    else if (action == actions.ToggleChannelSwayMultiplier)
-    {
-        bool multiplier = SettingsHandler::getMultiplierChecked(TCodeChannelLookup::Sway());
-        SettingsHandler::setMultiplierChecked(TCodeChannelLookup::Sway(), !multiplier);
-        onText_to_speech(multiplier ? "Disable sway multiplier" : "Enable sway motion");
-    }
-    else if (action == actions.ToggleChannelTwistMultiplier)
-    {
-        bool multiplier = SettingsHandler::getMultiplierChecked(TCodeChannelLookup::Twist());
-        SettingsHandler::setMultiplierChecked(TCodeChannelLookup::Twist(), !multiplier);
-        onText_to_speech(multiplier ? "Disable twist multiplier" : "Enable twist motion");
-    }
-    else if (action == actions.ToggleFunscriptInvert)
-    {
-        bool inverted = FunscriptHandler::getInverted();
-        onText_to_speech(inverted ? "Funscript normal" : "Funscript inverted");
-        FunscriptHandler::setInverted(!inverted);
-    }
-     else if(action == actions.TogglePauseAllDeviceActions)
-     {
-         bool paused = SettingsHandler::getLiveActionPaused();
-         onText_to_speech(paused ? "Resume action" : "Pause action");
-         SettingsHandler::setLiveActionPaused(!paused);
-     }
-     else if (action == actions.SkipToMoneyShot)
-     {
         skipToMoneyShot();
-     }
+    }
     else if (action == actions.SkipToAction)
     {
         skipToNextAction();
-    }
-    else if(action == actions.ToggleSkipToMoneyShotPlaysFunscript) {
-        auto enabled = !SettingsHandler::getSkipToMoneyShotPlaysFunscript();
-        QString verb = enabled ? "Enable" : "Disable";
-        SettingsHandler::setSkipToMoneyShotPlaysFunscript(enabled);
-        onText_to_speech(verb + " plays funscript.");
-    }
-    else if (action == actions.IncreaseFunscriptModifier || action == actions.DecreaseFunscriptModifier)
-    {
-        bool increase = action == actions.IncreaseFunscriptModifier;
-        QString verb = increase ? "Increase" : "Decrease";
-        int modifier = FunscriptHandler::getModifier();
-        int modedModifier = increase ? modifier + SettingsHandler::getFunscriptModifierStep() : modifier - SettingsHandler::getFunscriptModifierStep();
-        if(modedModifier > 0)
-        {
-            FunscriptHandler::setModifier(modedModifier);
-            onText_to_speech(verb + " funscript modifier to "+ QString::number(modedModifier) + "percent");
-        }
-        else
-            onText_to_speech("Funscript modifier at minimum "+ QString::number(modedModifier) + "percent");
     }
     else if (action == actions.IncreaseOffset || action == actions.DecreaseOffset)
     {
@@ -900,7 +711,6 @@ void MainWindow::mediaAction(QString action)
            {
                auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(path);
                int newOffset = increase ? libraryListItemMetaData.offset + SettingsHandler::getFunscriptOffsetStep() : libraryListItemMetaData.offset - SettingsHandler::getFunscriptOffsetStep();
-               SettingsHandler::setLiveOffset(newOffset);
                libraryListItemMetaData.offset = newOffset;
                SettingsHandler::updateLibraryListItemMetaData(libraryListItemMetaData);
                onText_to_speech(verb + " offset to " + QString::number(newOffset));
@@ -909,12 +719,18 @@ void MainWindow::mediaAction(QString action)
         else
             onText_to_speech("No script playing to " + verb + " offset.");
     }
+    else
+    {
+        onText_to_speech(actionText);
+    }
 }
 
 void MainWindow::onText_to_speech(QString message) {
-    if(!SettingsHandler::getDisableSpeechToText())
-        textToSpeech->say(message);
-    _xSettings->send_websocket_message("textToSpeech", message);
+    if(!message.isEmpty()) {
+        if(!SettingsHandler::getDisableSpeechToText())
+            textToSpeech->say(message);
+        _httpHandler->sendWebSocketTextMessage("textToSpeech", message);
+    }
 }
 
 void MainWindow::deviceHome()
@@ -2743,11 +2559,6 @@ void MainWindow::on_gamepad_sendTCode(QString value)
     }
 }
 
-void MainWindow::on_gamepad_sendAction(QString action)
-{
-    mediaAction(action);
-}
-
 void MainWindow::on_skipForwardButton_clicked()
 {
     skipForward();
@@ -3665,7 +3476,7 @@ void MainWindow::onAddBookmark(LibraryListItem27 libraryListItem, QString name, 
 void MainWindow::skipToMoneyShot()
 {
     _syncHandler->skipToMoneyShot();
-    _xSettings->send_websocket_message("skipToMoneyShot");
+    _httpHandler->sendWebSocketTextMessage("skipToMoneyShot");
 
     if(!SettingsHandler::getSkipToMoneyShotSkipsVideo())
         return;
@@ -3705,7 +3516,7 @@ void MainWindow::skipToNextAction()
             }
             else
             {
-                _xSettings->send_websocket_message("skipToNextAction", QString::number((nextActionMillis / 1000) - 1, 'f', 1));
+                _httpHandler->sendWebSocketTextMessage("skipToNextAction", QString::number((nextActionMillis / 1000) - 1, 'f', 1));
             }
         }
     }

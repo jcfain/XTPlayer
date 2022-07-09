@@ -44,6 +44,7 @@
 #include "lib/handler/medialibraryhandler.h"
 #include "lib/handler/connectionhandler.h"
 #include "lib/handler/xvideopreviewwidget.h"
+#include "lib/handler/settingsactionhandler.h"
 #include "lib/struct/LibraryListItem27.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/ConnectionChangedSignal.h"
@@ -102,7 +103,6 @@ private slots:
     void unlockThumb();
     void onFunscriptSearchResult(QString mediaPath, QString funscriptPath, qint64 mediaDuration);
     void on_gamepad_sendTCode(QString tcode);
-    void on_gamepad_sendAction(QString action);
     void on_gamepad_connectionChanged(ConnectionChangedSignal event);
     void on_actionAbout_triggered();
     void on_action75_triggered();
@@ -217,7 +217,9 @@ private:
     VideoHandler* videoHandler;
     MediaLibraryHandler* _mediaLibraryHandler;
     TCodeHandler* tcodeHandler;
+    HttpHandler* _httpHandler = 0;
     ConnectionHandler* _connectionHandler;
+    SettingsActionHandler* _settingsActionHandler;
     bool _isMaximized = false;
     bool _isFullScreen = false;
     QSize _videoSize;
@@ -327,7 +329,7 @@ private:
     void onSetLibraryLoaded();
     void onSetLibraryLoading();
     void toggleLibraryLoading(bool loading);
-    void mediaAction(QString action);
+    void mediaAction(QString action, QString actionText);
     void toggleFullScreen();
     void toggleLoop();
     void hideControls();

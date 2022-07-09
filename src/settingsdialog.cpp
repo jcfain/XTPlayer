@@ -23,7 +23,7 @@ void SettingsDialog::dispose()
     _connectionHandler->dispose();
 }
 
-void SettingsDialog::init(VideoHandler* videoHandler, MediaLibraryHandler* mediaLibraryHandler, SyncHandler* syncHandler, TCodeHandler* tcodeHandler,  ConnectionHandler* connectionHandler)
+void SettingsDialog::init(VideoHandler* videoHandler, SyncHandler* syncHandler, TCodeHandler* tcodeHandler,  ConnectionHandler* connectionHandler)
 {
     _videoHandler = videoHandler;
     _syncHandler = syncHandler;
@@ -34,23 +34,6 @@ void SettingsDialog::init(VideoHandler* videoHandler, MediaLibraryHandler* media
     connect(_connectionHandler, &ConnectionHandler::gamepadConnectionChange, this, &SettingsDialog::on_gamepad_connectionChanged);
     connect(_syncHandler, &SyncHandler::channelPositionChange, this, &SettingsDialog::setAxisProgressBar, Qt::QueuedConnection);
     connect(_syncHandler, &SyncHandler::funscriptEnded, this, &SettingsDialog::resetAxisProgressBars, Qt::QueuedConnection);
-    if(SettingsHandler::getEnableHttpServer())
-    {
-        _httpHandler = new HttpHandler(mediaLibraryHandler, this);
-        connect(_httpHandler, &HttpHandler::tcode, _connectionHandler, &ConnectionHandler::sendTCode);
-        connect(_httpHandler, &HttpHandler::connectOutputDevice, _connectionHandler, &ConnectionHandler::initOutputDevice);
-        connect(_httpHandler, &HttpHandler::error, this, [this](QString error) {
-            DialogHandler::MessageBox(this, error, XLogLevel::Critical);
-        });
-        connect(_httpHandler, &HttpHandler::xtpWebPacketRecieve, _connectionHandler, &ConnectionHandler::inputMessageSend);
-        connect(_connectionHandler, &ConnectionHandler::connectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
-        connect(_httpHandler, &HttpHandler::connectInputDevice, this, &SettingsDialog::on_xtpWeb_initSyncDevice);
-        connect(_httpHandler, &HttpHandler::restartService, this, &SettingsDialog::restart);
-        connect(_httpHandler, &HttpHandler::skipToMoneyShot, this, &SettingsDialog::skipToMoneyShot);
-        connect(_httpHandler, &HttpHandler::skipToNextAction, this, &SettingsDialog::skipToNextAction);
-
-        _httpHandler->listen();
-    }
 
     setupUi();
     if(SettingsHandler::getGamepadEnabled())
@@ -750,12 +733,6 @@ void SettingsDialog::setUpMultiplierUi(bool enabled)
 void SettingsDialog::setAxisProgressBar(QString axis, int value)
 {
     emit onAxisValueChange(axis, value);
-}
-
-void SettingsDialog::send_websocket_message(QString command, QString message)
-{
-    if(_httpHandler)
-        _httpHandler->sendWebSocketTextMessage(command, message);
 }
 
 void SettingsDialog::on_axis_valueChange(QString axis, int value)

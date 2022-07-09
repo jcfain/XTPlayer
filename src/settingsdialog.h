@@ -41,7 +41,7 @@ public:
     SettingsDialog(QWidget* parent = nullptr);
     ~SettingsDialog();
 
-    void init(VideoHandler* videoHandler, MediaLibraryHandler* mediaLibraryHandler, SyncHandler* syncHandler, TCodeHandler* tcodeHandler, ConnectionHandler* connectionHandler);
+    void init(VideoHandler* videoHandler, SyncHandler* syncHandler, TCodeHandler* tcodeHandler, ConnectionHandler* connectionHandler);
     void initLive();
     void dispose();
     void setAxisProgressBar(QString axis, int value);
@@ -70,7 +70,7 @@ signals:
     void skipToNextAction();
 
 public slots:
-    void send_websocket_message(QString command, QString message = nullptr);
+    void on_xtpWeb_initSyncDevice(DeviceName deviceName, bool checked);
 
 private slots:
     void on_serialOutputRdo_clicked();
@@ -203,7 +203,6 @@ private slots:
     void on_finscriptModifierSpinBox_valueChanged(int arg1);
 
     void on_xtpWebHandlerCheckbox_clicked(bool checked);
-    void on_xtpWeb_initSyncDevice(DeviceName deviceName, bool checked);
 
     void on_useMediaDirectoryCheckbox_clicked(bool checked);
 
@@ -243,7 +242,6 @@ private:
     QList<SerialComboboxItem> serialPorts;
     SerialComboboxItem selectedSerialPort;
     VideoHandler* _videoHandler;
-    HttpHandler* _httpHandler = 0;
     SyncHandler* _syncHandler;
     ConnectionHandler* _connectionHandler;
     TCodeHandler* _tcodeHandler;

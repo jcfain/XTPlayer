@@ -74,8 +74,10 @@ int DialogHandler::Dialog(QWidget* parent, QString message, bool modal, bool sho
 void DialogHandler::DialogClose()
 {
     if(_dialog) {
-        _dialog->close();
-        delete _dialog;
+        if(_dialog != nullptr) {
+            _dialog->close();
+            delete _dialog;
+        }
         _dialog = 0;
     }
 }
@@ -177,9 +179,14 @@ void DialogHandler::Loading(QWidget* parent, QString message)
 
 void DialogHandler::LoadingClose()
 {
-    LogHandler::Debug("Close Loading");
-    _loadingWidget->close();
-    delete _loadingWidget;
+    if(_loadingWidget) {
+        LogHandler::Debug("Close Loading");
+        if(_loadingWidget != nullptr) {
+            _loadingWidget->close();
+            delete _loadingWidget;
+        }
+        _loadingWidget = 0;
+    }
 }
-QDialog* DialogHandler::_loadingWidget;
+QDialog* DialogHandler::_loadingWidget = 0;
 QDialog* DialogHandler::_dialog = 0;
