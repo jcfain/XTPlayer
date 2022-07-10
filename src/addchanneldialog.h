@@ -9,7 +9,7 @@
 #include <QComboBox>
 #include <QGridLayout>
 #include <QDialogButtonBox>
-#include "lib/struct/ChannelModel.h"
+#include "lib/struct/ChannelModel33.h"
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/dialoghandler.h"
 #include "lib/lookup/TCodeVersion.h"
@@ -21,7 +21,7 @@ class AddChannelDialog : public QDialog
 public:
     AddChannelDialog(QWidget* parent = nullptr);
 
-    static ChannelModel getNewChannel(QWidget *parent, bool *ok = nullptr);
+    static ChannelModel33 getNewChannel(QWidget *parent, bool *ok = nullptr);
 
 private:
     QLabel* friendlyNameLabel;

@@ -499,7 +499,7 @@ void SettingsDialog::setUpTCodeAxis()
      foreach(auto channel, tcodeChannels.keys())
      {
          QString channelName = TCodeChannelLookup::ToString(channel);
-         ChannelModel axis = SettingsHandler::getAxis(channelName);
+         ChannelModel33 axis = SettingsHandler::getAxis(channelName);
          if(axis.Type == AxisType::None || axis.Type == AxisType::HalfRange)
              continue;
 
@@ -649,11 +649,11 @@ void SettingsDialog::setUpTCodeAxis()
          }
          QCheckBox* invertedCheckbox = new QCheckBox(this);
          invertedCheckbox->setText(axis.FriendlyName);
-         invertedCheckbox->setChecked(SettingsHandler::getChannelInverseChecked(channelName));
+         invertedCheckbox->setChecked(SettingsHandler::getChannelFunscriptInverseChecked(channelName));
          connect(invertedCheckbox, &QCheckBox::clicked, this,
                  [this, channelName](bool checked)
                    {
-                     SettingsHandler::setChannelInverseChecked(channelName, checked);
+                     SettingsHandler::setChannelFunscriptInverseChecked(channelName, checked);
                    });
          ui.FunscriptSettingsGrid->addWidget(invertedCheckbox, funscriptSettingsGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
 
@@ -754,21 +754,6 @@ void SettingsDialog::on_axis_valueReset()
 {
     foreach(auto axisProgressBar, axisProgressbars)
         axisProgressBar->reset();
-}
-
-void SettingsDialog::on_inverseTcXL0_valueChanged(bool checked)
-{
-    SettingsHandler::setInverseTcXL0(checked);
-}
-
-void SettingsDialog::on_inverseTcXRollR2_valueChanged(bool checked)
-{
-    SettingsHandler::setInverseTcXRollR2(checked);
-}
-
-void SettingsDialog::on_inverseTcYRollR1_valueChanged(bool checked)
-{
-    SettingsHandler::setInverseTcYRollR1(checked);
 }
 
 void SettingsDialog::on_speedInput_valueChanged(int value)
@@ -1321,7 +1306,7 @@ void SettingsDialog::on_invertFunscriptXCheckBox_clicked(bool checked)
 void SettingsDialog::on_channelAddButton_clicked()
 {
     bool ok;
-    ChannelModel channel = AddChannelDialog::getNewChannel(this, &ok);
+    ChannelModel33 channel = AddChannelDialog::getNewChannel(this, &ok);
     if (ok)
     {
         SettingsHandler::addAxis(channel);

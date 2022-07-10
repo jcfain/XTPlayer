@@ -6,6 +6,7 @@
 #include <QTableWidget>
 #include <QHeaderView>
 #include <QHBoxLayout>
+#include <QCheckBox>
 #include <lib/handler/dialoghandler.h>
 
 #include <lib/handler/settingshandler.h>
@@ -41,11 +42,14 @@ private:
         ACTION_NAME,
         GAMEPAD,
         KEY,
+        INVERT,
         EDIT
     };
 
     void setUpData();
     void clearData();
+    void tableItemClicked(int row, int column);
+    void listenForGamepadInput(QString action, QString actionName);
 };
 
 #endif // INPUTMAPWIDGET_H

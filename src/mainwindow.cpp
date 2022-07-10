@@ -6,8 +6,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 {
     QCoreApplication::setOrganizationName("cUrbSide prOd");
     QCoreApplication::setApplicationName("XTPlayer");
-    XTPVersion = QString("0.323a_%1T%2").arg(__DATE__).arg(__TIME__);
-    XTPVersionNum = 0.323f;
+    XTPVersion = QString("0.33a_%1T%2").arg(__DATE__).arg(__TIME__);
+    XTPVersionNum = 0.33f;
     const QString fullVersion = "XTP: v"+ XTPVersion + "\nXTE: v" + SettingsHandler::XTEVersion;
 
     QPixmap pixmap("://images/XTP_Splash.png");
@@ -777,7 +777,7 @@ void MainWindow::on_audioLevel_Change(int decibelL,int decibelR)
             QString tcode;
             foreach(auto axis, availibleAxis->keys())
             {
-                ChannelModel channel = availibleAxis->value(axis);
+                ChannelModel33 channel = availibleAxis->value(axis);
                 if (channel.AxisName == TCodeChannelLookup::Stroke()  || SettingsHandler::getMultiplierChecked(axis))
                 {
                     if (channel.Type == AxisType::HalfRange || channel.Type == AxisType::None)

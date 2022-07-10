@@ -57,11 +57,11 @@ AddChannelDialog::AddChannelDialog(QWidget* parent) : QDialog(parent)
     setLayout(layout);
 }
 
-ChannelModel AddChannelDialog::getNewChannel(QWidget *parent, bool *ok)
+ChannelModel33 AddChannelDialog::getNewChannel(QWidget *parent, bool *ok)
 {
     AddChannelDialog *dialog = new AddChannelDialog(parent);
 
-    ChannelModel channelModel;
+    ChannelModel33 channelModel;
 
     const int ret = dialog->exec();
     if (ok)
@@ -93,7 +93,8 @@ ChannelModel AddChannelDialog::getNewChannel(QWidget *parent, bool *ok)
         channelModel.UserMax = SettingsHandler::getSelectedTCodeVersion() == TCodeVersion::v2 ? 999 : 9999;
         channelModel.DamperEnabled = false;
         channelModel.DamperValue = 0.2f;
-        channelModel.Inverted = false;
+        channelModel.FunscriptInverted = false;
+        channelModel.GamepadInverted = false;
         channelModel.MultiplierEnabled = false;
         channelModel.LinkToRelatedMFS = false;
         channelModel.RelatedChannel = TCodeChannelLookup::Stroke();

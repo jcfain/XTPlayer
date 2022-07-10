@@ -112,13 +112,9 @@ private slots:
 
     void on_videoIncrement_valueChanged(int value);
 
-    void on_inverseTcXL0_valueChanged(bool checked);
-    void on_inverseTcXRollR2_valueChanged(bool checked);
-    void on_inverseTcYRollR1_valueChanged(bool checked);
     void on_speedInput_valueChanged(int value);
     void on_speedIncrementInput_valueChanged(int value);
     void xRangeStepInput_valueChanged(int value);
-
 
     void lubePulseEnabled_valueChanged(bool value);
     void lubeFrequency_valueChanged(int value);

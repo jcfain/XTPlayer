@@ -110,7 +110,7 @@ bool ChannelTableViewModel::setData(const QModelIndex &index, const QVariant &va
             return false;
         //save value from editor to member m_gridData
         QString key = (_map->constBegin() + index.row()).key();
-        ChannelModel valueModel = (_map->constBegin() + index.row()).value();
+        ChannelModel33 valueModel = (_map->constBegin() + index.row()).value();
 //        if (index.column() == 0)
 //        {
 //            return false;
@@ -175,7 +175,7 @@ Qt::ItemFlags ChannelTableViewModel::flags(const QModelIndex &index) const
     return Qt::ItemIsEditable | QAbstractTableModel::flags(index);
 }
 
-const ChannelModel* ChannelTableViewModel::getRowData(int row)
+const ChannelModel33* ChannelTableViewModel::getRowData(int row)
 {
     if (!_map || row <= 0)
         return nullptr;

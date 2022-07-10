@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QAbstractTableModel>
-#include "lib/struct/ChannelModel.h"
+#include "lib/struct/ChannelModel33.h"
 #include "lib/handler/serialhandler.h"
 
 class ChannelTableViewModel : public QAbstractTableModel
@@ -30,10 +30,10 @@ public:
         _map = SettingsHandler::getAvailableAxis();
         endResetModel();
     }
-    const ChannelModel* getRowData(int row);
+    const ChannelModel33* getRowData(int row);
 
 private:
-    QMap<QString, ChannelModel>* _map;
+    QMap<QString, ChannelModel33>* _map;
 };
 
 #endif // CHANNELTABLEVIEWMODEL_H

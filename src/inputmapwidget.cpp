@@ -13,9 +13,9 @@ InputMapWidget::InputMapWidget(ConnectionHandler* connectionHandler, QWidget *pa
     _layout = new QGridLayout(this);
     _tableWidget = new QTableWidget(this);
     _tableWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    _tableWidget->setColumnCount(4);
+    _tableWidget->setColumnCount(5);
     QStringList tableHeader;
-    tableHeader <<"Action"<<"Gamepad"<<"Key"<<"Edit";
+    tableHeader <<"Action"<<"Gamepad"<<"Key"<<"Invert"<<"Edit";
     _tableWidget->setHorizontalHeaderLabels(tableHeader);
     _tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
     // Widget width 1271
@@ -24,10 +24,12 @@ InputMapWidget::InputMapWidget(ConnectionHandler* connectionHandler, QWidget *pa
     _tableWidget->horizontalHeader()->setSectionResizeMode(_COLUMNS::GAMEPAD, QHeaderView::ResizeMode::Stretch);
     //ui.tableWidget->horizontalHeader()->resizeSection(_COLUMNS::SCRIPT_PATH, 450);
     _tableWidget->horizontalHeader()->setSectionResizeMode(_COLUMNS::KEY, QHeaderView::ResizeMode::Stretch);
+    _tableWidget->horizontalHeader()->setSectionResizeMode(_COLUMNS::INVERT, QHeaderView::ResizeMode::Stretch);
     //ui.tableWidget->horizontalHeader()->resizeSection(_COLUMNS::MEDIA_PATH, 275);
     _tableWidget->horizontalHeader()->setSectionResizeMode(_COLUMNS::EDIT, QHeaderView::ResizeMode::Stretch);
     //ui.tableWidget->horizontalHeader()->resizeSection(_COLUMNS::SCRIPT_SELECTION, 196);
     _tableWidget->horizontalHeader()->setStretchLastSection(true);
+    connect(_tableWidget, &QTableWidget::cellClicked, this, &InputMapWidget::tableItemClicked);
     _layout->addWidget(_tableWidget);
     setLayout(_layout);
     setUpData();
@@ -64,74 +66,62 @@ void InputMapWidget::setUpData()
         _tableWidget->setItem(row, _COLUMNS::ACTION_NAME, actionNameTableItem);
         QTableWidgetItem *gamepad = new QTableWidgetItem(gamePadKeys);
         gamepad->setFlags(gamepad->flags() & ~Qt::ItemIsEditable);
+        gamepad->setData(Qt::UserRole, QVariant::fromValue(actionKeyValue));
         _tableWidget->setItem(row, _COLUMNS::GAMEPAD, gamepad);
         QTableWidgetItem *keyboard = new QTableWidgetItem("Coming soon");
         keyboard->setFlags(keyboard->flags() & ~Qt::ItemIsEditable);
         _tableWidget->setItem(row, _COLUMNS::KEY, keyboard);
 
-        QWidget *editWidget = new QWidget(this); //create QWidget
-        QHBoxLayout *layoutBrowse = new QHBoxLayout(editWidget);
-        QPushButton* editButton = new QPushButton(this);
-        editButton->setText("Edit");
-        editButton->setObjectName(action);
-        editButton->setMaximumWidth(150);
-        QPushButton* clearButton = new QPushButton(this);
-        clearButton->setText("Clear");
-        clearButton->setObjectName(action);
-        clearButton->setMaximumWidth(150);
-        layoutBrowse->addWidget(editButton);
-        layoutBrowse->addWidget(clearButton);
-        layoutBrowse->setAlignment(Qt::AlignCenter); //set Alignment layout
-        layoutBrowse->setContentsMargins(4,4,4,4);
-        connect(clearButton, &QPushButton::clicked, this, [this, action, actionName]() {
-            auto items = _tableWidget->findItems(actionName, Qt::MatchFlag::MatchExactly);
-            QMap<QString, QStringList> inverseGamePadMap = SettingsHandler::getGamePadMapInverse();
-            auto item = items.first();
-            auto gamepadItem = _tableWidget->item(item->row(), _COLUMNS::GAMEPAD);
-            auto buttonMapValues = inverseGamePadMap.value(action);
-            foreach (auto button, buttonMapValues)
-            {
-                gamepadItem->setText("");
-                SettingsHandler::removeGamePadMapButton(button, action);
-            }
-        });
-
-        connect(editButton, &QPushButton::clicked, this, [this, action, actionName]() {
-            if(_connectionHandler->getGamepadHandler()->isConnected()) {
-                connect(_connectionHandler->getGamepadHandler(), &GamepadHandler::onListenForInputRecieve, this, [this, action, actionName](QString button) {
-                    QMap<QString, QStringList> gamepadMap = SettingsHandler::getGamePadMap();
-                    auto items = _tableWidget->findItems(actionName, Qt::MatchFlag::MatchExactly);
-                    auto item = items.first();
-                    auto gamepadItem = _tableWidget->item(item->row(), _COLUMNS::GAMEPAD);
-                    auto buttonMapValues = gamepadMap.value(button);
-                    auto text = gamepadItem->text();
-                    if (buttonMapValues.contains(action))
-                    {
-                        if(!text.isEmpty()) {
-                            if(text.contains(", " + button))
-                                gamepadItem->setText(text.trimmed().remove(", " + button));
-                            else if(text.contains(button + ", "))
-                                gamepadItem->setText(text.trimmed().remove(button + ", "));
-                            else
-                                gamepadItem->setText(text.trimmed().remove(button));
-                        }
-                        SettingsHandler::removeGamePadMapButton(button, action);
-                    }
-                    else
-                    {
-                        gamepadItem->setText(text.isEmpty() ? button : text + ", " + button);
-                        SettingsHandler::setGamePadMapButton(button, action);
-                    }
-                    tableWidget_Changed(gamepadItem);
+        QWidget *invertWidget = new QWidget(this); //create QWidget
+        QHBoxLayout *invertLayout = new QHBoxLayout(invertWidget);
+        if(availableAxis->contains(action)) {
+            auto channel = availableAxis->value(action);
+            if(channel.Type == AxisType::Range) {
+                QCheckBox* invertCheckbox = new QCheckBox(this);
+                invertCheckbox->setChecked(channel.GamepadInverted);
+                invertCheckbox->setObjectName(action + "InvertCheckbox");
+                connect(invertCheckbox, &QCheckBox::clicked, this, [action](bool checked) {
+                    SettingsHandler::setChannelGamepadInverse(action, checked);
                 });
-                _connectionHandler->getGamepadHandler()->listenForInput();
-                if(DialogHandler::Dialog(this, "Press a button or key for action "+actionName, true, false) == QDialog::DialogCode::Rejected) {
-                    disconnect(_connectionHandler->getGamepadHandler(), &GamepadHandler::onListenForInputRecieve, nullptr, nullptr);
-                }
+                invertLayout->addWidget(invertCheckbox);
+                invertLayout->setAlignment(Qt::AlignCenter); //set Alignment layout
+                invertLayout->setContentsMargins(4,4,4,4);
             }
-            else
-                DialogHandler::Dialog(this, "No gamepad connected!");
-        });
+        }
+        _tableWidget->setCellWidget(row, _COLUMNS::INVERT, invertWidget);
+
+        QWidget *editWidget = new QWidget(this); //create QWidget
+        QHBoxLayout *editLayoutayout = new QHBoxLayout(editWidget);
+        if(action != TCodeChannelLookup::None()) {
+            QPushButton* editButton = new QPushButton(this);
+            editButton->setText("Change");
+            editButton->setObjectName(action + "ChangeButton");
+            editButton->setMaximumWidth(150);
+            QPushButton* clearButton = new QPushButton(this);
+            clearButton->setText("Clear");
+            clearButton->setObjectName(action + "ClearButton");
+            clearButton->setMaximumWidth(150);
+            editLayoutayout->addWidget(editButton);
+            editLayoutayout->addWidget(clearButton);
+            editLayoutayout->setAlignment(Qt::AlignCenter); //set Alignment layout
+            editLayoutayout->setContentsMargins(4,4,4,4);
+            connect(clearButton, &QPushButton::clicked, this, [this, action, actionName]() {
+                auto items = _tableWidget->findItems(actionName, Qt::MatchFlag::MatchExactly);
+                QMap<QString, QStringList> inverseGamePadMap = SettingsHandler::getGamePadMapInverse();
+                auto item = items.first();
+                auto gamepadItem = _tableWidget->item(item->row(), _COLUMNS::GAMEPAD);
+                auto buttonMapValues = inverseGamePadMap.value(action);
+                foreach (auto button, buttonMapValues)
+                {
+                    gamepadItem->setText("");
+                    SettingsHandler::removeGamePadMapButton(button, action);
+                }
+            });
+
+            connect(editButton, &QPushButton::clicked, this, [this, action, actionName]() {
+                listenForGamepadInput(action, actionName);
+            });
+        }
         _tableWidget->setCellWidget(row, _COLUMNS::EDIT, editWidget);
         row++;
     }
@@ -145,6 +135,68 @@ void InputMapWidget::clearData()
 
 }
 
+void InputMapWidget::tableItemClicked(int row, int column)
+{
+    if(_COLUMNS::GAMEPAD == column)
+    {
+        auto gamepadItem = _tableWidget->item(row, _COLUMNS::GAMEPAD);
+        auto actionKeyValue = gamepadItem->data(Qt::UserRole).value<QPair<QString, QString>>();
+        QString action = actionKeyValue.first;
+        if(action != TCodeChannelLookup::None()) {
+            QString actionName = actionKeyValue.second;
+            listenForGamepadInput(action, actionName);
+        }
+    }
+    else if(_COLUMNS::KEY == column)
+    {
+        //Listen for key input
+        auto gamepadItem = _tableWidget->item(row, _COLUMNS::KEY);
+        auto actionKeyValue = gamepadItem->data(Qt::UserRole).value<QPair<QString, QString>>();
+        QString action = actionKeyValue.first;
+        if(action != TCodeChannelLookup::None()) {
+            QString actionName = actionKeyValue.second;
+            //listenForKeyboardInput(action, actionName);
+        }
+    }
+}
+
+void InputMapWidget::listenForGamepadInput(QString action, QString actionName)
+{
+    if(_connectionHandler->getGamepadHandler()->isConnected()) {
+        connect(_connectionHandler->getGamepadHandler(), &GamepadHandler::onListenForInputRecieve, this, [this, action, actionName](QString button) {
+            QMap<QString, QStringList> gamepadMap = SettingsHandler::getGamePadMap();
+            auto items = _tableWidget->findItems(actionName, Qt::MatchFlag::MatchExactly);
+            auto item = items.first();
+            auto gamepadItem = _tableWidget->item(item->row(), _COLUMNS::GAMEPAD);
+            auto buttonMapValues = gamepadMap.value(button);
+            auto text = gamepadItem->text();
+            if (buttonMapValues.contains(action))
+            {
+                if(!text.isEmpty()) {
+                    if(text.contains(", " + button))
+                        gamepadItem->setText(text.trimmed().remove(", " + button));
+                    else if(text.contains(button + ", "))
+                        gamepadItem->setText(text.trimmed().remove(button + ", "));
+                    else
+                        gamepadItem->setText(text.trimmed().remove(button));
+                }
+                SettingsHandler::removeGamePadMapButton(button, action);
+            }
+            else
+            {
+                gamepadItem->setText(text.isEmpty() ? button : text + ", " + button);
+                SettingsHandler::setGamePadMapButton(button, action);
+            }
+            tableWidget_Changed(gamepadItem);
+        });
+        _connectionHandler->getGamepadHandler()->listenForInput();
+        if(DialogHandler::Dialog(this, "Press a button or key for action "+actionName, true, false) == QDialog::DialogCode::Rejected) {
+            disconnect(_connectionHandler->getGamepadHandler(), &GamepadHandler::onListenForInputRecieve, nullptr, nullptr);
+        }
+    }
+    else
+        DialogHandler::Dialog(this, "No gamepad connected!");
+}
 void InputMapWidget::tableWidget_Changed(QTableWidgetItem *item)
 {
     DialogHandler::DialogClose();
