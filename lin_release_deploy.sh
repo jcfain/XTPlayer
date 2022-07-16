@@ -1,11 +1,13 @@
 #!/bin/bash
 
-targetDirectory=./Deploy/XTPlayer-v0.33a_Linux_x86_64
+version=v0.33a
+targetDirectory=./Deploy/XTPlayer-${version}_Linux_x86_64
+xteTargetDirectory=./Deploy/XTEngine-${version}_Linux_x86_64
 binDirectory=./build-XTPlayer-Desktop_Qt_5_15_2_GCC_64bit-Release/XTPlayer
 xteBinDirectory=../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_GCC_64bit-Release/release
 librDirectory=/home/jay/Qt/5.15.2/gcc_64/lib
 qmakeDirectory=/home/jay/Qt/5.15.2/gcc_64/bin/qmake
-cqtdeployer -bin $xteBinDirectory clear -libDir $librDirectory -qmake $qmakeDirectory -targetDir $targetDirectory
+cqtdeployer -bin $xteBinDirectory clear -libDir $librDirectory -qmake $qmakeDirectory -targetDir $xteTargetDirectory
 cqtdeployer -bin $binDirectory clear -libDir $librDirectory -qmake $qmakeDirectory -targetDir $targetDirectory
 mkdir $targetDirectory/bin/themes
 cp -R src/themes/ $targetDirectory/bin/
@@ -15,8 +17,9 @@ cp $xteBinDirectory/www/*-min.js $targetDirectory/bin/www/
 cp $xteBinDirectory/www/*-min.css $targetDirectory/bin/www/
 cp $xteBinDirectory/www/favicon.ico $targetDirectory/bin/www/
 cp -R Deploy/lib/* $targetDirectory/lib
+cp -R Deploy/XTEngine-v0.33a_Linux_x86_64/lib/* $targetDirectory/lib
 cp ../XTEngine/src/rename_me_for_local_settings.ini $targetDirectory/bin
-cp $xteBinDirectory/lib* $targetDirectory/lib
+cp $xteBinDirectory/*.* $targetDirectory/lib
 cp "XTP and DeoVR guide.pdf" $targetDirectory/"XTP and DeoVR guide.pdf"
 read -p "Press enter to resume ..."
 
