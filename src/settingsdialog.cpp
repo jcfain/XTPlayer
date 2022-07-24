@@ -830,9 +830,11 @@ void SettingsDialog::initNetworkEvent()
     }
 }
 
-void SettingsDialog::on_xtpWeb_initSyncDevice(DeviceName deviceName, bool checked)
+void SettingsDialog::on_xtpWeb_initInputDevice(DeviceName deviceName, bool checked)
 {
     if(deviceName == DeviceName::Deo) {
+        ui.deoAddressTxt->setText(SettingsHandler::getDeoAddress());
+        ui.deoPortTxt->setText(SettingsHandler::getDeoPort());
         ui.deoCheckbox->setChecked(checked);
         on_deoCheckbox_clicked(checked);
         on_deoConnectButton_clicked();
@@ -855,6 +857,26 @@ void SettingsDialog::on_xtpWeb_initSyncDevice(DeviceName deviceName, bool checke
         on_deoCheckbox_clicked(false);
     }
     _connectionHandler->initInputDevice(deviceName);
+}
+
+void SettingsDialog::on_xtpWeb_initOutputDevice(DeviceName deviceName, bool checked)
+{
+    if(deviceName == DeviceName::Serial) {
+        ui.SerialOutputCmb->setCurrentText(SettingsHandler::getSerialPort());
+        ui.serialOutputRdo->setChecked(checked);
+        on_serialOutputRdo_clicked();
+        on_serialConnectButton_clicked();
+    } else if(deviceName == DeviceName::Network) {
+        ui.networkAddressTxt->setText(SettingsHandler::getServerAddress());
+        ui.networkPortTxt->setText(SettingsHandler::getServerPort());
+        ui.networkOutputRdo->setChecked(checked);
+        on_networkOutputRdo_clicked();
+        on_networkConnectButton_clicked();
+    } else if(deviceName == DeviceName::None) {
+        ui.serialOutputRdo->setChecked(false);
+        ui.networkOutputRdo->setChecked(false);
+    }
+    _connectionHandler->initOutputDevice(deviceName);
 }
 
 void SettingsDialog::initDeoEvent()

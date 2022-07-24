@@ -6,8 +6,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 {
     QCoreApplication::setOrganizationName("cUrbSide prOd");
     QCoreApplication::setApplicationName("XTPlayer");
-    XTPVersion = QString("0.33a_%1T%2").arg(__DATE__).arg(__TIME__);
-    XTPVersionNum = 0.33f;
+    XTPVersion = QString("0.331a_%1T%2").arg(__DATE__).arg(__TIME__);
+    XTPVersionNum = 0.331f;
     const QString fullVersion = "XTP: v"+ XTPVersion + "\nXTE: v" + SettingsHandler::XTEVersion;
 
     QPixmap pixmap("://images/XTP_Splash.png");
@@ -74,13 +74,13 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     {
         _httpHandler = new HttpHandler(_mediaLibraryHandler, this);
         connect(_httpHandler, &HttpHandler::tcode, _connectionHandler, &ConnectionHandler::sendTCode);
-        connect(_httpHandler, &HttpHandler::connectOutputDevice, _connectionHandler, &ConnectionHandler::initOutputDevice);
         connect(_httpHandler, &HttpHandler::error, this, [this](QString error) {
             DialogHandler::MessageBox(this, error, XLogLevel::Critical);
         });
         connect(_httpHandler, &HttpHandler::xtpWebPacketRecieve, _connectionHandler, &ConnectionHandler::inputMessageSend);
         connect(_connectionHandler, &ConnectionHandler::connectionChange, _httpHandler, &HttpHandler::on_DeviceConnection_StateChange);
-        connect(_httpHandler, &HttpHandler::connectInputDevice, _xSettings, &SettingsDialog::on_xtpWeb_initSyncDevice);
+        connect(_httpHandler, &HttpHandler::connectInputDevice, _xSettings, &SettingsDialog::on_xtpWeb_initInputDevice);
+        connect(_httpHandler, &HttpHandler::connectOutputDevice, _xSettings, &SettingsDialog::on_xtpWeb_initOutputDevice);
         connect(_httpHandler, &HttpHandler::restartService, _xSettings, &SettingsDialog::restart);
         connect(_httpHandler, &HttpHandler::skipToMoneyShot, this, &MainWindow::skipToMoneyShot);
         connect(_httpHandler, &HttpHandler::skipToNextAction, this, &MainWindow::skipToNextAction);

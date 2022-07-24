@@ -70,7 +70,8 @@ signals:
     void skipToNextAction();
 
 public slots:
-    void on_xtpWeb_initSyncDevice(DeviceName deviceName, bool checked);
+    void on_xtpWeb_initInputDevice(DeviceName deviceName, bool checked);
+    void on_xtpWeb_initOutputDevice(DeviceName deviceName, bool checked);
 
 private slots:
     void on_serialOutputRdo_clicked();
