@@ -3480,19 +3480,41 @@ void MainWindow::skipToMoneyShot()
 
     if(!SettingsHandler::getSkipToMoneyShotSkipsVideo())
         return;
-    if(videoHandler->isPlaying())
+    if(videoHandler->isPlaying() ||  (_connectionHandler->getSelectedInputDevice() && _connectionHandler->getSelectedInputDevice()->isPlaying()))
     {
-        if(_playerControlsFrame->getAutoLoop())
-            _playerControlsFrame->SetLoop(false);
-        LibraryListItem27 selectedLibraryListItem27 = playingLibraryListItem->getLibraryListItem();
-        auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(selectedLibraryListItem27.path);
-        if (libraryListItemMetaData.moneyShotMillis > -1 && libraryListItemMetaData.moneyShotMillis < videoHandler->duration())
-        {
-            videoHandler->setPosition(libraryListItemMetaData.moneyShotMillis);
-        }
-        else
-        {
-            videoHandler->setPosition(videoHandler->duration() - (videoHandler->duration() * .1));
+        if(videoHandler->isPlaying()) {
+            if(_playerControlsFrame->getAutoLoop())
+                _playerControlsFrame->SetLoop(false);
+            LibraryListItem27 selectedLibraryListItem27 = playingLibraryListItem->getLibraryListItem();
+            auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(selectedLibraryListItem27.path);
+            if (libraryListItemMetaData.moneyShotMillis > -1 && libraryListItemMetaData.moneyShotMillis < videoHandler->duration())
+            {
+                videoHandler->setPosition(libraryListItemMetaData.moneyShotMillis);
+            }
+            else
+            {
+                videoHandler->setPosition(videoHandler->duration() - (videoHandler->duration() * .1));
+            }
+        } else if(_connectionHandler->getSelectedInputDevice() && _connectionHandler->getSelectedInputDevice()->isPlaying()) {
+            InputDevicePacket currentPacket = _connectionHandler->getSelectedInputDevice()->getCurrentPacket();
+            auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(currentPacket.path);
+            InputDevicePacket packet =
+            {
+                nullptr,
+                0,
+                libraryListItemMetaData.moneyShotMillis,
+                1,
+                0
+           };
+            if (libraryListItemMetaData.moneyShotMillis > -1 && libraryListItemMetaData.moneyShotMillis < currentPacket.duration)
+            {
+                _connectionHandler->getSelectedInputDevice()->sendPacket(packet);
+            }
+            else
+            {
+                packet.currentTime = currentPacket.duration - (currentPacket.duration * .1);
+                _connectionHandler->getSelectedInputDevice()->sendPacket(packet);
+            }
         }
     }
 }
