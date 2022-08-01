@@ -6,8 +6,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 {
     QCoreApplication::setOrganizationName("cUrbSide prOd");
     QCoreApplication::setApplicationName("XTPlayer");
-    XTPVersion = QString("0.331a_%1T%2").arg(__DATE__).arg(__TIME__);
-    XTPVersionNum = 0.331f;
+    XTPVersion = QString("0.332a_%1T%2").arg(__DATE__).arg(__TIME__);
+    XTPVersionNum = 0.332f;
     const QString fullVersion = "XTP: v"+ XTPVersion + "\nXTE: v" + SettingsHandler::XTEVersion;
 
     QPixmap pixmap("://images/XTP_Splash.png");
@@ -64,7 +64,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
                 SettingsHandler::Default();
         }
     }
-
+    _tcodeFactory = new TCodeFactory(0.0, 1.0);
     _dlnaScriptLinksDialog = new DLNAScriptLinks(this);
     tcodeHandler = new TCodeHandler(this);
     _settingsActionHandler = new SettingsActionHandler(this);
@@ -324,7 +324,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_connectionHandler, &ConnectionHandler::outputConnectionChange, this, &MainWindow::on_output_device_connectionChanged);
     connect(_connectionHandler, &ConnectionHandler::gamepadConnectionChange, this, &MainWindow::on_gamepad_connectionChanged);
     connect(_connectionHandler, &ConnectionHandler::gamepadAction, _settingsActionHandler, &SettingsActionHandler::media_action);
-    connect(_connectionHandler, &ConnectionHandler::gamepadTCode, this, &MainWindow::on_gamepad_sendTCode);
+    connect(_connectionHandler, &ConnectionHandler::gamepadTCode, this, &MainWindow::on_sendTCode);
     connect(retryConnectionButton, &QPushButton::clicked, _connectionHandler, [this](bool checked){
         _connectionHandler->initOutputDevice(SettingsHandler::getSelectedOutputDevice());
     });
@@ -398,6 +398,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(videoHandler, &VideoHandler::doubleClicked, this, &MainWindow::media_double_click_event);
     connect(videoHandler, &VideoHandler::singleClicked, this, &MainWindow::media_single_click_event);
     connect(videoHandler, &VideoHandler::keyPressed, this, &MainWindow::on_key_press);
+    connect(videoHandler, &VideoHandler::keyReleased, this, &MainWindow::on_key_press);
 
     connect(_playerControlsFrame, &PlayerControls::seekSliderMoved, this, &MainWindow::on_seekSlider_sliderMoved);
     connect(_playerControlsFrame, &PlayerControls::seekSliderHover, this, &MainWindow::on_seekslider_hover );
@@ -415,6 +416,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_playerControlsFrame, &PlayerControls::skipBack, this, &MainWindow::on_skipBackButton_clicked);
 
     connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
+    connect(this, &MainWindow::keyReleased, this, &MainWindow::on_key_press);
     connect(this, &MainWindow::change, this, &MainWindow::on_mainwindow_change);
     connect(this, &MainWindow::playVideo, this, &MainWindow::on_playVideo);
     connect(this, &MainWindow::stopAndPlayVideo, this, &MainWindow::stopAndPlayMedia);
@@ -426,6 +428,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(libraryList, &XLibraryListWidget::itemDoubleClicked, this, &MainWindow::on_LibraryList_itemDoubleClicked);
     connect(libraryList, &XLibraryListWidget::itemClicked, this, &MainWindow::on_LibraryList_itemClicked);
     connect(libraryList, &XLibraryListWidget::keyPressed, this, &MainWindow::on_key_press);
+    connect(libraryList, &XLibraryListWidget::keyReleased, this, &MainWindow::on_key_press);
 
     connect(QApplication::instance(), &QCoreApplication::aboutToQuit, this, &MainWindow::dispose);
 
@@ -473,6 +476,7 @@ void MainWindow::onPasswordIncorrect()
 }
 void MainWindow::dispose()
 {
+    delete _tcodeFactory;
     closeWelcomeDialog();
     if(playingLibraryListItem != nullptr)
         updateMetaData(playingLibraryListItem->getLibraryListItem());
@@ -532,9 +536,35 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 }
 void MainWindow::on_key_press(QKeyEvent * event)
 {
-    auto actions = SettingsHandler::getKeyboardKeyActionList(event->key(), event->modifiers());
-    foreach(auto action, actions) {
-        _settingsActionHandler->media_action(action);
+    MediaActions mediaActions;
+    auto keyActions = SettingsHandler::getKeyboardKeyActionList(event->key(), event->modifiers());
+    QVector<ChannelValueModel> channelValues;
+    foreach(auto action, keyActions) {
+        if (!mediaActions.Values.contains(action)) {
+            auto channel = SettingsHandler::getAxis(action);
+            float value = event->type() == QKeyEvent::KeyRelease ? 0.0f : 1.0f;
+//            if(event->type() == QKeyEvent::KeyRelease) {
+//                if(channel.Type == AxisType::Range || channel.Type == AxisType::Switch) {
+//                    value = -1.0f;
+//                } else if(channel.Type == AxisType::HalfRange) {
+//                    value = 0.0f;
+//                }
+//            }
+            _tcodeFactory->calculate(action, value, channelValues);
+        }
+        else {
+            if(event->type() == QKeyEvent::KeyRelease)
+                continue;
+            _settingsActionHandler->media_action(action);
+        }
+    }
+    if(channelValues.length() > 0) {
+        QString currentTCode = _tcodeFactory->formatTCode(&channelValues);
+        if (_lastKeyboardTCode != currentTCode)
+        {
+            _lastKeyboardTCode = currentTCode;
+            on_sendTCode(currentTCode);
+        }
     }
 }
 /**
@@ -2458,7 +2488,7 @@ void MainWindow::processVRMetaData(QString videoPath, QString funscriptPath, qin
     processMetaData(item);
 }
 
-void MainWindow::on_gamepad_sendTCode(QString value)
+void MainWindow::on_sendTCode(QString value)
 {
     if(_connectionHandler->isOutputDeviceConnected())
     {

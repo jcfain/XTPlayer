@@ -53,6 +53,7 @@
 #include "lib/lookup/AxisNames.h"
 #include "lib/lookup/MediaActions.h"
 #include "lib/tool/xmath.h"
+#include "lib/tool/tcodefactory.h"
 #include "lib/lookup/enum.h"
 #include <QtCompress/qzipwriter.h>
 #include <QtCompress/qzipreader.h>
@@ -103,7 +104,7 @@ private slots:
     void lockThumb();
     void unlockThumb();
     void onFunscriptSearchResult(QString mediaPath, QString funscriptPath, qint64 mediaDuration);
-    void on_gamepad_sendTCode(QString tcode);
+    void on_sendTCode(QString tcode);
     void on_gamepad_connectionChanged(ConnectionChangedSignal event);
     void on_actionAbout_triggered();
     void on_action75_triggered();
@@ -166,8 +167,8 @@ private slots:
 
 signals:
     void keyPressed(QKeyEvent * event);
+    void keyReleased(QKeyEvent * event);
     void change(QEvent * event);
-    void sendTCode(QString tcode);
 //    void prepareLibraryLoad();
 //    void libraryLoaded();
 //    void libraryNotFound();
@@ -182,6 +183,10 @@ protected:
     virtual void keyPressEvent(QKeyEvent *event) override
     {
         emit keyPressed(event);
+    }
+    virtual void keyReleaseEvent(QKeyEvent *event) override
+    {
+        emit keyReleased(event);
     }
     virtual void changeEvent(QEvent *event) override
     {
@@ -281,6 +286,8 @@ private:
     QMutex _eventLocker;
     bool _editPlaylistMode = false;
     bool _libraryDockMode = false;
+    QString _lastKeyboardTCode;
+    TCodeFactory *_tcodeFactory;
 
     void on_settingsMessageRecieve(QString message, XLogLevel logLevel);
 //    void saveSingleThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);

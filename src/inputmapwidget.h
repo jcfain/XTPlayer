@@ -22,6 +22,7 @@ public:
 
 signals:
     void keyRelease(QKeyEvent* e);
+    void refreshData();
 
 private slots:
     void tableWidget_Changed(QTableWidgetItem *item);
@@ -53,7 +54,9 @@ private:
     };
 
     void setUpData();
-    void clearData();
+    void clearAllData(int row);
+    void clearGamePadData(int row);
+    void clearKeyboardData(int row);
     void tableItemClicked(int row, int column);
     void listenForGamepadInput(QString action, QString actionName);
     void listenForKeyboardInput(QString action, QString actionName);

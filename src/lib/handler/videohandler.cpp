@@ -49,6 +49,7 @@ void VideoHandler::createLayout()
     connect(_videoWidget, &XVideoWidget::doubleClicked, this, [this](QMouseEvent* e) {emit doubleClicked(e);});
     connect(_videoWidget, &XVideoWidget::singleClicked, this, [this](QMouseEvent* e) {emit singleClicked(e);});
     connect(_videoWidget, &XVideoWidget::keyPressed, this, [this](QKeyEvent* e) {emit keyPressed(e);});
+    connect(_videoWidget, &XVideoWidget::keyReleased, this, [this](QKeyEvent* e) {emit keyReleased(e);});
     connect(_videoWidget, &XVideoWidget::mouseEnter, this, [this](QEvent* e) {emit mouseEnter(e);});
     _mediaGrid->addWidget(_videoWidget);
     _player->setVideoOutput(_videoWidget);

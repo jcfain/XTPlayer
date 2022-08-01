@@ -28,6 +28,7 @@ signals:
     void doubleClicked(QMouseEvent* e);
     void singleClicked(QMouseEvent* e);
     void keyPressed(QKeyEvent* k);
+    void keyReleased(QKeyEvent* k);
     void mouseEnter(QEvent* e);
     void positionChanged(int position);
     void mediaStatusChanged(XMediaStatus status);
