@@ -37,7 +37,8 @@ SOURCES += \
     noMatchingScriptDialog.cpp \
     playercontrols.cpp \
     settingsdialog.cpp \
-    welcomedialog.cpp
+    welcomedialog.cpp \
+    xlibrarylistwidget.cpp
 
 HEADERS += \
     CustomControls/rangeslider.h \
@@ -59,7 +60,8 @@ HEADERS += \
     noMatchingScriptDialog.h \
     playercontrols.h \
     settingsdialog.h \
-    welcomedialog.h
+    welcomedialog.h \
+    xlibrarylistwidget.h
 
 FORMS += \
     dlnascriptlinks.ui \

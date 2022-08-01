@@ -74,6 +74,7 @@ void VideoHandler::toggleFullscreen() {
         _fullscreenWidget->setLayout(layout);
         layout->addWidget(_videoWidget);
         _fullscreenWidget->showFullScreen();
+        grabKeyboard();
     }
     else
     {
@@ -81,6 +82,7 @@ void VideoHandler::toggleFullscreen() {
         _mediaGrid->addWidget(_videoWidget);
         delete _fullscreenWidget;
         _fullscreenWidget = 0;
+        releaseKeyboard();
     }
 }
 

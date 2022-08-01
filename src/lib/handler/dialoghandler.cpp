@@ -71,10 +71,15 @@ int DialogHandler::Dialog(QWidget* parent, QString message, bool modal, bool sho
     }
     return -1;
 }
+bool DialogHandler::IsDialogOpen() {
+  return _dialog && _dialog->isVisible();
+}
 void DialogHandler::DialogClose()
 {
     if(_dialog) {
         if(_dialog != nullptr) {
+            disconnect(_dialog, &QDialog::rejected, nullptr, nullptr);
+            disconnect(_dialog, &QDialog::accepted, nullptr, nullptr);
             _dialog->close();
             delete _dialog;
         }

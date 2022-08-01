@@ -9,6 +9,7 @@
 #include <QProgressBar>
 #include <QCryptographicHash>
 #include <QInputDialog>
+#include <QDesktopServices>
 #include "CustomControls/rangeslider.h"
 #include "inputmapwidget.h"
 #include "lib/struct/SerialComboboxItem.h"
@@ -214,6 +215,8 @@ private slots:
     void on_gamepad_connectionChanged(ConnectionChangedSignal event);
     void on_input_device_connectionChanged(ConnectionChangedSignal event);
     void on_output_device_connectionChanged(ConnectionChangedSignal event);
+
+    void on_openDeoPDFButton_clicked();
 
 private:
 

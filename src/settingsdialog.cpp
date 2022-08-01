@@ -248,7 +248,6 @@ void SettingsDialog::setupUi()
         }
 
         ui.gamePadCheckbox->setChecked(SettingsHandler::getGamepadEnabled());
-        ui.gamePadMapGroupbox->setHidden(!SettingsHandler::getGamepadEnabled());
         ui.videoIncrementSpinBox->setValue(SettingsHandler::getVideoIncrement());
         ui.disableTextToSpeechCheckBox->setChecked(SettingsHandler::getDisableSpeechToText());
         ui.disableVRScriptNotFoundCheckbox->setChecked(SettingsHandler::getDisableVRScriptSelect());
@@ -1303,7 +1302,6 @@ void SettingsDialog::on_resetAllButton_clicked()
 void SettingsDialog::on_gamePadCheckbox_clicked(bool checked)
 {
     SettingsHandler::setGamepadEnabled(checked);
-    ui.gamePadMapGroupbox->setHidden(!checked);
     if (checked)
         _connectionHandler->initInputDevice(DeviceName::Gamepad);
     else
@@ -1753,3 +1751,14 @@ void SettingsDialog::restart()
     QApplication::quit();
     QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
 }
+
+void SettingsDialog::on_openDeoPDFButton_clicked()
+{
+    QString filePath = QApplication::applicationDirPath() + "/XTP_and_DeoVR-HereSphere_guide.pdf";
+    if(QFile::exists(filePath)) {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
+    } else {
+        DialogHandler::MessageBox(this, "Error opening: "+ filePath, XLogLevel::Critical);
+    }
+}
+

@@ -20,7 +20,7 @@ cp -R Deploy/lib/* $targetDirectory/lib
 cp -R Deploy/XTEngine-v0.33a_Linux_x86_64/lib/* $targetDirectory/lib
 cp ../XTEngine/src/rename_me_for_local_settings.ini $targetDirectory/bin
 cp $xteBinDirectory/*.* $targetDirectory/lib
-cp "XTP and DeoVR guide.pdf" $targetDirectory/"XTP and DeoVR guide.pdf"
+cp "XTP and DeoVR guide.pdf" $targetDirectory/"XTP_and_DeoVR-HereSphere_guide.pdf"
 read -p "Press enter to resume ..."
 
 

@@ -153,7 +153,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     _syncHandler = new SyncHandler(this);
     _playerControlsFrame->setVolume(SettingsHandler::getPlayerVolume());
 
-    libraryList = new QListWidget(this);
+    libraryList = new XLibraryListWidget(this);
     libraryList->setUniformItemSizes(true);
     libraryList->setContextMenuPolicy(Qt::CustomContextMenu);
     libraryList->setProperty("id", "libraryList");
@@ -422,9 +422,10 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     //    connect(this, &MainWindow::scriptNotFound, this, &MainWindow::on_scriptNotFound);
     //connect(videoHandler, &VideoHandler::mouseEnter, this, &MainWindow::on_video_mouse_enter);
 
-    connect(libraryList, &QListWidget::customContextMenuRequested, this, &MainWindow::onLibraryList_ContextMenuRequested);
-    connect(libraryList, &QListWidget::itemDoubleClicked, this, &MainWindow::on_LibraryList_itemDoubleClicked);
-    connect(libraryList, &QListWidget::itemClicked, this, &MainWindow::on_LibraryList_itemClicked);
+    connect(libraryList, &XLibraryListWidget::customContextMenuRequested, this, &MainWindow::onLibraryList_ContextMenuRequested);
+    connect(libraryList, &XLibraryListWidget::itemDoubleClicked, this, &MainWindow::on_LibraryList_itemDoubleClicked);
+    connect(libraryList, &XLibraryListWidget::itemClicked, this, &MainWindow::on_LibraryList_itemClicked);
+    connect(libraryList, &XLibraryListWidget::keyPressed, this, &MainWindow::on_key_press);
 
     connect(QApplication::instance(), &QCoreApplication::aboutToQuit, this, &MainWindow::dispose);
 
@@ -531,89 +532,9 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 }
 void MainWindow::on_key_press(QKeyEvent * event)
 {
-    MediaActions actions;
-     switch(event->key())
-    {
-        case Qt::Key_Space:
-        case Qt::Key_Enter:
-        case Qt::Key_MediaPause:
-        case Qt::Key_MediaTogglePlayPause:
-            _settingsActionHandler->media_action(actions.TogglePause);
-            break;
-        case Qt::Key_1:
-        case Qt::Key_F11:
-            _settingsActionHandler->media_action(actions.FullScreen);
-            break;
-        case Qt::Key_M:
-        case Qt::Key_2:
-            _settingsActionHandler->media_action(actions.Mute);
-            break;
-        case Qt::Key_MediaStop:
-        case Qt::Key_Escape:
-            _settingsActionHandler->media_action(actions.Stop);
-            break;
-        case Qt::Key_MediaNext:
-        case Qt::Key_E:
-            _settingsActionHandler->media_action(actions.Next);
-            break;
-        case Qt::Key_MediaPrevious:
-        case Qt::Key_Q:
-            _settingsActionHandler->media_action(actions.Back);
-            break;
-        case Qt::Key_VolumeUp:
-        case Qt::Key_W:
-            _settingsActionHandler->media_action(actions.VolumeUp);
-            break;
-        case Qt::Key_VolumeDown:
-        case Qt::Key_S:
-            _settingsActionHandler->media_action(actions.VolumeDown);
-            break;
-        case Qt::Key_L:
-        case Qt::Key_C:
-            _settingsActionHandler->media_action(actions.Loop);
-            break;
-        case Qt::Key_A:
-            _settingsActionHandler->media_action(actions.Rewind);
-            break;
-        case Qt::Key_D:
-            _settingsActionHandler->media_action(actions.FastForward);
-            break;
-        case Qt::Key_X:
-            _settingsActionHandler->media_action(actions.IncreaseXRange);
-            break;
-        case Qt::Key_Z:
-            _settingsActionHandler->media_action(actions.DecreaseXRange);
-            break;
-        case Qt::Key_F:
-            _settingsActionHandler->media_action(actions.DecreaseXUpperRange);
-            break;
-        case Qt::Key_R:
-            _settingsActionHandler->media_action(actions.IncreaseXUpperRange);
-            break;
-        case Qt::Key_G:
-            _settingsActionHandler->media_action(actions.DecreaseXLowerRange);
-            break;
-        case Qt::Key_T:
-            _settingsActionHandler->media_action(actions.IncreaseXLowerRange);
-            break;
-        case Qt::Key_Control:
-            _settingsActionHandler->media_action(actions.ResetLiveXRange);
-            break;
-        case Qt::Key_I:
-            _settingsActionHandler->media_action(actions.ToggleFunscriptInvert);
-            break;
-        case Qt::Key_V:
-            _settingsActionHandler->media_action(actions.ToggleAxisMultiplier);
-            break;
-         case Qt::Key_P:
-             _settingsActionHandler->media_action(actions.TogglePauseAllDeviceActions);
-             break;
-         case Qt::Key_J:
-             _settingsActionHandler->media_action(actions.SkipToMoneyShot);
-             break;
-         case Qt::Key_K:
-             _settingsActionHandler->media_action(actions.SkipToAction);
-             break;
+    auto actions = SettingsHandler::getKeyboardKeyActionList(event->key(), event->modifiers());
+    foreach(auto action, actions) {
+        _settingsActionHandler->media_action(action);
     }
 }
 /**
@@ -3496,25 +3417,25 @@ void MainWindow::skipToMoneyShot()
                 videoHandler->setPosition(videoHandler->duration() - (videoHandler->duration() * .1));
             }
         } else if(_connectionHandler->getSelectedInputDevice() && _connectionHandler->getSelectedInputDevice()->isPlaying()) {
-            InputDevicePacket currentPacket = _connectionHandler->getSelectedInputDevice()->getCurrentPacket();
-            auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(currentPacket.path);
-            InputDevicePacket packet =
-            {
-                nullptr,
-                0,
-                libraryListItemMetaData.moneyShotMillis,
-                1,
-                0
-           };
-            if (libraryListItemMetaData.moneyShotMillis > -1 && libraryListItemMetaData.moneyShotMillis < currentPacket.duration)
-            {
-                _connectionHandler->getSelectedInputDevice()->sendPacket(packet);
-            }
-            else
-            {
-                packet.currentTime = currentPacket.duration - (currentPacket.duration * .1);
-                _connectionHandler->getSelectedInputDevice()->sendPacket(packet);
-            }
+//            InputDevicePacket currentPacket = _connectionHandler->getSelectedInputDevice()->getCurrentPacket();
+//            auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(currentPacket.path);
+//            InputDevicePacket packet =
+//            {
+//                nullptr,
+//                0,
+//                libraryListItemMetaData.moneyShotMillis,
+//                1,
+//                0
+//           };
+//            if (libraryListItemMetaData.moneyShotMillis > -1 && libraryListItemMetaData.moneyShotMillis < currentPacket.duration)
+//            {
+//                _connectionHandler->getSelectedInputDevice()->sendPacket(packet);
+//            }
+//            else
+//            {
+//                packet.currentTime = currentPacket.duration - (currentPacket.duration * .1);
+//                _connectionHandler->getSelectedInputDevice()->sendPacket(packet);
+//            }
         }
     }
 }

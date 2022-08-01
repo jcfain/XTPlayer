@@ -32,6 +32,7 @@
 #include "playercontrols.h"
 #include "welcomedialog.h"
 #include "dlnascriptlinks.h"
+#include "xlibrarylistwidget.h"
 #include "lib/handler/videohandler.h"
 #include "CustomControls/rangeslider.h"
 #include "lib/handler/settingshandler.h"
@@ -238,7 +239,7 @@ private:
     QLabel* vrConnectionStatusLabel;
     QPushButton* vrRetryConnectionButton;
     QLabel* xtpWebStatusLabel;
-    QListWidget* libraryList;
+    XLibraryListWidget* libraryList;
     QPushButton* backLibraryButton;
     QPushButton* randomizeLibraryButton;
     QPushButton* windowedLibraryButton;

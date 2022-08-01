@@ -7,6 +7,7 @@
 #include <QHeaderView>
 #include <QHBoxLayout>
 #include <QCheckBox>
+#include <QKeyEvent>
 #include <lib/handler/dialoghandler.h>
 
 #include <lib/handler/settingshandler.h>
@@ -20,12 +21,17 @@ public:
     explicit InputMapWidget(ConnectionHandler* connectionHandler, QWidget *parent = nullptr);
 
 signals:
+    void keyRelease(QKeyEvent* e);
 
 private slots:
     void tableWidget_Changed(QTableWidgetItem *item);
+    //void mousePressEvent(QMouseEvent *e) override;
     //void buttonBox_accepted();
     //void buttonBox_clicked(QAbstractButton *button);
     //void tableWidget_itemSelectionChanged();
+
+protected:
+    virtual void keyReleaseEvent(QKeyEvent *e);
 
 private:
     QGridLayout* _layout;
@@ -50,6 +56,7 @@ private:
     void clearData();
     void tableItemClicked(int row, int column);
     void listenForGamepadInput(QString action, QString actionName);
+    void listenForKeyboardInput(QString action, QString actionName);
 };
 
 #endif // INPUTMAPWIDGET_H
