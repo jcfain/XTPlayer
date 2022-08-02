@@ -325,15 +325,15 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_connectionHandler, &ConnectionHandler::gamepadConnectionChange, this, &MainWindow::on_gamepad_connectionChanged);
     connect(_connectionHandler, &ConnectionHandler::gamepadAction, _settingsActionHandler, &SettingsActionHandler::media_action);
     connect(_connectionHandler, &ConnectionHandler::gamepadTCode, this, &MainWindow::on_sendTCode);
-    connect(retryConnectionButton, &QPushButton::clicked, _connectionHandler, [this](bool checked){
-        _connectionHandler->initOutputDevice(SettingsHandler::getSelectedOutputDevice());
-    });
-    connect(deoRetryConnectionButton, &QPushButton::clicked, _connectionHandler, [this](bool checked) {
-        _connectionHandler->initInputDevice(SettingsHandler::getSelectedInputDevice());
-    });
     connect(_connectionHandler, &ConnectionHandler::messageRecieved, _syncHandler, &SyncHandler::searchForFunscript);
 
 
+    connect(retryConnectionButton, &QPushButton::clicked, this, [this](bool checked){
+        _connectionHandler->initOutputDevice(SettingsHandler::getSelectedOutputDevice());
+    });
+    connect(deoRetryConnectionButton, &QPushButton::clicked, this, [this](bool checked) {
+        _connectionHandler->initInputDevice(SettingsHandler::getSelectedInputDevice());
+    });
     connect(_settingsActionHandler, &SettingsActionHandler::actionExecuted, this, &MainWindow::mediaAction);
     //connect(_xSettings, &SettingsDialog::deviceConnectionChange, this, &MainWindow::on_device_connectionChanged);
     //connect(_xSettings, &SettingsDialog::deviceConnectionChange, _syncHandler, &SyncHandler::on_device_status_change);

@@ -36,40 +36,36 @@ void SettingsDialog::init(VideoHandler* videoHandler, SyncHandler* syncHandler, 
     connect(_syncHandler, &SyncHandler::funscriptEnded, this, &SettingsDialog::resetAxisProgressBars, Qt::QueuedConnection);
 
     setupUi();
-    if(SettingsHandler::getGamepadEnabled())
-    {
-        setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceName::Gamepad);
-    }
-    if(SettingsHandler::getSelectedOutputDevice() == DeviceName::Serial)
-    {
-        initSerialEvent();
-    }
-    else if (SettingsHandler::getSelectedOutputDevice() == DeviceName::Network)
-    {
-        initNetworkEvent();
-    }
-    initInputDevice();
+//    if(SettingsHandler::getSelectedOutputDevice() == DeviceName::Serial)
+//    {
+//        initSerialEvent();
+//    }
+//    else if (SettingsHandler::getSelectedOutputDevice() == DeviceName::Network)
+//    {
+//        initNetworkEvent();
+//    }
+//    initInputDevice();
 }
 
 void SettingsDialog::initInputDevice()
 {
-    DeviceName deviceName = SettingsHandler::getSelectedInputDevice();
-    setDeviceStatusStyle(ConnectionStatus::Disconnected, deviceName);
-    if(deviceName == DeviceName::Deo)
-    {
-        initDeoEvent();
-    }
-    else if(deviceName == DeviceName::Whirligig)
-    {
-        initWhirligigEvent();
-    }
-    else if(SettingsHandler::getEnableHttpServer() && deviceName == DeviceName::XTPWeb)
-    {
-        initXTPWebEvent();
-    }
-    if(SettingsHandler::getGamepadEnabled()) {
-        _connectionHandler->initInputDevice(DeviceName::Gamepad);
-    }
+//    DeviceName deviceName = SettingsHandler::getSelectedInputDevice();
+//    setDeviceStatusStyle(ConnectionStatus::Disconnected, deviceName);
+//    if(deviceName == DeviceName::Deo)
+//    {
+//        initDeoEvent();
+//    }
+//    else if(deviceName == DeviceName::Whirligig)
+//    {
+//        initWhirligigEvent();
+//    }
+//    else if(SettingsHandler::getEnableHttpServer() && deviceName == DeviceName::XTPWeb)
+//    {
+//        initXTPWebEvent();
+//    }
+//    if(SettingsHandler::getGamepadEnabled()) {
+//        _connectionHandler->initInputDevice(DeviceName::Gamepad);
+//    }
 }
 
 void SettingsDialog::initLive()
@@ -811,51 +807,6 @@ void SettingsDialog::lubeAmount_valueChanged(int value)
     SettingsHandler::setLubePulseAmount(value);
 }
 
-//UdpHandler* SettingsDialog::getNetworkHandler()
-//{
-//    return _udpHandler;
-//}
-
-//SerialHandler* SettingsDialog::getSerialHandler()
-//{
-//    return _serialHandler;
-//}
-
-//DeoHandler* SettingsDialog::getDeoHandler()
-//{
-//    return _deoHandler;
-//}
-//WhirligigHandler* SettingsDialog::getWhirligigHandler()
-//{
-//    return _whirligigHandler;
-//}
-//XTPWebHandler* SettingsDialog::getXTPWebHandler()
-//{
-//    return _xtpWebHandler;
-//}
-
-void SettingsDialog::initSerialEvent()
-{
-    ui.serialConnectButton->setEnabled(false);
-    setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceName::Serial);
-    _connectionHandler->initOutputDevice(DeviceName::Serial);
-}
-
-void SettingsDialog::initNetworkEvent()
-{
-    if(!SettingsHandler::getServerAddress().isEmpty() && !SettingsHandler::getServerPort().isEmpty() &&
-        SettingsHandler::getServerAddress() != "0" && SettingsHandler::getServerPort() != "0")
-    {
-        setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceName::Network);
-        ui.networkConnectButton->setEnabled(false);
-        _connectionHandler->initOutputDevice(DeviceName::Network);
-    }
-    else
-    {
-        DialogHandler::MessageBox(this, "Invalid Network address.", XLogLevel::Critical);
-    }
-}
-
 void SettingsDialog::on_xtpWeb_initInputDevice(DeviceName deviceName, bool checked)
 {
     if(deviceName == DeviceName::Deo) {
@@ -882,7 +833,7 @@ void SettingsDialog::on_xtpWeb_initInputDevice(DeviceName deviceName, bool check
         ui.deoCheckbox->setChecked(false);
         on_deoCheckbox_clicked(false);
     }
-    _connectionHandler->initInputDevice(deviceName);
+    //_connectionHandler->initInputDevice(deviceName);
 }
 
 void SettingsDialog::on_xtpWeb_initOutputDevice(DeviceName deviceName, bool checked)
@@ -903,34 +854,6 @@ void SettingsDialog::on_xtpWeb_initOutputDevice(DeviceName deviceName, bool chec
         ui.networkOutputRdo->setChecked(false);
     }
     _connectionHandler->initOutputDevice(deviceName);
-}
-
-void SettingsDialog::initDeoEvent()
-{
-    setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceName::Deo);
-    if(!SettingsHandler::getDeoAddress().isEmpty() && !SettingsHandler::getDeoPort().isEmpty() &&
-        SettingsHandler::getDeoAddress() != "0" && SettingsHandler::getDeoPort() != "0")
-    {
-        ui.deoConnectButton->setEnabled(false);
-        _connectionHandler->initInputDevice(DeviceName::Deo);
-    }
-}
-
-void SettingsDialog::initWhirligigEvent()
-{
-    setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceName::Whirligig);
-    if(!SettingsHandler::getWhirligigAddress().isEmpty() && !SettingsHandler::getWhirligigPort().isEmpty() &&
-        SettingsHandler::getWhirligigAddress() != "0" && SettingsHandler::getWhirligigPort() != "0")
-    {
-        ui.whirligigConnectButton->setEnabled(false);
-        _connectionHandler->initInputDevice(DeviceName::Whirligig);
-    }
-}
-
-void SettingsDialog::initXTPWebEvent()
-{
-    setDeviceStatusStyle(ConnectionStatus::Connecting, DeviceName::XTPWeb);
-    _connectionHandler->initInputDevice(DeviceName::XTPWeb);
 }
 
 void SettingsDialog::loadSerialPorts()
@@ -1189,7 +1112,8 @@ void SettingsDialog::on_serialConnectButton_clicked()
         return;
     }
     SettingsHandler::setSerialPort(portName);
-    initSerialEvent();
+    ui.serialConnectButton->setEnabled(false);
+    _connectionHandler->initOutputDevice(DeviceName::Serial);
 }
 
 void SettingsDialog::on_networkConnectButton_clicked()
@@ -1197,7 +1121,8 @@ void SettingsDialog::on_networkConnectButton_clicked()
     if(SettingsHandler::getServerAddress() != "" && SettingsHandler::getServerPort() != "" &&
      SettingsHandler::getServerAddress() != "0" && SettingsHandler::getServerPort() != "0")
     {
-        initNetworkEvent();
+        ui.networkConnectButton->setEnabled(false);
+        _connectionHandler->initOutputDevice(DeviceName::Network);
     }
     else
     {
@@ -1210,7 +1135,8 @@ void SettingsDialog::on_deoConnectButton_clicked()
     if(SettingsHandler::getDeoAddress() != "" && SettingsHandler::getDeoPort() != "" &&
      SettingsHandler::getDeoAddress() != "0" && SettingsHandler::getDeoPort() != "0")
     {
-        initDeoEvent();
+        ui.deoConnectButton->setEnabled(false);
+        _connectionHandler->initInputDevice(DeviceName::Deo);
     }
     else
     {
@@ -1223,7 +1149,8 @@ void SettingsDialog::on_whirligigConnectButton_clicked()
     if(SettingsHandler::getWhirligigAddress() != "" && SettingsHandler::getWhirligigPort() != "" &&
      SettingsHandler::getWhirligigAddress() != "0" && SettingsHandler::getWhirligigPort() != "0")
     {
-        initWhirligigEvent();
+        ui.whirligigConnectButton->setEnabled(false);
+        _connectionHandler->initInputDevice(DeviceName::Whirligig);
     }
     else
     {
@@ -1270,7 +1197,7 @@ void SettingsDialog::on_xtpWebHandlerCheckbox_clicked(bool checked)
         on_whirligigCheckBox_clicked(!checked);
         ui.deoCheckbox->setChecked(!checked);
         on_deoCheckbox_clicked(!checked);
-        initXTPWebEvent();
+        _connectionHandler->initInputDevice(DeviceName::XTPWeb);
     }
 }
 

@@ -222,11 +222,6 @@ private:
 
     Ui::SettingsDialog ui;
     void loadSerialPorts();
-    void initSerialEvent();
-    void initNetworkEvent();
-    void initDeoEvent();
-    void initWhirligigEvent();
-    void initXTPWebEvent();
     void initInputDevice();
     void setupUi();
     void setupGamepadMap();
