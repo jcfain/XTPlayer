@@ -420,6 +420,9 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(this, &MainWindow::change, this, &MainWindow::on_mainwindow_change);
     connect(this, &MainWindow::playVideo, this, &MainWindow::on_playVideo);
     connect(this, &MainWindow::stopAndPlayVideo, this, &MainWindow::stopAndPlayMedia);
+    connect(this, &MainWindow::playlistLoaded, this, &MainWindow::onPlaylistLoaded);
+    connect(this, &MainWindow::backFromPlaylistLoaded, this, &MainWindow::onBackFromPlaylistLoaded);
+
     //    connect(this, &MainWindow::setLoading, this, &MainWindow::on_setLoading);
     //    connect(this, &MainWindow::scriptNotFound, this, &MainWindow::on_scriptNotFound);
     //connect(videoHandler, &VideoHandler::mouseEnter, this, &MainWindow::on_video_mouse_enter);
@@ -3205,17 +3208,13 @@ void MainWindow::loadPlaylistIntoLibrary(QString playlistName, bool autoPlay)
                     libraryList->addItem(qListWidgetItem);
                     selectedPlaylistItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
                 }
-                backLibraryButton->show();
-                editPlaylistButton->show();
-                librarySortGroup->setEnabled(false);
-                changeLibraryDisplayMode(SettingsHandler::getLibraryView());
-                resizeThumbs(SettingsHandler::getThumbSize());
-                sortLibraryList(LibrarySortMode::NONE);
-                toggleLibraryLoading(false);
-                setCurrentLibraryRow(0);
                 if(autoPlay)
                 {
-                    emit stopAndPlayVideo(playlist.first());
+                    emit playlistLoaded(playlist.first());
+                }
+                else
+                {
+                    emit playlistLoaded();
                 }
             });
         }
@@ -3223,7 +3222,20 @@ void MainWindow::loadPlaylistIntoLibrary(QString playlistName, bool autoPlay)
     else
         DialogHandler::MessageBox(this, tr("Please wait for thumbnails to fully load!"), XLogLevel::Warning);
 }
-
+void MainWindow::onPlaylistLoaded(LibraryListItem27 autoPlayItem) {
+    backLibraryButton->show();
+    editPlaylistButton->show();
+    librarySortGroup->setEnabled(false);
+    changeLibraryDisplayMode(SettingsHandler::getLibraryView());
+    resizeThumbs(SettingsHandler::getThumbSize());
+    sortLibraryList(LibrarySortMode::NONE);
+    toggleLibraryLoading(false);
+    setCurrentLibraryRow(0);
+    if(!autoPlayItem.path.isEmpty())
+    {
+        emit stopAndPlayVideo(autoPlayItem);
+    }
+}
 void MainWindow::backToMainLibrary()
 {
     if(_editPlaylistMode)
@@ -3258,19 +3270,23 @@ void MainWindow::backToMainLibrary()
                     auto name = item->text();
                     libraryList->addItem(item->clone());
                 }
-                backLibraryButton->hide();
-                editPlaylistButton->hide();
-                savePlaylistButton->hide();
-                cancelEditPlaylistButton->hide();
-                libraryList->setDragEnabled(false);
-//                changeLibraryDisplayModeAndUpdateThumbSize(SettingsHandler::getLibraryView());
-//                resizeThumbs(SettingsHandler::getThumbSize());
-                sortLibraryList(SettingsHandler::getLibrarySortMode());
-                toggleLibraryLoading(false);
-                setCurrentLibraryRow(0);
+                emit backFromPlaylistLoaded();
             });
         }
     }
+}
+
+void MainWindow::onBackFromPlaylistLoaded() {
+    backLibraryButton->hide();
+    editPlaylistButton->hide();
+    savePlaylistButton->hide();
+    cancelEditPlaylistButton->hide();
+    libraryList->setDragEnabled(false);
+//                changeLibraryDisplayModeAndUpdateThumbSize(SettingsHandler::getLibraryView());
+//                resizeThumbs(SettingsHandler::getThumbSize());
+    sortLibraryList(SettingsHandler::getLibrarySortMode());
+    toggleLibraryLoading(false);
+    setCurrentLibraryRow(0);
 }
 
 void MainWindow::savePlaylist()

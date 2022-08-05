@@ -163,7 +163,8 @@ private slots:
 
     void on_actionStored_DLNA_links_triggered();
     void onText_to_speech(QString message);
-
+    void onPlaylistLoaded(LibraryListItem27 autoPlayItem = LibraryListItem27());
+    void onBackFromPlaylistLoaded();
 
 signals:
     void keyPressed(QKeyEvent * event);
@@ -179,6 +180,8 @@ signals:
 //    void setLoading(bool loading);
     void playVideo(LibraryListItem27 selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
     void stopAndPlayVideo(LibraryListItem27 selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
+    void playlistLoaded(LibraryListItem27 autoPlayItem = LibraryListItem27());
+    void backFromPlaylistLoaded();
 protected:
     virtual void keyPressEvent(QKeyEvent *event) override
     {
