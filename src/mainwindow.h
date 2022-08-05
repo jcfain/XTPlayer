@@ -150,7 +150,7 @@ private slots:
     void onPrepareLibraryLoad();
     void onLibraryLoadingStatusChange(QString message);
     void libraryListSetIconSize(QSize newSize);
-    void onLibraryItemFound(LibraryListItem27 item, bool vrMode);
+    void onLibraryItemFound(LibraryListItem27 item);
 
     void on_audioLevel_Change(int decibelL, int decibelR);
 
@@ -304,8 +304,8 @@ private:
 
 //    LibraryListItem27 createLibraryListItem27FromFunscript(QString funscript);
     bool isLibraryLoading();
-    QList<LibraryListWidgetItem*> cachedLibraryItems;
-    QList<LibraryListWidgetItem*> cachedVRItems;
+    QList<LibraryListWidgetItem*> cachedLibraryWidgetItems;
+    QList<LibraryListWidgetItem*> cachedVRWidgetItems;
     QList<LibraryListWidgetItem*> selectedPlaylistItems;
     QString selectedPlaylistName;
     int playingLibraryListIndex;

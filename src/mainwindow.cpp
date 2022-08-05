@@ -494,7 +494,7 @@ void MainWindow::dispose()
     _syncHandler->stopAll();
     _xSettings->dispose();
     //qDeleteAll(funscriptHandlers);
-    qDeleteAll(cachedVRItems);
+    qDeleteAll(cachedVRWidgetItems);
     //qDeleteAll(cachedLibraryItems);
 //    delete _mediaLibraryHandler;
 //    delete tcodeHandler;
@@ -1059,10 +1059,10 @@ void MainWindow::closeWelcomeDialog()
 void MainWindow::onPrepareLibraryLoad()
 {
     libraryList->setIconSize({SettingsHandler::getThumbSize(),SettingsHandler::getThumbSize()});
-    qDeleteAll(cachedLibraryItems);
-    cachedLibraryItems.clear();
-    qDeleteAll(cachedVRItems);
-    cachedVRItems.clear();
+    qDeleteAll(cachedLibraryWidgetItems);
+    cachedLibraryWidgetItems.clear();
+    qDeleteAll(cachedVRWidgetItems);
+    cachedVRWidgetItems.clear();
     libraryList->clear();
     ui->actionReload_library->setDisabled(true);
     ui->actionSelect_library->setDisabled(true);
@@ -1397,14 +1397,15 @@ void MainWindow::onLibraryLoadingStatusChange(QString message)
         libraryLoadingInfoLabel->setText(message);
     }
 }
-void MainWindow::onLibraryItemFound(LibraryListItem27 item, bool vrMode)
+void MainWindow::onLibraryItemFound(LibraryListItem27 item)
 {
 //    auto libraryPointer = new LibraryListItem27(item);
 //    QtConcurrent::run([this, libraryPointer, vrMode]() {
-        LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, vrMode ? nullptr : libraryList);
+    bool vrMode = item.type == LibraryListItemType::VR;
+    LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, vrMode ? nullptr : libraryList);
 //        if(!vrMode)
 //            libraryList->addItem(qListWidgetItem);
-        vrMode ? cachedVRItems.push_back(qListWidgetItem) : cachedLibraryItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
+    vrMode ? cachedVRWidgetItems.push_back(qListWidgetItem) : cachedLibraryWidgetItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
 //        delete libraryPointer;
 //    });
 }
@@ -1617,7 +1618,7 @@ void MainWindow::onSaveNewThumbLoading(LibraryListItem27 item)
         libraryListWidgetItem->setThumbFile(item.thumbFileLoadingCurrent);
     }
 
-    LibraryListWidgetItem* cachedListWidgetItem = boolinq::from(cachedLibraryItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
+    LibraryListWidgetItem* cachedListWidgetItem = boolinq::from(cachedLibraryWidgetItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
     if(cachedListWidgetItem)
         cachedListWidgetItem->setThumbFile(item.thumbFileLoadingCurrent);
 }
@@ -1626,9 +1627,9 @@ void MainWindow::onSaveNewThumb(LibraryListItem27 item, bool vrMode, QString thu
 {
     LibraryListWidgetItem* cachedListWidgetItem;
     if(!vrMode)
-        cachedListWidgetItem = boolinq::from(cachedLibraryItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
+        cachedListWidgetItem = boolinq::from(cachedLibraryWidgetItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
     else
-        cachedListWidgetItem = boolinq::from(cachedVRItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
+        cachedListWidgetItem = boolinq::from(cachedVRWidgetItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
     cachedListWidgetItem->setThumbFile(thumbFile);
     auto libraryListItems = libraryList->findItems(item.nameNoExtension, Qt::MatchFlag::MatchEndsWith);
     if(libraryListItems.length() > 0)
@@ -1647,9 +1648,9 @@ void MainWindow::onSaveThumbError(LibraryListItem27 item, bool vrMode, QString e
     }
     LibraryListWidgetItem* cachedListWidgetItem;
     if(!vrMode)
-        cachedListWidgetItem = boolinq::from(cachedLibraryItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
+        cachedListWidgetItem = boolinq::from(cachedLibraryWidgetItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
     else
-        cachedListWidgetItem = boolinq::from(cachedVRItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
+        cachedListWidgetItem = boolinq::from(cachedVRWidgetItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
 
     auto errorMsg = cachedListWidgetItem->toolTip() + tr("\n\nError: ") + errorMessage;
     cachedListWidgetItem->setThumbFile(item.thumbFile, errorMessage);
@@ -3175,7 +3176,7 @@ void MainWindow::onSetupPlaylistItem(LibraryListItem27 item)
 {
     LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, libraryList);
     libraryList->insertItem(0, qListWidgetItem);
-    cachedLibraryItems.push_front(new LibraryListWidgetItem(item));
+    cachedLibraryWidgetItems.push_front(new LibraryListWidgetItem(item));
 }
 
 void MainWindow::addSelectedLibraryItemToPlaylist(QString playlistName)
@@ -3252,7 +3253,7 @@ void MainWindow::backToMainLibrary()
     selectedPlaylistName = nullptr;
     qDeleteAll(selectedPlaylistItems);
     selectedPlaylistItems.clear();
-    if(cachedLibraryItems.length() == 0)
+    if(cachedLibraryWidgetItems.length() == 0)
         _mediaLibraryHandler->loadLibraryAsync();
     else
     {
@@ -3263,7 +3264,7 @@ void MainWindow::backToMainLibrary()
             onLibraryLoadingStatusChange("Loading library...");
             libraryList->clear();
             loadingLibraryFuture = QtConcurrent::run([this]() {
-                foreach(auto item, cachedLibraryItems)
+                foreach(auto item, cachedLibraryWidgetItems)
                 {
                     if(loadingLibraryStop)
                         return;
@@ -3379,8 +3380,8 @@ void MainWindow::deleteSelectedPlaylist()
     LibraryListItem27 selectedFileListItem = selectedItem->getLibraryListItem();
     SettingsHandler::deletePlaylist(selectedFileListItem.nameNoExtension);
     libraryList->removeItemWidget(selectedItem);
-    LibraryListWidgetItem* deleteCache = boolinq::from(cachedLibraryItems).firstOrDefault([selectedItem](const LibraryListWidgetItem* x) { return x->text() == selectedItem->text(); });
-    cachedLibraryItems.removeOne(deleteCache);
+    LibraryListWidgetItem* deleteCache = boolinq::from(cachedLibraryWidgetItems).firstOrDefault([selectedItem](const LibraryListWidgetItem* x) { return x->text() == selectedItem->text(); });
+    cachedLibraryWidgetItems.removeOne(deleteCache);
     delete deleteCache;
     delete selectedItem;
 }
