@@ -165,6 +165,7 @@ private slots:
     void onText_to_speech(QString message);
     void onPlaylistLoaded(LibraryListItem27 autoPlayItem = LibraryListItem27());
     void onBackFromPlaylistLoaded();
+    void onRandomizeComplete();
 
 signals:
     void keyPressed(QKeyEvent * event);
@@ -181,7 +182,9 @@ signals:
     void playVideo(LibraryListItem27 selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
     void stopAndPlayVideo(LibraryListItem27 selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
     void playlistLoaded(LibraryListItem27 autoPlayItem = LibraryListItem27());
+    void libraryItemFound(LibraryListItem27 item);
     void backFromPlaylistLoaded();
+    void randomizeComplete();
 protected:
     virtual void keyPressEvent(QKeyEvent *event) override
     {
@@ -305,8 +308,6 @@ private:
 //    LibraryListItem27 createLibraryListItem27FromFunscript(QString funscript);
     bool isLibraryLoading();
     QList<LibraryListWidgetItem*> cachedLibraryWidgetItems;
-    QList<LibraryListWidgetItem*> cachedVRWidgetItems;
-    QList<LibraryListWidgetItem*> selectedPlaylistItems;
     QString selectedPlaylistName;
     int playingLibraryListIndex;
     LibraryListWidgetItem* playingLibraryListItem = nullptr;
@@ -349,7 +350,6 @@ private:
     void showLibrary();
     void setLibraryToolBar();
     void updateThumbSizeUI(int size);
-    void updateLibrarySortUI();
     void updateLibrarySortUI(LibrarySortMode mode);
     void setThumbSize(int size);
     void resizeThumbs(int size);
@@ -373,6 +373,7 @@ private:
     bool eventFilter(QObject *obj, QEvent *event) override;
 
     void onSetupPlaylistItem(LibraryListItem27 item);
+    bool isPlaylistMode();
     void addSelectedLibraryItemToPlaylist(QString playlistName);
     void setVolumeIcon(int volume);
     void on_seekSlider_sliderMoved(int position);

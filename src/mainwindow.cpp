@@ -220,7 +220,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     ui->libraryFrame->setFrameShadow(QFrame::Sunken);
 
-    libraryLoadingLabel = new QLabel(this);
+    libraryLoadingLabel = new QLabel(ui->libraryFrame);
+    libraryLoadingLabel->setAttribute(Qt::WA_NoMousePropagation);
     libraryLoadingMovie = new QMovie("://images/Eclipse-1s-loading-200px.gif", nullptr, libraryLoadingLabel);
     libraryLoadingMovie->setScaledSize({200,200});
     libraryLoadingLabel->setMovie(libraryLoadingMovie);
@@ -268,6 +269,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     libraryThumbSizeGroup->addAction(action200_Size);
     libraryThumbSizeGroup->addAction(actionCustom_Size);
 
+    updateThumbSizeUI(SettingsHandler::getThumbSize());
+
     QMenu* submenuSort = ui->menuView->addMenu( "Sort" );
     submenuSort->setObjectName("sortMenu");
     librarySortGroup = new QActionGroup(submenuSort);
@@ -293,6 +296,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     librarySortGroup->addAction(actionTypeAsc_Sort);
     librarySortGroup->addAction(actionTypeDesc_Sort);
 
+    updateLibrarySortUI(SettingsHandler::getLibrarySortMode());
 
     if (SettingsHandler::getLibraryView() == LibraryView::List)
     {
@@ -366,7 +370,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_mediaLibraryHandler, &MediaLibraryHandler::saveNewThumb, this, &MainWindow::onSaveNewThumb);
     connect(_mediaLibraryHandler, &MediaLibraryHandler::saveNewThumbLoading, this, &MainWindow::onSaveNewThumbLoading);
 
-
     connect(action75_Size, &QAction::triggered, this, &MainWindow::on_action75_triggered);
     connect(action100_Size, &QAction::triggered, this, &MainWindow::on_action100_triggered);
     connect(action125_Size, &QAction::triggered, this, &MainWindow::on_action125_triggered);
@@ -422,6 +425,9 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(this, &MainWindow::stopAndPlayVideo, this, &MainWindow::stopAndPlayMedia);
     connect(this, &MainWindow::playlistLoaded, this, &MainWindow::onPlaylistLoaded);
     connect(this, &MainWindow::backFromPlaylistLoaded, this, &MainWindow::onBackFromPlaylistLoaded);
+    connect(this, &MainWindow::randomizeComplete, this, &MainWindow::onRandomizeComplete);
+    //connect(this, &MainWindow::libraryItemFound, this, &MainWindow::onLibraryItemFound);
+
 
     //    connect(this, &MainWindow::setLoading, this, &MainWindow::on_setLoading);
     //    connect(this, &MainWindow::scriptNotFound, this, &MainWindow::on_scriptNotFound);
@@ -493,16 +499,6 @@ void MainWindow::dispose()
     }
     _syncHandler->stopAll();
     _xSettings->dispose();
-    //qDeleteAll(funscriptHandlers);
-    qDeleteAll(cachedVRWidgetItems);
-    //qDeleteAll(cachedLibraryItems);
-//    delete _mediaLibraryHandler;
-//    delete tcodeHandler;
-//    delete videoHandler;
-//    delete connectionStatusLabel;
-//    delete retryConnectionButton;
-//    delete _videoPreviewWidget;
-    //delete ui;
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
@@ -822,7 +818,7 @@ void MainWindow::onLibraryWindowed_Clicked()
     else
         randomizeLibraryButton->show();
 
-    if(selectedPlaylistItems.length() > 0)
+    if(isPlaylistMode())
     {
         backLibraryButton->show();
         if(_editPlaylistMode)
@@ -865,7 +861,7 @@ void MainWindow::onLibraryWindowed_Closed()
     else
         randomizeLibraryButton->show();
 
-    if(selectedPlaylistItems.length() > 0)
+    if(isPlaylistMode())
     {
         backLibraryButton->show();
         if(_editPlaylistMode)
@@ -921,7 +917,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
         }
         if(selectedFileListItem.type != LibraryListItemType::PlaylistInternal)
         {
-            if(selectedPlaylistItems.length() > 0)
+            if(isPlaylistMode())
             {
                 myMenu.addAction(tr("Remove from playlist"), this, &MainWindow::removeFromPlaylist);
             }
@@ -931,7 +927,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             }
             // Experimental
             //myMenu.addAction("Play with audio sync (Experimental)", this, &MainWindow::playFileWithAudioSync);
-            if(selectedPlaylistItems.length() == 0)
+            if(!isPlaylistMode())
             {
                 QMenu* subMenu = myMenu.addMenu(tr("Add to playlist"));
                 subMenu->addAction(tr("New playlist..."), this, [this]()
@@ -951,7 +947,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                 }
             }
 
-            if(selectedFileListItem.type == LibraryListItemType::Video && !selectedFileListItem.thumbFile.contains(".lock.") && selectedPlaylistItems.length() == 0)
+            if(_mediaLibraryHandler->isLibraryItemVideo(selectedFileListItem) && !selectedFileListItem.thumbFile.contains(".lock.") && !isPlaylistMode())
             {
                 myMenu.addAction(tr("Regenerate thumbnail"), this, &MainWindow::regenerateThumbNail);
 
@@ -964,7 +960,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                 if(selectedFileListItem.thumbFileExists)
                     myMenu.addAction(tr("Lock thumb"), this, &MainWindow::lockThumb);
             }
-            else if(selectedFileListItem.type == LibraryListItemType::Video &&  selectedPlaylistItems.length() == 0)
+            else if(_mediaLibraryHandler->isLibraryItemVideo(selectedFileListItem) &&  !isPlaylistMode())
             {
                 if(selectedFileListItem.thumbFileExists)
                     myMenu.addAction(tr("Unlock thumb"), this, &MainWindow::unlockThumb);
@@ -1061,8 +1057,6 @@ void MainWindow::onPrepareLibraryLoad()
     libraryList->setIconSize({SettingsHandler::getThumbSize(),SettingsHandler::getThumbSize()});
     qDeleteAll(cachedLibraryWidgetItems);
     cachedLibraryWidgetItems.clear();
-    qDeleteAll(cachedVRWidgetItems);
-    cachedVRWidgetItems.clear();
     libraryList->clear();
     ui->actionReload_library->setDisabled(true);
     ui->actionSelect_library->setDisabled(true);
@@ -1381,6 +1375,8 @@ void MainWindow::toggleLibraryLoading(bool loading)
         libraryLoadingInfoLabel->hide();
         libraryLoadingInfoLabel->setText("");
     }
+    libraryList->setVisible(!loading);
+    _playerControlsFrame->setDisabled(loading);
     randomizeLibraryButton->setDisabled(loading);
     savePlaylistButton->setDisabled(loading);
     editPlaylistButton->setDisabled(loading);
@@ -1388,6 +1384,11 @@ void MainWindow::toggleLibraryLoading(bool loading)
     windowedLibraryButton->setDisabled(loading);
     ui->actionSelect_library->setDisabled(loading);
     ui->actionReload_library->setDisabled(loading);
+
+    ui->actionThumbnail->setDisabled(loading);
+    ui->actionList->setDisabled(loading);
+    libraryThumbSizeGroup->setDisabled(loading);
+    librarySortGroup->setDisabled(loading);
 
 }
 void MainWindow::onLibraryLoadingStatusChange(QString message)
@@ -1397,32 +1398,17 @@ void MainWindow::onLibraryLoadingStatusChange(QString message)
         libraryLoadingInfoLabel->setText(message);
     }
 }
+
 void MainWindow::onLibraryItemFound(LibraryListItem27 item)
 {
-//    auto libraryPointer = new LibraryListItem27(item);
-//    QtConcurrent::run([this, libraryPointer, vrMode]() {
-    bool vrMode = item.type == LibraryListItemType::VR;
-    LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, vrMode ? nullptr : libraryList);
-//        if(!vrMode)
-//            libraryList->addItem(qListWidgetItem);
-    vrMode ? cachedVRWidgetItems.push_back(qListWidgetItem) : cachedLibraryWidgetItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
-//        delete libraryPointer;
-//    });
+    LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, libraryList);
+    cachedLibraryWidgetItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
 }
 
 void MainWindow::onSetLibraryLoaded()
 {
     changeLibraryDisplayMode(SettingsHandler::getLibraryView());
-    updateLibrarySortUI();
-    updateThumbSizeUI(SettingsHandler::getThumbSize());
     sortLibraryList(SettingsHandler::getLibrarySortMode());
-    setThumbSize(SettingsHandler::getThumbSize());
-    setCurrentLibraryRow(0);
-    _playerControlsFrame->setDisabled(false);
-    ui->actionReload_library->setDisabled(false);
-    ui->actionSelect_library->setDisabled(false);
-
-    toggleLibraryLoading(false);
 }
 
 //void MainWindow::startThumbProcess(bool vrMode)
@@ -1476,7 +1462,7 @@ void MainWindow::onSetLibraryLoaded()
 //        LibraryListItem27 item = listWidgetItem->getLibraryListItem();
 //        thumbNailSearchIterator++;
 //        QFileInfo thumbInfo(mediaLibraryHandler.getThumbPath(item));
-//        if (item.type == LibraryListItemType::Video && !thumbInfo.exists())
+//        if (_mediaLibraryHandler->isLibraryItemVideo(item) && !thumbInfo.exists())
 //        {
 //            disconnect(extractor, nullptr,  nullptr, nullptr);
 //            disconnect(thumbNailPlayer, nullptr,  nullptr, nullptr);
@@ -1617,18 +1603,14 @@ void MainWindow::onSaveNewThumbLoading(LibraryListItem27 item)
         LibraryListWidgetItem* libraryListWidgetItem = (LibraryListWidgetItem*)libraryListItems.first();
         libraryListWidgetItem->setThumbFile(item.thumbFileLoadingCurrent);
     }
-
-    LibraryListWidgetItem* cachedListWidgetItem = boolinq::from(cachedLibraryWidgetItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
-    if(cachedListWidgetItem)
-        cachedListWidgetItem->setThumbFile(item.thumbFileLoadingCurrent);
 }
 
 void MainWindow::onSaveNewThumb(LibraryListItem27 item, bool vrMode, QString thumbFile)
 {
+
     LibraryListWidgetItem* cachedListWidgetItem = boolinq::from(cachedLibraryWidgetItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
-    if(cachedListWidgetItem == nullptr)
-        cachedListWidgetItem = boolinq::from(cachedVRWidgetItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
     cachedListWidgetItem->setThumbFile(thumbFile);
+
     auto libraryListItems = libraryList->findItems(item.nameNoExtension, Qt::MatchFlag::MatchEndsWith);
     if(libraryListItems.length() > 0)
     {
@@ -1644,13 +1626,8 @@ void MainWindow::onSaveThumbError(LibraryListItem27 item, bool vrMode, QString e
         DialogHandler::MessageBox(this, "Missing media", XLogLevel::Critical);
         return;
     }
-    LibraryListWidgetItem* cachedListWidgetItem;
-    if(!vrMode)
-        cachedListWidgetItem = boolinq::from(cachedLibraryWidgetItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
-    else
-        cachedListWidgetItem = boolinq::from(cachedVRWidgetItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
 
-    auto errorMsg = cachedListWidgetItem->toolTip() + tr("\n\nError: ") + errorMessage;
+    LibraryListWidgetItem* cachedListWidgetItem = boolinq::from(cachedLibraryWidgetItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
     cachedListWidgetItem->setThumbFile(item.thumbFile, errorMessage);
 
     auto libraryListItems = libraryList->findItems(item.nameNoExtension, Qt::MatchFlag::MatchEndsWith);
@@ -1728,7 +1705,9 @@ void MainWindow::unlockThumb()
 void MainWindow::on_LibraryList_itemDoubleClicked(QListWidgetItem *item)
 {
     auto libraryListItem = item->data(Qt::UserRole).value<LibraryListItem27>();
-    if(libraryListItem.type == LibraryListItemType::Audio || libraryListItem.type == LibraryListItemType::Video || libraryListItem.type == LibraryListItemType::FunscriptType)
+    if(libraryListItem.type == LibraryListItemType::Audio ||
+            _mediaLibraryHandler->isLibraryItemVideo(libraryListItem) ||
+            libraryListItem.type == LibraryListItemType::FunscriptType)
     {
         stopAndPlayMedia(item->data(Qt::UserRole).value<LibraryListItem27>());
     }
@@ -1743,18 +1722,13 @@ void MainWindow::playFileFromContextMenu()
     if(libraryList->count() > 0)
     {
         LibraryListItem27 libraryListItem = ((LibraryListWidgetItem*)libraryList->selectedItems().first())->getLibraryListItem();
-        if(libraryListItem.type == LibraryListItemType::Audio || libraryListItem.type == LibraryListItemType::Video || libraryListItem.type == LibraryListItemType::FunscriptType)
+        if(libraryListItem.type == LibraryListItemType::Audio || _mediaLibraryHandler->isLibraryItemVideo(libraryListItem) || libraryListItem.type == LibraryListItemType::FunscriptType)
         {
             stopAndPlayMedia(libraryListItem);
         }
         else if(libraryListItem.type == LibraryListItemType::PlaylistInternal)
         {
-            loadPlaylistIntoLibrary(libraryListItem.nameNoExtension);
-            if(selectedPlaylistItems.length() > 0)
-            {
-                LibraryListItem27 LibraryListItem = setCurrentLibraryRow(0)->getLibraryListItem();
-                stopAndPlayMedia(libraryListItem);
-            }
+            loadPlaylistIntoLibrary(libraryListItem.nameNoExtension, true);
         }
     }
 }
@@ -2841,7 +2815,6 @@ void MainWindow::updateThumbSizeUI(int size)
             actionCustom_Size->setChecked(true);
         break;
     }
-    setThumbSize(size);
 }
 
 void MainWindow::on_action75_triggered()
@@ -2933,11 +2906,6 @@ void MainWindow::libraryListSetIconSize(QSize newSize)
     toggleLibraryLoading(false);
 }
 
-void MainWindow::updateLibrarySortUI()
-{
-    updateLibrarySortUI(SettingsHandler::getLibrarySortMode());
-}
-
 void MainWindow::updateLibrarySortUI(LibrarySortMode mode)
 {
     switch(mode)
@@ -3010,12 +2978,14 @@ void MainWindow::sortLibraryList(LibrarySortMode sortMode)
         {
             toggleLibraryLoading(true);
             onLibraryLoadingStatusChange("Randomizing...");
+            libraryList->clear();
 
             loadingLibraryFuture = QtConcurrent::run([this]() {
                 //Fisher and Yates algorithm
-                int n = libraryList->count();
+                //auto cachedItems = _mediaLibraryHandler->getLibraryCache();
+                int n = cachedLibraryWidgetItems.count() - 1;
 
-                QList<LibraryListWidgetItem*> arr, arr1;
+                QList<LibraryListWidgetItem*> randomized;
                 int index_arr[n];
                 int index;
 
@@ -3038,34 +3008,54 @@ void MainWindow::sortLibraryList(LibrarySortMode sortMode)
                     }
                     while (index_arr[index] != 0);
                     index_arr[index] = 1;
-                    arr1.push_back(((LibraryListWidgetItem*)libraryList->item(index)));
+                    randomized.push_back(cachedLibraryWidgetItems.value(index));
                 }
-                while(libraryList->count()>0)
+//                while(libraryList->count()>0)
+//                {
+//                    if(loadingLibraryStop)
+//                        return;
+//                    libraryList->takeItem(0);
+//                }
+                foreach(auto item, randomized)
                 {
                     if(loadingLibraryStop)
                         return;
-                    libraryList->takeItem(0);
+                    auto clone = item->clone();
+                    libraryList->addItem(clone);
+                    if(clone->getType() == LibraryListItemType::VR) {
+                        clone->setHidden(true);
+                    }
                 }
-                foreach(auto item, arr1)
-                {
-                    if(loadingLibraryStop)
-                        return;
-                    libraryList->addItem(item);
-                }
-                randomizeLibraryButton->show();
-                toggleLibraryLoading(false);
+                emit randomizeComplete();
+//                foreach(auto item, arr1)
+//                {
+//                    if(loadingLibraryStop)
+//                        return;
+//                    libraryList->addItem(item);
+//                }
+//                randomizeLibraryButton->show();
+//                toggleLibraryLoading(false);
             });
         }
     }
-    else
-    {
-        randomizeLibraryButton->hide();
-    }
+
     if(sortMode != LibrarySortMode::NONE)
     {
         LibraryListWidgetItem::setSortMode(sortMode);
         libraryList->sortItems();
     }
+
+    if(sortMode != LibrarySortMode::RANDOM) {
+        randomizeLibraryButton->hide();
+        toggleLibraryLoading(false);
+        setCurrentLibraryRow(0);
+    }
+}
+
+void MainWindow::onRandomizeComplete() {
+    randomizeLibraryButton->show();
+    toggleLibraryLoading(false);
+    setCurrentLibraryRow(0);
 }
 
 void MainWindow::on_actionChange_theme_triggered()
@@ -3174,6 +3164,7 @@ void MainWindow::onSetupPlaylistItem(LibraryListItem27 item)
 {
     LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, libraryList);
     libraryList->insertItem(0, qListWidgetItem);
+
     cachedLibraryWidgetItems.push_front(new LibraryListWidgetItem(item));
 }
 
@@ -3183,7 +3174,9 @@ void MainWindow::addSelectedLibraryItemToPlaylist(QString playlistName)
     LibraryListItem27 selectedFileListItem = ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
     SettingsHandler::addToPlaylist(playlistName, selectedFileListItem);
 }
-
+bool MainWindow::isPlaylistMode() {
+    return !selectedPlaylistName.isEmpty();
+}
 void MainWindow::loadPlaylistIntoLibrary(QString playlistName, bool autoPlay)
 {
     if(!thumbProcessIsRunning)
@@ -3203,9 +3196,9 @@ void MainWindow::loadPlaylistIntoLibrary(QString playlistName, bool autoPlay)
                     if(loadingLibraryStop)
                         return;
                     _mediaLibraryHandler->setLiveProperties(item);
-                    LibraryListWidgetItem* qListWidgetItem = new LibraryListWidgetItem(item, libraryList);
-                    libraryList->addItem(qListWidgetItem);
-                    selectedPlaylistItems.push_back((LibraryListWidgetItem*)qListWidgetItem->clone());
+                    //emit libraryItemFound(item);
+                    new LibraryListWidgetItem(item, libraryList);
+                    //libraryList->addItem(qListWidgetItem);
                 }
                 if(autoPlay)
                 {
@@ -3249,8 +3242,6 @@ void MainWindow::backToMainLibrary()
     }
     librarySortGroup->setEnabled(true);
     selectedPlaylistName = nullptr;
-    qDeleteAll(selectedPlaylistItems);
-    selectedPlaylistItems.clear();
     if(cachedLibraryWidgetItems.length() == 0)
         _mediaLibraryHandler->loadLibraryAsync();
     else
@@ -3266,8 +3257,11 @@ void MainWindow::backToMainLibrary()
                 {
                     if(loadingLibraryStop)
                         return;
-                    auto name = item->text();
-                    libraryList->addItem(item->clone());
+                    auto clone = item->clone();
+                    libraryList->addItem(clone);
+                    if(clone->getType() == LibraryListItemType::VR) {
+                        clone->setHidden(true);
+                    }
                 }
                 emit backFromPlaylistLoaded();
             });
@@ -3378,10 +3372,11 @@ void MainWindow::deleteSelectedPlaylist()
     LibraryListItem27 selectedFileListItem = selectedItem->getLibraryListItem();
     SettingsHandler::deletePlaylist(selectedFileListItem.nameNoExtension);
     libraryList->removeItemWidget(selectedItem);
-    LibraryListWidgetItem* deleteCache = boolinq::from(cachedLibraryWidgetItems).firstOrDefault([selectedItem](const LibraryListWidgetItem* x) { return x->text() == selectedItem->text(); });
-    cachedLibraryWidgetItems.removeOne(deleteCache);
-    delete deleteCache;
     delete selectedItem;
+
+   LibraryListWidgetItem* deleteCache = boolinq::from(cachedLibraryWidgetItems).firstOrDefault([selectedItem](const LibraryListWidgetItem* x) { return x->text() == selectedItem->text(); });
+   cachedLibraryWidgetItems.removeOne(deleteCache);
+   delete deleteCache;
 }
 
 
@@ -3390,7 +3385,6 @@ LibraryListItem27 MainWindow::getSelectedLibraryListItem()
     QListWidgetItem* selectedItem = libraryList->selectedItems().first();
     return ((LibraryListWidgetItem*)selectedItem)->getLibraryListItem();
 }
-
 
 void MainWindow::showInGraphicalShell(QString path)
 {

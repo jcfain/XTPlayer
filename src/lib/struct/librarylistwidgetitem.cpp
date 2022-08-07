@@ -32,6 +32,10 @@ LibraryListWidgetItem::LibraryListWidgetItem(LibraryListItem27 &data, QListWidge
     QString thumbPath = data.thumbFile;
     QFileInfo thumbFile = QFileInfo(thumbPath);
     setThumbFile(thumbFile.exists() ? thumbPath : data.thumbFileLoading);
+
+    if(data.type == LibraryListItemType::VR) {
+        setHidden(true);
+    }
 }
 
 LibraryListWidgetItem::~LibraryListWidgetItem()
