@@ -6,8 +6,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 {
     QCoreApplication::setOrganizationName("cUrbSide prOd");
     QCoreApplication::setApplicationName("XTPlayer");
-    XTPVersion = QString("0.332a_%1T%2").arg(__DATE__).arg(__TIME__);
-    XTPVersionNum = 0.332f;
+    XTPVersion = QString("0.333a_%1T%2").arg(__DATE__).arg(__TIME__);
+    XTPVersionNum = 0.333f;
     const QString fullVersion = "XTP: v"+ XTPVersion + "\nXTE: v" + SettingsHandler::XTEVersion;
 
     QPixmap pixmap("://images/XTP_Splash.png");
@@ -1625,10 +1625,8 @@ void MainWindow::onSaveNewThumbLoading(LibraryListItem27 item)
 
 void MainWindow::onSaveNewThumb(LibraryListItem27 item, bool vrMode, QString thumbFile)
 {
-    LibraryListWidgetItem* cachedListWidgetItem;
-    if(!vrMode)
-        cachedListWidgetItem = boolinq::from(cachedLibraryWidgetItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
-    else
+    LibraryListWidgetItem* cachedListWidgetItem = boolinq::from(cachedLibraryWidgetItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
+    if(cachedListWidgetItem == nullptr)
         cachedListWidgetItem = boolinq::from(cachedVRWidgetItems).firstOrDefault([item](LibraryListWidgetItem* x) { return x->getLibraryListItem().path == item.path; });
     cachedListWidgetItem->setThumbFile(thumbFile);
     auto libraryListItems = libraryList->findItems(item.nameNoExtension, Qt::MatchFlag::MatchEndsWith);

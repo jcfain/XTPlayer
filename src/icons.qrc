@@ -46,5 +46,6 @@
         <file>images/icons/XTPWeb-logo.png</file>
         <file>images/welcome/XTP_welcome-7.png</file>
         <file>images/icons/search.svg</file>
+        <file>images/icons/context-menu.svg</file>
     </qresource>
 </RCC>
