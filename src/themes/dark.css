@@ -72,7 +72,7 @@ QLabel {
     background-color: transparent;
     color: white;
 }
-QListWidget {
+QListView {
     background-color: #33363c;
     color: white;
 	border: none;

@@ -28,7 +28,9 @@ SOURCES += \
     lib/handler/xvideowidget.cpp \
     lib/struct/channeltablecomboboxdelegate.cpp \
     lib/struct/channeltableviewmodel.cpp \
+    lib/struct/librarylistviewmodel.cpp \
     lib/struct/librarylistwidgetitem.cpp \
+    lib/struct/librarysortfilterproxymodel.cpp \
     libraryItemSettingsDialog.cpp \
     libraryexclusions.cpp \
     librarywindow.cpp \
@@ -52,7 +54,9 @@ HEADERS += \
     lib/handler/xvideowidget.h \
     lib/struct/channeltablecomboboxdelegate.h \
     lib/struct/channeltableviewmodel.h \
+    lib/struct/librarylistviewmodel.h \
     lib/struct/librarylistwidgetitem.h \
+    lib/struct/librarysortfilterproxymodel.h \
     libraryItemSettingsDialog.h \
     libraryexclusions.h \
     librarywindow.h \

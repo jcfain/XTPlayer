@@ -24,6 +24,9 @@
 #include <QScroller>
 #include <QInputDialog>
 #include <QSplashScreen>
+#include <QModelIndex>
+#include "lib/struct/librarylistviewmodel.h"
+#include "lib/struct/librarysortfilterproxymodel.h"
 #include "settingsdialog.h"
 #include "librarywindow.h"
 #include "addplaylistdialog.h"
@@ -76,9 +79,9 @@ public:
 private slots:
     void on_actionSelect_library_triggered();
 
-    void on_LibraryList_itemClicked(QListWidgetItem *item);
+    void on_LibraryList_itemClicked(QModelIndex index );
 
-    void on_LibraryList_itemDoubleClicked(QListWidgetItem *item);
+    void on_LibraryList_itemDoubleClicked(QModelIndex index );
 
     void on_VolumeSlider_valueChanged(int value);
 
@@ -251,6 +254,8 @@ private:
     QPushButton* vrRetryConnectionButton;
     QLabel* xtpWebStatusLabel;
     XLibraryListWidget* libraryList;
+    LibraryListViewModel* _libraryListViewModel;
+    LibrarySortFilterProxyModel* _librarySortFilterProxyModel;
     QPushButton* backLibraryButton;
     QPushButton* randomizeLibraryButton;
     QPushButton* windowedLibraryButton;
@@ -310,9 +315,9 @@ private:
     QList<LibraryListWidgetItem*> cachedLibraryWidgetItems;
     QString selectedPlaylistName;
     int playingLibraryListIndex;
-    LibraryListWidgetItem* playingLibraryListItem = nullptr;
+    LibraryListItem27 playingLibraryListItem;
     int selectedLibraryListIndex;
-    LibraryListWidgetItem* selectedLibraryListItem = nullptr;
+    LibraryListItem27 selectedLibraryListItem;
 
     LibraryListItem27 getSelectedLibraryListItem();
     void onLibraryNotFound();
@@ -366,7 +371,7 @@ private:
     void skipBack();
     void rewind();
     void fastForward();
-    LibraryListWidgetItem* setCurrentLibraryRow(int row);
+    LibraryListItem27 setCurrentLibraryRow(int row);
 //    void syncFunscript();
 //    void syncVRFunscript();
 
