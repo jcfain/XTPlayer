@@ -31,6 +31,7 @@ SOURCES += \
     lib/struct/librarylistviewmodel.cpp \
     lib/struct/librarylistwidgetitem.cpp \
     lib/struct/librarysortfilterproxymodel.cpp \
+    lib/struct/playlistviewmodel.cpp \
     libraryItemSettingsDialog.cpp \
     libraryexclusions.cpp \
     librarywindow.cpp \
@@ -57,6 +58,7 @@ HEADERS += \
     lib/struct/librarylistviewmodel.h \
     lib/struct/librarylistwidgetitem.h \
     lib/struct/librarysortfilterproxymodel.h \
+    lib/struct/playlistviewmodel.h \
     libraryItemSettingsDialog.h \
     libraryexclusions.h \
     librarywindow.h \

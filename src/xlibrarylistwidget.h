@@ -5,6 +5,8 @@
 #include <QKeyEvent>
 #include <QModelIndex>
 #include "lib/struct/LibraryListItem27.h"
+#include "lib/struct/playlistviewmodel.h"
+#include "lib/struct/librarysortfilterproxymodel.h"
 
 class XLibraryListWidget : public QListView
 {
@@ -24,6 +26,8 @@ public:
 protected:
     virtual void keyPressEvent(QKeyEvent*);
     virtual void keyReleaseEvent(QKeyEvent*);
+
+    LibraryListViewModel* getModel();
 };
 
 #endif // XLIBRARYLISTWIDGET_H

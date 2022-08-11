@@ -25,6 +25,7 @@
 #include <QInputDialog>
 #include <QSplashScreen>
 #include <QModelIndex>
+#include "lib/struct/playlistviewmodel.h"
 #include "lib/struct/librarylistviewmodel.h"
 #include "lib/struct/librarysortfilterproxymodel.h"
 #include "settingsdialog.h"
@@ -255,6 +256,7 @@ private:
     QLabel* xtpWebStatusLabel;
     XLibraryListWidget* libraryList;
     LibraryListViewModel* _libraryListViewModel;
+    PlaylistViewModel* _playListViewModel;
     LibrarySortFilterProxyModel* _librarySortFilterProxyModel;
     QPushButton* backLibraryButton;
     QPushButton* randomizeLibraryButton;
@@ -377,7 +379,6 @@ private:
 
     bool eventFilter(QObject *obj, QEvent *event) override;
 
-    void onSetupPlaylistItem(LibraryListItem27 item);
     bool isPlaylistMode();
     void addSelectedLibraryItemToPlaylist(QString playlistName);
     void setVolumeIcon(int volume);

@@ -1,5 +1,4 @@
 #include "xlibrarylistwidget.h"
-#include "lib/struct/librarylistviewmodel.h"
 XLibraryListWidget::XLibraryListWidget(QWidget* parent) : QListView(parent)
 {
 
@@ -14,23 +13,19 @@ int XLibraryListWidget::selectedRow() {
 }
 
 void XLibraryListWidget::setCurrentRow(int index) {
-    LibraryListViewModel* listModel = qobject_cast<LibraryListViewModel*>(model());
-    QModelIndex indexOfTheCellIWant = listModel->index(index, 0);
-    this->selectionModel()->setCurrentIndex(indexOfTheCellIWant, QItemSelectionModel::SelectionFlag::Current);
+    QModelIndex indexOfTheCellIWant = model()->index(index, 0);
+    this->selectionModel()->setCurrentIndex(indexOfTheCellIWant, QItemSelectionModel::SelectionFlag::SelectCurrent);
 }
 
 LibraryListItem27 XLibraryListWidget::item(QModelIndex index) {
-    LibraryListViewModel* listModel = qobject_cast<LibraryListViewModel*>(model());
-    return listModel->getItem(index);
+    return index.data(Qt::UserRole).value<LibraryListItem27>();
 }
 
 LibraryListItem27 XLibraryListWidget::item(int index) {
-    LibraryListViewModel* listModel = qobject_cast<LibraryListViewModel*>(model());
-    return listModel->getItem(index);
+    return model()->index(index, 0).data(Qt::UserRole).value<LibraryListItem27>();
 }
 QModelIndex XLibraryListWidget::itemIndex(int index) {
-    LibraryListViewModel* listModel = qobject_cast<LibraryListViewModel*>(model());
-    return listModel->index(index, 0);
+    return model()->index(index, 0);
 }
 int XLibraryListWidget::count() {
     return this->model()->rowCount();
@@ -41,4 +36,11 @@ void XLibraryListWidget::keyPressEvent(QKeyEvent *event) {
 }
 void XLibraryListWidget::keyReleaseEvent(QKeyEvent *event) {
     emit keyReleased(event);
+}
+
+LibraryListViewModel* XLibraryListWidget::getModel() {
+    auto playlistViewModel = qobject_cast<PlaylistViewModel*>(model());
+    if(!playlistViewModel)
+        return (LibraryListViewModel*)((LibrarySortFilterProxyModel*)model())->sourceModel();
+    return playlistViewModel;
 }

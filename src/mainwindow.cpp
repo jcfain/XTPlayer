@@ -163,10 +163,12 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     _libraryListViewModel = new LibraryListViewModel(_mediaLibraryHandler, libraryList);
     _librarySortFilterProxyModel = new LibrarySortFilterProxyModel(libraryList);
-    _librarySortFilterProxyModel->setDynamicSortFilter(true);
+    _librarySortFilterProxyModel->setDynamicSortFilter(false);
     _librarySortFilterProxyModel->setSourceModel(_libraryListViewModel);
-    _librarySortFilterProxyModel->setSortRole(_libraryListViewModel->SortRole);
-   libraryList->setModel(_libraryListViewModel);
+    _librarySortFilterProxyModel->setSortRole(Qt::UserRole);
+   libraryList->setModel(_librarySortFilterProxyModel);
+
+    _playListViewModel = new PlaylistViewModel(_mediaLibraryHandler, libraryList);
 
     QScroller::grabGesture(libraryList->viewport(), QScroller::LeftMouseButtonGesture);
     auto scroller = QScroller::scroller(libraryList->viewport());
@@ -371,7 +373,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_mediaLibraryHandler, &MediaLibraryHandler::libraryLoadingStatus, this, &MainWindow::onLibraryLoadingStatusChange);
     connect(_mediaLibraryHandler, &MediaLibraryHandler::libraryLoading, this, &MainWindow::onSetLibraryLoading);
     connect(_mediaLibraryHandler, &MediaLibraryHandler::libraryItemFound, this, &MainWindow::onLibraryItemFound);
-    connect(_mediaLibraryHandler, &MediaLibraryHandler::playListItem, this, &MainWindow::onSetupPlaylistItem);
     connect(_mediaLibraryHandler, &MediaLibraryHandler::prepareLibraryLoad, this, &MainWindow::onPrepareLibraryLoad);
     connect(_mediaLibraryHandler, &MediaLibraryHandler::saveThumbError, this, &MainWindow::onSaveThumbError);
     connect(_mediaLibraryHandler, &MediaLibraryHandler::saveNewThumb, this, &MainWindow::onSaveNewThumb);
@@ -1060,7 +1061,6 @@ void MainWindow::onPrepareLibraryLoad()
     libraryList->setIconSize({SettingsHandler::getThumbSize(),SettingsHandler::getThumbSize()});
     qDeleteAll(cachedLibraryWidgetItems);
     cachedLibraryWidgetItems.clear();
-    _libraryListViewModel->clear();
     ui->actionReload_library->setDisabled(true);
     ui->actionSelect_library->setDisabled(true);
     _playerControlsFrame->setDisabled(true);
@@ -1682,8 +1682,7 @@ void MainWindow::on_LibraryList_itemClicked(QModelIndex index)
 {
     if(index.isValid())
     {
-        QModelIndex selectedItem = libraryList->selectionModel()->currentIndex();
-        LibraryListItem27 selectedFileListItem = selectedItem.data().value<LibraryListItem27>();
+        LibraryListItem27 selectedFileListItem = index.data().value<LibraryListItem27>();
         if((videoHandler->isPlaying() && !videoHandler->isPaused()))
         {
             auto playingFile = videoHandler->file();
@@ -1702,12 +1701,12 @@ void MainWindow::on_LibraryList_itemClicked(QModelIndex index)
 
 void MainWindow::regenerateThumbNail()
 {
-    _mediaLibraryHandler->saveSingleThumb(libraryList->selectedItem());
+    _mediaLibraryHandler->saveSingleThumb(libraryList->selectedItem().ID);
 }
 
 void MainWindow::setThumbNailFromCurrent()
 {
-    _mediaLibraryHandler->saveSingleThumb(libraryList->selectedItem(), videoHandler->position());
+    _mediaLibraryHandler->saveSingleThumb(libraryList->selectedItem().ID, videoHandler->position());
 }
 
 void MainWindow::lockThumb()
@@ -2765,14 +2764,14 @@ void MainWindow::on_actionThumbnail_triggered()
 {
     SettingsHandler::setLibraryView(LibraryView::Thumb);
     changeLibraryDisplayMode(LibraryView::Thumb);
-    setThumbSize(SettingsHandler::getThumbSize());
+    //setThumbSize(SettingsHandler::getThumbSize());
 }
 
 void MainWindow::on_actionList_triggered()
 {
     SettingsHandler::setLibraryView(LibraryView::List);
     changeLibraryDisplayMode(LibraryView::List);
-    setThumbSize(SettingsHandler::getThumbSize());
+    //setThumbSize(SettingsHandler::getThumbSize());
 }
 
 void MainWindow::changeLibraryDisplayMode(LibraryView value)
@@ -2791,7 +2790,7 @@ void MainWindow::changeLibraryDisplayMode(LibraryView value)
             libraryList->setFlow(QListView::LeftToRight);
             libraryList->setViewMode(QListView::IconMode);
             libraryList->setTextElideMode(Qt::ElideMiddle);
-            libraryList->setSpacing(2);
+            libraryList->setSpacing(1);
         break;
     }
 //    if(selectedPlaylistItems.length() > 0)
@@ -2833,37 +2832,31 @@ void MainWindow::updateThumbSizeUI(int size)
 
 void MainWindow::on_action75_triggered()
 {
-    SettingsHandler::setThumbSize(75);
     setThumbSize(75);
 }
 
 void MainWindow::on_action100_triggered()
 {
-    SettingsHandler::setThumbSize(100);
     setThumbSize(100);
 }
 
 void MainWindow::on_action125_triggered()
 {
-    SettingsHandler::setThumbSize(125);
     setThumbSize(125);
 }
 
 void MainWindow::on_action150_triggered()
 {
-    SettingsHandler::setThumbSize(150);
     setThumbSize(150);
 }
 
 void MainWindow::on_action175_triggered()
 {
-    SettingsHandler::setThumbSize(175);
     setThumbSize(175);
 }
 
 void MainWindow::on_action200_triggered()
 {
-    SettingsHandler::setThumbSize(200);
     setThumbSize(200);
 }
 
@@ -2875,16 +2868,20 @@ void MainWindow::on_actionCustom_triggered()
     if (ok && size > 0)
     {
         setThumbSize(size);
-        SettingsHandler::setThumbSize(size);
     }
 }
 
 void MainWindow::setThumbSize(int size)
 {
-    resizeThumbs(size);
+    //resizeThumbs(size);
+    if(SettingsHandler::getThumbSize() != size)
+    {
+        ImageFactory::clearCache();
+        SettingsHandler::setThumbSize(size);
+        videoHandler->setMinimumHeight(size);
+        videoHandler->setMinimumWidth(size);
+    }
 
-    videoHandler->setMinimumHeight(size);
-    videoHandler->setMinimumWidth(size);
 //    if(SettingsHandler::getLibraryView() == LibraryView::List)
 //        libraryList->setViewMode(QListView::ListMode);
 //    else
@@ -3040,7 +3037,8 @@ void MainWindow::sortLibraryList(LibrarySortMode sortMode)
 //                        clone->setHidden(true);
 //                    }
 //                }
-                _libraryListViewModel->populate(randomized);
+                _playListViewModel->populate(randomized);
+                libraryList->setModel(_playListViewModel);
                 emit randomizeComplete();
 //                foreach(auto item, arr1)
 //                {
@@ -3057,7 +3055,6 @@ void MainWindow::sortLibraryList(LibrarySortMode sortMode)
     if(sortMode != LibrarySortMode::NONE)
     {
         _librarySortFilterProxyModel->setSortMode(sortMode);
-        _librarySortFilterProxyModel->sort(0);
     }
 
     if(sortMode != LibrarySortMode::RANDOM) {
@@ -3161,7 +3158,7 @@ QString MainWindow::getPlaylistName(bool newPlaylist)
     if(newPlaylist && ok)
     {
         auto item = _mediaLibraryHandler->findItemByName(playlistName);
-        if(item.ID.isEmpty())
+        if(!item)
         {
             SettingsHandler::addNewPlaylist(playlistName);
             _mediaLibraryHandler->setupPlaylistItem(playlistName);
@@ -3172,11 +3169,6 @@ QString MainWindow::getPlaylistName(bool newPlaylist)
         }
     }
     return ok ? playlistName : nullptr;
-}
-
-void MainWindow::onSetupPlaylistItem(LibraryListItem27 item)
-{
-    _libraryListViewModel->addItemFront(item);
 }
 
 void MainWindow::addSelectedLibraryItemToPlaylist(QString playlistName)
@@ -3198,9 +3190,9 @@ void MainWindow::loadPlaylistIntoLibrary(QString playlistName, bool autoPlay)
 
             loadingLibraryFuture = QtConcurrent::run([this, playlistName, autoPlay]() {
                 selectedPlaylistName = playlistName;
-                auto playlists = SettingsHandler::getPlaylists();
-                auto playlist = playlists.value(playlistName);
-                _libraryListViewModel->populate(playlist);
+                auto playlist = _mediaLibraryHandler->getPlaylist(selectedPlaylistName);
+                _playListViewModel->populate(playlist);
+                libraryList->setModel(_playListViewModel);
                 if(autoPlay)
                 {
                     emit playlistLoaded(playlist.first());
@@ -3220,7 +3212,7 @@ void MainWindow::onPlaylistLoaded(LibraryListItem27 autoPlayItem) {
     editPlaylistButton->show();
     librarySortGroup->setEnabled(false);
     changeLibraryDisplayMode(SettingsHandler::getLibraryView());
-    resizeThumbs(SettingsHandler::getThumbSize());
+    //resizeThumbs(SettingsHandler::getThumbSize());
     sortLibraryList(LibrarySortMode::NONE);
     toggleLibraryLoading(false);
     setCurrentLibraryRow(0);
@@ -3241,23 +3233,23 @@ void MainWindow::backToMainLibrary()
         else
             return;
     }
-    librarySortGroup->setEnabled(true);
     selectedPlaylistName = nullptr;
-    if(cachedLibraryWidgetItems.length() == 0)
-        _mediaLibraryHandler->loadLibraryAsync();
-    else
-    {
+//    if(cachedLibraryWidgetItems.length() == 0)
+//        _mediaLibraryHandler->loadLibraryAsync();
+//    else
+//    {
         if(!isLibraryLoading())
         {
             //disconnect(libraryList, &QListWidget::itemChanged, 0, 0);
             toggleLibraryLoading(true);
             onLibraryLoadingStatusChange("Loading library...");
             loadingLibraryFuture = QtConcurrent::run([this]() {
-                _libraryListViewModel->populate();
+                _playListViewModel->dePopulate();
+                libraryList->setModel(_librarySortFilterProxyModel);
                 emit backFromPlaylistLoaded();
             });
         }
-    }
+    //}
 }
 
 void MainWindow::onBackFromPlaylistLoaded() {
@@ -3276,20 +3268,21 @@ void MainWindow::onBackFromPlaylistLoaded() {
 void MainWindow::savePlaylist()
 {
     QScroller::grabGesture(libraryList->viewport(), QScroller::LeftMouseButtonGesture);
-    QList<LibraryListItem27> libraryItems;
-    for(int i=0;i<libraryList->count();i++)
-    {
-        LibraryListItem27 libraryListItem = libraryList->item(i);
-        if(!libraryListItem.nameNoExtension.isEmpty())
-            libraryItems.push_back(libraryListItem);
-    }
+    QList<LibraryListItem27> libraryItems = _playListViewModel->getPopulated();
+//    for(int i=0;i<libraryList->count();i++)
+//    {
+//        LibraryListItem27 libraryListItem = libraryList->item(i);
+//        if(!libraryListItem.nameNoExtension.isEmpty())
+//            libraryItems.push_back(libraryListItem);
+//    }
     SettingsHandler::updatePlaylist(selectedPlaylistName, libraryItems);
     savePlaylistButton->hide();
     editPlaylistButton->show();
     cancelEditPlaylistButton->hide();
     _editPlaylistMode = false;
     changeLibraryDisplayMode(SettingsHandler::getLibraryView());
-    resizeThumbs(SettingsHandler::getThumbSize());
+    _playListViewModel->clearOverRideThumbSize();
+    //resizeThumbs(SettingsHandler::getThumbSize());
 }
 void MainWindow::editPlaylist()
 {
@@ -3301,7 +3294,7 @@ void MainWindow::editPlaylist()
     if(SettingsHandler::getThumbSize() > 75)
     {
         changeLibraryDisplayMode(LibraryView::List);
-        resizeThumbs(75);
+        _playListViewModel->overRideThumbSize(75);
     }
     else
     {
@@ -3324,13 +3317,18 @@ void MainWindow::cancelEditPlaylist()
     editPlaylistButton->show();
     //loadPlaylistIntoLibrary(selectedPlaylistName);
     changeLibraryDisplayMode(SettingsHandler::getLibraryView());
-    resizeThumbs(SettingsHandler::getThumbSize());
+    _playListViewModel->clearOverRideThumbSize();
     libraryList->setDragEnabled(false);
+    libraryList->setMovement(QListWidget::Movement::Free);
 }
+
 void MainWindow::removeFromPlaylist()
 {
     auto selectedItem = libraryList->selectedItem();
-    _mediaLibraryHandler->removeFromCache(selectedItem);
+    _playListViewModel->removeItem(selectedItem);
+    //auto playlist = _mediaLibraryHandler->getPlaylist(selectedItem.nameNoExtension);
+//    playlist.removeOne(selectedItem);
+//    SettingsHandler::updatePlaylist(selectedItem.nameNoExtension, playlist);
     savePlaylistButton->show();
     editPlaylistButton->hide();
     cancelEditPlaylistButton->show();

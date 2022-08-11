@@ -6,13 +6,19 @@ LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(QObject *parent)
 
 }
 void LibrarySortFilterProxyModel::setSortMode(LibrarySortMode sortMode) {
-    _sortMode = sortMode;
+    if(_sortMode != sortMode) {
+        beginResetModel();
+        _sortMode = sortMode;
+        sort(0);
+        invalidate();
+        endResetModel();
+    }
 }
 bool LibrarySortFilterProxyModel::lessThan(const QModelIndex &left,
                                       const QModelIndex &right) const
 {
-    LibraryListItem27 leftData = sourceModel()->data(left).value<LibraryListItem27>();
-    LibraryListItem27 rightData = sourceModel()->data(right).value<LibraryListItem27>();
+    LibraryListItem27 leftData = left.data(sortRole()).value<LibraryListItem27>();
+    LibraryListItem27 rightData = right.data(sortRole()).value<LibraryListItem27>();
 
     if(_sortMode != NONE)
     {
@@ -24,9 +30,14 @@ bool LibrarySortFilterProxyModel::lessThan(const QModelIndex &left,
         {
             return false;
         }
+        else if(leftData.type == LibraryListItemType::PlaylistInternal && rightData.type == LibraryListItemType::PlaylistInternal &&
+                (_sortMode == LibrarySortMode::NAME_DESC || _sortMode == LibrarySortMode::TYPE_DESC))
+        {
+            return leftData.nameNoExtension.localeAwareCompare(rightData.nameNoExtension) > 0;
+        }
         else if(leftData.type == LibraryListItemType::PlaylistInternal && rightData.type == LibraryListItemType::PlaylistInternal)
         {
-            return rightData.nameNoExtension.localeAwareCompare(leftData.nameNoExtension) > 0;
+            return leftData.nameNoExtension.localeAwareCompare(rightData.nameNoExtension) < 0;
         }
         else if(_sortMode == LibrarySortMode::RANDOM)
         {
@@ -63,24 +74,24 @@ bool LibrarySortFilterProxyModel::lessThan(const QModelIndex &left,
 
     //            return false;
         }
-        else if(_sortMode == LibrarySortMode::NAME_DESC)
-        {
-            return leftData.name.localeAwareCompare(rightData.name) > 0;
-        }
         else if(_sortMode == LibrarySortMode::NAME_ASC)
         {
-
+            return left.data().toString().localeAwareCompare(right.data().toString()) < 0;
+        }
+        else if(_sortMode == LibrarySortMode::NAME_DESC)
+        {
+            return left.data().toString().localeAwareCompare(right.data().toString()) > 0;
         }
         else if(_sortMode == LibrarySortMode::TYPE_ASC)
         {
             if (leftData.type == rightData.type)
-              return rightData.name.localeAwareCompare(leftData.name) > 0;
+                return left.data().toString().localeAwareCompare(right.data().toString()) < 0;
             return leftData.type < rightData.type;
         }
         else if(_sortMode == LibrarySortMode::TYPE_DESC)
         {
             if (leftData.type == rightData.type)
-              return leftData.name.localeAwareCompare(rightData.name) > 0;
+                return left.data().toString().localeAwareCompare(right.data().toString()) > 0;
             return leftData.type > rightData.type;
         }
     }
@@ -90,9 +101,14 @@ bool LibrarySortFilterProxyModel::lessThan(const QModelIndex &left,
 bool LibrarySortFilterProxyModel::filterAcceptsRow(int sourceRow,
                                               const QModelIndex &sourceParent) const
 {
-    QModelIndex index0 = sourceModel()->index(sourceRow, 0, sourceParent);
-
-    return (sourceModel()->data(index0).toString().contains(filterRegularExpression()));
+    //Slow!?
+    QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
+    LibraryListItem27 item = index.data(Qt::UserRole).value<LibraryListItem27>();
+    bool isHidden = item.type == LibraryListItemType::VR || (SettingsHandler::getHideStandAloneFunscriptsInLibrary() && item.type == LibraryListItemType::FunscriptType);
+    if(isHidden)
+        return !isHidden;
+//    return (sourceModel()->data(index0, Qt::UserRole).value<LibraryListItem27>().name.contains(filterRegularExpression()));
+    return true;
 }
 bool LibrarySortFilterProxyModel::dateInRange(QDate date) const
 {
