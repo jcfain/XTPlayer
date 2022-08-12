@@ -53,7 +53,6 @@
 #include "lib/struct/LibraryListItem27.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/ConnectionChangedSignal.h"
-#include "lib/struct/librarylistwidgetitem.h"
 #include "lib/lookup/AxisNames.h"
 #include "lib/lookup/MediaActions.h"
 #include "lib/tool/xmath.h"
@@ -154,7 +153,6 @@ private slots:
     void onPrepareLibraryLoad();
     void onLibraryLoadingStatusChange(QString message);
     void libraryListSetIconSize(QSize newSize);
-    void onLibraryItemFound(LibraryListItem27 item);
 
     void on_audioLevel_Change(int decibelL, int decibelR);
 
@@ -255,7 +253,6 @@ private:
     QPushButton* vrRetryConnectionButton;
     QLabel* xtpWebStatusLabel;
     XLibraryListWidget* libraryList;
-    LibraryListViewModel* _libraryListViewModel;
     PlaylistViewModel* _playListViewModel;
     LibrarySortFilterProxyModel* _librarySortFilterProxyModel;
     QPushButton* backLibraryButton;
@@ -314,7 +311,6 @@ private:
 
 //    LibraryListItem27 createLibraryListItem27FromFunscript(QString funscript);
     bool isLibraryLoading();
-    QList<LibraryListWidgetItem*> cachedLibraryWidgetItems;
     QString selectedPlaylistName;
     int playingLibraryListIndex;
     LibraryListItem27 playingLibraryListItem;
@@ -380,7 +376,7 @@ private:
     bool eventFilter(QObject *obj, QEvent *event) override;
 
     bool isPlaylistMode();
-    void addSelectedLibraryItemToPlaylist(QString playlistName);
+    void addSelectedLibraryItemToPlaylist(QString playlistName, LibraryListItem27 item);
     void setVolumeIcon(int volume);
     void on_seekSlider_sliderMoved(int position);
     void on_key_press(QKeyEvent* event);

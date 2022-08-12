@@ -35,6 +35,9 @@ void PlaylistViewModel::clearOverRideThumbSize() {
     overRideThumbSizeWidth = -1;
 }
 
+void PlaylistViewModel::setDragEnabled(bool enabled) {
+    _dragEnabled = enabled;
+}
 bool PlaylistViewModel::setData(const QModelIndex & index, const QVariant & value, int role )
 {
     if (!_data.isEmpty() && index.isValid() && role == Qt::EditRole) {
@@ -66,7 +69,17 @@ bool PlaylistViewModel::removeRows(int position, int rows, const QModelIndex &pa
     endRemoveRows();
     return true;
 }
+Qt::ItemFlags PlaylistViewModel::flags(const QModelIndex &index) const {
+    Qt::ItemFlags defaultFlags = QAbstractListModel::flags(index);
 
+    if(_dragEnabled) {
+        if (index.isValid())
+            return Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled | defaultFlags;
+        else
+            return Qt::ItemIsDropEnabled | defaultFlags;
+    }
+    return defaultFlags;
+}
 QStringList PlaylistViewModel::mimeTypes() const
 {
     QStringList types;

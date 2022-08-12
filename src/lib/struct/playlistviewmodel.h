@@ -23,6 +23,7 @@ public:
     QList<LibraryListItem27> getPopulated();
     void dePopulate();
     void overRideThumbSize(int width);
+    void setDragEnabled(bool enabled);
     void clearOverRideThumbSize();
 
     bool setData( const QModelIndex & index, const QVariant & value, int role ) override;
@@ -30,6 +31,7 @@ public:
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
     Qt::DropActions supportedDragActions() const override { return Qt::MoveAction; }
     Qt::DropActions supportedDropActions() const override { return Qt::MoveAction; }
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
     QStringList mimeTypes() const override;
     QMimeData *mimeData(const QModelIndexList &indexes) const override;
     bool dropMimeData(const QMimeData *mimeData, Qt::DropAction action, int row, int column, const QModelIndex &parent) override;
@@ -39,6 +41,7 @@ protected:
 private:
     int overRideThumbSizeWidth = -1;
     bool _resetThumbSize = false;
+    bool _dragEnabled = false;
     QList<LibraryListItem27> _data;
 };
 

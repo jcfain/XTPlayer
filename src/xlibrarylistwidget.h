@@ -24,8 +24,9 @@ public:
     LibraryListItem27 item(int index);
     QModelIndex itemIndex(int index);
 protected:
-    virtual void keyPressEvent(QKeyEvent*);
-    virtual void keyReleaseEvent(QKeyEvent*);
+    void keyPressEvent(QKeyEvent*) override;
+    void keyReleaseEvent(QKeyEvent*) override;
+    QSize sizeHint() const override;
 
     LibraryListViewModel* getModel();
 };

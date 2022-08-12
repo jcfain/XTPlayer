@@ -4,11 +4,17 @@ LibraryListViewModel::LibraryListViewModel(MediaLibraryHandler* mediaLibraryHand
     : QAbstractListModel(parent)
 {
     _mediaLibraryHandler = mediaLibraryHandler;
-    //connect(_mediaLibraryHandler, &MediaLibraryHandler::libraryLoaded, this,  [this]() { populate(); } );
-    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemUpdated, this,   [this](LibraryListItem27 item) {
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::libraryChange, this,  [this]() {
         beginResetModel();
         endResetModel();
     } );
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemUpdated, this,   [this](LibraryListItem27 item) {
+        //beginResetModel();
+        auto index = this->index(getData().indexOf(item), 0);
+        emit dataChanged(index, index);
+        //endResetModel();
+    } );
+
 }
 
 int LibraryListViewModel::rowCount(const QModelIndex &parent) const
@@ -27,6 +33,9 @@ LibraryListItem27 LibraryListViewModel::getItem(int index) {
     return this->index(index, 0).data(Qt::UserRole).value<LibraryListItem27>();
 }
 
+void LibraryListViewModel::setLibraryViewMode(LibraryView mode) {
+    _libraryViewMode = mode;
+}
 //bool LibraryListViewModel::hasChildren(const QModelIndex &parent) const
 //{
 //    // FIXME: Implement me!
@@ -54,14 +63,15 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
     if (index.column() == 0) {
         auto data =  getData();
         auto item = data.value(index.row());
+        auto thumbInt = SettingsHandler::getThumbSize();
         if (role == Qt::DisplayRole)
         {
-                return (item.isMFS ? "(MFS) " : "") + item.nameNoExtension;
+            return (item.isMFS ? "(MFS) " : "") + item.nameNoExtension;
         }
         else if(Qt::DecorationRole == role)
         {
-            auto thumbInt = SettingsHandler::getThumbSize();
-            QSize thumbSize = {thumbInt, thumbInt};
+            int scaled = qRound(thumbInt * 0.75);
+            QSize thumbSize = {scaled, scaled};
             if(item.thumbState == ThumbState::Waiting)
                 return ImageFactory::resizeCache(item.thumbFileLoading, item.ID, thumbSize);
             else if(item.thumbState == ThumbState::Loading)
@@ -78,15 +88,37 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
         {
             return item.toolTip;
         }
-        else if (item.isMFS && role == Qt::ForegroundRole)
+        else if (role == Qt::ForegroundRole)
         {
-            return QColor(Qt::green);
+            if (item.type != LibraryListItemType::PlaylistInternal && !QFileInfo::exists(item.script) && !QFileInfo::exists(item.zipFile))
+                return QColor(Qt::gray);
+            if(item.isMFS)
+                return QColor(Qt::green);
         }
-        else if (item.isMFS && role == Qt::FontRole)
+        else if (role == Qt::FontRole)
         {
             QFont font;
-            font.setBold(true);
+            if(item.isMFS)
+                font.setBold(true);
+            if(_libraryViewMode == LibraryView::Thumb)
+                font.setPointSizeF((thumbInt * 0.25) * 0.25);
+            else
+                font.setPointSizeF((thumbInt * 0.25) * 0.35);
             return font;
+        }
+        else if (role == Qt::SizeHintRole)
+        {
+            if(_libraryViewMode == LibraryView::Thumb) {
+                int scaled  = qRound(thumbInt * 0.25) +thumbInt;
+                QSize thumbSizeHint = {scaled, scaled};
+                return thumbSizeHint;
+            }
+        }
+        else if (role == Qt::TextAlignmentRole)
+        {
+            return _libraryViewMode == LibraryView::Thumb ?
+                        int(Qt::AlignmentFlag::AlignTop | Qt::AlignmentFlag::AlignHCenter) :
+                        int(Qt::AlignmentFlag::AlignLeft | Qt::AlignmentFlag::AlignVCenter);
         }
     }
 

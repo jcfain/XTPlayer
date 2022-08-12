@@ -6,6 +6,7 @@
 #include "lib/handler/settingshandler.h"
 #include "lib/tool/xmath.h"
 #include "lib/struct/LibraryListItem27.h"
+#include "lib/struct/librarylistviewmodel.h"
 
 class LibrarySortFilterProxyModel : public QSortFilterProxyModel
 {
@@ -13,6 +14,7 @@ class LibrarySortFilterProxyModel : public QSortFilterProxyModel
 public:
     explicit LibrarySortFilterProxyModel(QObject *parent = nullptr);
     void setSortMode(LibrarySortMode sortMode);
+    void setLibraryViewMode(LibraryView mode);
 protected:
     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
     bool lessThan(const QModelIndex &left, const QModelIndex &right) const override;

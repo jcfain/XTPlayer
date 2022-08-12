@@ -3,10 +3,11 @@
 LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(QObject *parent)
     : QSortFilterProxyModel{parent}
 {
-
+    setDynamicSortFilter(false);
+    setSortRole(Qt::UserRole);
 }
 void LibrarySortFilterProxyModel::setSortMode(LibrarySortMode sortMode) {
-    if(_sortMode != sortMode) {
+    if(_sortMode != sortMode || _sortMode == LibrarySortMode::RANDOM) {
         beginResetModel();
         _sortMode = sortMode;
         sort(0);
@@ -14,6 +15,13 @@ void LibrarySortFilterProxyModel::setSortMode(LibrarySortMode sortMode) {
         endResetModel();
     }
 }
+
+void LibrarySortFilterProxyModel::setLibraryViewMode(LibraryView mode) {
+    beginResetModel();
+    qobject_cast<LibraryListViewModel*>(sourceModel())->setLibraryViewMode(mode);
+    endResetModel();
+}
+
 bool LibrarySortFilterProxyModel::lessThan(const QModelIndex &left,
                                       const QModelIndex &right) const
 {
@@ -44,7 +52,8 @@ bool LibrarySortFilterProxyModel::lessThan(const QModelIndex &left,
     //            qint64 randomValue = XMath::rand(0, 100);
     //            if(randomValue > 50)
     //                return thisData.modifiedDate < otherData.modifiedDate;
-            return false;
+            return rand()%20 < 10;
+            //return false;
         }
         else if(_sortMode == LibrarySortMode::CREATED_ASC)
         {
@@ -104,7 +113,7 @@ bool LibrarySortFilterProxyModel::filterAcceptsRow(int sourceRow,
     //Slow!?
     QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
     LibraryListItem27 item = index.data(Qt::UserRole).value<LibraryListItem27>();
-    bool isHidden = item.type == LibraryListItemType::VR || (SettingsHandler::getHideStandAloneFunscriptsInLibrary() && item.type == LibraryListItemType::FunscriptType);
+    bool isHidden = (item.type == LibraryListItemType::VR && !SettingsHandler::getShowVRInLibraryView()) || ( item.type == LibraryListItemType::FunscriptType && SettingsHandler::getHideStandAloneFunscriptsInLibrary());
     if(isHidden)
         return !isHidden;
 //    return (sourceModel()->data(index0, Qt::UserRole).value<LibraryListItem27>().name.contains(filterRegularExpression()));

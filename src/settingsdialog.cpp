@@ -281,8 +281,6 @@ void SettingsDialog::setupUi()
         connect(ui.webSocketPortSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_webSocketPort_valueChanged);
         connect(ui.httpThumbQualitySpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_httpThumbQualitySpinBox_editingFinished);
 
-
-
         ui.offsetSpinbox->setMinimum(std::numeric_limits<int>::lowest());
         ui.offsetSpinbox->setMaximum(std::numeric_limits<int>::max());
         ui.offsetSpinbox->setValue(SettingsHandler::getoffSet());
@@ -298,7 +296,7 @@ void SettingsDialog::setupUi()
         ui.rangeModifierStepSpinBox->setValue(SettingsHandler::getFunscriptModifierStep());
         connect(ui.rangeModifierStepSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onRangeModifierStep_valueChanged);
 
-
+        ui.showVRInLibraryViewCheckbox->setChecked(SettingsHandler::getShowVRInLibraryView());
 
         _interfaceInitialized = true;
     }
@@ -1517,8 +1515,8 @@ void SettingsDialog::on_close_loading_dialog()
 void SettingsDialog::on_showLoneFunscriptsInLibraryCheckbox_clicked(bool checked)
 {
     SettingsHandler::setHideStandAloneFunscriptsInLibrary(checked);
-    ui.httpServerOptions->setVisible(SettingsHandler::getEnableHttpServer());
-    _requiresRestart = true;
+    if(checked)
+        DialogHandler::Dialog(this, "Reload media to see changes");
 }
 
 void SettingsDialog::on_skipStandAloneFunscriptsInMainLibraryPlaylist_clicked(bool checked)
@@ -1714,5 +1712,12 @@ void SettingsDialog::on_openDeoPDFButton_clicked()
     } else {
         DialogHandler::MessageBox(this, "Error opening: "+ filePath, XLogLevel::Critical);
     }
+}
+
+void SettingsDialog::on_showVRInLibraryViewCheckbox_clicked(bool checked)
+{
+    SettingsHandler::setShowVRInLibraryView(checked);
+    if(checked)
+        DialogHandler::Dialog(this, "Reload media to see changes");
 }
 

@@ -32,6 +32,7 @@ public:
     LibraryListItem27 getItem(int index);
 
     void setSortMode(LibrarySortMode sortMode);
+    void setLibraryViewMode(LibraryView mode);
 
 protected:
     virtual QList<LibraryListItem27> getData() const;
@@ -47,6 +48,7 @@ private slots:
 
 private:
     MediaLibraryHandler* _mediaLibraryHandler;
+    LibraryView _libraryViewMode;
 
 
 };

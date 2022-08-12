@@ -218,6 +218,8 @@ private slots:
 
     void on_openDeoPDFButton_clicked();
 
+    void on_showVRInLibraryViewCheckbox_clicked(bool checked);
+
 private:
 
     Ui::SettingsDialog ui;
