@@ -822,7 +822,7 @@ void MainWindow::onLibraryWindowed_Clicked()
     libraryWindow->show();
     if(SettingsHandler::getLibrarySortMode() != LibrarySortMode::RANDOM)
         randomizeLibraryButton->hide();
-    else
+     else if(!isPlaylistMode())
         randomizeLibraryButton->show();
 
     if(isPlaylistMode())
@@ -866,7 +866,7 @@ void MainWindow::onLibraryWindowed_Closed()
     ui->libraryFrame->show();
     if(SettingsHandler::getLibrarySortMode() != LibrarySortMode::RANDOM)
         randomizeLibraryButton->hide();
-    else
+    else if(!isPlaylistMode())
         randomizeLibraryButton->show();
 
     if(isPlaylistMode())
@@ -3048,7 +3048,7 @@ void MainWindow::sortLibraryList(LibrarySortMode sortMode)
     _librarySortFilterProxyModel->setSortMode(sortMode);
     if(sortMode != LibrarySortMode::RANDOM) {
         randomizeLibraryButton->hide();
-    } else {
+    } else if(!isPlaylistMode()) {
         randomizeLibraryButton->show();
     }
     toggleLibraryLoading(false);
@@ -3202,6 +3202,7 @@ void MainWindow::onPlaylistLoaded(LibraryListItem27 autoPlayItem) {
     editPlaylistButton->show();
     librarySortGroup->setEnabled(false);
     libraryFilterLineEdit->hide();
+    randomizeLibraryButton->hide();
     //changeLibraryDisplayMode(SettingsHandler::getLibraryView());
     //resizeThumbs(SettingsHandler::getThumbSize());
     //sortLibraryList(LibrarySortMode::NONE);
@@ -3249,6 +3250,8 @@ void MainWindow::onBackFromPlaylistLoaded() {
     savePlaylistButton->hide();
     cancelEditPlaylistButton->hide();
     libraryFilterLineEdit->show();
+    if(SettingsHandler::getLibrarySortMode() == LibrarySortMode::RANDOM)
+        randomizeLibraryButton->show();
     libraryList->setDragEnabled(false);
     //sortLibraryList(SettingsHandler::getLibrarySortMode());
     toggleLibraryLoading(false);
