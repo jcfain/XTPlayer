@@ -3,7 +3,7 @@
 LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(QObject *parent)
     : QSortFilterProxyModel{parent}
 {
-    setDynamicSortFilter(false);
+    setDynamicSortFilter(true);
     setSortRole(Qt::UserRole);
 }
 void LibrarySortFilterProxyModel::setSortMode(LibrarySortMode sortMode) {
@@ -117,10 +117,34 @@ bool LibrarySortFilterProxyModel::filterAcceptsRow(int sourceRow,
     if(isHidden)
         return !isHidden;
 //    return (sourceModel()->data(index0, Qt::UserRole).value<LibraryListItem27>().name.contains(filterRegularExpression()));
-    return true;
+    //return true;
+    return index.data().toString().contains(filterRegularExpression());
 }
 bool LibrarySortFilterProxyModel::dateInRange(QDate date) const
 {
     return (!minDate.isValid() || date > minDate)
             && (!maxDate.isValid() || date < maxDate);
+}
+
+void LibrarySortFilterProxyModel::onTextFilterChanged(QString filter)
+{
+//    FilterWidget::PatternSyntax s = filterWidget->patternSyntax();
+//    QString filter = filterWidget->text();
+//    switch (s) {
+//    case FilterWidget::Wildcard:
+//        filter = QRegularExpression::wildcardToRegularExpression(filter);
+//        break;
+//    case FilterWidget::FixedString:
+//        filter = QRegularExpression::escape(filter);
+//        break;
+//    default:
+//        break;
+//    }
+
+        QRegularExpression::PatternOptions options = QRegularExpression::CaseInsensitiveOption;
+        //if (filterWidget->caseSensitivity() == Qt::CaseInsensitive)
+        QRegularExpression regularExpression(filter, options);
+        setFilterRegularExpression(regularExpression);
+        invalidateFilter();
+        //setSortMode(SettingsHandler::getLibrarySortMode());
 }

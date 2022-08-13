@@ -261,6 +261,7 @@ private:
     QPushButton* savePlaylistButton;
     QPushButton* editPlaylistButton;
     QPushButton* cancelEditPlaylistButton;
+    QLineEdit* libraryFilterLineEdit;
     QActionGroup* libraryViewGroup;
     QActionGroup* libraryThumbSizeGroup;
     QAction* action75_Size;

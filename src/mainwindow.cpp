@@ -6,8 +6,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 {
     QCoreApplication::setOrganizationName("cUrbSide prOd");
     QCoreApplication::setApplicationName("XTPlayer");
-    XTPVersion = QString("0.333a_%1T%2").arg(__DATE__).arg(__TIME__);
-    XTPVersionNum = 0.333f;
+    XTPVersion = QString("0.334a_%1T%2").arg(__DATE__).arg(__TIME__);
+    XTPVersionNum = 0.334f;
     const QString fullVersion = "XTP: v"+ XTPVersion + "\nXTE: v" + SettingsHandler::XTEVersion;
 
     QPixmap pixmap("://images/XTP_Splash.png");
@@ -220,6 +220,10 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     ui->libraryGrid->addWidget(cancelEditPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
     cancelEditPlaylistButton->hide();
 
+    libraryFilterLineEdit = new QLineEdit(this);
+    libraryFilterLineEdit->setPlaceholderText("Filter");
+    ui->libraryGrid->addWidget(libraryFilterLineEdit, 0, 2, 1, ui->libraryGrid->columnCount() - 4);
+
     ui->libraryFrame->setFrameShadow(QFrame::Sunken);
 
     libraryLoadingLabel = new QLabel(ui->libraryFrame);
@@ -323,6 +327,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(savePlaylistButton, &QPushButton::clicked, this, &MainWindow::savePlaylist);
     connect(editPlaylistButton, &QPushButton::clicked, this, &MainWindow::editPlaylist);
     connect(cancelEditPlaylistButton, &QPushButton::clicked, this, &MainWindow::cancelEditPlaylist);
+    connect(libraryFilterLineEdit, &QLineEdit::textChanged, _librarySortFilterProxyModel, &LibrarySortFilterProxyModel::onTextFilterChanged);
 
     connect(libraryWindow, &LibraryWindow::closeWindow, this, &MainWindow::onLibraryWindowed_Closed);
 
@@ -802,6 +807,7 @@ void MainWindow::onLibraryWindowed_Clicked()
     ui->libraryGrid->removeWidget(editPlaylistButton);
     ui->libraryGrid->removeWidget(savePlaylistButton);
     ui->libraryGrid->removeWidget(libraryLoadingLabel);
+    ui->libraryGrid->removeWidget(libraryFilterLineEdit);
     ((QGridLayout*)libraryWindow->layout())->addWidget(libraryList, 1, 0, 20, 12);
     ((QGridLayout*)libraryWindow->layout())->addWidget(backLibraryButton, 0, 0);
     ((QGridLayout*)libraryWindow->layout())->addWidget(randomizeLibraryButton, 0, 1);
@@ -809,6 +815,7 @@ void MainWindow::onLibraryWindowed_Clicked()
     ((QGridLayout*)libraryWindow->layout())->addWidget(cancelEditPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
     ((QGridLayout*)libraryWindow->layout())->addWidget(editPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
     ((QGridLayout*)libraryWindow->layout())->addWidget(savePlaylistButton, 0, ui->libraryGrid->columnCount() - 3);
+    ((QGridLayout*)libraryWindow->layout())->addWidget(libraryFilterLineEdit, 0, 2, 1, ui->libraryGrid->columnCount() - 4);
     ((QGridLayout*)libraryWindow->layout())->addWidget(libraryLoadingLabel, 0, 0, 21, 12);
     windowedLibraryButton->hide();
     ui->libraryFrame->hide();
@@ -853,6 +860,7 @@ void MainWindow::onLibraryWindowed_Closed()
     ui->libraryGrid->addWidget(cancelEditPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
     ui->libraryGrid->addWidget(editPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
     ui->libraryGrid->addWidget(savePlaylistButton, 0, ui->libraryGrid->columnCount() - 3);
+    ui->libraryGrid->addWidget(libraryFilterLineEdit, 0, 2, 1, ui->libraryGrid->columnCount() - 4);
     ui->libraryGrid->addWidget(libraryLoadingLabel, 0, 0, 21, 12);
     windowedLibraryButton->show();
     ui->libraryFrame->show();
@@ -1420,7 +1428,7 @@ void MainWindow::onSetLibraryLoaded()
 //    widget->show();
 
     //_libraryListViewModel->populate(_mediaLibraryHandler->getLibraryCache());
-    changeLibraryDisplayMode(SettingsHandler::getLibraryView());
+    //changeLibraryDisplayMode(SettingsHandler::getLibraryView());
     sortLibraryList(SettingsHandler::getLibrarySortMode());
 }
 
@@ -2761,27 +2769,34 @@ void MainWindow::on_actionList_triggered()
 
 void MainWindow::changeLibraryDisplayMode(LibraryView value)
 {
-    ImageFactory::clearCache();
-    switch(value)
-    {
-        case LibraryView::List:
-            libraryList->setResizeMode(QListView::Fixed);
-            //libraryList->setFlow(QListView::TopToBottom);
-            libraryList->setViewMode(QListView::ListMode);
-            libraryList->setTextElideMode(Qt::ElideRight);
-            libraryList->setSpacing(0);
-        break;
-        case LibraryView::Thumb:
-            libraryList->setResizeMode(QListView::Adjust);
-            //libraryList->setFlow(QListView::LeftToRight);
-            libraryList->setViewMode(QListView::IconMode);
-            libraryList->setTextElideMode(Qt::ElideRight);
-            libraryList->setSpacing(2);
-        break;
+    LibraryView converted = LibraryView::Thumb;
+    if(libraryList->viewMode() == QListView::ViewMode::ListMode) {
+        converted = LibraryView::List;
     }
-    _librarySortFilterProxyModel->setLibraryViewMode(value);
-    _playListViewModel->setLibraryViewMode(value);
-    setThumbSize(SettingsHandler::getThumbSize());
+
+    if(converted != value)
+    {
+        switch(value)
+        {
+            case LibraryView::List:
+                libraryList->setResizeMode(QListView::Fixed);
+                libraryList->setFlow(QListView::TopToBottom);
+                libraryList->setViewMode(QListView::ListMode);
+                libraryList->setSpacing(0);
+            break;
+            case LibraryView::Thumb:
+                libraryList->setResizeMode(QListView::Adjust);
+                libraryList->setFlow(QListView::LeftToRight);
+                libraryList->setViewMode(QListView::IconMode);
+                libraryList->setSpacing(2);
+            break;
+        }
+
+        libraryList->updateGeometries();
+        _librarySortFilterProxyModel->setLibraryViewMode(value);
+        _playListViewModel->setLibraryViewMode(value);
+        setThumbSize(SettingsHandler::getThumbSize());
+    }
 //    if(selectedPlaylistItems.length() > 0)
 //    {
 //        libraryList->setDragEnabled(true);
@@ -3186,9 +3201,10 @@ void MainWindow::onPlaylistLoaded(LibraryListItem27 autoPlayItem) {
     backLibraryButton->show();
     editPlaylistButton->show();
     librarySortGroup->setEnabled(false);
-    changeLibraryDisplayMode(SettingsHandler::getLibraryView());
+    libraryFilterLineEdit->hide();
+    //changeLibraryDisplayMode(SettingsHandler::getLibraryView());
     //resizeThumbs(SettingsHandler::getThumbSize());
-    sortLibraryList(LibrarySortMode::NONE);
+    //sortLibraryList(LibrarySortMode::NONE);
     toggleLibraryLoading(false);
     setCurrentLibraryRow(0);
     if(!autoPlayItem.path.isEmpty())
@@ -3232,8 +3248,9 @@ void MainWindow::onBackFromPlaylistLoaded() {
     editPlaylistButton->hide();
     savePlaylistButton->hide();
     cancelEditPlaylistButton->hide();
+    libraryFilterLineEdit->show();
     libraryList->setDragEnabled(false);
-    sortLibraryList(SettingsHandler::getLibrarySortMode());
+    //sortLibraryList(SettingsHandler::getLibrarySortMode());
     toggleLibraryLoading(false);
     setCurrentLibraryRow(0);
 }

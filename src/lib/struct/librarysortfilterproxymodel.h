@@ -11,6 +11,8 @@
 class LibrarySortFilterProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
+public slots:
+    void onTextFilterChanged(QString filter);
 public:
     explicit LibrarySortFilterProxyModel(QObject *parent = nullptr);
     void setSortMode(LibrarySortMode sortMode);

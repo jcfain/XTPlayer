@@ -1,10 +1,11 @@
 #include "xlibrarylistwidget.h"
 XLibraryListWidget::XLibraryListWidget(QWidget* parent) : QListView(parent)
 {
-    setUniformItemSizes(true);
-    setContextMenuPolicy(Qt::CustomContextMenu);
     setProperty("id", "libraryList");
+
+    setUniformItemSizes(true);
     setMovement(QListView::Static);
+    setContextMenuPolicy(Qt::CustomContextMenu);
     setTextElideMode(Qt::TextElideMode::ElideRight);
     setWordWrap(true);
 }
@@ -34,6 +35,12 @@ QModelIndex XLibraryListWidget::itemIndex(int index) {
 }
 int XLibraryListWidget::count() {
     return this->model()->rowCount();
+}
+
+void XLibraryListWidget::updateGeometries()
+{
+    QListView::updateGeometries();
+    verticalScrollBar()->setSingleStep(5);
 }
 
 void XLibraryListWidget::keyPressEvent(QKeyEvent *event) {

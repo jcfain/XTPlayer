@@ -4,6 +4,7 @@
 #include <QListView>
 #include <QKeyEvent>
 #include <QModelIndex>
+#include <QScrollbar>
 #include "lib/struct/LibraryListItem27.h"
 #include "lib/struct/playlistviewmodel.h"
 #include "lib/struct/librarysortfilterproxymodel.h"
@@ -23,6 +24,7 @@ public:
     LibraryListItem27 item(QModelIndex index);
     LibraryListItem27 item(int index);
     QModelIndex itemIndex(int index);
+    void updateGeometries() override;
 protected:
     void keyPressEvent(QKeyEvent*) override;
     void keyReleaseEvent(QKeyEvent*) override;
