@@ -223,6 +223,8 @@ void SettingsDialog::setupUi()
         {
             ui.networkOutputRdo->setChecked(true);
         }
+        ui.useWebSocketsCheckbox->setChecked(SettingsHandler::getSelectedNetworkDevice() == NetworkDeviceType::WEBSOCKET);
+
         enableOrDisableDeviceConnectionUI(SettingsHandler::getSelectedOutputDevice());
         bool deoEnabled = SettingsHandler::getSelectedInputDevice() == DeviceName::Deo;
         bool whiriligigEnabled = SettingsHandler::getSelectedInputDevice() == DeviceName::Whirligig;
@@ -939,13 +941,13 @@ void SettingsDialog::setDeviceStatusStyle(ConnectionStatus status, DeviceName de
 void SettingsDialog::on_serialOutputRdo_clicked()
 {
     enableOrDisableDeviceConnectionUI(DeviceName::Serial);
-    SettingsHandler::setSelectedDevice(DeviceName::Serial);
+    SettingsHandler::setSelectedOutputDevice(DeviceName::Serial);
 }
 
 void SettingsDialog::on_networkOutputRdo_clicked()
 {
     enableOrDisableDeviceConnectionUI(DeviceName::Network);
-    SettingsHandler::setSelectedDevice(DeviceName::Network);
+    SettingsHandler::setSelectedOutputDevice(DeviceName::Network);
 }
 
 void SettingsDialog::enableOrDisableDeviceConnectionUI(DeviceName deviceName)
@@ -958,6 +960,7 @@ void SettingsDialog::enableOrDisableDeviceConnectionUI(DeviceName deviceName)
         ui.serialConnectButton->setEnabled(false);
         ui.networkConnectButton->setEnabled(true);
         ui.serialRefreshBtn->setEnabled(false);
+        ui.useWebSocketsCheckbox->setEnabled(true);
     }
     else if(deviceName == DeviceName::Serial)
     {
@@ -967,6 +970,7 @@ void SettingsDialog::enableOrDisableDeviceConnectionUI(DeviceName deviceName)
         ui.networkConnectButton->setEnabled(false);
         ui.serialConnectButton->setEnabled(true);
         ui.serialRefreshBtn->setEnabled(true);
+        ui.useWebSocketsCheckbox->setEnabled(false);
     }
 }
 void SettingsDialog::on_serialRefreshBtn_clicked()
@@ -1076,6 +1080,14 @@ void SettingsDialog::on_deoAddressTxt_editingFinished()
     if(SettingsHandler::getSelectedInputDevice() == DeviceName::Deo)
         ui.deoConnectButton->setEnabled(true);
     SettingsHandler::setDeoAddress(ui.deoAddressTxt->text());
+}
+
+void SettingsDialog::on_useWebSocketsCheckbox_clicked(bool checked)
+{
+    if(SettingsHandler::getSelectedOutputDevice() == DeviceName::Network)
+        ui.networkConnectButton->setEnabled(true);
+    _connectionHandler->disposeOutputDevice(DeviceName::Network);
+    SettingsHandler::setSelectedNetworkDevice(checked ? NetworkDeviceType::WEBSOCKET : NetworkDeviceType::UDP);
 }
 
 void SettingsDialog::on_deoPortTxt_editingFinished()
@@ -1720,4 +1732,6 @@ void SettingsDialog::on_showVRInLibraryViewCheckbox_clicked(bool checked)
     if(checked)
         DialogHandler::Dialog(this, "Reload media to see changes");
 }
+
+
 

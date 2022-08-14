@@ -220,6 +220,8 @@ private slots:
 
     void on_showVRInLibraryViewCheckbox_clicked(bool checked);
 
+    void on_useWebSocketsCheckbox_clicked(bool checked);
+
 private:
 
     Ui::SettingsDialog ui;
