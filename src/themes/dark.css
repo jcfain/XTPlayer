@@ -45,6 +45,10 @@ QLabel[cssClass="libraryLoadingSpinnerText"] {
 QLabel[cssClass="mediaLoadingSpinner"] {
 	background-color: transparent;
 }
+QLabel[cssClass="linkLabel"] { 
+	color: black; 
+	background-color: white; 
+}
 QProgressBar {
 	color: green;
     margin: 0.5px;

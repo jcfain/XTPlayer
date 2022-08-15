@@ -346,19 +346,12 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
         _connectionHandler->initInputDevice(SettingsHandler::getSelectedInputDevice());
     });
     connect(_settingsActionHandler, &SettingsActionHandler::actionExecuted, this, &MainWindow::mediaAction);
-    //connect(_xSettings, &SettingsDialog::deviceConnectionChange, this, &MainWindow::on_device_connectionChanged);
-    //connect(_xSettings, &SettingsDialog::deviceConnectionChange, _syncHandler, &SyncHandler::on_device_status_change);
-    //connect(_xSettings, &SettingsDialog::deviceError, this, &MainWindow::on_device_error);
-//    connect(_xSettings->getDeoHandler(), &DeoHandler::messageRecieved, this, &MainWindow::onVRMessageRecieved);
-//    connect(_xSettings->getWhirligigHandler(), &WhirligigHandler::messageRecieved, this, &MainWindow::onVRMessageRecieved);
-//    connect(_xSettings->getXTPWebHandler(), &XTPWebHandler::messageRecieved, this, &MainWindow::onVRMessageRecieved);
-    //connect(_xSettings, &SettingsDialog::gamepadConnectionChange, this, &MainWindow::on_gamepad_connectionChanged);
-//    connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitTCode, this, &MainWindow::on_gamepad_sendTCode);
-//    connect(_xSettings->getGamepadHandler(), &GamepadHandler::emitAction, this, &MainWindow::on_gamepad_sendAction);
+
     connect(_xSettings, &SettingsDialog::TCodeHomeClicked, this, &MainWindow::deviceHome);
     connect(_xSettings, &SettingsDialog::onOpenWelcomeDialog, this, &MainWindow::openWelcomeDialog);
     connect(_xSettings, &SettingsDialog::skipToMoneyShot, this, &MainWindow::skipToMoneyShot);
     connect(_xSettings, &SettingsDialog::skipToNextAction, this, &MainWindow::skipToNextAction);
+    connect(_xSettings, &SettingsDialog::updateLibrary, _mediaLibraryHandler, &MediaLibraryHandler::libraryChange);
 
     _xSettings->init(videoHandler, _syncHandler, tcodeHandler, _connectionHandler);
     _connectionHandler->init();

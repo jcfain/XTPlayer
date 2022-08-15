@@ -42,6 +42,12 @@
      <property name="enabled">
       <bool>true</bool>
      </property>
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="currentIndex">
       <number>0</number>
      </property>
@@ -752,39 +758,85 @@ THIS VALUE WILL BR RESET ON SCRIPT CHANGE!</string>
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>50</y>
+         <y>40</y>
          <width>781</width>
-         <height>271</height>
+         <height>281</height>
         </rect>
        </property>
        <property name="title">
         <string>XTP web options</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_6">
-        <item row="3" column="4">
-         <widget class="QLabel" name="label_8">
+        <item row="3" column="0">
+         <widget class="QLabel" name="chunkSizeLabel">
           <property name="text">
-           <string>Web socket port</string>
+           <string>Chunk size</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
-        <item row="3" column="5">
-         <widget class="QSpinBox" name="webSocketPortSpinBox">
-          <property name="toolTip">
-           <string>0 = auto</string>
+        <item row="3" column="4">
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Web server port</string>
           </property>
-          <property name="maximum">
-           <number>65535</number>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
-        <item row="2" column="1" colspan="4">
-         <widget class="QLineEdit" name="vrLibraryLineEdit">
+        <item row="2" column="7">
+         <widget class="QPushButton" name="browseVRLibraryButton">
+          <property name="text">
+           <string>Browse</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1" colspan="6">
+         <widget class="QLineEdit" name="httpRootLineEdit">
           <property name="enabled">
            <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="7">
+         <widget class="QPushButton" name="browseHttpRootButton">
+          <property name="text">
+           <string>Browse</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="3">
+         <widget class="QSpinBox" name="httpThumbQualitySpinBox">
+          <property name="toolTip">
+           <string>Sets the quality of the thumb nail compression sent to the browser.\nEnter 0 for lowest and 100 for highest. -1 disables compression and sends the image file directly.\nCan be used to improve performance on lower end devices.</string>
+          </property>
+          <property name="minimum">
+           <number>-1</number>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+          <property name="singleStep">
+           <number>5</number>
+          </property>
+          <property name="value">
+           <number>-1</number>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2">
+         <widget class="QLabel" name="label_9">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="text">
+           <string>Thumb quality</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
@@ -808,50 +860,6 @@ THIS VALUE WILL BR RESET ON SCRIPT CHANGE!</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="0">
-         <widget class="QLabel" name="chunkSizeLabel">
-          <property name="text">
-           <string>Chunk size</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="5">
-         <widget class="QPushButton" name="browseVRLibraryButton">
-          <property name="text">
-           <string>Browse</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="2">
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>Web server port</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="3">
-         <widget class="QSpinBox" name="httpPortSpinBox">
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <number>65535</number>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="5">
-         <widget class="QPushButton" name="browseHttpRootButton">
-          <property name="text">
-           <string>Browse</string>
-          </property>
-         </widget>
-        </item>
         <item row="3" column="1">
          <widget class="QDoubleSpinBox" name="chunkSizeDoubleSpinBox">
           <property name="toolTip">
@@ -870,42 +878,87 @@ will be hit for the next chunk.</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="1" colspan="4">
-         <widget class="QLineEdit" name="httpRootLineEdit">
+        <item row="2" column="1" colspan="6">
+         <widget class="QLineEdit" name="vrLibraryLineEdit">
           <property name="enabled">
            <bool>true</bool>
           </property>
          </widget>
         </item>
-        <item row="4" column="1">
-         <widget class="QSpinBox" name="httpThumbQualitySpinBox">
+        <item row="3" column="7">
+         <widget class="QSpinBox" name="webSocketPortSpinBox">
           <property name="toolTip">
-           <string>Sets the quality of the thumb nail compression sent to the browser.\nEnter 0 for lowest and 100 for highest. -1 disables compression and sends the image file directly.\nCan be used to improve performance on lower end devices.</string>
-          </property>
-          <property name="minimum">
-           <number>-1</number>
+           <string>0 = auto</string>
           </property>
           <property name="maximum">
-           <number>100</number>
-          </property>
-          <property name="singleStep">
-           <number>5</number>
-          </property>
-          <property name="value">
-           <number>-1</number>
+           <number>65535</number>
           </property>
          </widget>
         </item>
-        <item row="4" column="0">
-         <widget class="QLabel" name="label_9">
-          <property name="toolTip">
-           <string/>
+        <item row="3" column="5">
+         <widget class="QSpinBox" name="httpPortSpinBox">
+          <property name="minimum">
+           <number>1</number>
           </property>
+          <property name="maximum">
+           <number>65535</number>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="6">
+         <widget class="QLabel" name="label_8">
           <property name="text">
-           <string>Thumb quality</string>
+           <string>Web socket port</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="7">
+         <widget class="QLabel" name="webAddressLinkLabel">
+          <property name="text">
+           <string>http://192.168.0.1/</string>
+          </property>
+          <property name="margin">
+           <number>2</number>
+          </property>
+          <property name="openExternalLinks">
+           <bool>true</bool>
+          </property>
+          <property name="textInteractionFlags">
+           <set>Qt::TextBrowserInteraction</set>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="4" colspan="3">
+         <widget class="QLabel" name="webAddressInstructionsLabel">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Enter this address into your devices browser</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="margin">
+           <number>2</number>
+          </property>
+          <property name="openExternalLinks">
+           <bool>true</bool>
+          </property>
+          <property name="textInteractionFlags">
+           <set>Qt::TextBrowserInteraction</set>
           </property>
          </widget>
         </item>

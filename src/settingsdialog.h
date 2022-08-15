@@ -10,6 +10,8 @@
 #include <QCryptographicHash>
 #include <QInputDialog>
 #include <QDesktopServices>
+#include <QClipboard>
+#include <QNetworkInterface>
 #include "CustomControls/rangeslider.h"
 #include "inputmapwidget.h"
 #include "lib/struct/SerialComboboxItem.h"
@@ -69,6 +71,7 @@ signals:
     void messageSend(QString message, XLogLevel loglevel);
     void skipToMoneyShot();
     void skipToNextAction();
+    void updateLibrary();
 
 public slots:
     void on_xtpWeb_initInputDevice(DeviceName deviceName, bool checked);
@@ -222,6 +225,8 @@ private slots:
 
     void on_useWebSocketsCheckbox_clicked(bool checked);
 
+    void on_webAddressCopyButton_clicked();
+
 private:
 
     Ui::SettingsDialog ui;
@@ -231,6 +236,7 @@ private:
     void setupGamepadMap();
     void setUpMultiplierUi(bool enabled);
     void enableOrDisableDeviceConnectionUI(DeviceName deviceName);
+    void updateIPAddress();
     QString encryptPass(QString pass);
     QString decryptPass(QString pass);
 

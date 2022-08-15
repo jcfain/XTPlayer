@@ -300,7 +300,42 @@ void SettingsDialog::setupUi()
 
         ui.showVRInLibraryViewCheckbox->setChecked(SettingsHandler::getShowVRInLibraryView());
 
+
+        ui.webAddressLinkLabel->setProperty("cssClass", "linkLabel");
+        ui.webAddressInstructionsLabel->setProperty("cssClass", "linkLabel");
+
+        updateIPAddress();
         _interfaceInitialized = true;
+    }
+}
+
+void SettingsDialog::updateIPAddress() {
+    if(SettingsHandler::getEnableHttpServer()) {
+        const QHostAddress &localhost = QHostAddress(QHostAddress::LocalHost);
+//        for (const QNetworkInterface &interface: QNetworkInterface::allInterfaces()) {
+//            if(interface.type() == QNetworkInterface::Ethernet) {
+//                for (const QNetworkAddressEntry &networkAddress: interface.addressEntries()) {
+//                    auto address = networkAddress.ip();
+//                    if (address.protocol() == QAbstractSocket::IPv4Protocol && address != localhost)
+//                         ui.webAddressLinkLabel->setText("<a href='"+address.toString() + ":"+SettingsHandler::getHTTPPort()+"'</a>");
+//                }
+//             }
+//        }
+        ui.webAddressLinkLabel->clear();
+        int port = SettingsHandler::getHTTPPort();
+        auto portText = port == 80 ? "" : ":" + QString::number(port);
+        ui.webAddressInstructionsLabel->setText("Choose from the list (click to test or right click and copy link)<br>to enter into your devices browser. You can also test:<br><a href='http://localhost" + portText + "/'><span>http://localhost" + portText + "/</span></a> ONLY on the local machine.");
+        int found = 0;
+        auto allAddresses = QNetworkInterface::allAddresses();
+        for (const QHostAddress &address: allAddresses) {
+            if (address.protocol() == QAbstractSocket::IPv4Protocol && address != localhost) {
+                found++;
+                 ui.webAddressLinkLabel->setText(ui.webAddressLinkLabel->text() + "<br><a href='http://" + address.toString() + portText + "/'><span>http://" + address.toString() + portText + "/</span></a><br>");
+            }
+        }
+        if(found == 0) {
+            ui.webAddressLinkLabel->setText("No addresses found.");
+        }
     }
 }
 
@@ -1527,8 +1562,7 @@ void SettingsDialog::on_close_loading_dialog()
 void SettingsDialog::on_showLoneFunscriptsInLibraryCheckbox_clicked(bool checked)
 {
     SettingsHandler::setHideStandAloneFunscriptsInLibrary(checked);
-    if(checked)
-        DialogHandler::Dialog(this, "Reload media to see changes");
+    emit updateLibrary();
 }
 
 void SettingsDialog::on_skipStandAloneFunscriptsInMainLibraryPlaylist_clicked(bool checked)
@@ -1641,6 +1675,7 @@ void SettingsDialog::on_httpPortSpinBox_editingFinished()
         return;
     }
     SettingsHandler::setHTTPPort(value);
+
     if(SettingsHandler::getEnableHttpServer())
         _requiresRestart = true;
 }
@@ -1729,9 +1764,13 @@ void SettingsDialog::on_openDeoPDFButton_clicked()
 void SettingsDialog::on_showVRInLibraryViewCheckbox_clicked(bool checked)
 {
     SettingsHandler::setShowVRInLibraryView(checked);
-    if(checked)
-        DialogHandler::Dialog(this, "Reload media to see changes");
+    emit updateLibrary();
 }
 
-
+void SettingsDialog::on_webAddressCopyButton_clicked()
+{
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    //QString originalText = clipboard->text();
+    clipboard->setText(ui.webAddressLinkLabel->text());
+}
 
