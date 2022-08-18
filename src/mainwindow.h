@@ -25,6 +25,8 @@
 #include <QInputDialog>
 #include <QSplashScreen>
 #include <QModelIndex>
+
+#include "xtengine.h"
 #include "lib/struct/playlistviewmodel.h"
 #include "lib/struct/librarylistviewmodel.h"
 #include "lib/struct/librarysortfilterproxymodel.h"
@@ -39,27 +41,22 @@
 #include "xlibrarylistwidget.h"
 #include "lib/handler/videohandler.h"
 #include "CustomControls/rangeslider.h"
-#include "lib/handler/settingshandler.h"
-#include "lib/handler/loghandler.h"
-#include "lib/handler/funscripthandler.h"
-#include "lib/handler/tcodehandler.h"
 #include "lib/handler/outputdevicehandler.h"
 #include "lib/handler/inputdevicehandler.h"
-#include "lib/handler/synchandler.h"
-#include "lib/handler/medialibraryhandler.h"
-#include "lib/handler/connectionhandler.h"
 #include "lib/handler/xvideopreviewwidget.h"
-#include "lib/handler/settingsactionhandler.h"
 #include "lib/struct/LibraryListItem27.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/ConnectionChangedSignal.h"
+//#include <QtCompress/qzipwriter.h>
+//#include <QtCompress/qzipreader.h>
+
 #include "lib/lookup/AxisNames.h"
-#include "lib/lookup/MediaActions.h"
 #include "lib/tool/xmath.h"
-#include "lib/tool/tcodefactory.h"
 #include "lib/lookup/enum.h"
-#include <QtCompress/qzipwriter.h>
-#include <QtCompress/qzipreader.h>
+#include "lib/lookup/MediaActions.h"
+#include "lib/handler/loghandler.h"
+#include "lib/handler/settingshandler.h"
+
 
 
 QT_BEGIN_NAMESPACE
@@ -207,11 +204,12 @@ private:
     PasswordResponse _isPasswordIncorrect = PasswordResponse::INCORRECT;
 
     Ui::MainWindow *ui;
+    XTEngine xtEngine;
+
     QMutex mutex;
     QString XTPVersion = "0.32a";
     float XTPVersionNum = 0.32f;
     SettingsDialog* _xSettings;
-    SyncHandler* _syncHandler;
     WelcomeDialog* _welcomeDialog = 0;
     DLNAScriptLinks* _dlnaScriptLinksDialog;
     QFrame* _controlsHomePlaceHolderFrame;
@@ -229,11 +227,6 @@ private:
     bool _waitForStopFutureCancel = false;
     QProgressBar* bar;
     VideoHandler* videoHandler;
-    MediaLibraryHandler* _mediaLibraryHandler;
-    TCodeHandler* tcodeHandler;
-    HttpHandler* _httpHandler = 0;
-    ConnectionHandler* _connectionHandler;
-    SettingsActionHandler* _settingsActionHandler;
     bool _isMaximized = false;
     bool _isFullScreen = false;
     QSize _videoSize;
@@ -298,7 +291,6 @@ private:
     bool _editPlaylistMode = false;
     bool _libraryDockMode = false;
     QString _lastKeyboardTCode;
-    TCodeFactory *_tcodeFactory;
 
     void on_settingsMessageRecieve(QString message, XLogLevel logLevel);
 //    void saveSingleThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);

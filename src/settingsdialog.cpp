@@ -1,4 +1,11 @@
 #include "settingsdialog.h"
+
+#include "lib/struct/channeltablecomboboxdelegate.h"
+#include "lib/tool/simplecrypt.h"
+#include "lib/handler/settingshandler.h"
+#include "lib/handler/serialhandler.h"
+#include "addchanneldialog.h"
+
 //http://192.168.0.145/toggleContinousTwist
 SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
 {
@@ -23,30 +30,13 @@ void SettingsDialog::dispose()
     _connectionHandler->dispose();
 }
 
-void SettingsDialog::init(VideoHandler* videoHandler, SyncHandler* syncHandler, TCodeHandler* tcodeHandler,  ConnectionHandler* connectionHandler)
+void SettingsDialog::init(VideoHandler* videoHandler, ConnectionHandler* connectionHandler)
 {
     _videoHandler = videoHandler;
-    _syncHandler = syncHandler;
     _connectionHandler = connectionHandler;
-    _tcodeHandler = tcodeHandler;
-    connect(_connectionHandler, &ConnectionHandler::outputConnectionChange, this, &SettingsDialog::on_output_device_connectionChanged);
-    connect(_connectionHandler, &ConnectionHandler::inputConnectionChange, this, &SettingsDialog::on_input_device_connectionChanged);
-    connect(_connectionHandler, &ConnectionHandler::gamepadConnectionChange, this, &SettingsDialog::on_gamepad_connectionChanged);
-    connect(_syncHandler, &SyncHandler::channelPositionChange, this, &SettingsDialog::setAxisProgressBar, Qt::QueuedConnection);
-    connect(_syncHandler, &SyncHandler::funscriptEnded, this, &SettingsDialog::resetAxisProgressBars, Qt::QueuedConnection);
-
 
     ui.useWebSocketsCheckbox->setHidden(true);//Fast sends buffer in QWebSocket and sends late
     setupUi();
-//    if(SettingsHandler::getSelectedOutputDevice() == DeviceName::Serial)
-//    {
-//        initSerialEvent();
-//    }
-//    else if (SettingsHandler::getSelectedOutputDevice() == DeviceName::Network)
-//    {
-//        initNetworkEvent();
-//    }
-//    initInputDevice();
 }
 
 void SettingsDialog::initInputDevice()
@@ -636,7 +626,7 @@ void SettingsDialog::setUpTCodeAxis()
                        {
                          SettingsHandler::setMultiplierChecked(channelName, checked);
                          if(!checked)
-                            _connectionHandler->sendTCode(_tcodeHandler->getChannelHome(channelName));
+                             emit TCodeHomeClicked();
                        });
              QCheckBox* damperCheckbox = new QCheckBox(this);
              damperCheckbox->setText("Speed");

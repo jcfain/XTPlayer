@@ -16,25 +16,9 @@
 #include "inputmapwidget.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/channeltableviewmodel.h"
-#include "lib/struct/channeltablecomboboxdelegate.h"
-#include "lib/struct/DecoderModel.h"
-#include "lib/lookup/MediaActions.h"
-#include "lib/lookup/xvideorenderer.h"
-#include "lib/tool/simplecrypt.h"
-#include "lib/handler/settingshandler.h"
-#include "lib/handler/serialhandler.h"
 #include "lib/handler/videohandler.h"
-#include "lib/handler/udphandler.h"
-#include "lib/handler/deohandler.h"
-#include "lib/handler/whirligighandler.h"
-#include "lib/handler/xtpwebhandler.h"
-#include "lib/handler/gamepadhandler.h"
-#include "lib/handler/funscripthandler.h"
-#include "lib/handler/httphandler.h"
-#include "lib/handler/synchandler.h"
 #include "lib/handler/connectionhandler.h"
 #include "libraryexclusions.h"
-#include "addchanneldialog.h"
 
 
 class SettingsDialog : public QDialog
@@ -44,7 +28,7 @@ public:
     SettingsDialog(QWidget* parent = nullptr);
     ~SettingsDialog();
 
-    void init(VideoHandler* videoHandler, SyncHandler* syncHandler, TCodeHandler* tcodeHandler, ConnectionHandler* connectionHandler);
+    void init(VideoHandler* videoHandler, ConnectionHandler* connectionHandler);
     void initLive();
     void dispose();
     void setAxisProgressBar(QString axis, int value);
@@ -76,6 +60,9 @@ signals:
 public slots:
     void on_xtpWeb_initInputDevice(DeviceName deviceName, bool checked);
     void on_xtpWeb_initOutputDevice(DeviceName deviceName, bool checked);
+    void on_gamepad_connectionChanged(ConnectionChangedSignal event);
+    void on_input_device_connectionChanged(ConnectionChangedSignal event);
+    void on_output_device_connectionChanged(ConnectionChangedSignal event);
 
 private slots:
     void on_serialOutputRdo_clicked();
@@ -214,11 +201,6 @@ private slots:
     void on_webSocketPortSpinBox_editingFinished();
 
     void on_httpThumbQualitySpinBox_editingFinished();
-
-    void on_gamepad_connectionChanged(ConnectionChangedSignal event);
-    void on_input_device_connectionChanged(ConnectionChangedSignal event);
-    void on_output_device_connectionChanged(ConnectionChangedSignal event);
-
     void on_openDeoPDFButton_clicked();
 
     void on_showVRInLibraryViewCheckbox_clicked(bool checked);
@@ -247,9 +229,7 @@ private:
     QList<SerialComboboxItem> serialPorts;
     SerialComboboxItem selectedSerialPort;
     VideoHandler* _videoHandler;
-    SyncHandler* _syncHandler;
     ConnectionHandler* _connectionHandler;
-    TCodeHandler* _tcodeHandler;
     InputMapWidget* _inputMapWidget;
 
     ChannelTableViewModel* channelTableViewModel;
