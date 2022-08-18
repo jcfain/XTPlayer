@@ -145,16 +145,6 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="3" colspan="6">
-          <widget class="QLineEdit" name="networkAddressTxt">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>25</height>
-            </size>
-           </property>
-          </widget>
-         </item>
          <item row="5" column="3" colspan="2">
           <widget class="QLabel" name="gamepadStatusLbl">
            <property name="text">
@@ -304,13 +294,6 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="9">
-          <widget class="QCheckBox" name="useWebSocketsCheckbox">
-           <property name="text">
-            <string>Use WebSocket</string>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="10">
           <widget class="QLineEdit" name="networkPortTxt">
            <property name="minimumSize">
@@ -376,6 +359,29 @@
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="12">
+          <widget class="QCheckBox" name="useWebSocketsCheckbox">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="text">
+            <string>Use WebSocket</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3" colspan="7">
+          <widget class="QLineEdit" name="networkAddressTxt">
+           <property name="enabled">
+            <bool>true</bool>
            </property>
            <property name="minimumSize">
             <size>

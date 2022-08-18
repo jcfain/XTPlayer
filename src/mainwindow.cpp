@@ -400,6 +400,13 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(videoHandler, &VideoHandler::singleClicked, this, &MainWindow::media_single_click_event);
     connect(videoHandler, &VideoHandler::keyPressed, this, &MainWindow::on_key_press);
     connect(videoHandler, &VideoHandler::keyReleased, this, &MainWindow::on_key_press);
+    connect(videoHandler, &VideoHandler::togglePaused, this, [this](bool paused) {
+        if(paused)
+            _connectionHandler->stopOutputDevice();
+    });
+    connect(videoHandler, &VideoHandler::stopped, this, [this]() {
+        _connectionHandler->stopOutputDevice();
+    });
 
     connect(_playerControlsFrame, &PlayerControls::seekSliderMoved, this, &MainWindow::on_seekSlider_sliderMoved);
     connect(_playerControlsFrame, &PlayerControls::seekSliderHover, this, &MainWindow::on_seekslider_hover );

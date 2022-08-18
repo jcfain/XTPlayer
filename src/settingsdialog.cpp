@@ -35,6 +35,8 @@ void SettingsDialog::init(VideoHandler* videoHandler, SyncHandler* syncHandler, 
     connect(_syncHandler, &SyncHandler::channelPositionChange, this, &SettingsDialog::setAxisProgressBar, Qt::QueuedConnection);
     connect(_syncHandler, &SyncHandler::funscriptEnded, this, &SettingsDialog::resetAxisProgressBars, Qt::QueuedConnection);
 
+
+    ui.useWebSocketsCheckbox->setHidden(true);//Fast sends buffer in QWebSocket and sends late
     setupUi();
 //    if(SettingsHandler::getSelectedOutputDevice() == DeviceName::Serial)
 //    {
