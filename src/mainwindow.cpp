@@ -644,7 +644,7 @@ void MainWindow::mediaAction(QString action, QString actionText)
     {
         skipToNextAction();
     }
-    else if (action == actions.IncreaseOffset || action == actions.DecreaseOffset)
+    else if (action == actions.IncreaseOffset || action == actions.DecreaseOffset)//TODO: move to XTEngine
     {
         bool increase = action == actions.IncreaseOffset;
         QString verb = increase ? "Increase" : "Decrease";
@@ -656,6 +656,7 @@ void MainWindow::mediaAction(QString action, QString actionText)
                auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(path);
                int newOffset = increase ? libraryListItemMetaData.offset + SettingsHandler::getFunscriptOffsetStep() : libraryListItemMetaData.offset - SettingsHandler::getFunscriptOffsetStep();
                libraryListItemMetaData.offset = newOffset;
+               SettingsHandler::setLiveOffset(newOffset);
                SettingsHandler::updateLibraryListItemMetaData(libraryListItemMetaData);
                onText_to_speech(verb + " offset to " + QString::number(newOffset));
            }
