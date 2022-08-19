@@ -132,7 +132,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     _playerControlsFrame->setVolume(SettingsHandler::getPlayerVolume());
 
-    libraryList = new XLibraryListWidget(this);
+    libraryList = new XLibraryList(this);
 
     _playListViewModel = new PlaylistViewModel(xtEngine.mediaLibraryHandler(), this);
 
@@ -429,11 +429,11 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     //    connect(this, &MainWindow::scriptNotFound, this, &MainWindow::on_scriptNotFound);
     //connect(videoHandler, &VideoHandler::mouseEnter, this, &MainWindow::on_video_mouse_enter);
 
-    connect(libraryList, &XLibraryListWidget::customContextMenuRequested, this, &MainWindow::onLibraryList_ContextMenuRequested);
-    connect(libraryList, &XLibraryListWidget::doubleClicked, this, &MainWindow::on_LibraryList_itemDoubleClicked);
-    connect(libraryList, &XLibraryListWidget::clicked, this, &MainWindow::on_LibraryList_itemClicked);
-    connect(libraryList, &XLibraryListWidget::keyPressed, this, &MainWindow::on_key_press);
-    connect(libraryList, &XLibraryListWidget::keyReleased, this, &MainWindow::on_key_press);
+    connect(libraryList, &XLibraryList::customContextMenuRequested, this, &MainWindow::onLibraryList_ContextMenuRequested);
+    connect(libraryList, &XLibraryList::doubleClicked, this, &MainWindow::on_LibraryList_itemDoubleClicked);
+    connect(libraryList, &XLibraryList::clicked, this, &MainWindow::on_LibraryList_itemClicked);
+    connect(libraryList, &XLibraryList::keyPressed, this, &MainWindow::on_key_press);
+    connect(libraryList, &XLibraryList::keyReleased, this, &MainWindow::on_key_press);
 
     connect(QApplication::instance(), &QCoreApplication::aboutToQuit, this, &MainWindow::dispose);
 

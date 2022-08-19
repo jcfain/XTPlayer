@@ -30,9 +30,13 @@ void DialogHandler::MessageBox(QWidget* parent, QString message, XLogLevel level
 
 int DialogHandler::Dialog(QWidget* parent, QLayout* layout, bool modal)
 {
-    if(!_dialog)
-    {
+    if(!_dialog) {
         _dialog = new QDialog(parent);
+        connect(_dialog, &QDialog::destroyed, [](){
+            qDebug("Dialog is gone.");
+            _dialog = 0;
+        });
+        _dialog->setAttribute(Qt::WA_DeleteOnClose);
         _dialog->setLayout(layout);
         if(modal)
             return _dialog->exec();
@@ -44,9 +48,13 @@ int DialogHandler::Dialog(QWidget* parent, QLayout* layout, bool modal)
 
 int DialogHandler::Dialog(QWidget* parent, QString message, bool modal, bool showAccept)
 {
-    if(!_dialog)
-    {
+    if(!_dialog) {
         _dialog = new QDialog(parent);
+        connect(_dialog, &QDialog::destroyed, [](){
+            qDebug("Dialog accept is gone.");
+            _dialog = 0;
+        });
+        _dialog->setAttribute(Qt::WA_DeleteOnClose);
         QGridLayout* layout = new QGridLayout(_dialog);
         QLabel* messageLabel = new QLabel(_dialog);
         messageLabel->setText(message);
@@ -72,18 +80,17 @@ int DialogHandler::Dialog(QWidget* parent, QString message, bool modal, bool sho
     return -1;
 }
 bool DialogHandler::IsDialogOpen() {
-  return _dialog && _dialog->isVisible();
+  return (_dialog && _dialog->isVisible());
 }
 void DialogHandler::DialogClose()
 {
     if(_dialog) {
-        if(_dialog != nullptr) {
-            disconnect(_dialog, &QDialog::rejected, nullptr, nullptr);
-            disconnect(_dialog, &QDialog::accepted, nullptr, nullptr);
+//        if(_dialog != nullptr) {
+//            disconnect(_dialog, nullptr, nullptr, nullptr);
             _dialog->close();
-            delete _dialog;
-        }
-        _dialog = 0;
+//            delete _dialog;
+//        }
+//        _dialog = 0;
     }
 }
 void DialogHandler::DialogAccepted()

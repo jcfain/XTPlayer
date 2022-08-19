@@ -41,7 +41,7 @@ SOURCES += \
     playercontrols.cpp \
     settingsdialog.cpp \
     welcomedialog.cpp \
-    xlibrarylistwidget.cpp
+    xlibrarylist.cpp
 
 HEADERS += \
     CustomControls/rangeslider.h \
@@ -67,7 +67,7 @@ HEADERS += \
     playercontrols.h \
     settingsdialog.h \
     welcomedialog.h \
-    xlibrarylistwidget.h
+    xlibrarylist.h
 
 FORMS += \
     dlnascriptlinks.ui \

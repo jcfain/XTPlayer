@@ -1,5 +1,5 @@
-#include "xlibrarylistwidget.h"
-XLibraryListWidget::XLibraryListWidget(QWidget* parent) : QListView(parent)
+#include "xlibrarylist.h"
+XLibraryList::XLibraryList(QWidget* parent) : QListView(parent)
 {
     setProperty("id", "libraryList");
 
@@ -10,53 +10,53 @@ XLibraryListWidget::XLibraryListWidget(QWidget* parent) : QListView(parent)
     setWordWrap(true);
 }
 
-LibraryListItem27 XLibraryListWidget::selectedItem() {
+LibraryListItem27 XLibraryList::selectedItem() {
     QModelIndex selectedItem = selectionModel()->currentIndex();
     return item(selectedItem);
 }
-int XLibraryListWidget::selectedRow() {
+int XLibraryList::selectedRow() {
     return selectionModel()->currentIndex().row();
 }
 
-void XLibraryListWidget::setCurrentRow(int index) {
+void XLibraryList::setCurrentRow(int index) {
     QModelIndex indexOfTheCellIWant = model()->index(index, 0);
     this->selectionModel()->setCurrentIndex(indexOfTheCellIWant, QItemSelectionModel::SelectionFlag::SelectCurrent);
 }
 
-LibraryListItem27 XLibraryListWidget::item(QModelIndex index) {
+LibraryListItem27 XLibraryList::item(QModelIndex index) {
     return index.data(Qt::UserRole).value<LibraryListItem27>();
 }
 
-LibraryListItem27 XLibraryListWidget::item(int index) {
+LibraryListItem27 XLibraryList::item(int index) {
     return model()->index(index, 0).data(Qt::UserRole).value<LibraryListItem27>();
 }
-QModelIndex XLibraryListWidget::itemIndex(int index) {
+QModelIndex XLibraryList::itemIndex(int index) {
     return model()->index(index, 0);
 }
-int XLibraryListWidget::count() {
+int XLibraryList::count() {
     return this->model()->rowCount();
 }
 
-void XLibraryListWidget::updateGeometries()
+void XLibraryList::updateGeometries()
 {
     QListView::updateGeometries();
-    verticalScrollBar()->setSingleStep(5);
+    verticalScrollBar()->setSingleStep(10);
 }
 
-void XLibraryListWidget::keyPressEvent(QKeyEvent *event) {
+void XLibraryList::keyPressEvent(QKeyEvent *event) {
     emit keyPressed(event);
 }
-void XLibraryListWidget::keyReleaseEvent(QKeyEvent *event) {
+void XLibraryList::keyReleaseEvent(QKeyEvent *event) {
     emit keyReleased(event);
 }
 
-LibraryListViewModel* XLibraryListWidget::getModel() {
+LibraryListViewModel* XLibraryList::getModel() {
     auto playlistViewModel = qobject_cast<PlaylistViewModel*>(model());
     if(!playlistViewModel)
         return (LibraryListViewModel*)((LibrarySortFilterProxyModel*)model())->sourceModel();
     return playlistViewModel;
 }
-QSize XLibraryListWidget::sizeHint() const
+QSize XLibraryList::sizeHint() const
 {
     QSize hint = QListView::sizeHint();
     if (model()) {

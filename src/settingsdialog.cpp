@@ -4,6 +4,7 @@
 #include "lib/tool/simplecrypt.h"
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/serialhandler.h"
+#include "lib/handler/funscripthandler.h"
 #include "addchanneldialog.h"
 
 //http://192.168.0.145/toggleContinousTwist
@@ -292,7 +293,6 @@ void SettingsDialog::setupUi()
 
         ui.showVRInLibraryViewCheckbox->setChecked(SettingsHandler::getShowVRInLibraryView());
 
-
         ui.webAddressLinkLabel->setProperty("cssClass", "linkLabel");
         ui.webAddressInstructionsLabel->setProperty("cssClass", "linkLabel");
 
@@ -350,6 +350,10 @@ void SettingsDialog::setupGamepadMap()
     }
     _inputMapWidget = new InputMapWidget(_connectionHandler, this);
     ui.gamePadMapGridLayout->addWidget(_inputMapWidget, 0, 0, 1, 11);
+    QLabel* instructionsLabel = new QLabel(this);
+    instructionsLabel->setText("Click a cell in either Gamepad or Key column for an action to assign an input.");
+    ui.gamePadMapGridLayout->addWidget(instructionsLabel, 1, 0, 1, 6, Qt::AlignLeft);
+    instructionsLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
     QLabel* speedLabel = new QLabel(this);
     speedLabel->setText("Default speed");
     speedLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);

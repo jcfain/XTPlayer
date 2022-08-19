@@ -272,22 +272,26 @@ void InputMapWidget::tableItemClicked(int row, int column)
     if(_COLUMNS::GAMEPAD == column)
     {
         auto gamepadTableCell = _tableWidget->item(row, _COLUMNS::GAMEPAD);
-        auto actionKeyValue = gamepadTableCell->data(Qt::UserRole).value<QPair<QString, QString>>();
-        QString action = actionKeyValue.first;
-        if(action != TCodeChannelLookup::None()) {
-            QString actionName = actionKeyValue.second;
-            listenForGamepadInput(action, actionName);
+        if(gamepadTableCell) {
+            auto actionKeyValue = gamepadTableCell->data(Qt::UserRole).value<QPair<QString, QString>>();
+            QString action = actionKeyValue.first;
+            if(action != TCodeChannelLookup::None()) {
+                QString actionName = actionKeyValue.second;
+                listenForGamepadInput(action, actionName);
+            }
         }
     }
     else if(_COLUMNS::KEY == column)
     {
         //Listen for key input
         auto keyboardTableCell = _tableWidget->item(row, _COLUMNS::KEY);
-        auto actionKeyValue = keyboardTableCell->data(Qt::UserRole).value<QPair<QString, QString>>();
-        QString action = actionKeyValue.first;
-        if(action != TCodeChannelLookup::None()) {
-            QString actionName = actionKeyValue.second;
-            listenForKeyboardInput(action, actionName);
+        if(keyboardTableCell) {
+            auto actionKeyValue = keyboardTableCell->data(Qt::UserRole).value<QPair<QString, QString>>();
+            QString action = actionKeyValue.first;
+            if(action != TCodeChannelLookup::None()) {
+                QString actionName = actionKeyValue.second;
+                listenForKeyboardInput(action, actionName);
+            }
         }
     }
 }

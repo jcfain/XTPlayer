@@ -1,5 +1,5 @@
-#ifndef XLIBRARYLISTWIDGET_H
-#define XLIBRARYLISTWIDGET_H
+#ifndef XLIBRARYLIST_H
+#define XLIBRARYLIST_H
 
 #include <QListView>
 #include <QKeyEvent>
@@ -9,14 +9,14 @@
 #include "lib/struct/playlistviewmodel.h"
 #include "lib/struct/librarysortfilterproxymodel.h"
 
-class XLibraryListWidget : public QListView
+class XLibraryList : public QListView
 {
     Q_OBJECT
 signals:
     void keyPressed(QKeyEvent* event);
     void keyReleased(QKeyEvent* event);
 public:
-    XLibraryListWidget(QWidget* parent = nullptr);
+    XLibraryList(QWidget* parent = nullptr);
     int count();
     LibraryListItem27 selectedItem();
     int selectedRow();
@@ -33,4 +33,4 @@ protected:
     LibraryListViewModel* getModel();
 };
 
-#endif // XLIBRARYLISTWIDGET_H
+#endif // XLIBRARYLIST_H
