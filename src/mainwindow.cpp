@@ -8,8 +8,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 {
     QCoreApplication::setOrganizationName("cUrbSide prOd");
     QCoreApplication::setApplicationName("XTPlayer");
-    XTPVersion = QString("0.334a_%1T%2").arg(__DATE__).arg(__TIME__);
-    XTPVersionNum = 0.334f;
+    XTPVersion = QString("0.338b_%1T%2").arg(__DATE__).arg(__TIME__);
+    XTPVersionNum = 0.338f;
     const QString fullVersion = "XTP: v"+ XTPVersion + "\nXTE: v" + SettingsHandler::XTEVersion;
 
     QPixmap pixmap("://images/XTP_Splash.png");
@@ -296,7 +296,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     if (splitterSizes.count() > 0)
         ui->mainFrameSplitter->setSizes(splitterSizes);
 
-    if(!SettingsHandler::getEnableHttpServer()) {
+    if(SettingsHandler::getEnableHttpServer()) {
         connect(xtEngine.httpHandler(), &HttpHandler::error, this, [this](QString error) {
             DialogHandler::MessageBox(this, error, XLogLevel::Critical);
         });
@@ -435,6 +435,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(libraryList, &XLibraryList::keyPressed, this, &MainWindow::on_key_press);
     connect(libraryList, &XLibraryList::keyReleased, this, &MainWindow::on_key_press);
 
+
     connect(QApplication::instance(), &QCoreApplication::aboutToQuit, this, &MainWindow::dispose);
 
     loadingSplash->showMessage(fullVersion + "\nSetting user styles...", Qt::AlignBottom, Qt::white);
@@ -447,7 +448,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     changeLibraryDisplayMode(SettingsHandler::getLibraryView());
     loadingSplash->showMessage(fullVersion + "\nLoading Library...", Qt::AlignBottom, Qt::white);
-    xtEngine.mediaLibraryHandler()->loadLibraryAsync();
+    xtEngine.init();
 
 //    QScreen *screen = this->screen();
 //    QSize screenSize = screen->size();
@@ -2627,9 +2628,10 @@ void MainWindow::media_single_click_event(QMouseEvent * event)
 
 void MainWindow::on_output_device_connectionChanged(ConnectionChangedSignal event)
 {
-    if(event.type == DeviceType::Output)
+    auto selectedOutputDevice = xtEngine.connectionHandler()->getSelectedOutputDevice();
+    if(event.type == DeviceType::Output && (!selectedOutputDevice || selectedOutputDevice->name() == event.deviceName))
     {
-        xtEngine.syncHandler()->on_output_device_change(xtEngine.connectionHandler()->getSelectedOutputDevice());
+        xtEngine.syncHandler()->on_output_device_change(selectedOutputDevice);
         deviceConnected = event.status == ConnectionStatus::Connected;
         if(deviceConnected)
         {
@@ -2690,9 +2692,10 @@ void MainWindow::on_gamepad_connectionChanged(ConnectionChangedSignal event)
 
 void MainWindow::on_input_device_connectionChanged(ConnectionChangedSignal event)
 {
-    if(event.type == DeviceType::Input)
+    auto selectedInputDevice = xtEngine.connectionHandler()->getSelectedInputDevice();
+    if(event.type == DeviceType::Input && (!selectedInputDevice || selectedInputDevice->name() == event.deviceName))
     {
-        xtEngine.syncHandler()->on_input_device_change(xtEngine.connectionHandler()->getSelectedInputDevice());
+        xtEngine.syncHandler()->on_input_device_change(selectedInputDevice);
         QString message = "";
         if(event.deviceName == DeviceName::None) {
             ui->actionChange_current_deo_script->setEnabled(false);

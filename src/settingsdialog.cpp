@@ -26,6 +26,14 @@ void SettingsDialog::on_settingsChange(bool dirty)
     closeBtn->setEnabled(dirty);
     saveBtn->setEnabled(dirty);
 }
+
+void SettingsDialog::set_requires_restart(bool enabled) {
+    _requiresRestart = enabled;
+    if(_requiresRestart) {
+        ui.restartRequiredLabel->show();
+    }
+}
+
 void SettingsDialog::dispose()
 {
     _connectionHandler->dispose();
@@ -87,7 +95,7 @@ void SettingsDialog::reject()
 {
     if(_requiresRestart)
     {
-        _requiresRestart = false;
+        set_requires_restart(false);
         askRestart(this, "Some changes made requires a restart.\nWould you like to restart now?");
     }
     QDialog::reject();
@@ -122,8 +130,8 @@ void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
     }
     if(_requiresRestart && (ui.buttonBox->buttonRole(button) == QDialogButtonBox::AcceptRole || ui.buttonBox->buttonRole(button) == QDialogButtonBox::ApplyRole))
     {
-        _requiresRestart = false;
-        askRestart(this, "Some changes made requires a restart.\nWould you like to restart now?");
+        set_requires_restart(false);
+        askRestart(this->parentWidget(), "Some changes made requires a restart.\nWould you like to restart now?");
     }
     if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::ApplyRole)
     {
@@ -150,6 +158,8 @@ void SettingsDialog::setupUi()
     }
     if (!_interfaceInitialized)
     {
+        ui.restartRequiredLabel->hide();
+        ui.restartRequiredLabel->setStyleSheet("* { color : red; }");
         saveAllBtn = ui.buttonBox->button(QDialogButtonBox::SaveAll);
         saveAllBtn->setAutoDefault(false);
         saveAllBtn->setDefault(false);
@@ -328,6 +338,13 @@ void SettingsDialog::updateIPAddress() {
         if(found == 0) {
             ui.webAddressLinkLabel->setText("No addresses found.");
         }
+        ui.webAddressLinkLabel->show();
+        ui.webAddressLinkLabel->show();
+        ui.webAddressInstructionsLabel->show();
+    } else {
+        ui.webAddressLinkLabel->hide();
+        ui.webAddressLinkLabel->hide();
+         ui.webAddressInstructionsLabel->hide();
     }
 }
 
@@ -863,8 +880,8 @@ void SettingsDialog::on_xtpWeb_initInputDevice(DeviceName deviceName, bool check
         on_whirligigCheckBox_clicked(false);
         ui.deoCheckbox->setChecked(false);
         on_deoCheckbox_clicked(false);
+        _connectionHandler->initInputDevice(deviceName);
     }
-    //_connectionHandler->initInputDevice(deviceName);
 }
 
 void SettingsDialog::on_xtpWeb_initOutputDevice(DeviceName deviceName, bool checked)
@@ -883,8 +900,8 @@ void SettingsDialog::on_xtpWeb_initOutputDevice(DeviceName deviceName, bool chec
     } else if(deviceName == DeviceName::None) {
         ui.serialOutputRdo->setChecked(false);
         ui.networkOutputRdo->setChecked(false);
+        _connectionHandler->initOutputDevice(deviceName);
     }
-    _connectionHandler->initOutputDevice(deviceName);
 }
 
 void SettingsDialog::loadSerialPorts()
@@ -1598,9 +1615,9 @@ void SettingsDialog::on_enableHttpServerCheckbox_clicked(bool checked)
 {
     SettingsHandler::setEnableHttpServer(checked);
     ui.httpServerOptions->setVisible(checked);
-    _requiresRestart = !checked;
+    set_requires_restart(true);
     if(!checked && SettingsHandler::getSelectedInputDevice() == DeviceName::XTPWeb)
-        SettingsHandler::setSelectedInputDevice(DeviceName::None);
+        on_xtpWeb_initInputDevice(DeviceName::None, false);
 }
 
 void SettingsDialog::on_browseHttpRootButton_clicked()
@@ -1611,7 +1628,7 @@ void SettingsDialog::on_browseHttpRootButton_clicked()
         SettingsHandler::setHttpServerRoot(selectedDirectory);
         ui.httpRootLineEdit->setText(selectedDirectory);
         if(SettingsHandler::getEnableHttpServer())
-            _requiresRestart = true;
+            set_requires_restart(true);
     }
 }
 
@@ -1643,7 +1660,7 @@ void SettingsDialog::on_httpRootLineEdit_textEdited(const QString &selectedDirec
 {
     SettingsHandler::setHttpServerRoot(selectedDirectory);
     if(SettingsHandler::getEnableHttpServer())
-        _requiresRestart = true;
+        set_requires_restart(true);
 }
 
 void SettingsDialog::on_vrLibraryLineEdit_textEdited(const QString &selectedDirectory)
@@ -1673,7 +1690,7 @@ void SettingsDialog::on_httpPortSpinBox_editingFinished()
     SettingsHandler::setHTTPPort(value);
 
     if(SettingsHandler::getEnableHttpServer())
-        _requiresRestart = true;
+        set_requires_restart(true);
 }
 
 void SettingsDialog::on_webSocketPortSpinBox_editingFinished()
@@ -1686,7 +1703,7 @@ void SettingsDialog::on_webSocketPortSpinBox_editingFinished()
     }
     SettingsHandler::setWebSocketPort(value);
     if(SettingsHandler::getEnableHttpServer())
-        _requiresRestart = true;
+        set_requires_restart(true);
 }
 
 void SettingsDialog::on_httpThumbQualitySpinBox_editingFinished()

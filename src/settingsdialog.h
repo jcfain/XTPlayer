@@ -1,7 +1,7 @@
 #ifndef SETTINGSDIALOG_H
 #define SETTINGSDIALOG_H
 
-#include<ui_settings.h>
+#include <ui_settings.h>
 #include <QDialog>
 #include <QtConcurrent/QtConcurrent>
 #include <QFuture>
@@ -208,6 +208,7 @@ private slots:
     void on_useWebSocketsCheckbox_clicked(bool checked);
 
     void on_webAddressCopyButton_clicked();
+    void set_requires_restart(bool enabled);
 
 private:
 
