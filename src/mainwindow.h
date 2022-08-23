@@ -305,12 +305,10 @@ private:
 //    LibraryListItem27 createLibraryListItem27FromFunscript(QString funscript);
     bool isLibraryLoading();
     QString selectedPlaylistName;
-    int playingLibraryListIndex;
+    //int playingLibraryListIndex;
     LibraryListItem27 playingLibraryListItem;
-    int selectedLibraryListIndex;
-    LibraryListItem27 selectedLibraryListItem;
-
-    LibraryListItem27 getSelectedLibraryListItem();
+    //int selectedLibraryListIndex;
+    //LibraryListItem27 selectedLibraryListItem;
     void onLibraryNotFound();
 //    void on_load_library(QString path, bool vrMode);
     void openWelcomeDialog();

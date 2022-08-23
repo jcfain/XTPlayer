@@ -1,8 +1,7 @@
 #include "libraryItemSettingsDialog.h"
 
-LibraryItemSettingsDialog::LibraryItemSettingsDialog(QString key, QWidget *parent) : QDialog(parent)
+LibraryItemSettingsDialog::LibraryItemSettingsDialog(QWidget *parent) : QDialog(parent)
 {
-    _libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(key);
     offsetLabel = new QLabel(this);
     offsetLabel->setText("Offset");
     offsetSpinBox = new QSpinBox(this);
@@ -35,7 +34,8 @@ LibraryItemSettingsDialog::LibraryItemSettingsDialog(QString key, QWidget *paren
 
 void LibraryItemSettingsDialog::getSettings(QWidget *parent, QString key, bool *ok)
 {
-    LibraryItemSettingsDialog *dialog = new LibraryItemSettingsDialog(key, parent);
+    _libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(key);
+    LibraryItemSettingsDialog *dialog = new LibraryItemSettingsDialog(parent);
     showDialog(dialog, ok);
 }
 

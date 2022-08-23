@@ -645,17 +645,25 @@ void MainWindow::mediaAction(QString action, QString actionText)
     {
         skipToNextAction();
     }
-    else if (action == actions.IncreaseOffset || action == actions.DecreaseOffset)//TODO: move to XTEngine
+    else if (action == actions.IncreaseOffset || action == actions.DecreaseOffset || action == actions.ResetOffset)//TODO: move to XTEngine
     {
         bool increase = action == actions.IncreaseOffset;
         QString verb = increase ? "Increase" : "Decrease";
+        bool reset = false;
+        if(action == actions.ResetOffset) {
+            reset = true;
+            verb = "reset";
+        }
         if (xtEngine.syncHandler()->isPlaying())
         {
            QString path = playingLibraryListItem.path;
            if(!path.isEmpty())
            {
                auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(path);
-               int newOffset = increase ? libraryListItemMetaData.offset + SettingsHandler::getFunscriptOffsetStep() : libraryListItemMetaData.offset - SettingsHandler::getFunscriptOffsetStep();
+               int newOffset = 0;
+               if(!reset) {
+                    newOffset = increase ? libraryListItemMetaData.offset + SettingsHandler::getFunscriptOffsetStep() : libraryListItemMetaData.offset - SettingsHandler::getFunscriptOffsetStep();
+               }
                libraryListItemMetaData.offset = newOffset;
                SettingsHandler::setLiveOffset(newOffset);
                SettingsHandler::updateLibraryListItemMetaData(libraryListItemMetaData);
@@ -1846,7 +1854,7 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
             }
             else if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
                 videoHandler->play();
-            playingLibraryListIndex = libraryList->selectedRow();
+            //playingLibraryListIndex = libraryList->selectedRow();
             playingLibraryListItem = selectedFileListItem;
 
             processMetaData(selectedFileListItem);
@@ -2426,7 +2434,15 @@ void MainWindow::onFunscriptSearchResult(QString mediaPath, QString funscriptPat
         if(!funscriptPath.isEmpty())
         {
             LogHandler::Debug("Starting sync: "+funscriptPath);
-            processVRMetaData(mediaPath, funscriptPath, mediaDuration);
+            auto fileName = QUrl(mediaPath).fileName();
+            auto itemRef = xtEngine.mediaLibraryHandler()->findItemByName(QUrl(mediaPath).fileName());
+            if(!itemRef) {
+                LogHandler::Error("NO vr item found in media library");
+                processVRMetaData(mediaPath, funscriptPath, mediaDuration);
+            } else {
+                playingLibraryListItem = LibraryListItem27(itemRef);
+                processMetaData(playingLibraryListItem);
+            }
             xtEngine.syncHandler()->syncInputDeviceFunscript(funscriptPath);
             if(saveLinkedScript)
             {
@@ -2463,6 +2479,7 @@ void MainWindow::processVRMetaData(QString videoPath, QString funscriptPath, qin
     xtEngine.mediaLibraryHandler()->setLiveProperties(item);
     //playingLibraryListItem = new LibraryListWidgetItem(item);
     processMetaData(item);
+    playingLibraryListItem = item;
 }
 
 void MainWindow::on_sendTCode(QString value)
@@ -3141,7 +3158,7 @@ QString MainWindow::getPlaylistName(bool newPlaylist)
 
     if(newPlaylist && ok)
     {
-        auto item = xtEngine.mediaLibraryHandler()->findItemByName(playlistName);
+        auto item = xtEngine.mediaLibraryHandler()->findItemByNameNoExtension(playlistName);
         if(!item)
         {
             SettingsHandler::addNewPlaylist(playlistName);
@@ -3339,12 +3356,6 @@ void MainWindow::deleteSelectedPlaylist()
     SettingsHandler::deletePlaylist(selectedFileListItem.nameNoExtension);
 
     xtEngine.mediaLibraryHandler()->removeFromCache(selectedFileListItem);
-}
-
-
-LibraryListItem27 MainWindow::getSelectedLibraryListItem()
-{
-    return libraryList->selectedItem();
 }
 
 void MainWindow::showInGraphicalShell(QString path)

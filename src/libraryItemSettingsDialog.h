@@ -14,7 +14,7 @@ class LibraryItemSettingsDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit LibraryItemSettingsDialog(QString key, QWidget *parent = nullptr);
+    explicit LibraryItemSettingsDialog(QWidget *parent = nullptr);
     static void getSettings(QWidget *parent, QString key,  bool *ok = nullptr);
 
 private:
