@@ -114,18 +114,25 @@ QMenu::item:disabled{
 	background-color: #33363c;
 	color: grey;
 } 
-
-QScrollBar:vertical,
-QScrollBar:horizontal {
+QScrollBar:vertical {
     background: #3e4249;
 	border-radius: 5px;
 	width: 10px;
 }
-QScrollBar::handle:vertical,
-QScrollBar:handle::horizontal {
+QScrollBar::handle:vertical {
     background-color: #81848d;
 	border-radius: 5px;
 	height: 30px;
+}
+QScrollBar:horizontal {
+    background: #3e4249;
+	border-radius: 5px;
+	height: 10px;
+}
+QScrollBar:handle::horizontal {
+    background-color: #81848d;
+	border-radius: 5px;
+	width: 30px;
 }
 QScrollBar::handle:vertical:hover,
 QScrollBar:handle::horizontal:hover {
