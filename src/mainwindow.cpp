@@ -2209,7 +2209,7 @@ void MainWindow::on_seekslider_hover(int position, int sliderValue)
     //    if (!Config::instance().previewEnabled())
     //        return;
 
-    if(playingLibraryListItem.type == LibraryListItemType::Video && (videoHandler->isPlaying() || videoHandler->isPaused()))
+    if(playingLibraryListItem.type == LibraryListItemType::Video && !_playerControlsFrame->getSeekSliderMousePressed() && (videoHandler->isPlaying() || videoHandler->isPaused()))
     {
         //const int w = Config::instance().previewWidth();
         //const int h = Config::instance().previewHeight();

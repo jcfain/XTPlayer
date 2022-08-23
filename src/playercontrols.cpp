@@ -330,6 +330,9 @@ void PlayerControls::setSeekSliderDisabled(bool disabled)
 {
     SeekSlider->setDisabled(disabled);
 }
+bool PlayerControls::getSeekSliderMousePressed() {
+    return SeekSlider->getMousePressed();
+}
 void PlayerControls::setTimeDuration(QString time, QString duration)
 {
     lblCurrentTime->setText(time);

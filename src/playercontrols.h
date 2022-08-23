@@ -49,6 +49,7 @@ public:
     int getSeekSliderLowerValue();
     void setSeekSliderMinimumRange(int value);
     void setSeekSliderDisabled(bool value);
+    bool getSeekSliderMousePressed();
     void setTimeDuration(QString time, QString duration);
     void setTime(QString time);
     void setDuration(QString duration);

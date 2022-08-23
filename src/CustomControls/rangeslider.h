@@ -39,6 +39,8 @@ public:
     int GetUpperValue() const;
     void SetUpperValue(int aUpperValue);
 
+    bool getMousePressed();
+
     void setName(QString name);
     void SetRange(int aMinimum, int aMaximum);
     void setOrientation(Qt::Orientation ori);
@@ -73,7 +75,7 @@ signals:
     void onHover(int position, int sliderValue);
     void onLeave();
     void mouseRelease(QString name);
-    void mouseRelease();
+    void mousePress();
 
 public slots:
     void setLowerValue(int aLowerValue);

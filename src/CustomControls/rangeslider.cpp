@@ -124,6 +124,9 @@ QRectF RangeSlider::handleRect(int aValue) const
         return QRect((width()-scHandleSideLength) / 2, aValue, scHandleSideLength, scHandleSideLength);
 }
 
+bool RangeSlider::getMousePressed() {
+    return mSecondHandlePressed || mFirstHandlePressed;
+}
 void RangeSlider::mousePressEvent(QMouseEvent* aEvent)
 {
     if (!isEnabled())
@@ -132,6 +135,7 @@ void RangeSlider::mousePressEvent(QMouseEvent* aEvent)
     }
     if(aEvent->buttons() & Qt::LeftButton)
     {
+        emit mousePress();
         int posCheck, posMax, posValue, sliderLength, firstHandleRectPosValue, secondHandleRectPosValue;
         posCheck = (orientation == Qt::Horizontal) ? aEvent->pos().y() : aEvent->pos().x();
         posMax = (orientation == Qt::Horizontal) ? height() : width();
