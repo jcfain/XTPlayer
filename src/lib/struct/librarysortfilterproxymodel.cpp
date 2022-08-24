@@ -1,10 +1,15 @@
 #include "librarysortfilterproxymodel.h"
 
-LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(QObject *parent)
+LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(MediaLibraryHandler* mediaLibraryHandler, QObject *parent)
     : QSortFilterProxyModel{parent}
 {
     setDynamicSortFilter(true);
     setSortRole(Qt::UserRole);
+    _mediaLibraryHandler = mediaLibraryHandler;
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::libraryChange, this,  [this]() {
+        beginResetModel();
+        endResetModel();
+    } );
 }
 void LibrarySortFilterProxyModel::setSortMode(LibrarySortMode sortMode) {
     if(_sortMode != sortMode || _sortMode == LibrarySortMode::RANDOM) {

@@ -14,7 +14,7 @@ class LibrarySortFilterProxyModel : public QSortFilterProxyModel
 public slots:
     void onTextFilterChanged(QString filter);
 public:
-    explicit LibrarySortFilterProxyModel(QObject *parent = nullptr);
+    explicit LibrarySortFilterProxyModel(MediaLibraryHandler* mediaLibraryHandler, QObject *parent = nullptr);
     void setSortMode(LibrarySortMode sortMode);
     void setLibraryViewMode(LibraryView mode);
 protected:
@@ -23,6 +23,7 @@ protected:
 
 private:
     LibrarySortMode _sortMode;
+    MediaLibraryHandler* _mediaLibraryHandler;
     bool dateInRange(QDate date) const;
 
     QDate minDate;

@@ -36,7 +36,10 @@ int DialogHandler::Dialog(QWidget* parent, QLayout* layout, bool modal)
             qDebug("Dialog is gone.");
             _dialog = 0;
         });
-        _dialog->setAttribute(Qt::WA_DeleteOnClose);
+        if(!modal)
+            _dialog->setAttribute(Qt::WA_DeleteOnClose);
+        else
+            _dialog->deleteLater();
         _dialog->setLayout(layout);
         if(modal)
             return _dialog->exec();
@@ -54,7 +57,10 @@ int DialogHandler::Dialog(QWidget* parent, QString message, bool modal, bool sho
             qDebug("Dialog accept is gone.");
             _dialog = 0;
         });
-        _dialog->setAttribute(Qt::WA_DeleteOnClose);
+        if(!modal)
+            _dialog->setAttribute(Qt::WA_DeleteOnClose);
+        else
+            _dialog->deleteLater();
         QGridLayout* layout = new QGridLayout(_dialog);
         QLabel* messageLabel = new QLabel(_dialog);
         messageLabel->setText(message);
