@@ -18,6 +18,7 @@
 #include "lib/struct/channeltableviewmodel.h"
 #include "lib/handler/videohandler.h"
 #include "lib/handler/connectionhandler.h"
+#include "lib/handler/xtpsettings.h"
 #include "libraryexclusions.h"
 
 
@@ -209,6 +210,8 @@ private slots:
 
     void on_webAddressCopyButton_clicked();
     void set_requires_restart(bool enabled);
+
+    void on_rememberWindowSettingsChk_clicked(bool checked);
 
 private:
 

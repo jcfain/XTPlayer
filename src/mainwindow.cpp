@@ -63,8 +63,23 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
                 LogHandler::setUserDebug(true);
             else if(arg.toLower().startsWith("-reset"))
                 SettingsHandler::Default();
+            else if(arg.toLower().startsWith("-resetWindow")) {
+                XTPSettings::resetWindowSize();
+            }
         }
     }
+    XTPSettings::load();
+    //XTPSettings::resetWindowSize();
+//    if(XTPSettings::getRememberWindowsSettings()) {
+//        auto pos = XTPSettings::getXWindowPosition();
+//        if(!pos.isNull()) {
+//            move(pos);
+//        }
+//        auto size = XTPSettings::getXWindowSize();
+//        if(!size.isNull()) {
+//            resize(size);
+//        }
+//    }
 
     _dlnaScriptLinksDialog = new DLNAScriptLinks(this);
 
@@ -154,7 +169,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     ui->libraryGrid->setSpacing(5);
     ui->libraryGrid->setColumnMinimumWidth(0, 0);
 
-    backLibraryButton = new QPushButton(this);
+    backLibraryButton = new QPushButton(libraryList);
     backLibraryButton->setProperty("id", "backLibraryButton");
     QIcon backIcon("://images/icons/back.svg");
     backLibraryButton->setIcon(backIcon);
@@ -162,7 +177,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     ui->libraryFrame->setFrameShadow(QFrame::Sunken);
     backLibraryButton->hide();
 
-    windowedLibraryButton = new QPushButton(this);
+    windowedLibraryButton = new QPushButton(libraryList);
     windowedLibraryButton->setProperty("id", "windowedLibraryButton");
     QIcon windowedIcon("://images/icons/windowed.svg");
     windowedLibraryButton->setIcon(windowedIcon);
@@ -172,34 +187,34 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     libraryWindow->setProperty("id", "libraryWindow");
     libraryWindow->hide();
 
-    randomizeLibraryButton = new QPushButton(this);
+    randomizeLibraryButton = new QPushButton(libraryList);
     randomizeLibraryButton->setProperty("id", "randomizeLibraryButton");
     QIcon reloadIcon("://images/icons/reload.svg");
     randomizeLibraryButton->setIcon(reloadIcon);
     ui->libraryGrid->addWidget(randomizeLibraryButton, 0, 1);
 
-    editPlaylistButton = new QPushButton(this);
+    editPlaylistButton = new QPushButton(libraryList);
     editPlaylistButton->setProperty("id", "editPlaylistButton");
     QIcon editIcon("://images/icons/edit.svg");
     editPlaylistButton->setIcon(editIcon);
     ui->libraryGrid->addWidget(editPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
     editPlaylistButton->hide();
 
-    savePlaylistButton = new QPushButton(this);
+    savePlaylistButton = new QPushButton(libraryList);
     savePlaylistButton->setProperty("id", "savePlaylistButton");
     QIcon saveIcon("://images/icons/save.svg");
     savePlaylistButton->setIcon(saveIcon);
     ui->libraryGrid->addWidget(savePlaylistButton, 0, ui->libraryGrid->columnCount() - 3);
     savePlaylistButton->hide();
 
-    cancelEditPlaylistButton = new QPushButton(this);
+    cancelEditPlaylistButton = new QPushButton(libraryList);
     cancelEditPlaylistButton->setProperty("id", "cancelEditPlaylistButton");
     QIcon xIcon("://images/icons/x.svg");
     cancelEditPlaylistButton->setIcon(xIcon);
     ui->libraryGrid->addWidget(cancelEditPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
     cancelEditPlaylistButton->hide();
 
-    libraryFilterLineEdit = new QLineEdit(this);
+    libraryFilterLineEdit = new QLineEdit(libraryList);
     libraryFilterLineEdit->setPlaceholderText("Filter");
     ui->libraryGrid->addWidget(libraryFilterLineEdit, 0, 2, 1, ui->libraryGrid->columnCount() - 4);
 
@@ -467,9 +482,26 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
         });
     }
 }
+
 MainWindow::~MainWindow()
 {
+}
+void MainWindow::showEvent(QShowEvent* event) {
+    if(XTPSettings::getRememberWindowsSettings()) {
+        auto pos = XTPSettings::getXWindowPosition();
+        if(!pos.isNull()) {
+            move(pos);
+        }
+        auto size = XTPSettings::getXWindowSize();
+        if(!size.isNull()) {
+            resize(size);
+        }
+        if(XTPSettings::getLibraryWindowOpen()) {
+            onLibraryWindowed_Clicked();
+        }
+    }
 
+    _windowInitialized = true;
 }
 
 void MainWindow::on_settingsMessageRecieve(QString message, XLogLevel logLevel) {
@@ -482,10 +514,11 @@ void MainWindow::onPasswordIncorrect()
 }
 void MainWindow::dispose()
 {
+    XTPSettings::setLibraryWindowOpen(_libraryDockMode);
     closeWelcomeDialog();
     if(!playingLibraryListItem.ID.isEmpty())
         updateMetaData(playingLibraryListItem);
-    SettingsHandler::Save();
+    XTPSettings::save();
     loadingLibraryStop = true;
     _waitForStopFutureCancel = true;
     _mediaStopped = true;
@@ -528,6 +561,19 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
         return QWidget::eventFilter(obj, event);
     }
 }
+
+
+void MainWindow::resizeEvent(QResizeEvent* event) {
+    QMainWindow::resizeEvent(event);
+    if(_windowInitialized)
+        XTPSettings::setXWindowSize(event->size());
+}
+void MainWindow::moveEvent(QMoveEvent* event) {
+    QMainWindow::moveEvent(event);
+    if(_windowInitialized)
+        XTPSettings::setXWindowPosition(event->pos());
+}
+
 void MainWindow::on_key_press(QKeyEvent * event)
 {
     MediaActions mediaActions;
@@ -816,6 +862,7 @@ void MainWindow::onLibraryWindowed_Clicked()
     ((QGridLayout*)libraryWindow->layout())->addWidget(savePlaylistButton, 0, ui->libraryGrid->columnCount() - 3);
     ((QGridLayout*)libraryWindow->layout())->addWidget(libraryFilterLineEdit, 0, 2, 1, ui->libraryGrid->columnCount() - 4);
     ((QGridLayout*)libraryWindow->layout())->addWidget(libraryLoadingLabel, 0, 0, 21, 12);
+    libraryList->setParent(libraryWindow);
     windowedLibraryButton->hide();
     ui->libraryFrame->hide();
     libraryWindow->show();
@@ -850,8 +897,8 @@ void MainWindow::onLibraryWindowed_Clicked()
 
 void MainWindow::onLibraryWindowed_Closed()
 {
-    _libraryDockMode = false;
     libraryWindow->layout()->removeWidget(libraryList);
+    libraryList->setParent(this);
     ui->libraryGrid->addWidget(libraryList, 1, 0, 20, 12);
     ui->libraryGrid->addWidget(backLibraryButton, 0, 0);
     ui->libraryGrid->addWidget(randomizeLibraryButton, 0, 1);
@@ -886,6 +933,7 @@ void MainWindow::onLibraryWindowed_Closed()
     }
     else
         backLibraryButton->hide();
+    _libraryDockMode = false;
 }
 
 void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
@@ -1909,6 +1957,7 @@ void MainWindow::updateMetaData(LibraryListItem27 libraryListItem)
 
 void MainWindow::on_mainwindow_change(QEvent* event)
 {
+
     if (event->type() == QEvent::WindowStateChange)
     {
         QWindowStateChangeEvent* stateEvent = (QWindowStateChangeEvent*)event;

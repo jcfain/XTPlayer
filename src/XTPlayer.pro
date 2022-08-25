@@ -24,6 +24,7 @@ SOURCES += \
     inputmapwidget.cpp \
     lib/handler/dialoghandler.cpp \
     lib/handler/videohandler.cpp \
+    lib/handler/xtpsettings.cpp \
     lib/handler/xvideopreviewwidget.cpp \
     lib/handler/xvideowidget.cpp \
     lib/struct/channeltablecomboboxdelegate.cpp \
@@ -51,6 +52,7 @@ HEADERS += \
     inputmapwidget.h \
     lib/handler/dialoghandler.h \
     lib/handler/videohandler.h \
+    lib/handler/xtpsettings.h \
     lib/handler/xvideopreviewwidget.h \
     lib/handler/xvideowidget.h \
     lib/struct/channeltablecomboboxdelegate.h \

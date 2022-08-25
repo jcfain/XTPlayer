@@ -20,7 +20,7 @@
   <property name="modal">
    <bool>true</bool>
   </property>
-  <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0,0,0,0,0,0,0,0">
+  <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0,0,0,0,0,0,0">
    <property name="sizeConstraint">
     <enum>QLayout::SetNoConstraint</enum>
    </property>
@@ -49,7 +49,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>5</number>
      </property>
      <widget class="QWidget" name="connectionTab">
       <attribute name="title">
@@ -1169,6 +1169,13 @@ that has no script of the same name.</string>
        </item>
        <item row="1" column="0" rowspan="12" colspan="9">
         <widget class="QTableView" name="channelTableView"/>
+       </item>
+       <item row="3" column="10">
+        <widget class="QCheckBox" name="rememberWindowSettingsChk">
+         <property name="text">
+          <string>Remember window size and position</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>

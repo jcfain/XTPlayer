@@ -44,6 +44,7 @@
 #include "lib/handler/outputdevicehandler.h"
 #include "lib/handler/inputdevicehandler.h"
 #include "lib/handler/xvideopreviewwidget.h"
+#include "lib/handler/xtpsettings.h"
 #include "lib/struct/LibraryListItem27.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/ConnectionChangedSignal.h"
@@ -199,7 +200,7 @@ protected:
     }
 
 private:
-    //Hack because QTAV calls stopped and start out of order
+    bool _windowInitialized = false;
     bool _mediaStopped = true;
     PasswordResponse _isPasswordIncorrect = PasswordResponse::INCORRECT;
 
@@ -365,6 +366,9 @@ private:
 //    void syncVRFunscript();
 
     bool eventFilter(QObject *obj, QEvent *event) override;
+    void resizeEvent(QResizeEvent* event) override;
+    void moveEvent(QMoveEvent* event) override;
+    void showEvent(QShowEvent* event) override;
 
     bool isPlaylistMode();
     void addSelectedLibraryItemToPlaylist(QString playlistName, LibraryListItem27 item);

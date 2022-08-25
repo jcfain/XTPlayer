@@ -1,12 +1,10 @@
 #include "librarywindow.h"
-
 LibraryWindow::LibraryWindow(QMainWindow* parent) :
     QFrame(parent)
 {
     //setMinimumSize({1024, 720});
     setWindowFlags(Qt::Window);
     setLayout(new QGridLayout(this));
-    _lastSize = {800, 500};
     //resize(_lastSize);
 //    auto point = parent->geometry().center() - parent->rect().center();
 //    setGeometry(point.rx(), point.ry(), 800, 600);
@@ -16,19 +14,41 @@ LibraryWindow::LibraryWindow(QMainWindow* parent) :
 
 void LibraryWindow::closeEvent(QCloseEvent *event)
 {
-    QFrame::closeEvent(event);
     emit closeWindow();
+    QFrame::closeEvent(event);
 }
 
 void LibraryWindow::showEvent(QShowEvent * event) {
     QFrame::showEvent(event);
-    //resize(_lastSize);
+    if(XTPSettings::getRememberWindowsSettings()) {
+        auto pos = XTPSettings::getLibraryWindowPosition();
+        if(!pos.isNull()) {
+            move(pos);
+        }
+        auto size = XTPSettings::getLibraryWindowSize();
+        if(!size.isNull()) {
+            resize(size);
+        } else
+            setDevaultSizeAndPosition();
+    } else {
+        setDevaultSizeAndPosition();
+    }
+    _isInitialized = true;
+}
+void LibraryWindow::resizeEvent(QResizeEvent* event) {
+    QFrame::resizeEvent(event);
+    if(_isInitialized)
+        XTPSettings::setLibraryWindowSize(event->size());
+}
+
+void LibraryWindow::moveEvent(QMoveEvent* event) {
+    QFrame::moveEvent(event);
+    if(_isInitialized)
+        XTPSettings::setLibraryWindowPosition(event->pos());
+}
+
+void LibraryWindow::setDevaultSizeAndPosition() {
     auto window = qobject_cast<QMainWindow*>(parent());
     auto point = window->geometry().center() - window->rect().center();
     setGeometry(point.rx(), point.ry(), 800, 600);
-    //move(window->geometry().center() - window->rect().center());
-}
-void LibraryWindow::resizeEvent(QResizeEvent * event) {
-    QFrame::resizeEvent(event);
-    //_lastSize = size();
 }

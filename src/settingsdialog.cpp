@@ -14,7 +14,6 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
     setModal(false);
     connect(ui.buttonBox, & QDialogButtonBox::clicked, this, &SettingsDialog::on_dialogButtonboxClicked);
     connect(this, &SettingsDialog::loadingDialogClose, this, &SettingsDialog::on_close_loading_dialog);
-    connect(&SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
 
 }
 SettingsDialog::~SettingsDialog()
@@ -112,7 +111,7 @@ void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
         DialogHandler::Loading(this, "Saving settings...");
         QtConcurrent::run([this] ()
         {
-            SettingsHandler::Save();
+            XTPSettings::save();
             emit loadingDialogClose();
         });
     }
@@ -123,7 +122,7 @@ void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
             DialogHandler::Loading(this, "Saving settings...");
             QtConcurrent::run([this] ()
             {
-                SettingsHandler::Save();
+                XTPSettings::save();
                 emit loadingDialogClose();
             });
         }
@@ -307,6 +306,10 @@ void SettingsDialog::setupUi()
         ui.webAddressInstructionsLabel->setProperty("cssClass", "linkLabel");
 
         updateIPAddress();
+
+        connect(&SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
+
+        ui.rememberWindowSettingsChk->setChecked(XTPSettings::getRememberWindowsSettings());
         _interfaceInitialized = true;
     }
 }
@@ -1510,7 +1513,7 @@ void SettingsDialog::on_thumbDirButton_clicked()
    if (selectedDir != Q_NULLPTR)
    {
        SettingsHandler::setSelectedThumbsDir(selectedDir);
-       SettingsHandler::Save();
+       XTPSettings::save();
        requestRestart(this);
    }
 }
@@ -1717,7 +1720,7 @@ void SettingsDialog::Export(QWidget* parent)
     if(!selectedFile.isEmpty())
     {
         QSettings* settingsExport = new QSettings(selectedFile, QSettings::Format::IniFormat);
-        SettingsHandler::Save(settingsExport);
+        XTPSettings::save(settingsExport);
         delete settingsExport;
         emit messageSend("Settings saved to "+ selectedFile, XLogLevel::Information);
     }
@@ -1729,8 +1732,8 @@ void SettingsDialog::Import(QWidget* parent)
     if(!selectedFile.isEmpty())
     {
         QSettings* settingsImport = new QSettings(selectedFile, QSettings::Format::IniFormat);
-        SettingsHandler::Load(settingsImport);
-        SettingsHandler::Save();
+        XTPSettings::load(settingsImport);
+        XTPSettings::save();
         SettingsHandler::setSaveOnExit(false);
         delete settingsImport;
         requestRestart(parent);
@@ -1785,5 +1788,11 @@ void SettingsDialog::on_webAddressCopyButton_clicked()
     QClipboard *clipboard = QGuiApplication::clipboard();
     //QString originalText = clipboard->text();
     clipboard->setText(ui.webAddressLinkLabel->text());
+}
+
+
+void SettingsDialog::on_rememberWindowSettingsChk_clicked(bool checked)
+{
+    XTPSettings::setRememberWindowsSettings(checked);
 }
 
