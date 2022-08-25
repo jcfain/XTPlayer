@@ -97,8 +97,6 @@ private slots:
 
     void on_deoCheckbox_clicked(bool checked);
 
-    void on_checkBox_clicked(bool checked);
-
     void on_resetAllButton_clicked();
 
     void on_gamePadCheckbox_clicked(bool checked);
@@ -212,6 +210,8 @@ private slots:
     void set_requires_restart(bool enabled);
 
     void on_rememberWindowSettingsChk_clicked(bool checked);
+
+    void on_dubugButton_clicked();
 
 private:
 

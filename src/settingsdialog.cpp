@@ -44,6 +44,9 @@ void SettingsDialog::init(VideoHandler* videoHandler, ConnectionHandler* connect
     _connectionHandler = connectionHandler;
 
     ui.useWebSocketsCheckbox->setHidden(true);//Fast sends buffer in QWebSocket and sends late
+    ui.dubugButton->hide();// Doesnt restart in debug mode.
+    ui.useMediaDirectoryCheckbox->hide();//Not fully developed.
+
     setupUi();
 }
 
@@ -1262,18 +1265,6 @@ void SettingsDialog::on_xtpWebHandlerCheckbox_clicked(bool checked)
     }
 }
 
-void SettingsDialog::on_checkBox_clicked(bool checked)
-{
-    QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "WARNING!", "Restart the app in debug mode?",
-                                  QMessageBox::Yes|QMessageBox::No);
-    if (reply == QMessageBox::Yes)
-    {
-        QApplication::quit();
-        QProcess::startDetached(qApp->arguments()[0], QStringList("-debug"));
-    }
-}
-
 void SettingsDialog::on_resetAllButton_clicked()
 {
     QMessageBox::StandardButton reply;
@@ -1732,7 +1723,7 @@ void SettingsDialog::Import(QWidget* parent)
     if(!selectedFile.isEmpty())
     {
         QSettings* settingsImport = new QSettings(selectedFile, QSettings::Format::IniFormat);
-        XTPSettings::load(settingsImport);
+        XTPSettings::import(settingsImport);
         XTPSettings::save();
         SettingsHandler::setSaveOnExit(false);
         delete settingsImport;
@@ -1794,5 +1785,18 @@ void SettingsDialog::on_webAddressCopyButton_clicked()
 void SettingsDialog::on_rememberWindowSettingsChk_clicked(bool checked)
 {
     XTPSettings::setRememberWindowsSettings(checked);
+}
+
+
+void SettingsDialog::on_dubugButton_clicked()
+{
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "WARNING!", "Restart the app in debug mode?",
+                                  QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes)
+    {
+        QApplication::quit();
+        QProcess::startDetached("XTPlayerDebug.bat", QStringList("-debug"));
+    }
 }
 

@@ -24,6 +24,19 @@
    <property name="sizeConstraint">
     <enum>QLayout::SetNoConstraint</enum>
    </property>
+   <item row="2" column="1">
+    <widget class="QLabel" name="restartRequiredLabel">
+     <property name="text">
+      <string>Restart required</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::RichText</enum>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+   </item>
    <item row="8" column="1">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
@@ -49,7 +62,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>5</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="connectionTab">
       <attribute name="title">
@@ -989,6 +1002,33 @@ will be hit for the next chunk.</string>
        <string>System</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
+       <item row="0" column="9">
+        <widget class="QPushButton" name="importButton">
+         <property name="text">
+          <string>Import settings</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="10">
+        <widget class="QPushButton" name="exportButton">
+         <property name="text">
+          <string>Export settings</string>
+         </property>
+        </widget>
+       </item>
+       <item row="18" column="0">
+        <widget class="QPushButton" name="axisDefaultButton">
+         <property name="text">
+          <string>Channel Default</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" rowspan="14" colspan="9">
+        <widget class="QTableView" name="channelTableView"/>
+       </item>
+       <item row="1" column="9" colspan="2">
+        <widget class="QComboBox" name="tCodeVersionComboBox"/>
+       </item>
        <item row="0" column="0" colspan="8">
         <widget class="QLabel" name="label">
          <property name="text">
@@ -996,19 +1036,28 @@ will be hit for the next chunk.</string>
          </property>
         </widget>
        </item>
-       <item row="5" column="9">
-        <widget class="QCheckBox" name="disableVRScriptNotFoundCheckbox">
-         <property name="toolTip">
-          <string>This disables the Script not found\n
-selector when in VR and the video playing\n
-has no script associated with it.</string>
-         </property>
+       <item row="18" column="7">
+        <widget class="QPushButton" name="channelDeleteButton">
          <property name="text">
-          <string>Disable script selector in VR</string>
+          <string>Delete Channel</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="9">
+       <item row="18" column="8">
+        <widget class="QPushButton" name="channelAddButton">
+         <property name="text">
+          <string>Add Channel</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="9">
+        <widget class="QCheckBox" name="rememberWindowSettingsChk">
+         <property name="text">
+          <string>Remember window size and position</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="10">
         <widget class="QCheckBox" name="disableTextToSpeechCheckBox">
          <property name="toolTip">
           <string>This disables all speech in the app.</string>
@@ -1018,17 +1067,7 @@ has no script associated with it.</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="9" colspan="2">
-        <widget class="QComboBox" name="tCodeVersionComboBox"/>
-       </item>
-       <item row="0" column="9">
-        <widget class="QPushButton" name="importButton">
-         <property name="text">
-          <string>Import settings</string>
-         </property>
-        </widget>
-       </item>
-       <item row="11" column="9">
+       <item row="3" column="10">
         <widget class="QCheckBox" name="showLoneFunscriptsInLibraryCheckbox">
          <property name="toolTip">
           <string>If checked, funscripts in your library folder will be shown if they do not have an associated video.</string>
@@ -1038,24 +1077,7 @@ has no script associated with it.</string>
          </property>
         </widget>
        </item>
-       <item row="7" column="9">
-        <widget class="QCheckBox" name="disableTCodeValidationCheckbox">
-         <property name="toolTip">
-          <string>This will disable the D1 command to verify the device is a TCode device for both Serial and Network connections</string>
-         </property>
-         <property name="text">
-          <string>Disable TCode validation</string>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="10">
-        <widget class="QPushButton" name="thumbsDirDefaultButton">
-         <property name="text">
-          <string>Thumb Directory Default</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="9">
+       <item row="3" column="9">
         <widget class="QCheckBox" name="disableNoScriptFoundInLibrary">
          <property name="toolTip">
           <string>This will disable the warning that pops up\n
@@ -1067,66 +1089,36 @@ that has no script of the same name.</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="10">
-        <widget class="QCheckBox" name="checkBox">
+       <item row="4" column="10">
+        <widget class="QCheckBox" name="showVRInLibraryViewCheckbox">
          <property name="text">
-          <string>Debug</string>
+          <string>Show VR items in library view</string>
          </property>
         </widget>
        </item>
-       <item row="8" column="9">
-        <widget class="QPushButton" name="thumbDirButton">
+       <item row="4" column="9">
+        <widget class="QCheckBox" name="disableVRScriptNotFoundCheckbox">
+         <property name="toolTip">
+          <string>This disables the Script not found\n
+selector when in VR and the video playing\n
+has no script associated with it.</string>
+         </property>
          <property name="text">
-          <string>Change thumb directory</string>
+          <string>Disable script selector in VR</string>
          </property>
         </widget>
        </item>
-       <item row="10" column="9">
-        <widget class="QPushButton" name="libraryExclusionsBtn">
-         <property name="text">
-          <string>Library exclusions</string>
-         </property>
-        </widget>
-       </item>
-       <item row="12" column="9">
+       <item row="5" column="10">
         <widget class="QCheckBox" name="skipStandAloneFunscriptsInMainLibraryPlaylist">
          <property name="toolTip">
           <string>If checked, the library will skip playing standalone funscripts when the previous item finishes playing.</string>
          </property>
          <property name="text">
-          <string>Skip playing stand alone funscripts in library</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="9">
-        <widget class="QCheckBox" name="hideWelcomeDialog">
-         <property name="text">
-          <string>Hide welcome dialog</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="9">
-        <widget class="QPushButton" name="passwordButton">
-         <property name="text">
-          <string>Set password</string>
+          <string>Skip stand alone funscripts in playlist</string>
          </property>
         </widget>
        </item>
        <item row="6" column="10">
-        <widget class="QPushButton" name="launchWelcomeDialog">
-         <property name="text">
-          <string>Open Welcome</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="10">
-        <widget class="QPushButton" name="exportButton">
-         <property name="text">
-          <string>Export settings</string>
-         </property>
-        </widget>
-       </item>
-       <item row="9" column="9">
         <widget class="QCheckBox" name="useMediaDirectoryCheckbox">
          <property name="enabled">
           <bool>false</bool>
@@ -1139,41 +1131,58 @@ that has no script of the same name.</string>
          </property>
         </widget>
        </item>
-       <item row="13" column="9">
-        <widget class="QCheckBox" name="showVRInLibraryViewCheckbox">
+       <item row="5" column="9">
+        <widget class="QCheckBox" name="hideWelcomeDialog">
          <property name="text">
-          <string>Show VR items in library view</string>
+          <string>Hide welcome dialog</string>
          </property>
         </widget>
        </item>
-       <item row="13" column="0">
-        <widget class="QPushButton" name="axisDefaultButton">
+       <item row="6" column="9">
+        <widget class="QCheckBox" name="disableTCodeValidationCheckbox">
+         <property name="toolTip">
+          <string>This will disable the D1 command to verify the device is a TCode device for both Serial and Network connections</string>
+         </property>
          <property name="text">
-          <string>Channel Default</string>
+          <string>Disable TCode validation</string>
          </property>
         </widget>
        </item>
-       <item row="13" column="8">
-        <widget class="QPushButton" name="channelAddButton">
+       <item row="18" column="10">
+        <widget class="QPushButton" name="thumbDirButton">
          <property name="text">
-          <string>Add Channel</string>
+          <string>Change thumb directory</string>
          </property>
         </widget>
        </item>
-       <item row="13" column="7">
-        <widget class="QPushButton" name="channelDeleteButton">
+       <item row="14" column="10">
+        <widget class="QPushButton" name="passwordButton">
          <property name="text">
-          <string>Delete Channel</string>
+          <string>Set password</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="0" rowspan="12" colspan="9">
-        <widget class="QTableView" name="channelTableView"/>
-       </item>
-       <item row="3" column="10">
-        <widget class="QCheckBox" name="rememberWindowSettingsChk">
+       <item row="18" column="9">
+        <widget class="QPushButton" name="thumbsDirDefaultButton">
          <property name="text">
-          <string>Remember window size and position</string>
+          <string>Thumb Directory Default</string>
+         </property>
+        </widget>
+       </item>
+       <item row="14" column="9">
+        <widget class="QPushButton" name="libraryExclusionsBtn">
+         <property name="text">
+          <string>Library exclusions</string>
+         </property>
+        </widget>
+       </item>
+       <item row="13" column="10">
+        <widget class="QPushButton" name="dubugButton">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Debug</string>
          </property>
         </widget>
        </item>
@@ -1183,33 +1192,33 @@ that has no script of the same name.</string>
       <attribute name="title">
        <string>Help</string>
       </attribute>
-      <layout class="QGridLayout" name="gridLayout_5">
-       <item row="0" column="1">
-        <layout class="QFormLayout" name="formLayout_3">
-         <item row="0" column="0">
-          <widget class="QPushButton" name="openDeoPDFButton">
-           <property name="text">
-            <string>View Deo/HereSphere guide</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
+      <widget class="QWidget" name="formLayoutWidget_3">
+       <property name="geometry">
+        <rect>
+         <x>9</x>
+         <y>9</y>
+         <width>1221</width>
+         <height>571</height>
+        </rect>
+       </property>
+       <layout class="QFormLayout" name="formLayout_3">
+        <item row="1" column="0">
+         <widget class="QPushButton" name="openDeoPDFButton">
+          <property name="text">
+           <string>View Deo/HereSphere guide</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QPushButton" name="launchWelcomeDialog">
+          <property name="text">
+           <string>Open Welcome</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
-    </widget>
-   </item>
-   <item row="2" column="1">
-    <widget class="QLabel" name="restartRequiredLabel">
-     <property name="text">
-      <string>Restart required</string>
-     </property>
-     <property name="textFormat">
-      <enum>Qt::RichText</enum>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-     </property>
     </widget>
    </item>
   </layout>

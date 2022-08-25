@@ -8,8 +8,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 {
     QCoreApplication::setOrganizationName("cUrbSide prOd");
     QCoreApplication::setApplicationName("XTPlayer");
-    XTPVersion = QString("0.339b_%1T%2").arg(__DATE__).arg(__TIME__);
-    XTPVersionNum = 0.339f;
+    XTPVersion = QString("0.3395b_%1T%2").arg(__DATE__).arg(__TIME__);
+    XTPVersionNum = 0.3395f;
     const QString fullVersion = "XTP: v"+ XTPVersion + "\nXTE: v" + SettingsHandler::XTEVersion;
 
     QPixmap pixmap("://images/XTP_Splash.png");
@@ -63,28 +63,16 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
                 LogHandler::setUserDebug(true);
             else if(arg.toLower().startsWith("-reset"))
                 SettingsHandler::Default();
-            else if(arg.toLower().startsWith("-resetWindow")) {
+            else if(arg.toLower().startsWith("-resetwindow")) {
                 XTPSettings::resetWindowSize();
             }
         }
     }
     XTPSettings::load();
-    //XTPSettings::resetWindowSize();
-//    if(XTPSettings::getRememberWindowsSettings()) {
-//        auto pos = XTPSettings::getXWindowPosition();
-//        if(!pos.isNull()) {
-//            move(pos);
-//        }
-//        auto size = XTPSettings::getXWindowSize();
-//        if(!size.isNull()) {
-//            resize(size);
-//        }
-//    }
 
     _dlnaScriptLinksDialog = new DLNAScriptLinks(this);
 
     loadingSplash->showMessage(fullVersion + "\nLoading UI...", Qt::AlignBottom, Qt::white);
-
 
     textToSpeech = new QTextToSpeech(this);
     auto availableVoices = textToSpeech->availableVoices();
@@ -169,7 +157,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     ui->libraryGrid->setSpacing(5);
     ui->libraryGrid->setColumnMinimumWidth(0, 0);
 
-    backLibraryButton = new QPushButton(libraryList);
+    backLibraryButton = new QPushButton(this);
     backLibraryButton->setProperty("id", "backLibraryButton");
     QIcon backIcon("://images/icons/back.svg");
     backLibraryButton->setIcon(backIcon);
@@ -177,7 +165,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     ui->libraryFrame->setFrameShadow(QFrame::Sunken);
     backLibraryButton->hide();
 
-    windowedLibraryButton = new QPushButton(libraryList);
+    windowedLibraryButton = new QPushButton(this);
     windowedLibraryButton->setProperty("id", "windowedLibraryButton");
     QIcon windowedIcon("://images/icons/windowed.svg");
     windowedLibraryButton->setIcon(windowedIcon);
@@ -187,34 +175,34 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     libraryWindow->setProperty("id", "libraryWindow");
     libraryWindow->hide();
 
-    randomizeLibraryButton = new QPushButton(libraryList);
+    randomizeLibraryButton = new QPushButton(this);
     randomizeLibraryButton->setProperty("id", "randomizeLibraryButton");
     QIcon reloadIcon("://images/icons/reload.svg");
     randomizeLibraryButton->setIcon(reloadIcon);
     ui->libraryGrid->addWidget(randomizeLibraryButton, 0, 1);
 
-    editPlaylistButton = new QPushButton(libraryList);
+    editPlaylistButton = new QPushButton(this);
     editPlaylistButton->setProperty("id", "editPlaylistButton");
     QIcon editIcon("://images/icons/edit.svg");
     editPlaylistButton->setIcon(editIcon);
     ui->libraryGrid->addWidget(editPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
     editPlaylistButton->hide();
 
-    savePlaylistButton = new QPushButton(libraryList);
+    savePlaylistButton = new QPushButton(this);
     savePlaylistButton->setProperty("id", "savePlaylistButton");
     QIcon saveIcon("://images/icons/save.svg");
     savePlaylistButton->setIcon(saveIcon);
     ui->libraryGrid->addWidget(savePlaylistButton, 0, ui->libraryGrid->columnCount() - 3);
     savePlaylistButton->hide();
 
-    cancelEditPlaylistButton = new QPushButton(libraryList);
+    cancelEditPlaylistButton = new QPushButton(this);
     cancelEditPlaylistButton->setProperty("id", "cancelEditPlaylistButton");
     QIcon xIcon("://images/icons/x.svg");
     cancelEditPlaylistButton->setIcon(xIcon);
     ui->libraryGrid->addWidget(cancelEditPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
     cancelEditPlaylistButton->hide();
 
-    libraryFilterLineEdit = new QLineEdit(libraryList);
+    libraryFilterLineEdit = new QLineEdit(this);
     libraryFilterLineEdit->setPlaceholderText("Filter");
     ui->libraryGrid->addWidget(libraryFilterLineEdit, 0, 2, 1, ui->libraryGrid->columnCount() - 4);
 
@@ -487,6 +475,7 @@ MainWindow::~MainWindow()
 {
 }
 void MainWindow::showEvent(QShowEvent* event) {
+    XTPSettings::resetWindowSize();
     if(XTPSettings::getRememberWindowsSettings()) {
         auto pos = XTPSettings::getXWindowPosition();
         if(!pos.isNull()) {
