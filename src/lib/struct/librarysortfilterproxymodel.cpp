@@ -15,6 +15,7 @@ void LibrarySortFilterProxyModel::setSortMode(LibrarySortMode sortMode) {
     if(_sortMode != sortMode || _sortMode == LibrarySortMode::RANDOM) {
         beginResetModel();
         _sortMode = sortMode;
+        //Sorting random with playlists crashes the app for some reason. Playlists are filtered in random mode.
         sort(0);
         invalidate();
         endResetModel();
@@ -30,10 +31,14 @@ void LibrarySortFilterProxyModel::setLibraryViewMode(LibraryView mode) {
 bool LibrarySortFilterProxyModel::lessThan(const QModelIndex &left,
                                       const QModelIndex &right) const
 {
+
+    if(!left.isValid() || !right.isValid())
+        return false;
+
     LibraryListItem27 leftData = left.data(sortRole()).value<LibraryListItem27>();
     LibraryListItem27 rightData = right.data(sortRole()).value<LibraryListItem27>();
 
-    if(_sortMode != NONE)
+    if(_sortMode != NONE && left.column()== 0)
     {
         if(leftData.type == LibraryListItemType::PlaylistInternal && rightData.type != LibraryListItemType::PlaylistInternal)
         {
@@ -110,7 +115,7 @@ bool LibrarySortFilterProxyModel::lessThan(const QModelIndex &left,
         }
     }
     // otherwise just return the comparison result from the base class
-    return false;
+    return QSortFilterProxyModel::lessThan(left, right);
 }
 bool LibrarySortFilterProxyModel::filterAcceptsRow(int sourceRow,
                                               const QModelIndex &sourceParent) const
@@ -121,8 +126,11 @@ bool LibrarySortFilterProxyModel::filterAcceptsRow(int sourceRow,
     bool isHidden = (item.type == LibraryListItemType::VR && !SettingsHandler::getShowVRInLibraryView()) || ( item.type == LibraryListItemType::FunscriptType && SettingsHandler::getHideStandAloneFunscriptsInLibrary());
     if(isHidden)
         return !isHidden;
-//    return (sourceModel()->data(index0, Qt::UserRole).value<LibraryListItem27>().name.contains(filterRegularExpression()));
-    //return true;
+
+    //For some reason sorting random and dealing with playlists crashes the app..Filter it in random sort for now.
+    if(_sortMode == LibrarySortMode::RANDOM && item.type == LibraryListItemType::PlaylistInternal)
+        return false;
+
     return index.data().toString().contains(filterRegularExpression());
 }
 bool LibrarySortFilterProxyModel::dateInRange(QDate date) const
