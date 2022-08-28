@@ -65,7 +65,7 @@ private:
     QPushButton *MuteBtn;
     QPushButton *loopToggleButton;
     QPushButton *fullScreenBtn;
-    QPushButton *settingsButton;
+    //QPushButton *settingsButton;
     RangeSlider *VolumeSlider;
     RangeSlider *SeekSlider;
     QLabel *lblCurrentTime;

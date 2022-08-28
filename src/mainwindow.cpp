@@ -16,6 +16,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     loadingSplash = new QSplashScreen(pixmap);
     loadingSplash->setStyleSheet("color: white");
     loadingSplash->show();
+    loadingSplash->raise();
 
     ui->setupUi(this);
     loadingSplash->showMessage(fullVersion + "\nLoading Settings...", Qt::AlignBottom, Qt::white);
@@ -59,11 +60,14 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     {
         foreach(QString arg, arguments)
         {
-            if(arg.toLower().startsWith("-debug"))
+            if(arg.toLower().startsWith("-debug")) {
                 LogHandler::setUserDebug(true);
-            else if(arg.toLower().startsWith("-reset"))
+                LogHandler::Debug("Starying in debug mode");
+            } else if(arg.toLower().startsWith("-reset")) {
+                LogHandler::Debug("Resettings settings to default!");
                 SettingsHandler::Default();
-            else if(arg.toLower().startsWith("-resetwindow")) {
+            } else if(arg.toLower().startsWith("-resetwindow")) {
+                LogHandler::Debug("Resettings window size to default!");
                 XTPSettings::resetWindowSize();
             }
         }
@@ -79,6 +83,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     const QVoice voice = boolinq::from(availableVoices).firstOrDefault([](const QVoice &x) { return x.gender() == QVoice::Female; });
     textToSpeech->setVoice(voice);
+
 
     deoConnectionStatusLabel = new QLabel(this);
     deoRetryConnectionButton = new QPushButton(this);
@@ -108,9 +113,20 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     ui->statusbar->addPermanentWidget(connectionStatusLabel);
     ui->statusbar->addPermanentWidget(retryConnectionButton);
 
-
     gamepadConnectionStatusLabel = new QLabel(this);
     ui->statusbar->addPermanentWidget(gamepadConnectionStatusLabel);
+
+    settingsButton = new QPushButton(this);
+    settingsButton->setObjectName(QString::fromUtf8("settingsButton"));
+    settingsButton->setProperty("cssClass", "settingsButton");
+    settingsButton->setMinimumSize(QSize(0, 20));
+    QIcon icon5;
+    icon5.addFile(QString::fromUtf8("://images/icons/settings-black.png"), QSize(), QIcon::Normal, QIcon::Off);
+    settingsButton->setIcon(icon5);
+    settingsButton->setIconSize(QSize(20, 20));
+    settingsButton->setFlat(true);
+    connect(settingsButton, &QPushButton::clicked, this, &MainWindow::on_actionSettings_triggered);
+    ui->statusbar->addPermanentWidget(settingsButton);
 
     _mediaFrame = new QFrame(this);
     _mediaGrid = new QGridLayout(_mediaFrame);
@@ -162,7 +178,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     QIcon backIcon("://images/icons/back.svg");
     backLibraryButton->setIcon(backIcon);
     ui->libraryGrid->addWidget(backLibraryButton, 0, 0);
-    ui->libraryFrame->setFrameShadow(QFrame::Sunken);
     backLibraryButton->hide();
 
     windowedLibraryButton = new QPushButton(this);
@@ -180,6 +195,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     QIcon reloadIcon("://images/icons/reload.svg");
     randomizeLibraryButton->setIcon(reloadIcon);
     ui->libraryGrid->addWidget(randomizeLibraryButton, 0, 1);
+    randomizeLibraryButton->hide();
 
     editPlaylistButton = new QPushButton(this);
     editPlaylistButton->setProperty("id", "editPlaylistButton");
@@ -299,6 +315,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     if (splitterSizes.count() > 0)
         ui->mainFrameSplitter->setSizes(splitterSizes);
 
+    auto sizes = ui->mainFrameSplitter->sizes();
     if(SettingsHandler::getEnableHttpServer()) {
         connect(xtEngine.httpHandler(), &HttpHandler::error, this, [this](QString error) {
             DialogHandler::MessageBox(this, error, XLogLevel::Critical);
@@ -351,11 +368,12 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 
     _xSettings->init(videoHandler, xtEngine.connectionHandler());
 
-    connect(this, &MainWindow::libraryIconResized, this, &MainWindow::libraryListSetIconSize);
+    //connect(this, &MainWindow::libraryIconResized, this, &MainWindow::libraryListSetIconSize);
 
     connect(ui->actionReload_library, &QAction::triggered, xtEngine.mediaLibraryHandler(), &MediaLibraryHandler::loadLibraryAsync);
     connect(xtEngine.mediaLibraryHandler(), &MediaLibraryHandler::libraryNotFound, this, &MainWindow::onLibraryNotFound);
     connect(xtEngine.mediaLibraryHandler(), &MediaLibraryHandler::libraryLoaded, this, &MainWindow::onSetLibraryLoaded);
+    connect(xtEngine.mediaLibraryHandler(), &MediaLibraryHandler::libraryStopped, this, &MainWindow::onSetLibraryStopped);
     connect(xtEngine.mediaLibraryHandler(), &MediaLibraryHandler::libraryLoadingStatus, this, &MainWindow::onLibraryLoadingStatusChange);
     connect(xtEngine.mediaLibraryHandler(), &MediaLibraryHandler::libraryLoading, this, &MainWindow::onSetLibraryLoading);
     connect(xtEngine.mediaLibraryHandler(), &MediaLibraryHandler::prepareLibraryLoad, this, &MainWindow::onPrepareLibraryLoad);
@@ -424,7 +442,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(this, &MainWindow::stopAndPlayVideo, this, &MainWindow::stopAndPlayMedia);
     connect(this, &MainWindow::playlistLoaded, this, &MainWindow::onPlaylistLoaded);
     connect(this, &MainWindow::backFromPlaylistLoaded, this, &MainWindow::onBackFromPlaylistLoaded);
-    connect(this, &MainWindow::randomizeComplete, this, &MainWindow::onRandomizeComplete);
+    //connect(this, &MainWindow::randomizeComplete, this, &MainWindow::onRandomizeComplete);
     //connect(this, &MainWindow::libraryItemFound, this, &MainWindow::onLibraryItemFound);
 
 
@@ -1098,7 +1116,7 @@ void MainWindow::onPrepareLibraryLoad()
 {
     libraryList->setIconSize({SettingsHandler::getThumbSize(),SettingsHandler::getThumbSize()});
     ui->actionReload_library->setDisabled(true);
-    ui->actionSelect_library->setDisabled(true);
+    //ui->actionSelect_library->setDisabled(true);
     _playerControlsFrame->setDisabled(true);
 }
 
@@ -1397,6 +1415,7 @@ void MainWindow::onLibraryNotFound()
 
 void MainWindow::onSetLibraryLoading()
 {
+    LogHandler::Debug("onSetLibraryLoading");
     toggleLibraryLoading(true);
 }
 void MainWindow::toggleLibraryLoading(bool loading)
@@ -1421,7 +1440,7 @@ void MainWindow::toggleLibraryLoading(bool loading)
     editPlaylistButton->setDisabled(loading);
     cancelEditPlaylistButton->setDisabled(loading);
     windowedLibraryButton->setDisabled(loading);
-    ui->actionSelect_library->setDisabled(loading);
+    //ui->actionSelect_library->setDisabled(loading);
     ui->actionReload_library->setDisabled(loading);
 
     ui->actionThumbnail->setDisabled(loading);
@@ -1437,7 +1456,10 @@ void MainWindow::onLibraryLoadingStatusChange(QString message)
         libraryLoadingInfoLabel->setText(message);
     }
 }
-
+void MainWindow::onSetLibraryStopped() {
+    LogHandler::Debug("onSetLibraryStopped");
+    toggleLibraryLoading(false);
+}
 void MainWindow::onSetLibraryLoaded()
 {
 //    QDialog* widget = new QDialog(this);
@@ -2967,11 +2989,11 @@ void MainWindow::resizeThumbs(int size)
 //    }
 }
 
-void MainWindow::libraryListSetIconSize(QSize newSize)
-{
-    libraryList->setIconSize(newSize);
-    toggleLibraryLoading(false);
-}
+//void MainWindow::libraryListSetIconSize(QSize newSize)
+//{
+//    libraryList->setIconSize(newSize);
+//    toggleLibraryLoading(false);
+//}
 
 void MainWindow::updateLibrarySortUI(LibrarySortMode mode)
 {
@@ -3103,11 +3125,11 @@ void MainWindow::sortLibraryList(LibrarySortMode sortMode)
     setCurrentLibraryRow(0);
 }
 
-void MainWindow::onRandomizeComplete() {
-    randomizeLibraryButton->show();
-    toggleLibraryLoading(false);
-    setCurrentLibraryRow(0);
-}
+//void MainWindow::onRandomizeComplete() {
+    //randomizeLibraryButton->show();
+    //toggleLibraryLoading(false);
+    //setCurrentLibraryRow(0);
+//}
 
 void MainWindow::on_actionChange_theme_triggered()
 {
@@ -3221,8 +3243,10 @@ void MainWindow::loadPlaylistIntoLibrary(QString playlistName, bool autoPlay)
 {
     if(!thumbProcessIsRunning)
     {
-        if(!isLibraryLoading())
-        {
+            if(isLibraryLoading())
+            {
+                xtEngine.mediaLibraryHandler()->stopLibraryLoading();
+            }
             toggleLibraryLoading(true);
             onLibraryLoadingStatusChange("Loading playlist...");
 
@@ -3240,7 +3264,6 @@ void MainWindow::loadPlaylistIntoLibrary(QString playlistName, bool autoPlay)
                     emit playlistLoaded();
                 }
             });
-        }
     }
     else
         DialogHandler::MessageBox(this, tr("Please wait for thumbnails to fully load!"), XLogLevel::Warning);

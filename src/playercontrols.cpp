@@ -21,7 +21,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToActionButton = new QPushButton(this);
     skipToActionButton->setObjectName(QString::fromUtf8("skipToActionButton"));
     skipToActionButton->setProperty("cssClass", "playerControlButton");
-    skipToActionButton->setMinimumSize(QSize(0, 15));
+    skipToActionButton->setMinimumSize(QSize(20, 15));
     skipToActionButton->setToolTip("Skips to 1 second before the next funscript action.");
     QIcon iconActionBegin;
     iconActionBegin.addFile(QString::fromUtf8(":/images/icons/skipToAction.png"), QSize(), QIcon::Normal, QIcon::Off);
@@ -30,12 +30,12 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToActionButton->setFlat(true);
     skipToActionButton->setEnabled(false);
 
-    playerControlsGrid->addWidget(skipToActionButton, 0, 1, 1, 4);
+    playerControlsGrid->addWidget(skipToActionButton, 0, 1, 1, 5);
 
     skipToMoneyShotButton = new QPushButton(this);
     skipToMoneyShotButton->setObjectName(QString::fromUtf8("skipToMoneyShotButton"));
     skipToMoneyShotButton->setProperty("cssClass", "playerControlButton");
-    skipToMoneyShotButton->setMinimumSize(QSize(0, 15));
+    skipToMoneyShotButton->setMinimumSize(QSize(20, 15));
     skipToMoneyShotButton->setToolTip("Skips to the last 10% of the video by default. You can chenge this by right clicking the library item.\nYou can also assign a script to this action on the funscript tab in settings.");
     QIcon iconMoneyShot;
     iconMoneyShot.addFile(QString::fromUtf8(":/images/icons/skipToMoneyShot.svg"), QSize(), QIcon::Normal, QIcon::Off);
@@ -44,13 +44,13 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToMoneyShotButton->setFlat(true);
     skipToMoneyShotButton->setEnabled(false);
 
-    playerControlsGrid->addWidget(skipToMoneyShotButton, 0, 6, 1, 4);
+    playerControlsGrid->addWidget(skipToMoneyShotButton, 0, 6, 1, 5);
 
     lblDuration = new QLabel(this);
     lblDuration->setObjectName(QString::fromUtf8("lblDuration"));
     lblDuration->setAlignment(Qt::AlignRight|Qt::AlignBottom);
 
-    playerControlsGrid->addWidget(lblDuration, 0, 10, 1, 1);
+    playerControlsGrid->addWidget(lblDuration, 0, 11, 1, 1);
 
     SeekSlider = new RangeSlider(this);
     SeekSlider->setObjectName(QString::fromUtf8("SeekSlider"));
@@ -63,7 +63,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     SeekSlider->setOption(RangeSlider::Option::RightHandle);
     SeekSlider->setUpperValue(0);
 
-    playerControlsGrid->addWidget(SeekSlider, 1, 0, 1, 11);
+    playerControlsGrid->addWidget(SeekSlider, 1, 0, 1, 12);
 
     fullScreenBtn = new QPushButton(this);
     fullScreenBtn->setObjectName(QString::fromUtf8("fullScreenBtn"));
@@ -78,71 +78,10 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 
     playerControlsGrid->addWidget(fullScreenBtn, 2, 0, 1, 1);
 
-    settingsButton = new QPushButton(this);
-    settingsButton->setObjectName(QString::fromUtf8("settingsButton"));
-    settingsButton->setProperty("cssClass", "playerControlButton");
-    settingsButton->setMinimumSize(QSize(0, 20));
-    QIcon icon5;
-    icon5.addFile(QString::fromUtf8(":/images/icons/settings.svg"), QSize(), QIcon::Normal, QIcon::Off);
-    settingsButton->setIcon(icon5);
-    settingsButton->setIconSize(QSize(20, 20));
-    settingsButton->setFlat(true);
-
-    playerControlsGrid->addWidget(settingsButton, 2, 1, 1, 1);
-
-    skipBackButton = new QPushButton(this);
-    skipBackButton->setObjectName(QString::fromUtf8("skipBackButton"));
-    skipBackButton->setProperty("cssClass", "playerControlButton");
-    skipBackButton->setMinimumSize(QSize(0, 20));
-    QIcon icon6;
-    icon6.addFile(QString::fromUtf8(":/images/icons/skipBack.svg"), QSize(), QIcon::Normal, QIcon::Off);
-    skipBackButton->setIcon(icon6);
-    skipBackButton->setIconSize(QSize(20, 20));
-    skipBackButton->setFlat(true);
-
-    playerControlsGrid->addWidget(skipBackButton, 2, 3, 1, 1);
-
-    _stopBtn = new QPushButton(this);
-    _stopBtn->setObjectName(QString::fromUtf8("stopBtn"));
-    _stopBtn->setProperty("cssClass", "playerControlButton");
-    _stopBtn->setMinimumSize(QSize(0, 20));
-    QIcon iconStop;
-    iconStop.addFile(QString::fromUtf8(":/images/icons/stop.svg"), QSize(), QIcon::Normal, QIcon::Off);
-    _stopBtn->setIcon(iconStop);
-    _stopBtn->setIconSize(QSize(20, 20));
-    _stopBtn->setFlat(true);
-    _stopBtn->setEnabled(false);
-
-    playerControlsGrid->addWidget(_stopBtn, 2, 4, 1, 1);
-
-    PlayBtn = new QPushButton(this);
-    PlayBtn->setObjectName(QString::fromUtf8("PlayBtn"));
-    PlayBtn->setProperty("cssClass", "playerControlButton");
-    PlayBtn->setMinimumSize(QSize(0, 20));
-    QIcon icon7;
-    icon7.addFile(QString::fromUtf8(":/images/icons/play.svg"), QSize(), QIcon::Normal, QIcon::Off);
-    PlayBtn->setIcon(icon7);
-    PlayBtn->setIconSize(QSize(20, 20));
-    PlayBtn->setFlat(true);
-
-    playerControlsGrid->addWidget(PlayBtn, 2, 5, 1, 1);
-
-    skipForwardButton = new QPushButton(this);
-    skipForwardButton->setObjectName(QString::fromUtf8("skipForwardButton"));
-    skipForwardButton->setProperty("cssClass", "playerControlButton");
-    skipForwardButton->setMinimumSize(QSize(0, 20));
-    QIcon icon1;
-    icon1.addFile(QString::fromUtf8(":/images/icons/skipForward.svg"), QSize(), QIcon::Normal, QIcon::Off);
-    skipForwardButton->setIcon(icon1);
-    skipForwardButton->setIconSize(QSize(20, 20));
-    skipForwardButton->setFlat(true);
-
-    playerControlsGrid->addWidget(skipForwardButton, 2, 6, 1, 1);
-
     loopToggleButton = new QPushButton(this);
     loopToggleButton->setObjectName(QString::fromUtf8("loopToggleButton"));
     loopToggleButton->setProperty("cssClass", "playerControlButton");
-    loopToggleButton->setMinimumSize(QSize(0, 20));
+    loopToggleButton->setMinimumSize(QSize(20, 20));
     QIcon icon3;
     icon3.addFile(QString::fromUtf8(":/images/icons/loop.svg"), QSize(), QIcon::Normal, QIcon::Off);
     loopToggleButton->setIcon(icon3);
@@ -151,22 +90,88 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     loopToggleButton->setFlat(true);
     loopToggleButton->setEnabled(false);
 
-    playerControlsGrid->addWidget(loopToggleButton, 2, 7, 1, 1);
+    playerControlsGrid->addWidget(loopToggleButton, 2, 1, 1, 1);
+
+//    settingsButton = new QPushButton(this);
+//    settingsButton->setObjectName(QString::fromUtf8("settingsButton"));
+//    settingsButton->setProperty("cssClass", "playerControlButton");
+//    settingsButton->setMinimumSize(QSize(0, 20));
+//    QIcon icon5;
+//    icon5.addFile(QString::fromUtf8(":/images/icons/settings.svg"), QSize(), QIcon::Normal, QIcon::Off);
+//    settingsButton->setIcon(icon5);
+//    settingsButton->setIconSize(QSize(20, 20));
+//    settingsButton->setFlat(true);
+
+//    playerControlsGrid->addWidget(settingsButton, 2, 1, 1, 1);
+    QSpacerItem* spacer = new QSpacerItem(20, 0, QSizePolicy::Fixed, QSizePolicy::Fixed);
+    playerControlsGrid->addItem(spacer, 2, 2, 1, 1);
+    playerControlsGrid->addItem(spacer, 2, 3, 1, 1);
+    //playerControlsGrid->setColumnMinimumWidth(1,20);
+    //playerControlsGrid->setColumnMinimumWidth(2,20);
+
+    skipBackButton = new QPushButton(this);
+    skipBackButton->setObjectName(QString::fromUtf8("skipBackButton"));
+    skipBackButton->setProperty("cssClass", "playerControlButton");
+    skipBackButton->setMinimumSize(QSize(20, 20));
+    QIcon icon6;
+    icon6.addFile(QString::fromUtf8(":/images/icons/skipBack.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    skipBackButton->setIcon(icon6);
+    skipBackButton->setIconSize(QSize(20, 20));
+    skipBackButton->setFlat(true);
+
+    playerControlsGrid->addWidget(skipBackButton, 2, 4, 1, 1);
+
+    _stopBtn = new QPushButton(this);
+    _stopBtn->setObjectName(QString::fromUtf8("stopBtn"));
+    _stopBtn->setProperty("cssClass", "playerControlButton");
+    _stopBtn->setMinimumSize(QSize(20, 20));
+    QIcon iconStop;
+    iconStop.addFile(QString::fromUtf8(":/images/icons/stop.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    _stopBtn->setIcon(iconStop);
+    _stopBtn->setIconSize(QSize(20, 20));
+    _stopBtn->setFlat(true);
+    _stopBtn->setEnabled(false);
+
+    playerControlsGrid->addWidget(_stopBtn, 2, 5, 1, 1);
+
+    PlayBtn = new QPushButton(this);
+    PlayBtn->setObjectName(QString::fromUtf8("PlayBtn"));
+    PlayBtn->setProperty("cssClass", "playerControlButton");
+    PlayBtn->setMinimumSize(QSize(20, 20));
+    QIcon icon7;
+    icon7.addFile(QString::fromUtf8(":/images/icons/play.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    PlayBtn->setIcon(icon7);
+    PlayBtn->setIconSize(QSize(20, 20));
+    PlayBtn->setFlat(true);
+
+    playerControlsGrid->addWidget(PlayBtn, 2, 6, 1, 1);
+
+    skipForwardButton = new QPushButton(this);
+    skipForwardButton->setObjectName(QString::fromUtf8("skipForwardButton"));
+    skipForwardButton->setProperty("cssClass", "playerControlButton");
+    skipForwardButton->setMinimumSize(QSize(20, 20));
+    QIcon icon1;
+    icon1.addFile(QString::fromUtf8(":/images/icons/skipForward.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    skipForwardButton->setIcon(icon1);
+    skipForwardButton->setIconSize(QSize(20, 20));
+    skipForwardButton->setFlat(true);
+
+    playerControlsGrid->addWidget(skipForwardButton, 2, 7, 1, 1);
 
     VolumeSlider = new RangeSlider(this);
     VolumeSlider->setObjectName(QString::fromUtf8("VolumeSlider"));
-    VolumeSlider->setMinimumSize(QSize(0, 20));
+    VolumeSlider->setMinimumSize(QSize(20, 20));
     VolumeSlider->setOrientation(Qt::Horizontal);
     VolumeSlider->setDisabled(false);
     VolumeSlider->SetRange(0, 100);
     VolumeSlider->setOption(RangeSlider::Option::RightHandle);
 
-    playerControlsGrid->addWidget(VolumeSlider, 2, 8, 1, 2);
+    playerControlsGrid->addWidget(VolumeSlider, 2, 8, 1, 3);
 
     MuteBtn = new QPushButton(this);
     MuteBtn->setObjectName(QString::fromUtf8("muteBtn"));
     MuteBtn->setProperty("cssClass", "playerControlButton");
-    MuteBtn->setMinimumSize(QSize(0, 20));
+    MuteBtn->setMinimumSize(QSize(20, 20));
     QIcon icon2;
     icon2.addFile(QString::fromUtf8(":/images/icons/speakerMute.svg"), QSize(), QIcon::Normal, QIcon::Off);
     MuteBtn->setIcon(icon2);
@@ -174,7 +179,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     MuteBtn->setCheckable(true);
     MuteBtn->setFlat(true);
 
-    playerControlsGrid->addWidget(MuteBtn, 2, 10, 1, 1);
+    playerControlsGrid->addWidget(MuteBtn, 2, 11, 1, 1);
 
     connect(SeekSlider, &RangeSlider::upperValueMove, this, &PlayerControls::on_seekSlider_sliderMoved);
     connect(SeekSlider, &RangeSlider::onHover, this, &PlayerControls::on_seekslider_hover);
@@ -187,7 +192,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     connect(skipToActionButton, &QPushButton::clicked, this, [this]() {emit skipToNextAction();});
     connect(skipBackButton, &QPushButton::clicked, this, [this]() {emit skipBack();});
     connect(fullScreenBtn, &QPushButton::clicked, this, [this]() {emit fullscreenToggled();});
-    connect(settingsButton, &QPushButton::clicked, this, [this]() {emit settingsClicked();});
+    //connect(settingsButton, &QPushButton::clicked, this, [this]() {emit settingsClicked();});
     connect(loopToggleButton, &QPushButton::toggled, this, &PlayerControls::on_loopToggleButton_toggled);
     connect(MuteBtn, &QPushButton::toggled, this, &PlayerControls::on_MuteBtn_toggled);
 

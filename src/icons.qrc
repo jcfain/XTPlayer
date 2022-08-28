@@ -47,5 +47,7 @@
         <file>images/welcome/XTP_welcome-7.png</file>
         <file>images/icons/search.svg</file>
         <file>images/icons/context-menu.svg</file>
+        <file>images/icons/settings-black.png</file>
+        <file>images/icons/settings-white.png</file>
     </qresource>
 </RCC>

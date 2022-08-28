@@ -150,7 +150,7 @@ private slots:
 
     void onPrepareLibraryLoad();
     void onLibraryLoadingStatusChange(QString message);
-    void libraryListSetIconSize(QSize newSize);
+    //void libraryListSetIconSize(QSize newSize);
 
     void on_audioLevel_Change(int decibelL, int decibelR);
 
@@ -165,7 +165,7 @@ private slots:
     void onText_to_speech(QString message);
     void onPlaylistLoaded(LibraryListItem27 autoPlayItem = LibraryListItem27());
     void onBackFromPlaylistLoaded();
-    void onRandomizeComplete();
+    //void onRandomizeComplete();
 
 signals:
     void keyPressed(QKeyEvent * event);
@@ -184,7 +184,7 @@ signals:
     void playlistLoaded(LibraryListItem27 autoPlayItem = LibraryListItem27());
     void libraryItemFound(LibraryListItem27 item);
     void backFromPlaylistLoaded();
-    void randomizeComplete();
+    //void randomizeComplete();
 protected:
     virtual void keyPressEvent(QKeyEvent *event) override
     {
@@ -240,6 +240,7 @@ private:
     QLabel* libraryLoadingLabel;
     QLabel* libraryLoadingInfoLabel;
     QMovie* libraryLoadingMovie;
+    QPushButton *settingsButton;
     QPushButton* retryConnectionButton;
     QLabel* deoConnectionStatusLabel;
     QPushButton* deoRetryConnectionButton;
@@ -333,6 +334,7 @@ private:
 
     void deviceHome();
     void deviceSwitchedHome();
+    void onSetLibraryStopped();
     void onSetLibraryLoaded();
     void onSetLibraryLoading();
     void toggleLibraryLoading(bool loading);

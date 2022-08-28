@@ -1402,11 +1402,17 @@ void SettingsDialog::on_passwordButton_clicked()
          QString text = QInputDialog::getText(this, tr("Set password"),
                                               tr("Launch password:"), QLineEdit::PasswordEchoOnEdit,
                                               "", &ok);
-         if (ok && !text.isEmpty())
+         QString text2 = QInputDialog::getText(this, tr("Set password"),
+                                              tr("Confirm password:"), QLineEdit::PasswordEchoOnEdit,
+                                              "", &ok);
+         if (ok && !text.isEmpty() && text == text2)
          {
              SettingsHandler::SetHashedPass(encryptPass(text));
              DialogHandler::MessageBox(this, "Password set.", XLogLevel::Information);
              ui.passwordButton->setText("Change password");
+         } else if(text != text2) {
+             DialogHandler::MessageBox(this, "Passwords did not match!", XLogLevel::Critical);
+             on_passwordButton_clicked();
          }
     }
     else
@@ -1428,13 +1434,22 @@ void SettingsDialog::on_passwordButton_clicked()
                      {
                          SettingsHandler::SetHashedPass(nullptr);
                         ui.passwordButton->setText("Set password");
+                        DialogHandler::MessageBox(this, "Password cleared!", XLogLevel::Information);
                      }
                      else
                      {
-                        SettingsHandler::SetHashedPass(encryptPass(text));
-                        ui.passwordButton->setText("Change password");
+                         QString text2 = QInputDialog::getText(this, tr("Confirm password"),
+                                                              tr("Confirm password:"), QLineEdit::PasswordEchoOnEdit,
+                                                              "", &ok);
+                         if (text == text2)
+                         {
+                             SettingsHandler::SetHashedPass(encryptPass(text));
+                             DialogHandler::MessageBox(this, "Password changed!", XLogLevel::Information);
+                         } else if(text != text2) {
+                             DialogHandler::MessageBox(this, "Passwords did not match!", XLogLevel::Critical);
+                             on_passwordButton_clicked();
+                         }
                      }
-                     DialogHandler::MessageBox(this, "Password changed!", XLogLevel::Information);
                  }
              }
              else

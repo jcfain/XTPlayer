@@ -30,6 +30,7 @@ LibraryListItem27 XLibraryList::item(QModelIndex index) {
 LibraryListItem27 XLibraryList::item(int index) {
     return model()->index(index, 0).data(Qt::UserRole).value<LibraryListItem27>();
 }
+
 QModelIndex XLibraryList::itemIndex(int index) {
     return model()->index(index, 0);
 }

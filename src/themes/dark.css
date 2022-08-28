@@ -254,6 +254,19 @@ QPushButton[cssClass="playerControlButton"]:disabled {
     background-color: transparent;
     color: grey;
 }
+QPushButton[cssClass="settingsButton"] {
+    background: transparent;
+	border-radius: 25px;
+    color: black;
+}
+QPushButton[cssClass="settingsButton"]:hover {
+    background-color: #44474f;
+    color: #dddedf;
+}
+QPushButton[cssClass="settingsButton"]:disabled {
+    background-color: transparent;
+    color: grey;
+}
 QPushButton#loopToggleButton:checked,
 QPushButton#muteBtn:checked  {
     background-color: rgba(100, 100, 100, 0.5);
