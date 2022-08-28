@@ -103,11 +103,6 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 //    settingsButton->setFlat(true);
 
 //    playerControlsGrid->addWidget(settingsButton, 2, 1, 1, 1);
-    QSpacerItem* spacer = new QSpacerItem(20, 0, QSizePolicy::Fixed, QSizePolicy::Fixed);
-    playerControlsGrid->addItem(spacer, 2, 2, 1, 1);
-    playerControlsGrid->addItem(spacer, 2, 3, 1, 1);
-    //playerControlsGrid->setColumnMinimumWidth(1,20);
-    //playerControlsGrid->setColumnMinimumWidth(2,20);
 
     skipBackButton = new QPushButton(this);
     skipBackButton->setObjectName(QString::fromUtf8("skipBackButton"));
