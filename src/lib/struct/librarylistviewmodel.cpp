@@ -4,7 +4,7 @@ LibraryListViewModel::LibraryListViewModel(MediaLibraryHandler* mediaLibraryHand
     : QAbstractListModel(parent)
 {
     _mediaLibraryHandler = mediaLibraryHandler;
-    connect(_mediaLibraryHandler, &MediaLibraryHandler::libraryChange, this,  [this]() {
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::libraryLoaded, this,  [this]() {
         beginResetModel();
         endResetModel();
     } );
@@ -13,6 +13,14 @@ LibraryListViewModel::LibraryListViewModel(MediaLibraryHandler* mediaLibraryHand
         auto index = this->index(getData().indexOf(item), 0);
         emit dataChanged(index, index);
         //endResetModel();
+    } );
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemRemoved, this,   [this](LibraryListItem27 item) {
+        auto index = this->index(getData().indexOf(item), 0);
+        emit dataChanged(index, index);
+    } );
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemAdded, this,   [this](LibraryListItem27 item) {
+        auto index = this->index(getData().indexOf(item), 0);
+        emit dataChanged(index, index);
     } );
 
 }
@@ -52,12 +60,21 @@ void LibraryListViewModel::setLibraryViewMode(LibraryView mode) {
 //{
 //    // FIXME: Implement me!
 //}
+
+Qt::ItemFlags LibraryListViewModel::flags(const QModelIndex &index) const {
+    Qt::ItemFlags defaultFlags = QAbstractListModel::flags(index);
+
+    return defaultFlags;
+}
+
 QList<LibraryListItem27> LibraryListViewModel::getData() const {
     return _mediaLibraryHandler->getLibraryCache();
 }
 QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
+        return QVariant();
+    if (index.row() >= getData().size())
         return QVariant();
 
     if (index.column() == 0) {

@@ -23,7 +23,6 @@ protected:
 
 private:
     LibrarySortMode _sortMode;
-    MediaLibraryHandler* _mediaLibraryHandler;
     bool dateInRange(QDate date) const;
 
     QDate minDate;

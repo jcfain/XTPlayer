@@ -1,24 +1,30 @@
 #include "librarysortfilterproxymodel.h"
 
 LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(MediaLibraryHandler* mediaLibraryHandler, QObject *parent)
-    : QSortFilterProxyModel{parent}
-{
-    setDynamicSortFilter(true);
+    : QSortFilterProxyModel(parent) {
+    setDynamicSortFilter(false);
     setSortRole(Qt::UserRole);
-    _mediaLibraryHandler = mediaLibraryHandler;
-    connect(_mediaLibraryHandler, &MediaLibraryHandler::libraryChange, this,  [this]() {
-        beginResetModel();
-        endResetModel();
+    connect(mediaLibraryHandler, &MediaLibraryHandler::libraryChange, this,  [this]() {
+        invalidate();
+    } );
+//    connect(mediaLibraryHandler, &MediaLibraryHandler::itemUpdated, this,   [this](LibraryListItem27 item) {
+//        invalidate();
+//    } );
+    connect(mediaLibraryHandler, &MediaLibraryHandler::itemRemoved, this,   [this](LibraryListItem27 item) {
+        invalidate();
+    } );
+    connect(mediaLibraryHandler, &MediaLibraryHandler::itemAdded, this,   [this](LibraryListItem27 item) {
+        invalidate();
     } );
 }
+
 void LibrarySortFilterProxyModel::setSortMode(LibrarySortMode sortMode) {
     if(_sortMode != sortMode || _sortMode == LibrarySortMode::RANDOM) {
-        beginResetModel();
+        //beginResetModel();
         _sortMode = sortMode;
-        //Sorting random with playlists crashes the app for some reason. Playlists are filtered in random mode.
-        sort(0);
         invalidate();
-        endResetModel();
+        sort(0);
+        //endResetModel();
     }
 }
 
@@ -28,13 +34,10 @@ void LibrarySortFilterProxyModel::setLibraryViewMode(LibraryView mode) {
     endResetModel();
 }
 
-bool LibrarySortFilterProxyModel::lessThan(const QModelIndex &left,
-                                      const QModelIndex &right) const
-{
+bool LibrarySortFilterProxyModel::lessThan(const QModelIndex &left, const QModelIndex &right) const {
 
-    if(!left.isValid() || !right.isValid())
-        return false;
-
+//    if(!left.isValid() || !right.isValid())
+//        return false;
     LibraryListItem27 leftData = left.data(sortRole()).value<LibraryListItem27>();
     LibraryListItem27 rightData = right.data(sortRole()).value<LibraryListItem27>();
 
@@ -59,39 +62,15 @@ bool LibrarySortFilterProxyModel::lessThan(const QModelIndex &left,
         }
         else if(_sortMode == LibrarySortMode::RANDOM)
         {
-    //            qint64 randomValue = XMath::rand(0, 100);
-    //            if(randomValue > 50)
-    //                return thisData.modifiedDate < otherData.modifiedDate;
             return rand()%20 < 10;
-            //return false;
         }
         else if(_sortMode == LibrarySortMode::CREATED_ASC)
         {
             return leftData.modifiedDate < rightData.modifiedDate;
-    //            auto d1 = thisData.modifiedDate;
-    //            auto d2 = otherData.modifiedDate;
-    //            if (d1.year() < d2.year())
-    //                return true;
-    //            if (d1.year() == d2.year() && d1.month() < d2.month())
-    //                return true;
-    //            if (d1.year() == d2.year() && d1.month() == d2.month() && d1.day() < d2.day())
-    //                return true;
-
-    //            return false;
         }
         else if(_sortMode == LibrarySortMode::CREATED_DESC)
         {
             return leftData.modifiedDate > rightData.modifiedDate;
-    //            auto d1 = thisData.modifiedDate;
-    //            auto d2 = otherData.modifiedDate;
-    //            if (d1.year() > d2.year())
-    //                return true;
-    //            if (d1.year() == d2.year() && d1.month() > d2.month())
-    //                return true;
-    //            if (d1.year() == d2.year() && d1.month() == d2.month() && d1.day() > d2.day())
-    //                return true;
-
-    //            return false;
         }
         else if(_sortMode == LibrarySortMode::NAME_ASC)
         {
@@ -114,7 +93,7 @@ bool LibrarySortFilterProxyModel::lessThan(const QModelIndex &left,
             return leftData.type > rightData.type;
         }
     }
-    // otherwise just return the comparison result from the base class
+
     return QSortFilterProxyModel::lessThan(left, right);
 }
 bool LibrarySortFilterProxyModel::filterAcceptsRow(int sourceRow,
@@ -127,8 +106,9 @@ bool LibrarySortFilterProxyModel::filterAcceptsRow(int sourceRow,
     if(isHidden)
         return !isHidden;
 
-    //For some reason sorting random and dealing with playlists crashes the app..Filter it in random sort for now.
-    if(_sortMode == LibrarySortMode::RANDOM && item.type == LibraryListItemType::PlaylistInternal)
+
+    //For some reason sorting random without any playlists crashes. Add dummy and hide it.
+    if(item.nameNoExtension == "DummyPlaylistThatNoOneShouldEverSeeOrNameTheSame")
         return false;
 
     return index.data().toString().contains(filterRegularExpression());

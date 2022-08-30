@@ -8,8 +8,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 {
     QCoreApplication::setOrganizationName("cUrbSide prOd");
     QCoreApplication::setApplicationName("XTPlayer");
-    XTPVersion = QString("0.3395b_%1T%2").arg(__DATE__).arg(__TIME__);
-    XTPVersionNum = 0.3395f;
+    XTPVersion = QString("0.4b_%1T%2").arg(__DATE__).arg(__TIME__);
+    XTPVersionNum = 0.4f;
     const QString fullVersion = "XTP: v"+ XTPVersion + "\nXTE: v" + SettingsHandler::XTEVersion;
 
     QPixmap pixmap("://images/XTP_Splash.png");
@@ -156,7 +156,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     _playListViewModel = new PlaylistViewModel(xtEngine.mediaLibraryHandler(), this);
 
     _librarySortFilterProxyModel = new LibrarySortFilterProxyModel(xtEngine.mediaLibraryHandler(), this);
-    auto libraryListViewModel = new LibraryListViewModel(xtEngine.mediaLibraryHandler(), _librarySortFilterProxyModel);
+    auto libraryListViewModel = new LibraryListViewModel(xtEngine.mediaLibraryHandler(), this);
     _librarySortFilterProxyModel->setSourceModel(libraryListViewModel);
     libraryList->setModel(_librarySortFilterProxyModel);
 

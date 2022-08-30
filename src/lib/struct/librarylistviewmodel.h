@@ -31,11 +31,11 @@ public:
     LibraryListItem27 getItem(const QModelIndex &index);
     LibraryListItem27 getItem(int index);
 
-    void setSortMode(LibrarySortMode sortMode);
     void setLibraryViewMode(LibraryView mode);
 
 protected:
     virtual QList<LibraryListItem27> getData() const;
+    virtual Qt::ItemFlags flags(const QModelIndex &index) const override;
 
 
 //    // Add data:
@@ -49,6 +49,7 @@ private slots:
 private:
     MediaLibraryHandler* _mediaLibraryHandler;
     LibraryView _libraryViewMode;
+    LibrarySortMode _sortMode;
 
 
 };
