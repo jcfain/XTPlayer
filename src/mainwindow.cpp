@@ -1717,7 +1717,7 @@ void MainWindow::onSaveThumbError(LibraryListItem27 item, bool vrMode, QString e
 //        libraryListWidgetItem->setThumbFile(item.thumbFile, errorMessage);
 //    }
 }
-#include "libraryManager.h"
+
 void MainWindow::on_actionSelect_library_triggered()
 {
     QStringList oldPaths = SettingsHandler::getSelectedLibrary();
@@ -1730,13 +1730,14 @@ void MainWindow::on_actionSelect_library_triggered()
     }
     QDir currentDir(firstPathExists);
     QString defaultPath = !firstPathExists.isEmpty() ? firstPathExists : ".";
-    LibraryManager libraryExclusions;
-    libraryExclusions.exec();
+    LibraryManager libraryManager;
+    libraryManager.exec();
     QStringList currentPaths = SettingsHandler::getSelectedLibrary();
 
     if(!currentPaths.isEmpty()) {
-        QSet<QString> subtraction = QSet<QString>(currentPaths.begin(),currentPaths.end()).subtract(QSet<QString>(oldPaths.begin(), oldPaths.end()));
-        if(!subtraction.isEmpty()) {
+        QSet<QString> additions = QSet<QString>(currentPaths.begin(),currentPaths.end()).subtract(QSet<QString>(oldPaths.begin(), oldPaths.end()));
+        QSet<QString> subtraction = QSet<QString>(oldPaths.begin(), oldPaths.end()).subtract(QSet<QString>(currentPaths.begin(),currentPaths.end()));
+        if(!subtraction.isEmpty() || !additions.empty()) {
             auto message = xtEngine.mediaLibraryHandler()->isLibraryLoading() ? "Stop current loading process and restart with new list now?" : "Load all libraries now?";
             if(DialogHandler::Dialog(this, message) == QDialog::DialogCode::Accepted) {
                 xtEngine.mediaLibraryHandler()->loadLibraryAsync();

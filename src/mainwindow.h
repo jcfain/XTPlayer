@@ -48,6 +48,7 @@
 #include "lib/struct/LibraryListItem27.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/ConnectionChangedSignal.h"
+#include "libraryManager.h"
 //#include <QtCompress/qzipwriter.h>
 //#include <QtCompress/qzipreader.h>
 

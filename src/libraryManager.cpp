@@ -5,7 +5,7 @@ LibraryManager::LibraryManager(QWidget* parent) : QDialog(parent)
     ui.setupUi(this);
     ui.listWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ui.listWidget->addItems(SettingsHandler::getSelectedLibrary());
-    setWindowTitle("Library Manager");
+    setWindowTitle("Media folders");
 }
 
 LibraryManager::~LibraryManager()
@@ -26,7 +26,7 @@ void LibraryManager::on_addButton_clicked()
 //        }
 //    }
     QFileDialog file_dialog;
-    QString path  = SettingsHandler::getLastSelectedLibrary();
+    QString path  = QFileInfo(SettingsHandler::getLastSelectedLibrary()).dir().path();
     file_dialog.setDirectory(path);
     //file_dialog.setOption(QFileDialog::DontUseNativeDialog, true);
     file_dialog.setFileMode(QFileDialog::DirectoryOnly);
@@ -48,16 +48,16 @@ void LibraryManager::on_addButton_clicked()
         {
             bool duplicate = false;
             foreach (auto currentPath, currentPaths) {
-                if(currentPath.startsWith(path)) {
-                    DialogHandler::MessageBox(this, "Directory '"+path+"' is a parent of '"+currentPath+"'", XLogLevel::Warning);
+                if(currentPath==path) {
+                    DialogHandler::MessageBox(this, "Directory '"+path+"' is already in the selected list!", XLogLevel::Warning);
+                    duplicate = true;
+                    break;
+                } else if(currentPath.startsWith(path)) {
+                    DialogHandler::MessageBox(this, "Directory '"+path+"'\nis a parent of\n'"+currentPath+"'", XLogLevel::Warning);
                     duplicate = true;
                     break;
                 } else if(path.startsWith(currentPath)) {
-                    DialogHandler::MessageBox(this, "Directory '"+path+"' is a child of '"+currentPath+"'", XLogLevel::Warning);
-                    duplicate = true;
-                    break;
-                } else if(currentPath==path) {
-                    DialogHandler::MessageBox(this, "Directory '"+path+"' is already in the selected list!", XLogLevel::Warning);
+                    DialogHandler::MessageBox(this, "Directory '"+path+"'\nis a child of\n'"+currentPath+"'", XLogLevel::Warning);
                     duplicate = true;
                     break;
                 }
