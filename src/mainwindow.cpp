@@ -1735,6 +1735,10 @@ void MainWindow::on_actionSelect_library_triggered()
     QStringList currentPaths = SettingsHandler::getSelectedLibrary();
 
     if(!currentPaths.isEmpty()) {
+        if(oldPaths.isEmpty()) {
+            xtEngine.mediaLibraryHandler()->loadLibraryAsync();
+            return;
+        }
         QSet<QString> additions = QSet<QString>(currentPaths.begin(),currentPaths.end()).subtract(QSet<QString>(oldPaths.begin(), oldPaths.end()));
         QSet<QString> subtraction = QSet<QString>(oldPaths.begin(), oldPaths.end()).subtract(QSet<QString>(currentPaths.begin(),currentPaths.end()));
         if(!subtraction.isEmpty() || !additions.empty()) {
