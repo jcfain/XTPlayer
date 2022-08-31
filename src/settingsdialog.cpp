@@ -278,7 +278,7 @@ void SettingsDialog::setupUi()
         ui.enableHttpServerCheckbox->setChecked(SettingsHandler::getEnableHttpServer());
         ui.httpServerOptions->setVisible(SettingsHandler::getEnableHttpServer());
         ui.httpRootLineEdit->setText(SettingsHandler::getHttpServerRoot());
-        ui.vrLibraryLineEdit->setText(SettingsHandler::getVRLibrary());
+        ui.vrLibraryLineEdit->setText(SettingsHandler::getLastSelectedVRLibrary());
         ui.chunkSizeDoubleSpinBox->setValue(SettingsHandler::getHTTPChunkSize() / 1048576);
         ui.httpPortSpinBox->setValue(SettingsHandler::getHTTPPort());
         ui.webSocketPortSpinBox->setValue(SettingsHandler::getWebSocketPort());
@@ -1602,7 +1602,7 @@ void SettingsDialog::on_skipToMoneyShotPlaysFunscriptCheckbox_clicked(bool check
 
 void SettingsDialog::on_browseSkipToMoneyShotFunscriptButton_clicked(bool checked)
 {
-    QString selectedScript = QFileDialog::getOpenFileName(this, tr("Choose script"), SettingsHandler::getSelectedLibrary(), tr("Scripts (*.funscript *.zip)"));
+    QString selectedScript = QFileDialog::getOpenFileName(this, tr("Choose script"), SettingsHandler::getLastSelectedLibrary(), tr("Scripts (*.funscript *.zip)"));
     if (selectedScript != Q_NULLPTR)
     {
         SettingsHandler::setSkipToMoneyShotFunscript(selectedScript);
@@ -1631,7 +1631,7 @@ void SettingsDialog::on_enableHttpServerCheckbox_clicked(bool checked)
 
 void SettingsDialog::on_browseHttpRootButton_clicked()
 {
-    QString selectedDirectory = QFileDialog::getExistingDirectory(this, tr("Choose HTTP root"), SettingsHandler::getSelectedLibrary());
+    QString selectedDirectory = QFileDialog::getExistingDirectory(this, tr("Choose HTTP root"), QApplication::applicationDirPath());
     if (selectedDirectory != Q_NULLPTR)
     {
         SettingsHandler::setHttpServerRoot(selectedDirectory);
@@ -1643,10 +1643,10 @@ void SettingsDialog::on_browseHttpRootButton_clicked()
 
 void SettingsDialog::on_browseVRLibraryButton_clicked()
 {
-    QString selectedDirectory = QFileDialog::getExistingDirectory(this, tr("Choose VR library"), SettingsHandler::getSelectedLibrary());
+    QString selectedDirectory = QFileDialog::getExistingDirectory(this, tr("Choose VR library"), SettingsHandler::getLastSelectedLibrary());
     if (selectedDirectory != Q_NULLPTR)
     {
-        SettingsHandler::setVRLibrary(selectedDirectory);
+        SettingsHandler::addSelectedVRLibrary(selectedDirectory);
         ui.vrLibraryLineEdit->setText(selectedDirectory);
     }
 }
@@ -1674,7 +1674,7 @@ void SettingsDialog::on_httpRootLineEdit_textEdited(const QString &selectedDirec
 
 void SettingsDialog::on_vrLibraryLineEdit_textEdited(const QString &selectedDirectory)
 {
-    SettingsHandler::setVRLibrary(selectedDirectory);
+    SettingsHandler::addSelectedVRLibrary(selectedDirectory);
 }
 
 void SettingsDialog::on_finscriptModifierSpinBox_valueChanged(int value)

@@ -71,7 +71,7 @@ void DLNAScriptLinks::setUpData()
         layoutBrowse->setAlignment(Qt::AlignCenter); //set Alignment layout
         layoutBrowse->setContentsMargins(4,4,4,4);
         connect(browseButton, &QPushButton::clicked, this, [this, key]() {
-            QString funscriptPath = QFileDialog::getOpenFileName(this, tr("Choose script for video: ") + key, SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
+            QString funscriptPath = QFileDialog::getOpenFileName(this, tr("Choose script for video: ") + key, SettingsHandler::getLastSelectedLibrary(), "Script Files (*.funscript)");
             if (!funscriptPath.isEmpty())
             {
                 auto items = ui.tableWidget->findItems(key, Qt::MatchFlag::MatchExactly);

@@ -1064,7 +1064,7 @@ void MainWindow::changeDeoFunscript()
     {
         QFileInfo videoFile(playingPacket.path);
         funscriptFileSelectorOpen = true;
-        QString funscriptPath = QFileDialog::getOpenFileName(this, tr("Choose script for video: ") + videoFile.fileName(), SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript)");
+        QString funscriptPath = QFileDialog::getOpenFileName(this, tr("Choose script for video: ") + videoFile.fileName(), SettingsHandler::getLastSelectedLibrary(), "Script Files (*.funscript)");
         funscriptFileSelectorOpen = false;
         if (!funscriptPath.isEmpty())
         {
@@ -1717,18 +1717,38 @@ void MainWindow::onSaveThumbError(LibraryListItem27 item, bool vrMode, QString e
 //        libraryListWidgetItem->setThumbFile(item.thumbFile, errorMessage);
 //    }
 }
-
+#include "libraryManager.h"
 void MainWindow::on_actionSelect_library_triggered()
 {
-    QString currentPath = SettingsHandler::getSelectedLibrary();
-    QDir currentDir(currentPath);
-    QString defaultPath = !currentPath.isEmpty() && currentDir.exists() ? currentPath : ".";
-    QString selectedLibrary = QFileDialog::getExistingDirectory(this, tr("Choose media library"), defaultPath, QFileDialog::ReadOnly);
-    if (selectedLibrary != Q_NULLPTR)
-    {
-        SettingsHandler::setSelectedLibrary(selectedLibrary);
-        xtEngine.mediaLibraryHandler()->loadLibraryAsync();
+    QStringList oldPaths = SettingsHandler::getSelectedLibrary();
+    QString firstPathExists;
+    foreach(auto path, oldPaths) {
+        if(QFileInfo::exists(path)) {
+            firstPathExists = path;
+            break;
+        }
     }
+    QDir currentDir(firstPathExists);
+    QString defaultPath = !firstPathExists.isEmpty() ? firstPathExists : ".";
+    LibraryManager libraryExclusions;
+    libraryExclusions.exec();
+    QStringList currentPaths = SettingsHandler::getSelectedLibrary();
+
+    if(!currentPaths.isEmpty()) {
+        QSet<QString> subtraction = QSet<QString>(currentPaths.begin(),currentPaths.end()).subtract(QSet<QString>(oldPaths.begin(), oldPaths.end()));
+        if(!subtraction.isEmpty()) {
+            auto message = xtEngine.mediaLibraryHandler()->isLibraryLoading() ? "Stop current loading process and restart with new list now?" : "Load all libraries now?";
+            if(DialogHandler::Dialog(this, message) == QDialog::DialogCode::Accepted) {
+                xtEngine.mediaLibraryHandler()->loadLibraryAsync();
+            }
+        }
+    }
+//    QString selectedLibrary = QFileDialog::getExistingDirectory(this, tr("Choose media library"), defaultPath, QFileDialog::ReadOnly);
+//    if (selectedLibrary != Q_NULLPTR)
+//    {
+//        SettingsHandler::addSelectedLibrary(selectedLibrary);
+//        xtEngine.mediaLibraryHandler()->loadLibraryAsync();
+//    }
 }
 
 void MainWindow::on_LibraryList_itemClicked(QModelIndex index)
@@ -1812,7 +1832,7 @@ void MainWindow::playFileWithAudioSync()
 
 void MainWindow::playFileWithCustomScript()
 {
-    QString selectedScript = QFileDialog::getOpenFileName(this, tr("Choose script"), SettingsHandler::getSelectedLibrary(), tr("Scripts (*.funscript *.zip)"));
+    QString selectedScript = QFileDialog::getOpenFileName(this, tr("Choose script"), SettingsHandler::getLastSelectedLibrary(), tr("Scripts (*.funscript *.zip)"));
     if (selectedScript != Q_NULLPTR)
     {
         LibraryListItem27 selectedFileListItem = libraryList->selectedItem();
@@ -2479,7 +2499,7 @@ void MainWindow::onFunscriptSearchResult(QString mediaPath, QString funscriptPat
                 LogHandler::Debug("onFunscriptSearchResult Enter no scripts found. Ask user");
                 onText_to_speech("Script for video playing in VR not found. Please check your computer to select a script.");
                 funscriptFileSelectorOpen = true;
-                funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + mediaPath, SettingsHandler::getSelectedLibrary(), "Script Files (*.funscript);;Zip (*.zip)");
+                funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + mediaPath, SettingsHandler::getLastSelectedLibrary(), "Script Files (*.funscript);;Zip (*.zip)");
                 funscriptFileSelectorOpen = false;
                 saveLinkedScript = true;
                 //LogHandler::Debug("funscriptPath: "+funscriptPath);

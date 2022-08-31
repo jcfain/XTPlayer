@@ -26,7 +26,7 @@ void LibraryExclusions::on_addButton_clicked()
 //        }
 //    }
     QFileDialog file_dialog;
-    QString library = SettingsHandler::getSelectedLibrary();
+    QString library = SettingsHandler::getLastSelectedLibrary();
     file_dialog.setDirectory(library);
     //file_dialog.setOption(QFileDialog::DontUseNativeDialog, true);
     file_dialog.setFileMode(QFileDialog::DirectoryOnly);

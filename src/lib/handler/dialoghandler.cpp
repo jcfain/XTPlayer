@@ -32,6 +32,7 @@ int DialogHandler::Dialog(QWidget* parent, QLayout* layout, bool modal)
 {
     if(!_dialog) {
         _dialog = new QDialog(parent);
+        _dialog->setMinimumSize({175, 100});
         connect(_dialog, &QDialog::destroyed, [](){
             qDebug("Dialog is gone.");
             _dialog = 0;
@@ -53,6 +54,7 @@ int DialogHandler::Dialog(QWidget* parent, QString message, bool modal, bool sho
 {
     if(!_dialog) {
         _dialog = new QDialog(parent);
+        _dialog->setMinimumSize({175, 100});
         connect(_dialog, &QDialog::destroyed, [](){
             qDebug("Dialog accept is gone.");
             _dialog = 0;
@@ -71,8 +73,13 @@ int DialogHandler::Dialog(QWidget* parent, QString message, bool modal, bool sho
         if(showAccept) {
             QPushButton* okButton = new QPushButton(_dialog);
             okButton->setText("Ok");
-            layout->addWidget(okButton, 2, 3, 1, 2);
+            layout->addWidget(okButton, 2, 2, 1, 1);
             connect(okButton, &QPushButton::released, _dialog, &QDialog::accept);
+            QPushButton* cancelButton = new QPushButton(_dialog);
+            cancelButton->setText("Cancel");
+            layout->addWidget(cancelButton, 2, 3, 1, 1);
+            connect(cancelButton, &QPushButton::released, _dialog, &QDialog::reject);
+
             connect(_dialog, &QDialog::accepted, DialogAccepted);
         }
         _dialog->setModal(modal);
