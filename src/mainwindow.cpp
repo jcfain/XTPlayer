@@ -8,8 +8,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 {
     QCoreApplication::setOrganizationName("cUrbSide prOd");
     QCoreApplication::setApplicationName("XTPlayer");
-    XTPVersion = QString("0.4b_%1T%2").arg(__DATE__).arg(__TIME__);
-    XTPVersionNum = 0.4f;
+    XTPVersion = QString("0.41b_%1T%2").arg(__DATE__).arg(__TIME__);
+    XTPVersionNum = 0.41f;
     const QString fullVersion = "XTP: v"+ XTPVersion + "\nXTE: v" + SettingsHandler::XTEVersion;
 
     QPixmap pixmap("://images/XTP_Splash.png");
