@@ -4,7 +4,7 @@
 #include <QListView>
 #include <QKeyEvent>
 #include <QModelIndex>
-#include <QScrollbar>
+#include <QScrollBar>
 #include "lib/struct/LibraryListItem27.h"
 #include "lib/struct/playlistviewmodel.h"
 #include "lib/struct/librarysortfilterproxymodel.h"

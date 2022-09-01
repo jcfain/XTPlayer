@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version=v0.33a
+version=v0.41a
 targetDirectory=./Deploy/XTPlayer-${version}_Linux_x86_64
 xteTargetDirectory=./Deploy/XTEngine-${version}_Linux_x86_64
 binDirectory=./build-XTPlayer-Desktop_Qt_5_15_2_GCC_64bit-Release/XTPlayer
@@ -17,10 +17,11 @@ cp $xteBinDirectory/www/*-min.js $targetDirectory/bin/www/
 cp $xteBinDirectory/www/*-min.css $targetDirectory/bin/www/
 cp $xteBinDirectory/www/favicon.ico $targetDirectory/bin/www/
 cp -R Deploy/lib/* $targetDirectory/lib
-cp -R Deploy/XTEngine-v0.33a_Linux_x86_64/lib/* $targetDirectory/lib
+cp -R $xteTargetDirectory/lib/* $targetDirectory/lib
 cp ../XTEngine/src/rename_me_for_local_settings.ini $targetDirectory/bin
 cp $xteBinDirectory/*.* $targetDirectory/lib
-cp "XTP and DeoVR guide.pdf" $targetDirectory/"XTP_and_DeoVR-HereSphere_guide.pdf"
+rm -r $xteTargetDirectory
+cp "XTP_and_DeoVR-HereSphere_guide.pdf" $targetDirectory/bin/"XTP_and_DeoVR-HereSphere_guide.pdf"
 read -p "Press enter to resume ..."
 
 
