@@ -1130,19 +1130,6 @@ has no script associated with it.</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="10">
-        <widget class="QCheckBox" name="useMediaDirectoryCheckbox">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="toolTip">
-          <string>I didnt get a chance to test this option. If checked XTP will generate the thumbfiles  in the same folder as video. videoname.jpg</string>
-         </property>
-         <property name="text">
-          <string>Use media directory for thumbs</string>
-         </property>
-        </widget>
-       </item>
        <item row="5" column="9">
         <widget class="QCheckBox" name="hideWelcomeDialog">
          <property name="text">
@@ -1195,6 +1182,26 @@ has no script associated with it.</string>
          </property>
          <property name="text">
           <string>Debug</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="10">
+        <widget class="QCheckBox" name="useMediaDirectoryCheckbox">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="toolTip">
+          <string>I didnt get a chance to test this option. If checked XTP will generate the thumbfiles  in the same folder as video. videoname.jpg</string>
+         </property>
+         <property name="text">
+          <string>Use media directory for thumbs</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="10">
+        <widget class="QCheckBox" name="disableTimeLinePreviewChk">
+         <property name="text">
+          <string>Disable timeline preview</string>
          </property>
         </widget>
        </item>

@@ -1,20 +1,18 @@
 #include "xtpsettings.h"
+#include "lib/handler/settingshandler.h"
 
-XTPSettings::XTPSettings()
-{
-
-}
-
+XTPSettings::XTPSettings() {}
 
 void XTPSettings::save(QSettings* settingsToSaveTo) {
     if(!settingsToSaveTo)
         settingsToSaveTo = getSettings();
-    settingsToSaveTo->setValue("xwindowPos", _xwindowPos);
-    settingsToSaveTo->setValue("xwindowSize", _xwindowSize);
-    settingsToSaveTo->setValue("xLibraryWindowPos", _xLibraryPos);
-    settingsToSaveTo->setValue("xLibraryWindowSize", _xLibrarySize);
-    settingsToSaveTo->setValue("rememberWindowsSettings", _rememberWindowsSettings);
-    settingsToSaveTo->setValue("libraryWindowOpen", _libraryWindowOpen);
+    settingsToSaveTo->setValue("xwindowPos", m_xwindowPos);
+    settingsToSaveTo->setValue("xwindowSize", m_xwindowSize);
+    settingsToSaveTo->setValue("xLibraryWindowPos", m_xLibraryPos);
+    settingsToSaveTo->setValue("xLibraryWindowSize", m_xLibrarySize);
+    settingsToSaveTo->setValue("rememberWindowsSettings", m_rememberWindowsSettings);
+    settingsToSaveTo->setValue("libraryWindowOpen", m_libraryWindowOpen);
+    settingsToSaveTo->setValue("disableTimeLinePreview", m_disableTimeLinePreview);
 
     SettingsHandler::Save(settingsToSaveTo);
 }
@@ -23,13 +21,13 @@ void XTPSettings::load(QSettings* settingsToLoadFrom) {
     if(!settingsToLoadFrom)
         settingsToLoadFrom = getSettings();
 
-    _xwindowPos = settingsToLoadFrom->value("xwindowPos").toPoint();
-    _xwindowSize = settingsToLoadFrom->value("xwindowSize").toSize();
-    _xLibraryPos = settingsToLoadFrom->value("xLibraryWindowPos").toPoint();
-    _xLibrarySize = settingsToLoadFrom->value("xLibraryWindowSize").toSize();
-    _rememberWindowsSettings = settingsToLoadFrom->value("rememberWindowsSettings").toBool();
-    _libraryWindowOpen = settingsToLoadFrom->value("libraryWindowOpen").toBool();
-
+    m_xwindowPos = settingsToLoadFrom->value("xwindowPos").toPoint();
+    m_xwindowSize = settingsToLoadFrom->value("xwindowSize").toSize();
+    m_xLibraryPos = settingsToLoadFrom->value("xLibraryWindowPos").toPoint();
+    m_xLibrarySize = settingsToLoadFrom->value("xLibraryWindowSize").toSize();
+    m_rememberWindowsSettings = settingsToLoadFrom->value("rememberWindowsSettings").toBool();
+    m_libraryWindowOpen = settingsToLoadFrom->value("libraryWindowOpen").toBool();
+    m_disableTimeLinePreview = settingsToLoadFrom->value("disableTimeLinePreview").toBool();
 }
 
 void XTPSettings::import(QSettings* settingsToImportFrom) {
@@ -38,28 +36,28 @@ void XTPSettings::import(QSettings* settingsToImportFrom) {
 }
 
 void XTPSettings::setXWindowPosition(QPoint position) {
-    _xwindowPos = position;
+    m_xwindowPos = position;
 }
 QPoint XTPSettings::getXWindowPosition() {
-    return _xwindowPos;
+    return m_xwindowPos;
 }
 void XTPSettings::setXWindowSize(QSize size) {
-    _xwindowSize = size;
+    m_xwindowSize = size;
 }
 QSize XTPSettings::getXWindowSize() {
-    return _xwindowSize;
+    return m_xwindowSize;
 }
 void XTPSettings::setLibraryWindowPosition(QPoint position) {
-    _xLibraryPos = position;
+    m_xLibraryPos = position;
 }
 QPoint XTPSettings::getLibraryWindowPosition() {
-    return _xLibraryPos;
+    return m_xLibraryPos;
 }
 void XTPSettings::setLibraryWindowSize(QSize size) {
-    _xLibrarySize = size;
+    m_xLibrarySize = size;
 }
 QSize XTPSettings::getLibraryWindowSize() {
-    return _xLibrarySize;
+    return m_xLibrarySize;
 }
 
 void XTPSettings::resetWindowSize() {
@@ -71,18 +69,25 @@ void XTPSettings::resetWindowSize() {
 }
 
 void XTPSettings::setRememberWindowsSettings(bool enabled) {
-    _rememberWindowsSettings = enabled;
+    m_rememberWindowsSettings = enabled;
     emit SettingsHandler::instance().settingsChanged(true);
 }
 bool XTPSettings::getRememberWindowsSettings() {
-    return _rememberWindowsSettings;
+    return m_rememberWindowsSettings;
 }
 
 void XTPSettings::setLibraryWindowOpen(bool open) {
-    _libraryWindowOpen = open;
+    m_libraryWindowOpen = open;
 }
 bool XTPSettings::getLibraryWindowOpen() {
-    return _libraryWindowOpen;
+    return m_libraryWindowOpen;
+}
+
+void XTPSettings::setDisableTimeLinePreview(bool enabled) {
+    m_disableTimeLinePreview = enabled;
+}
+bool XTPSettings::getDisableTimeLinePreview() {
+   return m_disableTimeLinePreview;
 }
 
 //Private
@@ -90,10 +95,11 @@ QSettings* XTPSettings::getSettings() {
     return SettingsHandler::getSettings();
 }
 
-QSize XTPSettings::_xwindowSize = {0,0};
-QPoint XTPSettings::_xwindowPos = {0,0};
-QSize XTPSettings::_xLibrarySize = {0,0};
-QPoint XTPSettings::_xLibraryPos = {0,0};
+QSize XTPSettings::m_xwindowSize = {0,0};
+QPoint XTPSettings::m_xwindowPos = {0,0};
+QSize XTPSettings::m_xLibrarySize = {0,0};
+QPoint XTPSettings::m_xLibraryPos = {0,0};
 
-bool XTPSettings::_rememberWindowsSettings;
-bool XTPSettings::_libraryWindowOpen;
+bool XTPSettings::m_rememberWindowsSettings;
+bool XTPSettings::m_libraryWindowOpen;
+bool XTPSettings::m_disableTimeLinePreview;

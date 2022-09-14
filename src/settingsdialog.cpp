@@ -308,6 +308,8 @@ void SettingsDialog::setupUi()
         ui.webAddressLinkLabel->setProperty("cssClass", "linkLabel");
         ui.webAddressInstructionsLabel->setProperty("cssClass", "linkLabel");
 
+        ui.disableTimeLinePreviewChk->setChecked(XTPSettings::getDisableTimeLinePreview());
+
         updateIPAddress();
 
         connect(&SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
@@ -1813,5 +1815,11 @@ void SettingsDialog::on_dubugButton_clicked()
         QApplication::quit();
         QProcess::startDetached("XTPlayerDebug.bat", QStringList("-debug"));
     }
+}
+
+
+void SettingsDialog::on_disableTimeLinePreviewChk_clicked(bool checked)
+{
+    XTPSettings::setDisableTimeLinePreview(checked);
 }
 

@@ -213,6 +213,8 @@ private slots:
 
     void on_dubugButton_clicked();
 
+    void on_disableTimeLinePreviewChk_clicked(bool checked);
+
 private:
 
     Ui::SettingsDialog ui;

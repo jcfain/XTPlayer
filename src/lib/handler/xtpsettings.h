@@ -3,8 +3,7 @@
 
 #include <QPoint>
 #include <QSize>
-#include "lib/handler/settingshandler.h"
-
+#include <QSettings>
 
 class XTPSettings
 {
@@ -29,15 +28,18 @@ public:
     static bool getRememberWindowsSettings();
     static void setLibraryWindowOpen(bool enabled);
     static bool getLibraryWindowOpen();
+    static void setDisableTimeLinePreview(bool enabled);
+    static bool getDisableTimeLinePreview();
 
 private:
     static QSettings* getSettings();
-    static bool _rememberWindowsSettings;
-    static bool _libraryWindowOpen;
-    static QSize _xwindowSize;
-    static QPoint _xwindowPos;
-    static QSize _xLibrarySize;
-    static QPoint _xLibraryPos;
+    static bool m_rememberWindowsSettings;
+    static bool m_libraryWindowOpen;
+    static QSize m_xwindowSize;
+    static QPoint m_xwindowPos;
+    static QSize m_xLibrarySize;
+    static QPoint m_xLibraryPos;
+    static bool m_disableTimeLinePreview;
 };
 
 #endif // XTPSETTINGS_H

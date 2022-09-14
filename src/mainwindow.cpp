@@ -8,8 +8,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 {
     QCoreApplication::setOrganizationName("cUrbSide prOd");
     QCoreApplication::setApplicationName("XTPlayer");
-    XTPVersion = QString("0.41b_%1T%2").arg(__DATE__).arg(__TIME__);
-    XTPVersionNum = 0.41f;
+    XTPVersion = QString("0.411b_%1T%2").arg(__DATE__).arg(__TIME__);
+    XTPVersionNum = 0.411f;
     const QString fullVersion = "XTP: v"+ XTPVersion + "\nXTE: v" + SettingsHandler::XTEVersion;
 
     QPixmap pixmap("://images/XTP_Splash.png");
@@ -2302,7 +2302,7 @@ void MainWindow::on_seekslider_hover(int position, int sliderValue)
     //    if (!Config::instance().previewEnabled())
     //        return;
 
-    if(playingLibraryListItem.type == LibraryListItemType::Video && !_playerControlsFrame->getSeekSliderMousePressed() && (videoHandler->isPlaying() || videoHandler->isPaused()))
+    if(!XTPSettings::getDisableTimeLinePreview() && playingLibraryListItem.type == LibraryListItemType::Video && !_playerControlsFrame->getSeekSliderMousePressed() && (videoHandler->isPlaying() || videoHandler->isPaused()))
     {
         //const int w = Config::instance().previewWidth();
         //const int h = Config::instance().previewHeight();
