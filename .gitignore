@@ -76,7 +76,6 @@ src/.qmake.stash
 /build*
 /libav*
 /XTPlayer-release
-XTPlayer*
 src/www/.vscode
 settings_export*
 *.user
