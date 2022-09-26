@@ -60,9 +60,13 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     {
         foreach(QString arg, arguments)
         {
-            if(arg.toLower().startsWith("-debug")) {
+            if(arg.toLower().startsWith("-verbose")) {
+                LogHandler::Debug("Starting in verbose mode");
                 LogHandler::setUserDebug(true);
-                LogHandler::Debug("Starying in debug mode");
+                LogHandler::setQtDebuging(true);
+            } else if(arg.toLower().startsWith("-debug")) {
+                LogHandler::Debug("Starting in debug mode");
+                LogHandler::setUserDebug(true);
             } else if(arg.toLower().startsWith("-reset")) {
                 LogHandler::Debug("Resettings settings to default!");
                 SettingsHandler::Default();

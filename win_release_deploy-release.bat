@@ -32,6 +32,7 @@ xcopy ..\build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release\src\release\htt
 xcopy ..\XTEngine\src\rename_me_for_local_settings.ini %deployDir%
 xcopy "XTP_and_DeoVR-HereSphere_guide.pdf" %deployDir%
 xcopy .\src\XTPlayerDebug.bat %deployDir%
+xcopy .\src\XTPlayerVerbose.bat %deployDir%
 xcopy .\src\README.txt %deployDir%
 xcopy ..\XTEngine\src\www\*-min.html %deployDir%www\
 xcopy ..\XTEngine\src\www\*-min.js %deployDir%www\
