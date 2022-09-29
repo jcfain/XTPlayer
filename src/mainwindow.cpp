@@ -8,8 +8,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 {
     QCoreApplication::setOrganizationName("cUrbSide prOd");
     QCoreApplication::setApplicationName("XTPlayer");
-    XTPVersion = QString("0.411b_%1T%2").arg(__DATE__).arg(__TIME__);
-    XTPVersionNum = 0.411f;
+    XTPVersion = QString("0.412b_%1T%2").arg(__DATE__).arg(__TIME__);
+    XTPVersionNum = 0.412f;
     const QString fullVersion = "XTP: v"+ XTPVersion + "\nXTE: v" + SettingsHandler::XTEVersion;
 
     QPixmap pixmap("://images/XTP_Splash.png");
@@ -740,7 +740,8 @@ void MainWindow::onText_to_speech(QString message) {
     if(!message.isEmpty()) {
         if(!SettingsHandler::getDisableSpeechToText())
             textToSpeech->say(message);
-        xtEngine.httpHandler()->sendWebSocketTextMessage("textToSpeech", message);
+        if(SettingsHandler::getEnableHttpServer())
+            xtEngine.httpHandler()->sendWebSocketTextMessage("textToSpeech", message);
     }
 }
 
@@ -3498,7 +3499,8 @@ void MainWindow::onAddBookmark(LibraryListItem27 libraryListItem, QString name, 
 void MainWindow::skipToMoneyShot()
 {
     xtEngine.syncHandler()->skipToMoneyShot();
-    xtEngine.httpHandler()->sendWebSocketTextMessage("skipToMoneyShot");
+    if(SettingsHandler::getEnableHttpServer())
+        xtEngine.httpHandler()->sendWebSocketTextMessage("skipToMoneyShot");
 
     if(!SettingsHandler::getSkipToMoneyShotSkipsVideo())
         return;
@@ -3560,7 +3562,8 @@ void MainWindow::skipToNextAction()
             }
             else
             {
-                xtEngine.httpHandler()->sendWebSocketTextMessage("skipToNextAction", QString::number((nextActionMillis / 1000) - 1, 'f', 1));
+                if(SettingsHandler::getEnableHttpServer())
+                    xtEngine.httpHandler()->sendWebSocketTextMessage("skipToNextAction", QString::number((nextActionMillis / 1000) - 1, 'f', 1));
             }
         }
     }
