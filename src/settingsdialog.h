@@ -215,6 +215,8 @@ private slots:
 
     void on_disableTimeLinePreviewChk_clicked(bool checked);
 
+    void on_MFSDiscoveryDisabledCheckBox_clicked(bool checked);
+
 private:
 
     Ui::SettingsDialog ui;

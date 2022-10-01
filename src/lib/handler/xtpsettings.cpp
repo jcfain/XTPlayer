@@ -1,6 +1,10 @@
 #include "xtpsettings.h"
 #include "lib/handler/settingshandler.h"
 
+
+QString XTPSettings::XTPVersion = QString("0.413b_%1T%2").arg(__DATE__).arg(__TIME__);
+float XTPSettings::XTPVersionNum = 0.413f;
+
 XTPSettings::XTPSettings() {}
 
 void XTPSettings::save(QSettings* settingsToSaveTo) {

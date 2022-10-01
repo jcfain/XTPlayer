@@ -180,14 +180,13 @@ void SettingsDialog::setupUi()
         closeBtn->setDefault(false);
         closeBtn->setEnabled(false);
         // TCode version
-        foreach(auto version, SettingsHandler::SupportedTCodeVersions.keys())
+        foreach(auto version, TCodeChannelLookup::SupportedTCodeVersions.keys())
         {
             QVariant variant;
             variant.setValue(version);
-            ui.tCodeVersionComboBox->addItem(SettingsHandler::SupportedTCodeVersions.value(version), variant);
+            ui.tCodeVersionComboBox->addItem(TCodeChannelLookup::SupportedTCodeVersions.value(version), variant);
         }
-        auto versionTCode = SettingsHandler::getSelectedTCodeVersion();
-        ui.tCodeVersionComboBox->setCurrentText(SettingsHandler::getSelectedTCodeVersion());
+        ui.tCodeVersionComboBox->setCurrentText(TCodeChannelLookup::getSelectedTCodeVersionName());
         connect(ui.tCodeVersionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
         connect(&SettingsHandler::instance(), &SettingsHandler::tcodeVersionChanged, this, &SettingsDialog::setUpTCodeAxis);
 
@@ -315,6 +314,8 @@ void SettingsDialog::setupUi()
         connect(&SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
 
         ui.rememberWindowSettingsChk->setChecked(XTPSettings::getRememberWindowsSettings());
+        ui.MFSDiscoveryDisabledCheckBox->setChecked(SettingsHandler::getMFSDiscoveryDisabled());
+
         _interfaceInitialized = true;
     }
 }
@@ -577,37 +578,37 @@ void SettingsDialog::setUpTCodeAxis()
      foreach(auto channel, tcodeChannels.keys())
      {
          QString channelName = TCodeChannelLookup::ToString(channel);
-         ChannelModel33 axis = SettingsHandler::getAxis(channelName);
-         if(axis.Type == AxisType::None || axis.Type == AxisType::HalfRange)
+         auto axis = TCodeChannelLookup::getChannel(channelName);
+         if(axis->Type == AxisType::None || axis->Type == AxisType::HalfRange)
              continue;
 
-         int userMin = axis.UserMin;
-         int userMid = axis.UserMid;
-         int userMax = axis.UserMax;
+         int userMin = axis->UserMin;
+         int userMid = axis->UserMid;
+         int userMax = axis->UserMax;
          QLabel* rangeMinLabel = new QLabel(QString::number(userMin));
-         rangeMinLabel->setObjectName(axis.AxisName+"RangeMinLabel");
+         rangeMinLabel->setObjectName(axis->AxisName+"RangeMinLabel");
          rangeMinLabel->setFont(font);
          rangeMinLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
          ui.RangeSettingsGrid->addWidget(rangeMinLabel, sliderGridRow, 0);
          rangeMinLabels.insert(channelName, rangeMinLabel);
 
-         QLabel* rangeLabel = new QLabel(axis.FriendlyName + " Range mid: " + QString::number(userMid));
-         rangeLabel->setObjectName(axis.AxisName+"RangeLabel");
+         QLabel* rangeLabel = new QLabel(axis->FriendlyName + " Range mid: " + QString::number(userMid));
+         rangeLabel->setObjectName(axis->AxisName+"RangeLabel");
          rangeLabel->setFont(font);
          rangeLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
          ui.RangeSettingsGrid->addWidget(rangeLabel, sliderGridRow, 1, 1, 2, Qt::AlignHCenter | Qt::AlignVCenter);
          rangeLabels.insert(channelName, rangeLabel);
 
          QLabel* rangeMaxLabel = new QLabel(QString::number(userMax));
-         rangeMaxLabel->setObjectName(axis.AxisName+"RangeMaxLabel");
+         rangeMaxLabel->setObjectName(axis->AxisName+"RangeMaxLabel");
          rangeMaxLabel->setFont(font);
          rangeMaxLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
          ui.RangeSettingsGrid->addWidget(rangeMaxLabel, sliderGridRow, 3);
          rangeMaxLabels.insert(channelName, rangeMaxLabel);
 
          RangeSlider* axisRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, this);
-         axisRangeSlider->setObjectName(axis.AxisName+"RangeSlider");
-         axisRangeSlider->SetRange(axis.Min, axis.Max);
+         axisRangeSlider->setObjectName(axis->AxisName+"RangeSlider");
+         axisRangeSlider->SetRange(axis->Min, axis->Max);
          axisRangeSlider->setLowerValue(userMin);
          axisRangeSlider->setUpperValue(userMax);
          axisRangeSlider->SetMinimumRange(1);
@@ -618,7 +619,7 @@ void SettingsDialog::setUpTCodeAxis()
          sliderGridRow++;
 
          QProgressBar* funscriptProgressbar = new QProgressBar(this);
-         funscriptProgressbar->setObjectName(axis.AxisName+"FunscriptStatus");
+         funscriptProgressbar->setObjectName(axis->AxisName+"FunscriptStatus");
          funscriptProgressbar->setMinimum(0);
          funscriptProgressbar->setMaximum(100);
          funscriptProgressbar->setMaximumHeight(5);
@@ -634,10 +635,10 @@ void SettingsDialog::setUpTCodeAxis()
          connect(axisRangeSlider, QOverload<QString>::of(&RangeSlider::mouseRelease), this, &SettingsDialog::onRange_mouseRelease);
 
          // Multipliers
-         if(axis.Dimension != AxisDimension::Heave)
+         if(axis->Dimension != AxisDimension::Heave)
          {
              QCheckBox* multiplierCheckbox = new QCheckBox(this);
-             multiplierCheckbox->setText(axis.FriendlyName);
+             multiplierCheckbox->setText(axis->FriendlyName);
              multiplierCheckbox->setChecked(SettingsHandler::getMultiplierChecked(channelName));
              QDoubleSpinBox* multiplierInput = new QDoubleSpinBox(this);
              multiplierInput->setDecimals(3);
@@ -682,8 +683,8 @@ void SettingsDialog::setUpTCodeAxis()
              ui.MultiplierSettingsGrid->addWidget(multiplierCheckbox, multiplierGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
              ui.MultiplierSettingsGrid->addWidget(multiplierInput, multiplierGridRow, 1, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
              QCheckBox* linkCheckbox = new QCheckBox(this);
-             auto relatedChannel = SettingsHandler::getAxis(axis.RelatedChannel);
-             linkCheckbox->setToolTip("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS " + relatedChannel.FriendlyName + " funscript value.\nIf there is no " + relatedChannel.FriendlyName + " funscript then it will default to random motion.");
+             auto relatedChannel = TCodeChannelLookup::getChannel(axis->RelatedChannel);
+             linkCheckbox->setToolTip("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS " + relatedChannel->FriendlyName + " funscript value.\nIf there is no " + relatedChannel->FriendlyName + " funscript then it will default to random motion.");
              linkCheckbox->setText("Link to MFS: ");
              linkCheckbox->setChecked(SettingsHandler::getLinkToRelatedAxisChecked(channelName));
              connect(linkCheckbox, &QCheckBox::clicked, this,
@@ -695,14 +696,14 @@ void SettingsDialog::setUpTCodeAxis()
              QComboBox* linkToAxisCombobox = new QComboBox(this);
              foreach(auto axis, tcodeChannels.keys())
              {
-                 auto channel = SettingsHandler::getAxis(TCodeChannelLookup::ToString(axis));
-                 if(channel.AxisName == channelName || channel.Type == AxisType::HalfRange)
+                 auto channel =  TCodeChannelLookup::getChannel(TCodeChannelLookup::ToString(axis));
+                 if(channel->AxisName == channelName || channel->Type == AxisType::HalfRange)
                      continue;
                  QVariant variant;
-                 variant.setValue(channel);
-                 linkToAxisCombobox->addItem(channel.FriendlyName, variant);
+                 variant.setValue(*channel);
+                 linkToAxisCombobox->addItem(channel->FriendlyName, variant);
              }
-             linkToAxisCombobox->setCurrentText(relatedChannel.FriendlyName);
+             linkToAxisCombobox->setCurrentText(relatedChannel->FriendlyName);
              connect(linkToAxisCombobox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
                      [this, channelName, linkToAxisCombobox, linkCheckbox](int value)
                        {
@@ -726,7 +727,7 @@ void SettingsDialog::setUpTCodeAxis()
              multiplierGridRow++;
          }
          QCheckBox* invertedCheckbox = new QCheckBox(this);
-         invertedCheckbox->setText(axis.FriendlyName);
+         invertedCheckbox->setText(axis->FriendlyName);
          invertedCheckbox->setChecked(SettingsHandler::getChannelFunscriptInverseChecked(channelName));
          connect(invertedCheckbox, &QCheckBox::clicked, this,
                  [this, channelName](bool checked)
@@ -751,7 +752,7 @@ void SettingsDialog::setUpTCodeAxis()
      connect(lubePulseCheckbox, &QCheckBox::clicked, this, &SettingsDialog::lubePulseEnabled_valueChanged);
      lubePulseCheckbox->setChecked(SettingsHandler::getLubePulseEnabled());
      QSpinBox* libePulseAmountInput = new QSpinBox(this);
-     auto max = SettingsHandler::getAxis(TCodeChannelLookup::Stroke()).Max;
+     auto max = TCodeChannelLookup::getChannel(TCodeChannelLookup::Stroke())->Max;
      libePulseAmountInput->setToolTip("TCode value to be sent to the selected channel between 0-"+QString::number(max));
      libePulseAmountInput->setMinimum(0);
      libePulseAmountInput->setMaximum(max);
@@ -1043,7 +1044,7 @@ void SettingsDialog::onRange_valueChanged(QString name, int value)
     int min = slider->GetLowerValue();
     rangeMinLabels.value(name)->setText(QString::number(min));
     rangeMaxLabels.value(name)->setText(QString::number(max));
-    mainLabel->setText(channel.FriendlyName + " mid: " + QString::number(XMath::middle(min, max)));
+    mainLabel->setText(channel->FriendlyName + " mid: " + QString::number(XMath::middle(min, max)));
     OutputDeviceHandler* outputDevice = _connectionHandler->getSelectedOutputDevice();
     InputDeviceHandler* inputDevice = _connectionHandler->getSelectedInputDevice();
     if ((!_videoHandler->isPlaying() || _videoHandler->isPaused() || SettingsHandler::getLiveActionPaused())
@@ -1548,12 +1549,12 @@ void SettingsDialog::on_tCodeVSComboBox_currentIndexChanged(int index)
                                   QMessageBox::Yes|QMessageBox::No);
     if(reply == QMessageBox::Yes)
     {
-        SettingsHandler::setSelectedTCodeVersion(ui.tCodeVersionComboBox->currentData().value<TCodeVersion>());
+        SettingsHandler::changeSelectedTCodeVersion(ui.tCodeVersionComboBox->currentData().value<TCodeVersion>());
     }
     else
     {
         disconnect(ui.tCodeVersionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
-        ui.tCodeVersionComboBox->setCurrentText(SettingsHandler::getSelectedTCodeVersion());
+        ui.tCodeVersionComboBox->setCurrentText(TCodeChannelLookup::getSelectedTCodeVersionName());
         connect(ui.tCodeVersionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
     }
 }
@@ -1821,5 +1822,11 @@ void SettingsDialog::on_dubugButton_clicked()
 void SettingsDialog::on_disableTimeLinePreviewChk_clicked(bool checked)
 {
     XTPSettings::setDisableTimeLinePreview(checked);
+}
+
+
+void SettingsDialog::on_MFSDiscoveryDisabledCheckBox_clicked(bool checked)
+{
+    SettingsHandler::setMFSDiscoveryDisabled(checked);
 }
 

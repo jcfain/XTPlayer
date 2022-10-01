@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1262</width>
+    <width>1299</width>
     <height>685</height>
    </rect>
   </property>
@@ -1202,6 +1202,17 @@ has no script associated with it.</string>
         <widget class="QCheckBox" name="disableTimeLinePreviewChk">
          <property name="text">
           <string>Disable timeline preview</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="9">
+        <widget class="QCheckBox" name="MFSDiscoveryDisabledCheckBox">
+         <property name="toolTip">
+          <string>Checking this option will load MFS status on item hover instead of load time.
+This will greatly slows down media reading on load if checked.</string>
+         </property>
+         <property name="text">
+          <string>Disable MFS detection on load</string>
          </property>
         </widget>
        </item>

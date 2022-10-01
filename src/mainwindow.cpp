@@ -8,9 +8,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 {
     QCoreApplication::setOrganizationName("cUrbSide prOd");
     QCoreApplication::setApplicationName("XTPlayer");
-    XTPVersion = QString("0.412b_%1T%2").arg(__DATE__).arg(__TIME__);
-    XTPVersionNum = 0.412f;
-    const QString fullVersion = "XTP: v"+ XTPVersion + "\nXTE: v" + SettingsHandler::XTEVersion;
+    const QString fullVersion = "XTP: v"+ XTPSettings::XTPVersion + "\nXTE: v" + SettingsHandler::XTEVersion;
 
     QPixmap pixmap("://images/XTP_Splash.png");
     loadingSplash = new QSplashScreen(pixmap);
@@ -775,7 +773,7 @@ void MainWindow::on_audioLevel_Change(int decibelL,int decibelR)
         if(xtEngine.connectionHandler()->isOutputDeviceConnected())
         {
     //        strokerLastUpdate = time;
-            auto availibleAxis = SettingsHandler::getAvailableAxis();
+            auto availibleAxis = TCodeChannelLookup::getAvailableAxis();
             auto decibelLInverse = -decibelL;
             auto decibelRInverse = -decibelR;
             auto difference = decibelLInverse > decibelRInverse ? decibelLInverse - decibelRInverse : decibelRInverse - decibelLInverse;
@@ -2841,7 +2839,7 @@ void MainWindow::on_input_device_connectionChanged(ConnectionChangedSignal event
 
 void MainWindow::on_actionAbout_triggered()
 {
-    DialogHandler::ShowAboutDialog(this, XTPVersion, SettingsHandler::XTEVersion, SettingsHandler::getSelectedTCodeVersion());
+    DialogHandler::ShowAboutDialog(this, XTPSettings::XTPVersion, SettingsHandler::XTEVersion, TCodeChannelLookup::getSelectedTCodeVersionName());
 }
 
 void MainWindow::on_actionDonate_triggered()

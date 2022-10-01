@@ -10,6 +10,9 @@ class XTPSettings
 public:
     XTPSettings();
 
+    static QString XTPVersion;
+    static float XTPVersionNum;
+
     static void save(QSettings* settingsToSaveTo = 0);
     static void load(QSettings* settingsToLoadFrom = 0);
     static void import(QSettings* settingsToImportFrom = 0);

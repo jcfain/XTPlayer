@@ -86,11 +86,11 @@ ChannelModel33 AddChannelDialog::getNewChannel(QWidget *parent, bool *ok)
         channelModel.Type = AxisTypes[dialog->type->currentText()];
         channelModel.Dimension = AxisDimensions[dialog->dimension->currentText()];
         channelModel.Min = 0;
-        channelModel.Mid = SettingsHandler::getSelectedTCodeVersion() == TCodeVersion::v2 ? 500 : 5000;
-        channelModel.Max = SettingsHandler::getSelectedTCodeVersion() == TCodeVersion::v2 ? 999: 9999;
+        channelModel.Mid = TCodeChannelLookup::getSelectedTCodeVersion() == TCodeVersion::v2 ? 500 : 5000;
+        channelModel.Max = TCodeChannelLookup::getSelectedTCodeVersion() == TCodeVersion::v2 ? 999: 9999;
         channelModel.UserMin = 0;
-        channelModel.UserMid = SettingsHandler::getSelectedTCodeVersion() == TCodeVersion::v2 ? 500 : 5000;
-        channelModel.UserMax = SettingsHandler::getSelectedTCodeVersion() == TCodeVersion::v2 ? 999 : 9999;
+        channelModel.UserMid = TCodeChannelLookup::getSelectedTCodeVersion() == TCodeVersion::v2 ? 500 : 5000;
+        channelModel.UserMax = TCodeChannelLookup::getSelectedTCodeVersion() == TCodeVersion::v2 ? 999 : 9999;
         channelModel.DamperEnabled = false;
         channelModel.DamperValue = 0.2f;
         channelModel.FunscriptInverted = false;
@@ -99,7 +99,7 @@ ChannelModel33 AddChannelDialog::getNewChannel(QWidget *parent, bool *ok)
         channelModel.LinkToRelatedMFS = false;
         channelModel.RelatedChannel = TCodeChannelLookup::Stroke();
         channelModel.TrackName = "";
-        if(SettingsHandler::getAvailableAxis()->contains(channelModel.AxisName))
+        if(TCodeChannelLookup::hasChannel(channelModel.AxisName))
         {
             isValid = false;
             DialogHandler::MessageBox(parent, channelModel.AxisName + " already exists!", XLogLevel::Critical);

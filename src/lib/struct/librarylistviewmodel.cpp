@@ -103,6 +103,9 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
         }
         else if (role == Qt::ToolTipRole)
         {
+            if(item.type != LibraryListItemType::PlaylistInternal && item.toolTip.endsWith("Unknown")) {
+                _mediaLibraryHandler->updateToolTip(item, true);
+            }
             return item.toolTip;
         }
         else if (role == Qt::ForegroundRole)

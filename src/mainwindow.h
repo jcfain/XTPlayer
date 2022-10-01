@@ -209,8 +209,6 @@ private:
     XTEngine xtEngine;
 
     QMutex mutex;
-    QString XTPVersion = "0.32a";
-    float XTPVersionNum = 0.32f;
     SettingsDialog* _xSettings;
     WelcomeDialog* _welcomeDialog = 0;
     DLNAScriptLinks* _dlnaScriptLinksDialog;
