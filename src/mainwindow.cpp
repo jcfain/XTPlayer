@@ -91,7 +91,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     deoRetryConnectionButton = new QPushButton(this);
     deoRetryConnectionButton->hide();
     deoRetryConnectionButton->setProperty("cssClass", "retryButton");
-    deoRetryConnectionButton->setText("DeoVR Retry");
+    deoRetryConnectionButton->setText("HereSphere Retry");
     ui->statusbar->addPermanentWidget(deoConnectionStatusLabel);
     ui->statusbar->addPermanentWidget(deoRetryConnectionButton);
 
@@ -2810,7 +2810,7 @@ void MainWindow::on_input_device_connectionChanged(ConnectionChangedSignal event
         else if(event.deviceName == DeviceName::XTPWeb)
             message += "XTP Web: ";
         else
-            message += event.deviceName == DeviceName::Whirligig ? "Whirligig: " : "DeoVR/HereSphere: ";
+            message += event.deviceName == DeviceName::Whirligig ? "Whirligig: " : "HereSphere: ";
         message += " " + event.message;
         vrConnectionStatusLabel->setText(message);
 

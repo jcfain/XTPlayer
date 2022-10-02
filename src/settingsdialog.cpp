@@ -147,7 +147,7 @@ void SettingsDialog::setupUi()
     loadSerialPorts();
     setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceName::Serial);
     setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceName::Network);
-    setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceName::Deo);
+    setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceName::HereSphere);
     setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceName::Whirligig);
     setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceName::Gamepad);
     if(SettingsHandler::getSelectedOutputDevice() == DeviceName::Serial)
@@ -230,7 +230,7 @@ void SettingsDialog::setupUi()
         ui.useWebSocketsCheckbox->setChecked(SettingsHandler::getSelectedNetworkDevice() == NetworkDeviceType::WEBSOCKET);
 
         enableOrDisableDeviceConnectionUI(SettingsHandler::getSelectedOutputDevice());
-        bool deoEnabled = SettingsHandler::getSelectedInputDevice() == DeviceName::Deo;
+        bool deoEnabled = SettingsHandler::getSelectedInputDevice() == DeviceName::HereSphere;
         bool whiriligigEnabled = SettingsHandler::getSelectedInputDevice() == DeviceName::Whirligig;
         bool xtpWebEnabled = SettingsHandler::getSelectedInputDevice() == DeviceName::XTPWeb;
         if(deoEnabled)
@@ -866,7 +866,7 @@ void SettingsDialog::lubeAmount_valueChanged(int value)
 
 void SettingsDialog::on_xtpWeb_initInputDevice(DeviceName deviceName, bool checked)
 {
-    if(deviceName == DeviceName::Deo) {
+    if(deviceName == DeviceName::HereSphere) {
         ui.deoAddressTxt->setText(SettingsHandler::getDeoAddress());
         ui.deoPortTxt->setText(SettingsHandler::getDeoPort());
         ui.deoCheckbox->setChecked(checked);
@@ -937,7 +937,7 @@ void SettingsDialog::setDeviceStatusStyle(ConnectionStatus status, DeviceName de
         ui.serialStatuslbl->clear();
         ui.networkStatuslbl->clear();
     }
-    else if(deviceName == DeviceName::Deo ||
+    else if(deviceName == DeviceName::HereSphere ||
             deviceName == DeviceName::Whirligig ||
             deviceName == DeviceName::XTPWeb)
     {
@@ -969,7 +969,7 @@ void SettingsDialog::setDeviceStatusStyle(ConnectionStatus status, DeviceName de
         ui.networkStatuslbl->setFont(font);
         ui.networkStatuslbl->setStyleSheet("color: " + statusColor);
     }
-    else if (deviceName == DeviceName::Deo)
+    else if (deviceName == DeviceName::HereSphere)
     {
         ui.deoStatuslbl->setText(statusUnicode + " " + message);
         ui.deoStatuslbl->setFont(font);
@@ -1083,10 +1083,10 @@ void SettingsDialog::on_input_device_connectionChanged(ConnectionChangedSignal e
 {
     bool connectingOrConnected = event.status != ConnectionStatus::Connected && event.status != ConnectionStatus::Connecting;
 
-    if(event.deviceName == DeviceName::Whirligig || event.deviceName == DeviceName::Deo)
+    if(event.deviceName == DeviceName::Whirligig || event.deviceName == DeviceName::HereSphere)
     {
         ui.whirligigConnectButton->setEnabled(event.deviceName == DeviceName::Whirligig && connectingOrConnected);
-        ui.deoConnectButton->setEnabled(event.deviceName == DeviceName::Deo && connectingOrConnected);
+        ui.deoConnectButton->setEnabled(event.deviceName == DeviceName::HereSphere && connectingOrConnected);
     }
     setDeviceStatusStyle(event.status, event.deviceName, event.message);
 }
@@ -1134,7 +1134,7 @@ void SettingsDialog::on_networkPortTxt_editingFinished()
 
 void SettingsDialog::on_deoAddressTxt_editingFinished()
 {
-    if(SettingsHandler::getSelectedInputDevice() == DeviceName::Deo)
+    if(SettingsHandler::getSelectedInputDevice() == DeviceName::HereSphere)
         ui.deoConnectButton->setEnabled(true);
     SettingsHandler::setDeoAddress(ui.deoAddressTxt->text());
 }
@@ -1149,7 +1149,7 @@ void SettingsDialog::on_useWebSocketsCheckbox_clicked(bool checked)
 
 void SettingsDialog::on_deoPortTxt_editingFinished()
 {
-    if(SettingsHandler::getSelectedInputDevice() == DeviceName::Deo)
+    if(SettingsHandler::getSelectedInputDevice() == DeviceName::HereSphere)
         ui.deoConnectButton->setEnabled(true);
     SettingsHandler::setDeoPort(ui.deoPortTxt->text());
 }
@@ -1203,11 +1203,11 @@ void SettingsDialog::on_deoConnectButton_clicked()
      SettingsHandler::getDeoAddress() != "0" && SettingsHandler::getDeoPort() != "0")
     {
         ui.deoConnectButton->setEnabled(false);
-        _connectionHandler->initInputDevice(DeviceName::Deo);
+        _connectionHandler->initInputDevice(DeviceName::HereSphere);
     }
     else
     {
-        DialogHandler::MessageBox(this, "Invalid deo vr address!", XLogLevel::Warning);
+        DialogHandler::MessageBox(this, "Invalid heresphere address!", XLogLevel::Warning);
     }
 }
 
@@ -1778,7 +1778,7 @@ void SettingsDialog::restart()
 
 void SettingsDialog::on_openDeoPDFButton_clicked()
 {
-    QString filePath = QApplication::applicationDirPath() + "/XTP_and_DeoVR-HereSphere_guide.pdf";
+    QString filePath = QApplication::applicationDirPath() + "/XTP_and_VR_guide.pdf";
     if(QFile::exists(filePath)) {
         QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
     } else {

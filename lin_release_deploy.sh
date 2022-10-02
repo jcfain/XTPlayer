@@ -21,7 +21,7 @@ cp -R $xteTargetDirectory/lib/* $targetDirectory/lib
 cp ../XTEngine/src/rename_me_for_local_settings.ini $targetDirectory/bin
 cp $xteBinDirectory/*.* $targetDirectory/lib
 rm -r $xteTargetDirectory
-cp "XTP_and_DeoVR-HereSphere_guide.pdf" $targetDirectory/bin/"XTP_and_DeoVR-HereSphere_guide.pdf"
+cp "XTP_and_VR_guide.pdf" $targetDirectory/bin/"XTP_and_VR_guide.pdf"
 read -p "Press enter to resume ..."
 
 
