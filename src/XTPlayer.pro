@@ -30,7 +30,6 @@ SOURCES += \
     lib/struct/channeltablecomboboxdelegate.cpp \
     lib/struct/channeltableviewmodel.cpp \
     lib/struct/librarylistviewmodel.cpp \
-    lib/struct/librarylistwidgetitem.cpp \
     lib/struct/librarysortfilterproxymodel.cpp \
     lib/struct/playlistviewmodel.cpp \
     libraryItemSettingsDialog.cpp \
@@ -59,7 +58,6 @@ HEADERS += \
     lib/struct/channeltablecomboboxdelegate.h \
     lib/struct/channeltableviewmodel.h \
     lib/struct/librarylistviewmodel.h \
-    lib/struct/librarylistwidgetitem.h \
     lib/struct/librarysortfilterproxymodel.h \
     lib/struct/playlistviewmodel.h \
     libraryItemSettingsDialog.h \
