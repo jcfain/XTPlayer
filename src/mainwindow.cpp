@@ -773,7 +773,7 @@ void MainWindow::on_audioLevel_Change(int decibelL,int decibelR)
         if(xtEngine.connectionHandler()->isOutputDeviceConnected())
         {
     //        strokerLastUpdate = time;
-            auto availibleAxis = TCodeChannelLookup::getAvailableAxis();
+            auto availibleAxis = TCodeChannelLookup::getAvailableChannels();
             auto decibelLInverse = -decibelL;
             auto decibelRInverse = -decibelR;
             auto difference = decibelLInverse > decibelRInverse ? decibelLInverse - decibelRInverse : decibelRInverse - decibelLInverse;

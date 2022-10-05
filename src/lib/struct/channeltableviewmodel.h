@@ -27,7 +27,7 @@ public:
     inline void setMap()
     {
         beginResetModel();
-        _map = TCodeChannelLookup::getAvailableAxis();
+        _map = TCodeChannelLookup::getAvailableChannels();
         endResetModel();
     }
     const ChannelModel33* getRowData(int row);

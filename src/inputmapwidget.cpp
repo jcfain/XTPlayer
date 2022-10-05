@@ -48,7 +48,7 @@ void InputMapWidget::setUpData()
     QMap<QString, QStringList> inverseKeyboardMap = SettingsHandler::getKeyboardMapInverse();
 
     auto tcodeVersionMap = TCodeChannelLookup::GetSelectedVersionMap();
-    auto availableAxis = TCodeChannelLookup::getAvailableAxis();
+    auto availableAxis = TCodeChannelLookup::getAvailableChannels();
     for(auto __begin = tcodeVersionMap.begin(), __end = tcodeVersionMap.end();  __begin != __end; ++__begin) {
         auto channel = availableAxis->value(TCodeChannelLookup::ToString(__begin.key()));
         actions.append({channel.AxisName, "Channel: " + channel.FriendlyName});
