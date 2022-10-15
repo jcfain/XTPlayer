@@ -607,7 +607,7 @@ void SettingsDialog::setUpTCodeAxis()
          ui.RangeSettingsGrid->addWidget(rangeMinLabel, sliderGridRow, 0);
          rangeMinLabels.insert(channelName, rangeMinLabel);
 
-         QLabel* rangeLabel = new QLabel(axis->FriendlyName + " Range mid: " + QString::number(userMid));
+         QLabel* rangeLabel = new QLabel(axis->FriendlyName + " mid: " + QString::number(userMid));
          rangeLabel->setObjectName(axis->AxisName+"RangeLabel");
          rangeLabel->setFont(font);
          rangeLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
@@ -757,13 +757,13 @@ void SettingsDialog::setUpTCodeAxis()
      setUpMultiplierUi(SettingsHandler::getMultiplierEnabled());
 
      QPushButton* zeroOutButton = new QPushButton(this);
-     zeroOutButton->setText("All axis home");
+     zeroOutButton->setText("Send device home");
      connect(zeroOutButton, & QPushButton::clicked, this, &SettingsDialog::on_tCodeHome_clicked);
      ui.RangeSettingsGrid->addWidget(zeroOutButton, sliderGridRow + 1, 0);
 
      QLabel* xRangeStepLabel = new QLabel(this);
      xRangeStepLabel->setText("Stroke range change step");
-     xRangeStepLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+     xRangeStepLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
      QSpinBox* xRangeStepInput = new QSpinBox(this);
      xRangeStepInput->setToolTip("The amount to modify the stroke range when using keyboard/gamepad.");
      xRangeStepInput->setMinimum(1);
