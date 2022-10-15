@@ -10,13 +10,20 @@ XTPSettings::XTPSettings() {}
 void XTPSettings::save(QSettings* settingsToSaveTo) {
     if(!settingsToSaveTo)
         settingsToSaveTo = getSettings();
-    settingsToSaveTo->setValue("xwindowPos", m_xwindowPos);
-    settingsToSaveTo->setValue("xwindowSize", m_xwindowSize);
-    settingsToSaveTo->setValue("xLibraryWindowPos", m_xLibraryPos);
-    settingsToSaveTo->setValue("xLibraryWindowSize", m_xLibrarySize);
     settingsToSaveTo->setValue("rememberWindowsSettings", m_rememberWindowsSettings);
     settingsToSaveTo->setValue("libraryWindowOpen", m_libraryWindowOpen);
     settingsToSaveTo->setValue("disableTimeLinePreview", m_disableTimeLinePreview);
+
+    QList<QVariant> splitterPos;
+    int i = 0;
+    foreach(auto pos, m_mainWindowSplitterPos)
+    {
+        if(i==2)//Bandaid. Dont store over two.
+            break;
+        splitterPos.append(pos);
+        i++;
+    }
+    settingsToSaveTo->setValue("mainWindowPos", splitterPos);
 
     SettingsHandler::Save(settingsToSaveTo);
 }
@@ -32,11 +39,36 @@ void XTPSettings::load(QSettings* settingsToLoadFrom) {
     m_rememberWindowsSettings = settingsToLoadFrom->value("rememberWindowsSettings").toBool();
     m_libraryWindowOpen = settingsToLoadFrom->value("libraryWindowOpen").toBool();
     m_disableTimeLinePreview = settingsToLoadFrom->value("disableTimeLinePreview").toBool();
+    auto splitterSizes = settingsToLoadFrom->value("mainWindowPos").toList();
+    if(splitterSizes.isEmpty()) {
+        splitterSizes.append(398);
+        splitterSizes.append(782);
+    }
+    int i = 0;
+    m_mainWindowSplitterPos.clear();
+    foreach (auto splitterPos, splitterSizes)
+    {
+        if(i==2)//Bandaid. Dont store over two.
+            break;
+        m_mainWindowSplitterPos.append(splitterPos.value<int>());
+        i++;
+    }
 }
 
 void XTPSettings::import(QSettings* settingsToImportFrom) {
     SettingsHandler::Load(settingsToImportFrom);
     load(settingsToImportFrom);
+}
+
+QList<int> XTPSettings::getMainWindowSplitterPos()
+{
+    QMutexLocker locker(&m_mutex);
+    return m_mainWindowSplitterPos;
+}
+void XTPSettings::setMainWindowSplitterPos(QList<int> value)
+{
+    QMutexLocker locker(&m_mutex);
+    m_mainWindowSplitterPos = value;
 }
 
 void XTPSettings::setXWindowPosition(QPoint position) {
@@ -69,7 +101,7 @@ void XTPSettings::resetWindowSize() {
     setXWindowSize({0,0});
     setLibraryWindowPosition({0,0});
     setLibraryWindowSize({0,0});
-    save();
+    m_mainWindowSplitterPos.clear();
 }
 
 void XTPSettings::setRememberWindowsSettings(bool enabled) {
@@ -103,7 +135,9 @@ QSize XTPSettings::m_xwindowSize = {0,0};
 QPoint XTPSettings::m_xwindowPos = {0,0};
 QSize XTPSettings::m_xLibrarySize = {0,0};
 QPoint XTPSettings::m_xLibraryPos = {0,0};
+QList<int> XTPSettings::m_mainWindowSplitterPos;
 
 bool XTPSettings::m_rememberWindowsSettings;
 bool XTPSettings::m_libraryWindowOpen;
 bool XTPSettings::m_disableTimeLinePreview;
+QMutex XTPSettings::m_mutex;

@@ -217,6 +217,16 @@ void SettingsDialog::setupUi()
 
         ui.RangeSettingsGrid->setSpacing(5);
 
+        auto profiles = TCodeChannelLookup::getAvailableChannelProfiles();
+        foreach(auto profileName, profiles->keys())
+        {
+            QVariant variant;
+            variant.setValue(profiles->value(profileName));
+            ui.channelProfilesComboBox->addItem(profileName, variant);
+        }
+        ui.channelProfilesComboBox->setCurrentText(TCodeChannelLookup::getSelectedChannelProfile());
+        connect(ui.channelProfilesComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::on_channelProfilesComboBox_textChange);
+
         setUpTCodeAxis();
 
         if(SettingsHandler::getSelectedOutputDevice() == DeviceName::Serial)
@@ -560,12 +570,17 @@ void SettingsDialog::setUpTCodeAxis()
         }
         while ((child = ui.MultiplierSettingsGrid->takeAt(0)) != 0)
         {
+            bool dontDelete = false;
             if(child->widget())
             {
-                child->widget()->setParent(NULL);
+                if(child->widget()->objectName() != "enableMultiplierCheckbox")
+                    child->widget()->setParent(NULL);
+                else
+                    dontDelete = true;
             }
 
-            delete child;
+            if(!dontDelete)
+                delete child;
         }
     }
      QFont font( "Sans Serif", 8);
@@ -741,6 +756,27 @@ void SettingsDialog::setUpTCodeAxis()
 
      setUpMultiplierUi(SettingsHandler::getMultiplierEnabled());
 
+     QPushButton* zeroOutButton = new QPushButton(this);
+     zeroOutButton->setText("All axis home");
+     connect(zeroOutButton, & QPushButton::clicked, this, &SettingsDialog::on_tCodeHome_clicked);
+     ui.RangeSettingsGrid->addWidget(zeroOutButton, sliderGridRow + 1, 0);
+
+     QLabel* xRangeStepLabel = new QLabel(this);
+     xRangeStepLabel->setText("Stroke range change step");
+     xRangeStepLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+     QSpinBox* xRangeStepInput = new QSpinBox(this);
+     xRangeStepInput->setToolTip("The amount to modify the stroke range when using keyboard/gamepad.");
+     xRangeStepInput->setMinimum(1);
+     xRangeStepInput->setMaximum(INT_MAX);
+     xRangeStepInput->setMinimumWidth(75);
+     xRangeStepInput->setSingleStep(50);
+     xRangeStepInput->setValue(SettingsHandler::getGamepadSpeedIncrement());
+     xRangeStepInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+     connect(xRangeStepInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::xRangeStepInput_valueChanged);
+     ui.RangeSettingsGrid->addWidget(xRangeStepLabel, sliderGridRow + 1, 2);
+     ui.RangeSettingsGrid->addWidget(xRangeStepInput, sliderGridRow + 1, 3);
+
+
      QLabel* lubePulseAmountLabel = new QLabel(this);
      lubePulseAmountLabel->setText("Pulse lube amount");
      lubePulseAmountLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -771,33 +807,13 @@ void SettingsDialog::setUpTCodeAxis()
      libePulseFrequencyInput->setValue(SettingsHandler::getLubePulseFrequency());
      libePulseFrequencyInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
      connect(libePulseFrequencyInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::lubeFrequency_valueChanged);
-     ui.RangeSettingsGrid->addWidget(lubePulseCheckbox, sliderGridRow + 1, 0);
-     ui.RangeSettingsGrid->addWidget(lubePulseAmountLabel, sliderGridRow + 1, 0);
+     ui.otherMotionGridLayout->addWidget(lubePulseCheckbox, 0, 0);
+     ui.otherMotionGridLayout->addWidget(lubePulseAmountLabel, 1, 0);
      lubePulseCheckbox->raise();
      lubePulseCheckbox->setStyleSheet("* {background: transparent}");
-     ui.RangeSettingsGrid->addWidget(libePulseAmountInput, sliderGridRow + 1, 1);
-     ui.RangeSettingsGrid->addWidget(lubePulseFrequencyLabel, sliderGridRow + 1, 2);
-     ui.RangeSettingsGrid->addWidget(libePulseFrequencyInput, sliderGridRow + 1, 3);
-
-     QPushButton* zeroOutButton = new QPushButton(this);
-     zeroOutButton->setText("All axis home");
-     connect(zeroOutButton, & QPushButton::clicked, this, &SettingsDialog::on_tCodeHome_clicked);
-     ui.RangeSettingsGrid->addWidget(zeroOutButton, sliderGridRow + 4, 0);
-
-     QLabel* xRangeStepLabel = new QLabel(this);
-     xRangeStepLabel->setText("Stroke range change step");
-     xRangeStepLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-     QSpinBox* xRangeStepInput = new QSpinBox(this);
-     xRangeStepInput->setToolTip("The amount to modify the stroke range when using keyboard/gamepad.");
-     xRangeStepInput->setMinimum(1);
-     xRangeStepInput->setMaximum(INT_MAX);
-     xRangeStepInput->setMinimumWidth(75);
-     xRangeStepInput->setSingleStep(50);
-     xRangeStepInput->setValue(SettingsHandler::getGamepadSpeedIncrement());
-     xRangeStepInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-     connect(xRangeStepInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::xRangeStepInput_valueChanged);
-     ui.RangeSettingsGrid->addWidget(xRangeStepLabel, sliderGridRow + 3, 3);
-     ui.RangeSettingsGrid->addWidget(xRangeStepInput, sliderGridRow + 4, 3);
+     ui.otherMotionGridLayout->addWidget(libePulseAmountInput, 1, 1);
+     ui.otherMotionGridLayout->addWidget(lubePulseFrequencyLabel, 2, 0);
+     ui.otherMotionGridLayout->addWidget(libePulseFrequencyInput, 2, 1);
 
      setupGamepadMap();
 
@@ -816,7 +832,7 @@ void SettingsDialog::setAxisProgressBar(QString axis, int value)
 
 void SettingsDialog::on_axis_valueChange(QString axis, int value)
 {
-    if (ui.settingsTabWidget->currentWidget() == ui.tcodeTab)
+    if (ui.settingsTabWidget->currentWidget() == ui.motionTab)
     {
         auto bar = axisProgressbars.value(axis);
         if(bar != nullptr)
@@ -1339,7 +1355,7 @@ void SettingsDialog::on_channelAddButton_clicked()
     if (ok)
     {
         SettingsHandler::addAxis(channel);
-        channelTableViewModel->setMap();
+        //channelTableViewModel->setMap();
         setUpTCodeAxis();
     }
 }
@@ -1366,7 +1382,7 @@ void SettingsDialog::on_channelDeleteButton_clicked()
             }
             foreach(auto channel, channelsToDelete)
                 SettingsHandler::deleteAxis(channel);
-            channelTableViewModel->setMap();
+            //channelTableViewModel->setMap();
             setUpTCodeAxis();
         }
     }
@@ -1380,7 +1396,7 @@ void SettingsDialog::on_axisDefaultButton_clicked()
     if (reply == QMessageBox::Yes)
     {
         SettingsHandler::SetChannelMapDefaults();
-        channelTableViewModel->setMap();
+        //channelTableViewModel->setMap();
         setUpTCodeAxis();
     }
 }
@@ -1828,5 +1844,70 @@ void SettingsDialog::on_disableTimeLinePreviewChk_clicked(bool checked)
 void SettingsDialog::on_MFSDiscoveryDisabledCheckBox_clicked(bool checked)
 {
     SettingsHandler::setMFSDiscoveryDisabled(checked);
+}
+
+
+void SettingsDialog::on_channelProfilesComboBox_textChange(const QString &profile)
+{
+    TCodeChannelLookup::setSelectedChannelProfile(profile);
+    setUpTCodeAxis();
+}
+
+
+void SettingsDialog::on_pushButton_clicked()
+{
+    QMessageBox::StandardButton reply;
+    auto selectedProfile = ui.channelProfilesComboBox->currentData().value<QMap<QString, ChannelModel33>>();
+    reply = QMessageBox::question(this, "Copy!", "Copy from current profile?",
+                                  QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
+    if (reply == QMessageBox::Yes) {
+    }
+    else if(reply == QMessageBox::No) {
+        selectedProfile = TCodeChannelLookup::getDefaultChannelProfile();
+    }
+    if(reply != QMessageBox::Cancel) {
+        bool ok;
+        QString text = QInputDialog::getText(this, tr("New profile"),
+                                             tr("Profile name:"), QLineEdit::Normal,
+                                             "", &ok);
+        if (ok && !text.isEmpty())
+        {
+            auto duplicate = TCodeChannelLookup::getAvailableChannelProfiles()->contains(text);
+            if(duplicate) {
+                DialogHandler::MessageBox(this, "There is already a profile named: "+ text, XLogLevel::Critical);
+            } else {
+                TCodeChannelLookup::addChannelsProfile(text, selectedProfile);
+                auto profiles = TCodeChannelLookup::getAvailableChannelProfiles();
+                QVariant variant;
+                variant.setValue(profiles->value(text));
+                ui.channelProfilesComboBox->addItem(text, variant);
+                ui.channelProfilesComboBox->setCurrentText(text);
+                //setUpTCodeAxis();
+
+            }
+        }
+    }
+}
+
+
+void SettingsDialog::on_deleteProfileButton_clicked()
+{
+    auto lastProfile = TCodeChannelLookup::getAvailableChannelProfiles()->count() == 1;
+    if(lastProfile) {
+        DialogHandler::MessageBox(this, "Must have at least 1 profile!", XLogLevel::Critical);
+        return;
+    }
+    QMessageBox::StandardButton reply;
+    auto selectedProfile = ui.channelProfilesComboBox->currentData().value<QMap<QString, ChannelModel33>>();
+    reply = QMessageBox::question(this, "Delete!", "Delete current profile?",
+                                  QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes) {
+        auto selectedProfileName = ui.channelProfilesComboBox->currentText();
+        TCodeChannelLookup::deleteChannelsProfile(selectedProfileName);
+        ui.channelProfilesComboBox->removeItem(ui.channelProfilesComboBox->currentIndex());
+        auto newProfile = TCodeChannelLookup::getSelectedChannelProfile();
+        ui.channelProfilesComboBox->setCurrentText(newProfile);
+        //setUpTCodeAxis();
+    }
 }
 

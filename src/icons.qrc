@@ -49,5 +49,7 @@
         <file>images/icons/context-menu.svg</file>
         <file>images/icons/settings-black.png</file>
         <file>images/icons/settings-white.png</file>
+        <file>images/icons/icons8-plus-48.png</file>
+        <file>images/icons/minus.png</file>
     </qresource>
 </RCC>

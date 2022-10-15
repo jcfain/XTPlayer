@@ -4,7 +4,6 @@
 #include <QObject>
 #include <QAbstractTableModel>
 #include "lib/struct/ChannelModel33.h"
-#include "lib/handler/serialhandler.h"
 
 class ChannelTableViewModel : public QAbstractTableModel
 {
@@ -24,16 +23,9 @@ public:
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
-    inline void setMap()
-    {
-        beginResetModel();
-        _map = TCodeChannelLookup::getAvailableChannels();
-        endResetModel();
-    }
     const ChannelModel33* getRowData(int row);
 
 private:
-    QMap<QString, ChannelModel33>* _map;
 };
 
 #endif // CHANNELTABLEVIEWMODEL_H

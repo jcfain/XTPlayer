@@ -1,8 +1,9 @@
 
-QMainWindow, QDialog, QTabWidget > QWidget, QLineEdit, LibraryWindow  {
+QMainWindow, QDialog, QTabWidget > QWidget, QLineEdit, QScrollArea > QWidget > QWidget, LibraryWindow  {
     background-color: #33363c;
     color: #bec0c1;
 }
+
 QFrame#libraryFrame {
 	border: 1px solid;
 	border-color: #3e4249;
@@ -77,7 +78,7 @@ QLabel {
     color: white;
 }
 QListView {
-    background-color: #33363c;
+    background-color: transparent;
     color: white;
 	border: none;
 }

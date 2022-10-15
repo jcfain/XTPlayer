@@ -4,6 +4,7 @@
 #include <QPoint>
 #include <QSize>
 #include <QSettings>
+#include <QMutex>
 
 class XTPSettings
 {
@@ -31,8 +32,12 @@ public:
     static bool getRememberWindowsSettings();
     static void setLibraryWindowOpen(bool enabled);
     static bool getLibraryWindowOpen();
+    static QList<int> getMainWindowSplitterPos();
+    static void setMainWindowSplitterPos(QList<int> value);
+
     static void setDisableTimeLinePreview(bool enabled);
     static bool getDisableTimeLinePreview();
+
 
 private:
     static QSettings* getSettings();
@@ -43,6 +48,8 @@ private:
     static QSize m_xLibrarySize;
     static QPoint m_xLibraryPos;
     static bool m_disableTimeLinePreview;
+    static QList<int> m_mainWindowSplitterPos;
+    static QMutex m_mutex;
 };
 
 #endif // XTPSETTINGS_H

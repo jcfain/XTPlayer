@@ -313,7 +313,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
         ui->actionThumbnail->setChecked(true);
     }
 
-    auto splitterSizes = SettingsHandler::getMainWindowSplitterPos();
+    auto splitterSizes = XTPSettings::getMainWindowSplitterPos();
     if (splitterSizes.count() > 0)
         ui->mainFrameSplitter->setSizes(splitterSizes);
 
@@ -754,7 +754,7 @@ void MainWindow::deviceSwitchedHome()
 
 void MainWindow::on_mainwindow_splitterMove(int pos, int index)
 {
-    SettingsHandler::setMainWindowSplitterPos(ui->mainFrameSplitter->sizes());
+    XTPSettings::setMainWindowSplitterPos(ui->mainFrameSplitter->sizes());
 }
 
 //qint64 strokerUpdateMillis = 50;

@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1299</width>
+    <width>1304</width>
     <height>685</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>1303</width>
+    <height>685</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Settings</string>
@@ -20,24 +26,8 @@
   <property name="modal">
    <bool>true</bool>
   </property>
-  <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0,0,0,0,0,0,0">
-   <property name="sizeConstraint">
-    <enum>QLayout::SetNoConstraint</enum>
-   </property>
-   <item row="2" column="1">
-    <widget class="QLabel" name="restartRequiredLabel">
-     <property name="text">
-      <string>Restart required</string>
-     </property>
-     <property name="textFormat">
-      <enum>Qt::RichText</enum>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="1">
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="2" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -50,16 +40,22 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0" colspan="2">
+   <item row="0" column="0">
     <widget class="QTabWidget" name="settingsTabWidget">
      <property name="enabled">
       <bool>true</bool>
      </property>
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
+       <horstretch>1</horstretch>
+       <verstretch>1</verstretch>
       </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>1285</width>
+       <height>615</height>
+      </size>
      </property>
      <property name="currentIndex">
       <number>0</number>
@@ -426,302 +422,447 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tcodeTab">
+     <widget class="QWidget" name="motionTab">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>1282</width>
+        <height>585</height>
+       </size>
+      </property>
       <attribute name="title">
-       <string>TCode</string>
+       <string>Motion</string>
       </attribute>
-      <layout class="QGridLayout" name="gridLayout_3">
+      <layout class="QGridLayout" name="gridLayout_12">
        <item row="0" column="0">
-        <layout class="QGridLayout" name="RangeSettingsGrid">
-         <property name="sizeConstraint">
-          <enum>QLayout::SetMinimumSize</enum>
+        <widget class="QScrollArea" name="motionTabScrollArea">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
          </property>
-         <property name="horizontalSpacing">
-          <number>2</number>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
          </property>
-         <property name="verticalSpacing">
-          <number>0</number>
+         <property name="widgetResizable">
+          <bool>true</bool>
          </property>
-        </layout>
+         <widget class="QWidget" name="scrollAreaWidgetContents">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>1248</width>
+            <height>732</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_7" rowstretch="0,0,0,0,0,0,0" columnminimumwidth="0,0,0,0,0,0,0">
+           <property name="sizeConstraint">
+            <enum>QLayout::SetNoConstraint</enum>
+           </property>
+           <item row="3" column="5">
+            <widget class="QGroupBox" name="groupBox_2">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>361</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>130</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="title">
+              <string>Inversion</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_10">
+              <item row="0" column="0">
+               <layout class="QGridLayout" name="FunscriptSettingsGrid"/>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="7">
+            <widget class="QGroupBox" name="rangeLimitGroupbox">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
+               <horstretch>1</horstretch>
+               <verstretch>1</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>150</height>
+              </size>
+             </property>
+             <property name="title">
+              <string>Range limits</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_3">
+              <property name="sizeConstraint">
+               <enum>QLayout::SetMinimumSize</enum>
+              </property>
+              <property name="leftMargin">
+               <number>9</number>
+              </property>
+              <property name="topMargin">
+               <number>9</number>
+              </property>
+              <property name="rightMargin">
+               <number>9</number>
+              </property>
+              <property name="bottomMargin">
+               <number>9</number>
+              </property>
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <item row="1" column="0">
+               <layout class="QGridLayout" name="RangeSettingsGrid">
+                <property name="sizeConstraint">
+                 <enum>QLayout::SetMinimumSize</enum>
+                </property>
+                <property name="horizontalSpacing">
+                 <number>2</number>
+                </property>
+                <property name="verticalSpacing">
+                 <number>0</number>
+                </property>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_3">
+             <property name="maximumSize">
+              <size>
+               <width>50</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Profile</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QPushButton" name="pushButton">
+             <property name="minimumSize">
+              <size>
+               <width>25</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>25</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>Add profile</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="icons.qrc">
+               <normaloff>:/images/icons/icons8-plus-48.png</normaloff>:/images/icons/icons8-plus-48.png</iconset>
+             </property>
+             <property name="flat">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0" colspan="5">
+            <widget class="QGroupBox" name="randomMotionGroupbox">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>361</height>
+              </size>
+             </property>
+             <property name="title">
+              <string>Random motion on channels without scripts</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_11">
+              <item row="0" column="0">
+               <layout class="QGridLayout" name="MultiplierSettingsGrid" rowstretch="0">
+                <property name="sizeConstraint">
+                 <enum>QLayout::SetMinimumSize</enum>
+                </property>
+                <item row="0" column="0">
+                 <widget class="QCheckBox" name="enableMultiplierCheckbox">
+                  <property name="toolTip">
+                   <string>Enables the random motion on the channels below that have been checked.</string>
+                  </property>
+                  <property name="text">
+                   <string>Enable</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="channelProfilesComboBox"/>
+           </item>
+           <item row="4" column="0" colspan="6">
+            <widget class="QGroupBox" name="skipToMoneyShotGroupbox">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>161</height>
+              </size>
+             </property>
+             <property name="title">
+              <string>Skip to moneyshot</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_8">
+              <item row="0" column="0">
+               <layout class="QGridLayout" name="skipToMoneyShotGrid">
+                <item row="1" column="0">
+                 <widget class="QLineEdit" name="skipToMoneyShotFunscriptLineEdit"/>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QCheckBox" name="skipToMoneyShotSkipsVideo">
+                  <property name="toolTip">
+                   <string>If checked, skip to money shot will skip the playing video to either the specified bookmark or the last 10 percent.\nOtherwise the video position will not change.</string>
+                  </property>
+                  <property name="text">
+                   <string>Skip playing video to bookmark</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0" colspan="2">
+                 <widget class="QCheckBox" name="skipToMoneyShotPlaysFunscriptCheckbox">
+                  <property name="text">
+                   <string>Skip to moneyshot plays funscript</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QPushButton" name="browseSkipToMoneyShotFunscriptButton">
+                  <property name="maximumSize">
+                   <size>
+                    <width>100</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Browse</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <widget class="QCheckBox" name="skipToMoneyShotStandAloneLoopCheckBox">
+                  <property name="toolTip">
+                   <string>If checked, the selected funscript will loop untill the current playing media has paused, stopped, or changed.</string>
+                  </property>
+                  <property name="text">
+                   <string>Loop</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="4" column="6">
+            <widget class="QGroupBox" name="funscriptModifierGroupbox">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>161</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="title">
+              <string>Funscript modifiers</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_9">
+              <item row="0" column="0">
+               <widget class="QLabel" name="funscriptModifierLabel">
+                <property name="toolTip">
+                 <string>Increases/Decreases the funscript range\n
+THIS VALUE WILL BR RESET ON SCRIPT CHANGE!</string>
+                </property>
+                <property name="text">
+                 <string>Range modifier</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QSpinBox" name="finscriptModifierSpinBox">
+                <property name="toolTip">
+                 <string>Increases/Decreases the funscript range
+THIS VALUE WILL BR RESET ON SCRIPT CHANGE!</string>
+                </property>
+                <property name="suffix">
+                 <string>%</string>
+                </property>
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="maximum">
+                 <number>500</number>
+                </property>
+                <property name="value">
+                 <number>100</number>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="rangMpdifierStepLabel">
+                <property name="toolTip">
+                 <string>This sets the step for when changing the range modifier value in from a gamepad or keyboard.</string>
+                </property>
+                <property name="text">
+                 <string>Range modifier step</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QSpinBox" name="rangeModifierStepSpinBox">
+                <property name="toolTip">
+                 <string>This sets the step for when changing the range modifier value in from a gamepad or keyboard.</string>
+                </property>
+                <property name="suffix">
+                 <string>%</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="globalOffsetLabel">
+                <property name="toolTip">
+                 <string>This sets the offset for all scripts unless the script has its own offset value.</string>
+                </property>
+                <property name="text">
+                 <string>Global offset</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QSpinBox" name="offsetSpinbox">
+                <property name="toolTip">
+                 <string>This sets the offset for all scripts unless the script has its own offset value.</string>
+                </property>
+                <property name="suffix">
+                 <string>ms</string>
+                </property>
+                <property name="maximum">
+                 <number>98</number>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="o">
+                <property name="toolTip">
+                 <string>This sets the step for when changing the rang modifier value in from a gamepad or keyboard.</string>
+                </property>
+                <property name="text">
+                 <string>Offset step</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QSpinBox" name="offsetSpinboxStep">
+                <property name="toolTip">
+                 <string>This sets the step for when changing the range modifier value in from a gamepad or keyboard.</string>
+                </property>
+                <property name="suffix">
+                 <string>ms</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="3" column="6">
+            <widget class="QGroupBox" name="motionOtherGroupBox">
+             <property name="title">
+              <string>Other</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_13">
+              <item row="0" column="0">
+               <layout class="QGridLayout" name="otherMotionGridLayout"/>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QPushButton" name="deleteProfileButton">
+             <property name="minimumSize">
+              <size>
+               <width>25</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>25</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>Delete profile</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="icons.qrc">
+               <normaloff>:/images/icons/minus.png</normaloff>:/images/icons/minus.png</iconset>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
        </item>
       </layout>
-     </widget>
-     <widget class="QWidget" name="funscriptTab">
-      <attribute name="title">
-       <string>Funscript</string>
-      </attribute>
-      <widget class="QGroupBox" name="groupBox">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>20</y>
-         <width>851</width>
-         <height>361</height>
-        </rect>
-       </property>
-       <property name="title">
-        <string>Random motion on channels without scripts</string>
-       </property>
-       <widget class="QWidget" name="gridLayoutWidget">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>30</y>
-          <width>831</width>
-          <height>321</height>
-         </rect>
-        </property>
-        <layout class="QGridLayout" name="MultiplierSettingsGrid" rowstretch="0">
-         <property name="sizeConstraint">
-          <enum>QLayout::SetDefaultConstraint</enum>
-         </property>
-         <item row="0" column="0">
-          <widget class="QCheckBox" name="enableMultiplierCheckbox">
-           <property name="toolTip">
-            <string>Enables the random motion on the channels below that have been checked.</string>
-           </property>
-           <property name="text">
-            <string>Enable</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </widget>
-      <widget class="QGroupBox" name="groupBox_2">
-       <property name="geometry">
-        <rect>
-         <x>870</x>
-         <y>20</y>
-         <width>131</width>
-         <height>361</height>
-        </rect>
-       </property>
-       <property name="title">
-        <string>Inversion</string>
-       </property>
-       <widget class="QWidget" name="gridLayoutWidget_2">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>30</y>
-          <width>111</width>
-          <height>321</height>
-         </rect>
-        </property>
-        <layout class="QGridLayout" name="FunscriptSettingsGrid"/>
-       </widget>
-      </widget>
-      <widget class="QGroupBox" name="skipToMoneyShotGroupbox">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>390</y>
-         <width>631</width>
-         <height>161</height>
-        </rect>
-       </property>
-       <property name="title">
-        <string>Skip to moneyshot</string>
-       </property>
-       <widget class="QWidget" name="formLayoutWidget_2">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>30</y>
-          <width>611</width>
-          <height>127</height>
-         </rect>
-        </property>
-        <layout class="QGridLayout" name="skipToMoneyShotGrid">
-         <item row="1" column="0">
-          <widget class="QLineEdit" name="skipToMoneyShotFunscriptLineEdit"/>
-         </item>
-         <item row="2" column="0">
-          <widget class="QCheckBox" name="skipToMoneyShotSkipsVideo">
-           <property name="toolTip">
-            <string>If checked, skip to money shot will skip the playing video to either the specified bookmark or the last 10 percent.\nOtherwise the video position will not change.</string>
-           </property>
-           <property name="text">
-            <string>Skip playing video to bookmark</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0" colspan="2">
-          <widget class="QCheckBox" name="skipToMoneyShotPlaysFunscriptCheckbox">
-           <property name="text">
-            <string>Skip to moneyshot plays funscript</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QPushButton" name="browseSkipToMoneyShotFunscriptButton">
-           <property name="maximumSize">
-            <size>
-             <width>100</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Browse</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QCheckBox" name="skipToMoneyShotStandAloneLoopCheckBox">
-           <property name="toolTip">
-            <string>If checked, the selected funscript will loop untill the current playing media has paused, stopped, or changed.</string>
-           </property>
-           <property name="text">
-            <string>Loop</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </widget>
-      <widget class="QSpinBox" name="finscriptModifierSpinBox">
-       <property name="geometry">
-        <rect>
-         <x>780</x>
-         <y>410</y>
-         <width>111</width>
-         <height>22</height>
-        </rect>
-       </property>
-       <property name="toolTip">
-        <string>Increases/Decreases the funscript range
-THIS VALUE WILL BR RESET ON SCRIPT CHANGE!</string>
-       </property>
-       <property name="suffix">
-        <string>%</string>
-       </property>
-       <property name="minimum">
-        <number>1</number>
-       </property>
-       <property name="maximum">
-        <number>500</number>
-       </property>
-       <property name="value">
-        <number>100</number>
-       </property>
-      </widget>
-      <widget class="QLabel" name="funscriptModifierLabel">
-       <property name="geometry">
-        <rect>
-         <x>660</x>
-         <y>410</y>
-         <width>111</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="toolTip">
-        <string>Increases/Decreases the funscript range\n
-THIS VALUE WILL BR RESET ON SCRIPT CHANGE!</string>
-       </property>
-       <property name="text">
-        <string>Range modifier</string>
-       </property>
-      </widget>
-      <widget class="QSpinBox" name="rangeModifierStepSpinBox">
-       <property name="geometry">
-        <rect>
-         <x>780</x>
-         <y>440</y>
-         <width>111</width>
-         <height>22</height>
-        </rect>
-       </property>
-       <property name="toolTip">
-        <string>This sets the step for when changing the range modifier value in from a gamepad or keyboard.</string>
-       </property>
-       <property name="suffix">
-        <string>%</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_5">
-       <property name="geometry">
-        <rect>
-         <x>660</x>
-         <y>440</y>
-         <width>111</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="toolTip">
-        <string>This sets the step for when changing the range modifier value in from a gamepad or keyboard.</string>
-       </property>
-       <property name="text">
-        <string>Range modifier step</string>
-       </property>
-      </widget>
-      <widget class="QSpinBox" name="offsetSpinboxStep">
-       <property name="geometry">
-        <rect>
-         <x>780</x>
-         <y>500</y>
-         <width>111</width>
-         <height>22</height>
-        </rect>
-       </property>
-       <property name="toolTip">
-        <string>This sets the step for when changing the range modifier value in from a gamepad or keyboard.</string>
-       </property>
-       <property name="suffix">
-        <string>ms</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_6">
-       <property name="geometry">
-        <rect>
-         <x>660</x>
-         <y>500</y>
-         <width>111</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="toolTip">
-        <string>This sets the step for when changing the rang modifier value in from a gamepad or keyboard.</string>
-       </property>
-       <property name="text">
-        <string>Offset step</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_7">
-       <property name="geometry">
-        <rect>
-         <x>660</x>
-         <y>470</y>
-         <width>111</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="toolTip">
-        <string>This sets the offset for all scripts unless the script has its own offset value.</string>
-       </property>
-       <property name="text">
-        <string>Global offset</string>
-       </property>
-      </widget>
-      <widget class="QSpinBox" name="offsetSpinbox">
-       <property name="geometry">
-        <rect>
-         <x>780</x>
-         <y>470</y>
-         <width>111</width>
-         <height>22</height>
-        </rect>
-       </property>
-       <property name="toolTip">
-        <string>This sets the offset for all scripts unless the script has its own offset value.</string>
-       </property>
-       <property name="suffix">
-        <string>ms</string>
-       </property>
-       <property name="maximum">
-        <number>98</number>
-       </property>
-      </widget>
      </widget>
      <widget class="QWidget" name="videoTab">
       <attribute name="title">
@@ -1222,33 +1363,77 @@ This will greatly slows down media reading on load if checked.</string>
       <attribute name="title">
        <string>Help</string>
       </attribute>
-      <widget class="QWidget" name="formLayoutWidget_3">
-       <property name="geometry">
-        <rect>
-         <x>9</x>
-         <y>9</y>
-         <width>1221</width>
-         <height>571</height>
-        </rect>
-       </property>
-       <layout class="QFormLayout" name="formLayout_3">
-        <item row="1" column="0">
-         <widget class="QPushButton" name="openDeoPDFButton">
-          <property name="text">
-           <string>View Deo/HereSphere guide</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QPushButton" name="launchWelcomeDialog">
-          <property name="text">
-           <string>Open Welcome</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
+      <layout class="QGridLayout" name="gridLayout_15">
+       <item row="0" column="0">
+        <layout class="QFormLayout" name="formLayout_3">
+         <item row="1" column="0">
+          <widget class="QPushButton" name="openDeoPDFButton">
+           <property name="text">
+            <string>View Deo/HereSphere guide</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QPushButton" name="launchWelcomeDialog">
+           <property name="text">
+            <string>Open Welcome</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
      </widget>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="restartRequiredLabel">
+     <property name="palette">
+      <palette>
+       <active>
+        <colorrole role="Text">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>208</red>
+           <green>0</green>
+           <blue>3</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </active>
+       <inactive>
+        <colorrole role="Text">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>208</red>
+           <green>208</green>
+           <blue>208</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </inactive>
+       <disabled>
+        <colorrole role="Text">
+         <brush brushstyle="SolidPattern">
+          <color alpha="96">
+           <red>164</red>
+           <green>166</green>
+           <blue>168</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </disabled>
+      </palette>
+     </property>
+     <property name="text">
+      <string>Restart required</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::RichText</enum>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
     </widget>
    </item>
   </layout>

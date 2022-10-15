@@ -1,9 +1,10 @@
 #include "channeltableviewmodel.h"
+#include "lib/lookup/tcodechannellookup.h"
+#include "lib/handler/settingshandler.h"
 
 ChannelTableViewModel::ChannelTableViewModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
-    setMap();
     //setHeaderData(0, Qt::Horizontal, QObject::tr("ID"));
     setHeaderData(0, Qt::Horizontal, QObject::tr("Friendly Name"));
     setHeaderData(1, Qt::Horizontal, QObject::tr("Axis Name"));
@@ -19,9 +20,7 @@ ChannelTableViewModel::ChannelTableViewModel(QObject *parent) :
 
 int ChannelTableViewModel::rowCount(const QModelIndex& parent) const
 {
-    if (_map)
-        return _map->count();
-    return 0;
+   return TCodeChannelLookup::getAvailableChannels()->count();
 }
 
 int ChannelTableViewModel::columnCount(const QModelIndex & parent) const
@@ -60,9 +59,10 @@ QVariant ChannelTableViewModel::headerData(int section, Qt::Orientation orientat
 
 QVariant ChannelTableViewModel::data(const QModelIndex& index, int role) const
 {
-    if (!_map)
+    auto map = TCodeChannelLookup::getAvailableChannels();
+    if (!map)
         return QVariant();
-    if (index.row() < 0 || index.row() >= _map->count()) {
+    if (index.row() < 0 || index.row() >= TCodeChannelLookup::getAvailableChannels()->count()) {
         return QVariant();
     }
     switch (role) {
@@ -70,23 +70,23 @@ QVariant ChannelTableViewModel::data(const QModelIndex& index, int role) const
 //        if (index.column() == 0)
 //            return _map->keys().at(index.row());
         if (index.column() == 0)
-            return (_map->constBegin() + index.row()).value().FriendlyName;
+            return (map->constBegin() + index.row()).value().FriendlyName;
         else if (index.column() == 1)
-            return (_map->constBegin() + index.row()).value().AxisName;
+            return (map->constBegin() + index.row()).value().AxisName;
         else if (index.column() == 2)
-            return (_map->constBegin() + index.row()).value().Channel;
+            return (map->constBegin() + index.row()).value().Channel;
         else if (index.column() == 3)
-            return (_map->constBegin() + index.row()).value().Min;
+            return (map->constBegin() + index.row()).value().Min;
         else if (index.column() == 4)
-            return (_map->constBegin() + index.row()).value().Mid;
+            return (map->constBegin() + index.row()).value().Mid;
         else if (index.column() == 5)
-            return (_map->constBegin() + index.row()).value().Max;
+            return (map->constBegin() + index.row()).value().Max;
         else if (index.column() == 6)
-            return (int)(_map->constBegin() + index.row()).value().Dimension;
+            return (int)(map->constBegin() + index.row()).value().Dimension;
         else if (index.column() == 7)
-            return (int)(_map->constBegin() + index.row()).value().Type;
+            return (int)(map->constBegin() + index.row()).value().Type;
         else if (index.column() == 8)
-            return (_map->constBegin() + index.row()).value().TrackName;
+            return (map->constBegin() + index.row()).value().TrackName;
       case Qt::FontRole:
           break;
       case Qt::BackgroundRole:
@@ -101,6 +101,7 @@ QVariant ChannelTableViewModel::data(const QModelIndex& index, int role) const
 
 bool ChannelTableViewModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
+    auto map = TCodeChannelLookup::getAvailableChannels();
     if (role == Qt::EditRole) {
         if (!checkIndex(index))
             return false;
@@ -109,8 +110,8 @@ bool ChannelTableViewModel::setData(const QModelIndex &index, const QVariant &va
         if ((value.userType() == QMetaType::QString && value.toString().isEmpty()))
             return false;
         //save value from editor to member m_gridData
-        QString key = (_map->constBegin() + index.row()).key();
-        ChannelModel33 valueModel = (_map->constBegin() + index.row()).value();
+        QString key = (map->constBegin() + index.row()).key();
+        ChannelModel33 valueModel = (map->constBegin() + index.row()).value();
 //        if (index.column() == 0)
 //        {
 //            return false;
@@ -160,7 +161,6 @@ bool ChannelTableViewModel::setData(const QModelIndex &index, const QVariant &va
             valueModel.TrackName = value.toString();
             SettingsHandler::setAxis(key, valueModel);
         }
-        setMap();
         emit editCompleted("");
         return true;
     }
@@ -169,7 +169,8 @@ bool ChannelTableViewModel::setData(const QModelIndex &index, const QVariant &va
 
 Qt::ItemFlags ChannelTableViewModel::flags(const QModelIndex &index) const
 {
-    QString key = (_map->constBegin() + index.row()).key();
+    auto map = TCodeChannelLookup::getAvailableChannels();
+    QString key = (map->constBegin() + index.row()).key();
     if (index.column() == 1 || index.column() == 2)
         return Qt::ItemIsSelectable | QAbstractTableModel::flags(index);
     return Qt::ItemIsEditable | QAbstractTableModel::flags(index);
@@ -177,7 +178,8 @@ Qt::ItemFlags ChannelTableViewModel::flags(const QModelIndex &index) const
 
 const ChannelModel33* ChannelTableViewModel::getRowData(int row)
 {
-    if (!_map || row <= 0)
+    auto map = TCodeChannelLookup::getAvailableChannels();
+    if (!map || row <= 0)
         return nullptr;
-    return &(_map->constBegin() + row).value();
+    return &(map->constBegin() + row).value();
 }

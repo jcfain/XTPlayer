@@ -217,6 +217,12 @@ private slots:
 
     void on_MFSDiscoveryDisabledCheckBox_clicked(bool checked);
 
+    void on_channelProfilesComboBox_textChange(const QString &arg1);
+
+    void on_pushButton_clicked();
+
+    void on_deleteProfileButton_clicked();
+
 private:
 
     Ui::SettingsDialog ui;
