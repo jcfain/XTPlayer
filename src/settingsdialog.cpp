@@ -188,9 +188,12 @@ void SettingsDialog::setupUi()
         }
         ui.tCodeVersionComboBox->setCurrentText(TCodeChannelLookup::getSelectedTCodeVersionName());
         connect(ui.tCodeVersionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
-        connect(&SettingsHandler::instance(), &SettingsHandler::tcodeVersionChanged, this, &SettingsDialog::setUpTCodeAxis);
+        //connect(&TCodeChannelLookup::instance(), &TCodeChannelLookup::tcodeVersionChanged, this, &SettingsDialog::setUpTCodeAxis);
+        connect(&TCodeChannelLookup::instance(), &TCodeChannelLookup::channelProfileChanged, this, &SettingsDialog::setUpTCodeChannelUI);
 
         channelTableViewModel = new ChannelTableViewModel(this);
+        connect(&TCodeChannelLookup::instance(), &TCodeChannelLookup::channelProfileChanged, channelTableViewModel, &ChannelTableViewModel::setMap);
+
         ui.channelTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
         ui.channelTableView->setSelectionMode(QAbstractItemView::ExtendedSelection);
         ChannelTableComboboxDelegate* channelTypeCombobox = new ChannelTableComboboxDelegate(ui.channelTableView);
@@ -217,17 +220,8 @@ void SettingsDialog::setupUi()
 
         ui.RangeSettingsGrid->setSpacing(5);
 
-        auto profiles = TCodeChannelLookup::getAvailableChannelProfiles();
-        foreach(auto profileName, profiles->keys())
-        {
-            QVariant variant;
-            variant.setValue(profiles->value(profileName));
-            ui.channelProfilesComboBox->addItem(profileName, variant);
-        }
-        ui.channelProfilesComboBox->setCurrentText(TCodeChannelLookup::getSelectedChannelProfile());
-        connect(ui.channelProfilesComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::on_channelProfilesComboBox_textChange);
-
-        setUpTCodeAxis();
+        setUpTCodeChannelProfiles();
+        setUpTCodeChannelUI();
 
         if(SettingsHandler::getSelectedOutputDevice() == DeviceName::Serial)
         {
@@ -553,7 +547,21 @@ void SettingsDialog::setupGamepadMap()
 //    inverseGrid->addWidget(inverseXRoll, 3, 2, Qt::AlignCenter);
 }
 
-void SettingsDialog::setUpTCodeAxis()
+void SettingsDialog::setUpTCodeChannelProfiles() {
+    disconnect(ui.channelProfilesComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::on_channelProfilesComboBox_textChange);
+    ui.channelProfilesComboBox->clear();
+    auto profiles = TCodeChannelLookup::getChannelProfiles();
+    foreach(auto profileName, profiles)
+    {
+        QVariant variant;
+        variant.setValue(TCodeChannelLookup::getChannels(profileName));
+        ui.channelProfilesComboBox->addItem(profileName, variant);
+    }
+    ui.channelProfilesComboBox->setCurrentText(TCodeChannelLookup::getSelectedChannelProfile());
+    connect(ui.channelProfilesComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::on_channelProfilesComboBox_textChange);
+}
+
+void SettingsDialog::setUpTCodeChannelUI()
 {
     if(_interfaceInitialized)
     {
@@ -583,6 +591,8 @@ void SettingsDialog::setUpTCodeAxis()
                 delete child;
         }
     }
+
+
      QFont font( "Sans Serif", 8);
      int sliderGridRow = 0;
      int multiplierGridRow = 1;
@@ -694,9 +704,6 @@ void SettingsDialog::setUpTCodeAxis()
                          SettingsHandler::setDamperChecked(channelName, checked);
                        });
 
-
-             ui.MultiplierSettingsGrid->addWidget(multiplierCheckbox, multiplierGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-             ui.MultiplierSettingsGrid->addWidget(multiplierInput, multiplierGridRow, 1, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
              QCheckBox* linkCheckbox = new QCheckBox(this);
              auto relatedChannel = TCodeChannelLookup::getChannel(axis->RelatedChannel);
              linkCheckbox->setToolTip("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS " + relatedChannel->FriendlyName + " funscript value.\nIf there is no " + relatedChannel->FriendlyName + " funscript then it will default to random motion.");
@@ -727,6 +734,9 @@ void SettingsDialog::setUpTCodeAxis()
                             SettingsHandler::setLinkToRelatedAxis(channelName, relatedChannel.AxisName);
                        });
 
+
+             ui.MultiplierSettingsGrid->addWidget(multiplierCheckbox, multiplierGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+             ui.MultiplierSettingsGrid->addWidget(multiplierInput, multiplierGridRow, 1, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
              ui.MultiplierSettingsGrid->addWidget(linkCheckbox, multiplierGridRow, 2, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
              ui.MultiplierSettingsGrid->addWidget(linkToAxisCombobox, multiplierGridRow, 3, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
              ui.MultiplierSettingsGrid->addWidget(damperCheckbox, multiplierGridRow, 4, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
@@ -1356,7 +1366,7 @@ void SettingsDialog::on_channelAddButton_clicked()
     {
         SettingsHandler::addAxis(channel);
         //channelTableViewModel->setMap();
-        setUpTCodeAxis();
+        //setUpTCodeAxis();
     }
 }
 
@@ -1375,29 +1385,16 @@ void SettingsDialog::on_channelDeleteButton_clicked()
             foreach(auto row, selectedRows)
             {
                 const auto model = row.model();
-                const auto channelData = ((ChannelTableViewModel*)model)->getRowData(row.row());
-                if (channelData == nullptr)
+                const auto channelKey = ((ChannelTableViewModel*)model)->getRowKey(row.row());
+                if (channelKey.isEmpty())
                     continue;
-                channelsToDelete << channelData->AxisName;
+                channelsToDelete << channelKey;
             }
             foreach(auto channel, channelsToDelete)
                 SettingsHandler::deleteAxis(channel);
             //channelTableViewModel->setMap();
-            setUpTCodeAxis();
+            //setUpTCodeAxis();
         }
-    }
-}
-
-void SettingsDialog::on_axisDefaultButton_clicked()
-{
-    QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset the channel map?\nThis will reset ALL range and multiplier settings!",
-                                  QMessageBox::Yes|QMessageBox::No);
-    if (reply == QMessageBox::Yes)
-    {
-        SettingsHandler::SetChannelMapDefaults();
-        //channelTableViewModel->setMap();
-        setUpTCodeAxis();
     }
 }
 
@@ -1850,21 +1847,14 @@ void SettingsDialog::on_MFSDiscoveryDisabledCheckBox_clicked(bool checked)
 void SettingsDialog::on_channelProfilesComboBox_textChange(const QString &profile)
 {
     TCodeChannelLookup::setSelectedChannelProfile(profile);
-    setUpTCodeAxis();
 }
 
 
-void SettingsDialog::on_pushButton_clicked()
+void SettingsDialog::on_addChannelProfileButton_clicked()
 {
     QMessageBox::StandardButton reply;
-    auto selectedProfile = ui.channelProfilesComboBox->currentData().value<QMap<QString, ChannelModel33>>();
     reply = QMessageBox::question(this, "Copy!", "Copy from current profile?",
                                   QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
-    if (reply == QMessageBox::Yes) {
-    }
-    else if(reply == QMessageBox::No) {
-        selectedProfile = TCodeChannelLookup::getDefaultChannelProfile();
-    }
     if(reply != QMessageBox::Cancel) {
         bool ok;
         QString text = QInputDialog::getText(this, tr("New profile"),
@@ -1872,18 +1862,21 @@ void SettingsDialog::on_pushButton_clicked()
                                              "", &ok);
         if (ok && !text.isEmpty())
         {
-            auto duplicate = TCodeChannelLookup::getAvailableChannelProfiles()->contains(text);
+            auto duplicate = TCodeChannelLookup::hasProfile(text);
             if(duplicate) {
                 DialogHandler::MessageBox(this, "There is already a profile named: "+ text, XLogLevel::Critical);
             } else {
-                TCodeChannelLookup::addChannelsProfile(text, selectedProfile);
-                auto profiles = TCodeChannelLookup::getAvailableChannelProfiles();
+                if (reply == QMessageBox::Yes) {
+                    TCodeChannelLookup::copyChannelsProfile(text);
+                }
+                else if(reply == QMessageBox::No) {
+                    TCodeChannelLookup::addChannelsProfile(text);
+                }
+                auto profiles = TCodeChannelLookup::getChannelProfiles();
                 QVariant variant;
-                variant.setValue(profiles->value(text));
+                variant.setValue(TCodeChannelLookup::getChannels(text));
                 ui.channelProfilesComboBox->addItem(text, variant);
                 ui.channelProfilesComboBox->setCurrentText(text);
-                //setUpTCodeAxis();
-
             }
         }
     }
@@ -1892,7 +1885,7 @@ void SettingsDialog::on_pushButton_clicked()
 
 void SettingsDialog::on_deleteProfileButton_clicked()
 {
-    auto lastProfile = TCodeChannelLookup::getAvailableChannelProfiles()->count() == 1;
+    auto lastProfile = TCodeChannelLookup::getChannelProfiles().count() == 1;
     if(lastProfile) {
         DialogHandler::MessageBox(this, "Must have at least 1 profile!", XLogLevel::Critical);
         return;
@@ -1907,7 +1900,30 @@ void SettingsDialog::on_deleteProfileButton_clicked()
         ui.channelProfilesComboBox->removeItem(ui.channelProfilesComboBox->currentIndex());
         auto newProfile = TCodeChannelLookup::getSelectedChannelProfile();
         ui.channelProfilesComboBox->setCurrentText(newProfile);
-        //setUpTCodeAxis();
+    }
+}
+
+void SettingsDialog::on_defultSelectedProfile_clicked()
+{
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset the channel mapn for the selected profile?\nThis will reset ALL range and multiplier settings!",
+                                  QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes) {
+        TCodeChannelLookup::setProfileDefaults();
+    }
+}
+
+
+void SettingsDialog::on_allProfilesDefaultButton_clicked()
+{
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to DELETE ALL PROFILES?",
+                                  QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes) {
+        TCodeChannelLookup::setAllProfileDefaults();
+        setUpTCodeChannelProfiles();
+//        ui.channelProfilesComboBox->clear();
+//        ui.channelProfilesComboBox->setCurrentText(TCodeChannelLookup::getSelectedChannelProfile());
     }
 }
 

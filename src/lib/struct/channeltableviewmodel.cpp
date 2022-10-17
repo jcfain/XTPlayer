@@ -1,10 +1,10 @@
 #include "channeltableviewmodel.h"
-#include "lib/lookup/tcodechannellookup.h"
 #include "lib/handler/settingshandler.h"
 
 ChannelTableViewModel::ChannelTableViewModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
+    setMap();
     //setHeaderData(0, Qt::Horizontal, QObject::tr("ID"));
     setHeaderData(0, Qt::Horizontal, QObject::tr("Friendly Name"));
     setHeaderData(1, Qt::Horizontal, QObject::tr("Axis Name"));
@@ -20,7 +20,7 @@ ChannelTableViewModel::ChannelTableViewModel(QObject *parent) :
 
 int ChannelTableViewModel::rowCount(const QModelIndex& parent) const
 {
-   return TCodeChannelLookup::getAvailableChannels()->count();
+    return _map.count();
 }
 
 int ChannelTableViewModel::columnCount(const QModelIndex & parent) const
@@ -59,34 +59,34 @@ QVariant ChannelTableViewModel::headerData(int section, Qt::Orientation orientat
 
 QVariant ChannelTableViewModel::data(const QModelIndex& index, int role) const
 {
-    auto map = TCodeChannelLookup::getAvailableChannels();
-    if (!map)
+    if (_map.length() == 0)
         return QVariant();
-    if (index.row() < 0 || index.row() >= TCodeChannelLookup::getAvailableChannels()->count()) {
+    if (index.row() < 0 || index.row() >= _map.count()) {
         return QVariant();
     }
+    auto channel = TCodeChannelLookup::getChannel(_map[index.row()]);
     switch (role) {
       case Qt::DisplayRole:
 //        if (index.column() == 0)
 //            return _map->keys().at(index.row());
         if (index.column() == 0)
-            return (map->constBegin() + index.row()).value().FriendlyName;
+            return channel->FriendlyName;
         else if (index.column() == 1)
-            return (map->constBegin() + index.row()).value().AxisName;
+            return channel->AxisName;
         else if (index.column() == 2)
-            return (map->constBegin() + index.row()).value().Channel;
+            return channel->Channel;
         else if (index.column() == 3)
-            return (map->constBegin() + index.row()).value().Min;
+            return channel->Min;
         else if (index.column() == 4)
-            return (map->constBegin() + index.row()).value().Mid;
+            return channel->Mid;
         else if (index.column() == 5)
-            return (map->constBegin() + index.row()).value().Max;
+            return channel->Max;
         else if (index.column() == 6)
-            return (int)(map->constBegin() + index.row()).value().Dimension;
+            return (int)channel->Dimension;
         else if (index.column() == 7)
-            return (int)(map->constBegin() + index.row()).value().Type;
+            return (int)channel->Type;
         else if (index.column() == 8)
-            return (map->constBegin() + index.row()).value().TrackName;
+            return channel->TrackName;
       case Qt::FontRole:
           break;
       case Qt::BackgroundRole:
@@ -101,7 +101,6 @@ QVariant ChannelTableViewModel::data(const QModelIndex& index, int role) const
 
 bool ChannelTableViewModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    auto map = TCodeChannelLookup::getAvailableChannels();
     if (role == Qt::EditRole) {
         if (!checkIndex(index))
             return false;
@@ -109,58 +108,60 @@ bool ChannelTableViewModel::setData(const QModelIndex &index, const QVariant &va
             return false;
         if ((value.userType() == QMetaType::QString && value.toString().isEmpty()))
             return false;
+
+        QString key = _map[index.row()];
+        auto channel = TCodeChannelLookup::getChannel(key);
         //save value from editor to member m_gridData
-        QString key = (map->constBegin() + index.row()).key();
-        ChannelModel33 valueModel = (map->constBegin() + index.row()).value();
 //        if (index.column() == 0)
 //        {
 //            return false;
 //        }
         if (index.column() == 0)
         {
-            valueModel.FriendlyName = value.toString();
-            SettingsHandler::setAxis(key, valueModel);
+            channel->FriendlyName = value.toString();
+            //SettingsHandler::setAxis(key, valueModel);
         }
         else if (index.column() == 1)
         {
-            valueModel.AxisName = value.toString();
-            SettingsHandler::setAxis(key, valueModel);
+            channel->AxisName = value.toString();
+            //SettingsHandler::setAxis(key, valueModel);
         }
         else if (index.column() == 2)
         {
-            valueModel.Channel = value.toString();
-            SettingsHandler::setAxis(key, valueModel);
+            channel->Channel = value.toString();
+            //SettingsHandler::setAxis(key, valueModel);
         }
         else if (index.column() == 3)
         {
-            valueModel.Min = value.toInt();
-            SettingsHandler::setAxis(key, valueModel);
+            channel->Min = value.toInt();
+            //SettingsHandler::setAxis(key, valueModel);
         }
         else if (index.column() == 4)
         {
-            valueModel.Mid = value.toInt();
-            SettingsHandler::setAxis(key, valueModel);
+            channel->Mid = value.toInt();
+            //SettingsHandler::setAxis(key, valueModel);
         }
         else if (index.column() == 5)
         {
-            valueModel.Max = value.toInt();
-            SettingsHandler::setAxis(key, valueModel);
+            channel->Max = value.toInt();
+            //SettingsHandler::setAxis(key, valueModel);
         }
         else if (index.column() == 6)
         {
-            valueModel.Dimension = (AxisDimension)value.toInt();
-            SettingsHandler::setAxis(key, valueModel);
+            channel->Dimension = (AxisDimension)value.toInt();
+            //SettingsHandler::setAxis(key, valueModel);
         }
         else if (index.column() == 7)
         {
-            valueModel.Type = (AxisType)value.toInt();
-            SettingsHandler::setAxis(key, valueModel);
+            channel->Type = (AxisType)value.toInt();
+            //SettingsHandler::setAxis(key, valueModel);
         }
         else if (index.column() == 9)
         {
-            valueModel.TrackName = value.toString();
-            SettingsHandler::setAxis(key, valueModel);
+            channel->TrackName = value.toString();
+            //SettingsHandler::setAxis(key, valueModel);
         }
+        //setMap(_map);
         emit editCompleted("");
         return true;
     }
@@ -169,17 +170,14 @@ bool ChannelTableViewModel::setData(const QModelIndex &index, const QVariant &va
 
 Qt::ItemFlags ChannelTableViewModel::flags(const QModelIndex &index) const
 {
-    auto map = TCodeChannelLookup::getAvailableChannels();
-    QString key = (map->constBegin() + index.row()).key();
     if (index.column() == 1 || index.column() == 2)
         return Qt::ItemIsSelectable | QAbstractTableModel::flags(index);
     return Qt::ItemIsEditable | QAbstractTableModel::flags(index);
 }
 
-const ChannelModel33* ChannelTableViewModel::getRowData(int row)
+const QString ChannelTableViewModel::getRowKey(int row)
 {
-    auto map = TCodeChannelLookup::getAvailableChannels();
-    if (!map || row <= 0)
+    if (row < 0)
         return nullptr;
-    return &(map->constBegin() + row).value();
+    return _map[row];
 }

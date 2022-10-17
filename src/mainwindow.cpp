@@ -773,7 +773,7 @@ void MainWindow::on_audioLevel_Change(int decibelL,int decibelR)
         if(xtEngine.connectionHandler()->isOutputDeviceConnected())
         {
     //        strokerLastUpdate = time;
-            auto availibleAxis = TCodeChannelLookup::getAvailableChannels();
+            auto availibleAxis = TCodeChannelLookup::getChannels();
             auto decibelLInverse = -decibelL;
             auto decibelRInverse = -decibelR;
             auto difference = decibelLInverse > decibelRInverse ? decibelLInverse - decibelRInverse : decibelRInverse - decibelLInverse;
@@ -785,15 +785,15 @@ void MainWindow::on_audioLevel_Change(int decibelL,int decibelR)
     //            maxAmplitude = amplitude;
             //auto delta = decibelLInverse > decibelRInverse ? amplitude / average : decibelRInverse - average;
             QString tcode;
-            foreach(auto axis, availibleAxis->keys())
+            foreach(auto axis, availibleAxis)
             {
-                ChannelModel33 channel = availibleAxis->value(axis);
-                if (channel.AxisName == TCodeChannelLookup::Stroke()  || SettingsHandler::getMultiplierChecked(axis))
+                ChannelModel33* channel = TCodeChannelLookup::getChannel(axis);
+                if (channel->AxisName == TCodeChannelLookup::Stroke()  || SettingsHandler::getMultiplierChecked(axis))
                 {
-                    if (channel.Type == AxisType::HalfRange || channel.Type == AxisType::None)
+                    if (channel->Type == AxisType::HalfRange || channel->Type == AxisType::None)
                         continue;
                     auto multiplierValue = SettingsHandler::getMultiplierValue(axis);
-                    if (channel.AxisName == TCodeChannelLookup::Stroke())
+                    if (channel->AxisName == TCodeChannelLookup::Stroke())
                         multiplierValue = 1.0f;
                     auto angle = XMath::mapRange(amplitude * 2, minAmplitude, maxAmplitude, 0, 180);
                     auto magnifiedAmplitude = XMath::mapRange(amplitude * 2, minAmplitude, maxAmplitude, 0, 100);

@@ -48,10 +48,10 @@ void InputMapWidget::setUpData()
     QMap<QString, QStringList> inverseKeyboardMap = SettingsHandler::getKeyboardMapInverse();
 
     auto tcodeVersionMap = TCodeChannelLookup::GetSelectedVersionMap();
-    auto availableAxis = TCodeChannelLookup::getAvailableChannels();
+    //auto availableAxis = TCodeChannelLookup::getChannels();
     for(auto __begin = tcodeVersionMap.begin(), __end = tcodeVersionMap.end();  __begin != __end; ++__begin) {
-        auto channel = availableAxis->value(TCodeChannelLookup::ToString(__begin.key()));
-        actions.append({channel.AxisName, "Channel: " + channel.FriendlyName});
+        auto channel = TCodeChannelLookup::getChannel(TCodeChannelLookup::ToString(__begin.key()));
+        actions.append({channel->AxisName, "Channel: " + channel->FriendlyName});
     }
 
     MediaActions actionsMap;
@@ -90,11 +90,11 @@ void InputMapWidget::setUpData()
 
         QWidget *invertWidget = new QWidget(this);
         QHBoxLayout *invertLayout = new QHBoxLayout(invertWidget);
-        if(availableAxis->contains(action)) {
-            auto channel = availableAxis->value(action);
-            if(channel.Type == AxisType::Range) {
+        if(TCodeChannelLookup::hasChannel(action)) {
+            auto channel = TCodeChannelLookup::getChannel(action);
+            if(channel->Type == AxisType::Range) {
                 QCheckBox* invertCheckbox = new QCheckBox(this);
-                invertCheckbox->setChecked(channel.GamepadInverted);
+                invertCheckbox->setChecked(channel->GamepadInverted);
                 invertCheckbox->setObjectName(action + "InvertCheckbox");
                 connect(invertCheckbox, &QCheckBox::clicked, this, [action](bool checked) {
                     SettingsHandler::setChannelGamepadInverse(action, checked);

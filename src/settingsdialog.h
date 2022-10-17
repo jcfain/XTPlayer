@@ -69,7 +69,8 @@ private slots:
     void on_serialOutputRdo_clicked();
 
     void on_networkOutputRdo_clicked();
-    void setUpTCodeAxis();
+    void setUpTCodeChannelProfiles();
+    void setUpTCodeChannelUI();
 
     void on_serialRefreshBtn_clicked();
 
@@ -125,8 +126,6 @@ private slots:
     void on_channelAddButton_clicked();
 
     void on_channelDeleteButton_clicked();
-
-    void on_axisDefaultButton_clicked();
 
     void on_tCodeHome_clicked();
 
@@ -219,9 +218,13 @@ private slots:
 
     void on_channelProfilesComboBox_textChange(const QString &arg1);
 
-    void on_pushButton_clicked();
+    void on_addChannelProfileButton_clicked();
 
     void on_deleteProfileButton_clicked();
+
+    void on_defultSelectedProfile_clicked();
+
+    void on_allProfilesDefaultButton_clicked();
 
 private:
 
