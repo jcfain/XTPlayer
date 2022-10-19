@@ -100,6 +100,7 @@ private slots:
     void on_togglePaused(bool paused);
     void playFileFromContextMenu();
     void playFileWithCustomScript();
+    void playFileWithCustomMedia();
     void playFileWithAudioSync();
     void regenerateThumbNail();
     void setThumbNailFromCurrent();

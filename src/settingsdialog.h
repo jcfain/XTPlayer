@@ -64,6 +64,7 @@ public slots:
     void on_gamepad_connectionChanged(ConnectionChangedSignal event);
     void on_input_device_connectionChanged(ConnectionChangedSignal event);
     void on_output_device_connectionChanged(ConnectionChangedSignal event);
+    void set_channelProfilesComboBox_value(const QString &arg1);
 
 private slots:
     void on_serialOutputRdo_clicked();
@@ -225,6 +226,8 @@ private slots:
     void on_defultSelectedProfile_clicked();
 
     void on_allProfilesDefaultButton_clicked();
+
+    void on_hideMediaWithoutFunscriptsCheckbox_clicked(bool checked);
 
 private:
 

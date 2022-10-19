@@ -36,7 +36,10 @@ public:
     static void setMainWindowSplitterPos(QList<int> value);
 
     static void setDisableTimeLinePreview(bool enabled);
-    static bool getDisableTimeLinePreview();
+    static bool getDisableTimeLinePreview();\
+
+    static void setHideMediaWithoutFunscripts(bool enabled);
+    static bool getHideMediaWithoutFunscripts();
 
 
 private:
@@ -48,6 +51,7 @@ private:
     static QSize m_xLibrarySize;
     static QPoint m_xLibraryPos;
     static bool m_disableTimeLinePreview;
+    static bool m_hideMediaWithoutFunscripts;
     static QList<int> m_mainWindowSplitterPos;
     static QMutex m_mutex;
 };

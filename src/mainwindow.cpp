@@ -728,6 +728,10 @@ void MainWindow::mediaAction(QString action, QString actionText)
         else
             onText_to_speech("No script playing to " + verb + " offset.");
     }
+    else if(MediaActions::TCodeChannelProfileActions.contains(action)) {
+        _xSettings->set_channelProfilesComboBox_value(action);
+        onText_to_speech(actionText);
+    }
     else
     {
         onText_to_speech(actionText);
@@ -987,6 +991,10 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
             {
                 myMenu.addAction(tr("Play with chosen funscript..."), this, &MainWindow::playFileWithCustomScript);
+            }
+            if(selectedFileListItem.type == LibraryListItemType::FunscriptType)
+            {
+                myMenu.addAction(tr("Play with chosen video..."), this, &MainWindow::playFileWithCustomMedia);
             }
             // Experimental
             //myMenu.addAction("Play with audio sync (Experimental)", this, &MainWindow::playFileWithAudioSync);
@@ -1847,6 +1855,34 @@ void MainWindow::playFileWithCustomScript()
         stopAndPlayMedia(selectedFileListItem, selectedScript);
     }
 }
+
+void MainWindow::playFileWithCustomMedia()
+{
+    QStringList mediaTypes;
+    QStringList videoTypes;
+    QStringList audioTypes;
+    foreach(auto ext, SettingsHandler::getVideoExtensions())
+        videoTypes.append("*."+ext);
+    foreach(auto ext, SettingsHandler::getAudioExtensions())
+        audioTypes.append("*."+ext);
+    mediaTypes.append(videoTypes);
+    mediaTypes.append(audioTypes);
+    const QString mediaMemeType = "Media (" + mediaTypes.join(QString(" ")) + ")";
+    QString selectedMedia = QFileDialog::getOpenFileName(this, tr("Choose media"), SettingsHandler::getLastSelectedLibrary(), mediaMemeType);
+    if (!selectedMedia.isEmpty())
+    {
+        LibraryListItem27 selectedFileListItem = libraryList->selectedItem();
+        LibraryListItem27 selectedMediaItem;
+        selectedMediaItem.path = selectedMedia;
+        auto fileNameTemp = QFileInfo(selectedMedia).fileName();
+        QString mediaExtension = "*" + fileNameTemp.remove(0, fileNameTemp.length() - (fileNameTemp.length() - fileNameTemp.lastIndexOf('.')));
+        selectedMediaItem.type = videoTypes.contains(mediaExtension) ? LibraryListItemType::Video : LibraryListItemType::Audio;
+        selectedMediaItem.script = selectedFileListItem.script;
+        selectedMediaItem.zipFile = selectedFileListItem.zipFile;
+        stopAndPlayMedia(selectedMediaItem);
+    }
+}
+
 //Hack because QTAV calls stopped and start out of order
 void MainWindow::stopAndPlayMedia(LibraryListItem27 selectedFileListItem, QString customScript, bool audioSync)
 {

@@ -13,6 +13,8 @@ void XTPSettings::save(QSettings* settingsToSaveTo) {
     settingsToSaveTo->setValue("rememberWindowsSettings", m_rememberWindowsSettings);
     settingsToSaveTo->setValue("libraryWindowOpen", m_libraryWindowOpen);
     settingsToSaveTo->setValue("disableTimeLinePreview", m_disableTimeLinePreview);
+    settingsToSaveTo->setValue("hideMediaWithoutFunscripts", m_hideMediaWithoutFunscripts);
+
 
     QList<QVariant> splitterPos;
     int i = 0;
@@ -39,6 +41,7 @@ void XTPSettings::load(QSettings* settingsToLoadFrom) {
     m_rememberWindowsSettings = settingsToLoadFrom->value("rememberWindowsSettings").toBool();
     m_libraryWindowOpen = settingsToLoadFrom->value("libraryWindowOpen").toBool();
     m_disableTimeLinePreview = settingsToLoadFrom->value("disableTimeLinePreview").toBool();
+    m_hideMediaWithoutFunscripts = settingsToLoadFrom->value("hideMediaWithoutFunscripts").toBool();
     auto splitterSizes = settingsToLoadFrom->value("mainWindowPos").toList();
     if(splitterSizes.isEmpty()) {
         splitterSizes.append(398);
@@ -96,6 +99,14 @@ QSize XTPSettings::getLibraryWindowSize() {
     return m_xLibrarySize;
 }
 
+void XTPSettings::setHideMediaWithoutFunscripts(bool enabled) {
+    m_hideMediaWithoutFunscripts = enabled;
+    emit SettingsHandler::instance().settingsChanged(true);
+}
+bool XTPSettings::getHideMediaWithoutFunscripts() {
+    return m_hideMediaWithoutFunscripts;
+}
+
 void XTPSettings::resetWindowSize() {
     setXWindowPosition({0,0});
     setXWindowSize({0,0});
@@ -140,4 +151,5 @@ QList<int> XTPSettings::m_mainWindowSplitterPos;
 bool XTPSettings::m_rememberWindowsSettings;
 bool XTPSettings::m_libraryWindowOpen;
 bool XTPSettings::m_disableTimeLinePreview;
+bool XTPSettings::m_hideMediaWithoutFunscripts;
 QMutex XTPSettings::m_mutex;

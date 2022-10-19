@@ -312,6 +312,7 @@ void SettingsDialog::setupUi()
         ui.webAddressInstructionsLabel->setProperty("cssClass", "linkLabel");
 
         ui.disableTimeLinePreviewChk->setChecked(XTPSettings::getDisableTimeLinePreview());
+        ui.hideMediaWithoutFunscriptsCheckbox->setChecked(XTPSettings::getHideMediaWithoutFunscripts());
 
         updateIPAddress();
 
@@ -1846,9 +1847,14 @@ void SettingsDialog::on_MFSDiscoveryDisabledCheckBox_clicked(bool checked)
 
 void SettingsDialog::on_channelProfilesComboBox_textChange(const QString &profile)
 {
-    TCodeChannelLookup::setSelectedChannelProfile(profile);
+    if(TCodeChannelLookup::getSelectedChannelProfile() != profile)
+        TCodeChannelLookup::setSelectedChannelProfile(profile);
 }
 
+void SettingsDialog::set_channelProfilesComboBox_value(const QString &profile) {
+    if(ui.channelProfilesComboBox->currentText() != profile)
+        ui.channelProfilesComboBox->setCurrentText(profile);
+}
 
 void SettingsDialog::on_addChannelProfileButton_clicked()
 {
@@ -1925,5 +1931,12 @@ void SettingsDialog::on_allProfilesDefaultButton_clicked()
 //        ui.channelProfilesComboBox->clear();
 //        ui.channelProfilesComboBox->setCurrentText(TCodeChannelLookup::getSelectedChannelProfile());
     }
+}
+
+
+void SettingsDialog::on_hideMediaWithoutFunscriptsCheckbox_clicked(bool checked)
+{
+    XTPSettings::setHideMediaWithoutFunscripts(checked);
+    emit updateLibrary();
 }
 

@@ -45,7 +45,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>4</number>
      </property>
      <widget class="QWidget" name="connectionTab">
       <attribute name="title">
@@ -502,8 +502,8 @@
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-687</y>
-            <width>1248</width>
+            <y>0</y>
+            <width>1245</width>
             <height>1222</height>
            </rect>
           </property>
@@ -1424,6 +1424,13 @@ that has no script of the same name.</string>
           </size>
          </property>
         </spacer>
+       </item>
+       <item row="7" column="1">
+        <widget class="QCheckBox" name="hideMediaWithoutFunscriptsCheckbox">
+         <property name="text">
+          <string>Hide media without funscript</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>

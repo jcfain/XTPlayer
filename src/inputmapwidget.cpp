@@ -59,6 +59,10 @@ void InputMapWidget::setUpData()
         actions.append({__begin.key(), __begin.value()});
     }
 
+    for(auto __begin = MediaActions::TCodeChannelProfileActions.begin(), __end = MediaActions::TCodeChannelProfileActions.end();  __begin != __end; ++__begin) {
+        actions.append({__begin.key(), "Channel profile: " + __begin.value()});
+    }
+
     _tableWidget->setRowCount(actions.count() + 1);
     int row = 0;
     foreach(auto actionKeyValue, actions)
