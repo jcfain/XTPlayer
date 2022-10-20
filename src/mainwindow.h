@@ -167,7 +167,6 @@ private slots:
     void onText_to_speech(QString message);
     void onPlaylistLoaded(LibraryListItem27 autoPlayItem = LibraryListItem27());
     void onBackFromPlaylistLoaded();
-    //void onRandomizeComplete();
 
 signals:
     void keyPressed(QKeyEvent * event);
@@ -186,6 +185,8 @@ signals:
     void playlistLoaded(LibraryListItem27 autoPlayItem = LibraryListItem27());
     void libraryItemFound(LibraryListItem27 item);
     void backFromPlaylistLoaded();
+    void cleanUpThumbsFinished();
+    void cleanUpThumbsFailed();
     //void randomizeComplete();
 protected:
     virtual void keyPressEvent(QKeyEvent *event) override

@@ -365,6 +365,16 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_xSettings, &SettingsDialog::skipToMoneyShot, this, &MainWindow::skipToMoneyShot);
     connect(_xSettings, &SettingsDialog::skipToNextAction, this, &MainWindow::skipToNextAction);
     connect(_xSettings, &SettingsDialog::updateLibrary, xtEngine.mediaLibraryHandler(), &MediaLibraryHandler::libraryChange);
+    connect(_xSettings, &SettingsDialog::cleanUpThumbsDirectory, this, [this] () {
+        QtConcurrent::run([this]() {
+            if(xtEngine.mediaLibraryHandler()->isLibraryLoading()) {
+                emit cleanUpThumbsFailed();
+                return;
+            }
+            xtEngine.mediaLibraryHandler()->cleanGlobalThumbDirectory();
+            emit cleanUpThumbsFinished();
+        });
+    });
     connect(xtEngine.syncHandler(), &SyncHandler::channelPositionChange, _xSettings, &SettingsDialog::setAxisProgressBar, Qt::QueuedConnection);
     connect(xtEngine.syncHandler(), &SyncHandler::funscriptEnded, _xSettings, &SettingsDialog::resetAxisProgressBars, Qt::QueuedConnection);
 
@@ -444,6 +454,16 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(this, &MainWindow::stopAndPlayVideo, this, &MainWindow::stopAndPlayMedia);
     connect(this, &MainWindow::playlistLoaded, this, &MainWindow::onPlaylistLoaded);
     connect(this, &MainWindow::backFromPlaylistLoaded, this, &MainWindow::onBackFromPlaylistLoaded);
+    connect(this, &MainWindow::cleanUpThumbsFinished, this, [this]() {
+        _xSettings->onCleanUpThumbsDirectoryComplete();
+        DialogHandler::Dialog(this, "Thumb cleanup finished", true, false);
+
+    });
+    connect(this, &MainWindow::cleanUpThumbsFailed, this, [this]() {
+        _xSettings->onCleanUpThumbsDirectoryStopped();
+        DialogHandler::Dialog(this, "Thumb cleanup cannot be run while the media is loading", true, false);
+
+    });
     //connect(this, &MainWindow::randomizeComplete, this, &MainWindow::onRandomizeComplete);
     //connect(this, &MainWindow::libraryItemFound, this, &MainWindow::onLibraryItemFound);
 

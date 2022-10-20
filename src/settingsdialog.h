@@ -57,6 +57,7 @@ signals:
     void skipToMoneyShot();
     void skipToNextAction();
     void updateLibrary();
+    void cleanUpThumbsDirectory();
 
 public slots:
     void on_xtpWeb_initInputDevice(DeviceName deviceName, bool checked);
@@ -65,6 +66,8 @@ public slots:
     void on_input_device_connectionChanged(ConnectionChangedSignal event);
     void on_output_device_connectionChanged(ConnectionChangedSignal event);
     void set_channelProfilesComboBox_value(const QString &arg1);
+    void onCleanUpThumbsDirectoryComplete();
+    void onCleanUpThumbsDirectoryStopped();
 
 private slots:
     void on_serialOutputRdo_clicked();
@@ -228,6 +231,8 @@ private slots:
     void on_allProfilesDefaultButton_clicked();
 
     void on_hideMediaWithoutFunscriptsCheckbox_clicked(bool checked);
+
+    void on_cleanupThumbsPushButton_clicked();
 
 private:
 
