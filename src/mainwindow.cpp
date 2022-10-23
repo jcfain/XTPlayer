@@ -609,7 +609,7 @@ void MainWindow::on_key_press(QKeyEvent * event)
     auto keyActions = SettingsHandler::getKeyboardKeyActionList(event->key(), event->modifiers());
     QVector<ChannelValueModel> channelValues;
     foreach(auto action, keyActions) {
-        if (!mediaActions.Values.contains(action)) {
+        if (!mediaActions.Values.contains(action) && !MediaActions::HasOtherAction(action)) {
             //auto channel = TCodeChannelLookup::getChannel(action);
             float value = event->type() == QKeyEvent::KeyRelease ? 0.0f : 1.0f;
 //            if(event->type() == QKeyEvent::KeyRelease) {
