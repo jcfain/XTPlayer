@@ -59,8 +59,9 @@ void InputMapWidget::setUpData()
         actions.append({__begin.key(), __begin.value()});
     }
 
-    for(auto __begin = MediaActions::TCodeChannelProfileActions.begin(), __end = MediaActions::TCodeChannelProfileActions.end();  __begin != __end; ++__begin) {
-        actions.append({__begin.key(), "Channel profile: " + __begin.value()});
+    auto otherActions = MediaActions::GetOtherActions();
+    for(auto __begin = otherActions.begin(), __end = otherActions.end();  __begin != __end; ++__begin) {
+        actions.append({__begin.key(), __begin.value()});
     }
 
     _tableWidget->setRowCount(actions.count() + 1);
@@ -96,7 +97,7 @@ void InputMapWidget::setUpData()
         QHBoxLayout *invertLayout = new QHBoxLayout(invertWidget);
         if(TCodeChannelLookup::hasChannel(action)) {
             auto channel = TCodeChannelLookup::getChannel(action);
-            if(channel->Type == AxisType::Range) {
+            if(channel->Type == AxisType::Oscillate) {
                 QCheckBox* invertCheckbox = new QCheckBox(this);
                 invertCheckbox->setChecked(channel->GamepadInverted);
                 invertCheckbox->setObjectName(action + "InvertCheckbox");

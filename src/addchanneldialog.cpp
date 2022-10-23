@@ -10,6 +10,10 @@ AddChannelDialog::AddChannelDialog(QWidget* parent) : QDialog(parent)
     channelLabel->setText("Channel name");
     channelName = new QLineEdit(this);
     channelName->setText("L0");
+    trackNameLabel = new QLabel(this);
+    trackNameLabel->setText("Track name");
+    trackName = new QLineEdit(this);
+    trackName->setText("");
     positiveModifier = new QRadioButton(this);
     positiveModifier->setText("+");
     negativeModifier = new QRadioButton(this);
@@ -36,6 +40,8 @@ AddChannelDialog::AddChannelDialog(QWidget* parent) : QDialog(parent)
     layout->addWidget(friendlyName, 0, 1, 1, 1);
     layout->addWidget(channelLabel, 1, 0, 1, 1);
     layout->addWidget(channelName, 1, 1, 1, 1);
+    layout->addWidget(trackNameLabel, 2, 0, 1, 1);
+    layout->addWidget(trackName, 2, 1, 1, 1);
     layout->addWidget(typeLabel, 3, 0, 1, 1);
     layout->addWidget(type, 3, 1, 1, 1);
     layout->addWidget(dimensionLabel, 4, 0, 1, 1);
@@ -73,11 +79,11 @@ ChannelModel33 AddChannelDialog::getNewChannel(QWidget *parent, bool *ok)
         channelModel.Channel = dialog->channelName->text();
         channelModel.FriendlyName = dialog->friendlyName->text();
         QString modifier = "";
-        if(AxisTypes[dialog->type->currentText()] == AxisType::HalfRange && dialog->positiveModifier->isChecked())
+        if(AxisTypes[dialog->type->currentText()] == AxisType::HalfOscillate && dialog->positiveModifier->isChecked())
             modifier = "+";
-        else if (AxisTypes[dialog->type->currentText()] == AxisType::HalfRange && dialog->negativeModifier->isChecked())
+        else if (AxisTypes[dialog->type->currentText()] == AxisType::HalfOscillate && dialog->negativeModifier->isChecked())
             modifier = "-";
-        else if (AxisTypes[dialog->type->currentText()] == AxisType::HalfRange)
+        else if (AxisTypes[dialog->type->currentText()] == AxisType::HalfOscillate)
         {
             isValid = false;
             DialogHandler::MessageBox(parent, "Modifier (+/-) required for half range types!", XLogLevel::Critical);
@@ -86,10 +92,10 @@ ChannelModel33 AddChannelDialog::getNewChannel(QWidget *parent, bool *ok)
         channelModel.Type = AxisTypes[dialog->type->currentText()];
         channelModel.Dimension = AxisDimensions[dialog->dimension->currentText()];
         channelModel.Min = 0;
-        channelModel.Mid = TCodeChannelLookup::getSelectedTCodeVersion() == TCodeVersion::v2 ? 500 : 5000;
+        channelModel.Mid = channelModel.Type == AxisType::Ramp ? 0 : TCodeChannelLookup::getSelectedTCodeVersion() == TCodeVersion::v2 ? 500 : 5000;
         channelModel.Max = TCodeChannelLookup::getSelectedTCodeVersion() == TCodeVersion::v2 ? 999: 9999;
         channelModel.UserMin = 0;
-        channelModel.UserMid = TCodeChannelLookup::getSelectedTCodeVersion() == TCodeVersion::v2 ? 500 : 5000;
+        channelModel.UserMid = channelModel.Type == AxisType::Ramp ? 0 : TCodeChannelLookup::getSelectedTCodeVersion() == TCodeVersion::v2 ? 500 : 5000;
         channelModel.UserMax = TCodeChannelLookup::getSelectedTCodeVersion() == TCodeVersion::v2 ? 999 : 9999;
         channelModel.DamperEnabled = false;
         channelModel.DamperValue = 0.2f;
@@ -98,7 +104,7 @@ ChannelModel33 AddChannelDialog::getNewChannel(QWidget *parent, bool *ok)
         channelModel.MultiplierEnabled = false;
         channelModel.LinkToRelatedMFS = false;
         channelModel.RelatedChannel = TCodeChannelLookup::Stroke();
-        channelModel.TrackName = "";
+        channelModel.TrackName = dialog->trackName->text();
         if(TCodeChannelLookup::hasChannel(channelModel.AxisName))
         {
             isValid = false;
@@ -120,7 +126,7 @@ ChannelModel33 AddChannelDialog::getNewChannel(QWidget *parent, bool *ok)
 
 void AddChannelDialog::onTypeChanged(QString value)
 {
-    if(AxisTypes[value] == AxisType::HalfRange)
+    if(AxisTypes[value] == AxisType::HalfOscillate)
         modifierFrame->show();
     else
     {

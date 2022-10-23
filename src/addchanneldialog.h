@@ -28,6 +28,8 @@ private:
     QLineEdit* friendlyName;
     QLabel* channelLabel;
     QLineEdit* channelName;
+    QLabel* trackNameLabel;
+    QLineEdit* trackName;
     QComboBox* type;
     QComboBox* dimension;
     QRadioButton* positiveModifier;

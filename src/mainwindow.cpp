@@ -456,12 +456,12 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(this, &MainWindow::backFromPlaylistLoaded, this, &MainWindow::onBackFromPlaylistLoaded);
     connect(this, &MainWindow::cleanUpThumbsFinished, this, [this]() {
         _xSettings->onCleanUpThumbsDirectoryComplete();
-        DialogHandler::Dialog(this, "Thumb cleanup finished", true, false);
+        DialogHandler::MessageBox(this, "Thumb cleanup finished", XLogLevel::Information);
 
     });
     connect(this, &MainWindow::cleanUpThumbsFailed, this, [this]() {
         _xSettings->onCleanUpThumbsDirectoryStopped();
-        DialogHandler::Dialog(this, "Thumb cleanup cannot be run while the media is loading", true, false);
+        DialogHandler::MessageBox(this, "Thumb cleanup cannot be run while the media is loading", XLogLevel::Warning);
 
     });
     //connect(this, &MainWindow::randomizeComplete, this, &MainWindow::onRandomizeComplete);
@@ -610,7 +610,7 @@ void MainWindow::on_key_press(QKeyEvent * event)
     QVector<ChannelValueModel> channelValues;
     foreach(auto action, keyActions) {
         if (!mediaActions.Values.contains(action)) {
-            auto channel = SettingsHandler::getAxis(action);
+            //auto channel = TCodeChannelLookup::getChannel(action);
             float value = event->type() == QKeyEvent::KeyRelease ? 0.0f : 1.0f;
 //            if(event->type() == QKeyEvent::KeyRelease) {
 //                if(channel.Type == AxisType::Range || channel.Type == AxisType::Switch) {
@@ -748,7 +748,7 @@ void MainWindow::mediaAction(QString action, QString actionText)
         else
             onText_to_speech("No script playing to " + verb + " offset.");
     }
-    else if(MediaActions::TCodeChannelProfileActions.contains(action)) {
+    else if(MediaActions::HasOtherAction(action, ActionType::CHANNEL_PROFILE)) {
         _xSettings->set_channelProfilesComboBox_value(action);
         onText_to_speech(actionText);
     }
@@ -814,7 +814,7 @@ void MainWindow::on_audioLevel_Change(int decibelL,int decibelR)
                 ChannelModel33* channel = TCodeChannelLookup::getChannel(axis);
                 if (channel->AxisName == TCodeChannelLookup::Stroke()  || SettingsHandler::getMultiplierChecked(axis))
                 {
-                    if (channel->Type == AxisType::HalfRange || channel->Type == AxisType::None)
+                    if (channel->Type == AxisType::HalfOscillate || channel->Type == AxisType::None)
                         continue;
                     auto multiplierValue = SettingsHandler::getMultiplierValue(axis);
                     if (channel->AxisName == TCodeChannelLookup::Stroke())
@@ -1868,10 +1868,10 @@ void MainWindow::playFileWithAudioSync()
 
 void MainWindow::playFileWithCustomScript()
 {
-    QString selectedScript = QFileDialog::getOpenFileName(this, tr("Choose script"), SettingsHandler::getLastSelectedLibrary(), tr("Scripts (*.funscript *.zip)"));
+    LibraryListItem27 selectedFileListItem = libraryList->selectedItem();
+    QString selectedScript = QFileDialog::getOpenFileName(this, tr("Choose script"), QFileInfo(selectedFileListItem.path).absolutePath(), tr("Scripts (*.funscript *.zip)"));
     if (selectedScript != Q_NULLPTR)
     {
-        LibraryListItem27 selectedFileListItem = libraryList->selectedItem();
         stopAndPlayMedia(selectedFileListItem, selectedScript);
     }
 }
@@ -1888,10 +1888,10 @@ void MainWindow::playFileWithCustomMedia()
     mediaTypes.append(videoTypes);
     mediaTypes.append(audioTypes);
     const QString mediaMemeType = "Media (" + mediaTypes.join(QString(" ")) + ")";
-    QString selectedMedia = QFileDialog::getOpenFileName(this, tr("Choose media"), SettingsHandler::getLastSelectedLibrary(), mediaMemeType);
+    LibraryListItem27 selectedFileListItem = libraryList->selectedItem();
+    QString selectedMedia = QFileDialog::getOpenFileName(this, tr("Choose media"), QFileInfo(selectedFileListItem.path).absolutePath(), mediaMemeType);
     if (!selectedMedia.isEmpty())
     {
-        LibraryListItem27 selectedFileListItem = libraryList->selectedItem();
         LibraryListItem27 selectedMediaItem;
         selectedMediaItem.path = selectedMedia;
         auto fileNameTemp = QFileInfo(selectedMedia).fileName();

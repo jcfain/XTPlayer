@@ -244,6 +244,7 @@ private:
     void setUpMultiplierUi(bool enabled);
     void enableOrDisableDeviceConnectionUI(DeviceName deviceName);
     void updateIPAddress();
+    void askHowToResetChannelProfileDefaults();
     QString encryptPass(QString pass);
     QString decryptPass(QString pass);
 

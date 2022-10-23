@@ -64,9 +64,12 @@ QVariant ChannelTableViewModel::data(const QModelIndex& index, int role) const
     if (index.row() < 0 || index.row() >= _map.count()) {
         return QVariant();
     }
-    auto channel = TCodeChannelLookup::getChannel(_map[index.row()]);
     switch (role) {
       case Qt::DisplayRole:
+      {
+        auto channel = TCodeChannelLookup::getChannel(_map[index.row()]);
+        if(channel == nullptr)
+            return QVariant();
 //        if (index.column() == 0)
 //            return _map->keys().at(index.row());
         if (index.column() == 0)
@@ -87,6 +90,7 @@ QVariant ChannelTableViewModel::data(const QModelIndex& index, int role) const
             return (int)channel->Type;
         else if (index.column() == 8)
             return channel->TrackName;
+      }
       case Qt::FontRole:
           break;
       case Qt::BackgroundRole:
@@ -156,7 +160,7 @@ bool ChannelTableViewModel::setData(const QModelIndex &index, const QVariant &va
             channel->Type = (AxisType)value.toInt();
             //SettingsHandler::setAxis(key, valueModel);
         }
-        else if (index.column() == 9)
+        else if (index.column() == 8)
         {
             channel->TrackName = value.toString();
             //SettingsHandler::setAxis(key, valueModel);

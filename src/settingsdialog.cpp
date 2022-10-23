@@ -188,8 +188,9 @@ void SettingsDialog::setupUi()
         }
         ui.tCodeVersionComboBox->setCurrentText(TCodeChannelLookup::getSelectedTCodeVersionName());
         connect(ui.tCodeVersionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
-        //connect(&TCodeChannelLookup::instance(), &TCodeChannelLookup::tcodeVersionChanged, this, &SettingsDialog::setUpTCodeAxis);
+
         connect(&TCodeChannelLookup::instance(), &TCodeChannelLookup::channelProfileChanged, this, &SettingsDialog::setUpTCodeChannelUI);
+        connect(&TCodeChannelLookup::instance(), &TCodeChannelLookup::allProfilesDeleted, this, &SettingsDialog::setUpTCodeChannelProfiles);
 
         channelTableViewModel = new ChannelTableViewModel(this);
         connect(&TCodeChannelLookup::instance(), &TCodeChannelLookup::channelProfileChanged, channelTableViewModel, &ChannelTableViewModel::setMap);
@@ -605,7 +606,7 @@ void SettingsDialog::setUpTCodeChannelUI()
      {
          QString channelName = TCodeChannelLookup::ToString(channel);
          auto axis = TCodeChannelLookup::getChannel(channelName);
-         if(axis->Type == AxisType::None || axis->Type == AxisType::HalfRange)
+         if(axis == nullptr || axis->Type == AxisType::None || axis->Type == AxisType::HalfOscillate)
              continue;
 
          int userMin = axis->UserMin;
@@ -720,7 +721,7 @@ void SettingsDialog::setUpTCodeChannelUI()
              foreach(auto axis, tcodeChannels.keys())
              {
                  auto channel =  TCodeChannelLookup::getChannel(TCodeChannelLookup::ToString(axis));
-                 if(channel->AxisName == channelName || channel->Type == AxisType::HalfRange)
+                 if(channel == nullptr || channel->AxisName == channelName || channel->Type == AxisType::HalfOscillate)
                      continue;
                  QVariant variant;
                  variant.setValue(*channel);
@@ -1065,7 +1066,7 @@ void SettingsDialog::on_serialRefreshBtn_clicked()
 void SettingsDialog::onRange_valueChanged(QString name, int value)
 {
     RangeSlider* slider = rangeSliders.value(name);
-    auto channel = SettingsHandler::getAxis(name);
+    auto channel = TCodeChannelLookup::getChannel(name);
     auto mainLabel = rangeLabels.value(name);
     int max = slider->GetUpperValue();
     int min = slider->GetLowerValue();
@@ -1383,16 +1384,25 @@ void SettingsDialog::on_channelDeleteButton_clicked()
         {
             auto selectedRows = select->selectedRows();
             QStringList channelsToDelete;
+            QStringList cannotBedeleted;
             foreach(auto row, selectedRows)
             {
                 const auto model = row.model();
                 const auto channelKey = ((ChannelTableViewModel*)model)->getRowKey(row.row());
                 if (channelKey.isEmpty())
                     continue;
+                if(TCodeChannelLookup::isDefaultChannel(channelKey)) {
+                    cannotBedeleted << channelKey;
+                    continue;
+                }
+
                 channelsToDelete << channelKey;
             }
             foreach(auto channel, channelsToDelete)
                 SettingsHandler::deleteAxis(channel);
+
+            if(!cannotBedeleted.empty())
+                DialogHandler::MessageBox(this, "The following channels are default and cannot be deleted: "+cannotBedeleted.join(", "), XLogLevel::Critical);
             //channelTableViewModel->setMap();
             //setUpTCodeAxis();
         }
@@ -1559,11 +1569,12 @@ void SettingsDialog::on_disableNoScriptFoundInLibrary_stateChanged(int checkStat
 
 void SettingsDialog::on_tCodeVSComboBox_currentIndexChanged(int index)
 {
-    QMessageBox::StandardButton reply = QMessageBox::question(this, "Warning!", "This will reset your ranges and any custom channel settings to default.\nContinue?",
+    QMessageBox::StandardButton reply = QMessageBox::question(this, "Warning!", "This will reset ALL CHANNEL PROFILES to default.\nContinue?",
                                   QMessageBox::Yes|QMessageBox::No);
     if(reply == QMessageBox::Yes)
     {
         SettingsHandler::changeSelectedTCodeVersion(ui.tCodeVersionComboBox->currentData().value<TCodeVersion>());
+        askHowToResetChannelProfileDefaults();
     }
     else
     {
@@ -1923,13 +1934,10 @@ void SettingsDialog::on_defultSelectedProfile_clicked()
 void SettingsDialog::on_allProfilesDefaultButton_clicked()
 {
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to DELETE ALL PROFILES?",
+    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to DEFAULT ALL PROFILES?",
                                   QMessageBox::Yes|QMessageBox::No);
     if (reply == QMessageBox::Yes) {
-        TCodeChannelLookup::setAllProfileDefaults();
-        setUpTCodeChannelProfiles();
-//        ui.channelProfilesComboBox->clear();
-//        ui.channelProfilesComboBox->setCurrentText(TCodeChannelLookup::getSelectedChannelProfile());
+        askHowToResetChannelProfileDefaults();
     }
 }
 
@@ -1959,4 +1967,10 @@ void SettingsDialog::onCleanUpThumbsDirectoryComplete() {
 
 void SettingsDialog::onCleanUpThumbsDirectoryStopped() {
     ui.cleanUpThumbsStatus->setText("Thumb cleanup: Stopped!");
+}
+
+void SettingsDialog::askHowToResetChannelProfileDefaults() {
+    QMessageBox::StandardButton reply = QMessageBox::question(this, "Keep current profiles?", "Do you want to keep the current profile names?",
+                                  QMessageBox::Yes|QMessageBox::No);
+    TCodeChannelLookup::setAllProfileDefaults(reply == QMessageBox::Yes);
 }
