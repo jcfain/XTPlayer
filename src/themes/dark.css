@@ -307,5 +307,5 @@ QPushButton#cancelEditPlaylistButton {
     background-color: rgba(255, 0, 0, 0.5);
 }
 
-QWidget {font-size: 10pt}
+QWidget {font-size: 12px}
 ;
