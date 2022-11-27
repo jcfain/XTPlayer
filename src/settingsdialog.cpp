@@ -1856,8 +1856,7 @@ void SettingsDialog::on_MFSDiscoveryDisabledCheckBox_clicked(bool checked)
 }
 
 
-void SettingsDialog::on_channelProfilesComboBox_textChange(const QString &profile)
-{
+void SettingsDialog::on_channelProfilesComboBox_textChange(const QString &profile) {
     if(TCodeChannelLookup::getSelectedChannelProfile() != profile)
         TCodeChannelLookup::setSelectedChannelProfile(profile);
 }
