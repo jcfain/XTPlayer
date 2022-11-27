@@ -2,14 +2,15 @@
 #include "lib/handler/settingshandler.h"
 
 
-QString XTPSettings::XTPVersion = QString("0.42b_%1T%2").arg(__DATE__).arg(__TIME__);
-float XTPSettings::XTPVersionNum = 0.42f;
+QString XTPSettings::XTPVersion = QString("0.421b_%1T%2").arg(__DATE__).arg(__TIME__);
+float XTPSettings::XTPVersionNum = 0.421f;
 
 XTPSettings::XTPSettings() {}
 
 void XTPSettings::save(QSettings* settingsToSaveTo) {
     if(!settingsToSaveTo)
         settingsToSaveTo = getSettings();
+    settingsToSaveTo->setValue("selectedTheme", m_selectedTheme);
     settingsToSaveTo->setValue("rememberWindowsSettings", m_rememberWindowsSettings);
     settingsToSaveTo->setValue("libraryWindowOpen", m_libraryWindowOpen);
     settingsToSaveTo->setValue("disableTimeLinePreview", m_disableTimeLinePreview);
@@ -34,6 +35,8 @@ void XTPSettings::load(QSettings* settingsToLoadFrom) {
     if(!settingsToLoadFrom)
         settingsToLoadFrom = getSettings();
 
+    m_selectedTheme = settingsToLoadFrom->value("selectedTheme").toString();
+    m_selectedTheme = m_selectedTheme.isEmpty() || !QFile::exists(m_selectedTheme) ? QCoreApplication::applicationDirPath() + "/themes/dark.css" : m_selectedTheme;
     m_xwindowPos = settingsToLoadFrom->value("xwindowPos").toPoint();
     m_xwindowSize = settingsToLoadFrom->value("xwindowSize").toSize();
     m_xLibraryPos = settingsToLoadFrom->value("xLibraryWindowPos").toPoint();
@@ -61,6 +64,18 @@ void XTPSettings::load(QSettings* settingsToLoadFrom) {
 void XTPSettings::import(QSettings* settingsToImportFrom) {
     SettingsHandler::Load(settingsToImportFrom);
     load(settingsToImportFrom);
+}
+
+
+QString XTPSettings::getSelectedTheme()
+{
+    QMutexLocker locker(&m_mutex);
+    return m_selectedTheme;
+}
+void XTPSettings::setSelectedTheme(QString value)
+{
+    QMutexLocker locker(&m_mutex);
+    m_selectedTheme = value;
 }
 
 QList<int> XTPSettings::getMainWindowSplitterPos()
@@ -141,7 +156,7 @@ bool XTPSettings::getDisableTimeLinePreview() {
 QSettings* XTPSettings::getSettings() {
     return SettingsHandler::getSettings();
 }
-
+QString XTPSettings::m_selectedTheme;
 QSize XTPSettings::m_xwindowSize = {0,0};
 QPoint XTPSettings::m_xwindowPos = {0,0};
 QSize XTPSettings::m_xLibrarySize = {0,0};

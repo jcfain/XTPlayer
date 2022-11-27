@@ -431,6 +431,18 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(videoHandler, &VideoHandler::stopped, this, [this]() {
         xtEngine.connectionHandler()->stopOutputDevice();
     });
+//    connect(videoHandler, &VideoHandler::durationChange, this, [this](qint64 value) {
+//        auto heatmap = new HeatMap(this);
+//        auto widget = new QWidget(this);
+//        auto layout = new QGridLayout(this);
+//        auto label = new QLabel(this);
+//        label->setPixmap(heatmap->setData(700, 75, xtEngine.syncHandler()->getFunscriptHandler(), value));
+//        layout->addWidget(label);
+//        widget->setLayout(layout);
+//        widget->setMinimumHeight(75);
+//        widget->setMinimumWidth(700);
+//        widget->showNormal();
+//    });
 
     connect(_playerControlsFrame, &PlayerControls::seekSliderMoved, this, &MainWindow::on_seekSlider_sliderMoved);
     connect(_playerControlsFrame, &PlayerControls::seekSliderHover, this, &MainWindow::on_seekslider_hover );
@@ -482,7 +494,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(QApplication::instance(), &QCoreApplication::aboutToQuit, this, &MainWindow::dispose);
 
     loadingSplash->showMessage(fullVersion + "\nSetting user styles...", Qt::AlignBottom, Qt::white);
-    loadTheme(SettingsHandler::getSelectedTheme());
+    loadTheme(XTPSettings::getSelectedTheme());
 
     setFocus();
     _defaultAppSize = this->size();
@@ -1952,6 +1964,8 @@ void MainWindow::stopAndPlayMedia(LibraryListItem27 selectedFileListItem, QStrin
     }
 
 }
+
+#include "lib/tool/heatmap.h"
 void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString customScript, bool audioSync)
 {
     QFile file(selectedFileListItem.path);
@@ -2013,6 +2027,7 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
             {
                 on_scriptNotFound(scriptFile);
             }
+
         }
     }
     else
@@ -3217,11 +3232,11 @@ void MainWindow::sortLibraryList(LibrarySortMode sortMode)
 
 void MainWindow::on_actionChange_theme_triggered()
 {
-    QFileInfo selectedThemeInfo(SettingsHandler::getSelectedTheme());
+    QFileInfo selectedThemeInfo(XTPSettings::getSelectedTheme());
     QString selectedTheme = QFileDialog::getOpenFileName(this, "Choose XTP theme", selectedThemeInfo.absoluteDir().absolutePath(), "CSS Files (*.css)");
     if(!selectedTheme.isEmpty())
     {
-        SettingsHandler::setSelectedTheme(selectedTheme);
+        XTPSettings::setSelectedTheme(selectedTheme);
         loadTheme(selectedTheme);
     }
 }
@@ -3625,7 +3640,7 @@ void MainWindow::skipToNextAction()
 
 void MainWindow::on_actionReload_theme_triggered()
 {
-    loadTheme(SettingsHandler::getSelectedTheme());
+    loadTheme(XTPSettings::getSelectedTheme());
 }
 
 void MainWindow::on_actionStored_DLNA_links_triggered()

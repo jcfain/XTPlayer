@@ -54,6 +54,7 @@
 
 #include "lib/lookup/AxisNames.h"
 #include "lib/tool/xmath.h"
+#include "lib/tool/heatmap.h"
 #include "lib/lookup/enum.h"
 #include "lib/lookup/MediaActions.h"
 #include "lib/handler/loghandler.h"

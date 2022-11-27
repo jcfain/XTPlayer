@@ -38,6 +38,7 @@ signals:
     void playing();
     void stopping();
     void togglePaused(bool paused);
+    void durationChange(qint64 value);
 
 public:;
     VideoHandler(QWidget* parent = 0);

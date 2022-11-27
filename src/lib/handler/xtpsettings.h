@@ -18,6 +18,9 @@ public:
     static void load(QSettings* settingsToLoadFrom = 0);
     static void import(QSettings* settingsToImportFrom = 0);
 
+    static QString getSelectedTheme();
+    static void setSelectedTheme(QString value);
+
     static void setXWindowPosition(QPoint position);
     static QPoint getXWindowPosition();
     static void setXWindowSize(QSize position);
@@ -44,6 +47,7 @@ public:
 
 private:
     static QSettings* getSettings();
+    static QString m_selectedTheme;
     static bool m_rememberWindowsSettings;
     static bool m_libraryWindowOpen;
     static QSize m_xwindowSize;
