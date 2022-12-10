@@ -11,6 +11,11 @@ VideoHandler::VideoHandler(QWidget *parent) : QWidget(parent),
     connect(_player, &QMediaPlayer::durationChanged, this, &VideoHandler::durationChange, Qt::QueuedConnection);
     //connect(_player, &QMediaPlayer::error, this, &VideoHandler::on_media_error, Qt::QueuedConnection);
 
+//    m_audioProbe = new QAudioProbe(this);
+//    m_audioProbe->setSource(_player);
+
+//    connect(m_audioProbe, &QAudioProbe::audioBufferProbed, this, &VideoHandler::audioBufferProbed);
+
     setMinimumHeight(SettingsHandler::getThumbSize());
     setMinimumWidth(SettingsHandler::getThumbSize());
     createLayout();
@@ -311,3 +316,9 @@ XMediaState VideoHandler::convertMediaState(QMediaPlayer::State status) {
             return XMediaState::Stopped;
     }
 }
+
+
+//void VideoHandler::audioBufferProbed(const QAudioBuffer &buffer) {
+//    LogHandler::Debug("probe0");
+//    //const quint16 *data = buffer->constData<quint16>();
+//}

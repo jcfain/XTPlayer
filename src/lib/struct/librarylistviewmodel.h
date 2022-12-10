@@ -50,6 +50,7 @@ private:
     MediaLibraryHandler* _mediaLibraryHandler;
     LibraryView _libraryViewMode;
     LibrarySortMode _sortMode;
+    int m_librarySize = 0;
 
 
 };

@@ -8,18 +8,20 @@ LibraryListViewModel::LibraryListViewModel(MediaLibraryHandler* mediaLibraryHand
         beginResetModel();
         endResetModel();
     } );
-    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemUpdated, this,   [this](LibraryListItem27 item) {
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemUpdated, this,   [this](LibraryListItem27 item, int indexOfItem) {
         //beginResetModel();
-        auto index = this->index(getData().indexOf(item), 0);
+        auto index = this->index(indexOfItem, 0);
         emit dataChanged(index, index);
         //endResetModel();
     } );
-    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemRemoved, this,   [this](LibraryListItem27 item) {
-        auto index = this->index(getData().indexOf(item), 0);
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemRemoved, this,   [this](LibraryListItem27 item, int indexOfItem, int newSize) {
+        m_librarySize = newSize;
+        auto index = this->index(indexOfItem, 0);
         emit dataChanged(index, index);
     } );
-    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemAdded, this,   [this](LibraryListItem27 item) {
-        auto index = this->index(getData().indexOf(item), 0);
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemAdded, this,   [this](LibraryListItem27 item, int indexOfItem, int newSize) {
+        m_librarySize = newSize;
+        auto index = this->index(indexOfItem, 0);
         emit dataChanged(index, index);
     } );
 
@@ -32,7 +34,7 @@ int LibraryListViewModel::rowCount(const QModelIndex &parent) const
     if (parent.isValid())
         return 0;
 
-    return getData().size();
+    return m_librarySize;
 }
 LibraryListItem27 LibraryListViewModel::getItem(const QModelIndex &index) {
     return index.data(Qt::UserRole).value<LibraryListItem27>();

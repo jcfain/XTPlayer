@@ -2027,7 +2027,6 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
             {
                 on_scriptNotFound(scriptFile);
             }
-
         }
     }
     else

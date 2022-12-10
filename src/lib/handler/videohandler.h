@@ -3,6 +3,7 @@
 #include <QWidget>
 #include <QHBoxLayout>
 #include <QMediaPlayer>
+//#include <QAudioProbe>
 #include <QVideoWidget>
 #include <QMouseEvent>
 #include <QMovie>
@@ -23,6 +24,7 @@ private slots:
     void on_media_error(QMediaPlayer::Error error);
     void on_media_start();
     void on_media_stop();
+//    void audioBufferProbed(const QAudioBuffer &buffer);
 
 signals:
     void doubleClicked(QMouseEvent* e);
@@ -75,6 +77,7 @@ private:
     QWidget* _parent;
     QGridLayout* _mediaGrid = 0;
     QMediaPlayer* _player = 0;
+    //QAudioProbe* m_audioProbe = 0;
     bool _isFullScreen = false;
     QWidget* _fullscreenWidget;
 //    VideoRenderer* _videoRenderer = 0;

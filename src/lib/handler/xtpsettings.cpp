@@ -2,8 +2,8 @@
 #include "lib/handler/settingshandler.h"
 
 
-QString XTPSettings::XTPVersion = QString("0.421b_%1T%2").arg(__DATE__).arg(__TIME__);
-float XTPSettings::XTPVersionNum = 0.421f;
+QString XTPSettings::XTPVersion = QString("0.422b_%1T%2").arg(__DATE__).arg(__TIME__);
+float XTPSettings::XTPVersionNum = 0.422f;
 
 XTPSettings::XTPSettings() {}
 
