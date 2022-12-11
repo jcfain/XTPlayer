@@ -431,18 +431,20 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(videoHandler, &VideoHandler::stopped, this, [this]() {
         xtEngine.connectionHandler()->stopOutputDevice();
     });
-//    connect(videoHandler, &VideoHandler::durationChange, this, [this](qint64 value) {
-//        auto heatmap = new HeatMap(this);
-//        auto widget = new QWidget(this);
-//        auto layout = new QGridLayout(this);
-//        auto label = new QLabel(this);
-//        label->setPixmap(heatmap->setData(700, 75, xtEngine.syncHandler()->getFunscriptHandler(), value));
-//        layout->addWidget(label);
-//        widget->setLayout(layout);
-//        widget->setMinimumHeight(75);
-//        widget->setMinimumWidth(700);
-//        widget->showNormal();
-//    });
+    connect(videoHandler, &VideoHandler::durationChange, this, [this](qint64 value) {
+        auto heatmap = new HeatMap(this);
+        auto widget = new QWidget(this, Qt::Window);
+        auto layout = new QGridLayout(this);
+        auto label = new QLabel(this);
+        QPixmap map = heatmap->draw(700, 75, xtEngine.syncHandler()->getFunscriptHandler(), value);
+        label->setPixmap(map);
+        layout->addWidget(label);
+        widget->setLayout(layout);
+        widget->setMinimumHeight(100);
+        widget->setMinimumWidth(750);
+        widget->raise();
+        widget->show();
+    });
 
     connect(_playerControlsFrame, &PlayerControls::seekSliderMoved, this, &MainWindow::on_seekSlider_sliderMoved);
     connect(_playerControlsFrame, &PlayerControls::seekSliderHover, this, &MainWindow::on_seekslider_hover );
@@ -476,12 +478,9 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
         DialogHandler::MessageBox(this, "Thumb cleanup cannot be run while the media is loading", XLogLevel::Warning);
 
     });
-    //connect(this, &MainWindow::randomizeComplete, this, &MainWindow::onRandomizeComplete);
-    //connect(this, &MainWindow::libraryItemFound, this, &MainWindow::onLibraryItemFound);
 
 
     //    connect(this, &MainWindow::setLoading, this, &MainWindow::on_setLoading);
-    //    connect(this, &MainWindow::scriptNotFound, this, &MainWindow::on_scriptNotFound);
     //connect(videoHandler, &VideoHandler::mouseEnter, this, &MainWindow::on_video_mouse_enter);
 
     connect(libraryList, &XLibraryList::customContextMenuRequested, this, &MainWindow::onLibraryList_ContextMenuRequested);
