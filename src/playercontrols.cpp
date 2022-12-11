@@ -65,6 +65,9 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 
     playerControlsGrid->addWidget(SeekSlider, 1, 0, 1, 12);
 
+    lblHeatmap = new QLabel(this);
+    playerControlsGrid->addWidget(lblHeatmap, 2, 0, 1, 12);
+
     fullScreenBtn = new QPushButton(this);
     fullScreenBtn->setObjectName(QString::fromUtf8("fullScreenBtn"));
     fullScreenBtn->setProperty("cssClass", "playerControlButton");
@@ -76,7 +79,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     fullScreenBtn->setIconSize(QSize(20, 20));
     fullScreenBtn->setFlat(true);
 
-    playerControlsGrid->addWidget(fullScreenBtn, 2, 0, 1, 1);
+    playerControlsGrid->addWidget(fullScreenBtn, 3, 0, 1, 1);
 
     loopToggleButton = new QPushButton(this);
     loopToggleButton->setObjectName(QString::fromUtf8("loopToggleButton"));
@@ -90,7 +93,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     loopToggleButton->setFlat(true);
     loopToggleButton->setEnabled(false);
 
-    playerControlsGrid->addWidget(loopToggleButton, 2, 1, 1, 1);
+    playerControlsGrid->addWidget(loopToggleButton, 3, 1, 1, 1);
 
 //    settingsButton = new QPushButton(this);
 //    settingsButton->setObjectName(QString::fromUtf8("settingsButton"));
@@ -102,7 +105,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 //    settingsButton->setIconSize(QSize(20, 20));
 //    settingsButton->setFlat(true);
 
-//    playerControlsGrid->addWidget(settingsButton, 2, 1, 1, 1);
+//    playerControlsGrid->addWidget(settingsButton, 3, 1, 1, 1);
 
     skipBackButton = new QPushButton(this);
     skipBackButton->setObjectName(QString::fromUtf8("skipBackButton"));
@@ -114,7 +117,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipBackButton->setIconSize(QSize(20, 20));
     skipBackButton->setFlat(true);
 
-    playerControlsGrid->addWidget(skipBackButton, 2, 4, 1, 1);
+    playerControlsGrid->addWidget(skipBackButton, 3, 4, 1, 1);
 
     _stopBtn = new QPushButton(this);
     _stopBtn->setObjectName(QString::fromUtf8("stopBtn"));
@@ -127,7 +130,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     _stopBtn->setFlat(true);
     _stopBtn->setEnabled(false);
 
-    playerControlsGrid->addWidget(_stopBtn, 2, 5, 1, 1);
+    playerControlsGrid->addWidget(_stopBtn, 3, 5, 1, 1);
 
     PlayBtn = new QPushButton(this);
     PlayBtn->setObjectName(QString::fromUtf8("PlayBtn"));
@@ -139,7 +142,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     PlayBtn->setIconSize(QSize(20, 20));
     PlayBtn->setFlat(true);
 
-    playerControlsGrid->addWidget(PlayBtn, 2, 6, 1, 1);
+    playerControlsGrid->addWidget(PlayBtn, 3, 6, 1, 1);
 
     skipForwardButton = new QPushButton(this);
     skipForwardButton->setObjectName(QString::fromUtf8("skipForwardButton"));
@@ -151,7 +154,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipForwardButton->setIconSize(QSize(20, 20));
     skipForwardButton->setFlat(true);
 
-    playerControlsGrid->addWidget(skipForwardButton, 2, 7, 1, 1);
+    playerControlsGrid->addWidget(skipForwardButton, 3, 7, 1, 1);
 
     VolumeSlider = new RangeSlider(this);
     VolumeSlider->setObjectName(QString::fromUtf8("VolumeSlider"));
@@ -161,7 +164,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     VolumeSlider->SetRange(0, 100);
     VolumeSlider->setOption(RangeSlider::Option::RightHandle);
 
-    playerControlsGrid->addWidget(VolumeSlider, 2, 8, 1, 3);
+    playerControlsGrid->addWidget(VolumeSlider, 3, 8, 1, 3);
 
     MuteBtn = new QPushButton(this);
     MuteBtn->setObjectName(QString::fromUtf8("muteBtn"));
@@ -174,7 +177,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     MuteBtn->setCheckable(true);
     MuteBtn->setFlat(true);
 
-    playerControlsGrid->addWidget(MuteBtn, 2, 11, 1, 1);
+    playerControlsGrid->addWidget(MuteBtn, 3, 11, 1, 1);
 
     connect(SeekSlider, &RangeSlider::upperValueMove, this, &PlayerControls::on_seekSlider_sliderMoved);
     connect(SeekSlider, &RangeSlider::onHover, this, &PlayerControls::on_seekslider_hover);
@@ -194,12 +197,16 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     voulumeBeforeMute = SettingsHandler::getPlayerVolume();
     setVolume(voulumeBeforeMute);
     on_VolumeSlider_valueChanged(voulumeBeforeMute);
-    setTimeDuration("00:00:00", "00:00:00");
+    setTimeDuration((qint64)0, (qint64)0);
 }
 
 PlayerControls::~PlayerControls()
 {
 
+}
+
+void PlayerControls::resizeEvent(QResizeEvent *event) {
+    lblHeatmap->setPixmap(m_heatMap.scaled(event->size().width(), lblHeatmap->height(), Qt::IgnoreAspectRatio));
 }
 
 bool PlayerControls::getAutoLoop()
@@ -243,7 +250,7 @@ void PlayerControls::resetMediaControlStatus(bool playing)
     setPlayIcon(playing);
     if(!playing)
     {
-        setTimeDuration("00:00:00", "00:00:00");
+        setTimeDuration(0, 0);
     }
 }
 
@@ -300,9 +307,9 @@ void PlayerControls::toggleLoop(qint64 currentDuration, qint64 currentPosition)
     }
 }
 
-void PlayerControls::setSeekSliderToolTip(QString timeCurrent)
+void PlayerControls::setSeekSliderToolTip(qint64 timeCurrent)
 {
-    SeekSlider->setToolTip(timeCurrent);
+    SeekSlider->setToolTip(mSecondFormat(timeCurrent));
 }
 
 void PlayerControls::setSeekSliderUpperValue(int value)
@@ -333,20 +340,38 @@ void PlayerControls::setSeekSliderDisabled(bool disabled)
 bool PlayerControls::getSeekSliderMousePressed() {
     return SeekSlider->getMousePressed();
 }
-void PlayerControls::setTimeDuration(QString time, QString duration)
+void PlayerControls::setTimeDuration(qint64 time, qint64 duration)
 {
-    lblCurrentTime->setText(time);
-    lblDuration->setText(duration);
+    lblCurrentTime->setText(mSecondFormat(time));
+    lblDuration->setText(mSecondFormat(duration));
 }
-void PlayerControls::setTime(QString time)
+void PlayerControls::setTime(qint64 time)
 {
-    lblCurrentTime->setText(time);
+    lblCurrentTime->setText(mSecondFormat(time));
 }
-void PlayerControls::setDuration(QString duration)
+void PlayerControls::setDuration(qint64 duration)
 {
-    lblDuration->setText(duration);
+    lblDuration->setText(mSecondFormat(duration));
 }
 
+QString PlayerControls::mSecondFormat(qint64 mSecs)
+{
+    if(mSecs <= 0)
+        return "00:00:00";
+    int seconds = mSecs / 1000;
+    mSecs %= 1000;
+
+    int minutes = seconds / 60;
+    seconds %= 60;
+
+    int hours = minutes / 60;
+    minutes %= 60;
+    QString hr = QString::number(hours);
+    QString mn = QString::number(minutes);
+    QString sc = QString::number(seconds);
+
+    return (hr.length() == 1 ? "0" + hr : hr ) + ":" + (mn.length() == 1 ? "0" + mn : mn ) + ":" + (sc.length() == 1 ? "0" + sc : sc);
+}
 
 //Slots
 void PlayerControls::on_VolumeSlider_valueChanged(int value)
@@ -437,6 +462,16 @@ void PlayerControls::on_seekslider_hover(int position, int sliderValue)
 void PlayerControls::on_seekslider_leave()
 {
     emit seekSliderLeave();
+}
+
+void PlayerControls::on_heatmapGenerated(QPixmap pixmap) {
+    if(!pixmap.isNull()) {
+        lblHeatmap->setPixmap(pixmap);
+    }
+    else {
+        lblHeatmap->clear();
+    }
+    m_heatMap = pixmap;
 }
 
 void PlayerControls::setSkipToMoneyShotEnabled(bool enabled)

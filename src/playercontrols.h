@@ -8,6 +8,7 @@
 #include "CustomControls/rangeslider.h"
 #include "lib/handler/settingshandler.h"
 #include "lib/tool/xmath.h"
+#include "lib/tool/heatmap.h"
 
 class PlayerControls : public QFrame
 {
@@ -28,7 +29,8 @@ signals:
     void seekSliderMoved(int value);
     void seekSliderHover(int position, int sliderValue);
     void seekSliderLeave();
-
+public slots:
+    void on_heatmapGenerated(QPixmap pixmap);
 public:
     explicit PlayerControls(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
     ~PlayerControls();
@@ -42,7 +44,7 @@ public:
     bool getAutoLoop();
     QPoint getTimeSliderPosition();
     int getSeekSliderWidth();
-    void setSeekSliderToolTip(QString value);
+    void setSeekSliderToolTip(qint64 value);
     void setSeekSliderUpperValue(int value);
     int getSeekSliderUpperValue();
     void setSeekSliderLowerValue(int value);
@@ -50,12 +52,13 @@ public:
     void setSeekSliderMinimumRange(int value);
     void setSeekSliderDisabled(bool value);
     bool getSeekSliderMousePressed();
-    void setTimeDuration(QString time, QString duration);
-    void setTime(QString time);
-    void setDuration(QString duration);
+    void setTimeDuration(qint64 time, qint64 duration);
+    void setTime(qint64 time);
+    void setDuration(qint64 duration);
     void resetMediaControlStatus(bool playing);
     void setSkipToMoneyShotEnabled(bool enabled);
-
+protected:
+    virtual void resizeEvent(QResizeEvent *event) override;
 
 private:
     QGridLayout *playerControlsGrid;
@@ -70,14 +73,17 @@ private:
     RangeSlider *SeekSlider;
     QLabel *lblCurrentTime;
     QLabel *lblDuration;
+    QLabel *lblHeatmap;
     QPushButton* skipBackButton;
     QPushButton* PlayBtn;
     QPushButton* _stopBtn;
+    QPixmap m_heatMap;
 
     int voulumeBeforeMute;
     bool _autoLoopOn = false;
 
     void setVolumeIcon(int volume);
+    QString mSecondFormat(qint64 seconds);
 
     //Slots
     void on_VolumeSlider_valueChanged(int value);

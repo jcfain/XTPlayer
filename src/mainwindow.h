@@ -159,7 +159,7 @@ private slots:
 
     void onPasswordIncorrect();
     void on_scriptNotFound(QString message);
-    void on_noScriptsFound(QString message);
+    //void on_noScriptsFound(QString message);
     void on_playVideo(LibraryListItem27 selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
 
     void on_actionReload_theme_triggered();
@@ -295,6 +295,7 @@ private:
     bool _editPlaylistMode = false;
     bool _libraryDockMode = false;
     QString _lastKeyboardTCode;
+    HeatMap* m_heatmap;
 
     void on_settingsMessageRecieve(QString message, XLogLevel logLevel);
 //    void saveSingleThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
@@ -320,7 +321,6 @@ private:
     void backToMainLibrary();
     void loadPlaylistIntoLibrary(QString playlistName, bool autoPlay = false);
     void media_double_click_event(QMouseEvent * event);
-    QString mSecondFormat(int seconds);
     bool isPlayingFile(QString file);
     void savePlaylist();
     void editPlaylist();

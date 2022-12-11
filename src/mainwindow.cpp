@@ -432,20 +432,11 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
         xtEngine.connectionHandler()->stopOutputDevice();
     });
     connect(videoHandler, &VideoHandler::durationChange, this, [this](qint64 value) {
-        auto heatmap = new HeatMap(this);
-        auto widget = new QWidget(this, Qt::Window);
-        auto layout = new QGridLayout(this);
-        auto label = new QLabel(this);
-        QPixmap map = heatmap->draw(700, 75, xtEngine.syncHandler()->getFunscriptHandler(), value);
-        label->setPixmap(map);
-        layout->addWidget(label);
-        widget->setLayout(layout);
-        widget->setMinimumHeight(100);
-        widget->setMinimumWidth(750);
-        widget->raise();
-        widget->show();
+        m_heatmap->drawAsync(_playerControlsFrame->width(), 25, xtEngine.syncHandler()->getFunscriptHandler(), value);
     });
 
+    m_heatmap = new HeatMap(this);
+    connect(m_heatmap, &HeatMap::imageGenerated, _playerControlsFrame, &PlayerControls::on_heatmapGenerated);
     connect(_playerControlsFrame, &PlayerControls::seekSliderMoved, this, &MainWindow::on_seekSlider_sliderMoved);
     connect(_playerControlsFrame, &PlayerControls::seekSliderHover, this, &MainWindow::on_seekslider_hover );
     connect(_playerControlsFrame, &PlayerControls::seekSliderLeave, this, &MainWindow::on_seekslider_leave );
@@ -2005,7 +1996,7 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
                 xtEngine.syncHandler()->playStandAlone();
             else if(selectedFileListItem.type == LibraryListItemType::FunscriptType && !xtEngine.syncHandler()->isLoaded())
             {
-                on_noScriptsFound("No scripts found for the media with the same name: " + selectedFileListItem.path);
+                on_scriptNotFound("No scripts found for the media with the same name: " + selectedFileListItem.path);
                 skipForward();
             }
             else if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
@@ -2022,7 +2013,7 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
                 filesWithLoadingIssues += "\n\nThis is may be due to an invalid JSON format.\nTry downloading the script again or asking the script maker.\nYou may also find some information running XTP in debug mode.";
                 DialogHandler::MessageBox(this, filesWithLoadingIssues, XLogLevel::Critical);
             }
-            if(!SettingsHandler::getDisableNoScriptFound() && selectedFileListItem.type != LibraryListItemType::FunscriptType && !audioSync && !xtEngine.syncHandler()->isLoaded() && !invalidScripts.contains(scriptFile))
+            if(selectedFileListItem.type != LibraryListItemType::FunscriptType && !audioSync && !xtEngine.syncHandler()->isLoaded() && !invalidScripts.contains(scriptFile))
             {
                 on_scriptNotFound(scriptFile);
             }
@@ -2428,8 +2419,7 @@ void MainWindow::onLoopRange_valueChanged(int position, int startLoop, int endLo
     qint64 currentVideoPositionPercentage = XMath::mapRange(mediaPosition,  (qint64)0, duration, (qint64)0, (qint64)100);
     qint64 destinationVideoPosition = XMath::mapRange((qint64)position, (qint64)0, (qint64)100,  (qint64)0, duration);
 
-    QString timeCurrent = mSecondFormat(destinationVideoPosition);
-    _playerControlsFrame->setSeekSliderToolTip(timeCurrent);
+    _playerControlsFrame->setSeekSliderToolTip(destinationVideoPosition);
 
     if(currentVideoPositionPercentage < startLoop)
     {
@@ -2485,29 +2475,13 @@ void MainWindow::on_media_positionChanged(qint64 position)
 //        }
         }
     }
-    _playerControlsFrame->setTimeDuration(mSecondFormat(position), mSecondFormat(duration));
+    _playerControlsFrame->setTimeDuration(position, duration);
     //    QString timeCurrent = QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss"));
     //    QString timeDuration = QTime(0, 0, 0).addMSecs(duration).toString(QString::fromLatin1("HH:mm:ss"));
     //    QString timeStamp = timeCurrent.append("/").append(timeDuration);
     //    ui->lblCurrentDuration->setText(timeStamp);
 }
 
-QString MainWindow::mSecondFormat(int mSecs)
-{
-    int seconds = mSecs / 1000;
-    mSecs %= 1000;
-
-    int minutes = seconds / 60;
-    seconds %= 60;
-
-    int hours = minutes / 60;
-    minutes %= 60;
-    QString hr = QString::number(hours);
-    QString mn = QString::number(minutes);
-    QString sc = QString::number(seconds);
-
-    return (hr.length() == 1 ? "0" + hr : hr ) + ":" + (mn.length() == 1 ? "0" + mn : mn ) + ":" + (sc.length() == 1 ? "0" + sc : sc);
-}
 
 void MainWindow::on_standaloneFunscript_start()
 {
@@ -2552,12 +2526,17 @@ void MainWindow::on_media_stop()
 
 void MainWindow::on_scriptNotFound(QString message)
 {
-    NoMatchingScriptDialog::show(this, message);
+    xtEngine.syncHandler()->reset();
+    if(!SettingsHandler::getDisableNoScriptFound())
+        NoMatchingScriptDialog::show(this, message);
 }
-void MainWindow::on_noScriptsFound(QString message)
-{
-    DialogHandler::MessageBox(this, message, XLogLevel::Critical);
-}
+
+//void MainWindow::on_noScriptsFound(QString message)
+//{
+//    xtEngine.syncHandler()->reset();
+//    if(!SettingsHandler::getDisableNoScriptFound())
+//        DialogHandler::MessageBox(this, message, XLogLevel::Critical);
+//}
 
 void MainWindow::onFunscriptSearchResult(QString mediaPath, QString funscriptPath, qint64 mediaDuration)
 {
