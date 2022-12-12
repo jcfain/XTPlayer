@@ -377,6 +377,18 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     });
     connect(xtEngine.syncHandler(), &SyncHandler::channelPositionChange, _xSettings, &SettingsDialog::setAxisProgressBar, Qt::QueuedConnection);
     connect(xtEngine.syncHandler(), &SyncHandler::funscriptEnded, _xSettings, &SettingsDialog::resetAxisProgressBars, Qt::QueuedConnection);
+    connect(xtEngine.syncHandler(), &SyncHandler::funscriptLoaded, this, [this](QString funscriptPath) {
+        // Generate first load moneyshot based off heatmap if not already set.
+        if(funscriptPath != playingLibraryListItem.script)
+            return;
+//        auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(playingLibraryListItem.path);
+//        if(libraryListItemMetaData.moneyShotMillis > 0)
+//            return;
+
+        auto funscript = xtEngine.syncHandler()->getFunscriptHandler()->currentFunscript();
+        if(funscript)
+            m_heatmap->getMaxHeatAsync(funscript->actions);
+    });
 
     _xSettings->init(videoHandler, xtEngine.connectionHandler());
 
@@ -436,7 +448,12 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     });
 
     m_heatmap = new HeatMap(this);
+    connect(m_heatmap, &HeatMap::maxHeat, this, [this](qint64 maxHeatAt) {
+        if(maxHeatAt > 0)
+            onSetMoneyShot(playingLibraryListItem, maxHeatAt, false);
+    });
     connect(m_heatmap, &HeatMap::imageGenerated, _playerControlsFrame, &PlayerControls::on_heatmapGenerated);
+
     connect(_playerControlsFrame, &PlayerControls::seekSliderMoved, this, &MainWindow::on_seekSlider_sliderMoved);
     connect(_playerControlsFrame, &PlayerControls::seekSliderHover, this, &MainWindow::on_seekslider_hover );
     connect(_playerControlsFrame, &PlayerControls::seekSliderLeave, this, &MainWindow::on_seekslider_leave );
@@ -1973,6 +1990,9 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
             videoHandler->setLoading(true);
             xtEngine.syncHandler()->stopAll();
 
+            //playingLibraryListIndex = libraryList->selectedRow();
+            playingLibraryListItem = selectedFileListItem;
+
             if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
             {
                 videoHandler->setFile(selectedFileListItem.path);
@@ -2001,8 +2021,6 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
             }
             else if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
                 videoHandler->play();
-            //playingLibraryListIndex = libraryList->selectedRow();
-            playingLibraryListItem = selectedFileListItem;
 
             processMetaData(selectedFileListItem);
             if(!invalidScripts.empty())
@@ -3529,9 +3547,11 @@ void MainWindow::showInGraphicalShell(QString path)
 #endif
 }
 
-void MainWindow::onSetMoneyShot(LibraryListItem27 libraryListItem, qint64 currentPosition)
+void MainWindow::onSetMoneyShot(LibraryListItem27 libraryListItem, qint64 currentPosition, bool userSet)
 {
     auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
+    if(!userSet && libraryListItemMetaData.moneyShotMillis > 0)
+        return;
     libraryListItemMetaData.moneyShotMillis = currentPosition;
     SettingsHandler::updateLibraryListItemMetaData(libraryListItemMetaData);
 }

@@ -391,7 +391,7 @@ private:
     void on_input_device_connectionChanged(ConnectionChangedSignal event);
     void donate();
     void showInGraphicalShell(QString path);
-    void onSetMoneyShot(LibraryListItem27 selectedLibraryListItem27, qint64 currentPosition);
+    void onSetMoneyShot(LibraryListItem27 selectedLibraryListItem27, qint64 currentPosition, bool userSet = true);
     void onAddBookmark(LibraryListItem27 LibraryListItem27, QString name, qint64 currentPosition);
     void processMetaData(LibraryListItem27 LibraryListItem27);
     void updateMetaData(LibraryListItem27 LibraryListItem27);
