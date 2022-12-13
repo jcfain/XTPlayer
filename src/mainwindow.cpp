@@ -379,11 +379,11 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(xtEngine.syncHandler(), &SyncHandler::funscriptEnded, _xSettings, &SettingsDialog::resetAxisProgressBars, Qt::QueuedConnection);
     connect(xtEngine.syncHandler(), &SyncHandler::funscriptLoaded, this, [this](QString funscriptPath) {
         // Generate first load moneyshot based off heatmap if not already set.
-        if(funscriptPath != playingLibraryListItem.script)
+        if(funscriptPath != playingLibraryListItem.script)// Are we loading moneyshot/alt script?
             return;
-//        auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(playingLibraryListItem.path);
-//        if(libraryListItemMetaData.moneyShotMillis > 0)
-//            return;
+        auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(playingLibraryListItem.path);
+        if(libraryListItemMetaData.moneyShotMillis > 0)
+            return;
 
         auto funscript = xtEngine.syncHandler()->getFunscriptHandler()->currentFunscript();
         if(funscript)

@@ -4,6 +4,8 @@
 #include <QDialog>
 #include <QLabel>
 #include <QSpinBox>
+#include <QLineEdit>
+#include <QPushButton>
 #include <QDialogButtonBox>
 #include <QGridLayout>
 #include "lib/handler/loghandler.h"
@@ -20,6 +22,10 @@ public:
 private:
     QLabel* offsetLabel;
     QSpinBox* offsetSpinBox;
+
+    QLabel* moneyShotLabel;
+    QLineEdit* moneyShotLineEdit;
+    QPushButton* resetMoneyShotButton;
 
     static LibraryListItemMetaData258 _libraryListItemMetaData;
     static void showDialog(LibraryItemSettingsDialog *dialog, bool *ok);
