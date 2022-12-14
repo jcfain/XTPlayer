@@ -42,6 +42,7 @@ SOURCES += \
     playercontrols.cpp \
     settingsdialog.cpp \
     welcomedialog.cpp \
+    widgets/heatmapwidget.cpp \
     xlibrarylist.cpp
 
 HEADERS += \
@@ -69,6 +70,7 @@ HEADERS += \
     playercontrols.h \
     settingsdialog.h \
     welcomedialog.h \
+    widgets/heatmapwidget.h \
     xlibrarylist.h
 
 FORMS += \

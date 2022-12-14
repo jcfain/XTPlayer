@@ -16,16 +16,19 @@ QList<LibraryListItem27> PlaylistViewModel::getPopulated() {
 void PlaylistViewModel::populate(QList<LibraryListItem27> list) {
     beginResetModel();
     _data = list;
+    m_librarySize = _data.size();
     endResetModel();
 }
 void PlaylistViewModel::dePopulate() {
     beginResetModel();
     _data.clear();
+    m_librarySize = _data.size();
     endResetModel();
 }
 
 void PlaylistViewModel::removeItem(LibraryListItem27 item) {
     _data.removeOne(item);
+    m_librarySize = _data.size();
 }
 void PlaylistViewModel::overRideThumbSize(int width) {
     overRideThumbSizeWidth = width;

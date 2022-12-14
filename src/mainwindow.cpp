@@ -365,6 +365,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(_xSettings, &SettingsDialog::skipToMoneyShot, this, &MainWindow::skipToMoneyShot);
     connect(_xSettings, &SettingsDialog::skipToNextAction, this, &MainWindow::skipToNextAction);
     connect(_xSettings, &SettingsDialog::updateLibrary, xtEngine.mediaLibraryHandler(), &MediaLibraryHandler::libraryChange);
+    connect(_xSettings, &SettingsDialog::disableHeatmapToggled, _playerControlsFrame, &PlayerControls::on_heatmapToggled);
     connect(_xSettings, &SettingsDialog::cleanUpThumbsDirectory, this, [this] () {
         QtConcurrent::run([this]() {
             if(xtEngine.mediaLibraryHandler()->isLibraryLoading()) {
@@ -381,13 +382,17 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
         // Generate first load moneyshot based off heatmap if not already set.
         if(funscriptPath != playingLibraryListItem.script)// Are we loading moneyshot/alt script?
             return;
+        auto funscript = xtEngine.syncHandler()->getFunscriptHandler()->currentFunscript();
+        if(funscript) {
+            _playerControlsFrame->setActions(funscript->actions);
+        }
         auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(playingLibraryListItem.path);
         if(libraryListItemMetaData.moneyShotMillis > 0)
             return;
 
-        auto funscript = xtEngine.syncHandler()->getFunscriptHandler()->currentFunscript();
-        if(funscript)
+        if(funscript) {
             m_heatmap->getMaxHeatAsync(funscript->actions);
+        }
     });
 
     _xSettings->init(videoHandler, xtEngine.connectionHandler());
@@ -444,7 +449,8 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
         xtEngine.connectionHandler()->stopOutputDevice();
     });
     connect(videoHandler, &VideoHandler::durationChange, this, [this](qint64 value) {
-        m_heatmap->drawAsync(_playerControlsFrame->width(), 25, xtEngine.syncHandler()->getFunscriptHandler(), value);
+        //m_heatmap->drawPixmapAsync(_playerControlsFrame->width(), 25, xtEngine.syncHandler()->getFunscriptHandler(), value);
+        _playerControlsFrame->setDuration(value);
     });
 
     m_heatmap = new HeatMap(this);
@@ -452,7 +458,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
         if(maxHeatAt > 0)
             onSetMoneyShot(playingLibraryListItem, maxHeatAt, false);
     });
-    connect(m_heatmap, &HeatMap::imageGenerated, _playerControlsFrame, &PlayerControls::on_heatmapGenerated);
 
     connect(_playerControlsFrame, &PlayerControls::seekSliderMoved, this, &MainWindow::on_seekSlider_sliderMoved);
     connect(_playerControlsFrame, &PlayerControls::seekSliderHover, this, &MainWindow::on_seekslider_hover );

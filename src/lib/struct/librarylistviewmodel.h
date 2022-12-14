@@ -36,6 +36,7 @@ public:
 protected:
     virtual QList<LibraryListItem27> getData() const;
     virtual Qt::ItemFlags flags(const QModelIndex &index) const override;
+    int m_librarySize = 0;
 
 
 //    // Add data:
@@ -50,7 +51,6 @@ private:
     MediaLibraryHandler* _mediaLibraryHandler;
     LibraryView _libraryViewMode;
     LibrarySortMode _sortMode;
-    int m_librarySize = 0;
 
 
 };

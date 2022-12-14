@@ -44,6 +44,9 @@ public:
     static void setHideMediaWithoutFunscripts(bool enabled);
     static bool getHideMediaWithoutFunscripts();
 
+    static void setHeatmapDisabled(bool checked);
+    static bool getHeatmapDisabled();
+
 
 private:
     static QSettings* getSettings();
@@ -57,6 +60,7 @@ private:
     static bool m_disableTimeLinePreview;
     static bool m_hideMediaWithoutFunscripts;
     static QList<int> m_mainWindowSplitterPos;
+    static bool m_heatmapDisabled;
     static QMutex m_mutex;
 };
 

@@ -15,7 +15,7 @@ void XTPSettings::save(QSettings* settingsToSaveTo) {
     settingsToSaveTo->setValue("libraryWindowOpen", m_libraryWindowOpen);
     settingsToSaveTo->setValue("disableTimeLinePreview", m_disableTimeLinePreview);
     settingsToSaveTo->setValue("hideMediaWithoutFunscripts", m_hideMediaWithoutFunscripts);
-
+    settingsToSaveTo->setValue("heatmapDisabled", m_heatmapDisabled);
 
     QList<QVariant> splitterPos;
     int i = 0;
@@ -45,6 +45,8 @@ void XTPSettings::load(QSettings* settingsToLoadFrom) {
     m_libraryWindowOpen = settingsToLoadFrom->value("libraryWindowOpen").toBool();
     m_disableTimeLinePreview = settingsToLoadFrom->value("disableTimeLinePreview").toBool();
     m_hideMediaWithoutFunscripts = settingsToLoadFrom->value("hideMediaWithoutFunscripts").toBool();
+    m_heatmapDisabled = settingsToLoadFrom->value("heatmapDisabled").toBool();
+
     auto splitterSizes = settingsToLoadFrom->value("mainWindowPos").toList();
     if(splitterSizes.isEmpty()) {
         splitterSizes.append(398);
@@ -152,6 +154,14 @@ bool XTPSettings::getDisableTimeLinePreview() {
    return m_disableTimeLinePreview;
 }
 
+void XTPSettings::setHeatmapDisabled(bool checked) {
+    m_heatmapDisabled = checked;
+}
+
+bool XTPSettings::getHeatmapDisabled() {
+    return m_heatmapDisabled;
+}
+
 //Private
 QSettings* XTPSettings::getSettings() {
     return SettingsHandler::getSettings();
@@ -167,4 +177,5 @@ bool XTPSettings::m_rememberWindowsSettings;
 bool XTPSettings::m_libraryWindowOpen;
 bool XTPSettings::m_disableTimeLinePreview;
 bool XTPSettings::m_hideMediaWithoutFunscripts;
+bool XTPSettings::m_heatmapDisabled;
 QMutex XTPSettings::m_mutex;

@@ -12,11 +12,13 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 
     setLayout(playerControlsGrid);
 
+    int row = 0;
+
     lblCurrentTime = new QLabel(this);
     lblCurrentTime->setObjectName(QString::fromUtf8("lblCurrentTime"));
     lblCurrentTime->setAlignment(Qt::AlignLeft|Qt::AlignBottom);
 
-    playerControlsGrid->addWidget(lblCurrentTime, 0, 0, 1, 1);
+    playerControlsGrid->addWidget(lblCurrentTime, row, 0, 1, 1);
 
     skipToActionButton = new QPushButton(this);
     skipToActionButton->setObjectName(QString::fromUtf8("skipToActionButton"));
@@ -30,7 +32,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToActionButton->setFlat(true);
     skipToActionButton->setEnabled(false);
 
-    playerControlsGrid->addWidget(skipToActionButton, 0, 1, 1, 5);
+    playerControlsGrid->addWidget(skipToActionButton, row, 1, 1, 5);
 
     skipToMoneyShotButton = new QPushButton(this);
     skipToMoneyShotButton->setObjectName(QString::fromUtf8("skipToMoneyShotButton"));
@@ -44,13 +46,15 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToMoneyShotButton->setFlat(true);
     skipToMoneyShotButton->setEnabled(false);
 
-    playerControlsGrid->addWidget(skipToMoneyShotButton, 0, 6, 1, 5);
+    playerControlsGrid->addWidget(skipToMoneyShotButton, row, 6, 1, 5);
 
     lblDuration = new QLabel(this);
     lblDuration->setObjectName(QString::fromUtf8("lblDuration"));
     lblDuration->setAlignment(Qt::AlignRight|Qt::AlignBottom);
 
-    playerControlsGrid->addWidget(lblDuration, 0, 11, 1, 1);
+    playerControlsGrid->addWidget(lblDuration, row, 11, 1, 1);
+
+    row++;
 
     SeekSlider = new RangeSlider(this);
     SeekSlider->setObjectName(QString::fromUtf8("SeekSlider"));
@@ -63,10 +67,16 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     SeekSlider->setOption(RangeSlider::Option::RightHandle);
     SeekSlider->setUpperValue(0);
 
-    playerControlsGrid->addWidget(SeekSlider, 1, 0, 1, 12);
+    playerControlsGrid->addWidget(SeekSlider, row, 0, 1, 12);
 
-    lblHeatmap = new QLabel(this);
-    playerControlsGrid->addWidget(lblHeatmap, 2, 0, 1, 12);
+    row++;
+
+    lblHeatmap = new HeatmapWidget(this);
+    playerControlsGrid->addWidget(lblHeatmap, row, 0, 1, 12);
+    if(XTPSettings::getHeatmapDisabled())
+        lblHeatmap->hide();
+
+    row++;
 
     fullScreenBtn = new QPushButton(this);
     fullScreenBtn->setObjectName(QString::fromUtf8("fullScreenBtn"));
@@ -79,7 +89,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     fullScreenBtn->setIconSize(QSize(20, 20));
     fullScreenBtn->setFlat(true);
 
-    playerControlsGrid->addWidget(fullScreenBtn, 3, 0, 1, 1);
+    playerControlsGrid->addWidget(fullScreenBtn, row, 0, 1, 1);
 
     loopToggleButton = new QPushButton(this);
     loopToggleButton->setObjectName(QString::fromUtf8("loopToggleButton"));
@@ -93,7 +103,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     loopToggleButton->setFlat(true);
     loopToggleButton->setEnabled(false);
 
-    playerControlsGrid->addWidget(loopToggleButton, 3, 1, 1, 1);
+    playerControlsGrid->addWidget(loopToggleButton, row, 1, 1, 1);
 
 //    settingsButton = new QPushButton(this);
 //    settingsButton->setObjectName(QString::fromUtf8("settingsButton"));
@@ -105,7 +115,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 //    settingsButton->setIconSize(QSize(20, 20));
 //    settingsButton->setFlat(true);
 
-//    playerControlsGrid->addWidget(settingsButton, 3, 1, 1, 1);
+//    playerControlsGrid->addWidget(settingsButton, row, 1, 1, 1);
 
     skipBackButton = new QPushButton(this);
     skipBackButton->setObjectName(QString::fromUtf8("skipBackButton"));
@@ -117,7 +127,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipBackButton->setIconSize(QSize(20, 20));
     skipBackButton->setFlat(true);
 
-    playerControlsGrid->addWidget(skipBackButton, 3, 4, 1, 1);
+    playerControlsGrid->addWidget(skipBackButton, row, 4, 1, 1);
 
     _stopBtn = new QPushButton(this);
     _stopBtn->setObjectName(QString::fromUtf8("stopBtn"));
@@ -130,7 +140,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     _stopBtn->setFlat(true);
     _stopBtn->setEnabled(false);
 
-    playerControlsGrid->addWidget(_stopBtn, 3, 5, 1, 1);
+    playerControlsGrid->addWidget(_stopBtn, row, 5, 1, 1);
 
     PlayBtn = new QPushButton(this);
     PlayBtn->setObjectName(QString::fromUtf8("PlayBtn"));
@@ -142,7 +152,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     PlayBtn->setIconSize(QSize(20, 20));
     PlayBtn->setFlat(true);
 
-    playerControlsGrid->addWidget(PlayBtn, 3, 6, 1, 1);
+    playerControlsGrid->addWidget(PlayBtn, row, 6, 1, 1);
 
     skipForwardButton = new QPushButton(this);
     skipForwardButton->setObjectName(QString::fromUtf8("skipForwardButton"));
@@ -154,7 +164,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipForwardButton->setIconSize(QSize(20, 20));
     skipForwardButton->setFlat(true);
 
-    playerControlsGrid->addWidget(skipForwardButton, 3, 7, 1, 1);
+    playerControlsGrid->addWidget(skipForwardButton, row, 7, 1, 1);
 
     VolumeSlider = new RangeSlider(this);
     VolumeSlider->setObjectName(QString::fromUtf8("VolumeSlider"));
@@ -164,7 +174,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     VolumeSlider->SetRange(0, 100);
     VolumeSlider->setOption(RangeSlider::Option::RightHandle);
 
-    playerControlsGrid->addWidget(VolumeSlider, 3, 8, 1, 3);
+    playerControlsGrid->addWidget(VolumeSlider, row, 8, 1, 3);
 
     MuteBtn = new QPushButton(this);
     MuteBtn->setObjectName(QString::fromUtf8("muteBtn"));
@@ -177,7 +187,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     MuteBtn->setCheckable(true);
     MuteBtn->setFlat(true);
 
-    playerControlsGrid->addWidget(MuteBtn, 3, 11, 1, 1);
+    playerControlsGrid->addWidget(MuteBtn, row, 11, 1, 1);
 
     connect(SeekSlider, &RangeSlider::upperValueMove, this, &PlayerControls::on_seekSlider_sliderMoved);
     connect(SeekSlider, &RangeSlider::onHover, this, &PlayerControls::on_seekslider_hover);
@@ -185,14 +195,22 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     connect(VolumeSlider, &RangeSlider::upperValueMove, this, &PlayerControls::on_VolumeSlider_valueChanged);
     connect(PlayBtn, &QPushButton::clicked, this, &PlayerControls::on_PlayBtn_clicked);
     connect(_stopBtn, &QPushButton::clicked, this, [this]() {emit stopClicked();});
-    connect(skipForwardButton, &QPushButton::clicked, this, [this]() {emit skipForward();});
+    connect(skipForwardButton, &QPushButton::clicked, this, [this]() {
+        //lblHeatmap->clearMap();
+        emit skipForward();
+    });
     connect(skipToMoneyShotButton, &QPushButton::clicked, this, [this]() {emit skipToMoneyShot();});
     connect(skipToActionButton, &QPushButton::clicked, this, [this]() {emit skipToNextAction();});
-    connect(skipBackButton, &QPushButton::clicked, this, [this]() {emit skipBack();});
+    connect(skipBackButton, &QPushButton::clicked, this, [this]() {
+        //lblHeatmap->clearMap();
+        emit skipBack();
+    });
     connect(fullScreenBtn, &QPushButton::clicked, this, [this]() {emit fullscreenToggled();});
     //connect(settingsButton, &QPushButton::clicked, this, [this]() {emit settingsClicked();});
     connect(loopToggleButton, &QPushButton::toggled, this, &PlayerControls::on_loopToggleButton_toggled);
     connect(MuteBtn, &QPushButton::toggled, this, &PlayerControls::on_MuteBtn_toggled);
+
+    connect(lblHeatmap, &HeatmapWidget::mouseReleased, this, &PlayerControls::seekSliderMoved);
 
     voulumeBeforeMute = SettingsHandler::getPlayerVolume();
     setVolume(voulumeBeforeMute);
@@ -203,10 +221,6 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 PlayerControls::~PlayerControls()
 {
 
-}
-
-void PlayerControls::resizeEvent(QResizeEvent *event) {
-    lblHeatmap->setPixmap(m_heatMap.scaled(event->size().width(), lblHeatmap->height(), Qt::IgnoreAspectRatio));
 }
 
 bool PlayerControls::getAutoLoop()
@@ -226,6 +240,7 @@ void PlayerControls::setPlayIcon(bool playing)
     QIcon icon(playing ? "://images/icons/pause.svg" : "://images/icons/play.svg" );
     PlayBtn->setIcon(icon);
 }
+
 void PlayerControls::setVolumeIcon(int volume)
 {
     if (volume > VolumeSlider->GetMaximum() / 2)
@@ -239,6 +254,7 @@ void PlayerControls::setVolumeIcon(int volume)
         MuteBtn->setIcon(QIcon(":/images/icons/speakerMute.svg"));
     }
 }
+
 void PlayerControls::resetMediaControlStatus(bool playing)
 {
     LogHandler::Debug("Enter toggleMediaControlStatus: "+QString::number(playing));
@@ -274,6 +290,7 @@ QPoint PlayerControls::getTimeSliderPosition()
 {
     return SeekSlider->pos();
 }
+
 int PlayerControls::getSeekSliderWidth()
 {
     return SeekSlider->width();
@@ -344,14 +361,20 @@ void PlayerControls::setTimeDuration(qint64 time, qint64 duration)
 {
     lblCurrentTime->setText(mSecondFormat(time));
     lblDuration->setText(mSecondFormat(duration));
+    if(!XTPSettings::getHeatmapDisabled())
+        lblHeatmap->setCurrentTime(time);
 }
 void PlayerControls::setTime(qint64 time)
 {
     lblCurrentTime->setText(mSecondFormat(time));
+    if(!XTPSettings::getHeatmapDisabled())
+        lblHeatmap->setCurrentTime(time);
 }
 void PlayerControls::setDuration(qint64 duration)
 {
     lblDuration->setText(mSecondFormat(duration));
+    if(!XTPSettings::getHeatmapDisabled())
+        lblHeatmap->setDuration(duration);
 }
 
 QString PlayerControls::mSecondFormat(qint64 mSecs)
@@ -396,6 +419,7 @@ void PlayerControls::on_PlayBtn_clicked()
 void PlayerControls::on_StopBtn_clicked()
 {
     setPlayIcon(false);
+    //lblHeatmap->clearMap();
     emit stopClicked();
 }
 
@@ -464,18 +488,21 @@ void PlayerControls::on_seekslider_leave()
     emit seekSliderLeave();
 }
 
-void PlayerControls::on_heatmapGenerated(QPixmap pixmap) {
-    if(!pixmap.isNull()) {
-        lblHeatmap->setPixmap(pixmap);
+void PlayerControls::on_heatmapToggled(bool disabled) {
+    if(disabled) {
+        lblHeatmap->hide();
+    } else {
+        lblHeatmap->show();
     }
-    else {
-        lblHeatmap->clear();
-    }
-    m_heatMap = pixmap;
 }
 
 void PlayerControls::setSkipToMoneyShotEnabled(bool enabled)
 {
     skipToMoneyShotButton->setEnabled(enabled);
     skipToActionButton->setEnabled(enabled);
+}
+
+void PlayerControls::setActions(QHash<qint64, int> actions) {
+    if(!XTPSettings::getHeatmapDisabled())
+        lblHeatmap->setActions(actions);
 }

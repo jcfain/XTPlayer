@@ -10,8 +10,10 @@ LibraryListViewModel::LibraryListViewModel(MediaLibraryHandler* mediaLibraryHand
     } );
     connect(_mediaLibraryHandler, &MediaLibraryHandler::itemUpdated, this,   [this](LibraryListItem27 item, int indexOfItem) {
         //beginResetModel();
-        auto index = this->index(indexOfItem, 0);
-        emit dataChanged(index, index);
+        if(indexOfItem > -1) {
+            auto index = this->index(indexOfItem, 0);
+            emit dataChanged(index, index);
+        }
         //endResetModel();
     } );
     connect(_mediaLibraryHandler, &MediaLibraryHandler::itemRemoved, this,   [this](LibraryListItem27 item, int indexOfItem, int newSize) {
@@ -76,7 +78,7 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
         return QVariant();
-    if (index.row() >= getData().size())
+    if (index.row() >= m_librarySize)
         return QVariant();
 
     if (index.column() == 0) {

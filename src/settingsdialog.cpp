@@ -315,6 +315,8 @@ void SettingsDialog::setupUi()
         ui.disableTimeLinePreviewChk->setChecked(XTPSettings::getDisableTimeLinePreview());
         ui.hideMediaWithoutFunscriptsCheckbox->setChecked(XTPSettings::getHideMediaWithoutFunscripts());
 
+        ui.disableFunscriptHeatmapheckBox->setChecked(XTPSettings::getHeatmapDisabled());
+
         updateIPAddress();
 
         connect(&SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
@@ -1973,3 +1975,10 @@ void SettingsDialog::askHowToResetChannelProfileDefaults() {
                                   QMessageBox::Yes|QMessageBox::No);
     TCodeChannelLookup::setAllProfileDefaults(reply == QMessageBox::Yes);
 }
+
+void SettingsDialog::on_disableFunscriptHeatmapheckBox_clicked(bool checked)
+{
+    XTPSettings::setHeatmapDisabled(checked);
+    emit disableHeatmapToggled(checked);
+}
+

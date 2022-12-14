@@ -58,6 +58,7 @@ signals:
     void skipToNextAction();
     void updateLibrary();
     void cleanUpThumbsDirectory();
+    void disableHeatmapToggled(bool disabled);
 
 public slots:
     void on_xtpWeb_initInputDevice(DeviceName deviceName, bool checked);
@@ -233,6 +234,8 @@ private slots:
     void on_hideMediaWithoutFunscriptsCheckbox_clicked(bool checked);
 
     void on_cleanupThumbsPushButton_clicked();
+
+    void on_disableFunscriptHeatmapheckBox_clicked(bool checked);
 
 private:
 

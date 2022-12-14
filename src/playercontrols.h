@@ -6,9 +6,9 @@
 #include <QPushButton>
 #include <QLabel>
 #include "CustomControls/rangeslider.h"
-#include "lib/handler/settingshandler.h"
+#include "lib/handler/xtpsettings.h"
 #include "lib/tool/xmath.h"
-#include "lib/tool/heatmap.h"
+#include "widgets/heatmapwidget.h"
 
 class PlayerControls : public QFrame
 {
@@ -30,7 +30,7 @@ signals:
     void seekSliderHover(int position, int sliderValue);
     void seekSliderLeave();
 public slots:
-    void on_heatmapGenerated(QPixmap pixmap);
+    void on_heatmapToggled(bool disabled);
 public:
     explicit PlayerControls(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
     ~PlayerControls();
@@ -57,8 +57,7 @@ public:
     void setDuration(qint64 duration);
     void resetMediaControlStatus(bool playing);
     void setSkipToMoneyShotEnabled(bool enabled);
-protected:
-    virtual void resizeEvent(QResizeEvent *event) override;
+    void setActions(QHash<qint64, int> actions);
 
 private:
     QGridLayout *playerControlsGrid;
@@ -73,11 +72,10 @@ private:
     RangeSlider *SeekSlider;
     QLabel *lblCurrentTime;
     QLabel *lblDuration;
-    QLabel *lblHeatmap;
+    HeatmapWidget *lblHeatmap;
     QPushButton* skipBackButton;
     QPushButton* PlayBtn;
     QPushButton* _stopBtn;
-    QPixmap m_heatMap;
 
     int voulumeBeforeMute;
     bool _autoLoopOn = false;
