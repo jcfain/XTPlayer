@@ -451,6 +451,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(videoHandler, &VideoHandler::durationChange, this, [this](qint64 value) {
         //m_heatmap->drawPixmapAsync(_playerControlsFrame->width(), 25, xtEngine.syncHandler()->getFunscriptHandler(), value);
         _playerControlsFrame->setDuration(value);
+        processMetaData(playingLibraryListItem);
     });
 
     m_heatmap = new HeatMap(this);
@@ -459,7 +460,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
             onSetMoneyShot(playingLibraryListItem, maxHeatAt, false);
     });
 
-    connect(_playerControlsFrame, &PlayerControls::seekSliderMoved, this, &MainWindow::on_seekSlider_sliderMoved);
+    connect(_playerControlsFrame, &PlayerControls::seekSliderMoved, this, &MainWindow::on_timeline_currentTimeMove);
     connect(_playerControlsFrame, &PlayerControls::seekSliderHover, this, &MainWindow::on_seekslider_hover );
     connect(_playerControlsFrame, &PlayerControls::seekSliderLeave, this, &MainWindow::on_seekslider_leave );
     connect(_playerControlsFrame, &PlayerControls::volumeChanged, this, &MainWindow::on_VolumeSlider_valueChanged);
@@ -1939,9 +1940,6 @@ void MainWindow::stopAndPlayMedia(LibraryListItem27 selectedFileListItem, QStrin
               || !customScript.isEmpty()
               || audioSync)
         {
-            if(!playingLibraryListItem.ID.isEmpty())
-                updateMetaData(playingLibraryListItem);
-            _playerControlsFrame->SetLoop(false);
             videoHandler->setLoading(true);
             if(videoHandler->isPlaying() || xtEngine.syncHandler()->isPlayingStandAlone())
             {
@@ -1991,7 +1989,6 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
             QString scriptFile;
             QList<QString> invalidScripts;
             deviceHome();
-            _playerControlsFrame->SetLoop(false);
             videoHandler->setLoading(true);
             xtEngine.syncHandler()->stopAll();
 
@@ -2027,7 +2024,6 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
             else if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
                 videoHandler->play();
 
-            processMetaData(selectedFileListItem);
             if(!invalidScripts.empty())
             {
                 filesWithLoadingIssues += "The following scripts had issues loading:\n\n";
@@ -2070,8 +2066,8 @@ void MainWindow::updateMetaData(LibraryListItem27 libraryListItem)
         libraryListItemMetaData.lastLoopEnabled = _playerControlsFrame->getAutoLoop();
         if(libraryListItemMetaData.lastLoopEnabled)
         {
-            libraryListItemMetaData.lastLoopStart = _playerControlsFrame->getSeekSliderLowerValue();
-            libraryListItemMetaData.lastLoopEnd = _playerControlsFrame->getSeekSliderUpperValue();
+            libraryListItemMetaData.lastLoopStart = _playerControlsFrame->getStartLoop();
+            libraryListItemMetaData.lastLoopEnd = _playerControlsFrame->getEndLoop();
         }
     }
     SettingsHandler::updateLibraryListItemMetaData(libraryListItemMetaData);
@@ -2388,7 +2384,7 @@ void MainWindow::on_seekslider_hover(int position, int sliderValue)
     //    if (!Config::instance().previewEnabled())
     //        return;
 
-    if(!XTPSettings::getDisableTimeLinePreview() && playingLibraryListItem.type == LibraryListItemType::Video && !_playerControlsFrame->getSeekSliderMousePressed() && (videoHandler->isPlaying() || videoHandler->isPaused()))
+    if(!XTPSettings::getDisableTimeLinePreview() && playingLibraryListItem.type == LibraryListItemType::Video && !_playerControlsFrame->getTimeLineMousePressed() && (videoHandler->isPlaying() || videoHandler->isPaused()))
     {
         //const int w = Config::instance().previewWidth();
         //const int h = Config::instance().previewHeight();
@@ -2414,70 +2410,66 @@ void MainWindow::on_seekslider_leave()
 //    videoPreviewWidget = NULL;
 }
 
-void MainWindow::on_seekSlider_sliderMoved(int position)
+void MainWindow::on_timeline_currentTimeMove(qint64 position)
 {
     LogHandler::Debug("position: "+ QString::number(position));
-    if (!_playerControlsFrame->getAutoLoop())
-    {
-        bool isStandAloneFunscriptPlaying = playingLibraryListItem.type == LibraryListItemType::FunscriptType;
-        qint64 duration = isStandAloneFunscriptPlaying ? xtEngine.syncHandler()->getFunscriptMax() : videoHandler->duration();
-        qint64 playerPosition = XMath::mapRange(static_cast<qint64>(position), (qint64)0, (qint64)100, (qint64)0, duration);
+    bool isStandAloneFunscriptPlaying = playingLibraryListItem.type == LibraryListItemType::FunscriptType;
+    //qint64 duration = isStandAloneFunscriptPlaying ? xtEngine.syncHandler()->getFunscriptMax() : videoHandler->duration();
 
-        LogHandler::Debug("playerPosition: "+ QString::number(playerPosition));
-        if(playerPosition <= 0)
-            playerPosition = 50;
-        isStandAloneFunscriptPlaying ? xtEngine.syncHandler()->setFunscriptTime(playerPosition) : videoHandler->setPosition(playerPosition);
-    }
+    LogHandler::Debug("playerPosition: "+ QString::number(position));
+    if(position <= 0)
+        position = 50;
+    isStandAloneFunscriptPlaying ? xtEngine.syncHandler()->setFunscriptTime(position) : videoHandler->setPosition(position);
 }
 
 
-void MainWindow::onLoopRange_valueChanged(int position, int startLoop, int endLoop)
+void MainWindow::onLoopRange_valueChanged(qint64 currentTime, qint64 startLoop, qint64 endLoop)
 {
     bool isStandAloneFunscriptPlaying = playingLibraryListItem.type == LibraryListItemType::FunscriptType;
-    if(endLoop >= 100)
-        endLoop = 99;
-    qint64 duration = isStandAloneFunscriptPlaying ? xtEngine.syncHandler()->getFunscriptMax() : videoHandler->duration();
+    //qint64 duration = isStandAloneFunscriptPlaying ? xtEngine.syncHandler()->getFunscriptMax() : videoHandler->duration();
     qint64 mediaPosition = isStandAloneFunscriptPlaying ? xtEngine.syncHandler()->getFunscriptTime() : videoHandler->position();
 
-    qint64 currentVideoPositionPercentage = XMath::mapRange(mediaPosition,  (qint64)0, duration, (qint64)0, (qint64)100);
-    qint64 destinationVideoPosition = XMath::mapRange((qint64)position, (qint64)0, (qint64)100,  (qint64)0, duration);
+    //qint64 currentVideoPositionPercentage = XMath::mapRange(mediaPosition,  (qint64)0, duration, (qint64)0, (qint64)100);
+    //qint64 destinationVideoPosition = XMath::mapRange((qint64)position, (qint64)0, (qint64)100,  (qint64)0, duration);
 
-    _playerControlsFrame->setSeekSliderToolTip(destinationVideoPosition);
+    //_playerControlsFrame->setSeekSliderToolTip(currentTime);
 
-    if(currentVideoPositionPercentage < startLoop)
-    {
-        isStandAloneFunscriptPlaying ? xtEngine.syncHandler()->setFunscriptTime(destinationVideoPosition) : videoHandler->setPosition(destinationVideoPosition);
+    if(endLoop > 0) {
+        if(mediaPosition < startLoop || mediaPosition >= endLoop)
+        {
+            isStandAloneFunscriptPlaying ? xtEngine.syncHandler()->setFunscriptTime(startLoop) : videoHandler->setPosition(startLoop);
+        }
     }
-    else if (currentVideoPositionPercentage >= endLoop)
-    {
-        qint64 startLoopVideoPosition = XMath::mapRange((qint64)startLoop, (qint64)0, (qint64)100,  (qint64)0, duration);
-        if(startLoopVideoPosition <= 0)
-            startLoopVideoPosition = 50;
-        if (position != startLoopVideoPosition)
-            isStandAloneFunscriptPlaying ? xtEngine.syncHandler()->setFunscriptTime(destinationVideoPosition) : videoHandler->setPosition(destinationVideoPosition);
-    }
+//    else if (mediaPosition >= endLoop)
+//    {
+//        //qint64 startLoopVideoPosition = XMath::mapRange((qint64)startLoop, (qint64)0, (qint64)100,  (qint64)0, duration);
+//        if(startLoop <= 0)
+//            startLoop = 50;
+//        if (mediaPosition != startLoop)
+//            isStandAloneFunscriptPlaying ? xtEngine.syncHandler()->setFunscriptTime(startLoop) : videoHandler->setPosition(startLoop);
+//    }
 }
 
 void MainWindow::on_media_positionChanged(qint64 position)
 {
     bool isStandAloneFunscriptPlaying = playingLibraryListItem.type == LibraryListItemType::FunscriptType;
     qint64 duration = isStandAloneFunscriptPlaying ? xtEngine.syncHandler()->getFunscriptMax() : videoHandler->duration();
-    qint64 videoToSliderPosition = XMath::mapRange(position,  (qint64)0, duration, (qint64)0, (qint64)100);
-    if (!_playerControlsFrame->getAutoLoop())
+   // qint64 videoToSliderPosition = XMath::mapRange(position,  (qint64)0, duration, (qint64)0, (qint64)100);
+//    if (!_playerControlsFrame->getAutoLoop())
+//    {
+//        if (duration > 0)
+//        {
+//            _playerControlsFrame->setTime(position);
+//        }
+//    }
+    if(_playerControlsFrame->getAutoLoop())
     {
-        if (duration > 0)
+        qint64 endLoopToVideoPosition = _playerControlsFrame->getEndLoop();
+        //qint64 endLoopToVideoPosition = XMath::mapRange((qint64)endLoop, (qint64)0, (qint64)100,  (qint64)0, duration);
+        if (position >= endLoopToVideoPosition || (endLoopToVideoPosition == duration && position >= duration - 2000))
         {
-            _playerControlsFrame->setSeekSliderUpperValue(static_cast<int>(videoToSliderPosition));
-        }
-    }
-    else
-    {
-        int endLoop = _playerControlsFrame->getSeekSliderUpperValue();
-        qint64 endLoopToVideoPosition = XMath::mapRange((qint64)endLoop, (qint64)0, (qint64)100,  (qint64)0, duration);
-        if (position >= endLoopToVideoPosition || (endLoop == 100 && position >= duration - 2000))
-        {
-            int startLoop = _playerControlsFrame->getSeekSliderLowerValue();
-            qint64 startLoopVideoPosition = XMath::mapRange((qint64)startLoop, (qint64)0, (qint64)100,  (qint64)0, duration);
+            qint64 startLoopVideoPosition = _playerControlsFrame->getStartLoop();
+            //qint64 startLoopVideoPosition = XMath::mapRange((qint64)startLoop, (qint64)0, (qint64)100,  (qint64)0, duration);
             if (position != startLoopVideoPosition)
                 isStandAloneFunscriptPlaying ? xtEngine.syncHandler()->setFunscriptTime(startLoopVideoPosition) : videoHandler->seek(startLoopVideoPosition);
 
@@ -2540,6 +2532,8 @@ void MainWindow::on_media_start()
 void MainWindow::on_media_stop()
 {
     LogHandler::Debug("Enter on_media_stop");
+    if(!playingLibraryListItem.ID.isEmpty())
+        updateMetaData(playingLibraryListItem);
     xtEngine.syncHandler()->on_other_media_state_change(XMediaState::Stopped);
     videoHandler->setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(false);
@@ -2600,7 +2594,6 @@ void MainWindow::onFunscriptSearchResult(QString mediaPath, QString funscriptPat
                 processVRMetaData(mediaPath, funscriptPath, mediaDuration);
             } else {
                 playingLibraryListItem = LibraryListItem27(itemRef);
-                processMetaData(playingLibraryListItem);
             }
             xtEngine.syncHandler()->syncInputDeviceFunscript(funscriptPath);
             if(saveLinkedScript)
@@ -2624,21 +2617,23 @@ void MainWindow::processVRMetaData(QString videoPath, QString funscriptPath, qin
     QString zipFile;
     if(funscriptPath.endsWith(".zip"))
         zipFile = funscriptPath;
-    LibraryListItem27 item ;
-    item.type = LibraryListItemType::VR;
-    item.path = videoPath; // path
-    item.name = videoFile.fileName(); // name
-    item.nameNoExtension = scriptNoExtension; //nameNoExtension
-    item.script = funscriptPath; // script
-    item.scriptNoExtension = scriptNoExtension;
-    item.mediaExtension = mediaExtension;
-    item.zipFile = zipFile;
-    item.modifiedDate = videoFile.birthTime().isValid() ? videoFile.birthTime().date() : videoFile.created().date();
-    item.duration = (unsigned)duration;
-    xtEngine.mediaLibraryHandler()->setLiveProperties(item);
+    LibraryListItem27 vrItem ;
+    vrItem.type = LibraryListItemType::VR;
+    vrItem.path = videoPath; // path
+    vrItem.name = videoFile.fileName(); // name
+    vrItem.nameNoExtension = scriptNoExtension; //nameNoExtension
+    vrItem.script = funscriptPath; // script
+    vrItem.scriptNoExtension = scriptNoExtension;
+    vrItem.mediaExtension = mediaExtension;
+    vrItem.zipFile = zipFile;
+    vrItem.modifiedDate = videoFile.birthTime().isValid() ? videoFile.birthTime().date() : videoFile.created().date();
+    vrItem.duration = (unsigned)duration;
+    xtEngine.mediaLibraryHandler()->setLiveProperties(vrItem);
     //playingLibraryListItem = new LibraryListWidgetItem(item);
-    processMetaData(item);
-    playingLibraryListItem = item;
+
+    auto itemRef = xtEngine.mediaLibraryHandler()->findItemByName(QUrl(videoPath).fileName());
+    processMetaData(itemRef ? itemRef : vrItem);
+    playingLibraryListItem = itemRef ? itemRef : vrItem;
 }
 
 void MainWindow::on_sendTCode(QString value)
@@ -3278,19 +3273,19 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
         if(libraryListItemMetaData.lastLoopStart > -1 && libraryListItemMetaData.lastLoopEnd > libraryListItemMetaData.lastLoopStart)
         {
             QTimer::singleShot(250, this, [this, libraryListItemMetaData]() {
-                _playerControlsFrame->setSeekSliderLowerValue(libraryListItemMetaData.lastLoopStart);
-                _playerControlsFrame->setSeekSliderUpperValue(libraryListItemMetaData.lastLoopEnd);
+                _playerControlsFrame->setStartLoop(libraryListItemMetaData.lastLoopStart);
+                _playerControlsFrame->setEndLoop(libraryListItemMetaData.lastLoopEnd);
             });
 //            qint64 sliderToVideoPosition = XMath::mapRange(libraryListItemMetaData.lastLoopStart,  (qint64)0, (qint64)100, (qint64)0, videoHandler->duration());
 //            videoHandler->setPosition(sliderToVideoPosition +100);
         }
         else
         {
-            qint64 videoToSliderPosition = XMath::mapRange(videoHandler->position(),  (qint64)0, videoHandler->duration(), (qint64)0, (qint64)100);
+            //qint64 videoToSliderPosition = XMath::mapRange(videoHandler->position(),  (qint64)0, videoHandler->duration(), (qint64)0, (qint64)100);
             updateMetaData(playingLibraryListItem);
-            _playerControlsFrame->setSeekSliderLowerValue(videoToSliderPosition);
+            _playerControlsFrame->setStartLoop(videoHandler->position());
         }
-        _playerControlsFrame->setSeekSliderMinimumRange(1);
+        //_playerControlsFrame->setLoopMinimumRange(1000);
     }
     else
     {
@@ -3299,7 +3294,7 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
         qint64 position = videoHandler->position();
         videoHandler->setRepeat();
         videoHandler->setPosition(position);
-        _playerControlsFrame->setSeekSliderMinimumRange(0);
+        //_playerControlsFrame->setLoopMinimumRange(0);
     }
 }
 

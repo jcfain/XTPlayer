@@ -9,6 +9,7 @@
 #include "lib/handler/xtpsettings.h"
 #include "lib/tool/xmath.h"
 #include "widgets/heatmapwidget.h"
+#include "widgets/timeline.h"
 
 class PlayerControls : public QFrame
 {
@@ -45,13 +46,13 @@ public:
     QPoint getTimeSliderPosition();
     int getSeekSliderWidth();
     void setSeekSliderToolTip(qint64 value);
-    void setSeekSliderUpperValue(int value);
-    int getSeekSliderUpperValue();
-    void setSeekSliderLowerValue(int value);
-    int getSeekSliderLowerValue();
-    void setSeekSliderMinimumRange(int value);
-    void setSeekSliderDisabled(bool value);
-    bool getSeekSliderMousePressed();
+    void setEndLoop(qint64 value);
+    qint64 getEndLoop();
+    void setStartLoop(qint64 value);
+    qint64 getStartLoop();
+    //void setLoopMinimumRange(qint64 value);
+    void setTimeLineDisabled(bool value);
+    bool getTimeLineMousePressed();
     void setTimeDuration(qint64 time, qint64 duration);
     void setTime(qint64 time);
     void setDuration(qint64 duration);
@@ -69,13 +70,15 @@ private:
     QPushButton *fullScreenBtn;
     //QPushButton *settingsButton;
     RangeSlider *VolumeSlider;
-    RangeSlider *SeekSlider;
+//    RangeSlider *SeekSlider;
     QLabel *lblCurrentTime;
     QLabel *lblDuration;
     HeatmapWidget *lblHeatmap;
+    TimeLine* m_timeLine;
     QPushButton* skipBackButton;
     QPushButton* PlayBtn;
     QPushButton* _stopBtn;
+    qint64 m_duration;
 
     int voulumeBeforeMute;
     bool _autoLoopOn = false;
@@ -88,10 +91,10 @@ private:
     void on_PlayBtn_clicked();
     void on_StopBtn_clicked();
     void on_MuteBtn_toggled(bool checked);
-    void on_seekSlider_sliderMoved(int position);
-    void on_LoopRange_valueChanged(int position);
+    void on_timeline_currentTimeMove(qint64 position);
+    void on_LoopRange_valueChanged(qint64 position);
     void on_loopToggleButton_toggled(bool checked);
-    void on_seekslider_hover(int position, int sliderValue);
+    void on_seekslider_hover(qint64 position, qint64 sliderValue);
     void on_seekslider_leave();
 
 };

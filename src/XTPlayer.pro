@@ -43,6 +43,7 @@ SOURCES += \
     settingsdialog.cpp \
     welcomedialog.cpp \
     widgets/heatmapwidget.cpp \
+    widgets/timeline.cpp \
     xlibrarylist.cpp
 
 HEADERS += \
@@ -71,6 +72,7 @@ HEADERS += \
     settingsdialog.h \
     welcomedialog.h \
     widgets/heatmapwidget.h \
+    widgets/timeline.h \
     xlibrarylist.h
 
 FORMS += \

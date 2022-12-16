@@ -141,7 +141,7 @@ private slots:
     void on_seekslider_hover(int position, int time);
     void on_seekslider_leave();
 
-    void onLoopRange_valueChanged(int position, int startLoop, int endLoop);
+    void onLoopRange_valueChanged(qint64 position, qint64 startLoop, qint64 endLoop);
 
     void on_actionChange_theme_triggered();
 
@@ -377,7 +377,7 @@ private:
     bool isPlaylistMode();
     void addSelectedLibraryItemToPlaylist(QString playlistName, LibraryListItem27 item);
     void setVolumeIcon(int volume);
-    void on_seekSlider_sliderMoved(int position);
+    void on_timeline_currentTimeMove(qint64 position);
     void on_key_press(QKeyEvent* event);
     void on_controls_mouse_enter(QMouseEvent* event);
     void on_media_positionChanged(qint64 position);

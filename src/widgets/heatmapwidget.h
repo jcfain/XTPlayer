@@ -9,28 +9,30 @@ class HeatmapWidget : public QLabel
 {
     Q_OBJECT
 signals:
-    void mouseReleased(int pos);
+    //void mouseReleased(int pos);
 public:
     explicit HeatmapWidget(QWidget *parent = nullptr);
     ~HeatmapWidget();
     void setDuration(qint64 duration);
-    void setCurrentTime(qint64 duration);
+    //void setCurrentTime(qint64 duration);
     void setActions(QHash<qint64, int> actions);
     void clearMap();
     //void setHeatMap(QPixmap map);
 protected:
-    void paintEvent(QPaintEvent* event) override;
+//    void paintEvent(QPaintEvent* event) override;
     virtual void resizeEvent(QResizeEvent *event) override;
-    virtual void mouseReleaseEvent(QMouseEvent* event) override;
 
 private:
+    void paint();
     QPainter painter;
     HeatMap m_heatMap;
     qint64 m_duration = 0;
     qint64 m_currentTime = 0;
-    //QPixmap m_heatMapPixmap;
+    QPixmap m_heatMapPixmap;
     QMap<qint64, int> m_actions;
-    QPen m_CurrentPositionPen = QPen(Qt::GlobalColor::cyan, 2, Qt::SolidLine, Qt::RoundCap, Qt::MiterJoin);
+
+    QTimer m_resizeDebounce;
+   // QPen m_CurrentPositionPen = QPen(Qt::GlobalColor::cyan, 2, Qt::SolidLine, Qt::RoundCap, Qt::MiterJoin);
 
 
 

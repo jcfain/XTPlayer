@@ -56,18 +56,18 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 
     row++;
 
-    SeekSlider = new RangeSlider(this);
-    SeekSlider->setObjectName(QString::fromUtf8("SeekSlider"));
-    SeekSlider->setEnabled(false);
-    SeekSlider->setMinimumSize(QSize(100, 15));
-    SeekSlider->setMaximum(100);
-    SeekSlider->setOrientation(Qt::Horizontal);
-    SeekSlider->setDisabled(true);
-    SeekSlider->SetRange(0, 100);
-    SeekSlider->setOption(RangeSlider::Option::RightHandle);
-    SeekSlider->setUpperValue(0);
+//    SeekSlider = new RangeSlider(this);
+//    SeekSlider->setObjectName(QString::fromUtf8("SeekSlider"));
+//    SeekSlider->setEnabled(false);
+//    SeekSlider->setMinimumSize(QSize(100, 15));
+//    SeekSlider->setMaximum(100);
+//    SeekSlider->setOrientation(Qt::Horizontal);
+//    SeekSlider->setDisabled(true);
+//    SeekSlider->SetRange(0, 100);
+//    SeekSlider->setOption(RangeSlider::Option::RightHandle);
+//    SeekSlider->setUpperValue(0);
 
-    playerControlsGrid->addWidget(SeekSlider, row, 0, 1, 12);
+//    playerControlsGrid->addWidget(SeekSlider, row, 0, 1, 12);
 
     row++;
 
@@ -75,6 +75,19 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     playerControlsGrid->addWidget(lblHeatmap, row, 0, 1, 12);
     if(XTPSettings::getHeatmapDisabled())
         lblHeatmap->hide();
+
+    m_timeLine = new TimeLine(this);
+    m_timeLine->setObjectName(QString::fromUtf8("timeLine"));
+    m_timeLine->setEnabled(false);
+    //m_timeLine->setMinimumSize(QSize(100, 15));
+    //m_timeLine->setMaximum(100);
+    //m_timeLine->setOrientation(Qt::Horizontal);
+    //m_timeLine->setDisabled(true);
+    //m_timeLine->SetRange(0, 100);
+    //m_timeLine->setOption(RangeSlider::Option::RightHandle);
+    //m_timeLine->setUpperValue(0);
+
+    playerControlsGrid->addWidget(m_timeLine, row, 0, 1, 12);
 
     row++;
 
@@ -189,12 +202,12 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 
     playerControlsGrid->addWidget(MuteBtn, row, 11, 1, 1);
 
-    connect(SeekSlider, &RangeSlider::upperValueMove, this, &PlayerControls::on_seekSlider_sliderMoved);
-    connect(SeekSlider, &RangeSlider::onHover, this, &PlayerControls::on_seekslider_hover);
-    connect(SeekSlider, &RangeSlider::onLeave, this, &PlayerControls::on_seekslider_leave);
+    connect(m_timeLine, &TimeLine::currentTimeChanged, this, &PlayerControls::on_timeline_currentTimeMove);
+    connect(m_timeLine, &TimeLine::onHover, this, &PlayerControls::on_seekslider_hover);
+    connect(m_timeLine, &TimeLine::onLeave, this, &PlayerControls::on_seekslider_leave);
     connect(VolumeSlider, &RangeSlider::upperValueMove, this, &PlayerControls::on_VolumeSlider_valueChanged);
     connect(PlayBtn, &QPushButton::clicked, this, &PlayerControls::on_PlayBtn_clicked);
-    connect(_stopBtn, &QPushButton::clicked, this, [this]() {emit stopClicked();});
+    connect(_stopBtn, &QPushButton::clicked, this, &PlayerControls::on_StopBtn_clicked);
     connect(skipForwardButton, &QPushButton::clicked, this, [this]() {
         //lblHeatmap->clearMap();
         emit skipForward();
@@ -210,7 +223,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     connect(loopToggleButton, &QPushButton::toggled, this, &PlayerControls::on_loopToggleButton_toggled);
     connect(MuteBtn, &QPushButton::toggled, this, &PlayerControls::on_MuteBtn_toggled);
 
-    connect(lblHeatmap, &HeatmapWidget::mouseReleased, this, &PlayerControls::seekSliderMoved);
+    //connect(lblHeatmap, &HeatmapWidget::mouseReleased, this, &PlayerControls::seekSliderMoved);
 
     voulumeBeforeMute = SettingsHandler::getPlayerVolume();
     setVolume(voulumeBeforeMute);
@@ -258,8 +271,8 @@ void PlayerControls::setVolumeIcon(int volume)
 void PlayerControls::resetMediaControlStatus(bool playing)
 {
     LogHandler::Debug("Enter toggleMediaControlStatus: "+QString::number(playing));
-    setSeekSliderUpperValue(0);
-    setSeekSliderDisabled(!playing);
+    setEndLoop(0);
+    setTimeLineDisabled(!playing);
     setSkipToMoneyShotEnabled(playing);
     loopToggleButton->setEnabled(playing);
     _stopBtn->setEnabled(playing);
@@ -267,6 +280,9 @@ void PlayerControls::resetMediaControlStatus(bool playing)
     if(!playing)
     {
         setTimeDuration(0, 0);
+        loopToggleButton->setChecked(false);
+        lblHeatmap->clearMap();
+        m_timeLine->clear();
     }
 }
 
@@ -288,12 +304,12 @@ void PlayerControls::DecreaseVolume()
 
 QPoint PlayerControls::getTimeSliderPosition()
 {
-    return SeekSlider->pos();
+    return m_timeLine->pos();
 }
 
 int PlayerControls::getSeekSliderWidth()
 {
-    return SeekSlider->width();
+    return m_timeLine->width();
 }
 
 void PlayerControls::SetLoop(bool loop)
@@ -307,16 +323,16 @@ void PlayerControls::toggleLoop(qint64 currentDuration, qint64 currentPosition)
     {
         _autoLoopOn = true;
         loopToggleButton->setChecked(true);
-        qint64 currentVideoPositionPercentage = XMath::mapRange(currentPosition,  (qint64)0, currentDuration, (qint64)0, (qint64)100);
-        SeekSlider->setLowerValue(currentVideoPositionPercentage);
+        //qint64 currentVideoPositionPercentage = XMath::mapRange(currentPosition,  (qint64)0, currentDuration, (qint64)0, (qint64)100);
+        m_timeLine->setStartLoop(currentPosition);
     }
     else if (loopToggleButton->isChecked() && _autoLoopOn)
     {
         _autoLoopOn = false;
-        int lowerValue = SeekSlider->GetLowerValue();
-        qint64 currentVideoPositionPercentage = XMath::mapRange(currentPosition,  (qint64)0, currentDuration, (qint64)0, (qint64)100);
-        SeekSlider->setUpperValue(currentVideoPositionPercentage > lowerValue + SeekSlider->GetMinimumRange()
-                                      ? currentVideoPositionPercentage : currentVideoPositionPercentage + lowerValue + SeekSlider->GetMinimumRange());
+        int lowerValue = m_timeLine->getStartLoop();
+        //qint64 currentVideoPositionPercentage = XMath::mapRange(currentPosition,  (qint64)0, currentDuration, (qint64)0, (qint64)100);
+        m_timeLine->setEndLoop(currentPosition > lowerValue + m_timeLine->GetMinimumRange()
+                                      ? currentPosition : currentPosition + lowerValue + m_timeLine->GetMinimumRange());
     }
     else
     {
@@ -326,55 +342,55 @@ void PlayerControls::toggleLoop(qint64 currentDuration, qint64 currentPosition)
 
 void PlayerControls::setSeekSliderToolTip(qint64 timeCurrent)
 {
-    SeekSlider->setToolTip(mSecondFormat(timeCurrent));
+    m_timeLine->setToolTip(mSecondFormat(timeCurrent));
 }
 
-void PlayerControls::setSeekSliderUpperValue(int value)
+void PlayerControls::setEndLoop(qint64 value)
 {
-    SeekSlider->setUpperValue(value);
+    m_timeLine->setEndLoop(value);
 }
 
-int PlayerControls::getSeekSliderUpperValue()
+qint64 PlayerControls::getEndLoop()
 {
-    return SeekSlider->GetUpperValue();
+    return m_timeLine->getEndLoop();
 }
-void PlayerControls::setSeekSliderLowerValue(int value)
+void PlayerControls::setStartLoop(qint64 value)
 {
-    SeekSlider->setLowerValue(value);
+    m_timeLine->setStartLoop(value);
 }
-int PlayerControls::getSeekSliderLowerValue()
+qint64 PlayerControls::getStartLoop()
 {
-    return SeekSlider->GetLowerValue();
+    return m_timeLine->getStartLoop();
 }
-void PlayerControls::setSeekSliderMinimumRange(int value)
+//void PlayerControls::setLoopMinimumRange(qint64 value)
+//{
+//    return m_timeLine->SetMinimumRange(value);
+//}
+void PlayerControls::setTimeLineDisabled(bool disabled)
 {
-    return SeekSlider->SetMinimumRange(value);
+    m_timeLine->setDisabled(disabled);
 }
-void PlayerControls::setSeekSliderDisabled(bool disabled)
-{
-    SeekSlider->setDisabled(disabled);
-}
-bool PlayerControls::getSeekSliderMousePressed() {
-    return SeekSlider->getMousePressed();
+bool PlayerControls::getTimeLineMousePressed() {
+    return m_timeLine->getMousePressed();
 }
 void PlayerControls::setTimeDuration(qint64 time, qint64 duration)
 {
     lblCurrentTime->setText(mSecondFormat(time));
     lblDuration->setText(mSecondFormat(duration));
     if(!XTPSettings::getHeatmapDisabled())
-        lblHeatmap->setCurrentTime(time);
+        m_timeLine->setCurrentTime(time);
 }
 void PlayerControls::setTime(qint64 time)
 {
     lblCurrentTime->setText(mSecondFormat(time));
-    if(!XTPSettings::getHeatmapDisabled())
-        lblHeatmap->setCurrentTime(time);
+    m_timeLine->setCurrentTime(time);
 }
 void PlayerControls::setDuration(qint64 duration)
 {
+    m_duration = duration;
     lblDuration->setText(mSecondFormat(duration));
-    if(!XTPSettings::getHeatmapDisabled())
-        lblHeatmap->setDuration(duration);
+    lblHeatmap->setDuration(duration);
+    m_timeLine->setDuration(duration);
 }
 
 QString PlayerControls::mSecondFormat(qint64 mSecs)
@@ -418,17 +434,15 @@ void PlayerControls::on_PlayBtn_clicked()
 
 void PlayerControls::on_StopBtn_clicked()
 {
-    setPlayIcon(false);
-    //lblHeatmap->clearMap();
+//    setPlayIcon(false);
+//    lblHeatmap->clearMap();
+//    m_timeLine->clear();
     emit stopClicked();
 }
 
-void PlayerControls::on_seekSlider_sliderMoved(int position)
+void PlayerControls::on_timeline_currentTimeMove(qint64 position)
 {
-    if (!getAutoLoop())
-    {
-        SeekSlider->setToolTip(QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")));
-    }
+    m_timeLine->setToolTip(QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")));
     emit seekSliderMoved(position);
 }
 
@@ -450,11 +464,12 @@ void PlayerControls::on_MuteBtn_toggled(bool checked)
     emit muteChanged(checked);
 }
 
-void PlayerControls::on_LoopRange_valueChanged(int position)
+void PlayerControls::on_LoopRange_valueChanged(qint64 position)
 {
-    int endLoop = SeekSlider->GetUpperValue();
-    int startLoop = SeekSlider->GetLowerValue();
-    emit loopRangeChanged(position, startLoop, endLoop);
+    qint64 endLoop = m_timeLine->getEndLoop();
+    qint64 startLoop = m_timeLine->getStartLoop();
+    qint64 currentTime = m_timeLine->getCurrentTime();
+    emit loopRangeChanged(currentTime, startLoop, endLoop);
 }
 
 
@@ -462,24 +477,22 @@ void PlayerControls::on_loopToggleButton_toggled(bool checked)
 {
     if (checked)
     {
-        SeekSlider->setOption(RangeSlider::Option::DoubleHandles);
-        SeekSlider->SetRange(0, 100);
-        SeekSlider->updateColor();
-        connect(SeekSlider, QOverload<int>::of(&RangeSlider::lowerValueChanged), this, &PlayerControls::on_LoopRange_valueChanged);
-        connect(SeekSlider, QOverload<int>::of(&RangeSlider::upperValueChanged), this, &PlayerControls::on_LoopRange_valueChanged);
+        if(m_duration > 0)
+            m_timeLine->setLoopRange(0, m_duration);
+        connect(m_timeLine, &TimeLine::startLoopChanged, this, &PlayerControls::on_LoopRange_valueChanged);
+        connect(m_timeLine, &TimeLine::endLoopChanged, this, &PlayerControls::on_LoopRange_valueChanged);
     }
     else
     {
-        SeekSlider->setOption(RangeSlider::Option::RightHandle);
-        SeekSlider->SetRange(0, 100);
-        SeekSlider->updateColor();
-        disconnect(SeekSlider, QOverload<int>::of(&RangeSlider::lowerValueChanged), this, &PlayerControls::on_LoopRange_valueChanged);
-        disconnect(SeekSlider, QOverload<int>::of(&RangeSlider::upperValueChanged), this, &PlayerControls::on_LoopRange_valueChanged);
+        m_timeLine->setLoopRange(0, 0);
+        disconnect(m_timeLine, QOverload<qint64>::of(&TimeLine::startLoopChanged), this, &PlayerControls::on_LoopRange_valueChanged);
+        disconnect(m_timeLine, QOverload<qint64>::of(&TimeLine::endLoopChanged), this, &PlayerControls::on_LoopRange_valueChanged);
     }
+    m_timeLine->setLoop(checked);
     emit loopButtonToggled(checked);
 }
 
-void PlayerControls::on_seekslider_hover(int position, int sliderValue)
+void PlayerControls::on_seekslider_hover(qint64 position, qint64 sliderValue)
 {
     emit seekSliderHover(position, sliderValue);
 }
