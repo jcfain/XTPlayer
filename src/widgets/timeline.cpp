@@ -41,6 +41,9 @@ void TimeLine::paintEvent(QPaintEvent* aEvent)
             startLoop.lineTo(startRect.topLeft());
             painter.fillPath(startLoop, m_positionBrush);
 
+//            painter.setPen(m_positionOutlinePen);
+//            painter.drawPath(startLoop);
+
 
             QRectF endRect = secondHandleRect();
             QPainterPath endLoop;
@@ -53,6 +56,9 @@ void TimeLine::paintEvent(QPaintEvent* aEvent)
             endLoop.lineTo(endRect.left(), (endRect.height() / 2));
             endLoop.lineTo(endRect.topRight());
             painter.fillPath(endLoop, m_positionBrush);
+
+//            painter.setPen(m_positionOutlinePen);
+//            painter.drawPath(endLoop);
         }
 
         if(m_currentTime > 0) {
@@ -89,13 +95,23 @@ void TimeLine::paintEvent(QPaintEvent* aEvent)
 
 void TimeLine::setDuration(qint64 duration) {
     m_duration = duration;
+//    if(duration > 0) {
+//        clear();
+//    }
     update();
 }
 
 void TimeLine::setCurrentTime(qint64 time) {
+    if(time < 0) {
+        m_syncTimeRunning = false;
+        m_syncTimeFuture.cancel();
+        m_syncTimeFuture.waitForFinished();
+        update();
+        return;
+    }
     m_currentTime = time;
     update();
-    if(!m_syncTimeFuture.isRunning() && m_currentTime > 0)
+    if(!m_syncTimeFuture.isRunning() && m_currentTime >= 0)
         syncTime();
 }
 
@@ -140,22 +156,22 @@ qint64 TimeLine::getCurrentTime() const {
 
 QRectF TimeLine::firstHandleRect() const
 {
-    return handleRect(getTimeToWidth(m_startLoop));
+    return handleRect(getTimeToWidth(m_startLoop), m_LoopHandleWidth);
 }
 
 QRectF TimeLine::currentHandleRect() const
 {
-    return handleRect(getTimeToWidth(m_currentTime) - m_HandleWidth / 2);
+    return handleRect(getTimeToWidth(m_currentTime) - m_HandleWidth / 2, m_HandleWidth);
 }
 
 QRectF TimeLine::secondHandleRect() const
 {
-    return handleRect(getTimeToWidth(m_endLoop) - m_HandleWidth);
+    return handleRect(getTimeToWidth(m_endLoop) - m_LoopHandleWidth, m_LoopHandleWidth);
 }
 
-QRectF TimeLine::handleRect(qint64 aValue) const {
+QRectF TimeLine::handleRect(qint64 aValue, int width) const {
     // left top width height
-    return QRectF(aValue, 0, m_HandleWidth, height());
+    return QRectF(aValue, 0, width, height());
 }
 
 int TimeLine::getTimeToWidth(qint64 time) const {
@@ -167,7 +183,7 @@ qint64 TimeLine::getPositionToTime(int position) const {
 }
 
 bool TimeLine::getMousePressed() {
-    return m_endLoopPressed || m_startLoopPressed;
+    return m_endLoopPressed || m_startLoopPressed || m_currentTimePressed;
 }
 
 void TimeLine::setLoop(bool enabled) {
@@ -214,12 +230,12 @@ void TimeLine::mousePressEvent(QMouseEvent* aEvent)
 
         m_endLoopPressed = secondHandleRect.contains(aEvent->pos());
         m_startLoopPressed = !m_endLoopPressed && firstHandleRect.contains(aEvent->pos());
-        mCurrentTimeHandlePressed = !m_startLoopPressed && !m_endLoopPressed && currentHandleRect.contains(aEvent->pos());
+        m_currentTimePressed = !m_startLoopPressed && !m_endLoopPressed && currentHandleRect.contains(aEvent->pos());
 
         if(posCheck >= 2 && posCheck <= posMax - 2)
         {
             qint64 destinationValue = getPositionToTime(posValue);
-            if((mCurrentTimeHandlePressed && m_duration > 0) || (!m_startLoopPressed && !m_endLoopPressed && m_duration > 0)) {
+            if((m_currentTimePressed && m_duration > 0) || (!m_startLoopPressed && !m_endLoopPressed && m_duration > 0)) {
                 if((isLoop && firstHandleRect.x() > posValue) || (isLoop && secondHandleRect.x() < posValue)) {
                     return;
                 }
@@ -244,7 +260,7 @@ void TimeLine::mouseMoveEvent(QMouseEvent* aEvent)
             firstHandleRectPosValue = firstHandleRect().x();
             secondHandleRectPosValue = secondHandleRect().x();
 
-            if(mCurrentTimeHandlePressed )
+            if(m_currentTimePressed )
             {
                 if(isLoop && posValue < firstHandleRectPosValue) {
                     setCurrentTime(getPositionToTime(firstHandleRectPosValue));
@@ -257,7 +273,7 @@ void TimeLine::mouseMoveEvent(QMouseEvent* aEvent)
             }
             else if(isLoop && m_startLoopPressed)
             {
-                if(posValue + m_HandleWidth <= secondHandleRectPosValue)
+                if(posValue + m_LoopHandleWidth <= secondHandleRectPosValue)
                 {
                     setStartLoop(getPositionToTime(posValue));
                     emit startLoopMove(m_startLoop);
@@ -270,7 +286,7 @@ void TimeLine::mouseMoveEvent(QMouseEvent* aEvent)
             }
             else if(isLoop && m_endLoopPressed )
             {
-                if(firstHandleRectPosValue + m_HandleWidth <= posValue)
+                if(firstHandleRectPosValue + m_LoopHandleWidth <= posValue)
                 {
                     setEndLoop(getPositionToTime(posValue));
                     emit endLoopMove(m_endLoop);
@@ -285,9 +301,9 @@ void TimeLine::mouseMoveEvent(QMouseEvent* aEvent)
     }
 
 
-    const int o = style()->pixelMetric(QStyle::PM_SliderLength ) - 1;
-    int sliderValue = QStyle::sliderValueFromPosition(0, m_duration, aEvent->pos().x()-o/2, width()-o, false);
-    emit onHover(aEvent->x(), sliderValue);
+    //const int o = style()->pixelMetric(QStyle::PM_SliderLength ) - 1;
+    //int sliderValue = QStyle::sliderValueFromPosition(0, m_duration, aEvent->pos().x()-o/2, width()-o, false);
+    emit onHover(aEvent->x(), getPositionToTime(aEvent->pos().x()));
 }
 
 void TimeLine::enterEvent(QEvent * event)
@@ -305,7 +321,7 @@ void TimeLine::mouseReleaseEvent(QMouseEvent* aEvent)
 
     m_startLoopPressed = false;
     m_endLoopPressed = false;
-    mCurrentTimeHandlePressed = false;
+    m_currentTimePressed = false;
     emit mouseRelease(_name);
 }
 
@@ -317,10 +333,10 @@ void TimeLine::changeEvent(QEvent* aEvent)
     }
 }
 
-QSize TimeLine::minimumSizeHint() const
-{
-    return QSize(m_HandleWidth * 2 * 2, m_HandleWidth);
-}
+//QSize TimeLine::minimumSizeHint() const
+//{
+//    return QSize(m_HandleWidth * 2 * 2, m_HandleWidth);
+//}
 
 void TimeLine::setName(QString name)
 {
@@ -372,11 +388,11 @@ void TimeLine::setEndLoop(qint64 endLoop)
     update();
 }
 
-int TimeLine::validLength() const
-{
-    int len = width();
-    return len * 2 - m_HandleWidth * 2;
-}
+//int TimeLine::validLength() const
+//{
+//    int len = width();
+//    return len * 2 - m_HandleWidth * 2;
+//}
 
 qint64 TimeLine::GetMinimumRange()
 {

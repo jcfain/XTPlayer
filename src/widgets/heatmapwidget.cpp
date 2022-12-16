@@ -47,21 +47,19 @@ void HeatmapWidget::paint() {
 //        painter.begin(this);
 //        painter.setBrush(QBrush(Qt::black));
 //        painter.fillRect(rect(), painter.brush());
-        m_heatMapPixmap.swap(pixmap);
         //painter.setBrush(QBrush(Qt::black));
-        m_heatMapPixmap.fill(Qt::GlobalColor::black);
-        if(!painter.begin(&m_heatMapPixmap)) {
+        pixmap.fill(Qt::GlobalColor::black);
+        if(!painter.begin(&pixmap)) {
             LogHandler::Error("Could not create painter for heat map");
             return;
         }
         //painter.setRenderHint( QPainter::Antialiasing, true);
         m_heatMap.paint(&painter, width(), height() - 10, m_duration, m_actions, 5);
-        setPixmap(m_heatMapPixmap);
+        setPixmap(pixmap);
         painter.end();
     } else {
-        m_heatMapPixmap.swap(pixmap);
-        m_heatMapPixmap.fill(Qt::GlobalColor::black);
-        setPixmap(m_heatMapPixmap);
+        pixmap.fill(Qt::GlobalColor::black);
+        setPixmap(pixmap);
     }
 }
 void HeatmapWidget::resizeEvent(QResizeEvent *event) {

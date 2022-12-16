@@ -27,8 +27,8 @@ signals:
     void fullscreenToggled();
     void settingsClicked();
     void muteChanged(bool muted);
-    void seekSliderMoved(int value);
-    void seekSliderHover(int position, int sliderValue);
+    void seekSliderMoved(qint64 value);
+    void seekSliderHover(int position, qint64 sliderValue);
     void seekSliderLeave();
 public slots:
     void on_heatmapToggled(bool disabled);
@@ -94,7 +94,7 @@ private:
     void on_timeline_currentTimeMove(qint64 position);
     void on_LoopRange_valueChanged(qint64 position);
     void on_loopToggleButton_toggled(bool checked);
-    void on_seekslider_hover(qint64 position, qint64 sliderValue);
+    void on_seekslider_hover(int position, qint64 sliderValue);
     void on_seekslider_leave();
 
 };

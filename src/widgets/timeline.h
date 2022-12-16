@@ -13,7 +13,7 @@ public:
     explicit TimeLine(QWidget *parent = nullptr);
     ~TimeLine();
 
-    QSize minimumSizeHint() const override;
+    //QSize minimumSizeHint() const override;
 
 //    qint64 GetMinimum() const;
 //    void SetMinimum(qint64 aMinimum);
@@ -56,7 +56,7 @@ protected:
     QRectF currentHandleRect() const;
     QRectF secondHandleRect() const;
 
-    QRectF handleRect(qint64 aValue) const;
+    QRectF handleRect(qint64 aValue, int width) const;
     int getTimeToWidth(qint64 time) const;
     qint64 getPositionToTime(int position) const;
 
@@ -67,7 +67,7 @@ signals:
     void endLoopMove(qint64 endLoop);
     void loopChanged(qint64 min, qint64 max);
     void currentTimeChanged(qint64 time);
-    void onHover(qint64 position, qint64 sliderValue);
+    void onHover(int position, qint64 sliderValue);
     void onLeave();
     void mouseRelease(QString name);
     void mousePress();
@@ -76,7 +76,7 @@ private:
     Q_DISABLE_COPY(TimeLine)
     QString _name;
     float currentPercentage();
-    int validLength() const;
+    //int validLength() const;
     void syncTime();
     bool isLoop = false;
 //    qint64 mMinimum = 0;
@@ -88,13 +88,15 @@ private:
     qint64 m_currentTime = 0;
     qint64 m_endLoop = 0;
     qint64 m_duration = 0;
-    bool m_startLoopPressed;
-    bool m_endLoopPressed;
-    bool mCurrentTimeHandlePressed;
+    bool m_startLoopPressed = false;
+    bool m_endLoopPressed = false;
+    bool m_currentTimePressed = false;
     int mDelta;
     int m_HandleWidth = 6;
+    int m_LoopHandleWidth = 10;
     QPen m_positionPen = QPen(Qt::GlobalColor::cyan, 2, Qt::SolidLine);
     QBrush m_positionBrush = QBrush(Qt::GlobalColor::cyan);
+    QPen m_positionOutlinePen = QPen(Qt::GlobalColor::black, 1, Qt::SolidLine);
 };
 
 #endif // TIMELINE_H

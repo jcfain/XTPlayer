@@ -281,8 +281,9 @@ void PlayerControls::resetMediaControlStatus(bool playing)
     {
         setTimeDuration(0, 0);
         loopToggleButton->setChecked(false);
-        lblHeatmap->clearMap();
-        m_timeLine->clear();
+//        lblHeatmap->clearMap();
+//        m_timeLine->clear();
+        m_timeLine->setCurrentTime(-1);; //stop the time sync in the timeline widget.
     }
 }
 
@@ -329,7 +330,7 @@ void PlayerControls::toggleLoop(qint64 currentDuration, qint64 currentPosition)
     else if (loopToggleButton->isChecked() && _autoLoopOn)
     {
         _autoLoopOn = false;
-        int lowerValue = m_timeLine->getStartLoop();
+        qint64 lowerValue = m_timeLine->getStartLoop();
         //qint64 currentVideoPositionPercentage = XMath::mapRange(currentPosition,  (qint64)0, currentDuration, (qint64)0, (qint64)100);
         m_timeLine->setEndLoop(currentPosition > lowerValue + m_timeLine->GetMinimumRange()
                                       ? currentPosition : currentPosition + lowerValue + m_timeLine->GetMinimumRange());
@@ -477,8 +478,8 @@ void PlayerControls::on_loopToggleButton_toggled(bool checked)
 {
     if (checked)
     {
-        if(m_duration > 0)
-            m_timeLine->setLoopRange(0, m_duration);
+//        if(m_duration > 0)
+//            m_timeLine->setLoopRange(m_timeLine->getCurrentTime() <= 0 ? 0 : m_timeLine->getCurrentTime(), m_duration);
         connect(m_timeLine, &TimeLine::startLoopChanged, this, &PlayerControls::on_LoopRange_valueChanged);
         connect(m_timeLine, &TimeLine::endLoopChanged, this, &PlayerControls::on_LoopRange_valueChanged);
     }
@@ -492,7 +493,7 @@ void PlayerControls::on_loopToggleButton_toggled(bool checked)
     emit loopButtonToggled(checked);
 }
 
-void PlayerControls::on_seekslider_hover(qint64 position, qint64 sliderValue)
+void PlayerControls::on_seekslider_hover(int position, qint64 sliderValue)
 {
     emit seekSliderHover(position, sliderValue);
 }

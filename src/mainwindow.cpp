@@ -2350,9 +2350,9 @@ void MainWindow::on_fullScreenBtn_clicked()
     toggleFullScreen();
 }
 
-void MainWindow::on_seekslider_hover(int position, int sliderValue)
+void MainWindow::on_seekslider_hover(int position, qint64 sliderValue)
 {
-    qint64 sliderValueTime = XMath::mapRange(static_cast<qint64>(sliderValue), (qint64)0, (qint64)100, (qint64)0, videoHandler->duration());
+    //qint64 sliderValueTime = XMath::mapRange(static_cast<qint64>(sliderValue), (qint64)0, (qint64)100, (qint64)0, videoHandler->duration());
 //    if (!videoPreviewWidget)
 //        videoPreviewWidget = new VideoPreviewWidget();
 //        LogHandler::Debug("sliderValue: "+QString::number(sliderValue));
@@ -2362,12 +2362,12 @@ void MainWindow::on_seekslider_hover(int position, int sliderValue)
     if(_isFullScreen)
     {
         gpos = mapToGlobal(playerControlsPlaceHolder->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(position, 0));
-        QToolTip::showText(gpos, QTime(0, 0, 0).addMSecs(sliderValueTime).toString(QString::fromLatin1("HH:mm:ss")));
+        QToolTip::showText(gpos, QTime(0, 0, 0).addMSecs(sliderValue).toString(QString::fromLatin1("HH:mm:ss")));
     }
     else
     {
         auto tootipPos = mapToGlobal(QPoint(ui->medialAndControlsFrame->pos().x(), 0) + _controlsHomePlaceHolderFrame->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(position, 0));
-        QToolTip::showText(tootipPos, QTime(0, 0, 0).addMSecs(sliderValueTime).toString(QString::fromLatin1("HH:mm:ss")));
+        QToolTip::showText(tootipPos, QTime(0, 0, 0).addMSecs(sliderValue).toString(QString::fromLatin1("HH:mm:ss")));
         gpos = QPoint(ui->medialAndControlsFrame->pos().x(), 0) + _controlsHomePlaceHolderFrame->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(position, 0);
     }
 
@@ -2389,23 +2389,23 @@ void MainWindow::on_seekslider_hover(int position, int sliderValue)
         //const int w = Config::instance().previewWidth();
         //const int h = Config::instance().previewHeight();
         //videoPreviewWidget->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
-        _videoPreviewWidget->setTimestamp(sliderValueTime);
+        _videoPreviewWidget->setTimestamp(sliderValue);
         _videoPreviewWidget->preview(gpos);
         //videoPreviewWidget->raise();
         //videoPreviewWidget->activateWindow();
+    }
+    else if(_videoPreviewWidget && _videoPreviewWidget->isVisible() && _playerControlsFrame->getTimeLineMousePressed()) {
+        _videoPreviewWidget->close();
     }
 }
 
 void MainWindow::on_seekslider_leave()
 {
-    if (!_videoPreviewWidget)
+    if (!_videoPreviewWidget || !_videoPreviewWidget->isVisible())
     {
         return;
     }
-    if (_videoPreviewWidget->isVisible())
-    {
-        _videoPreviewWidget->close();
-    }
+    _videoPreviewWidget->close();
 //    delete videoPreviewWidget;
 //    videoPreviewWidget = NULL;
 }

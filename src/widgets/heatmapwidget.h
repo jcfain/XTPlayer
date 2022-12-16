@@ -28,7 +28,7 @@ private:
     HeatMap m_heatMap;
     qint64 m_duration = 0;
     qint64 m_currentTime = 0;
-    QPixmap m_heatMapPixmap;
+    //QPixmap m_heatMapPixmap;
     QMap<qint64, int> m_actions;
 
     QTimer m_resizeDebounce;
