@@ -1,4 +1,5 @@
 #include "heatmapwidget.h"
+#include "lib/handler/xtpsettings.h"
 //#include <QSvgGenerator>
 HeatmapWidget::HeatmapWidget(QWidget *parent)
     : QLabel{parent},
@@ -68,11 +69,15 @@ void HeatmapWidget::resizeEvent(QResizeEvent *event) {
 }
 
 void HeatmapWidget::setDuration(qint64 duration) {
+    if(XTPSettings::getHeatmapDisabled())
+        return;
     m_duration = duration;
     paint();
 }
 
 void HeatmapWidget::setActions(QHash<qint64, int> actions) {
+    if(XTPSettings::getHeatmapDisabled())
+        return;
     QMap<qint64, int> sortedMap;
     foreach (auto key, actions.keys()) {
         sortedMap.insert(key, actions.value(key));
@@ -84,6 +89,5 @@ void HeatmapWidget::setActions(QHash<qint64, int> actions) {
 void HeatmapWidget::clearMap() {
     m_actions.clear();
     m_duration = 0;
-    m_currentTime = 0;
     paint();
 }

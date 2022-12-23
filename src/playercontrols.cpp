@@ -73,8 +73,6 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 
     lblHeatmap = new HeatmapWidget(this);
     playerControlsGrid->addWidget(lblHeatmap, row, 0, 1, 12);
-    if(XTPSettings::getHeatmapDisabled())
-        lblHeatmap->hide();
 
     m_timeLine = new TimeLine(this);
     m_timeLine->setObjectName(QString::fromUtf8("timeLine"));
@@ -88,6 +86,8 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     //m_timeLine->setUpperValue(0);
 
     playerControlsGrid->addWidget(m_timeLine, row, 0, 1, 12);
+
+    on_heatmapToggled(XTPSettings::getHeatmapDisabled());
 
     row++;
 
@@ -228,7 +228,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     voulumeBeforeMute = SettingsHandler::getPlayerVolume();
     setVolume(voulumeBeforeMute);
     on_VolumeSlider_valueChanged(voulumeBeforeMute);
-    setTimeDuration((qint64)0, (qint64)0);
+    updateTimeDurationLabels((qint64)0, (qint64)0);
 }
 
 PlayerControls::~PlayerControls()
@@ -252,6 +252,12 @@ void PlayerControls::setPlayIcon(bool playing)
 {
     QIcon icon(playing ? "://images/icons/pause.svg" : "://images/icons/play.svg" );
     PlayBtn->setIcon(icon);
+}
+
+void PlayerControls::togglePause(bool isPause)
+{
+    setPlayIcon(!isPause);
+    m_timeLine->togglePause(isPause);
 }
 
 void PlayerControls::setVolumeIcon(int volume)
@@ -279,11 +285,11 @@ void PlayerControls::resetMediaControlStatus(bool playing)
     setPlayIcon(playing);
     if(!playing)
     {
-        setTimeDuration(0, 0);
+        updateTimeDurationLabels(0, 0);
         loopToggleButton->setChecked(false);
 //        lblHeatmap->clearMap();
 //        m_timeLine->clear();
-        m_timeLine->setCurrentTime(-1);; //stop the time sync in the timeline widget.
+        m_timeLine->stop();
     }
 }
 
@@ -374,12 +380,10 @@ void PlayerControls::setTimeLineDisabled(bool disabled)
 bool PlayerControls::getTimeLineMousePressed() {
     return m_timeLine->getMousePressed();
 }
-void PlayerControls::setTimeDuration(qint64 time, qint64 duration)
+void PlayerControls::updateTimeDurationLabels(qint64 time, qint64 duration)
 {
     lblCurrentTime->setText(mSecondFormat(time));
     lblDuration->setText(mSecondFormat(duration));
-    if(!XTPSettings::getHeatmapDisabled())
-        m_timeLine->setCurrentTime(time);
 }
 void PlayerControls::setTime(qint64 time)
 {
@@ -389,7 +393,6 @@ void PlayerControls::setTime(qint64 time)
 void PlayerControls::setDuration(qint64 duration)
 {
     m_duration = duration;
-    lblDuration->setText(mSecondFormat(duration));
     lblHeatmap->setDuration(duration);
     m_timeLine->setDuration(duration);
 }
@@ -505,9 +508,13 @@ void PlayerControls::on_seekslider_leave()
 void PlayerControls::on_heatmapToggled(bool disabled) {
     if(disabled) {
         lblHeatmap->hide();
+        lblHeatmap->clearMap();
     } else {
         lblHeatmap->show();
+        lblHeatmap->setDuration(m_duration);
+        lblHeatmap->setActions(m_actions);
     }
+    m_timeLine->setPaintBackground(disabled);
 }
 
 void PlayerControls::setSkipToMoneyShotEnabled(bool enabled)
@@ -517,6 +524,7 @@ void PlayerControls::setSkipToMoneyShotEnabled(bool enabled)
 }
 
 void PlayerControls::setActions(QHash<qint64, int> actions) {
+    m_actions = actions;
     if(!XTPSettings::getHeatmapDisabled())
         lblHeatmap->setActions(actions);
 }

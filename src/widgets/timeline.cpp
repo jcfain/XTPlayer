@@ -5,8 +5,8 @@
 #include "lib/tool/xmath.h"
 
 
-TimeLine::TimeLine(QWidget* aParent)
-    : QWidget(aParent),
+TimeLine::TimeLine(QWidget* parent)
+    : QWidget(parent),
       m_startLoop(0),
       m_endLoop(100),
       m_startLoopPressed(false),
@@ -14,6 +14,7 @@ TimeLine::TimeLine(QWidget* aParent)
 {
     setMouseTracking(true);
     setProperty("cssClass", "TimeLine");
+    setMinimumSize(QSize(parent->minimumWidth(), 20));
 }
 
 TimeLine::~TimeLine() {
@@ -25,6 +26,10 @@ void TimeLine::paintEvent(QPaintEvent* aEvent)
     Q_UNUSED(aEvent);
     QPainter painter(this);
 
+    if(m_isBackgroundPainted) {
+        int posHeight = qRound(height() * 0.25);
+        painter.fillRect(QRectF(0, posHeight, width(), height() - posHeight * 2), Qt::GlobalColor::black);
+    }
     if(m_duration > 0)
     {
         if(isLoop)
@@ -102,17 +107,17 @@ void TimeLine::setDuration(qint64 duration) {
 }
 
 void TimeLine::setCurrentTime(qint64 time) {
-    if(time < 0) {
-        m_syncTimeRunning = false;
-        m_syncTimeFuture.cancel();
-        m_syncTimeFuture.waitForFinished();
-        update();
-        return;
-    }
     m_currentTime = time;
     update();
-    if(!m_syncTimeFuture.isRunning() && m_currentTime >= 0)
+    if(!m_syncTimeFuture.isRunning() && m_currentTime > 0)
         syncTime();
+}
+
+void TimeLine::stop() {
+    m_syncTimeRunning = false;
+    m_syncTimeFuture.cancel();
+    m_syncTimeFuture.waitForFinished();
+    update();
 }
 
 void TimeLine::syncTime() {
@@ -127,24 +132,26 @@ void TimeLine::syncTime() {
         m_syncTimeRunning = true;
         while (m_syncTimeRunning)
         {
-            if (timer2 - timer1 >= 1)
-            {
-                timer1 = timer2;
-                if(lastCurrentTime != m_currentTime)
+            if(!m_isPaused) {
+                if (timer2 - timer1 >= 1)
                 {
-                    //LogHandler::Debug("VR time reset: "+QString::number(currentTime));
-                    lastCurrentTime = m_currentTime;
-                    timeTracker = m_currentTime;
+                    timer1 = timer2;
+                    if(lastCurrentTime != m_currentTime)
+                    {
+                        //LogHandler::Debug("VR time reset: "+QString::number(currentTime));
+                        lastCurrentTime = m_currentTime;
+                        timeTracker = m_currentTime;
+                    }
+                    else
+                    {
+                        timeTracker++;
+                        m_currentTime = timeTracker;
+                    }
+                    update();
                 }
-                else
-                {
-                    timeTracker++;
-                    m_currentTime = timeTracker;
-                }
-                update();
+                timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
+                //LogHandler::Debug("timer nsecsElapsed: "+QString::number(timer2));
             }
-            timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
-            //LogHandler::Debug("timer nsecsElapsed: "+QString::number(timer2));
         }
         //LogHandler::Debug("exit syncTime");
     });
@@ -188,7 +195,13 @@ bool TimeLine::getMousePressed() {
 
 void TimeLine::setLoop(bool enabled) {
     isLoop = enabled;
+    if(isLoop && m_endLoop <= 0)
+        m_endLoop = m_duration;
     update();
+}
+
+void TimeLine::togglePause(bool isPaused) {
+    m_isPaused = isPaused;
 }
 
 void TimeLine::setLoopRange(qint64 loopStart, qint64 loopEnd) {
@@ -227,6 +240,8 @@ void TimeLine::mousePressEvent(QMouseEvent* aEvent)
         auto firstHandleRect = this->firstHandleRect();
         auto secondHandleRect = this->secondHandleRect();
         auto currentHandleRect = this->currentHandleRect();
+//        currentHandleRect.setLeft(currentHandleRect.left() + currentHandleRect.left() * 0.75);
+//        currentHandleRect.setRight(currentHandleRect.right() + currentHandleRect.right() * 0.75);
 
         m_endLoopPressed = secondHandleRect.contains(aEvent->pos());
         m_startLoopPressed = !m_endLoopPressed && firstHandleRect.contains(aEvent->pos());
@@ -341,6 +356,10 @@ void TimeLine::changeEvent(QEvent* aEvent)
 void TimeLine::setName(QString name)
 {
     _name = name;
+}
+
+void TimeLine::setPaintBackground(bool isPainted) {
+    m_isBackgroundPainted = isPainted;
 }
 
 qint64 TimeLine::getStartLoop() const

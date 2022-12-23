@@ -42,6 +42,9 @@ public:
     void setLoop(bool enabled);
     void setLoopRange(qint64 loopStart, qint64 loopEnd);
     void clear();
+    void togglePause(bool isPaused);
+    void stop();
+    void setPaintBackground(bool isPainted);
 
 protected:
     void paintEvent(QPaintEvent* aEvent) override;
@@ -79,6 +82,8 @@ private:
     //int validLength() const;
     void syncTime();
     bool isLoop = false;
+    bool m_isPaused = false;
+    bool m_isBackgroundPainted = false;
 //    qint64 mMinimum = 0;
 //    qint64 mMaximum = 0;
     QFuture<void> m_syncTimeFuture;

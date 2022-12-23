@@ -2323,7 +2323,7 @@ LibraryListItem27 MainWindow::setCurrentLibraryRow(int row)
 
 void MainWindow::on_togglePaused(bool paused)
 {
-    _playerControlsFrame->setPlayIcon(!paused);
+    _playerControlsFrame->togglePause(paused);
     if(paused)
         deviceSwitchedHome();
 }
@@ -2490,7 +2490,8 @@ void MainWindow::on_media_positionChanged(qint64 position)
 //        }
         }
     }
-    _playerControlsFrame->setTimeDuration(position, duration);
+    _playerControlsFrame->updateTimeDurationLabels(position, duration);
+    _playerControlsFrame->setTime(position);
     //    QString timeCurrent = QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss"));
     //    QString timeDuration = QTime(0, 0, 0).addMSecs(duration).toString(QString::fromLatin1("HH:mm:ss"));
     //    QString timeStamp = timeCurrent.append("/").append(timeDuration);

@@ -39,6 +39,7 @@ public:
     void IncreaseVolume();
     void DecreaseVolume();
     void setPlayIcon(bool playing);
+    void togglePause(bool isPause);
     void setVolume(int volume);
     void SetLoop(bool loop);
     void toggleLoop(qint64 currentDuration, qint64 currentPosition);
@@ -53,7 +54,7 @@ public:
     //void setLoopMinimumRange(qint64 value);
     void setTimeLineDisabled(bool value);
     bool getTimeLineMousePressed();
-    void setTimeDuration(qint64 time, qint64 duration);
+    void updateTimeDurationLabels(qint64 time, qint64 duration);
     void setTime(qint64 time);
     void setDuration(qint64 duration);
     void resetMediaControlStatus(bool playing);
@@ -79,6 +80,7 @@ private:
     QPushButton* PlayBtn;
     QPushButton* _stopBtn;
     qint64 m_duration;
+    QHash<qint64, int> m_actions;
 
     int voulumeBeforeMute;
     bool _autoLoopOn = false;
