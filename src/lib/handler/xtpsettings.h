@@ -11,8 +11,9 @@ class XTPSettings
 public:
     XTPSettings();
 
-    static QString XTPVersion;
-    static float XTPVersionNum;
+    static const QString XTPVersion;
+    static const QString XTPVersionTimeStamp;
+    static const float XTPVersionNum;
 
     static void save(QSettings* settingsToSaveTo = 0);
     static void load(QSettings* settingsToLoadFrom = 0);

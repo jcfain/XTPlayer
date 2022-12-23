@@ -8,7 +8,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
 {
     QCoreApplication::setOrganizationName("cUrbSide prOd");
     QCoreApplication::setApplicationName("XTPlayer");
-    const QString fullVersion = "XTP: v"+ XTPSettings::XTPVersion + "\nXTE: v" + SettingsHandler::XTEVersion;
+    const QString fullVersion = "XTP: v"+ XTPSettings::XTPVersionTimeStamp + "\nXTE: v" + SettingsHandler::XTEVersionTimeStamp;
 
     QPixmap pixmap("://images/XTP_Splash.png");
     loadingSplash = new QSplashScreen(pixmap);
@@ -2905,7 +2905,7 @@ void MainWindow::on_input_device_connectionChanged(ConnectionChangedSignal event
 
 void MainWindow::on_actionAbout_triggered()
 {
-    DialogHandler::ShowAboutDialog(this, XTPSettings::XTPVersion, SettingsHandler::XTEVersion, TCodeChannelLookup::getSelectedTCodeVersionName());
+    DialogHandler::ShowAboutDialog(this, XTPSettings::XTPVersionTimeStamp, SettingsHandler::XTEVersionTimeStamp, TCodeChannelLookup::getSelectedTCodeVersionName());
 }
 
 void MainWindow::on_actionDonate_triggered()
@@ -3568,7 +3568,7 @@ void MainWindow::skipToMoneyShot()
     if(SettingsHandler::getEnableHttpServer())
         xtEngine.httpHandler()->sendWebSocketTextMessage("skipToMoneyShot");
 
-    if(!SettingsHandler::getSkipToMoneyShotSkipsVideo())
+    if(SettingsHandler::getSkipToMoneyShotPlaysFunscript() && !SettingsHandler::getSkipToMoneyShotSkipsVideo())
         return;
     if(videoHandler->isPlaying() ||  (xtEngine.connectionHandler()->getSelectedInputDevice() && xtEngine.connectionHandler()->getSelectedInputDevice()->isPlaying()))
     {

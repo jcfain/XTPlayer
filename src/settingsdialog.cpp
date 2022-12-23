@@ -802,7 +802,7 @@ void SettingsDialog::setUpTCodeChannelUI()
      connect(lubePulseCheckbox, &QCheckBox::clicked, this, &SettingsDialog::lubePulseEnabled_valueChanged);
      lubePulseCheckbox->setChecked(SettingsHandler::getLubePulseEnabled());
      QSpinBox* libePulseAmountInput = new QSpinBox(this);
-     auto max = TCodeChannelLookup::getChannel(TCodeChannelLookup::Stroke())->Max;
+     auto max = TCodeChannelLookup::getTCodeMaxValue();
      libePulseAmountInput->setToolTip("TCode value to be sent to the selected channel between 0-"+QString::number(max));
      libePulseAmountInput->setMinimum(0);
      libePulseAmountInput->setMaximum(max);
@@ -1752,7 +1752,7 @@ void SettingsDialog::on_httpThumbQualitySpinBox_editingFinished()
 
 void SettingsDialog::Export(QWidget* parent)
 {
-    QString selectedFile = QFileDialog::getSaveFileName(parent, QApplication::applicationDirPath() + "/Save settings ini", "settings_export.ini", "INI Files (*.ini)");
+    QString selectedFile = QFileDialog::getSaveFileName(parent, QApplication::applicationDirPath() + "/Save settings ini", "settings_export-"+XTPSettings::XTPVersion+".ini", "INI Files (*.ini)");
     if(!selectedFile.isEmpty())
     {
         QSettings* settingsExport = new QSettings(selectedFile, QSettings::Format::IniFormat);

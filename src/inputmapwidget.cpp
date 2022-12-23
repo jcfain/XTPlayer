@@ -51,7 +51,8 @@ void InputMapWidget::setUpData()
     //auto availableAxis = TCodeChannelLookup::getChannels();
     for(auto __begin = tcodeVersionMap.begin(), __end = tcodeVersionMap.end();  __begin != __end; ++__begin) {
         auto channel = TCodeChannelLookup::getChannel(TCodeChannelLookup::ToString(__begin.key()));
-        actions.append({channel->AxisName, "Channel: " + channel->FriendlyName});
+        if(channel)
+            actions.append({channel->AxisName, "Channel: " + channel->FriendlyName});
     }
 
     MediaActions actionsMap;
