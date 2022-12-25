@@ -578,10 +578,6 @@ void MainWindow::dispose()
     loadingLibraryStop = true;
     _waitForStopFutureCancel = true;
     _mediaStopped = true;
-    if (videoHandler->isPlaying())
-    {
-        videoHandler->stop();
-    }
     _xSettings->dispose();
 }
 

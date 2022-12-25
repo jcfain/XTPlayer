@@ -15,7 +15,7 @@ cp ../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_clang_64bit-Release/release/l
 install_name_tool -change libhttpServer.1.dylib @executable_path/../Frameworks/libhttpServer.1.dylib XTPlayer.app/Contents/MacOS/XTPlayer
 install_name_tool -change libhttpServer.1.dylib @executable_path/../Frameworks/libhttpServer.1.dylib XTPlayer.app/Contents/Frameworks/libxtengine.1.0.0.dylib
 install_name_tool -change libxtengine.1.0.0.dylib @executable_path/../Frameworks/libxtengine.1.0.0.dylib XTPlayer.app/Contents/MacOS/XTPlayer
-mkdir XTPlayer-v0.42b_MacOS_x86_64
-cp -R XTPlayer.app XTPlayer-v0.42b_MacOS_x86_64/
-hdiutil create /tmp/tmp.dmg -ov -volname "XTPlayer-v0.42b_MacOS_x86_64" -fs HFS+ -srcfolder "XTPlayer-v0.42b_MacOS_x86_64"
-hdiutil convert /tmp/tmp.dmg -format UDZO -o XTPlayer-v0.42b_MacOS_x86_64.dmg
+mkdir XTPlayer-v0.423b_MacOS_x86_64
+cp -R XTPlayer.app XTPlayer-v0.423b_MacOS_x86_64/
+hdiutil create /tmp/tmp.dmg -ov -volname "XTPlayer-v0.423b_MacOS_x86_64" -fs HFS+ -srcfolder "XTPlayer-v0.423b_MacOS_x86_64"
+hdiutil convert /tmp/tmp.dmg -format UDZO -o XTPlayer-v0.423b_MacOS_x86_64.dmg
