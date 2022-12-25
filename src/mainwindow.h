@@ -396,6 +396,9 @@ private:
     void processMetaData(LibraryListItem27 LibraryListItem27);
     void updateMetaData(LibraryListItem27 LibraryListItem27);
     void processVRMetaData(QString videoPath, QString funscriptPath, qint64 duration);
+
+    qint64 mediaPosition();
+    qint64 mediaDuration();
 };
 extern void startThumbProcess(MainWindow* mainWindow);
 #endif // MAINWINDOW_H

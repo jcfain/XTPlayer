@@ -394,6 +394,10 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
             m_heatmap->getMaxHeatAsync(funscript->actions);
         }
     });
+    connect(xtEngine.syncHandler(),  &SyncHandler::funscriptStandaloneDurationChanged, this, [this](qint64 value) {
+        _playerControlsFrame->setDuration(value);
+        processMetaData(playingLibraryListItem);
+    });
 
     _xSettings->init(videoHandler, xtEngine.connectionHandler());
 
@@ -724,8 +728,8 @@ void MainWindow::mediaAction(QString action, QString actionText)
     }
     else if(action == actions.Loop)
     {
-        if (videoHandler->isPaused() || videoHandler->isPlaying())
-            _playerControlsFrame->toggleLoop(videoHandler->duration(), videoHandler->position());
+        if (videoHandler->isPaused() || videoHandler->isPlaying() || xtEngine.syncHandler()->isPlayingStandAlone())
+            _playerControlsFrame->toggleLoop(mediaDuration(), mediaPosition());
     }
     else if(action == actions.Rewind)
     {
@@ -2511,8 +2515,12 @@ void MainWindow::on_standaloneFunscript_start()
 void MainWindow::on_standaloneFunscript_stop()
 {
     LogHandler::Debug("Enter on_standaloneFunscript_stop");
+    if(!playingLibraryListItem.ID.isEmpty())
+        updateMetaData(playingLibraryListItem);
     videoHandler->setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(false);
+    _playerControlsFrame->setDuration(0);
+    _playerControlsFrame->setTime(0);
 }
 
 void MainWindow::on_media_start()
@@ -3284,7 +3292,7 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
         {
             //qint64 videoToSliderPosition = XMath::mapRange(videoHandler->position(),  (qint64)0, videoHandler->duration(), (qint64)0, (qint64)100);
             updateMetaData(playingLibraryListItem);
-            _playerControlsFrame->setStartLoop(videoHandler->position());
+            _playerControlsFrame->setStartLoop(mediaPosition());
         }
         //_playerControlsFrame->setLoopMinimumRange(1000);
     }
@@ -3297,6 +3305,13 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
         videoHandler->setPosition(position);
         //_playerControlsFrame->setLoopMinimumRange(0);
     }
+}
+// TODO: move to XMedia class
+qint64 MainWindow::mediaPosition() {
+    return xtEngine.syncHandler()->isPlayingStandAlone() ? xtEngine.syncHandler()->getFunscriptTime() : videoHandler->position();
+}
+qint64 MainWindow::mediaDuration() {
+    return xtEngine.syncHandler()->isPlayingStandAlone() ? xtEngine.syncHandler()->getFunscriptMax() : videoHandler->duration();
 }
 
 QString MainWindow::getPlaylistName(bool newPlaylist)
