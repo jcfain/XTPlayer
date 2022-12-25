@@ -167,6 +167,7 @@ void VideoHandler::play()
 void VideoHandler::stop()
 {
     _player->stop();
+    _player->setMedia(QMediaContent());
     emit stopping();
 }
 
