@@ -380,8 +380,6 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     connect(xtEngine.syncHandler(), &SyncHandler::funscriptEnded, _xSettings, &SettingsDialog::resetAxisProgressBars, Qt::QueuedConnection);
     connect(xtEngine.syncHandler(), &SyncHandler::funscriptLoaded, this, [this](QString funscriptPath) {
         // Generate first load moneyshot based off heatmap if not already set.
-        if(funscriptPath != playingLibraryListItem.script)// Are we loading moneyshot/alt script?
-            return;
         auto funscript = xtEngine.syncHandler()->getFunscriptHandler()->currentFunscript();
         if(funscript) {
             _playerControlsFrame->setActions(funscript->actions);
@@ -2388,7 +2386,11 @@ void MainWindow::on_seekslider_hover(int position, qint64 sliderValue)
     //    if (!Config::instance().previewEnabled())
     //        return;
 
-    if(!XTPSettings::getDisableTimeLinePreview() && playingLibraryListItem.type == LibraryListItemType::Video && !_playerControlsFrame->getTimeLineMousePressed() && (videoHandler->isPlaying() || videoHandler->isPaused()))
+    if(!XTPSettings::getDisableTimeLinePreview() &&
+            playingLibraryListItem.type == LibraryListItemType::Video &&
+            !xtEngine.syncHandler()->isPlayingStandAlone() &&
+            !_playerControlsFrame->getTimeLineMousePressed() &&
+            (videoHandler->isPlaying() || videoHandler->isPaused()))
     {
         //const int w = Config::instance().previewWidth();
         //const int h = Config::instance().previewHeight();
@@ -2416,8 +2418,9 @@ void MainWindow::on_seekslider_leave()
 
 void MainWindow::on_timeline_currentTimeMove(qint64 position)
 {
+    //position = mediaPosition();
     LogHandler::Debug("position: "+ QString::number(position));
-    bool isStandAloneFunscriptPlaying = playingLibraryListItem.type == LibraryListItemType::FunscriptType;
+    bool isStandAloneFunscriptPlaying = xtEngine.syncHandler()->isPlayingStandAlone();
     //qint64 duration = isStandAloneFunscriptPlaying ? xtEngine.syncHandler()->getFunscriptMax() : videoHandler->duration();
 
     LogHandler::Debug("playerPosition: "+ QString::number(position));
@@ -2429,9 +2432,9 @@ void MainWindow::on_timeline_currentTimeMove(qint64 position)
 
 void MainWindow::onLoopRange_valueChanged(qint64 currentTime, qint64 startLoop, qint64 endLoop)
 {
-    bool isStandAloneFunscriptPlaying = playingLibraryListItem.type == LibraryListItemType::FunscriptType;
+    bool isStandAloneFunscriptPlaying = xtEngine.syncHandler()->isPlayingStandAlone();
     //qint64 duration = isStandAloneFunscriptPlaying ? xtEngine.syncHandler()->getFunscriptMax() : videoHandler->duration();
-    qint64 mediaPosition = isStandAloneFunscriptPlaying ? xtEngine.syncHandler()->getFunscriptTime() : videoHandler->position();
+    qint64 position = mediaPosition();
 
     //qint64 currentVideoPositionPercentage = XMath::mapRange(mediaPosition,  (qint64)0, duration, (qint64)0, (qint64)100);
     //qint64 destinationVideoPosition = XMath::mapRange((qint64)position, (qint64)0, (qint64)100,  (qint64)0, duration);
@@ -2439,7 +2442,7 @@ void MainWindow::onLoopRange_valueChanged(qint64 currentTime, qint64 startLoop, 
     //_playerControlsFrame->setSeekSliderToolTip(currentTime);
 
     if(endLoop > 0) {
-        if(mediaPosition < startLoop || mediaPosition >= endLoop)
+        if(position < startLoop || position >= endLoop)
         {
             isStandAloneFunscriptPlaying ? xtEngine.syncHandler()->setFunscriptTime(startLoop) : videoHandler->setPosition(startLoop);
         }
@@ -2454,10 +2457,11 @@ void MainWindow::onLoopRange_valueChanged(qint64 currentTime, qint64 startLoop, 
 //    }
 }
 
-void MainWindow::on_media_positionChanged(qint64 position)
+void MainWindow::on_media_positionChanged(qint64 positionIgnored)
 {
-    bool isStandAloneFunscriptPlaying = playingLibraryListItem.type == LibraryListItemType::FunscriptType;
-    qint64 duration = isStandAloneFunscriptPlaying ? xtEngine.syncHandler()->getFunscriptMax() : videoHandler->duration();
+    bool isStandAloneFunscriptPlaying = xtEngine.syncHandler()->isPlayingStandAlone();
+    qint64 duration = mediaDuration();
+    qint64 position = mediaPosition();
    // qint64 videoToSliderPosition = XMath::mapRange(position,  (qint64)0, duration, (qint64)0, (qint64)100);
 //    if (!_playerControlsFrame->getAutoLoop())
 //    {
@@ -2519,8 +2523,6 @@ void MainWindow::on_standaloneFunscript_stop()
         updateMetaData(playingLibraryListItem);
     videoHandler->setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(false);
-    _playerControlsFrame->setDuration(0);
-    _playerControlsFrame->setTime(0);
 }
 
 void MainWindow::on_media_start()
