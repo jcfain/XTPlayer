@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version=v0.41a
+version=v0.423b
 targetDirectory=./Deploy/XTPlayer-${version}_Linux_x86_64
 xteTargetDirectory=./Deploy/XTEngine-${version}_Linux_x86_64
 binDirectory=./build-XTPlayer-Desktop_Qt_5_15_2_GCC_64bit-Release/XTPlayer

@@ -109,14 +109,20 @@ void TimeLine::setDuration(qint64 duration) {
 void TimeLine::setCurrentTime(qint64 time) {
     m_currentTime = time;
     update();
-    if(!m_syncTimeFuture.isRunning() && m_currentTime > 0)
+#if !defined(Q_OS_LINUX)
+    if(!m_syncTimeFuture.isRunning() && m_currentTime > 0 && !m_stopping)
         syncTime();
+#endif
 }
 
 void TimeLine::stop() {
     m_syncTimeRunning = false;
     m_syncTimeFuture.cancel();
+    m_stopping = true;
     m_syncTimeFuture.waitForFinished();
+    QTimer::singleShot(500, [this]() {
+        m_stopping = false;
+    });
     update();
 }
 

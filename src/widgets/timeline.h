@@ -84,6 +84,7 @@ private:
     bool isLoop = false;
     bool m_isPaused = false;
     bool m_isBackgroundPainted = false;
+    bool m_stopping = false;
 //    qint64 mMinimum = 0;
 //    qint64 mMaximum = 0;
     QFuture<void> m_syncTimeFuture;
