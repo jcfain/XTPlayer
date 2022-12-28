@@ -1,11 +1,8 @@
 [Desktop Entry]
-Name=XTPlayer
-Version=0.16b
-Exec=/home/jay/git/XTPlayer/build-XTPlayer-Desktop_Qt_5_15_0_GCC_64bit-Release/XTPlayer
-Comment=Cross platform TCode player
-Icon=/home/jay/git/XTPlayer/src/images/icons/XTP-window-icon.ico
 Type=Application
+Name=XTPlayer
+Exec=XTPlayer
+Icon=XTPlayer
+Comment=Cross platform TCode media funscript player
 Terminal=false
-StartupNotify=true
-Encoding=UTF-8
-Categories=Media;Application;
+Categories=AudioVideo;
