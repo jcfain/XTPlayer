@@ -79,3 +79,4 @@ src/.qmake.stash
 src/www/.vscode
 settings_export*
 *.user
+/Deploy
