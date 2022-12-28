@@ -1,21 +1,38 @@
+#!/bin/bash
+
 echo "Enter version: (ex: 0.423b)"  
 read versionInput
-VERSION=v${versionInput}
-export VERSION
+export VERSION=v${versionInput}
 
-mkdir -p ~/git/XTPlayer/Deploy/lib 
-cp -r ~/git/XTEngine/build-XTEngine-Desktop_Qt_5_15_2_GCC_64bit-Release/release/* ~/git/XTPlayer/Deploy/lib
-cp -r ~/git/HttpServer/src/build/release/* ~/git/XTPlayer/Deploy/lib
-#RPATH=$(pwd)/XTPlayer/Deploy/lib:${RPATH}
-#export RPATH
-LD_LIBRARY_PATH=$(pwd)/Deploy/lib
-export LD_LIBRARY_PATH
-echo $LD_LIBRARY_PATH
-find ~/git/XTPlayer/build-XTPlayer-Desktop-Release/XTPlayer \( -name "moc_*" -or -name "*.o" -or -name "qrc_*" -or -name "Makefile*" -or -name "*.a" \) -exec rm {} \;
-cp ~/git/XTPlayer/XTPlayer.desktop ~/git/XTPlayer/build-XTPlayer-Desktop-Release/XTPlayer.desktop
+home=~/
+target='/media/NAS/STK/Hardware/my software/'
+xtplayerSource="${home}"git/XTPlayer
+xtplayerLocation="${home}"git/XTPlayer/build-XTPlayer-Desktop-Release/
+xtengineLocation="${home}"git/XTEngine/build-XTEngine-Desktop-Release/release/
+httpserverLocation="${home}"git/HttpServer/src/build/release/
+deployDirectory="${home}"git/XTPlayer/Deploy/
+linuxdeployqtBinary="${home}"git/bin/linuxdeployqt
+qtDirectory=/usr/lib/qt5/
 
-cp ~/git/XTPlayer/src/images/icons/XTP-icon.png ~/git/XTPlayer/build-XTPlayer-Desktop-Release/XTPlayer.png
-~/git/linuxdeployqt/bin/linuxdeployqt ~/git/XTPlayer/build-XTPlayer-Desktop-Release/XTPlayer -appimage -unsupported-allow-new-glibc -always-overwrite -extra-plugins=iconengines
+#Export directory with qmake to path.
+export PATH="${qtDirectory}":$PATH
+export LD_LIBRARY_PATH="${deployDirectory}lib"
+
+#echo LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}
+#echo PATH: ${PATH}
+#echo Home: ${home}
+#echo Target: ${target}
+
+mkdir -p "${deployDirectory}lib"
+find "${xtengineLocation}" \( -name "moc_*" -or -name "*.o" -or -name "qrc_*" -or -name "Makefile*" -or -name "*.a" \) -exec rm {} \;
+cp -r "${xtengineLocation}"* "${deployDirectory}lib"
+cp -r "${httpserverLocation}"* "${deployDirectory}lib"
+find "${xtplayerLocation}" \( -name "moc_*" -or -name "*.o" -or -name "qrc_*" -or -name "Makefile*" -or -name "*.a" \) -exec rm {} \;
+cp "${xtplayerSource}"/XTPlayer.desktop "${xtplayerLocation}"/XTPlayer.desktop
+
+cp "${xtplayerSource}"/src/images/icons/XTP-icon.png ${xtplayerLocation}/XTPlayer.png
+"${linuxdeployqtBinary}" ${xtplayerLocation}/XTPlayer -appimage -unsupported-allow-new-glibc -always-overwrite -extra-plugins=iconengines
 #,platformthemes/libqgtk3.so
-#mv ~/git/XTPlayer.appimage  ~/git/XTPlayer-v$(version).appimage
-cp ~/git/XTPlayer/XTPlayer-${VERSION}-aarch64.AppImage /media/NAS/STK/Hardware/my\ software/XTPlayer-${VERSION}-Linux-aarch64.AppImage
+#mv ${home}git/XTPlayer.appimage  ${home}git/XTPlayer-v$(version).appimage
+mv "${xtplayerSource}"/XTPlayer-"${VERSION}"-x86_64.AppImage "${deployDirectory}"XTPlayer-"${VERSION}"-Linux-x86_64.AppImage
+cp "${deployDirectory}"XTPlayer-"${VERSION}"-Linux-x86_64.AppImage "${target}"XTPlayer-"${VERSION}"-Linux-x86_64.AppImage
