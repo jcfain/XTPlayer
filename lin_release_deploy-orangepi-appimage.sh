@@ -18,4 +18,4 @@ cp ~/git/XTPlayer/src/images/icons/XTP-icon.png ~/git/XTPlayer/build-XTPlayer-De
 ~/git/linuxdeployqt/bin/linuxdeployqt ~/git/XTPlayer/build-XTPlayer-Desktop-Release/XTPlayer -appimage -unsupported-allow-new-glibc -always-overwrite -extra-plugins=iconengines
 #,platformthemes/libqgtk3.so
 #mv ~/git/XTPlayer.appimage  ~/git/XTPlayer-v$(version).appimage
-cp ~/git/XTPlayer/XTPlayer-${VERSION}-aarch64.AppImage /media/NAS/STK/Hardware/my\ software/XTPlayer-${VERSION}-aarch64.AppImage
+cp ~/git/XTPlayer/XTPlayer-${VERSION}-aarch64.AppImage /media/NAS/STK/Hardware/my\ software/XTPlayer-${VERSION}-Linux-aarch64.AppImage
