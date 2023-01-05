@@ -314,7 +314,8 @@ private:
     LibraryListItem27 playingLibraryListItem;
     //int selectedLibraryListIndex;
     //LibraryListItem27 selectedLibraryListItem;
-    void onLibraryNotFound();
+    void onNoLibraryFound();
+    void onLibraryNotFound(QStringList paths);
 //    void on_load_library(QString path, bool vrMode);
     void openWelcomeDialog();
     void closeWelcomeDialog();

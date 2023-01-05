@@ -15,6 +15,9 @@ TimeLine::TimeLine(QWidget* parent)
     setMouseTracking(true);
     setProperty("cssClass", "TimeLine");
     setMinimumSize(QSize(parent->minimumWidth(), 20));
+    connect(this, &TimeLine::updatePaint, this, [this]() {
+        update();
+    });
 }
 
 TimeLine::~TimeLine() {
@@ -153,7 +156,7 @@ void TimeLine::syncTime() {
                         timeTracker++;
                         m_currentTime = timeTracker;
                     }
-                    update();
+                    emit updatePaint();
                 }
                 timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
                 //LogHandler::Debug("timer nsecsElapsed: "+QString::number(timer2));

@@ -74,6 +74,7 @@ signals:
     void onLeave();
     void mouseRelease(QString name);
     void mousePress();
+    void updatePaint();
 
 private:
     Q_DISABLE_COPY(TimeLine)

@@ -5,6 +5,7 @@ HeatmapWidget::HeatmapWidget(QWidget *parent)
     : QLabel{parent},
     painter(this) {
     setMinimumSize(QSize(parent->minimumWidth(), 35));
+    setFixedHeight(35);
 //    connect(&m_resizeDebounce, &QTimer::timeout, this, [this](){
 //        paint();
 //    });

@@ -402,6 +402,7 @@ MainWindow::MainWindow(QStringList arguments, QWidget *parent)
     //connect(this, &MainWindow::libraryIconResized, this, &MainWindow::libraryListSetIconSize);
 
     connect(ui->actionReload_library, &QAction::triggered, xtEngine.mediaLibraryHandler(), &MediaLibraryHandler::loadLibraryAsync);
+    connect(xtEngine.mediaLibraryHandler(), &MediaLibraryHandler::noLibraryFound, this, &MainWindow::onNoLibraryFound);
     connect(xtEngine.mediaLibraryHandler(), &MediaLibraryHandler::libraryNotFound, this, &MainWindow::onLibraryNotFound);
     connect(xtEngine.mediaLibraryHandler(), &MediaLibraryHandler::libraryLoaded, this, &MainWindow::onSetLibraryLoaded);
     connect(xtEngine.mediaLibraryHandler(), &MediaLibraryHandler::libraryStopped, this, &MainWindow::onSetLibraryStopped);
@@ -1062,23 +1063,25 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                     });
                 }
             }
-
-            if(xtEngine.mediaLibraryHandler()->isLibraryItemVideo(selectedFileListItem) && !selectedFileListItem.thumbFile.contains(".lock.") && !isPlaylistMode())
-            {
-                myMenu.addAction(tr("Regenerate thumbnail"), this, &MainWindow::regenerateThumbNail);
-
-                if(!playingLibraryListItem.ID.isEmpty() && (videoHandler->isPlaying() || videoHandler->isPaused()))
+            if(selectedFileListItem.managedThumb && xtEngine.mediaLibraryHandler()->isLibraryItemVideo(selectedFileListItem) && !isPlaylistMode()) {
+                if(!selectedFileListItem.thumbFile.contains(".lock."))
                 {
-                    if(playingLibraryListItem.ID == selectedFileListItem.ID)
-                        myMenu.addAction(tr("Set thumbnail from current"), this, &MainWindow::setThumbNailFromCurrent);
+                    QAction* regenerateThumbAction = myMenu.addAction(tr("Regenerate thumbnail"), this, &MainWindow::regenerateThumbNail);
+                    regenerateThumbAction->setToolTip("Overwrites the current image file with a randomly chosen time.");
+
+                    if(!playingLibraryListItem.ID.isEmpty() && (videoHandler->isPlaying() || videoHandler->isPaused()))
+                    {
+                        if(playingLibraryListItem.ID == selectedFileListItem.ID)
+                            myMenu.addAction(tr("Set thumbnail from current"), this, &MainWindow::setThumbNailFromCurrent);
+                    }
+                    if(selectedFileListItem.thumbFileExists && selectedFileListItem.managedThumb)
+                        myMenu.addAction(tr("Lock thumb"), this, &MainWindow::lockThumb);
                 }
-                if(selectedFileListItem.thumbFileExists)
-                    myMenu.addAction(tr("Lock thumb"), this, &MainWindow::lockThumb);
-            }
-            else if(xtEngine.mediaLibraryHandler()->isLibraryItemVideo(selectedFileListItem) &&  !isPlaylistMode())
-            {
-                if(selectedFileListItem.thumbFileExists)
-                    myMenu.addAction(tr("Unlock thumb"), this, &MainWindow::unlockThumb);
+                else
+                {
+                    if(selectedFileListItem.thumbFileExists && selectedFileListItem.managedThumb)
+                        myMenu.addAction(tr("Unlock thumb"), this, &MainWindow::unlockThumb);
+                }
             }
             if(!playingLibraryListItem.ID.isEmpty() && (videoHandler->isPlaying() || videoHandler->isPaused()))
             {
@@ -1090,8 +1093,8 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
     //        myMenu.addAction("Add bookmark from current", this, [this, selectedFileListItem] () {
     //            onAddBookmark(selectedFileListItem, "Book mark 1", videoHandler->position());
     //        });
-            myMenu.addAction(tr("Reveal in directory"), this, [this, selectedFileListItem] () {
-                if(selectedFileListItem.path.isNull()) {
+            myMenu.addAction(tr("Reveal video in directory"), this, [this, selectedFileListItem] () {
+                if(selectedFileListItem.path.isEmpty()) {
                     DialogHandler::MessageBox(this, "Invalid media path.", XLogLevel::Critical);
                     return;
                 }
@@ -1101,6 +1104,19 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                 }
                 showInGraphicalShell(selectedFileListItem.path);
             });
+            if(selectedFileListItem.thumbState == ThumbState::Ready) {
+                myMenu.addAction(tr("Reveal thumb in directory"), this, [this, selectedFileListItem] () {
+                    if(selectedFileListItem.thumbFile.isEmpty()) {
+                        DialogHandler::MessageBox(this, "Invalid thumb path.", XLogLevel::Critical);
+                        return;
+                    }
+                    if(!QFile::exists(selectedFileListItem.thumbFile)) {
+                        DialogHandler::MessageBox(this, "Thumb does not exist.", XLogLevel::Critical);
+                        return;
+                    }
+                    showInGraphicalShell(selectedFileListItem.thumbFile);
+                });
+            }
             myMenu.addAction(tr("Edit media settings..."), this, [this, selectedFileListItem] () {
                 LibraryItemSettingsDialog::getSettings(this, selectedFileListItem.path);
             });
@@ -1174,14 +1190,19 @@ void MainWindow::onPrepareLibraryLoad()
     _playerControlsFrame->setDisabled(true);
 }
 
-void MainWindow::onLibraryNotFound()
+void MainWindow::onNoLibraryFound()
 {
-    QMessageBox::StandardButton reply = QMessageBox::question(this, "ERROR!", "The media library stored in settings does not exist anymore.\nChoose a new one now?",
-                                  QMessageBox::Yes|QMessageBox::No);
-    if (reply == QMessageBox::Yes)
-    {
-        on_actionSelect_library_triggered();
-    }
+    LogHandler::Error("No libraries stored in settings exists currently.");
+}
+void MainWindow::onLibraryNotFound(QStringList paths)
+{
+    LogHandler::Error("The following media libraries do not exist currently: "+ paths.join("\n"));
+//    QMessageBox::StandardButton reply = QMessageBox::question(this, "ERROR!", "The media library stored in settings does not exist anymore.\nChoose a new one now?",
+//                                  QMessageBox::Yes|QMessageBox::No);
+//    if (reply == QMessageBox::Yes)
+//    {
+//        on_actionSelect_library_triggered();
+//    }
 }
 
 //void MainWindow::on_load_library(QString path, bool vrMode)
@@ -1756,7 +1777,7 @@ void MainWindow::onSaveNewThumb(LibraryListItem27 item, bool vrMode, QString thu
 void MainWindow::onSaveThumbError(LibraryListItem27 item, bool vrMode, QString errorMessage)
 {
 //    if(item.ID.isNull()) {
-//        DialogHandler::MessageBox(this, "Missing media", XLogLevel::Critical);
+//        DialogHandler::MessageBox(this, errorMessage, XLogLevel::Critical);
 //        return;
 //    }
 
@@ -3071,6 +3092,7 @@ bool MainWindow::isLibraryLoading()
 {
     return xtEngine.mediaLibraryHandler()->isLibraryLoading() || loadingLibraryFuture.isRunning();
 }
+
 void MainWindow::resizeThumbs(int size)
 {
 //    if(!isLibraryLoading())
@@ -3456,15 +3478,15 @@ void MainWindow::editPlaylist()
     savePlaylistButton->show();
     cancelEditPlaylistButton->show();
     editPlaylistButton->hide();
-//    if(SettingsHandler::getThumbSize() > 75)
-//    {
+    changeLibraryDisplayMode(LibraryView::List);
+    if(SettingsHandler::getThumbSize() > 75)
+    {
 //        changeLibraryDisplayMode(LibraryView::List);
-//        //_playListViewModel->overRideThumbSize(75);
-//    }
+        _playListViewModel->overRideThumbSize(75);
+    }
 //    else
 //    {
-        changeLibraryDisplayMode(LibraryView::List);
-    //}
+//    }
     _playListViewModel->setDragEnabled(true);
     libraryList->setDragEnabled(true);
     libraryList->setDragDropMode(QAbstractItemView::InternalMove);

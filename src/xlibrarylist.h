@@ -29,6 +29,8 @@ protected:
     void keyPressEvent(QKeyEvent*) override;
     void keyReleaseEvent(QKeyEvent*) override;
     QSize sizeHint() const override;
+    //void dropEvent( QDropEvent* e ) override;
+    //void dragMoveEvent(QDragMoveEvent *event) override;
 
     LibraryListViewModel* getModel();
 };
