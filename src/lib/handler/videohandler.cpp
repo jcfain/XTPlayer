@@ -145,6 +145,8 @@ void VideoHandler::on_media_start()
 
 void VideoHandler::on_media_stop()
 {
+    LogHandler::Info("on_media_stop");
+    _player->setMedia(QMediaContent());
     emit stopped();
 }
 
@@ -167,7 +169,6 @@ void VideoHandler::play()
 void VideoHandler::stop()
 {
     _player->stop();
-    _player->setMedia(QMediaContent());
     emit stopping();
 }
 

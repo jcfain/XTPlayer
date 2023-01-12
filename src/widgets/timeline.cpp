@@ -112,10 +112,10 @@ void TimeLine::setDuration(qint64 duration) {
 void TimeLine::setCurrentTime(qint64 time) {
     m_currentTime = time;
     update();
-#if !defined(Q_OS_LINUX)
-    if(!m_syncTimeFuture.isRunning() && m_currentTime > 0 && !m_stopping)
-        syncTime();
-#endif
+//#if !defined(Q_OS_LINUX)
+//    if(!m_syncTimeFuture.isRunning() && m_currentTime > 0 && !m_stopping)
+//        syncTime();
+//#endif
 }
 
 void TimeLine::stop() {
@@ -142,7 +142,7 @@ void TimeLine::syncTime() {
         while (m_syncTimeRunning)
         {
             if(!m_isPaused) {
-                if (timer2 - timer1 >= 1)
+                if (timer2 - timer1 >= 10)
                 {
                     timer1 = timer2;
                     if(lastCurrentTime != m_currentTime)

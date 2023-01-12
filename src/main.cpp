@@ -15,6 +15,7 @@ int main(int argc, char *argv[])
     }
     #endif
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+
     qRegisterMetaType<QItemSelection>();
     qRegisterMetaTypeStreamOperators<QList<QString>>("QList<QString>");
     qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
@@ -36,8 +37,23 @@ int main(int argc, char *argv[])
     qRegisterMetaTypeStreamOperators<LibraryListItemMetaData258>("LibraryListItemMetaData258");
     qRegisterMetaTypeStreamOperators<Bookmark>("Bookmark");
     qRegisterMetaType<QVector<int> >("QVector<int>");
+
     QApplication a(argc, argv);
-    MainWindow w(a.arguments());
-    w.show();
+    QCommandLineParser parser;
+//    parser.setApplicationDescription("My program");
+//    parser.addHelpOption();
+//    parser.addVersionOption();
+
+    QCommandLineOption guiOption(QStringList() << "headless", "Running it via GUI.");
+    parser.addOption(guiOption);
+
+    parser.process(a);
+    XTEngine* xtengine = new XTEngine();
+
+    if (!parser.isSet(guiOption)){
+        MainWindow w(xtengine, a.arguments());
+        w.show();
+        return a.exec();
+    }
     return a.exec();
 }

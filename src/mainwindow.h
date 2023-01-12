@@ -73,7 +73,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QStringList, QWidget *parent = nullptr);
+    MainWindow(XTEngine* xtengine, QStringList, QWidget *parent = nullptr);
     ~MainWindow();
 
 private slots:
@@ -209,9 +209,9 @@ private:
     PasswordResponse _isPasswordIncorrect = PasswordResponse::INCORRECT;
 
     Ui::MainWindow *ui;
-    XTEngine xtEngine;
 
     QMutex mutex;
+    XTEngine* m_xtengine;
     SettingsDialog* _xSettings;
     WelcomeDialog* _welcomeDialog = 0;
     DLNAScriptLinks* _dlnaScriptLinksDialog;
