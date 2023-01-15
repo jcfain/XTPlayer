@@ -54,8 +54,6 @@ signals:
     void onAxisValueReset();
     void onOpenWelcomeDialog();
     void messageSend(QString message, XLogLevel loglevel);
-    void skipToMoneyShot();
-    void skipToNextAction();
     void updateLibrary();
     void cleanUpThumbsDirectory();
     void disableHeatmapToggled(bool disabled);

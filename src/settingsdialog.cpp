@@ -919,7 +919,6 @@ void SettingsDialog::on_xtpWeb_initInputDevice(DeviceName deviceName, bool check
         on_whirligigCheckBox_clicked(false);
         ui.deoCheckbox->setChecked(false);
         on_deoCheckbox_clicked(false);
-        _connectionHandler->initInputDevice(deviceName);
     }
 }
 
@@ -939,7 +938,6 @@ void SettingsDialog::on_xtpWeb_initOutputDevice(DeviceName deviceName, bool chec
     } else if(deviceName == DeviceName::None) {
         ui.serialOutputRdo->setChecked(false);
         ui.networkOutputRdo->setChecked(false);
-        _connectionHandler->initOutputDevice(deviceName);
     }
 }
 
@@ -1792,15 +1790,12 @@ void SettingsDialog::askRestart(QWidget* parent, QString message)
 }
 void SettingsDialog::quit(bool restart)
 {
-    QApplication::quit();
-    if(restart)
-        QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
+    SettingsHandler::Quit(restart);
 }
 
 void SettingsDialog::restart()
 {
-    QApplication::quit();
-    QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
+    SettingsHandler::Restart();
 }
 
 void SettingsDialog::on_openDeoPDFButton_clicked()

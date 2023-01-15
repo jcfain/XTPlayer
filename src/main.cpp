@@ -8,13 +8,6 @@
 
 int main(int argc, char *argv[])
 {
-    #ifdef _WIN32
-    if (AttachConsole(ATTACH_PARENT_PROCESS)) {
-        freopen("CONOUT$", "w", stdout);
-        freopen("CONOUT$", "w", stderr);
-    }
-    #endif
-    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     qRegisterMetaType<QItemSelection>();
     qRegisterMetaTypeStreamOperators<QList<QString>>("QList<QString>");
@@ -51,9 +44,17 @@ int main(int argc, char *argv[])
     XTEngine* xtengine = new XTEngine();
 
     if (!parser.isSet(guiOption)){
+        #ifdef _WIN32
+        if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+            freopen("CONOUT$", "w", stdout);
+            freopen("CONOUT$", "w", stderr);
+        }
+        #endif
+        QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
         MainWindow w(xtengine, a.arguments());
         w.show();
         return a.exec();
     }
+    xtengine->init();
     return a.exec();
 }

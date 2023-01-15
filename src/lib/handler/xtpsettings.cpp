@@ -1,8 +1,8 @@
 #include "xtpsettings.h"
 #include "lib/handler/settingshandler.h"
 
-const QString XTPSettings::XTPVersion = "0.425b";
-const float XTPSettings::XTPVersionNum = 0.425f;
+const QString XTPSettings::XTPVersion = "0.426b";
+const float XTPSettings::XTPVersionNum = 0.426f;
 const QString XTPSettings::XTPVersionTimeStamp = QString(XTPVersion +" %1T%2").arg(__DATE__).arg(__TIME__);
 
 XTPSettings::XTPSettings() {}
