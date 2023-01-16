@@ -9,6 +9,7 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include "lib/handler/loghandler.h"
+#include "lib/handler/crypthandler.h"
 
 class DialogHandler : public QObject
 {
@@ -23,6 +24,8 @@ public:
     static void Loading(QWidget* parent, QString message);
     static void LoadingClose();
     static void ShowAboutDialog(QWidget* parent, QString XTPVersion, QString XTEVersion, QString selectedTCodeVersion);
+    static PasswordResponse checkPass(QWidget* parent, QString currentPassword);
+    static QString passwordSetWizard(QWidget* parent, QString currentPassword, bool* okOut);
 
 private:
     static void DialogAccepted();

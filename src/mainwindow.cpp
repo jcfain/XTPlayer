@@ -27,7 +27,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QStringList arguments, QWidget *paren
         int tries = 1;
         while(_isPasswordIncorrect != PasswordResponse::CANCEL && _isPasswordIncorrect == PasswordResponse::INCORRECT)
         {
-            _isPasswordIncorrect = _xSettings->GetLaunchPass();
+            _isPasswordIncorrect = DialogHandler::checkPass(this, SettingsHandler::GetHashedPass());
             if(_isPasswordIncorrect == PasswordResponse::CANCEL)
             {
                 QTimer::singleShot(0, this, SLOT(onPasswordIncorrect()));
