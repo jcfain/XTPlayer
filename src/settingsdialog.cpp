@@ -1427,13 +1427,14 @@ void SettingsDialog::on_passwordButton_clicked()
 {
     bool ok;
     QString hashedPass = DialogHandler::passwordSetWizard(this, SettingsHandler::GetHashedPass(), &ok);
-    if(!hashedPass.isEmpty()) {
-        ui.passwordButton->setText("Change password");
-    } else {
-        ui.passwordButton->setText("Set password");
-    }
-    if(ok)
+    if(ok) {
         SettingsHandler::SetHashedPass(hashedPass);
+        if(!hashedPass.isEmpty()) {
+            ui.passwordButton->setText("Change password");
+        } else {
+            ui.passwordButton->setText("Set password");
+        }
+    }
 }
 
 
@@ -1442,13 +1443,14 @@ void SettingsDialog::on_webPasswordButton_clicked()
 {
     bool ok;
     QString hashedPass = DialogHandler::passwordSetWizard(this, SettingsHandler::hashedWebPass(), &ok);
-    if(!hashedPass.isEmpty()) {
-        ui.webPasswordButton->setText("Change password");
-    } else {
-        ui.webPasswordButton->setText("Set password");
-    }
-    if(ok)
+    if(ok) {
         SettingsHandler::setHashedWebPass(hashedPass);
+        if(!hashedPass.isEmpty()) {
+            ui.webPasswordButton->setText("Change password");
+        } else {
+            ui.webPasswordButton->setText("Set password");
+        }
+    }
 }
 
 void SettingsDialog::on_exportButton_clicked()
