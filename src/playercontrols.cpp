@@ -3,7 +3,7 @@
 PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(parent, f)
 {
     setObjectName(QString::fromUtf8("playerControlsFrame"));
-    setMinimumSize(QSize(240, 75));
+    setMinimumSize(QSize(240, 110));
     setMaximumSize(QSize(16777215, 16777215));
     setFrameShape(QFrame::StyledPanel);
     setFrameShadow(QFrame::Raised);

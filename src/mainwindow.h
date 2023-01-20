@@ -41,6 +41,7 @@
 #include "xlibrarylist.h"
 #include "lib/handler/videohandler.h"
 #include "CustomControls/rangeslider.h"
+#include "lib/handler/xmediastatehandler.h"
 #include "lib/handler/outputdevicehandler.h"
 #include "lib/handler/inputdevicehandler.h"
 #include "lib/handler/xvideopreviewwidget.h"
@@ -54,7 +55,6 @@
 
 #include "lib/lookup/AxisNames.h"
 #include "lib/tool/xmath.h"
-#include "lib/tool/heatmap.h"
 #include "lib/lookup/enum.h"
 #include "lib/lookup/MediaActions.h"
 #include "lib/handler/loghandler.h"
@@ -73,7 +73,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QStringList, QWidget *parent = nullptr);
+    MainWindow(XTEngine* xtengine, QStringList, QWidget *parent = nullptr);
     ~MainWindow();
 
 private slots:
@@ -209,9 +209,9 @@ private:
     PasswordResponse _isPasswordIncorrect = PasswordResponse::INCORRECT;
 
     Ui::MainWindow *ui;
-    XTEngine xtEngine;
 
     QMutex mutex;
+    XTEngine* m_xtengine;
     SettingsDialog* _xSettings;
     WelcomeDialog* _welcomeDialog = 0;
     DLNAScriptLinks* _dlnaScriptLinksDialog;
@@ -295,7 +295,6 @@ private:
     bool _editPlaylistMode = false;
     bool _libraryDockMode = false;
     QString _lastKeyboardTCode;
-    HeatMap* m_heatmap;
 
     void on_settingsMessageRecieve(QString message, XLogLevel logLevel);
 //    void saveSingleThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
@@ -311,10 +310,12 @@ private:
     bool isLibraryLoading();
     QString selectedPlaylistName;
     //int playingLibraryListIndex;
-    LibraryListItem27 playingLibraryListItem;
+    //LibraryListItem27 playingLibraryListItem;
     //int selectedLibraryListIndex;
     //LibraryListItem27 selectedLibraryListItem;
-    void onLibraryNotFound();
+    LibraryListItem27 playingLibraryListItem();
+    void onNoLibraryFound();
+    void onLibraryNotFound(QStringList paths);
 //    void on_load_library(QString path, bool vrMode);
     void openWelcomeDialog();
     void closeWelcomeDialog();
@@ -391,11 +392,8 @@ private:
     void on_input_device_connectionChanged(ConnectionChangedSignal event);
     void donate();
     void showInGraphicalShell(QString path);
-    void onSetMoneyShot(LibraryListItem27 selectedLibraryListItem27, qint64 currentPosition, bool userSet = true);
-    void onAddBookmark(LibraryListItem27 LibraryListItem27, QString name, qint64 currentPosition);
     void processMetaData(LibraryListItem27 LibraryListItem27);
     void updateMetaData(LibraryListItem27 LibraryListItem27);
-    void processVRMetaData(QString videoPath, QString funscriptPath, qint64 duration);
 
     qint64 mediaPosition();
     qint64 mediaDuration();

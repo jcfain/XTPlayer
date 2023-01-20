@@ -15,6 +15,9 @@ TimeLine::TimeLine(QWidget* parent)
     setMouseTracking(true);
     setProperty("cssClass", "TimeLine");
     setMinimumSize(QSize(parent->minimumWidth(), 20));
+    connect(this, &TimeLine::updatePaint, this, [this]() {
+        update();
+    });
 }
 
 TimeLine::~TimeLine() {
@@ -109,10 +112,10 @@ void TimeLine::setDuration(qint64 duration) {
 void TimeLine::setCurrentTime(qint64 time) {
     m_currentTime = time;
     update();
-#if !defined(Q_OS_LINUX)
-    if(!m_syncTimeFuture.isRunning() && m_currentTime > 0 && !m_stopping)
-        syncTime();
-#endif
+//#if !defined(Q_OS_LINUX)
+//    if(!m_syncTimeFuture.isRunning() && m_currentTime > 0 && !m_stopping)
+//        syncTime();
+//#endif
 }
 
 void TimeLine::stop() {
@@ -139,7 +142,7 @@ void TimeLine::syncTime() {
         while (m_syncTimeRunning)
         {
             if(!m_isPaused) {
-                if (timer2 - timer1 >= 1)
+                if (timer2 - timer1 >= 10)
                 {
                     timer1 = timer2;
                     if(lastCurrentTime != m_currentTime)
@@ -153,7 +156,7 @@ void TimeLine::syncTime() {
                         timeTracker++;
                         m_currentTime = timeTracker;
                     }
-                    update();
+                    emit updatePaint();
                 }
                 timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
                 //LogHandler::Debug("timer nsecsElapsed: "+QString::number(timer2));

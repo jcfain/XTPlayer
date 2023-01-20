@@ -7,7 +7,6 @@
 #include <QFuture>
 #include <QSpinBox>
 #include <QProgressBar>
-#include <QCryptographicHash>
 #include <QInputDialog>
 #include <QDesktopServices>
 #include <QClipboard>
@@ -16,9 +15,9 @@
 #include "inputmapwidget.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/channeltableviewmodel.h"
+#include "lib/handler/crypthandler.h"
 #include "lib/handler/videohandler.h"
 #include "lib/handler/connectionhandler.h"
-#include "lib/handler/xtpsettings.h"
 #include "libraryexclusions.h"
 
 
@@ -35,9 +34,6 @@ public:
     void setAxisProgressBar(QString axis, int value);
     void resetAxisProgressBars();
     void latestYoutubeDownloaded();
-    PasswordResponse CheckPass(QString pass);
-    PasswordResponse GetLaunchPass();
-    bool HasLaunchPass();
 
     void Export(QWidget* parent);
     void Import(QWidget* parent);
@@ -54,8 +50,6 @@ signals:
     void onAxisValueReset();
     void onOpenWelcomeDialog();
     void messageSend(QString message, XLogLevel loglevel);
-    void skipToMoneyShot();
-    void skipToNextAction();
     void updateLibrary();
     void cleanUpThumbsDirectory();
     void disableHeatmapToggled(bool disabled);
@@ -237,6 +231,8 @@ private slots:
 
     void on_disableFunscriptHeatmapheckBox_clicked(bool checked);
 
+    void on_webPasswordButton_clicked();
+
 private:
 
     Ui::SettingsDialog ui;
@@ -248,8 +244,6 @@ private:
     void enableOrDisableDeviceConnectionUI(DeviceName deviceName);
     void updateIPAddress();
     void askHowToResetChannelProfileDefaults();
-    QString encryptPass(QString pass);
-    QString decryptPass(QString pass);
 
     QList<QWidget*> _multiplierWidgets;
 

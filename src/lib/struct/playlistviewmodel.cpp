@@ -29,13 +29,19 @@ void PlaylistViewModel::dePopulate() {
 void PlaylistViewModel::removeItem(LibraryListItem27 item) {
     _data.removeOne(item);
     m_librarySize = _data.size();
+    beginResetModel();
+    endResetModel();
 }
 void PlaylistViewModel::overRideThumbSize(int width) {
     overRideThumbSizeWidth = width;
+    beginResetModel();
+    endResetModel();
 }
 void PlaylistViewModel::clearOverRideThumbSize() {
     _resetThumbSize = true;
     overRideThumbSizeWidth = -1;
+    beginResetModel();
+    endResetModel();
 }
 
 void PlaylistViewModel::setDragEnabled(bool enabled) {
@@ -58,6 +64,7 @@ bool PlaylistViewModel::insertRows(int position, int rows, const QModelIndex &pa
     for (int row = 0; row < rows; ++row) {
         _data.insert(position, parent.data(Qt::UserRole).value<LibraryListItem27>());
     }
+    m_librarySize = _data.size();
     endInsertRows();
     return true;
 }
@@ -69,11 +76,12 @@ bool PlaylistViewModel::removeRows(int position, int rows, const QModelIndex &pa
     for (int row = 0; row < rows; ++row) {
         _data.removeAt(position);
     }
+    m_librarySize = _data.size();
     endRemoveRows();
     return true;
 }
 Qt::ItemFlags PlaylistViewModel::flags(const QModelIndex &index) const {
-    Qt::ItemFlags defaultFlags = QAbstractListModel::flags(index);
+    Qt::ItemFlags defaultFlags = LibraryListViewModel::flags(index);
 
     if(_dragEnabled) {
         if (index.isValid())
@@ -111,9 +119,13 @@ QMimeData *PlaylistViewModel::mimeData(const QModelIndexList &indexes) const
 bool PlaylistViewModel::dropMimeData(const QMimeData *data,
     Qt::DropAction action, int row, int column, const QModelIndex &parent)
 {
+    // https://www.qtcentre.org/threads/51679-How-to-Drag-and-Drop-working-with-tableview
     qDebug() << action;
     if (action == Qt::IgnoreAction)
         return true;
+
+    if (action != Qt::MoveAction)
+        return false;
 
     if (!data->hasFormat("application/library.list.item.model"))
         return false;
@@ -134,15 +146,15 @@ bool PlaylistViewModel::dropMimeData(const QMimeData *data,
     int rows = 0;
 
     while (!stream.atEnd()) {
-        LibraryListItem27 text;
-        stream >> text;
-        newItems << text;
+        LibraryListItem27 item;
+        stream >> item;
+        newItems << item;
         ++rows;
     }
     insertRows(beginRow, rows, QModelIndex());
-    foreach (const LibraryListItem27 &text, newItems) {
+    foreach (const LibraryListItem27 &item, newItems) {
         QModelIndex idx = index(beginRow, 0, QModelIndex());
-        setData(idx, QVariant::fromValue(text), Qt::EditRole);
+        setData(idx, QVariant::fromValue(item), Qt::EditRole);
         beginRow++;
     }
 

@@ -1,4 +1,5 @@
 #include "dialoghandler.h"
+#include <QInputDialog>
 
 DialogHandler::DialogHandler(QObject *parent)
     : QObject{parent}
@@ -213,5 +214,89 @@ void DialogHandler::LoadingClose()
         _loadingWidget = 0;
     }
 }
+
+PasswordResponse DialogHandler::checkPass(QWidget* parent, QString currentPassword)
+{
+     bool ok;
+     QString text = QInputDialog::getText(parent, tr("STOP!"),
+                                          tr("Password:"), QLineEdit::Password,
+                                          "", &ok);
+     if (ok && !text.isEmpty())
+     {
+         return CryptHandler::checkPass(text, currentPassword);
+     }
+     return PasswordResponse::CANCEL ;
+}
+
+QString DialogHandler::passwordSetWizard(QWidget* parent, QString currenthashedPass, bool* ok) {
+    if(currenthashedPass.isEmpty())
+    {
+         QString text = QInputDialog::getText(parent, parent->tr("Set password"),
+                                              parent->tr("Enter password:"), QLineEdit::PasswordEchoOnEdit,
+                                              "", ok);
+         if(*ok && !text.isEmpty()) {
+             QString text2 = QInputDialog::getText(parent, parent->tr("Set password"),
+                                                  parent->tr("Confirm password:"), QLineEdit::PasswordEchoOnEdit,
+                                                  "", ok);
+             if (*ok && !text.isEmpty() && text == text2)
+             {
+                 DialogHandler::MessageBox(parent, "Password set.", XLogLevel::Information);
+                 return CryptHandler::encryptPass(text);
+             } else if(text != text2) {
+                 *ok = false;
+                 DialogHandler::MessageBox(parent, "Passwords did not match!", XLogLevel::Critical);
+             }
+         } else {
+             *ok = false;
+         }
+    }
+    else
+    {
+         QString text = QInputDialog::getText(parent, parent->tr("Current password"),
+                                              parent->tr("Current password:"), QLineEdit::Password,
+                                              "", ok);
+         if (*ok && !text.isEmpty())
+         {
+             if(CryptHandler::checkPass(text, currenthashedPass) == PasswordResponse::CORRECT)
+             {
+                 QString text = QInputDialog::getText(parent, parent->tr("Change password"),
+                                                      parent->tr("New password (Leave blank to remove protection):"), QLineEdit::PasswordEchoOnEdit,
+                                                      "", ok);
+                 if (*ok)
+                 {
+                     if(text.isEmpty())
+                     {
+                        DialogHandler::MessageBox(parent, "Password cleared!", XLogLevel::Information);
+                     }
+                     else
+                     {
+                         QString text2 = QInputDialog::getText(parent, parent->tr("Confirm password"),
+                                                              parent->tr("Confirm password:"), QLineEdit::PasswordEchoOnEdit,
+                                                              "", ok);
+                         if (text == text2)
+                         {
+                             DialogHandler::MessageBox(parent, "Password changed!", XLogLevel::Information);
+                             return CryptHandler::encryptPass(text);
+                         } else if(text != text2) {
+                             *ok = false;
+                             DialogHandler::MessageBox(parent, "Passwords did not match!", XLogLevel::Critical);
+                         }
+                     }
+                 }
+             }
+             else
+             {
+                 DialogHandler::MessageBox(parent, "Password incorrect!", XLogLevel::Critical);
+                 *ok = false;
+             }
+         }
+         else
+         {
+             *ok = false;
+         }
+    }
+    return nullptr;
+}
+
 QDialog* DialogHandler::_loadingWidget = 0;
 QDialog* DialogHandler::_dialog = 0;

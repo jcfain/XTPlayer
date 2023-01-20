@@ -5,6 +5,7 @@
 #include <QPixmap>
 #include <QColor>
 #include <QFont>
+#include <QDragMoveEvent>
 #include "librarylistviewmodel.h"
 #include "lib/struct/LibraryListItem27.h"
 #include "lib/handler/settingshandler.h"
@@ -39,7 +40,6 @@ protected:
     QList<LibraryListItem27> getData() const override;
 
 private:
-    int overRideThumbSizeWidth = -1;
     bool _resetThumbSize = false;
     bool _dragEnabled = false;
     QList<LibraryListItem27> _data;

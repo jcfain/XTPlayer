@@ -77,3 +77,35 @@ QSize XLibraryList::sizeHint() const
 //    int nToShow = _nItemsToShow < model()->rowCount() ? _nItemsToShow : model()->rowCount();
 //    return QSize(width(), nToShow*sizeHintForRow(0));
 }
+
+//void XLibraryList::dragMoveEvent(QDragMoveEvent *event)
+//{
+//    if (event->mimeData()->hasFormat("application/library.list.item.model")
+//        && event->answerRect().intersects(geometry())) {
+
+//        auto current = indexAt(QPoint(8, 8));
+//        //setCurrentRow(current.row());
+//        LogHandler::Debug("Scrolling: " +QString::number( current.row()));
+//        scrollTo(current);
+//        event->acceptProposedAction();
+//    }
+//    QListView::dragMoveEvent(event);
+//}
+
+//void XLibraryList::dropEvent( QDropEvent* e )
+//{
+//    if( e->source() != this )
+//    {
+//        // something comes from the outside
+//        // what to do? return?
+//        return;
+//    }
+//    else
+//    {
+//        auto current = currentIndex();
+//        auto currentRow = current.row();
+//        //setCurrentRow(current.row());
+//        scrollTo(current);
+//        QAbstractItemView::dropEvent(e);
+//    }
+//}

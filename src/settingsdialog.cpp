@@ -1,7 +1,7 @@
 #include "settingsdialog.h"
+#include "lib/handler/xtpsettings.h"
 
 #include "lib/struct/channeltablecomboboxdelegate.h"
-#include "lib/tool/simplecrypt.h"
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/serialhandler.h"
 #include "lib/handler/funscripthandler.h"
@@ -79,8 +79,10 @@ void SettingsDialog::initLive()
     ui.enableMultiplierCheckbox->setChecked(SettingsHandler::getMultiplierEnabled());
     setUpMultiplierUi(SettingsHandler::getMultiplierEnabled());
     ui.disableNoScriptFoundInLibrary->setChecked(SettingsHandler::getDisableNoScriptFound());
-    if(HasLaunchPass())
+    if(!SettingsHandler::GetHashedPass().isEmpty())
         ui.passwordButton->setText("Change password");
+    if(!SettingsHandler::hashedWebPass().isEmpty())
+        ui.webPasswordButton->setText("Change password");
     ui.hideWelcomeDialog->setChecked(SettingsHandler::getHideWelcomeScreen());
     ui.finscriptModifierSpinBox->setValue(FunscriptHandler::getModifier());
 //    auto availableAxis = SettingsHandler::getAvailableAxis();
@@ -92,6 +94,7 @@ void SettingsDialog::initLive()
 //            invertedCheckbox->setChecked(SettingsHandler::getChannelInverseChecked(channel));
 //    }
 }
+
 
 void SettingsDialog::reject()
 {
@@ -919,7 +922,6 @@ void SettingsDialog::on_xtpWeb_initInputDevice(DeviceName deviceName, bool check
         on_whirligigCheckBox_clicked(false);
         ui.deoCheckbox->setChecked(false);
         on_deoCheckbox_clicked(false);
-        _connectionHandler->initInputDevice(deviceName);
     }
 }
 
@@ -939,7 +941,6 @@ void SettingsDialog::on_xtpWeb_initOutputDevice(DeviceName deviceName, bool chec
     } else if(deviceName == DeviceName::None) {
         ui.serialOutputRdo->setChecked(false);
         ui.networkOutputRdo->setChecked(false);
-        _connectionHandler->initOutputDevice(deviceName);
     }
 }
 
@@ -1424,110 +1425,32 @@ void SettingsDialog::on_libraryExclusionsBtn_clicked()
 
 void SettingsDialog::on_passwordButton_clicked()
 {
-    QString hashedPass = SettingsHandler::GetHashedPass();
-    if(hashedPass.isEmpty())
-    {
-         bool ok;
-         QString text = QInputDialog::getText(this, tr("Set password"),
-                                              tr("Launch password:"), QLineEdit::PasswordEchoOnEdit,
-                                              "", &ok);
-         QString text2 = QInputDialog::getText(this, tr("Set password"),
-                                              tr("Confirm password:"), QLineEdit::PasswordEchoOnEdit,
-                                              "", &ok);
-         if (ok && !text.isEmpty() && text == text2)
-         {
-             SettingsHandler::SetHashedPass(encryptPass(text));
-             DialogHandler::MessageBox(this, "Password set.", XLogLevel::Information);
-             ui.passwordButton->setText("Change password");
-         } else if(text != text2) {
-             DialogHandler::MessageBox(this, "Passwords did not match!", XLogLevel::Critical);
-             on_passwordButton_clicked();
-         }
-    }
-    else
-    {
-         bool ok;
-         QString text = QInputDialog::getText(this, tr("Current password"),
-                                              tr("Current password:"), QLineEdit::Password,
-                                              "", &ok);
-         if (ok && !text.isEmpty())
-         {
-             if(CheckPass(text) == PasswordResponse::CORRECT)
-             {
-                 QString text = QInputDialog::getText(this, tr("Change password"),
-                                                      tr("New password (Leave blank to remove protection):"), QLineEdit::PasswordEchoOnEdit,
-                                                      "", &ok);
-                 if (ok)
-                 {
-                     if(text.isEmpty())
-                     {
-                         SettingsHandler::SetHashedPass(nullptr);
-                        ui.passwordButton->setText("Set password");
-                        DialogHandler::MessageBox(this, "Password cleared!", XLogLevel::Information);
-                     }
-                     else
-                     {
-                         QString text2 = QInputDialog::getText(this, tr("Confirm password"),
-                                                              tr("Confirm password:"), QLineEdit::PasswordEchoOnEdit,
-                                                              "", &ok);
-                         if (text == text2)
-                         {
-                             SettingsHandler::SetHashedPass(encryptPass(text));
-                             DialogHandler::MessageBox(this, "Password changed!", XLogLevel::Information);
-                         } else if(text != text2) {
-                             DialogHandler::MessageBox(this, "Passwords did not match!", XLogLevel::Critical);
-                             on_passwordButton_clicked();
-                         }
-                     }
-                 }
-             }
-             else
-             {
-                 DialogHandler::MessageBox(this, "Password incorrect!", XLogLevel::Warning);
-             }
-         }
+    bool ok;
+    QString hashedPass = DialogHandler::passwordSetWizard(this, SettingsHandler::GetHashedPass(), &ok);
+    if(ok) {
+        SettingsHandler::SetHashedPass(hashedPass);
+        if(!hashedPass.isEmpty()) {
+            ui.passwordButton->setText("Change password");
+        } else {
+            ui.passwordButton->setText("Set password");
+        }
     }
 }
 
-PasswordResponse SettingsDialog::GetLaunchPass()
+
+
+void SettingsDialog::on_webPasswordButton_clicked()
 {
-     bool ok;
-     QString text = QInputDialog::getText(this, tr("STOP!"),
-                                          tr("Password:"), QLineEdit::Password,
-                                          "", &ok);
-     if (ok && !text.isEmpty())
-     {
-         return CheckPass(text);
-     }
-     return PasswordResponse::CANCEL ;
-}
-
-bool SettingsDialog::HasLaunchPass()
-{
-    return !SettingsHandler::GetHashedPass().isEmpty();
-}
-
-PasswordResponse SettingsDialog::CheckPass(QString pass)
-{
-    //QString encrypted = encryptPass(pass);
-    QString stored = decryptPass(SettingsHandler::GetHashedPass());
-    return pass == stored ? PasswordResponse::CORRECT : PasswordResponse::INCORRECT;
-}
-
-QString SettingsDialog::encryptPass(QString pass)
-{
-    SimpleCrypt crypto(Q_UINT64_C(0xcafbb6143ff01257)); //some random number
-
-    //Encryption
-    return crypto.encryptToString(pass);
-}
-
-QString SettingsDialog::decryptPass(QString pass)
-{
-    SimpleCrypt crypto(Q_UINT64_C(0xcafbb6143ff01257)); //some random number
-
-    //Encryption
-    return crypto.decryptToString(pass);
+    bool ok;
+    QString hashedPass = DialogHandler::passwordSetWizard(this, SettingsHandler::hashedWebPass(), &ok);
+    if(ok) {
+        SettingsHandler::setHashedWebPass(hashedPass);
+        if(!hashedPass.isEmpty()) {
+            ui.webPasswordButton->setText("Change password");
+        } else {
+            ui.webPasswordButton->setText("Set password");
+        }
+    }
 }
 
 void SettingsDialog::on_exportButton_clicked()
@@ -1792,15 +1715,12 @@ void SettingsDialog::askRestart(QWidget* parent, QString message)
 }
 void SettingsDialog::quit(bool restart)
 {
-    QApplication::quit();
-    if(restart)
-        QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
+    SettingsHandler::Quit(restart);
 }
 
 void SettingsDialog::restart()
 {
-    QApplication::quit();
-    QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
+    SettingsHandler::Restart();
 }
 
 void SettingsDialog::on_openDeoPDFButton_clicked()
@@ -1981,4 +1901,3 @@ void SettingsDialog::on_disableFunscriptHeatmapheckBox_clicked(bool checked)
     XTPSettings::setHeatmapDisabled(checked);
     emit disableHeatmapToggled(checked);
 }
-

@@ -19,12 +19,14 @@ LibraryListViewModel::LibraryListViewModel(MediaLibraryHandler* mediaLibraryHand
     connect(_mediaLibraryHandler, &MediaLibraryHandler::itemRemoved, this,   [this](LibraryListItem27 item, int indexOfItem, int newSize) {
         m_librarySize = newSize;
         auto index = this->index(indexOfItem, 0);
-        emit dataChanged(index, index);
+        //emit dataChanged(index, index);
+        removeRow(index.row());
     } );
     connect(_mediaLibraryHandler, &MediaLibraryHandler::itemAdded, this,   [this](LibraryListItem27 item, int indexOfItem, int newSize) {
         m_librarySize = newSize;
         auto index = this->index(indexOfItem, 0);
-        emit dataChanged(index, index);
+        //emit dataChanged(index, index);
+        insertRow(indexOfItem);
     } );
 
 }
@@ -84,7 +86,7 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
     if (index.column() == 0) {
         auto data =  getData();
         auto item = data.value(index.row());
-        auto thumbInt = SettingsHandler::getThumbSize();
+        auto thumbInt = overRideThumbSizeWidth > -1 ? overRideThumbSizeWidth : SettingsHandler::getThumbSize();
         if (role == Qt::DisplayRole)
         {
             return (item.isMFS ? "(MFS) " : "") + item.nameNoExtension;

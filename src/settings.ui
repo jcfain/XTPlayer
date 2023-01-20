@@ -1063,56 +1063,6 @@ THIS VALUE WILL BR RESET ON SCRIPT CHANGE!</string>
         <string>XTP web options</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_6">
-        <item row="3" column="3">
-         <widget class="QSpinBox" name="httpThumbQualitySpinBox">
-          <property name="toolTip">
-           <string>Sets the quality of the thumb nail compression sent to the browser.\nEnter 0 for lowest and 100 for highest. -1 disables compression and sends the image file directly.\nCan be used to improve performance on lower end devices.</string>
-          </property>
-          <property name="minimum">
-           <number>-1</number>
-          </property>
-          <property name="maximum">
-           <number>100</number>
-          </property>
-          <property name="singleStep">
-           <number>5</number>
-          </property>
-          <property name="value">
-           <number>-1</number>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1" colspan="6">
-         <widget class="QLineEdit" name="httpRootLineEdit">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1" colspan="6">
-         <widget class="QLineEdit" name="vrLibraryLineEdit">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QLabel" name="chunkSizeLabel">
-          <property name="text">
-           <string>Chunk size</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="7">
-         <widget class="QPushButton" name="browseHttpRootButton">
-          <property name="text">
-           <string>Browse</string>
-          </property>
-         </widget>
-        </item>
         <item row="3" column="2">
          <widget class="QLabel" name="label_9">
           <property name="toolTip">
@@ -1136,30 +1086,32 @@ THIS VALUE WILL BR RESET ON SCRIPT CHANGE!</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="7">
-         <widget class="QPushButton" name="browseVRLibraryButton">
-          <property name="text">
-           <string>Browse</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="7">
-         <widget class="QSpinBox" name="webSocketPortSpinBox">
+        <item row="3" column="3">
+         <widget class="QSpinBox" name="httpThumbQualitySpinBox">
           <property name="toolTip">
-           <string>0 = auto</string>
+           <string>Sets the quality of the thumb nail compression sent to the browser.\nEnter 0 for lowest and 100 for highest. -1 disables compression and sends the image file directly.\nCan be used to improve performance on lower end devices.</string>
+          </property>
+          <property name="minimum">
+           <number>-1</number>
           </property>
           <property name="maximum">
-           <number>65535</number>
+           <number>100</number>
+          </property>
+          <property name="singleStep">
+           <number>5</number>
+          </property>
+          <property name="value">
+           <number>-1</number>
           </property>
          </widget>
         </item>
-        <item row="3" column="5">
-         <widget class="QSpinBox" name="httpPortSpinBox">
-          <property name="minimum">
-           <number>1</number>
+        <item row="3" column="6">
+         <widget class="QLabel" name="label_8">
+          <property name="text">
+           <string>Web socket port</string>
           </property>
-          <property name="maximum">
-           <number>65535</number>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
@@ -1191,16 +1143,6 @@ will be hit for the next chunk.</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="6">
-         <widget class="QLabel" name="label_8">
-          <property name="text">
-           <string>Web socket port</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
         <item row="2" column="0">
          <widget class="QLabel" name="vrLibraryLabel">
           <property name="text">
@@ -1208,6 +1150,71 @@ will be hit for the next chunk.</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="7">
+         <widget class="QSpinBox" name="webSocketPortSpinBox">
+          <property name="toolTip">
+           <string>0 = auto</string>
+          </property>
+          <property name="maximum">
+           <number>65535</number>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="5">
+         <widget class="QSpinBox" name="httpPortSpinBox">
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>65535</number>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="chunkSizeLabel">
+          <property name="text">
+           <string>Chunk size</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="8">
+         <widget class="QPushButton" name="webPasswordButton">
+          <property name="text">
+           <string>Set password</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="8">
+         <widget class="QPushButton" name="browseVRLibraryButton">
+          <property name="text">
+           <string>Browse</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="8">
+         <widget class="QPushButton" name="browseHttpRootButton">
+          <property name="text">
+           <string>Browse</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1" colspan="7">
+         <widget class="QLineEdit" name="httpRootLineEdit">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1" colspan="7">
+         <widget class="QLineEdit" name="vrLibraryLineEdit">
+          <property name="enabled">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -1284,6 +1291,19 @@ will be hit for the next chunk.</string>
          </widget>
         </item>
        </layout>
+      </widget>
+      <widget class="QLabel" name="label_5">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>410</y>
+         <width>1261</width>
+         <height>111</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; text-decoration: underline; color:#aa0000;&quot;&gt;WARNING: LOCAL INTRANET USE ONLY&lt;/span&gt;. This web server is &lt;span style=&quot; color:#aa0000;&quot;&gt;NOT MEANT FOR USE OVER THE INTERNET&lt;/span&gt;. Do so at your own risk.&lt;br/&gt;All data except your password is sent in plain text and that does not have strong encryption. The password was meant to keep out&lt;br/&gt;prying eyes and not seasoned hackers. &lt;/p&gt;&lt;p&gt;This server uses a non secure http only.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
       </widget>
      </widget>
      <widget class="QWidget" name="systemtab">

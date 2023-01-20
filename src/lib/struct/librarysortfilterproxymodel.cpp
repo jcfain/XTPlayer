@@ -7,13 +7,21 @@ LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(MediaLibraryHandler* me
     connect(mediaLibraryHandler, &MediaLibraryHandler::libraryChange, this,  [this]() {
         invalidate();
     } );
+    connect(mediaLibraryHandler, &MediaLibraryHandler::libraryLoaded, this,  [this]() {
+        invalidate();
+    } );
 //    connect(mediaLibraryHandler, &MediaLibraryHandler::itemUpdated, this,   [this](LibraryListItem27 item) {
 //        invalidate();
 //    } );
-    connect(mediaLibraryHandler, &MediaLibraryHandler::itemRemoved, this,   [this](LibraryListItem27 item) {
+    connect(mediaLibraryHandler, &MediaLibraryHandler::itemRemoved, this,   [this](LibraryListItem27 item, int indexOfItem, int newSize) {
+/*        auto index = this->index(indexOfItem, 0);
+        emit dataChanged(index, index)*/;
         invalidate();
     } );
-    connect(mediaLibraryHandler, &MediaLibraryHandler::itemAdded, this,   [this](LibraryListItem27 item) {
+    connect(mediaLibraryHandler, &MediaLibraryHandler::itemAdded, this,   [this](LibraryListItem27 item, int indexOfItem, int newSize) {
+//        auto index = this->index(indexOfItem, 0);
+//        emit dataChanged(index, index);
+
         invalidate();
     } );
 }
@@ -138,11 +146,12 @@ void LibrarySortFilterProxyModel::onTextFilterChanged(QString filter)
 //    default:
 //        break;
 //    }
-
         QRegularExpression::PatternOptions options = QRegularExpression::CaseInsensitiveOption;
         //if (filterWidget->caseSensitivity() == Qt::CaseInsensitive)
         QRegularExpression regularExpression(filter, options);
         setFilterRegularExpression(regularExpression);
         invalidateFilter();
+        if(filter.isEmpty())
+            invalidate();
         //setSortMode(SettingsHandler::getLibrarySortMode());
 }

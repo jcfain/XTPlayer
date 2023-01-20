@@ -37,6 +37,7 @@ protected:
     virtual QList<LibraryListItem27> getData() const;
     virtual Qt::ItemFlags flags(const QModelIndex &index) const override;
     int m_librarySize = 0;
+    int overRideThumbSizeWidth = -1;
 
 
 //    // Add data:
