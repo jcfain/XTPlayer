@@ -11,7 +11,7 @@ xtplayerLocation="${home}"git/XTPlayer/build-XTPlayer-Desktop-Release/
 xtengineLocation="${home}"git/XTEngine/build-XTEngine-Desktop-Release/release/
 httpserverLocation="${home}"git/HttpServer/src/build/release/
 deployDirectory="${home}"git/XTPlayer/Deploy/
-linuxdeployqtBinary="${home}"git/bin/linuxdeployqt
+linuxdeployqtBinary="${home}"git/linuxdeployqt/bin/linuxdeployqt
 qtDirectory=/usr/lib/qt5/
 
 #Export directory with qmake to path.
@@ -34,5 +34,7 @@ cp "${xtplayerSource}"/src/images/icons/XTP-icon.png ${xtplayerLocation}/XTPlaye
 "${linuxdeployqtBinary}" ${xtplayerLocation}/XTPlayer -appimage -unsupported-allow-new-glibc -always-overwrite -extra-plugins=iconengines
 #,platformthemes/libqgtk3.so
 #mv ${home}git/XTPlayer.appimage  ${home}git/XTPlayer-v$(version).appimage
-mv "${xtplayerSource}"/XTPlayer-"${VERSION}"-x86_64.AppImage "${deployDirectory}"XTPlayer-"${VERSION}"-Linux-x86_64.AppImage
-cp "${deployDirectory}"XTPlayer-"${VERSION}"-Linux-x86_64.AppImage "${target}"XTPlayer-"${VERSION}"-Linux-x86_64.AppImage
+mv "${xtplayerSource}"/XTPlayer-"${VERSION}"-aarch64.AppImage "${deployDirectory}"XTPlayer-"${VERSION}"-Linux-aarch64.AppImage
+cp "${deployDirectory}"XTPlayer-"${VERSION}"-Linux-aarch64.AppImage "${target}"
+
+cp "${deployDirectory}"XTPlayer-"${VERSION}"-Linux-aarch64.AppImage "${deployDirectory}"XTPlayer-Latest.AppImage
