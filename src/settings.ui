@@ -1292,6 +1292,19 @@ will be hit for the next chunk.</string>
         </item>
        </layout>
       </widget>
+      <widget class="QLabel" name="label_5">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>410</y>
+         <width>1261</width>
+         <height>111</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; text-decoration: underline; color:#aa0000;&quot;&gt;WARNING: LOCAL INTRANET USE ONLY&lt;/span&gt;. This web server is &lt;span style=&quot; color:#aa0000;&quot;&gt;NOT MEANT FOR USE OVER THE INTERNET&lt;/span&gt;. Do so at your own risk.&lt;br/&gt;All data except your password is sent in plain text and that does not have strong encryption. The password was meant to keep out&lt;br/&gt;prying eyes and not seasoned hackers. &lt;/p&gt;&lt;p&gt;This server uses a non secure http only.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
      </widget>
      <widget class="QWidget" name="systemtab">
       <attribute name="title">
