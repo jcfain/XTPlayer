@@ -92,11 +92,11 @@ unix:!mac {
     INCLUDEPATH += $$PWD/../../HttpServer/src
     DEPENDPATH += $$PWD/../../HttpServer/src
     CONFIG(debug, debug|release) {
-        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_GCC_64bit-Debug/debug -lxtengine
+        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop-Debug/debug -lxtengine
         LIBS += -L$$PWD/../../HttpServer/src/build/debug -lhttpServer
     }
     else:CONFIG(release, debug|release): {
-        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_GCC_64bit-Release/release -lxtengine
+        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop-Release/release -lxtengine
         LIBS += -L$$PWD/../../HttpServer/src/build/release -lhttpServer
     }
 }

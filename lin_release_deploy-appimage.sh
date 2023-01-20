@@ -7,12 +7,12 @@ export VERSION=v${versionInput}
 home=~/
 target='/media/NAS/STK/Hardware/my software/'
 xtplayerSource="${home}"git/XTPlayer
-xtplayerLocation="${home}"git/XTPlayer/build-XTPlayer-Desktop-Release/
-xtengineLocation="${home}"git/XTEngine/build-XTEngine-Desktop-Release/release/
+xtplayerLocation="${home}"git/XTPlayer/build-XTPlayer-Desktop_Qt_5_15_2_GCC_64bit-Release/
+xtengineLocation="${home}"git/XTEngine/build-XTEngine-Desktop_Qt_5_15_2_GCC_64bit-Release/release/
 httpserverLocation="${home}"git/HttpServer/src/build/release/
 deployDirectory="${home}"git/XTPlayer/Deploy/
-linuxdeployqtBinary="${home}"git/linuxdeployqt/bin/linuxdeployqt
-qtDirectory=/usr/lib/qt5/
+linuxdeployqtBinary="${home}git/linuxdeployqt-continuous-x86_64.AppImage"
+qtDirectory="${home}"Qt/5.15.2/gcc_64/bin
 
 #Export directory with qmake to path.
 export PATH="${qtDirectory}":$PATH
@@ -34,7 +34,5 @@ cp "${xtplayerSource}"/src/images/icons/XTP-icon.png ${xtplayerLocation}/XTPlaye
 "${linuxdeployqtBinary}" ${xtplayerLocation}/XTPlayer -appimage -unsupported-allow-new-glibc -always-overwrite -extra-plugins=iconengines
 #,platformthemes/libqgtk3.so
 #mv ${home}git/XTPlayer.appimage  ${home}git/XTPlayer-v$(version).appimage
-mv "${xtplayerSource}"/XTPlayer-"${VERSION}"-aarch64.AppImage "${deployDirectory}"XTPlayer-"${VERSION}"-Linux-aarch64.AppImage
-cp "${deployDirectory}"XTPlayer-"${VERSION}"-Linux-aarch64.AppImage "${target}"
-
-cp "${deployDirectory}"XTPlayer-"${VERSION}"-Linux-aarch64.AppImage "${deployDirectory}"XTPlayer-Latest.AppImage
+mv "${xtplayerSource}"/XTPlayer-"${VERSION}"-x86_64.AppImage "${deployDirectory}"XTPlayer-"${VERSION}"-Linux-x86_64.AppImage
+cp "${deployDirectory}"XTPlayer-"${VERSION}"-Linux-x86_64.AppImage "${target}"XTPlayer-"${VERSION}"-Linux-x86_64.AppImage
