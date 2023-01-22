@@ -38,6 +38,8 @@ int main(int argc, char *argv[])
 
     QCommandLineOption headlessOption(QStringList() << "s" << "server", "Run without GUI.");
     parser.addOption(headlessOption);
+    QCommandLineOption addLibraryFolderOption(QStringList() << "a" << "add-media-folder", "Add media folder <folder>", "folder");
+    parser.addOption(addLibraryFolderOption);
     QCommandLineOption importOption(QStringList() << "i" << "import", "Import settings from an ini <file>", "file");
     parser.addOption(importOption);
     QCommandLineOption debugOption(QStringList() << "d" << "debug", "Start with debug output");
@@ -69,6 +71,20 @@ int main(int argc, char *argv[])
         LogHandler::Info("Resettings settings to default!");
         SettingsHandler::Default();
         LogHandler::Info("Settings cleared!");
+        delete xtengine;
+        delete a;
+        return 0;
+    }
+    if(parser.isSet(resetOption)) {
+        LogHandler::Debug("Adding library..");
+        QString targetDir = parser.value(addLibraryFolderOption);
+        if(!targetDir.isEmpty() && QFileInfo::exists(targetDir)) {
+            SettingsHandler::addSelectedLibrary(targetDir);
+            SettingsHandler::Save();
+            LogHandler::Info("Success!");
+        } else {
+            LogHandler::Error("Invalid directory: '"+ targetDir +"'");
+        }
         delete xtengine;
         delete a;
         return 0;
@@ -118,6 +134,8 @@ int main(int argc, char *argv[])
         delete a;
         return r;
     }
+    if(!SettingsHandler::getEnableHttpServer())
+        SettingsHandler::setEnableHttpServer(true);
     xtengine->init();
     int r = a->exec();
     delete xtengine;
