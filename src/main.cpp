@@ -50,6 +50,12 @@ int main(int argc, char *argv[])
     parser.addOption(resetOption);
     QCommandLineOption resetwindowOption(QStringList() << "reset-window", "Reset window size and position to default. (GUI mode only)");
     parser.addOption(resetwindowOption);
+    QCommandLineOption webServerPortOption(QStringList() << "web-server-port", "Set webserver port (1-65535) <number>", "number");
+    parser.addOption(webServerPortOption);
+    QCommandLineOption deviceIPAddressOption(QStringList() << "tcode-device-address", "Set tcode device address (IP address or name) <value>", "value");
+    parser.addOption(deviceIPAddressOption);
+    QCommandLineOption deviceIPPortOption(QStringList() << "tcode-device-port", "Set tcode device port (1-65535) <number>", "number");
+    parser.addOption(deviceIPPortOption);
 
 
     QCoreApplication *a = new QCoreApplication(argc, argv);
@@ -108,6 +114,61 @@ int main(int argc, char *argv[])
         delete xtengine;
         delete a;
         return 1;
+    }
+
+    if(parser.isSet(webServerPortOption)) {
+        LogHandler::Info("Setting web server port");
+        QString targetPort = parser.value(webServerPortOption);
+        bool ok;
+        int i = targetPort.toInt(&ok, 10);
+        if(!ok) {
+            LogHandler::Error("Invalid input: '"+ targetPort +"'");
+            delete xtengine;
+            delete a;
+            return 1;
+        } else {
+            SettingsHandler::setHTTPPort(i);
+            SettingsHandler::Save();
+        }
+        delete xtengine;
+        delete a;
+        return 0;
+    }
+
+    if(parser.isSet(deviceIPAddressOption)) {
+        LogHandler::Info("Setting tcode device address");
+        QString target = parser.value(deviceIPAddressOption);
+        if(target.isEmpty()) {
+            LogHandler::Error("Invalid input: '"+ target +"'");
+            delete xtengine;
+            delete a;
+            return 1;
+        } else {
+            SettingsHandler::setServerAddress(target);
+            SettingsHandler::Save();
+        }
+        delete xtengine;
+        delete a;
+        return 0;
+    }
+
+    if(parser.isSet(deviceIPPortOption)) {
+        LogHandler::Info("Setting tcode device port");
+        QString targetPort = parser.value(deviceIPPortOption);
+        bool ok;
+        int i = targetPort.toInt(&ok, 10);
+        if(!ok) {
+            LogHandler::Error("Invalid input: '"+ targetPort +"'");
+            delete xtengine;
+            delete a;
+            return 1;
+        } else {
+            SettingsHandler::setServerPort(targetPort);
+            SettingsHandler::Save();
+        }
+        delete xtengine;
+        delete a;
+        return 0;
     }
 
     if (!isGUI) {
