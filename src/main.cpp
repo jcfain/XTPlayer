@@ -38,24 +38,30 @@ int main(int argc, char *argv[])
 
     QCommandLineOption headlessOption(QStringList() << "s" << "server", "Run without GUI.");
     parser.addOption(headlessOption);
-    QCommandLineOption addLibraryFolderOption(QStringList() << "a" << "add-media-folder", "Add media folder <folder>", "folder");
-    parser.addOption(addLibraryFolderOption);
     QCommandLineOption importOption(QStringList() << "i" << "import", "Import settings from an ini <file>", "file");
     parser.addOption(importOption);
-    QCommandLineOption debugOption(QStringList() << "d" << "debug", "Start with debug output");
-    parser.addOption(debugOption);
-    QCommandLineOption verboseOption(QStringList() << "b" << "verbose", "Start with verbose output");
-    parser.addOption(verboseOption);
-    QCommandLineOption resetOption(QStringList() << "reset", "Reset all settings to default");
-    parser.addOption(resetOption);
-    QCommandLineOption resetwindowOption(QStringList() << "reset-window", "Reset window size and position to default. (GUI mode only)");
-    parser.addOption(resetwindowOption);
+    QCommandLineOption addLibraryFolderOption(QStringList() << "a" << "add-media-folder", "Add media folder <folder>", "folder");
+    parser.addOption(addLibraryFolderOption);
+    QCommandLineOption excludeLibraryFolderOption(QStringList() << "exclude-media-folder", "Exclude media folder <folder>", "folder");
+    parser.addOption(excludeLibraryFolderOption);
+    QCommandLineOption removeLibraryFolderOption(QStringList() << "remove-media-folder", "Remove media or excluded folder <folder>", "folder");
+    parser.addOption(removeLibraryFolderOption);
+    QCommandLineOption listLibraryFolderOption(QStringList() << "list-media-folder", "List out media folders");
+    parser.addOption(listLibraryFolderOption);
     QCommandLineOption webServerPortOption(QStringList() << "web-server-port", "Set webserver port (1-65535) <number>", "number");
     parser.addOption(webServerPortOption);
     QCommandLineOption deviceIPAddressOption(QStringList() << "tcode-device-address", "Set tcode device address (IP address or name) <value>", "value");
     parser.addOption(deviceIPAddressOption);
     QCommandLineOption deviceIPPortOption(QStringList() << "tcode-device-port", "Set tcode device port (1-65535) <number>", "number");
     parser.addOption(deviceIPPortOption);
+    QCommandLineOption debugOption(QStringList() << "d" << "debug", "Start with debug output");
+    parser.addOption(debugOption);
+    QCommandLineOption verboseOption(QStringList() << "b" << "verbose", "Start with verbose output");
+    parser.addOption(verboseOption);
+    QCommandLineOption resetwindowOption(QStringList() << "reset-window", "Reset window size and position to default. (GUI mode only)");
+    parser.addOption(resetwindowOption);
+    QCommandLineOption resetOption(QStringList() << "reset", "Reset all settings to default");
+    parser.addOption(resetOption);
 
 
     QCoreApplication *a = new QCoreApplication(argc, argv);
@@ -82,7 +88,7 @@ int main(int argc, char *argv[])
         return 0;
     }
     if(parser.isSet(addLibraryFolderOption)) {
-        LogHandler::Info("Adding library..");
+        LogHandler::Info("Adding media folder..");
         QString targetDir = parser.value(addLibraryFolderOption);
         if(!targetDir.isEmpty() && QFileInfo::exists(targetDir)) {
             SettingsHandler::addSelectedLibrary(targetDir);
@@ -95,6 +101,55 @@ int main(int argc, char *argv[])
         delete a;
         return 0;
     }
+    if(parser.isSet(excludeLibraryFolderOption)) {
+        LogHandler::Info("Excluding folder..");
+        QString targetDir = parser.value(excludeLibraryFolderOption);
+        if(!targetDir.isEmpty() && QFileInfo::exists(targetDir)) {
+            SettingsHandler::addToLibraryExclusions(targetDir);
+            SettingsHandler::Save();
+            LogHandler::Info("Success!");
+        } else {
+            LogHandler::Error("Invalid directory: '"+ targetDir +"'");
+        }
+        delete xtengine;
+        delete a;
+        return 0;
+    }
+    if(parser.isSet(removeLibraryFolderOption)) {
+        QString targetDir = parser.value(removeLibraryFolderOption);
+        if(!targetDir.isEmpty() && QFileInfo::exists(targetDir)) {
+            QStringList folders = SettingsHandler::getSelectedLibrary();
+            if(folders.contains(targetDir)) {
+                LogHandler::Info("Removing library folder..");
+                SettingsHandler::removeSelectedLibrary(targetDir);
+                SettingsHandler::Save();
+                LogHandler::Info("Success!");
+                delete xtengine;
+                delete a;
+                return 0;
+            }
+            QStringList exclusions = SettingsHandler::getLibraryExclusions();
+            if(exclusions.contains(targetDir)) {
+                LogHandler::Info("Removing excluded folder..");
+                SettingsHandler::removeFromLibraryExclusions(QList<int> {exclusions.indexOf(targetDir)});
+                SettingsHandler::Save();
+                LogHandler::Info("Success!");
+                delete xtengine;
+                delete a;
+                return 0;
+            }
+            LogHandler::Info("Not found in libraries or excluded: "+targetDir);
+            delete xtengine;
+            delete a;
+            return 0;
+        } else {
+            LogHandler::Error("Invalid directory: '"+ targetDir +"'");
+        }
+        delete xtengine;
+        delete a;
+        return 0;
+    }
+
     if(parser.isSet(importOption)) {
         LogHandler::Info("Import settings from file");
         QString targetFile = parser.value(importOption);
@@ -165,6 +220,27 @@ int main(int argc, char *argv[])
         } else {
             SettingsHandler::setServerPort(targetPort);
             SettingsHandler::Save();
+        }
+        delete xtengine;
+        delete a;
+        return 0;
+    }
+    if(parser.isSet(listLibraryFolderOption)) {
+        QStringList folders = SettingsHandler::getSelectedLibrary();
+        LogHandler::Info("Media folders:");
+        if(folders.isEmpty()) {
+            LogHandler::Info("None");
+        }
+        foreach (QString folder, folders) {
+            LogHandler::Info(folder);
+        }
+        QStringList exclusions = SettingsHandler::getLibraryExclusions();
+        LogHandler::Info("Excluded Media folders:");
+        if(exclusions.isEmpty()) {
+            LogHandler::Info("None");
+        }
+        foreach (QString folder, exclusions) {
+            LogHandler::Info(folder);
         }
         delete xtengine;
         delete a;
