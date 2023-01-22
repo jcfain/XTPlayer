@@ -50,6 +50,8 @@ int main(int argc, char *argv[])
     parser.addOption(listLibraryFolderOption);
     QCommandLineOption webServerPortOption(QStringList() << "web-server-port", "Set webserver port (1-65535) <number>", "number");
     parser.addOption(webServerPortOption);
+    QCommandLineOption webServerChunkSizeOption(QStringList() << "web-server-chunk-size", "Set webserver HLS chunk size in MB <number>", "number");
+    parser.addOption(webServerChunkSizeOption);
     QCommandLineOption deviceIPAddressOption(QStringList() << "tcode-device-address", "Set tcode device address (IP address or name) <value>", "value");
     parser.addOption(deviceIPAddressOption);
     QCommandLineOption deviceIPPortOption(QStringList() << "tcode-device-port", "Set tcode device port (1-65535) <number>", "number");
@@ -171,6 +173,26 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    if(parser.isSet(webServerChunkSizeOption)) {
+        LogHandler::Info("Setting web server HLS chunk size");
+        QString target = parser.value(webServerChunkSizeOption);
+        bool ok;
+        int i = target.toInt(&ok, 10);
+        if(!ok) {
+            LogHandler::Error("Invalid input: '"+ target +"'");
+            delete xtengine;
+            delete a;
+            return 1;
+        } else {
+            SettingsHandler::setHTTPChunkSize(i * 1048576);
+            SettingsHandler::Save();
+            LogHandler::Info("Success!");
+        }
+        delete xtengine;
+        delete a;
+        return 0;
+    }
+
     if(parser.isSet(webServerPortOption)) {
         LogHandler::Info("Setting web server port");
         QString targetPort = parser.value(webServerPortOption);
@@ -184,6 +206,7 @@ int main(int argc, char *argv[])
         } else {
             SettingsHandler::setHTTPPort(i);
             SettingsHandler::Save();
+            LogHandler::Info("Success!");
         }
         delete xtengine;
         delete a;
@@ -201,6 +224,7 @@ int main(int argc, char *argv[])
         } else {
             SettingsHandler::setServerAddress(target);
             SettingsHandler::Save();
+            LogHandler::Info("Success!");
         }
         delete xtengine;
         delete a;
@@ -220,6 +244,7 @@ int main(int argc, char *argv[])
         } else {
             SettingsHandler::setServerPort(targetPort);
             SettingsHandler::Save();
+            LogHandler::Info("Success!");
         }
         delete xtengine;
         delete a;
