@@ -73,7 +73,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(XTEngine* xtengine, QStringList, QWidget *parent = nullptr);
+    MainWindow(XTEngine* xtengine, QWidget *parent = nullptr);
     ~MainWindow();
 
 private slots:

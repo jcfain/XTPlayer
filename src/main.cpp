@@ -32,18 +32,48 @@ int main(int argc, char *argv[])
     qRegisterMetaType<QVector<int> >("QVector<int>");
 
     QCommandLineParser parser;
-//    parser.setApplicationDescription("My program");
-//    parser.addHelpOption();
-//    parser.addVersionOption();
+    parser.setApplicationDescription("XTP");
+    parser.addHelpOption();
+    parser.addVersionOption();
 
-    QCommandLineOption guiOption(QStringList() << "headless", "Running it via GUI.");
-    parser.addOption(guiOption);
+    QCommandLineOption headlessOption(QStringList() << "h", "headless", "Run without GUI.");
+    parser.addOption(headlessOption);
+    QCommandLineOption importOption(QStringList() << "i", "import", "Import settings from <file>", "file");
+    parser.addOption(importOption);
+    QCommandLineOption debugOption(QStringList() << "d", "debug", "Start with debug output");
+    parser.addOption(debugOption);
+    QCommandLineOption verboseOption(QStringList() << "v", "verbose", "Start with verbose output");
+    parser.addOption(verboseOption);
+    QCommandLineOption resetOption(QStringList() << "reset", "Reset all settings to default");
+    parser.addOption(resetOption);
+    QCommandLineOption resetwindowOption(QStringList() << "reset-window", "Reset all settings to default");
+    parser.addOption(resetwindowOption);
+
 
     QCoreApplication *a = new QCoreApplication(argc, argv);
     parser.process(*a);
-    bool isGUI = parser.isSet(guiOption);
+    bool isGUI = parser.isSet(headlessOption);
 
     XTEngine* xtengine = new XTEngine();
+
+    if(parser.isSet(verboseOption)) {
+        LogHandler::Debug("Starting in verbose mode");
+        LogHandler::setUserDebug(true);
+        LogHandler::setQtDebuging(true);
+    }
+    if(parser.isSet(debugOption)) {
+        LogHandler::Debug("Starting in debug mode");
+        LogHandler::setUserDebug(true);
+    }
+    if(parser.isSet(resetOption)) {
+        LogHandler::Debug("Resettings settings to default!");
+        SettingsHandler::Default();
+    }
+    if(parser.isSet(importOption)) {
+        LogHandler::Debug("Import settings from file");
+        QString targetDir = parser.value(importOption);
+
+    }
 
     if (!isGUI){
         delete a;
@@ -55,7 +85,14 @@ int main(int argc, char *argv[])
             freopen("CONOUT$", "w", stderr);
         }
         #endif
-        MainWindow w(xtengine, a->arguments());
+
+        XTPSettings::load();
+        if(parser.isSet("reset-window")) {
+            LogHandler::Debug("Resettings window size to default!");
+            XTPSettings::resetWindowSize();
+        }
+
+        MainWindow w(xtengine);
         w.show();
         return a->exec();
     }

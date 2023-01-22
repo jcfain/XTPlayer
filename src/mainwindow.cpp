@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-MainWindow::MainWindow(XTEngine* xtengine, QStringList arguments, QWidget *parent)
+MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
@@ -57,27 +57,27 @@ MainWindow::MainWindow(XTEngine* xtengine, QStringList arguments, QWidget *paren
         }
     }
 
-    if(arguments.length() > 0)
-    {
-        foreach(QString arg, arguments)
-        {
-            if(arg.toLower().startsWith("-verbose")) {
-                LogHandler::Debug("Starting in verbose mode");
-                LogHandler::setUserDebug(true);
-                LogHandler::setQtDebuging(true);
-            } else if(arg.toLower().startsWith("-debug")) {
-                LogHandler::Debug("Starting in debug mode");
-                LogHandler::setUserDebug(true);
-            } else if(arg.toLower().startsWith("-reset")) {
-                LogHandler::Debug("Resettings settings to default!");
-                SettingsHandler::Default();
-            } else if(arg.toLower().startsWith("-resetwindow")) {
-                LogHandler::Debug("Resettings window size to default!");
-                XTPSettings::resetWindowSize();
-            }
-        }
-    }
-    XTPSettings::load();
+//    if(arguments.length() > 0)
+//    {
+//        foreach(QString arg, arguments)
+//        {
+//            if(arg.toLower().startsWith("--verbose")) {
+//                LogHandler::Debug("Starting in verbose mode");
+//                LogHandler::setUserDebug(true);
+//                LogHandler::setQtDebuging(true);
+//            } else if(arg.toLower().startsWith("--debug")) {
+//                LogHandler::Debug("Starting in debug mode");
+//                LogHandler::setUserDebug(true);
+//            } else if(arg.toLower().startsWith("--reset")) {
+//                LogHandler::Debug("Resettings settings to default!");
+//                SettingsHandler::Default();
+//            } else
+//            if(arg.toLower().startsWith("--resetwindow")) {
+//                LogHandler::Debug("Resettings window size to default!");
+//                XTPSettings::resetWindowSize();
+//            }
+//        }
+//    }
 
     _dlnaScriptLinksDialog = new DLNAScriptLinks(this);
 
