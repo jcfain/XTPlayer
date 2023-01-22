@@ -32,21 +32,21 @@ int main(int argc, char *argv[])
     qRegisterMetaType<QVector<int> >("QVector<int>");
 
     QCommandLineParser parser;
-    parser.setApplicationDescription("XTP");
+    parser.setApplicationDescription("XTPlayer");
     parser.addHelpOption();
     parser.addVersionOption();
 
-    QCommandLineOption headlessOption(QStringList() << "h", "headless", "Run without GUI.");
+    QCommandLineOption headlessOption(QStringList() << "s" << "server", "Run without GUI.");
     parser.addOption(headlessOption);
-    QCommandLineOption importOption(QStringList() << "i", "import", "Import settings from <file>", "file");
+    QCommandLineOption importOption(QStringList() << "i" << "import", "Import settings from an ini <file>", "file");
     parser.addOption(importOption);
-    QCommandLineOption debugOption(QStringList() << "d", "debug", "Start with debug output");
+    QCommandLineOption debugOption(QStringList() << "d" << "debug", "Start with debug output");
     parser.addOption(debugOption);
-    QCommandLineOption verboseOption(QStringList() << "v", "verbose", "Start with verbose output");
+    QCommandLineOption verboseOption(QStringList() << "b" << "verbose", "Start with verbose output");
     parser.addOption(verboseOption);
     QCommandLineOption resetOption(QStringList() << "reset", "Reset all settings to default");
     parser.addOption(resetOption);
-    QCommandLineOption resetwindowOption(QStringList() << "reset-window", "Reset all settings to default");
+    QCommandLineOption resetwindowOption(QStringList() << "reset-window", "Reset window size and position to default. (GUI mode only)");
     parser.addOption(resetwindowOption);
 
 
@@ -54,28 +54,47 @@ int main(int argc, char *argv[])
     parser.process(*a);
     bool isGUI = parser.isSet(headlessOption);
 
-    XTEngine* xtengine = new XTEngine();
+    XTEngine* xtengine = new XTEngine();//Must be called before SettingsHandler functions are called.
 
     if(parser.isSet(verboseOption)) {
-        LogHandler::Debug("Starting in verbose mode");
+        LogHandler::Info("Starting in verbose mode");
         LogHandler::setUserDebug(true);
         LogHandler::setQtDebuging(true);
     }
     if(parser.isSet(debugOption)) {
-        LogHandler::Debug("Starting in debug mode");
+        LogHandler::Info("Starting in debug mode");
         LogHandler::setUserDebug(true);
     }
     if(parser.isSet(resetOption)) {
-        LogHandler::Debug("Resettings settings to default!");
+        LogHandler::Info("Resettings settings to default!");
         SettingsHandler::Default();
+        LogHandler::Info("Settings cleared!");
+        delete xtengine;
+        delete a;
+        return 0;
     }
     if(parser.isSet(importOption)) {
         LogHandler::Debug("Import settings from file");
-        QString targetDir = parser.value(importOption);
-
+        QString targetFile = parser.value(importOption);
+        if(!targetFile.endsWith("ini")) {
+            LogHandler::Error("Invalid file: only ini files are valid: '"+ targetFile +"'");
+            delete xtengine;
+            delete a;
+            return 1;
+        }
+        if(SettingsHandler::Import(targetFile)) {
+            LogHandler::Info("Success!");
+            delete xtengine;
+            delete a;
+            return 0;
+        }
+        LogHandler::Info("Error importing file: '"+ targetFile +"'");
+        delete xtengine;
+        delete a;
+        return 1;
     }
 
-    if (!isGUI){
+    if (!isGUI) {
         delete a;
         QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
         a = new QApplication(argc, argv);
@@ -94,8 +113,14 @@ int main(int argc, char *argv[])
 
         MainWindow w(xtengine);
         w.show();
-        return a->exec();
+        int r = a->exec();
+        delete xtengine;
+        delete a;
+        return r;
     }
     xtengine->init();
-    return a->exec();
+    int r = a->exec();
+    delete xtengine;
+    delete a;
+    return r;
 }

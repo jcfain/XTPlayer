@@ -284,6 +284,9 @@ void SettingsDialog::setupUi()
 
         ui.enableHttpServerCheckbox->setChecked(SettingsHandler::getEnableHttpServer());
         ui.httpServerOptions->setVisible(SettingsHandler::getEnableHttpServer());
+        ui.webServerWarningLabel->setVisible(SettingsHandler::getEnableHttpServer());
+        ui.webAddressInstructionsLabel->setVisible(SettingsHandler::getEnableHttpServer());
+        ui.webAddressLinkLabel->setVisible(SettingsHandler::getEnableHttpServer());
         ui.httpRootLineEdit->setText(SettingsHandler::getHttpServerRoot());
         ui.vrLibraryLineEdit->setText(SettingsHandler::getLastSelectedVRLibrary());
         ui.chunkSizeDoubleSpinBox->setValue(SettingsHandler::getHTTPChunkSize() / 1048576);
@@ -1577,6 +1580,9 @@ void SettingsDialog::on_enableHttpServerCheckbox_clicked(bool checked)
 {
     SettingsHandler::setEnableHttpServer(checked);
     ui.httpServerOptions->setVisible(checked);
+    ui.webServerWarningLabel->setVisible(checked);
+    ui.webAddressInstructionsLabel->setVisible(checked);
+    ui.webAddressLinkLabel->setVisible(checked);
     set_requires_restart(true);
     if(!checked && SettingsHandler::getSelectedInputDevice() == DeviceName::XTPWeb)
         on_xtpWeb_initInputDevice(DeviceName::None, false);

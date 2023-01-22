@@ -6,11 +6,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     m_xtengine = xtengine;
-    m_xtengine->setParent(this);
 
-    connect(xtengine, &XTEngine::destroyed, this, []() {
-        LogHandler::Debug("engine deleted");
-    });
     QPixmap pixmap("://images/XTP_Splash.png");
     loadingSplash = new QSplashScreen(pixmap);
     loadingSplash->setStyleSheet("color: white");

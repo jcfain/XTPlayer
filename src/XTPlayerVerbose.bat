@@ -1,2 +1,2 @@
-"%~dp0XTPlayer.exe" -verbose
+"%~dp0XTPlayer.exe" --verbose
 pause
