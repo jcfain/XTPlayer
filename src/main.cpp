@@ -31,7 +31,6 @@ int main(int argc, char *argv[])
     qRegisterMetaTypeStreamOperators<Bookmark>("Bookmark");
     qRegisterMetaType<QVector<int> >("QVector<int>");
 
-    QApplication a(argc, argv);
     QCommandLineParser parser;
 //    parser.setApplicationDescription("My program");
 //    parser.addHelpOption();
@@ -40,21 +39,26 @@ int main(int argc, char *argv[])
     QCommandLineOption guiOption(QStringList() << "headless", "Running it via GUI.");
     parser.addOption(guiOption);
 
-    parser.process(a);
+    QCoreApplication *a = new QCoreApplication(argc, argv);
+    parser.process(*a);
+    bool isGUI = parser.isSet(guiOption);
+
     XTEngine* xtengine = new XTEngine();
 
-    if (!parser.isSet(guiOption)){
+    if (!isGUI){
+        delete a;
+        QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+        a = new QApplication(argc, argv);
         #ifdef _WIN32
         if (AttachConsole(ATTACH_PARENT_PROCESS)) {
             freopen("CONOUT$", "w", stdout);
             freopen("CONOUT$", "w", stderr);
         }
         #endif
-        QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-        MainWindow w(xtengine, a.arguments());
+        MainWindow w(xtengine, a->arguments());
         w.show();
-        return a.exec();
+        return a->exec();
     }
     xtengine->init();
-    return a.exec();
+    return a->exec();
 }
