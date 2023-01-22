@@ -50,8 +50,20 @@ int main(int argc, char *argv[])
     parser.addOption(listLibraryFolderOption);
     QCommandLineOption webServerPortOption(QStringList() << "web-server-port", "Set webserver port (1-65535) <number>", "number");
     parser.addOption(webServerPortOption);
+    QCommandLineOption webSocketPortOption(QStringList() << "web-socket-port", "Set websocket port (1-65535 or -1 for auto) <number>", "number");
+    parser.addOption(webSocketPortOption);
     QCommandLineOption webServerChunkSizeOption(QStringList() << "web-server-chunk-size", "Set webserver HLS chunk size in MB <number>", "number");
     parser.addOption(webServerChunkSizeOption);
+    QCommandLineOption webImageCompressionOption(QStringList() << "web-thumb-compression", "Set thumb compression  (0-100 or -1 for uncompressed) <number>", "number");
+    parser.addOption(webImageCompressionOption);
+
+    QCommandLineOption deviceComPortOption(QStringList() << "tcode-device-com-port", "Set tcode device com <value>", "value");
+    parser.addOption(deviceComPortOption);
+    QCommandLineOption deviceComOption(QStringList() << "tcode-device-com", "Set tcode device to com port");
+    parser.addOption(deviceComOption);
+    QCommandLineOption deviceNetworkOption(QStringList() << "tcode-device-network", "Set tcode device network");
+    parser.addOption(deviceNetworkOption);
+
     QCommandLineOption deviceIPAddressOption(QStringList() << "tcode-device-address", "Set tcode device address (IP address or name) <value>", "value");
     parser.addOption(deviceIPAddressOption);
     QCommandLineOption deviceIPPortOption(QStringList() << "tcode-device-port", "Set tcode device port (1-65535) <number>", "number");
@@ -193,6 +205,26 @@ int main(int argc, char *argv[])
         return 0;
     }
 
+    if(parser.isSet(webSocketPortOption)) {
+        LogHandler::Info("Setting web socket port");
+        QString targetPort = parser.value(webSocketPortOption);
+        bool ok;
+        int i = targetPort.toInt(&ok, 10);
+        if(!ok) {
+            LogHandler::Error("Invalid input: '"+ targetPort +"'");
+            delete xtengine;
+            delete a;
+            return 1;
+        } else {
+            SettingsHandler::setWebSocketPort(i);
+            SettingsHandler::Save();
+            LogHandler::Info("Success!");
+        }
+        delete xtengine;
+        delete a;
+        return 0;
+    }
+
     if(parser.isSet(webServerPortOption)) {
         LogHandler::Info("Setting web server port");
         QString targetPort = parser.value(webServerPortOption);
@@ -205,6 +237,66 @@ int main(int argc, char *argv[])
             return 1;
         } else {
             SettingsHandler::setHTTPPort(i);
+            SettingsHandler::Save();
+            LogHandler::Info("Success!");
+        }
+        delete xtengine;
+        delete a;
+        return 0;
+    }
+    if(parser.isSet(webImageCompressionOption)) {
+        LogHandler::Info("Setting web thumb compression");
+        QString targetPort = parser.value(webImageCompressionOption);
+        bool ok;
+        int i = targetPort.toInt(&ok, 10);
+        if(!ok) {
+            LogHandler::Error("Invalid input: '"+ targetPort +"'");
+            delete xtengine;
+            delete a;
+            return 1;
+        } else {
+            SettingsHandler::setHttpThumbQuality(i);
+            SettingsHandler::Save();
+            LogHandler::Info("Success!");
+        }
+        delete xtengine;
+        delete a;
+        return 0;
+    }
+
+//    QCommandLineOption deviceComOption(QStringList() << "tcode-device-com", "Set tcode device to com port");
+//    QCommandLineOption deviceNetworkOption(QStringList() << "tcode-device-network", "Set tcode device network");
+
+    if(parser.isSet(deviceComOption)) {
+        LogHandler::Info("Setting tcode device com");
+        SettingsHandler::setSelectedInputDevice(DeviceName::Serial);
+        SettingsHandler::Save();
+        LogHandler::Info("Success!");
+        delete xtengine;
+        delete a;
+        return 0;
+    }
+
+    if(parser.isSet(deviceNetworkOption)) {
+        LogHandler::Info("Setting tcode device network");
+        SettingsHandler::setSelectedInputDevice(DeviceName::Network);
+        SettingsHandler::Save();
+        LogHandler::Info("Success!");
+        delete xtengine;
+        delete a;
+        return 0;
+    }
+
+    if(parser.isSet(deviceComPortOption)) {
+        LogHandler::Info("Setting tcode device com port");
+        QString target = parser.value(deviceComPortOption);
+        if(target.isEmpty()) {
+            LogHandler::Error("Invalid input: '"+ target +"'");
+            delete xtengine;
+            delete a;
+            return 1;
+        } else {
+            SettingsHandler::setSerialPort(target);
             SettingsHandler::Save();
             LogHandler::Info("Success!");
         }
