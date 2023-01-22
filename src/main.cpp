@@ -75,8 +75,8 @@ int main(int argc, char *argv[])
         delete a;
         return 0;
     }
-    if(parser.isSet(resetOption)) {
-        LogHandler::Debug("Adding library..");
+    if(parser.isSet(addLibraryFolderOption)) {
+        LogHandler::Info("Adding library..");
         QString targetDir = parser.value(addLibraryFolderOption);
         if(!targetDir.isEmpty() && QFileInfo::exists(targetDir)) {
             SettingsHandler::addSelectedLibrary(targetDir);
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
         return 0;
     }
     if(parser.isSet(importOption)) {
-        LogHandler::Debug("Import settings from file");
+        LogHandler::Info("Import settings from file");
         QString targetFile = parser.value(importOption);
         if(!targetFile.endsWith("ini")) {
             LogHandler::Error("Invalid file: only ini files are valid: '"+ targetFile +"'");
