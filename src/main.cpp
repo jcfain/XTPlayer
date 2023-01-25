@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
     parser.addOption(headlessOption);
     QCommandLineOption importOption(QStringList() << "i" << "import", "Import settings from an ini <file>", "file");
     parser.addOption(importOption);
+
     QCommandLineOption addLibraryFolderOption(QStringList() << "a" << "add-media-folder", "Add media folder <folder>", "folder");
     parser.addOption(addLibraryFolderOption);
     QCommandLineOption excludeLibraryFolderOption(QStringList() << "exclude-media-folder", "Exclude media folder <folder>", "folder");
@@ -48,6 +49,9 @@ int main(int argc, char *argv[])
     parser.addOption(removeLibraryFolderOption);
     QCommandLineOption listLibraryFolderOption(QStringList() << "list-media-folder", "List out media folders");
     parser.addOption(listLibraryFolderOption);
+    QCommandLineOption thumbFolderOption(QStringList() << "thumb-folder", "Set the thumb folder <folder>", "folder");
+    parser.addOption(thumbFolderOption);
+
     QCommandLineOption webServerPortOption(QStringList() << "web-server-port", "Set webserver port (1-65535) <number>", "number");
     parser.addOption(webServerPortOption);
     QCommandLineOption webSocketPortOption(QStringList() << "web-socket-port", "Set websocket port (1-65535 or -1 for auto) <number>", "number");
@@ -68,14 +72,14 @@ int main(int argc, char *argv[])
     parser.addOption(deviceIPAddressOption);
     QCommandLineOption deviceIPPortOption(QStringList() << "tcode-device-port", "Set tcode device port (1-65535) <number>", "number");
     parser.addOption(deviceIPPortOption);
-    QCommandLineOption debugOption(QStringList() << "d" << "debug", "Start with debug output");
-    parser.addOption(debugOption);
-    QCommandLineOption verboseOption(QStringList() << "b" << "verbose", "Start with verbose output");
-    parser.addOption(verboseOption);
     QCommandLineOption resetwindowOption(QStringList() << "reset-window", "Reset window size and position to default. (GUI mode only)");
     parser.addOption(resetwindowOption);
     QCommandLineOption resetOption(QStringList() << "reset", "Reset all settings to default");
     parser.addOption(resetOption);
+    QCommandLineOption debugOption(QStringList() << "d" << "debug", "Start with debug output");
+    parser.addOption(debugOption);
+    QCommandLineOption verboseOption(QStringList() << "b" << "verbose", "Start with verbose output");
+    parser.addOption(verboseOption);
 
 
     QCoreApplication *a = new QCoreApplication(argc, argv);
@@ -106,6 +110,20 @@ int main(int argc, char *argv[])
         QString targetDir = parser.value(addLibraryFolderOption);
         if(!targetDir.isEmpty() && QFileInfo::exists(targetDir)) {
             SettingsHandler::addSelectedLibrary(targetDir);
+            SettingsHandler::Save();
+            LogHandler::Info("Success!");
+        } else {
+            LogHandler::Error("Invalid directory: '"+ targetDir +"'");
+        }
+        delete xtengine;
+        delete a;
+        return 0;
+    }
+    if(parser.isSet(thumbFolderOption)) {
+        LogHandler::Info("Setting thumb folder..");
+        QString targetDir = parser.value(thumbFolderOption);
+        if(!targetDir.isEmpty() && QFileInfo::exists(targetDir)) {
+            SettingsHandler::setSelectedThumbsDir(targetDir);
             SettingsHandler::Save();
             LogHandler::Info("Success!");
         } else {

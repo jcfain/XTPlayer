@@ -317,13 +317,6 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
         ui->mainFrameSplitter->setSizes(splitterSizes);
 
     auto sizes = ui->mainFrameSplitter->sizes();
-    if(SettingsHandler::getEnableHttpServer()) {
-        connect(m_xtengine->httpHandler(), &HttpHandler::error, this, [this](QString error) {
-            DialogHandler::MessageBox(this, error, XLogLevel::Critical);
-        });
-        connect(m_xtengine->httpHandler(), &HttpHandler::connectInputDevice, _xSettings, &SettingsDialog::on_xtpWeb_initInputDevice);
-        connect(m_xtengine->httpHandler(), &HttpHandler::connectOutputDevice, _xSettings, &SettingsDialog::on_xtpWeb_initOutputDevice);
-    }
 
     connect(&SettingsHandler::instance(), &SettingsHandler::messageSend, this, &MainWindow::on_settingsMessageRecieve);
     connect(_xSettings, &SettingsDialog::messageSend, this, &MainWindow::on_settingsMessageRecieve);
@@ -504,9 +497,17 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     _appPos = this->pos();
 
     changeLibraryDisplayMode(SettingsHandler::getLibraryView());
-    loadingSplash->showMessage(fullVersion + "\nLoading Library...", Qt::AlignBottom, Qt::white);
+    loadingSplash->showMessage(fullVersion + "\nInitialize engine...", Qt::AlignBottom, Qt::white);
     m_xtengine->init();
 
+    // http initialized in engine.init
+    if(SettingsHandler::getEnableHttpServer()) {
+        connect(m_xtengine->httpHandler(), &HttpHandler::error, this, [this](QString error) {
+            DialogHandler::MessageBox(this, error, XLogLevel::Critical);
+        });
+        connect(m_xtengine->httpHandler(), &HttpHandler::connectInputDevice, _xSettings, &SettingsDialog::on_xtpWeb_initInputDevice);
+        connect(m_xtengine->httpHandler(), &HttpHandler::connectOutputDevice, _xSettings, &SettingsDialog::on_xtpWeb_initOutputDevice);
+    }
 //    QScreen *screen = this->screen();
 //    QSize screenSize = screen->size();
 //    auto minHeight = round(screenSize.height() * .06f);
@@ -1051,7 +1052,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
     //        myMenu.addAction("Add bookmark from current", this, [this, selectedFileListItem] () {
     //            onAddBookmark(selectedFileListItem, "Book mark 1", videoHandler->position());
     //        });
-            myMenu.addAction(tr("Reveal video in directory"), this, [this, selectedFileListItem] () {
+            myMenu.addAction(tr("Reveal media in directory"), this, [this, selectedFileListItem] () {
                 if(selectedFileListItem.path.isEmpty()) {
                     DialogHandler::MessageBox(this, "Invalid media path.", XLogLevel::Critical);
                     return;
@@ -1062,7 +1063,8 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                 }
                 showInGraphicalShell(selectedFileListItem.path);
             });
-            if(selectedFileListItem.thumbState == ThumbState::Ready) {
+            if(selectedFileListItem.thumbState == ThumbState::Ready &&
+               (selectedFileListItem.type == LibraryListItemType::VR ||selectedFileListItem.type == LibraryListItemType::Video)) {
                 myMenu.addAction(tr("Reveal thumb in directory"), this, [this, selectedFileListItem] () {
                     if(selectedFileListItem.thumbFile.isEmpty()) {
                         DialogHandler::MessageBox(this, "Invalid thumb path.", XLogLevel::Critical);
