@@ -81,11 +81,21 @@ int main(int argc, char *argv[])
     QCommandLineOption verboseOption(QStringList() << "b" << "verbose", "Start with verbose output");
     parser.addOption(verboseOption);
 
+    QCoreApplication *a;
+    QStringList opts;
+    for (int i=0; i < argc; ++i)
+        opts << QString(argv[i]);
 
-    QCoreApplication *a = new QCoreApplication(argc, argv);
-    parser.process(*a);
+    parser.parse(opts);
+    //parser.process(*a);
     bool isGUI = parser.isSet(headlessOption);
-
+    // Must be called before XTEngine is initialized for the main app loop events.
+    if(isGUI)
+        a = new QCoreApplication(argc, argv);
+    else {
+        QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+        a = new QApplication(argc, argv);
+    }
     XTEngine* xtengine = new XTEngine();//Must be called before SettingsHandler functions are called.
 
     if(parser.isSet(verboseOption)) {
@@ -383,9 +393,6 @@ int main(int argc, char *argv[])
     }
 
     if (!isGUI) {
-        delete a;
-        QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-        a = new QApplication(argc, argv);
         #ifdef _WIN32
         if (AttachConsole(ATTACH_PARENT_PROCESS)) {
             freopen("CONOUT$", "w", stdout);
