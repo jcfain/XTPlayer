@@ -85,25 +85,23 @@ int main(int argc, char *argv[])
     QStringList opts;
     for (int i=0; i < argc; ++i)
         opts << QString(argv[i]);
-
-    parser.parse(opts);
-    //parser.process(*a);
-    bool isGUI = parser.isSet(headlessOption);
+    bool consoleMode = opts.contains("-s") || opts.contains("--server");
     // Must be called before XTEngine is initialized for the main app loop events.
-    if(isGUI)
+    if(consoleMode) {
         a = new QCoreApplication(argc, argv);
-    else {
+    } else {
         QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
         a = new QApplication(argc, argv);
     }
+
+    parser.process(*a);
     XTEngine* xtengine = new XTEngine();//Must be called before SettingsHandler functions are called.
 
     if(parser.isSet(verboseOption)) {
         LogHandler::Info("Starting in verbose mode");
         LogHandler::setUserDebug(true);
         LogHandler::setQtDebuging(true);
-    }
-    if(parser.isSet(debugOption)) {
+    } else if(parser.isSet(debugOption)) {
         LogHandler::Info("Starting in debug mode");
         LogHandler::setUserDebug(true);
     }
@@ -392,7 +390,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    if (!isGUI) {
+    if (!consoleMode) {
         #ifdef _WIN32
         if (AttachConsole(ATTACH_PARENT_PROCESS)) {
             freopen("CONOUT$", "w", stdout);
