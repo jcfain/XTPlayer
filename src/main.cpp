@@ -86,8 +86,10 @@ int main(int argc, char *argv[])
     for (int i=0; i < argc; ++i)
         opts << QString(argv[i]);
     bool consoleMode = opts.contains("-s") || opts.contains("--server");
+    bool verboseMode = opts.contains("-b") || opts.contains("--verbose");
+    bool debugMode = opts.contains("-d") || opts.contains("--debug");
     // Must be called before XTEngine is initialized for the main app loop events.
-    if(consoleMode) {
+    if(consoleMode || (opts.length() > 0 && !verboseMode && !debugMode)) {
         a = new QCoreApplication(argc, argv);
     } else {
         QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
