@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
     bool verboseMode = opts.contains("-b") || opts.contains("--verbose");
     bool debugMode = opts.contains("-d") || opts.contains("--debug");
     // Must be called before XTEngine is initialized for the main app loop events.
-    if(consoleMode || (opts.length() > 0 && !verboseMode && !debugMode)) {
+    if(consoleMode || (opts.length() > 1 && !verboseMode && !debugMode)) {
         a = new QCoreApplication(argc, argv);
     } else {
         QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -409,8 +409,8 @@ int main(int argc, char *argv[])
         MainWindow w(xtengine);
         w.show();
         int r = a->exec();
-        delete xtengine;
-        delete a;
+//        delete xtengine; // Make xtengine parent Mainwindow
+//        delete a; // Deleteing here caused crash in gui mode
         return r;
     }
     if(!SettingsHandler::getEnableHttpServer())

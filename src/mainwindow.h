@@ -125,7 +125,7 @@ private slots:
     void on_actionCreatedDesc_triggered();
     void on_actionTypeAsc_triggered();
     void on_actionTypeDesc_triggered();
-    void dispose();
+    void onAboutToQuit();
 
     void on_actionDonate_triggered();
 

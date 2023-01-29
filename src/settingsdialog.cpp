@@ -101,7 +101,7 @@ void SettingsDialog::reject()
     if(_requiresRestart)
     {
         set_requires_restart(false);
-        askRestart(this, "Some changes made requires a restart.\nWould you like to restart now?");
+        askRestart(this);
     }
     QDialog::reject();
 }
@@ -117,7 +117,7 @@ void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
         DialogHandler::Loading(this, "Saving settings...");
         QtConcurrent::run([this] ()
         {
-            XTPSettings::save();
+            save();
             emit loadingDialogClose();
         });
     }
@@ -128,7 +128,7 @@ void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
             DialogHandler::Loading(this, "Saving settings...");
             QtConcurrent::run([this] ()
             {
-                XTPSettings::save();
+                save();
                 emit loadingDialogClose();
             });
         }
@@ -136,7 +136,7 @@ void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
     if(_requiresRestart && (ui.buttonBox->buttonRole(button) == QDialogButtonBox::AcceptRole || ui.buttonBox->buttonRole(button) == QDialogButtonBox::ApplyRole))
     {
         set_requires_restart(false);
-        askRestart(this->parentWidget(), "Some changes made requires a restart.\nWould you like to restart now?");
+        askRestart(this->parentWidget());
     }
     if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::ApplyRole)
     {
@@ -1456,6 +1456,12 @@ void SettingsDialog::on_webPasswordButton_clicked()
     }
 }
 
+void SettingsDialog::save(QSettings *settingsToSaveTo)
+{
+    XTPSettings::save(settingsToSaveTo);
+    SettingsHandler::Save(settingsToSaveTo);
+}
+
 void SettingsDialog::on_exportButton_clicked()
 {
     Export(this);
@@ -1474,7 +1480,7 @@ void SettingsDialog::on_thumbDirButton_clicked()
    if (selectedDir != Q_NULLPTR)
    {
        SettingsHandler::setSelectedThumbsDir(selectedDir);
-       XTPSettings::save();
+       save();
        requestRestart(this);
    }
 }
@@ -1529,7 +1535,7 @@ void SettingsDialog::on_disableTCodeValidationCheckbox_clicked(bool checked)
         DialogHandler::MessageBox(this, "Make sure to verify the version of TCode firmware installed on your device.", XLogLevel::Warning);
     }
     SettingsHandler::setDisableTCodeValidation(checked);
-    requestRestart(this);
+    askRestart(this);
 }
 
 void SettingsDialog::on_close_loading_dialog()
@@ -1685,7 +1691,7 @@ void SettingsDialog::Export(QWidget* parent)
     if(!selectedFile.isEmpty())
     {
         QSettings* settingsExport = new QSettings(selectedFile, QSettings::Format::IniFormat);
-        XTPSettings::save(settingsExport);
+        save(settingsExport);
         delete settingsExport;
         emit messageSend("Settings saved to "+ selectedFile, XLogLevel::Information);
     }
@@ -1698,7 +1704,7 @@ void SettingsDialog::Import(QWidget* parent)
     {
         QSettings* settingsImport = new QSettings(selectedFile, QSettings::Format::IniFormat);
         XTPSettings::import(settingsImport);
-        XTPSettings::save();
+        save();
         SettingsHandler::setSaveOnExit(false);
         delete settingsImport;
         requestRestart(parent);

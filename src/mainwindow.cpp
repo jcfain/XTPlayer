@@ -6,6 +6,11 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     m_xtengine = xtengine;
+    xtengine->setParent(this);
+
+    connect(this, &XTEngine::destroyed, this, []() {
+        LogHandler::Debug("XTPlayer destroyed");
+    });
 
     QPixmap pixmap("://images/XTP_Splash.png");
     loadingSplash = new QSplashScreen(pixmap);
@@ -486,7 +491,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(libraryList, &XLibraryList::keyReleased, this, &MainWindow::on_key_press);
 
 
-    connect(QApplication::instance(), &QCoreApplication::aboutToQuit, this, &MainWindow::dispose);
+    connect(QApplication::instance(), &QCoreApplication::aboutToQuit, this, &MainWindow::onAboutToQuit);
 
     loadingSplash->showMessage(fullVersion + "\nSetting user styles...", Qt::AlignBottom, Qt::white);
     loadTheme(XTPSettings::getSelectedTheme());
@@ -556,8 +561,9 @@ void MainWindow::onPasswordIncorrect()
     if(_isPasswordIncorrect)
         QApplication::quit();
 }
-void MainWindow::dispose()
+void MainWindow::onAboutToQuit()
 {
+    LogHandler::Info("XTPlayer about to quit");
     XTPSettings::setLibraryWindowOpen(_libraryDockMode);
     closeWelcomeDialog();
     if(!playingLibraryListItem().ID.isEmpty())

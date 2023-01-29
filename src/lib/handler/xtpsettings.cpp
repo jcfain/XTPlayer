@@ -8,6 +8,7 @@ const QString XTPSettings::XTPVersionTimeStamp = QString(XTPVersion +" %1T%2").a
 XTPSettings::XTPSettings() {}
 
 void XTPSettings::save(QSettings* settingsToSaveTo) {
+    LogHandler::Info("Saving XTP settings");
     if(!settingsToSaveTo)
         settingsToSaveTo = getSettings();
     settingsToSaveTo->setValue("selectedTheme", m_selectedTheme);
@@ -28,7 +29,9 @@ void XTPSettings::save(QSettings* settingsToSaveTo) {
     }
     settingsToSaveTo->setValue("mainWindowPos", splitterPos);
 
-    SettingsHandler::Save(settingsToSaveTo);
+    settingsToSaveTo->sync();
+    //SettingsHandler::Save(settingsToSaveTo);
+    LogHandler::Info("Save complete");
 }
 
 void XTPSettings::load(QSettings* settingsToLoadFrom) {

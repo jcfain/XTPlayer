@@ -38,7 +38,7 @@ public:
     void Export(QWidget* parent);
     void Import(QWidget* parent);
     void requestRestart(QWidget* parent);
-    void askRestart(QWidget* parent, QString message);
+    void askRestart(QWidget* parent, QString message = "Some changes made requires a restart.\nWould you like to restart now?");
     void quit(bool restart);
     void restart();
 
@@ -236,6 +236,7 @@ private slots:
 private:
 
     Ui::SettingsDialog ui;
+    void save(QSettings* settingsToSaveTo = 0);
     void loadSerialPorts();
     void initInputDevice();
     void setupUi();
