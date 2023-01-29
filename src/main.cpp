@@ -60,6 +60,8 @@ int main(int argc, char *argv[])
     parser.addOption(webServerChunkSizeOption);
     QCommandLineOption webImageCompressionOption(QStringList() << "web-thumb-compression", "Set thumb compression  (0-100 or -1 for uncompressed) <number>", "number");
     parser.addOption(webImageCompressionOption);
+//    QCommandLineOption webPassword(QStringList() << "web-password", "Set web server password <value>", "value");
+//    parser.addOption(webPassword);
 
     QCommandLineOption deviceComPortOption(QStringList() << "tcode-device-com-port", "Set tcode device com <value>", "value");
     parser.addOption(deviceComPortOption);
@@ -409,7 +411,7 @@ int main(int argc, char *argv[])
         MainWindow w(xtengine);
         w.show();
         int r = a->exec();
-//        delete xtengine; // Make xtengine parent Mainwindow
+//        delete xtengine; // Make xtengine parent in Mainwindow
 //        delete a; // Deleteing here caused crash in gui mode
         return r;
     }
