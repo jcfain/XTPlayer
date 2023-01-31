@@ -7,6 +7,7 @@ SET deployDir=.\bin\release\
 SET deployZipDir=.\bin\
 SET stagingDirectory=.\bin\latest
 SET sevenZipLocation="C:\Program Files\7-Zip\7z.exe"
+SET releaseDirectory="\\RASPBERRYPI.local\STK\Hardware\my software\"
 
 SET /P version=Enter a version (example: 0.423b):
 IF NOT DEFINED version SET "version=UNKNOWN"
@@ -50,5 +51,7 @@ xcopy ..\XTEngine\src\www\favicon.ico %deployDir%www\ /s /i /K /D /H /Y
 xcopy %deployDir%*.* %stagingDirectory% /s /i /K /D /H /Y
 
 %sevenZipLocation% a -tzip %deployZipDir%XTPlayer-v%version%_Win_x86_64.zip %deployDir%
+
+xcopy %deployZipDir%XTPlayer-v%version%_Win_x86_64.zip %releaseDirectory% /s /i /K /D /H /Y
 
 pause
