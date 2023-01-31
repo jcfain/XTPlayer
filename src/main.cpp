@@ -9,6 +9,13 @@
 int main(int argc, char *argv[])
 {
 
+    if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+        freopen("CONOUT$", "w", stdout);
+        freopen("CONOUT$", "w", stderr);
+        freopen("CONIN$", "r", stdin);
+    } else {
+        printf("fail to AttachConsole(ATTACH_PARENT_PROCESS)\n");
+    }
     qRegisterMetaType<QItemSelection>();
     qRegisterMetaTypeStreamOperators<QList<QString>>("QList<QString>");
     qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
@@ -60,8 +67,8 @@ int main(int argc, char *argv[])
     parser.addOption(webServerChunkSizeOption);
     QCommandLineOption webImageCompressionOption(QStringList() << "web-thumb-compression", "Set thumb compression  (0-100 or -1 for uncompressed) <number>", "number");
     parser.addOption(webImageCompressionOption);
-//    QCommandLineOption webPassword(QStringList() << "web-password", "Set web server password <value>", "value");
-//    parser.addOption(webPassword);
+    QCommandLineOption webPassword(QStringList() << "web-password", "Set web server password <value>", "value");
+    parser.addOption(webPassword);
 
     QCommandLineOption deviceComPortOption(QStringList() << "tcode-device-com-port", "Set tcode device com <value>", "value");
     parser.addOption(deviceComPortOption);
@@ -87,6 +94,7 @@ int main(int argc, char *argv[])
     QStringList opts;
     for (int i=0; i < argc; ++i)
         opts << QString(argv[i]);
+
     bool consoleMode = opts.contains("-s") || opts.contains("--server");
     bool verboseMode = opts.contains("-b") || opts.contains("--verbose");
     bool debugMode = opts.contains("-d") || opts.contains("--debug");
@@ -95,6 +103,9 @@ int main(int argc, char *argv[])
     if(consoleMode || (opts.length() > 1 && !verboseMode && !debugMode && !guiCommand)) {
         a = new QCoreApplication(argc, argv);
     } else {
+
+        #ifdef _WIN32
+        #endif
         QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
         a = new QApplication(argc, argv);
     }
@@ -118,6 +129,7 @@ int main(int argc, char *argv[])
         delete a;
         return 0;
     }
+
     if(parser.isSet(addLibraryFolderOption)) {
         LogHandler::Info("Adding media folder..");
         QString targetDir = parser.value(addLibraryFolderOption);
@@ -132,6 +144,40 @@ int main(int argc, char *argv[])
         delete a;
         return 0;
     }
+
+    if(parser.isSet(webPassword)) {
+        LogHandler::Info("Setting web password..");
+        QString unencryptedPass = parser.value(webPassword);
+        if(!unencryptedPass.isEmpty()) {
+            if(!SettingsHandler::hashedWebPass().isEmpty()) {
+                char var[SettingsHandler::hashedWebPass().length()];
+                printf("Current password\n");
+                fgets(var, SettingsHandler::hashedWebPass().length(), stdin);
+                if(CryptHandler::checkPass(QString(var), SettingsHandler::hashedWebPass())) {
+                    char var[unencryptedPass.length()];
+                    printf("Confirm new password\n");
+                    fgets(var, unencryptedPass.length(), stdin);
+                    if(QString(var) == unencryptedPass) {
+                        SettingsHandler::setHashedWebPass(CryptHandler::encryptPass(unencryptedPass));
+                        SettingsHandler::Save();
+                        LogHandler::Info("Success!");
+                    } else {
+                        LogHandler::Error("Password does not match");
+                    }
+                } else {
+                    LogHandler::Error("Invalid password");
+                }
+            }
+        } else {
+            LogHandler::Error("Invalid password");
+        }
+        delete xtengine;
+        delete a;
+        return 0;
+    }
+
+
+
     if(parser.isSet(thumbFolderOption)) {
         LogHandler::Info("Setting thumb folder..");
         QString targetDir = parser.value(thumbFolderOption);
@@ -396,13 +442,6 @@ int main(int argc, char *argv[])
     }
 
     if (!consoleMode) {
-        #ifdef _WIN32
-        if (AttachConsole(ATTACH_PARENT_PROCESS)) {
-            freopen("CONOUT$", "w", stdout);
-            freopen("CONOUT$", "w", stderr);
-        }
-        #endif
-
         XTPSettings::load();
         if(parser.isSet("reset-window")) {
             LogHandler::Debug("Resettings window size to default!");
