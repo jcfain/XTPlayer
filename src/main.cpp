@@ -9,6 +9,7 @@
 int main(int argc, char *argv[])
 {
 
+#ifdef _WIN32
     if (AttachConsole(ATTACH_PARENT_PROCESS)) {
         freopen("CONOUT$", "w", stdout);
         freopen("CONOUT$", "w", stderr);
@@ -16,6 +17,7 @@ int main(int argc, char *argv[])
     } else {
         printf("fail to AttachConsole(ATTACH_PARENT_PROCESS)\n");
     }
+#endif
     qRegisterMetaType<QItemSelection>();
     qRegisterMetaTypeStreamOperators<QList<QString>>("QList<QString>");
     qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
@@ -103,9 +105,6 @@ int main(int argc, char *argv[])
     if(consoleMode || (opts.length() > 1 && !verboseMode && !debugMode && !guiCommand)) {
         a = new QCoreApplication(argc, argv);
     } else {
-
-        #ifdef _WIN32
-        #endif
         QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
         a = new QApplication(argc, argv);
     }
@@ -150,14 +149,16 @@ int main(int argc, char *argv[])
         QString unencryptedPass = parser.value(webPassword);
         if(!unencryptedPass.isEmpty()) {
             if(!SettingsHandler::hashedWebPass().isEmpty()) {
-                char var[SettingsHandler::hashedWebPass().length()];
-                printf("Current password\n");
-                fgets(var, SettingsHandler::hashedWebPass().length(), stdin);
-                if(CryptHandler::checkPass(QString(var), SettingsHandler::hashedWebPass())) {
-                    char var[unencryptedPass.length()];
-                    printf("Confirm new password\n");
-                    fgets(var, unencryptedPass.length(), stdin);
-                    if(QString(var) == unencryptedPass) {
+                std::string var;
+                LogHandler::Info("Current password: ");
+                std::cin >> var;
+                //fgets(var, SettingsHandler::hashedWebPass().length(), stdin);
+                if(CryptHandler::checkPass(QString::fromStdString(var), SettingsHandler::hashedWebPass()) == PasswordResponse::CORRECT) {
+                    std::string var;
+                    LogHandler::Info("Confirm new password: ");
+                    std::cin >> var;
+                    //fgets(var, unencryptedPass.length(), stdin);
+                    if(QString::fromStdString(var) == unencryptedPass) {
                         SettingsHandler::setHashedWebPass(CryptHandler::encryptPass(unencryptedPass));
                         SettingsHandler::Save();
                         LogHandler::Info("Success!");
@@ -166,6 +167,18 @@ int main(int argc, char *argv[])
                     }
                 } else {
                     LogHandler::Error("Invalid password");
+                }
+            } else {
+                std::string var;
+                LogHandler::Info("Confirm password: ");
+                std::cin >> var;
+                //fgets(var, unencryptedPass.length(), stdin);
+                if(QString::fromStdString(var) == unencryptedPass) {
+                    SettingsHandler::setHashedWebPass(CryptHandler::encryptPass(unencryptedPass));
+                    SettingsHandler::Save();
+                    LogHandler::Info("Success!");
+                } else {
+                    LogHandler::Error("Password does not match");
                 }
             }
         } else {
