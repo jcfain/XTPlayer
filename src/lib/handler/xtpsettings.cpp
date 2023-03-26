@@ -1,8 +1,8 @@
 #include "xtpsettings.h"
 #include "lib/handler/settingshandler.h"
 
-const QString XTPSettings::XTPVersion = "0.43b";
-const float XTPSettings::XTPVersionNum = 0.43f;
+const QString XTPSettings::XTPVersion = "0.431b";
+const float XTPSettings::XTPVersionNum = 0.431f;
 const QString XTPSettings::XTPVersionTimeStamp = QString(XTPVersion +" %1T%2").arg(__DATE__).arg(__TIME__);
 
 XTPSettings::XTPSettings() {}
@@ -47,6 +47,8 @@ void XTPSettings::load(QSettings* settingsToLoadFrom) {
     m_rememberWindowsSettings = settingsToLoadFrom->value("rememberWindowsSettings").toBool();
     m_libraryWindowOpen = settingsToLoadFrom->value("libraryWindowOpen").toBool();
     m_disableTimeLinePreview = settingsToLoadFrom->value("disableTimeLinePreview").toBool();
+    if(SettingsHandler::getFirstLoad())
+        m_disableTimeLinePreview = true;
     m_hideMediaWithoutFunscripts = settingsToLoadFrom->value("hideMediaWithoutFunscripts").toBool();
     m_heatmapDisabled = settingsToLoadFrom->value("heatmapDisabled").toBool();
 
