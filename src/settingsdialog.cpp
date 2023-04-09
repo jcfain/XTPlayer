@@ -196,7 +196,10 @@ void SettingsDialog::setupUi()
         connect(&TCodeChannelLookup::instance(), &TCodeChannelLookup::allProfilesDeleted, this, &SettingsDialog::setUpTCodeChannelProfiles);
 
         channelTableViewModel = new ChannelTableViewModel(this);
-        connect(&TCodeChannelLookup::instance(), &TCodeChannelLookup::channelProfileChanged, channelTableViewModel, &ChannelTableViewModel::setMap);
+        connect(&TCodeChannelLookup::instance(), &TCodeChannelLookup::channelProfileChanged, this, [this]() {
+            channelTableViewModel->setMap();
+            set_channelProfilesComboBox_value(TCodeChannelLookup::getSelectedChannelProfile());
+        });
 
         ui.channelTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
         ui.channelTableView->setSelectionMode(QAbstractItemView::ExtendedSelection);

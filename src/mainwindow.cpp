@@ -738,7 +738,6 @@ void MainWindow::mediaAction(QString action, QString actionText)
         skipToNextAction();
     }
     else if(MediaActions::HasOtherAction(action, ActionType::CHANNEL_PROFILE)) {
-        _xSettings->set_channelProfilesComboBox_value(action);
         onText_to_speech(actionText);
     }
     else
