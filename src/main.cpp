@@ -18,6 +18,34 @@ int main(int argc, char *argv[])
         printf("fail to AttachConsole(ATTACH_PARENT_PROCESS)\n");
     }
 #endif
+
+    QCoreApplication *a;
+    bool consoleMode;
+    bool verboseMode;
+    bool debugMode;
+    bool guiCommand;
+    //QStringList opts;
+    for (int i=0; i < argc; ++i) {
+        char * val = argv[i];
+        if(strcmp(val, "-s") == 0 || strcmp(val, "--server") == 0) {
+            consoleMode = true;
+        } else if(strcmp(val, "-b") == 0 || strcmp(val, "--verbose") == 0) {
+            verboseMode = true;
+        } else if(strcmp(val, "-d") == 0 || strcmp(val, "--debug") == 0) {
+            debugMode = true;
+        } else if(strcmp(val, "--reset-window") == 0) {
+            guiCommand = true;
+        }
+    }
+
+    // Must be called before XTEngine is initialized for the main app loop events.
+    if(consoleMode || (argc > 1 && !verboseMode && !debugMode && !guiCommand)) {
+        a = new QCoreApplication(argc, argv);
+    } else {
+        QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+        a = new QApplication(argc, argv);
+    }
+
     qRegisterMetaType<QItemSelection>();
     qRegisterMetaTypeStreamOperators<QList<QString>>("QList<QString>");
     qRegisterMetaTypeStreamOperators<ChannelModel>("ChannelModel");
@@ -92,22 +120,6 @@ int main(int argc, char *argv[])
     QCommandLineOption verboseOption(QStringList() << "b" << "verbose", "Start with verbose output");
     parser.addOption(verboseOption);
 
-    QCoreApplication *a;
-    QStringList opts;
-    for (int i=0; i < argc; ++i)
-        opts << QString(argv[i]);
-
-    bool consoleMode = opts.contains("-s") || opts.contains("--server");
-    bool verboseMode = opts.contains("-b") || opts.contains("--verbose");
-    bool debugMode = opts.contains("-d") || opts.contains("--debug");
-    bool guiCommand = opts.contains("--reset-window");
-    // Must be called before XTEngine is initialized for the main app loop events.
-    if(consoleMode || (opts.length() > 1 && !verboseMode && !debugMode && !guiCommand)) {
-        a = new QCoreApplication(argc, argv);
-    } else {
-        QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-        a = new QApplication(argc, argv);
-    }
 
     parser.process(*a);
     XTEngine* xtengine = new XTEngine();//Must be called before SettingsHandler functions are called.

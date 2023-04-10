@@ -323,7 +323,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
 
     auto sizes = ui->mainFrameSplitter->sizes();
 
-    connect(&SettingsHandler::instance(), &SettingsHandler::messageSend, this, &MainWindow::on_settingsMessageRecieve);
+    connect(SettingsHandler::instance(), &SettingsHandler::messageSend, this, &MainWindow::on_settingsMessageRecieve);
     connect(_xSettings, &SettingsDialog::messageSend, this, &MainWindow::on_settingsMessageRecieve);
 
     connect(ui->mainFrameSplitter, &QSplitter::splitterMoved, this, &MainWindow::on_mainwindow_splitterMove);
@@ -1051,7 +1051,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             {
                 if(playingLibraryListItem().ID == selectedFileListItem.ID)
                     myMenu.addAction(tr("Set moneyshot from current"), this, [this, selectedFileListItem] () {
-                        SettingsHandler::instance().setMoneyShot(selectedFileListItem, videoHandler->position());
+                        SettingsHandler::instance()->setMoneyShot(selectedFileListItem, videoHandler->position());
                     });
             }
     //        myMenu.addAction("Add bookmark from current", this, [this, selectedFileListItem] () {

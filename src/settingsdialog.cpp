@@ -192,11 +192,11 @@ void SettingsDialog::setupUi()
         ui.tCodeVersionComboBox->setCurrentText(TCodeChannelLookup::getSelectedTCodeVersionName());
         connect(ui.tCodeVersionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
 
-        connect(&TCodeChannelLookup::instance(), &TCodeChannelLookup::channelProfileChanged, this, &SettingsDialog::setUpTCodeChannelUI);
-        connect(&TCodeChannelLookup::instance(), &TCodeChannelLookup::allProfilesDeleted, this, &SettingsDialog::setUpTCodeChannelProfiles);
+        connect(TCodeChannelLookup::instance(), &TCodeChannelLookup::channelProfileChanged, this, &SettingsDialog::setUpTCodeChannelUI);
+        connect(TCodeChannelLookup::instance(), &TCodeChannelLookup::allProfilesDeleted, this, &SettingsDialog::setUpTCodeChannelProfiles);
 
         channelTableViewModel = new ChannelTableViewModel(this);
-        connect(&TCodeChannelLookup::instance(), &TCodeChannelLookup::channelProfileChanged, this, [this]() {
+        connect(TCodeChannelLookup::instance(), &TCodeChannelLookup::channelProfileChanged, this, [this]() {
             channelTableViewModel->setMap();
             set_channelProfilesComboBox_value(TCodeChannelLookup::getSelectedChannelProfile());
         });
@@ -328,7 +328,7 @@ void SettingsDialog::setupUi()
 
         updateIPAddress();
 
-        connect(&SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
+        connect(SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
 
         ui.rememberWindowSettingsChk->setChecked(XTPSettings::getRememberWindowsSettings());
         ui.MFSDiscoveryDisabledCheckBox->setChecked(SettingsHandler::getMFSDiscoveryDisabled());

@@ -123,7 +123,7 @@ QSize XTPSettings::getLibraryWindowSize() {
 
 void XTPSettings::setHideMediaWithoutFunscripts(bool enabled) {
     m_hideMediaWithoutFunscripts = enabled;
-    emit SettingsHandler::instance().settingsChanged(true);
+    emit SettingsHandler::instance()->settingsChanged(true);
 }
 bool XTPSettings::getHideMediaWithoutFunscripts() {
     return m_hideMediaWithoutFunscripts;
@@ -139,7 +139,7 @@ void XTPSettings::resetWindowSize() {
 
 void XTPSettings::setRememberWindowsSettings(bool enabled) {
     m_rememberWindowsSettings = enabled;
-    emit SettingsHandler::instance().settingsChanged(true);
+    emit SettingsHandler::instance()->settingsChanged(true);
 }
 bool XTPSettings::getRememberWindowsSettings() {
     return m_rememberWindowsSettings;
