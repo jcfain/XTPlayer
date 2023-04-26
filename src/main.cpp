@@ -20,10 +20,10 @@ int main(int argc, char *argv[])
 #endif
 
     QCoreApplication *a;
-    bool consoleMode;
-    bool verboseMode;
-    bool debugMode;
-    bool guiCommand;
+    bool consoleMode = false;
+    bool verboseMode = false;
+    bool debugMode = false;
+    bool guiCommand = false;
     //QStringList opts;
     for (int i=0; i < argc; ++i) {
         char * val = argv[i];
@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
             guiCommand = true;
         }
     }
+
 
     // Must be called before XTEngine is initialized for the main app loop events.
     if(consoleMode || (argc > 1 && !verboseMode && !debugMode && !guiCommand)) {
