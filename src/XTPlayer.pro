@@ -15,69 +15,77 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
-
+INCLUDEPATH += $$PWD/lib/widgets
+INCLUDEPATH += $$PWD/lib/widgets/library
+INCLUDEPATH += $$PWD/lib/widgets/video
+INCLUDEPATH += $$PWD/lib/model
+INCLUDEPATH += $$PWD/lib/model/library
+INCLUDEPATH += $$PWD/lib/handler
+INCLUDEPATH += $$PWD/lib/handler
 SOURCES += \
-    CustomControls/rangeslider.cpp \
+    lib/widgets/rangeslider.cpp \
     addchanneldialog.cpp \
     addplaylistdialog.cpp \
     dlnascriptlinks.cpp \
     inputmapwidget.cpp \
     lib/handler/dialoghandler.cpp \
-    lib/handler/videohandler.cpp \
+    lib/widgets/video/videohandler.cpp \
     lib/handler/xtpsettings.cpp \
-    lib/handler/xvideopreviewwidget.cpp \
-    lib/handler/xvideowidget.cpp \
-    lib/struct/channeltablecomboboxdelegate.cpp \
-    lib/struct/channeltableviewmodel.cpp \
-    lib/struct/librarylistviewmodel.cpp \
-    lib/struct/librarysortfilterproxymodel.cpp \
-    lib/struct/playlistviewmodel.cpp \
-    libraryItemSettingsDialog.cpp \
-    libraryManager.cpp \
-    libraryexclusions.cpp \
-    librarywindow.cpp \
+    lib/widgets/video/xvideopreviewwidget.cpp \
+    lib/widgets/video/xvideowidget.cpp \
+    lib/widgets/video/playercontrols.cpp \
+    lib/model/channeltablecomboboxdelegate.cpp \
+    lib/model/channeltableviewmodel.cpp \
+    lib/model/library/librarylistviewmodel.cpp \
+    lib/model/library/librarysortfilterproxymodel.cpp \
+    lib/model/library/playlistviewmodel.cpp \
+    lib/widgets/library/libraryItemSettingsDialog.cpp \
+    lib/widgets/library/libraryManager.cpp \
+    lib/widgets/library/libraryexclusions.cpp \
+    lib/widgets/library/librarywindow.cpp \
     main.cpp \
     mainwindow.cpp \
     noMatchingScriptDialog.cpp \
-    playercontrols.cpp \
     settingsdialog.cpp \
     welcomedialog.cpp \
-    widgets/heatmapwidget.cpp \
-    widgets/timeline.cpp \
-    xlibrarylist.cpp
+    lib/widgets/heatmapwidget.cpp \
+    lib/widgets/timeline.cpp \
+    lib/widgets/xwidget.cpp \
+    lib/widgets/library/xlibrarylist.cpp
 
 HEADERS += \
-    CustomControls/rangeslider.h \
+    lib/widgets/rangeslider.h \
     addchanneldialog.h \
     addplaylistdialog.h \
     dlnascriptlinks.h \
     inputmapwidget.h \
     lib/handler/dialoghandler.h \
-    lib/handler/videohandler.h \
+    lib/widgets/video/videohandler.h \
     lib/handler/xtpsettings.h \
-    lib/handler/xvideopreviewwidget.h \
-    lib/handler/xvideowidget.h \
-    lib/struct/channeltablecomboboxdelegate.h \
-    lib/struct/channeltableviewmodel.h \
-    lib/struct/librarylistviewmodel.h \
-    lib/struct/librarysortfilterproxymodel.h \
-    lib/struct/playlistviewmodel.h \
-    libraryItemSettingsDialog.h \
-    libraryManager.h \
-    libraryexclusions.h \
-    librarywindow.h \
+    lib/widgets/video/xvideopreviewwidget.h \
+    lib/widgets/video/xvideowidget.h \
+    lib/widgets/video/playercontrols.h \
+    lib/model/channeltablecomboboxdelegate.h \
+    lib/model/channeltableviewmodel.h \
+    lib/model/library/librarylistviewmodel.h \
+    lib/model/library/librarysortfilterproxymodel.h \
+    lib/model/library/playlistviewmodel.h \
+    lib/widgets/library/libraryItemSettingsDialog.h \
+    lib/widgets/library/libraryManager.h \
+    lib/widgets/library/libraryexclusions.h \
+    lib/widgets/library/librarywindow.h \
     mainwindow.h \
     noMatchingScriptDialog.h \
-    playercontrols.h \
     settingsdialog.h \
     welcomedialog.h \
-    widgets/heatmapwidget.h \
-    widgets/timeline.h \
-    xlibrarylist.h
+    lib/widgets/heatmapwidget.h \
+    lib/widgets/timeline.h \
+    lib/widgets/xwidget.h \
+    lib/widgets/library/xlibrarylist.h
 
 FORMS += \
     dlnascriptlinks.ui \
-    libraryexclusions.ui \
+    lib/widgets/library/libraryexclusions.ui \
     mainwindow.ui \
     settings.ui \
     welcomedialog.ui

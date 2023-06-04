@@ -26,10 +26,22 @@
 #include <QSplashScreen>
 #include <QModelIndex>
 
-#include "xtengine.h"
-#include "lib/struct/playlistviewmodel.h"
-#include "lib/struct/librarylistviewmodel.h"
-#include "lib/struct/librarysortfilterproxymodel.h"
+#include "lib/handler/xmediastatehandler.h"
+#include "lib/handler/outputdevicehandler.h"
+#include "lib/handler/inputdevicehandler.h"
+#include "lib/struct/LibraryListItem27.h"
+#include "lib/struct/SerialComboboxItem.h"
+#include "lib/struct/ConnectionChangedSignal.h"
+#include "lib/lookup/AxisNames.h"
+#include "lib/tool/xmath.h"
+#include "lib/lookup/enum.h"
+#include "lib/lookup/MediaActions.h"
+#include "lib/handler/loghandler.h"
+#include "lib/handler/settingshandler.h"
+
+#include "xvideopreviewwidget.h"
+#include "xtpsettings.h"
+#include "libraryManager.h"
 #include "settingsdialog.h"
 #include "librarywindow.h"
 #include "addplaylistdialog.h"
@@ -39,28 +51,12 @@
 #include "welcomedialog.h"
 #include "dlnascriptlinks.h"
 #include "xlibrarylist.h"
-#include "lib/handler/videohandler.h"
-#include "CustomControls/rangeslider.h"
-#include "lib/handler/xmediastatehandler.h"
-#include "lib/handler/outputdevicehandler.h"
-#include "lib/handler/inputdevicehandler.h"
-#include "lib/handler/xvideopreviewwidget.h"
-#include "lib/handler/xtpsettings.h"
-#include "lib/struct/LibraryListItem27.h"
-#include "lib/struct/SerialComboboxItem.h"
-#include "lib/struct/ConnectionChangedSignal.h"
-#include "libraryManager.h"
-//#include <QtCompress/qzipwriter.h>
-//#include <QtCompress/qzipreader.h>
-
-#include "lib/lookup/AxisNames.h"
-#include "lib/tool/xmath.h"
-#include "lib/lookup/enum.h"
-#include "lib/lookup/MediaActions.h"
-#include "lib/handler/loghandler.h"
-#include "lib/handler/settingshandler.h"
-
-
+#include "videohandler.h"
+#include "rangeslider.h"
+#include "xtengine.h"
+#include "playlistviewmodel.h"
+#include "librarylistviewmodel.h"
+#include "librarysortfilterproxymodel.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -231,7 +227,6 @@ private:
     QProgressBar* bar;
     VideoHandler* videoHandler;
     bool _isMaximized = false;
-    bool _isFullScreen = false;
     QSize _videoSize;
     QSize _appSize;
     QSize _defaultAppSize;
@@ -277,14 +272,14 @@ private:
     QAction* actionTypeAsc_Sort;
     QAction* actionTypeDesc_Sort;
     qint64 thumbCaptureTime;
-    QWidget *normalWindowWidget;
-    QWidget *fullScreenWidget;
-    QGridLayout *fullScreenLayout;
-    QFrame* playerControlsPlaceHolder;
-    QGridLayout* placeHolderControlsGrid;
-    QFrame* playerLibraryPlaceHolder;
-    QGridLayout* placeHolderLibraryGrid;
-    bool libraryOverlay = false;
+    //QWidget *normalWindowWidget;
+    //QWidget *fullScreenWidget;
+    //QGridLayout *fullScreenLayout;
+   // QFrame* playerControlsPlaceHolder;
+    //QGridLayout* placeHolderControlsGrid;
+    //QFrame* playerLibraryPlaceHolder;
+    //QGridLayout* placeHolderLibraryGrid;
+    bool libraryWindowed = false;
     bool funscriptFileSelectorOpen = false;
     bool thumbProcessIsRunning = false;
     bool vrScriptSelectorCanceled = false;
@@ -344,10 +339,6 @@ private:
     void mediaAction(QString action, QString actionText);
     void toggleFullScreen();
     void toggleLoop();
-    void hideControls();
-    void showControls();
-    void hideLibrary();
-    void showLibrary();
     void setLibraryToolBar();
     void updateThumbSizeUI(int size);
     void updateLibrarySortUI(LibrarySortMode mode);
@@ -397,6 +388,8 @@ private:
 
     qint64 mediaPosition();
     qint64 mediaDuration();
+
+    void setupLibraryGrid(QGridLayout* layout);
 };
 extern void startThumbProcess(MainWindow* mainWindow);
 #endif // MAINWINDOW_H

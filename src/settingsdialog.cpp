@@ -1,11 +1,12 @@
 #include "settingsdialog.h"
-#include "lib/handler/xtpsettings.h"
 
-#include "lib/struct/channeltablecomboboxdelegate.h"
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/serialhandler.h"
 #include "lib/handler/funscripthandler.h"
+
 #include "addchanneldialog.h"
+#include "channeltablecomboboxdelegate.h"
+#include "xtpsettings.h"
 
 //http://192.168.0.145/toggleContinousTwist
 SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)

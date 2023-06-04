@@ -4,10 +4,11 @@
 #include <QSortFilterProxyModel>
 #include <QObject>
 #include "lib/handler/settingshandler.h"
-#include "lib/handler/xtpsettings.h"
 #include "lib/tool/xmath.h"
 #include "lib/struct/LibraryListItem27.h"
-#include "lib/struct/librarylistviewmodel.h"
+
+#include "librarylistviewmodel.h"
+#include "xtpsettings.h"
 
 class LibrarySortFilterProxyModel : public QSortFilterProxyModel
 {

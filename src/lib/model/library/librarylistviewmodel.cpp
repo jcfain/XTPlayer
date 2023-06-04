@@ -121,6 +121,10 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
             if(item.isMFS)
                 return QColor(Qt::green);
         }
+        else if (role == Qt::BackgroundRole)
+        {
+            return QColor(Qt::transparent);
+        }
         else if (role == Qt::FontRole)
         {
             QFont font;

@@ -11,13 +11,14 @@
 #include <QDesktopServices>
 #include <QClipboard>
 #include <QNetworkInterface>
-#include "CustomControls/rangeslider.h"
-#include "inputmapwidget.h"
 #include "lib/struct/SerialComboboxItem.h"
-#include "lib/struct/channeltableviewmodel.h"
 #include "lib/handler/crypthandler.h"
-#include "lib/handler/videohandler.h"
 #include "lib/handler/connectionhandler.h"
+
+#include "inputmapwidget.h"
+#include "rangeslider.h"
+#include "channeltableviewmodel.h"
+#include "videohandler.h"
 #include "libraryexclusions.h"
 
 

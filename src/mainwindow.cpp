@@ -139,12 +139,6 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     _mediaFrame->setLayout(_mediaGrid);
     _mediaFrame->setContentsMargins(0,0,0,0);
 
-    videoHandler = new VideoHandler(this);
-    _mediaGrid->addWidget(videoHandler, 0, 0, 3, 5);
-    _mediaGrid->setMargin(0);
-    _mediaGrid->setContentsMargins(0,0,0,0);
-
-
     _controlsHomePlaceHolderFrame = new QFrame(this);
     _controlsHomePlaceHolderGrid = new QGridLayout(_controlsHomePlaceHolderFrame);
     _controlsHomePlaceHolderFrame->setLayout(_controlsHomePlaceHolderGrid);
@@ -166,7 +160,6 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     _librarySortFilterProxyModel->setSourceModel(libraryListViewModel);
     libraryList->setModel(_librarySortFilterProxyModel);
 
-
     QScroller::grabGesture(libraryList->viewport(), QScroller::LeftMouseButtonGesture);
     auto scroller = QScroller::scroller(libraryList->viewport());
     QScrollerProperties scrollerProperties;
@@ -178,6 +171,11 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
 
     ui->libraryGrid->setSpacing(5);
     ui->libraryGrid->setColumnMinimumWidth(0, 0);
+
+    videoHandler = new VideoHandler(_playerControlsFrame, libraryList, this);
+    _mediaGrid->addWidget(videoHandler, 0, 0, 3, 5);
+    _mediaGrid->setMargin(0);
+    _mediaGrid->setContentsMargins(0,0,0,0);
 
     backLibraryButton = new QPushButton(this);
     backLibraryButton->setProperty("id", "backLibraryButton");
@@ -579,33 +577,33 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 {
     // This function repeatedly call for those QObjects
     // which have installed eventFilter (Step 2)
-    if (obj == (QObject*)playerControlsPlaceHolder) {
-        if (event->type() == QEvent::Enter)
-        {
-            showControls();
-        }
-        else if(event->type() == QEvent::Leave)
-        {
-            hideControls();
-        }
-        return true;
-    }
-    else if (obj == (QObject*)playerLibraryPlaceHolder) {
-        if (event->type() == QEvent::Enter)
-        {
-            showLibrary();
-        }
-        else if(event->type() == QEvent::Leave)
-        {
-            hideLibrary();
-        }
-        return true;
-    }
-    else
-    {
+//    if (obj == (QObject*)playerControlsPlaceHolder) {
+//        if (event->type() == QEvent::Enter)
+//        {
+//            showControls();
+//        }
+//        else if(event->type() == QEvent::Leave)
+//        {
+//            hideControls();
+//        }
+//        return true;
+//    }
+//    else if (obj == (QObject*)playerLibraryPlaceHolder) {
+//        if (event->type() == QEvent::Enter)
+//        {
+//            showLibrary();
+//        }
+//        else if(event->type() == QEvent::Leave)
+//        {
+//            hideLibrary();
+//        }
+//        return true;
+//    }
+//    else
+//    {
         // pass the event on to the parent class
         return QWidget::eventFilter(obj, event);
-    }
+//    }
 }
 
 
@@ -863,27 +861,23 @@ void MainWindow::turnOffAudioSync()
 //    strokerLastUpdate = 500;
 }
 
+void MainWindow::setupLibraryGrid(QGridLayout* layout) {
+    layout->addWidget(libraryList, 1, 0, 20, 12);
+    layout->addWidget(backLibraryButton, 0, 0);
+    layout->addWidget(randomizeLibraryButton, 0, 1);
+    layout->addWidget(windowedLibraryButton, 0, ui->libraryGrid->columnCount() - 1);
+    layout->addWidget(cancelEditPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
+    layout->addWidget(editPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
+    layout->addWidget(savePlaylistButton, 0, ui->libraryGrid->columnCount() - 3);
+    layout->addWidget(libraryFilterLineEdit, 0, 2, 1, ui->libraryGrid->columnCount() - 4);
+    layout->addWidget(libraryLoadingLabel, 0, 0, 21, 12);
+}
 void MainWindow::onLibraryWindowed_Clicked()
 {
     _libraryDockMode = true;
-    ui->libraryGrid->removeWidget(libraryList);
-    ui->libraryGrid->removeWidget(randomizeLibraryButton);
-    ui->libraryGrid->removeWidget(windowedLibraryButton);
-    ui->libraryGrid->removeWidget(backLibraryButton);
-    ui->libraryGrid->removeWidget(cancelEditPlaylistButton);
-    ui->libraryGrid->removeWidget(editPlaylistButton);
-    ui->libraryGrid->removeWidget(savePlaylistButton);
-    ui->libraryGrid->removeWidget(libraryLoadingLabel);
-    ui->libraryGrid->removeWidget(libraryFilterLineEdit);
-    ((QGridLayout*)libraryWindow->layout())->addWidget(libraryList, 1, 0, 20, 12);
-    ((QGridLayout*)libraryWindow->layout())->addWidget(backLibraryButton, 0, 0);
-    ((QGridLayout*)libraryWindow->layout())->addWidget(randomizeLibraryButton, 0, 1);
-    ((QGridLayout*)libraryWindow->layout())->addWidget(windowedLibraryButton, 0, ui->libraryGrid->columnCount() - 1);
-    ((QGridLayout*)libraryWindow->layout())->addWidget(cancelEditPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
-    ((QGridLayout*)libraryWindow->layout())->addWidget(editPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
-    ((QGridLayout*)libraryWindow->layout())->addWidget(savePlaylistButton, 0, ui->libraryGrid->columnCount() - 3);
-    ((QGridLayout*)libraryWindow->layout())->addWidget(libraryFilterLineEdit, 0, 2, 1, ui->libraryGrid->columnCount() - 4);
-    ((QGridLayout*)libraryWindow->layout())->addWidget(libraryLoadingLabel, 0, 0, 21, 12);
+
+    setupLibraryGrid((QGridLayout*)libraryWindow->layout());
+
     libraryList->setParent(libraryWindow);
     windowedLibraryButton->hide();
     ui->libraryFrame->hide();
@@ -919,17 +913,19 @@ void MainWindow::onLibraryWindowed_Clicked()
 
 void MainWindow::onLibraryWindowed_Closed()
 {
-    libraryWindow->layout()->removeWidget(libraryList);
     libraryList->setParent(this);
-    ui->libraryGrid->addWidget(libraryList, 1, 0, 20, 12);
-    ui->libraryGrid->addWidget(backLibraryButton, 0, 0);
-    ui->libraryGrid->addWidget(randomizeLibraryButton, 0, 1);
-    ui->libraryGrid->addWidget(windowedLibraryButton, 0, ui->libraryGrid->columnCount() - 1);
-    ui->libraryGrid->addWidget(cancelEditPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
-    ui->libraryGrid->addWidget(editPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
-    ui->libraryGrid->addWidget(savePlaylistButton, 0, ui->libraryGrid->columnCount() - 3);
-    ui->libraryGrid->addWidget(libraryFilterLineEdit, 0, 2, 1, ui->libraryGrid->columnCount() - 4);
-    ui->libraryGrid->addWidget(libraryLoadingLabel, 0, 0, 21, 12);
+
+    if(videoHandler->isFullScreen()) {
+        videoHandler->placeLibraryList();
+        setupLibraryGrid(videoHandler->libraryListLayout());
+        windowedLibraryButton->setHidden(true);
+    } else {
+        ui->libraryGrid->addWidget(libraryList, 1, 0, 20, 12);
+        setupLibraryGrid(ui->libraryGrid);
+        windowedLibraryButton->setHidden(false);
+    }
+
+
     windowedLibraryButton->show();
     ui->libraryFrame->show();
     if(SettingsHandler::getLibrarySortMode() != LibrarySortMode::RANDOM)
@@ -2065,7 +2061,7 @@ void MainWindow::on_mainwindow_change(QEvent* event)
         {
             LogHandler::Debug("oldState No state: "+QString::number(stateEvent->oldState()));
         }
-        else if(stateEvent->oldState() == Qt::WindowState::WindowMaximized && !_isFullScreen && !_isMaximized)
+        else if(stateEvent->oldState() == Qt::WindowState::WindowMaximized && !videoHandler->isFullScreen() && !_isMaximized)
         {
             LogHandler::Debug("oldState WindowMaximized: "+QString::number(stateEvent->oldState()));
             //QMainWindow::resize(_appSize);
@@ -2080,7 +2076,7 @@ void MainWindow::on_mainwindow_change(QEvent* event)
                // videoHandler->resize(_videoSize);
             });
         }
-        else if(stateEvent->oldState() == Qt::WindowState::WindowMaximized && !_isFullScreen && !QMainWindow::isMaximized())
+        else if(stateEvent->oldState() == Qt::WindowState::WindowMaximized && !videoHandler->isFullScreen() && !QMainWindow::isMaximized())
         {
             LogHandler::Debug("WindowMaximized to normal");
 
@@ -2088,10 +2084,26 @@ void MainWindow::on_mainwindow_change(QEvent* event)
         }
     }
 }
-QPoint _mainStackedWidgetPos;
+//QPoint _mainStackedWidgetPos;
 void MainWindow::toggleFullScreen()
 {
-    videoHandler->toggleFullscreen();
+    QScreen *screen = this->window()->windowHandle()->screen();
+    QSize screenSize = screen->size();
+    if(!videoHandler->isFullScreen())
+    {
+        videoHandler->showFullscreen(screenSize, !libraryWindow->isHidden());
+        if(libraryWindow->isHidden()) {
+            setupLibraryGrid(videoHandler->libraryListLayout());
+        }
+    } else {
+        if(libraryWindow->isHidden())
+        {
+            ui->libraryGrid->addWidget(libraryList, 0, 0, 20, 12);
+            setupLibraryGrid(ui->libraryGrid);
+        }
+        _controlsHomePlaceHolderGrid->addWidget(_playerControlsFrame);
+        videoHandler->showNormal();
+    }
 //    if(!_isFullScreen)
 //    {
 //        videoHandler->showFullScreen();
@@ -2216,37 +2228,6 @@ void MainWindow::toggleFullScreen()
 //    }
 }
 
-void MainWindow::hideControls()
-{
-    if (_isFullScreen)
-    {
-        _playerControlsFrame->hide();
-    }
-}
-
-void MainWindow::showControls()
-{
-    if (_isFullScreen)
-    {
-        _playerControlsFrame->show();
-    }
-}
-
-void MainWindow::hideLibrary()
-{
-    if (_isFullScreen)
-    {
-        libraryList->hide();
-    }
-}
-
-void MainWindow::showLibrary()
-{
-    if (_isFullScreen)
-    {
-        libraryList->show();
-    }
-}
 
 void MainWindow::on_VolumeSlider_valueChanged(int value)
 {
@@ -2341,9 +2322,9 @@ void MainWindow::on_seekslider_hover(int position, qint64 sliderValue)
 //        LogHandler::Debug("time: "+QString::number(sliderValueTime));
     //LogHandler::Debug("position: "+QString::number(position));
     QPoint gpos;
-    if(_isFullScreen)
+    if(videoHandler->isFullScreen())
     {
-        gpos = mapToGlobal(playerControlsPlaceHolder->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(position, 0));
+        gpos = mapToGlobal(_playerControlsFrame->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(position, 0));
         QToolTip::showText(gpos, QTime(0, 0, 0).addMSecs(sliderValue).toString(QString::fromLatin1("HH:mm:ss")));
     }
     else

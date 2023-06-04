@@ -8,11 +8,17 @@
 #include <QMouseEvent>
 #include <QMovie>
 #include <QLabel>
+
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/loghandler.h"
-#include "lib/handler/xvideowidget.h"
-#include "lib/handler/dialoghandler.h"
 #include "lib/lookup/XMedia.h"
+
+#include "xvideowidget.h"
+#include "playercontrols.h"
+#include "xlibrarylist.h"
+#include "xwidget.h"
+#include "dialoghandler.h"
+
 class VideoHandler : public QWidget
 {
     Q_OBJECT
@@ -43,7 +49,7 @@ signals:
     void durationChange(qint64 value);
 
 public:;
-    VideoHandler(QWidget* parent = 0);
+    VideoHandler(PlayerControls* controls, XLibraryList* libraryList, QWidget* parent = 0);
     virtual ~VideoHandler();
     bool isPlaying();
     void play();
@@ -71,17 +77,26 @@ public:;
     void setLoading(bool loading);
     QStringList getVideoExtensions();
     QStringList getAudioExtensions();
-    void toggleFullscreen();
+    bool isFullScreen();
+    void showFullscreen(QSize screenSize, bool libraryWindowed);
+    void showNormal();
+    void placeLibraryList(bool libraryWindowed = false);
+    QGridLayout* libraryListLayout();
 
 private:
-    QWidget* _parent;
     QGridLayout* _mediaGrid = 0;
+    QFrame* m_libraryListFrame;
     QMediaPlayer* _player = 0;
+    QTimer m_overlayTimer;
     //QAudioProbe* m_audioProbe = 0;
     bool _isFullScreen = false;
-    QWidget* _fullscreenWidget;
+    bool m_libraryWindowed;
+    QSize m_screenSize;
+    XWidget* _fullscreenWidget;
 //    VideoRenderer* _videoRenderer = 0;
 //    VideoPreviewWidget* _videoPreviewWidget;
+    QRect m_libraryRect;
+    QRect m_controlsRect;
     XVideoWidget* _videoWidget;
     QString _currentFile;
     QMutex _mutex;
@@ -95,5 +110,16 @@ private:
     void on_setLoading(bool loading);
     XMediaStatus convertMediaStatus(QMediaPlayer::MediaStatus status);
     XMediaState convertMediaState(QMediaPlayer::State status);
+
+    PlayerControls* m_controls;
+    XLibraryList* m_libraryList;
+
+    void mouseMove( QMouseEvent* e );
+    void hideControls();
+    void showControls();
+    void hideLibrary();
+    void showLibrary();
+    void hideControlsTimeout();
+    void hideLibraryTimeout();
 };
 #endif // VIDEOHANDLER_H

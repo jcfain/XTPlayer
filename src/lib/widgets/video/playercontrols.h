@@ -5,11 +5,12 @@
 #include <QGridLayout>
 #include <QPushButton>
 #include <QLabel>
-#include "CustomControls/rangeslider.h"
-#include "lib/handler/xtpsettings.h"
 #include "lib/tool/xmath.h"
-#include "widgets/heatmapwidget.h"
-#include "widgets/timeline.h"
+
+#include "rangeslider.h"
+#include "xtpsettings.h"
+#include "heatmapwidget.h"
+#include "timeline.h"
 
 class PlayerControls : public QFrame
 {

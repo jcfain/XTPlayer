@@ -6,8 +6,9 @@
 #include <QModelIndex>
 #include <QScrollBar>
 #include "lib/struct/LibraryListItem27.h"
-#include "lib/struct/playlistviewmodel.h"
-#include "lib/struct/librarysortfilterproxymodel.h"
+
+#include "playlistviewmodel.h"
+#include "librarysortfilterproxymodel.h"
 
 class XLibraryList : public QListView
 {

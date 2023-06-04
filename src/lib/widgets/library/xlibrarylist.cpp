@@ -8,6 +8,7 @@ XLibraryList::XLibraryList(QWidget* parent) : QListView(parent)
     setContextMenuPolicy(Qt::CustomContextMenu);
     setTextElideMode(Qt::TextElideMode::ElideRight);
     setWordWrap(true);
+    setAutoFillBackground( false );
 }
 
 LibraryListItem27 XLibraryList::selectedItem() {
