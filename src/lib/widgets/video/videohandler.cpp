@@ -59,7 +59,6 @@ void VideoHandler::createLayout()
     connect(&m_overlayTimer, &QTimer::timeout, this, [this]() {
         hideControlsTimeout();
         hideLibraryTimeout();
-
     });
     _mediaGrid->addWidget(_videoWidget);
     _player->setVideoOutput(_videoWidget);
@@ -154,8 +153,6 @@ void VideoHandler::showFullscreen(QSize screenSize, bool libraryWindowed) {
     hideControls();
 
     _fullscreenWidget->showFullScreen();
-//    libraryList->move(QPoint(0, screenSize.height()));
-//    controls->move(QPoint(0, screenSize.height() - controls->height()));
     grabKeyboard();
 }
 
@@ -466,7 +463,8 @@ void VideoHandler::hideLibraryTimeout() {
     if(m_libraryList) {
         if (!m_libraryRect.contains(QCursor::pos())) {
             hideLibrary();
-            grabKeyboard();
+            if(_isFullScreen)
+                grabKeyboard();
         }
     }
 }
