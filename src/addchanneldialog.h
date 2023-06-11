@@ -9,11 +9,12 @@
 #include <QComboBox>
 #include <QGridLayout>
 #include <QDialogButtonBox>
+
 #include "lib/struct/ChannelModel33.h"
 #include "lib/handler/settingshandler.h"
-#include "lib/handler/dialoghandler.h"
 #include "lib/lookup/TCodeVersion.h"
 
+#include "dialoghandler.h"
 
 class AddChannelDialog : public QDialog
 {

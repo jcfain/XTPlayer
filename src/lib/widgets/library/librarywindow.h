@@ -6,7 +6,7 @@
 #include <QResizeEvent>
 #include <QMoveEvent>
 
-#include "lib/handler/xtpsettings.h"
+#include "xtpsettings.h"
 
 class LibraryWindow : public QFrame
 {

@@ -1,5 +1,5 @@
 #include "heatmapwidget.h"
-#include "lib/handler/xtpsettings.h"
+#include "xtpsettings.h"
 //#include <QSvgGenerator>
 HeatmapWidget::HeatmapWidget(QWidget *parent)
     : QLabel{parent},

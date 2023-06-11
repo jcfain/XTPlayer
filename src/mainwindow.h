@@ -385,6 +385,8 @@ private:
     void showInGraphicalShell(QString path);
     void processMetaData(LibraryListItem27 LibraryListItem27);
     void updateMetaData(LibraryListItem27 LibraryListItem27);
+    void alternateFunscriptSelected(ScriptInfo script);
+    void alternateFunscriptsFound(QList<ScriptInfo> scriptInfos);
 
     qint64 mediaPosition();
     qint64 mediaDuration();

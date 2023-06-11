@@ -20,6 +20,7 @@ public:
     void setFile(QString path);
     void setTimestamp(qint64 time);
     void preview(QPoint gpos);
+    void stop();
 
 protected:
     virtual void closeEvent(QCloseEvent *event) override;

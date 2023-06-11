@@ -4,9 +4,12 @@
 #include <QObject>
 #include <QWidget>
 #include <QFileDialog>
-#include <lib/handler/settingshandler.h>
-#include <lib/handler/loghandler.h>
-#include <lib/handler/dialoghandler.h>
+
+#include "lib/handler/settingshandler.h"
+#include "lib/handler/loghandler.h"
+
+#include "dialoghandler.h"
+
 #include <ui_libraryexclusions.h>
 
 class LibraryManager : public QDialog

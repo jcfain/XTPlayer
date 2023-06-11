@@ -2,8 +2,10 @@
 
 #include <QDialogButtonBox>
 #include <QGridLayout>
+
 #include "lib/handler/loghandler.h"
-#include "lib/handler/dialoghandler.h"
+
+#include "dialoghandler.h"
 
 PlaylistDialog::PlaylistDialog(QWidget *parent) : QDialog(parent)
 {

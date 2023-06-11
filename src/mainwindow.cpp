@@ -394,6 +394,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::saveThumbError, this, &MainWindow::onSaveThumbError);
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::saveNewThumb, this, &MainWindow::onSaveNewThumb);
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::saveNewThumbLoading, this, &MainWindow::onSaveNewThumbLoading);
+    connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::alternateFunscriptsFound, this, &MainWindow::alternateFunscriptsFound);
 
     connect(action75_Size, &QAction::triggered, this, &MainWindow::on_action75_triggered);
     connect(action100_Size, &QAction::triggered, this, &MainWindow::on_action100_triggered);
@@ -459,6 +460,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
         m_xtengine->settingsActionHandler()->media_action(actions.SkipToAction);
     });
     connect(_playerControlsFrame, &PlayerControls::skipBack, this, &MainWindow::on_skipBackButton_clicked);
+    connect(_playerControlsFrame, &PlayerControls::alternateFunscriptSelected, this, &MainWindow::alternateFunscriptSelected);
 
     connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
     connect(this, &MainWindow::keyReleased, this, &MainWindow::on_key_press);
@@ -1985,6 +1987,7 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
                 turnOffAudioSync();
                 scriptFile = customScript.isEmpty() ? selectedFileListItem.zipFile.isEmpty() ? selectedFileListItem.script : selectedFileListItem.zipFile : customScript;
                 invalidScripts = m_xtengine->syncHandler()->load(scriptFile);
+                m_xtengine->mediaLibraryHandler()->findAlternateFunscripts(scriptFile);
             }
             else
             {
@@ -2049,6 +2052,16 @@ void MainWindow::updateMetaData(LibraryListItem27 libraryListItem)
         }
     }
     SettingsHandler::updateLibraryListItemMetaData(libraryListItemMetaData);
+}
+
+void MainWindow::alternateFunscriptSelected(ScriptInfo script)
+{
+    m_xtengine->syncHandler()->swap(script.path);
+}
+
+void MainWindow::alternateFunscriptsFound(QList<ScriptInfo> scriptInfos)
+{
+    _playerControlsFrame->setAltScripts(scriptInfos);
 }
 
 void MainWindow::on_mainwindow_change(QEvent* event)
@@ -2512,6 +2525,7 @@ void MainWindow::on_media_stop()
     _playerControlsFrame->resetMediaControlStatus(false);
     m_xtengine->syncHandler()->stopOtherMediaFunscript();
     XMediaStateHandler::stop();
+    _videoPreviewWidget->stop();
     _mediaStopped = true;
 }
 

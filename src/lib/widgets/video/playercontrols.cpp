@@ -32,7 +32,12 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToActionButton->setFlat(true);
     skipToActionButton->setEnabled(false);
 
-    playerControlsGrid->addWidget(skipToActionButton, row, 1, 1, 5);
+    playerControlsGrid->addWidget(skipToActionButton, row, 1, 1, 3);
+
+    alternateStriptCmb = new QComboBox(this);
+    alternateStriptCmb->setEditable(false);
+    playerControlsGrid->addWidget(alternateStriptCmb, row, 4, 1, 4);
+    connect(alternateStriptCmb, &QComboBox::currentTextChanged, this, &PlayerControls::onAlternateFunscriptSelected);
 
     skipToMoneyShotButton = new QPushButton(this);
     skipToMoneyShotButton->setObjectName(QString::fromUtf8("skipToMoneyShotButton"));
@@ -46,7 +51,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToMoneyShotButton->setFlat(true);
     skipToMoneyShotButton->setEnabled(false);
 
-    playerControlsGrid->addWidget(skipToMoneyShotButton, row, 6, 1, 5);
+    playerControlsGrid->addWidget(skipToMoneyShotButton, row, 8, 1, 3);
 
     lblDuration = new QLabel(this);
     lblDuration->setObjectName(QString::fromUtf8("lblDuration"));
@@ -290,6 +295,7 @@ void PlayerControls::resetMediaControlStatus(bool playing)
 //        lblHeatmap->clearMap();
 //        m_timeLine->clear();
         m_timeLine->stop();
+        setAltScripts(QList<ScriptInfo>());
     }
 }
 
@@ -527,4 +533,28 @@ void PlayerControls::setActions(QHash<qint64, int> actions) {
     m_actions = actions;
     if(!XTPSettings::getHeatmapDisabled())
         lblHeatmap->setActions(actions);
+}
+
+void PlayerControls::onAlternateFunscriptSelected(QString script)
+{
+    auto scriptPath = alternateStriptCmb->currentData(Qt::UserRole).value<ScriptInfo>();
+    emit alternateFunscriptSelected(scriptPath);
+}
+
+void PlayerControls::setAltScripts(QList<ScriptInfo> scriptInfos)
+{
+
+    disconnect(alternateStriptCmb, &QComboBox::currentTextChanged, this, &PlayerControls::onAlternateFunscriptSelected);
+    alternateStriptCmb->clear();
+    foreach(auto scriptInfo, scriptInfos) {
+        if(!QFileInfo::exists(scriptInfo.path))
+            continue;
+        QString type = "";
+        if(scriptInfo.containerType == ScriptContainerType::MFS)
+            continue;
+        else if(scriptInfo.containerType == ScriptContainerType::ZIP)
+            type = " (ZIP)";
+        alternateStriptCmb->addItem(scriptInfo.name + type, QVariant::fromValue(scriptInfo));
+    }
+    connect(alternateStriptCmb, &QComboBox::currentTextChanged, this, &PlayerControls::onAlternateFunscriptSelected);
 }

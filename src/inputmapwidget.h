@@ -8,11 +8,12 @@
 #include <QHBoxLayout>
 #include <QCheckBox>
 #include <QKeyEvent>
-#include <lib/handler/dialoghandler.h>
 
 #include <lib/handler/settingshandler.h>
 #include <lib/handler/loghandler.h>
 #include <lib/handler/connectionhandler.h>
+
+#include "dialoghandler.h"
 
 class InputMapWidget : public QWidget
 {

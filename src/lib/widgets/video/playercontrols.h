@@ -4,8 +4,11 @@
 #include <QFrame>
 #include <QGridLayout>
 #include <QPushButton>
+#include <QComboBox>
 #include <QLabel>
+
 #include "lib/tool/xmath.h"
+#include "lib/struct/ScriptInfo.h"
 
 #include "rangeslider.h"
 #include "xtpsettings.h"
@@ -31,6 +34,7 @@ signals:
     void seekSliderMoved(qint64 value);
     void seekSliderHover(int position, qint64 sliderValue);
     void seekSliderLeave();
+    void alternateFunscriptSelected(ScriptInfo script);
 public slots:
     void on_heatmapToggled(bool disabled);
 public:
@@ -61,11 +65,13 @@ public:
     void resetMediaControlStatus(bool playing);
     void setSkipToMoneyShotEnabled(bool enabled);
     void setActions(QHash<qint64, int> actions);
+    void setAltScripts(QList<ScriptInfo> scriptInfos);
 
 private:
     QGridLayout *playerControlsGrid;
     QPushButton *skipForwardButton;
     QPushButton *skipToMoneyShotButton;
+    QComboBox* alternateStriptCmb;
     QPushButton *skipToActionButton;
     QPushButton *MuteBtn;
     QPushButton *loopToggleButton;
@@ -99,6 +105,7 @@ private:
     void on_loopToggleButton_toggled(bool checked);
     void on_seekslider_hover(int position, qint64 sliderValue);
     void on_seekslider_leave();
+    void onAlternateFunscriptSelected(QString script);
 
 };
 

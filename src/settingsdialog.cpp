@@ -944,7 +944,7 @@ void SettingsDialog::on_xtpWeb_initOutputDevice(DeviceName deviceName, bool chec
         ui.networkPortTxt->setText(SettingsHandler::getServerPort());
         ui.networkOutputRdo->setChecked(checked);
         on_networkOutputRdo_clicked();
-        on_networkConnectButton_clicked();
+        ui.networkConnectButton->setEnabled(false);
     } else if(deviceName == DeviceName::None) {
         ui.serialOutputRdo->setChecked(false);
         ui.networkOutputRdo->setChecked(false);
