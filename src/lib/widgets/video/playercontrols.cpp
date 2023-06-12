@@ -558,3 +558,27 @@ void PlayerControls::setAltScripts(QList<ScriptInfo> scriptInfos)
     }
     connect(alternateStriptCmb, &QComboBox::currentTextChanged, this, &PlayerControls::onAlternateFunscriptSelected);
 }
+
+bool PlayerControls::alternateFunscriptNext()
+{
+    if(alternateStriptCmb->count() > 1) {
+        auto index = alternateStriptCmb->currentIndex() + 1;
+        if(index >= alternateStriptCmb->count())
+            index = 0;
+        alternateStriptCmb->setCurrentIndex(index);
+        return true;
+    }
+    return false;
+}
+
+bool PlayerControls::alternateFunscriptPrev()
+{
+    if(alternateStriptCmb->count() > 1) {
+        auto index = alternateStriptCmb->currentIndex() - 1;
+        if(index < 0)
+            index = alternateStriptCmb->count() - 1;
+        alternateStriptCmb->setCurrentIndex(index);
+        return true;
+    }
+    return false;
+}

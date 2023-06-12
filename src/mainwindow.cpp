@@ -740,6 +740,16 @@ void MainWindow::mediaAction(QString action, QString actionText)
     else if(MediaActions::HasOtherAction(action, ActionType::CHANNEL_PROFILE)) {
         onText_to_speech(actionText);
     }
+    else if(action == actions.AltFunscriptNext)
+    {
+        if(_playerControlsFrame->alternateFunscriptNext())
+            onText_to_speech("Next alt funscript");
+    }
+    else if(action == actions.AltFunscriptPrev)
+    {
+        if(_playerControlsFrame->alternateFunscriptPrev())
+            onText_to_speech("Previous alt funscript");
+    }
     else
     {
         onText_to_speech(actionText);

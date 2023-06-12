@@ -66,6 +66,8 @@ public:
     void setSkipToMoneyShotEnabled(bool enabled);
     void setActions(QHash<qint64, int> actions);
     void setAltScripts(QList<ScriptInfo> scriptInfos);
+    bool alternateFunscriptNext();
+    bool alternateFunscriptPrev();
 
 private:
     QGridLayout *playerControlsGrid;
