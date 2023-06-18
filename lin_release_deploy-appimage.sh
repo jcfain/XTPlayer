@@ -8,7 +8,7 @@ home=~/
 target='/media/NAS/STK/Hardware/my software/'
 xtplayerSource="${home}"git/XTPlayer
 xtplayerLocation="${home}"git/XTPlayer/build-XTPlayer-Desktop_Qt_5_15_2_GCC_64bit-Release/
-xtengineLocation="${home}"git/XTEngine/build-XTEngine-Desktop_Qt_5_15_2_GCC_64bit-Release/release/
+xtengineLocation="${home}"git/XTEngine/build-XTEngine-Desktop-Release/release/
 httpserverLocation="${home}"git/HttpServer/src/build/release/
 deployDirectory="${home}"git/XTPlayer/Deploy/
 linuxdeployqtBinary="${home}git/linuxdeployqt-continuous-x86_64.AppImage"
@@ -31,7 +31,8 @@ find "${xtplayerLocation}" \( -name "moc_*" -or -name "*.o" -or -name "qrc_*" -o
 cp "${xtplayerSource}"/XTPlayer.desktop "${xtplayerLocation}"/XTPlayer.desktop
 
 cp "${xtplayerSource}"/src/images/icons/XTP-icon.png ${xtplayerLocation}/XTPlayer.png
-"${linuxdeployqtBinary}" ${xtplayerLocation}/XTPlayer -appimage -unsupported-allow-new-glibc -always-overwrite -extra-plugins=iconengines
+"${linuxdeployqtBinary}" ${xtplayerLocation}/XTPlayer -appimage -unsupported-allow-new-glibc -always-overwrite -extra-plugins=iconengines,platformthemes/libqgtk3.so,mediaservice,gamepads
+#,libgstreamer1.0-0,libgstreamer-plugins-base1.0-0,libgstreamer-plugins-bad1.0-0,gstreamer1.0-x,gstreamer1.0-alsa,gstreamer1.0-plugins-base,gstreamer1.0-plugins-good,gstreamer1.0-plugins-bad,gstreamer1.0-plugins-ugly,gstreamer1.0-pulseaudio,gstreamer1.0-libav
 #,platformthemes/libqgtk3.so
 #mv ${home}git/XTPlayer.appimage  ${home}git/XTPlayer-v$(version).appimage
 mv "${xtplayerSource}"/XTPlayer-"${VERSION}"-x86_64.AppImage "${deployDirectory}"XTPlayer-"${VERSION}"-Linux-x86_64.AppImage

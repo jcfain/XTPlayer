@@ -1,10 +1,10 @@
 #!/bin/bash
 
-version=v0.423b
+version=v0.443b
 targetDirectory=./Deploy/XTPlayer-${version}_Linux_x86_64
 xteTargetDirectory=./Deploy/XTEngine-${version}_Linux_x86_64
 binDirectory=./build-XTPlayer-Desktop_Qt_5_15_2_GCC_64bit-Release/XTPlayer
-xteBinDirectory=../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_GCC_64bit-Release/release
+xteBinDirectory=../XTEngine/build-XTEngine-Desktop-Release/release
 librDirectory=/home/jay/Qt/5.15.2/gcc_64/lib
 qmakeDirectory=/home/jay/Qt/5.15.2/gcc_64/bin/qmake
 cqtdeployer -bin $xteBinDirectory clear -libDir $librDirectory -qmake $qmakeDirectory -targetDir $xteTargetDirectory

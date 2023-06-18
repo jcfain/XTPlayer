@@ -31,7 +31,7 @@ find "${xtplayerLocation}" \( -name "moc_*" -or -name "*.o" -or -name "qrc_*" -o
 cp "${xtplayerSource}"/XTPlayer.desktop "${xtplayerLocation}"/XTPlayer.desktop
 
 cp "${xtplayerSource}"/src/images/icons/XTP-icon.png ${xtplayerLocation}/XTPlayer.png
-"${linuxdeployqtBinary}" ${xtplayerLocation}/XTPlayer -appimage -unsupported-allow-new-glibc -always-overwrite -extra-plugins=iconengines
+"${linuxdeployqtBinary}" ${xtplayerLocation}/XTPlayer -appimage -unsupported-allow-new-glibc -always-overwrite -extra-plugins=iconengines,platformthemes/libqgtk3.so,mediaservice,gamepads
 #,platformthemes/libqgtk3.so
 #mv ${home}git/XTPlayer.appimage  ${home}git/XTPlayer-v$(version).appimage
 mv "${xtplayerSource}"/XTPlayer-"${VERSION}"-aarch64.AppImage "${deployDirectory}"XTPlayer-"${VERSION}"-Linux-aarch64.AppImage
