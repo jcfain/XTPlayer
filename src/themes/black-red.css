@@ -1,5 +1,5 @@
 
-QMainWindow, QDialog, QTabWidget > QWidget, LibraryWindow {
+QMainWindow, QDialog, QTabWidget > QWidget, QLineEdit, QScrollArea > QWidget > QWidget, LibraryWindow  {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1.5, stop: 0 black, stop: 1 darkred);
     color: white;
 }
@@ -84,6 +84,64 @@ QMenu::item:disabled{
 background-color: grey;
 color: lightgrey;
 } 
+QScrollBar:vertical {
+    background: #3e4249;
+	border-radius: 5px;
+	width: 10px;
+}
+QScrollBar::handle:vertical {
+    background-color: #81848d;
+	border-radius: 5px;
+	height: 30px;
+}
+QScrollBar:horizontal {
+    background: #3e4249;
+	border-radius: 5px;
+	height: 10px;
+}
+QScrollBar:handle::horizontal {
+    background-color: #81848d;
+	border-radius: 5px;
+	width: 30px;
+}
+QScrollBar::handle:vertical:hover,
+QScrollBar:handle::horizontal:hover {
+    background-color: #bec1cb;
+}
+QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical,
+QScrollBar::up-arrow:horizontal, QScrollBar::down-arrow:horizontal {
+	border: none;
+	background: none;
+	width: 0px;
+	height: 0px;
+}
+QScrollBar::right-arrow:vertical, QScrollBar::left-arrow:vertical,
+QScrollBar::right-arrow:horizontal, QScrollBar::left-arrow:horizontal
+{
+	border: none;
+	background: none;
+	width: 0px;
+	height: 0px;
+}
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical,
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+	border: none;
+	background: none;
+} 
+QScrollBar::add-line:vertical,
+QScrollBar::add-line:horizontal {
+	border: none;
+	background: none;
+	width: 0px;
+	height: 0px;
+}
+QScrollBar::sub-line:vertical,
+QScrollBar::sub-line:horizontal {
+	border: none;
+	background: none;
+	width: 0px;
+	height: 0px;
+}
 QRadioButton, QCheckBox, QGroupBox, QLabel {
     background-color: transparent;
     color: white;
@@ -104,82 +162,65 @@ QStatusBar {
     color: white;
 }
 QPushButton {
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 black, stop: 1 grey);
-    color: red;
+	background-color: black;
+    color: darkred;
 }
 QPushButton:disabled {
     background-color: lightgrey;
     color: grey;
 }
+
+XWidget[cssClass="fullScreenWidget"] {
+    background-color: transparent;
+}
 QFrame[cssClass="windowedControls"] {
     background-color: transparent;
-    color: white;
-}
-QFrame[cssClass="fullScreenControls"] {
-    background-color: rgba(255, 255, 255, 0.2);
     color: black;
 }
-QFrame[cssClass="windowedLibrary"] {
+QFrame[cssClass="fullScreenControls"] {
+	background-color: darkred;
+    color: white;
+}
+QListView[cssClass="windowedLibrary"] {
     background-color: transparent;
     color: white;
 }
-QFrame[cssClass="fullScreenLibrary"] {
-    background-color: rgba(255, 255, 255, 0.2);
+QListView[cssClass="fullScreenLibrary"] {
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1.5, stop: 0 black, stop: 1 darkred);
+    color: white;
+}
+QPushButton:pressed,
+QPushButton[cssClass="playerControlButton"]:pressed,
+QPushButton#windowedLibraryButton:pressed,
+QPushButton#randomizeLibraryButton:pressed,
+QPushButton#backLibraryButton:pressed,
+QPushButton#savePlaylistButton:pressed,
+QPushButton#editPlaylistButton:pressed,
+QPushButton#cancelEditPlaylistButton:pressed {
+    background-color: rgba(100, 100, 100, 0.5);
     color: black;
 }
-QPushButton[id="windowedLibraryButton"] {
-	height: 25px;
-	width: 25px;
+QPushButton#windowedLibraryButton,
+QPushButton#randomizeLibraryButton,
+QPushButton#backLibraryButton,
+QPushButton#savePlaylistButton,
+QPushButton#editPlaylistButton,
+QPushButton#cancelEditPlaylistButton {
+	height: 20px;
+	width: 20px;
+	border-radius: 4px 4px 0px 0px;
+}
+QPushButton#randomizeLibraryButton,
+QPushButton#backLibraryButton,
+QPushButton#windowedLibraryButton,
+QPushButton#editPlaylistButton {
     background-color: rgba(255, 255, 255, 0.5);
-	border-radius: 50%;
 }
-QPushButton[id="randomizeLibraryButton"] {
-	height: 25px;
-	width: 25px;
-    background-color: rgba(255, 255, 255, 0.5);
-	border-radius: 50%;
-}
-QPushButton[id="windowedLibraryButton"]:pressed {
-    background-color: rgba(100, 100, 100, 0.5);
-}
-QPushButton[id="randomizeLibraryButton"]:pressed {
-    background-color: rgba(100, 100, 100, 0.5);
-}
-QPushButton[id="backLibraryButton"] {
-	height: 25px;
-	width: 25px;
-    background-color: rgba(255, 255, 255, 0.5);
-	border-radius: 50%;
-}
-QPushButton[id="backLibraryButton"]:pressed {
-    background-color: rgba(100, 100, 100, 0.5);
-}
-QPushButton[id="savePlaylistButton"] {
-	height: 25px;
-	width: 25px;
+QPushButton#savePlaylistButton {
     background-color: rgba(0, 255, 0, 0.5);
-	border-radius: 50%;
 }
-QPushButton[id="savePlaylistButton"]:pressed {
-    background-color: rgba(100, 100, 100, 0.5);
-}
-QPushButton[id="editPlaylistButton"] {
-	height: 25px;
-	width: 25px;
-    background-color: rgba(255, 255, 255, 0.5);
-	border-radius: 50%;
-}
-QPushButton[id="editPlaylistButton"]:pressed {
-    background-color: rgba(100, 100, 100, 0.5);
-}
-QPushButton[id="cancelEditPlaylistButton"] {
-	height: 25px;
-	width: 25px;
+QPushButton#cancelEditPlaylistButton {
     background-color: rgba(255, 0, 0, 0.5);
-	border-radius: 50%;
-}
-QPushButton[id="cancelEditPlaylistButton"]:pressed {
-    background-color: rgba(100, 100, 100, 0.5);
 }
 QWidget {font-size: 12px}
 ;

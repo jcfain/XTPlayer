@@ -173,23 +173,6 @@ QScrollBar::sub-line:horizontal {
 	width: 0px;
 	height: 0px;
 }
-QFrame[cssClass="windowedControls"] {
-    background-color: transparent;
-    color: white;
-}
-
-QFrame[cssClass="fullScreenControls"] {
-    background-color: rgba(255, 255, 255, 0.2);
-    color: black;
-}
-QFrame[cssClass="windowedLibrary"] {
-    background-color: transparent;
-    color: white;
-}
-QFrame[cssClass="fullScreenLibrary"] {
-    background-color: rgba(255, 255, 255, 0.2);
-    color: black;
-}
 QStatusBar {
     color: white;
 }
@@ -272,6 +255,25 @@ QPushButton#loopToggleButton:checked,
 QPushButton#muteBtn:checked  {
     background-color: rgba(100, 100, 100, 0.5);
     color: black;
+}
+XWidget[cssClass="fullScreenWidget"] {
+    background-color: transparent;
+}
+QFrame[cssClass="windowedControls"] {
+    background-color: transparent;
+    color: black;
+}
+QFrame[cssClass="fullScreenControls"] {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: green;
+}
+QListView[cssClass="windowedLibrary"] {
+    background-color: transparent;
+    color: white;
+}
+QListView[cssClass="fullScreenLibrary"] {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
 }
 QPushButton:pressed,
 QPushButton[cssClass="playerControlButton"]:pressed,

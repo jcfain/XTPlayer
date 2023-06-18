@@ -1,6 +1,11 @@
 #include "videohandler.h"
 VideoHandler::VideoHandler(PlayerControls* controls, XLibraryList* libraryList, QWidget *parent) : QWidget(parent),
-    _player(0), _fullscreenWidget(0), _videoWidget(0), m_libraryListFrame(0),  m_controls(controls),  m_libraryList(libraryList)
+    _player(0),
+    _fullscreenWidget(0),
+    _videoWidget(0),
+    m_libraryListFrame(0),
+    m_controls(controls),
+    m_libraryList(libraryList)
 {
     _player = new QMediaPlayer(this);
     _player->setVolume(SettingsHandler::getPlayerVolume());
@@ -128,30 +133,40 @@ void VideoHandler::showNormal() {
 void VideoHandler::showFullscreen(QSize screenSize, bool libraryWindowed) {
     _isFullScreen = true;
     m_screenSize = screenSize;
-    _fullscreenWidget = new XWidget();
+    _fullscreenWidget = new XWidget(this);
+    _fullscreenWidget->setAttribute(Qt::WA_StyledBackground);
+    //_fullscreenWidget->setStyleSheet("background-color: transparent; color: white;");
+//    _fullscreenWidget->setProperty("cssClass", "fullScreenControls");
+//    _fullscreenWidget->style()->unpolish(_fullscreenWidget);
+//    _fullscreenWidget->style()->polish(_fullscreenWidget);
+
 //    QGraphicsOpacityEffect* opacityFx = new QGraphicsOpacityEffect(_fullscreenWidget);
 //    opacityFx->setOpacity(0.5);
 //    _fullscreenWidget->setGraphicsEffect(opacityFx);
+
     connect(_fullscreenWidget, &XWidget::mouseMove, this, &VideoHandler::mouseMove);
-    _fullscreenWidget->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+    _fullscreenWidget->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Window);
     QGridLayout* layout = new QGridLayout(_fullscreenWidget);
     layout->setContentsMargins(0,0,0,0);
     layout->setSpacing(0);
     _fullscreenWidget->setLayout(layout);
     _fullscreenWidget->setProperty("cssClass", "fullScreenWidget");
-    _fullscreenWidget->setAttribute(Qt::WA_StyledBackground);
     _videoWidget->setMouseTracking(true);
     int rows = m_screenSize.height() / m_controls->height();
     layout->addWidget(_videoWidget, 0, 0, rows, 5);
     layout->addWidget(m_controls, rows - 1, 0, 1, 5);
     m_controls->setProperty("cssClass", "fullScreenControls");
-//    m_controls->setAttribute(Qt::WA_TranslucentBackground);
     m_controls->style()->unpolish(m_controls);
     m_controls->style()->polish(m_controls);
+//    QGraphicsOpacityEffect* opacityFxControls = new QGraphicsOpacityEffect(m_controls);
+//    opacityFxControls->setOpacity(0.5);
+//    m_controls->setGraphicsEffect(opacityFxControls);
+
+    //m_controls->setAttribute(Qt::WA_TranslucentBackground);
     m_controlsRect = QRect(0, m_screenSize.height() - m_controls->height(), m_screenSize.width(), m_controls->height());
     placeLibraryList(libraryWindowed);
     hideControls();
-
+    //_fullscreenWidget->show();
     _fullscreenWidget->showFullScreen();
     grabKeyboard();
 }

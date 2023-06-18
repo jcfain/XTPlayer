@@ -1,5 +1,5 @@
 
-QMainWindow, QDialog, QTabWidget > QWidget, LibraryWindow  {
+QMainWindow, QDialog, QTabWidget > QWidget, QLineEdit, QScrollArea > QWidget > QWidget, LibraryWindow   {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1.5, stop: 0 black, stop: 1 silver);
     color: white;
 }
@@ -100,6 +100,27 @@ QScrollBar:handle:horizontal {
 QScrollBar:vertical {
     background-color: black;
 }
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 15px;
+
+    border-left-width: 1px;
+    border-left-color: darkgray;
+    border-left-style: solid; 
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+QComboBox::down-arrow {
+    image: url(://images/icons/expand-button.png);
+	width: 8px;
+	height: 8px;
+}
+QRadioButton, QGroupBox, QLabel {
+    background-color: transparent;
+    color: white;
+}
 QStatusBar {
     color: white;
 }
@@ -112,76 +133,57 @@ QPushButton:disabled {
     color: grey;
 }
 
+XWidget[cssClass="fullScreenWidget"] {
+    background-color: transparent;
+}
 QFrame[cssClass="windowedControls"] {
     background-color: transparent;
-    color: white;
-}
-
-QFrame[cssClass="fullScreenControls"] {
-    background-color: rgba(255, 255, 255, 0.2);
     color: black;
 }
-QFrame[cssClass="windowedLibrary"] {
+QFrame[cssClass="fullScreenControls"] {
+	background-color: silver;
+    color: white;
+}
+QListView[cssClass="windowedLibrary"] {
     background-color: transparent;
     color: white;
 }
-QFrame[cssClass="fullScreenLibrary"] {
-    background-color: rgba(255, 255, 255, 0.2);
+QListView[cssClass="fullScreenLibrary"] {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1.5, stop: 0 black, stop: 1 silver);
+    color: white;
+}
+QPushButton:pressed,
+QPushButton[cssClass="playerControlButton"]:pressed,
+QPushButton#windowedLibraryButton:pressed,
+QPushButton#randomizeLibraryButton:pressed,
+QPushButton#backLibraryButton:pressed,
+QPushButton#savePlaylistButton:pressed,
+QPushButton#editPlaylistButton:pressed,
+QPushButton#cancelEditPlaylistButton:pressed {
+    background-color: rgba(100, 100, 100, 0.5);
     color: black;
 }
-QPushButton[id="windowedLibraryButton"] {
-	height: 25px;
-	width: 25px;
+QPushButton#windowedLibraryButton,
+QPushButton#randomizeLibraryButton,
+QPushButton#backLibraryButton,
+QPushButton#savePlaylistButton,
+QPushButton#editPlaylistButton,
+QPushButton#cancelEditPlaylistButton {
+	height: 20px;
+	width: 20px;
+	border-radius: 4px 4px 0px 0px;
+}
+QPushButton#randomizeLibraryButton,
+QPushButton#backLibraryButton,
+QPushButton#windowedLibraryButton,
+QPushButton#editPlaylistButton {
     background-color: rgba(255, 255, 255, 0.5);
-	border-radius: 50%;
 }
-QPushButton[id="windowedLibraryButton"]:pressed {
-    background-color: rgba(100, 100, 100, 0.5);
-}
-QPushButton[id="randomizeLibraryButton"] {
-	height: 25px;
-	width: 25px;
-    background-color: rgba(255, 255, 255, 0.5);
-	border-radius: 50%;
-}
-QPushButton[id="randomizeLibraryButton"]:pressed {
-    background-color: rgba(100, 100, 100, 0.5);
-}
-QPushButton[id="backLibraryButton"] {
-	height: 25px;
-	width: 25px;
-    background-color: rgba(255, 255, 255, 0.5);
-	border-radius: 50%;
-}
-QPushButton[id="backLibraryButton"]:pressed {
-    background-color: rgba(100, 100, 100, 0.5);
-}
-QPushButton[id="savePlaylistButton"] {
-	height: 25px;
-	width: 25px;
+QPushButton#savePlaylistButton {
     background-color: rgba(0, 255, 0, 0.5);
-	border-radius: 50%;
 }
-QPushButton[id="savePlaylistButton"]:pressed {
-    background-color: rgba(100, 100, 100, 0.5);
-}
-QPushButton[id="editPlaylistButton"] {
-	height: 25px;
-	width: 25px;
-    background-color: rgba(255, 255, 255, 0.5);
-	border-radius: 50%;
-}
-QPushButton[id="editPlaylistButton"]:pressed {
-    background-color: rgba(100, 100, 100, 0.5);
-}
-QPushButton[id="cancelEditPlaylistButton"] {
-	height: 25px;
-	width: 25px;
+QPushButton#cancelEditPlaylistButton {
     background-color: rgba(255, 0, 0, 0.5);
-	border-radius: 50%;
-}
-QPushButton[id="cancelEditPlaylistButton"]:pressed {
-    background-color: rgba(100, 100, 100, 0.5);
 }
 
 QWidget {font-size: 12px}

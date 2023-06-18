@@ -3,6 +3,8 @@ XLibraryList::XLibraryList(QWidget* parent) : QListView(parent)
 {
     setProperty("id", "libraryList");
 
+    setProperty("cssClass", "windowedLibrary");
+
     setUniformItemSizes(true);
     setMovement(QListView::Static);
     setContextMenuPolicy(Qt::CustomContextMenu);
