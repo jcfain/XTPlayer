@@ -6,6 +6,7 @@
 #include <QPushButton>
 #include <QComboBox>
 #include <QLabel>
+#include <QDialog>
 
 #include "lib/tool/xmath.h"
 #include "lib/struct/ScriptInfo.h"
@@ -78,8 +79,10 @@ private:
     QPushButton *MuteBtn;
     QPushButton *loopToggleButton;
     QPushButton *fullScreenBtn;
+    QPushButton *altScriptBtn;
     //QPushButton *settingsButton;
     RangeSlider *VolumeSlider;
+    QDialog* altScriptDialog;
 //    RangeSlider *SeekSlider;
     QLabel *lblCurrentTime;
     QLabel *lblDuration;

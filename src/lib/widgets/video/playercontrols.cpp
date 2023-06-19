@@ -33,12 +33,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToActionButton->setFlat(true);
     skipToActionButton->setEnabled(false);
 
-    playerControlsGrid->addWidget(skipToActionButton, row, 1, 1, 3);
-
-    alternateStriptCmb = new QComboBox(this);
-    alternateStriptCmb->setEditable(false);
-    playerControlsGrid->addWidget(alternateStriptCmb, row, 4, 1, 4);
-    connect(alternateStriptCmb, &QComboBox::currentTextChanged, this, &PlayerControls::onAlternateFunscriptSelected);
+    playerControlsGrid->addWidget(skipToActionButton, row, 1, 1, 5);
 
     skipToMoneyShotButton = new QPushButton(this);
     skipToMoneyShotButton->setObjectName(QString::fromUtf8("skipToMoneyShotButton"));
@@ -52,7 +47,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToMoneyShotButton->setFlat(true);
     skipToMoneyShotButton->setEnabled(false);
 
-    playerControlsGrid->addWidget(skipToMoneyShotButton, row, 8, 1, 3);
+    playerControlsGrid->addWidget(skipToMoneyShotButton, row, 6, 1, 5);
 
     lblDuration = new QLabel(this);
     lblDuration->setObjectName(QString::fromUtf8("lblDuration"));
@@ -110,6 +105,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 
     playerControlsGrid->addWidget(fullScreenBtn, row, 0, 1, 1);
 
+
     loopToggleButton = new QPushButton(this);
     loopToggleButton->setObjectName(QString::fromUtf8("loopToggleButton"));
     loopToggleButton->setProperty("cssClass", "playerControlButton");
@@ -123,6 +119,48 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     loopToggleButton->setEnabled(false);
 
     playerControlsGrid->addWidget(loopToggleButton, row, 1, 1, 1);
+
+    altScriptBtn = new QPushButton(this);
+    altScriptBtn->setObjectName(QString::fromUtf8("altScriptBtn"));
+    altScriptBtn->setProperty("cssClass", "playerControlButton");
+    altScriptBtn->setEnabled(true);
+    altScriptBtn->setToolTip("Select an alternative script if any were found with names that start with the video name.\n"
+                             "If you want alternate scripts to show up here. the script name needs to be in the following format\n"
+                             "<videoname><modName>.funscript\n"
+                             "modname can be anything you want\n");
+    altScriptBtn->setMinimumSize(QSize(0, 20));
+    QIcon iconAltScript;
+    iconAltScript.addFile(QString::fromUtf8("://images/icons/funscript.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    altScriptBtn->setIcon(iconAltScript);
+    altScriptBtn->setIconSize(QSize(20, 20));
+    altScriptBtn->setFlat(true);
+    altScriptBtn->setText("0");
+//    altScriptBtn->setStyleSheet("*{"
+//        "text-align: right;"
+//        "font-size: small;"
+//        "background-position: center bottom;"
+//        "background-repeat: no-repeat;"
+//        "background-origin: content;"
+//        "background-image: url(\"://images/icons/funscript.svg\");"
+//                                                              "}");
+    playerControlsGrid->addWidget(altScriptBtn, row, 2, 1, 1);
+    connect(altScriptBtn, &QPushButton::clicked, this, [this]() {
+        if(altScriptDialog->isVisible())
+            altScriptDialog->hide();
+        else
+            altScriptDialog->show();
+    });
+
+    altScriptDialog = new QDialog(this);
+    altScriptDialog->setMinimumSize(QSize(300, 100));
+    altScriptDialog->setWindowFlags(altScriptDialog->windowFlags() | Qt::WindowStaysOnTopHint);
+    auto altScriptLayout = new QGridLayout(altScriptDialog);
+    altScriptDialog->setLayout(altScriptLayout);
+
+    alternateStriptCmb = new QComboBox(this);
+    alternateStriptCmb->setEditable(false);
+    altScriptLayout->addWidget(alternateStriptCmb);
+    connect(alternateStriptCmb, &QComboBox::currentTextChanged, this, &PlayerControls::onAlternateFunscriptSelected);
 
 //    settingsButton = new QPushButton(this);
 //    settingsButton->setObjectName(QString::fromUtf8("settingsButton"));
@@ -547,6 +585,7 @@ void PlayerControls::setAltScripts(QList<ScriptInfo> scriptInfos)
 
     disconnect(alternateStriptCmb, &QComboBox::currentTextChanged, this, &PlayerControls::onAlternateFunscriptSelected);
     alternateStriptCmb->clear();
+    int alternateCount = 0;
     foreach(auto scriptInfo, scriptInfos) {
         if(!QFileInfo::exists(scriptInfo.path))
             continue;
@@ -556,7 +595,10 @@ void PlayerControls::setAltScripts(QList<ScriptInfo> scriptInfos)
         else if(scriptInfo.containerType == ScriptContainerType::ZIP)
             type = " (ZIP)";
         alternateStriptCmb->addItem(scriptInfo.name + type, QVariant::fromValue(scriptInfo));
+        if(scriptInfo.type != ScriptType::MAIN)
+            alternateCount++;
     }
+    altScriptBtn->setText(QString::number(alternateCount));
     connect(alternateStriptCmb, &QComboBox::currentTextChanged, this, &PlayerControls::onAlternateFunscriptSelected);
 }
 
