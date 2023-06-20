@@ -151,7 +151,7 @@ void VideoHandler::showFullscreen(QSize screenSize, bool libraryWindowed) {
     layout->setSpacing(0);
     _fullscreenWidget->setLayout(layout);
     _fullscreenWidget->setProperty("cssClass", "fullScreenWidget");
-    //_videoWidget->setMouseTracking(true);
+    _videoWidget->setMouseTracking(true);
     int rows = m_screenSize.height() / m_controls->height();
     layout->addWidget(_videoWidget, 0, 0, rows, 5);
     layout->addWidget(m_controls, rows - 1, 0, 1, 5);
@@ -167,6 +167,7 @@ void VideoHandler::showFullscreen(QSize screenSize, bool libraryWindowed) {
     placeLibraryList(libraryWindowed);
     hideControls();
     //_fullscreenWidget->show();
+    //_fullscreenWidget->init();
     _fullscreenWidget->showFullScreen();
     grabKeyboard();
 }

@@ -13,13 +13,14 @@ class XWidget : public QWidget
     Q_OBJECT
 public:
     explicit XWidget(QWidget *parent = nullptr);
-    void mouseMoveEvent( QMouseEvent* e ) override;
     //bool eventFilter(QObject *watched, QEvent *event) override;
+    //void init();
 
 signals:
     void mouseMove(QMouseEvent* e);
 
 private:
+    void mouseMoveEvent( QMouseEvent* e ) override;
     //void install_filter(QObject *target, QObject *filter);
 
 };

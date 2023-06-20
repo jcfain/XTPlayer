@@ -5,7 +5,7 @@
 XWidget::XWidget(QWidget *parent)
     : QWidget{parent}
 {
-   //setMouseTracking(true);
+   setMouseTracking(true);
    //install_filter(this, this);
 }
 
@@ -14,6 +14,11 @@ void XWidget::mouseMoveEvent( QMouseEvent* e ) {
     emit mouseMove(e);
     QWidget::mouseMoveEvent(e);
 }
+
+//void XWidget::init()
+//{
+//    install_filter(this, this);
+//}
 
 //bool XWidget::eventFilter(QObject *watched, QEvent *event)
 //{
