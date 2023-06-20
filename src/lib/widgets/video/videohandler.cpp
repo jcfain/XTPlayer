@@ -1,9 +1,9 @@
 #include "videohandler.h"
 VideoHandler::VideoHandler(PlayerControls* controls, XLibraryList* libraryList, QWidget *parent) : QWidget(parent),
+    m_libraryListFrame(0),
     _player(0),
     _fullscreenWidget(0),
     _videoWidget(0),
-    m_libraryListFrame(0),
     m_controls(controls),
     m_libraryList(libraryList)
 {
@@ -151,7 +151,7 @@ void VideoHandler::showFullscreen(QSize screenSize, bool libraryWindowed) {
     layout->setSpacing(0);
     _fullscreenWidget->setLayout(layout);
     _fullscreenWidget->setProperty("cssClass", "fullScreenWidget");
-    _videoWidget->setMouseTracking(true);
+    //_videoWidget->setMouseTracking(true);
     int rows = m_screenSize.height() / m_controls->height();
     layout->addWidget(_videoWidget, 0, 0, rows, 5);
     layout->addWidget(m_controls, rows - 1, 0, 1, 5);
