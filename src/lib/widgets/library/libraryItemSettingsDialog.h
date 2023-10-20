@@ -22,6 +22,10 @@ public:
 private:
     QLabel* offsetLabel;
     QSpinBox* offsetSpinBox;
+    QLabel* globalOffsetLabel;
+    QLabel* globalOffsetValueLabel;
+    QSpinBox* globalOffsetSpinBox;
+
 
     QLabel* moneyShotLabel;
     QLineEdit* moneyShotLineEdit;
@@ -29,6 +33,7 @@ private:
 
     static LibraryListItemMetaData258 _libraryListItemMetaData;
     static void showDialog(LibraryItemSettingsDialog *dialog, bool *ok);
+    void updateOffsetLabel();
 };
 
 #endif // LIBRARYLISTITEMSETTINGSDIALOG_H
