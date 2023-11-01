@@ -1,5 +1,8 @@
 #include "playercontrols.h"
 
+#include "../library/libraryItemSettingsDialog.h"
+#include "lib/handler/xmediastatehandler.h"
+
 PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(parent, f)
 {
     setProperty("cssClass", "windowedControls");
@@ -161,6 +164,24 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     alternateStriptCmb->setEditable(false);
     altScriptLayout->addWidget(alternateStriptCmb);
     connect(alternateStriptCmb, &QComboBox::currentTextChanged, this, &PlayerControls::onAlternateFunscriptSelected);
+
+
+    mediaSettingsBtn = new QPushButton(this);
+    mediaSettingsBtn->setObjectName(QString::fromUtf8("mediaSettingsBtn"));
+    mediaSettingsBtn->setProperty("cssClass", "playerControlButton");
+    mediaSettingsBtn->setEnabled(true);
+    mediaSettingsBtn->setToolTip("Open the current media settings dialog");
+    mediaSettingsBtn->setMinimumSize(QSize(0, 20));
+    QIcon iconMediaSettings;
+    iconMediaSettings.addFile(QString::fromUtf8("://images/icons/settings.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    mediaSettingsBtn->setIcon(iconMediaSettings);
+    mediaSettingsBtn->setIconSize(QSize(20, 20));
+    mediaSettingsBtn->setFlat(true);
+    playerControlsGrid->addWidget(mediaSettingsBtn, row, 3, 1, 1);
+
+    connect(mediaSettingsBtn, &QPushButton::clicked, this, [this]() {
+        LibraryItemSettingsDialog::getSettings(this, XMediaStateHandler::getPlaying().path);
+    });
 
 //    settingsButton = new QPushButton(this);
 //    settingsButton->setObjectName(QString::fromUtf8("settingsButton"));
@@ -325,6 +346,7 @@ void PlayerControls::resetMediaControlStatus(bool playing)
     setTimeLineDisabled(!playing);
     setSkipToMoneyShotEnabled(playing);
     loopToggleButton->setEnabled(playing);
+    mediaSettingsBtn->setEnabled(playing);
     _stopBtn->setEnabled(playing);
     setPlayIcon(playing);
     if(!playing)
@@ -598,6 +620,11 @@ void PlayerControls::setAltScripts(QList<ScriptInfo> scriptInfos)
         if(scriptInfo.type != ScriptType::MAIN)
             alternateCount++;
     }
+    if(alternateCount)
+        altScriptBtn->setStyleSheet("*{ color:green }");
+    else
+        altScriptBtn->setStyleSheet("*{ color:black }");
+
     altScriptBtn->setText(QString::number(alternateCount));
     connect(alternateStriptCmb, &QComboBox::currentTextChanged, this, &PlayerControls::onAlternateFunscriptSelected);
 }

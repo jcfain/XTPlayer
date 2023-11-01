@@ -80,6 +80,7 @@ private:
     QPushButton *loopToggleButton;
     QPushButton *fullScreenBtn;
     QPushButton *altScriptBtn;
+    QPushButton *mediaSettingsBtn;
     //QPushButton *settingsButton;
     RangeSlider *VolumeSlider;
     QDialog* altScriptDialog;
