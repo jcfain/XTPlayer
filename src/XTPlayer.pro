@@ -24,6 +24,7 @@ INCLUDEPATH += $$PWD/lib/model/library
 INCLUDEPATH += $$PWD/lib/common
 
 SOURCES += \
+    gettextdialog.cpp \
     main.cpp \
     mainwindow.cpp \
     xtpsettings.cpp \
@@ -55,6 +56,7 @@ SOURCES += \
     lib/widgets/rangeslider.cpp \
 
 HEADERS += \
+    gettextdialog.h \
     mainwindow.h \
     xtpsettings.h \
     noMatchingScriptDialog.h \

@@ -7,6 +7,7 @@
 #include "addchanneldialog.h"
 #include "channeltablecomboboxdelegate.h"
 #include "xtpsettings.h"
+#include "gettextdialog.h"
 
 //http://192.168.0.145/toggleContinousTwist
 SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
@@ -835,9 +836,86 @@ void SettingsDialog::setUpTCodeChannelUI()
      ui.otherMotionGridLayout->addWidget(lubePulseAmountLabel, 1, 0);
      lubePulseCheckbox->raise();
      lubePulseCheckbox->setStyleSheet("* {background: transparent}");
+
+     QLabel* customTCodeLabel = new QLabel(this);
+     customTCodeLabel->setText("Custom TCode");
+     QListWidget* customTCodeListWidget = new QListWidget(this);
+     customTCodeListWidget->setObjectName(tr("customTCodeCommandList"));
+     customTCodeListWidget->setMinimumSize(100, 150);
+     customTCodeListWidget->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
+     customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
+     connect(customTCodeListWidget, & QListWidget::doubleClicked, this, [this, customTCodeListWidget](const QModelIndex index) {
+         if(customTCodeListWidget->selectedItems().length()) {
+             bool ok;
+             QString selected = customTCodeListWidget->selectedItems().first()->text();
+             auto newValue = GetTextDialog::show(this, "Custom TCode", selected, &ok);
+             if(ok) {
+                 MediaActions actions;
+                 if(actions.Values.contains(newValue)) {
+                     DialogHandler::MessageBox(this, "Reserved value: "+newValue, XLogLevel::Critical);
+                 } else if(customTCodeListWidget->findItems(newValue, Qt::MatchExactly).isEmpty()) {
+                     SettingsHandler::editCustomTCodeCommand(selected, newValue);
+                     customTCodeListWidget->clear();
+                     customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
+                     set_requires_restart(true);
+                 } else {
+                     DialogHandler::MessageBox(this, "Duplicate value: "+newValue, XLogLevel::Critical);
+                 }
+             }
+         }
+     });
+
+     QPushButton* customTCodeAddbutton = new QPushButton(this);
+     customTCodeAddbutton->setText("Add");
+     connect(customTCodeAddbutton, &QPushButton::clicked, this, [this, customTCodeListWidget]() {
+         bool ok;
+         auto value = GetTextDialog::show(this, "Custom TCode", nullptr, &ok);
+         if(ok) {
+             MediaActions actions;
+             if(actions.Values.contains(value)) {
+                 DialogHandler::MessageBox(this, "Reserved value: "+value, XLogLevel::Critical);
+             } else if(customTCodeListWidget->findItems(value, Qt::MatchExactly).isEmpty()) {
+                 SettingsHandler::addCustomTCodeCommand(value);
+                 customTCodeListWidget->clear();
+                 customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
+                 MediaActions::AddOtherAction(value, "TCode command: " + value, ActionType::TCODE);
+                 set_requires_restart(true);
+             } else {
+                DialogHandler::MessageBox(this, "Duplicate value: "+value, XLogLevel::Critical);
+             }
+         }
+     });
+
+     QPushButton* customTCodeRemovebutton = new QPushButton(this);
+     customTCodeRemovebutton->setEnabled(false);
+     customTCodeRemovebutton->setText("Remove");
+     connect(customTCodeRemovebutton, &QPushButton::clicked, this, [this, customTCodeListWidget, customTCodeRemovebutton]() {
+         auto amount = customTCodeListWidget->selectedItems().length();
+         if(amount) {
+             auto ok = DialogHandler::Dialog(this, "Remove selected " + QString::number(amount) + " item(s)?");
+             if(ok) {
+                 for(auto selected: customTCodeListWidget->selectedItems()) {
+                    SettingsHandler::removeCustomTCodeCommand(selected->text());
+                 }
+                 customTCodeListWidget->clear();
+                 customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
+                 customTCodeRemovebutton->setEnabled(false);
+                 set_requires_restart(true);
+             }
+         }
+     });
+
+     connect(customTCodeListWidget, & QListWidget::itemClicked, this, [customTCodeListWidget, customTCodeRemovebutton](QListWidgetItem* item) {
+         customTCodeRemovebutton->setEnabled(customTCodeListWidget->selectedItems().length());
+     });
+
      ui.otherMotionGridLayout->addWidget(libePulseAmountInput, 1, 1);
      ui.otherMotionGridLayout->addWidget(lubePulseFrequencyLabel, 2, 0);
      ui.otherMotionGridLayout->addWidget(libePulseFrequencyInput, 2, 1);
+     ui.otherMotionGridLayout->addWidget(customTCodeLabel, 3, 0);
+     ui.otherMotionGridLayout->addWidget(customTCodeListWidget, 4, 0, 1, 2);
+     ui.otherMotionGridLayout->addWidget(customTCodeAddbutton, 5, 0);
+     ui.otherMotionGridLayout->addWidget(customTCodeRemovebutton, 5, 1);
 
      setupGamepadMap();
 
@@ -1860,7 +1938,7 @@ void SettingsDialog::on_deleteProfileButton_clicked()
 void SettingsDialog::on_defultSelectedProfile_clicked()
 {
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset the channel mapn for the selected profile?\nThis will reset ALL range and multiplier settings!",
+    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset the channel map for the selected profile?\nThis will reset ALL range and multiplier settings!",
                                   QMessageBox::Yes|QMessageBox::No);
     if (reply == QMessageBox::Yes) {
         TCodeChannelLookup::setProfileDefaults();
