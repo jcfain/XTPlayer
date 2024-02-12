@@ -26,6 +26,7 @@ XTPlayer is a cross platform TCode media player.
                * Follow the instructions on the github
           * https://github.com/addisonElliott/HttpServer
                * Follow the instructions on the github
+               * build both Debug and Release
                * you dont need OpenSSL unless you do.
                * Youll need to build zlib. I usually open the CmakeLists.txt with Qt creator and build from there.
       If you have trouble building these I added a couple files in the "dependencies" directory of this repo for reminders.
