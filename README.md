@@ -37,6 +37,7 @@ XTPlayer is a cross platform TCode media player.
           
  ## Deploying
       1. In the root directory of this repository there is a file named "win_release_deploy-release.bat"
+         You may want to edit the file and make sure your directories are the same first.
       2. Double click this file to run.
       3. Make sure all commands say at least "1 files copied".
       4. The newly deployed app should be in a newly created dir ".\bin\release"
