@@ -18,9 +18,7 @@ XTPlayer is a cross platform TCode media player.
 ## Building on Windows
      1. Download and install the following apps
           *  QT Creator Community Open source edition: https://www.qt.io/download 
-             DUring installation, make sure to get Qt 5.15.2. ONLY Qt 5.15.2 is supported at this time.
-          *  GNU make: https://gnuwin32.sourceforge.net/packages/make.htm
-          *  Strawberry Perl: https://www.perl.org/get.html#win32
+             During installation, make sure to get Qt 5.15.2. ONLY Qt 5.15.2 is supported at this time.
      2. Required libraries needed:
           * https://github.com/nezticle/qtcompress
                * Follow the instructions on the github
@@ -28,7 +26,9 @@ XTPlayer is a cross platform TCode media player.
                * Follow the instructions on the github
                * build both Debug and Release
                * you dont need OpenSSL unless you do.
-               * Youll need to build zlib. I usually open the CmakeLists.txt with Qt creator and build from there.
+               * Youll need to build zlib. I usually open the CmakeLists.txt with Qt creator and build from there. 
+                  You may be able to fins a pre compiled dll but Its pretty easy to build.
+      You may need to check the XTEngine.pro and XTPlayer.pro build files for specific library directories. See the win32 section for windows.
       If you have trouble building these I added a couple files in the "dependencies" directory of this repo for reminders.
       3. Clone/download XTPlayer https://github.com/jcfain/XTPlayer/ and XTEngine https://github.com/jcfain/XTEngine/ source 
       4. Open the XTEngine and XTPlayer projects in Qt Creator
