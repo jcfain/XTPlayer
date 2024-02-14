@@ -131,11 +131,11 @@ unix:mac {
     INCLUDEPATH += $$PWD/../../HttpServer/src
     CONFIG(debug, debug|release) {
         LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_clang_64bit-Debug/debug -lxtengine
-        LIBS += -L$$PWD/../../HttpServer/src/build/debug -lhttpServer
+        LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/src/debug -lhttpServer
     }
     else:CONFIG(release, debug|release): {
         LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_clang_64bit-Release/release -lxtengine
-        LIBS += -L$$PWD/../../HttpServer/src/build/release -lhttpServer
+        LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release/src/release -lhttpServer
     }
 
     RPATHDIR *= @loader_path/../Frameworks @executable_path/../Frameworks
@@ -156,6 +156,7 @@ win32{
         #LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/debug -lhttpServer
         LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/debug -lXTEngine
         LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/src/debug -lhttpServer
+        LIBS += -L$$PWD/../../build-zlib-1.3.1-Desktop_Qt_5_15_2_MinGW_64_bit-Release -lzlib
 #        TEMPLATE = subdirs
 #        #SOURCE_ROOT += ../../
 #        SUBDIRS += libQtAV
@@ -168,6 +169,7 @@ win32{
         DESTDIR = $$shell_path($$OUT_PWD/release)
         LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_MinGW_64_bit-Release/release -lXTEngine
         LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release/src/release -lhttpServer
+        LIBS += -L$$PWD/../../build-zlib-1.3.1-Desktop_Qt_5_15_2_MinGW_64_bit-Release -lzlib
         #INCLUDEPATH += ../../QtAV-Builds/Release/x64/include
     }
     INCLUDEPATH += $$PWD/../../XTEngine/src

@@ -7,7 +7,10 @@ SET deployDir=.\bin\release\
 SET deployZipDir=.\bin\
 SET stagingDirectory=.\bin\latest
 SET sevenZipLocation="C:\Program Files\7-Zip\7z.exe"
+rem this is where the zip file will be copied for backup
 SET releaseDirectory="\\RASPBERRYPI.local\STK\Hardware\my software\"
+SET httpServerDll=..\build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release\src\release\httpServer.dll
+SET zlibDll=..\build-zlib-1.3.1-Desktop_Qt_5_15_2_MinGW_64_bit-Release\libzlib.dll
 
 SET /P version=Enter a version (example: 0.423b):
 IF NOT DEFINED version SET "version=UNKNOWN"
@@ -17,27 +20,10 @@ IF NOT DEFINED version SET "version=UNKNOWN"
 xcopy %buildDir%release\XTPlayer.exe %deployDir% /s /i  /K /D /H /Y
 xcopy %engineBuildDir%release\XTEngine.dll %deployDir%/s /i  /K /D /H /Y
 xcopy %buildDir%release\themes %deployDir%themes /s /i /K /D /H /Y
-REM xcopy %QtDir%QtAV1.dll %deployDir%
-REM xcopy %QtDir%QtAVWidgets1.dll %deployDir%
-REM xcopy %QtDir%avcodec-57.dll %deployDir%
-REM xcopy %QtDir%avdevice-57.dll %deployDir%
-REM xcopy %QtDir%avfilter-6.dll %deployDir%
-REM xcopy %QtDir%avformat-57.dll %deployDir%
-REM xcopy %QtDir%avresample-3.dll %deployDir%
-REM xcopy %QtDir%swresample-2.dll %deployDir%
-REM xcopy %QtDir%avutil-55.dll %deployDir%
-REM xcopy %QtDir%swscale-4.dll %deployDir%
-REM xcopy %QtDir%libvo-aacenc-0.dll %deployDir%
-REM xcopy %QtDir%libmp3lame-0.dll %deployDir%
-REM xcopy %QtDir%libvorbis-0.dll %deployDir%
-REM xcopy %QtDir%libopus-0.dll %deployDir%
-REM xcopy %QtDir%libx264-142.dll %deployDir%
-REM xcopy %QtDir%libvorbisenc-2.dll %deployDir%
-REM xcopy %QtDir%libogg-0.dll %deployDir%
-xcopy %QtDir%zlib1.dll %deployDir% /s /i /K /D /H /Y
+xcopy %zlibDll% %deployDir% /s /i /K /D /H /Y
+xcopy %httpServerDll% %deployDir% /s /i /K /D /H /Y
 xcopy %QtDir%Qt5OpenGL.dll %deployDir% /s /i /K /D /H /Y
 xcopy %QtDir%Qt5Compress.dll %deployDir% /s /i /K /D /H /Y
-xcopy ..\build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release\src\release\httpServer.dll %deployDir% /s /i /K /D /H /Y
 xcopy ..\XTEngine\src\rename_me_for_local_settings.ini %deployDir% /s /i /K /D /H /Y
 xcopy "XTP_and_VR_guide.pdf" %deployDir% /s /i /K /D /H /Y
 xcopy .\src\XTPlayerDebug.bat %deployDir% /s /i /K /D /H /Y
