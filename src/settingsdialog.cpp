@@ -680,17 +680,6 @@ void SettingsDialog::setUpTCodeChannelUI()
              QCheckBox* multiplierCheckbox = new QCheckBox(this);
              multiplierCheckbox->setText(axis->FriendlyName);
              multiplierCheckbox->setChecked(SettingsHandler::getMultiplierChecked(channelName));
-             QDoubleSpinBox* multiplierInput = new QDoubleSpinBox(this);
-             multiplierInput->setDecimals(3);
-             multiplierInput->setSingleStep(0.1f);
-             multiplierInput->setMinimum(std::numeric_limits<int>::lowest());
-             multiplierInput->setMaximum(std::numeric_limits<int>::max());
-             multiplierInput->setValue(SettingsHandler::getMultiplierValue(channelName));
-             connect(multiplierInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
-                     [this, channelName](float value)
-                       {
-                         SettingsHandler::setMultiplierValue(channelName, value);
-                       });
              connect(multiplierCheckbox, &QCheckBox::clicked, this,
                      [this, channelName](bool checked)
                        {
@@ -709,12 +698,12 @@ void SettingsDialog::setUpTCodeChannelUI()
              damperInput->setMaximum(std::numeric_limits<int>::max());
              damperInput->setValue(SettingsHandler::getDamperValue(channelName));
              connect(damperInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
-                     [this, channelName](float value)
+                     [channelName](float value)
                        {
                          SettingsHandler::setDamperValue(channelName, value);
                        });
              connect(damperCheckbox, &QCheckBox::clicked, this,
-                     [this, channelName](bool checked)
+                     [channelName](bool checked)
                        {
                          SettingsHandler::setDamperChecked(channelName, checked);
                        });
@@ -725,7 +714,7 @@ void SettingsDialog::setUpTCodeChannelUI()
              linkCheckbox->setText("Link to MFS: ");
              linkCheckbox->setChecked(SettingsHandler::getLinkToRelatedAxisChecked(channelName));
              connect(linkCheckbox, &QCheckBox::clicked, this,
-                     [this, channelName](bool checked)
+                     [channelName](bool checked)
                        {
                          SettingsHandler::setLinkToRelatedAxisChecked(channelName, checked);
                        });
@@ -742,23 +731,21 @@ void SettingsDialog::setUpTCodeChannelUI()
              }
              linkToAxisCombobox->setCurrentText(relatedChannel->FriendlyName);
              connect(linkToAxisCombobox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
-                     [this, channelName, linkToAxisCombobox, linkCheckbox](int value)
+                     [channelName, linkToAxisCombobox, linkCheckbox](int value)
                        {
-                            auto relatedChannel = linkToAxisCombobox->currentData().value<ChannelModel>();
+                            auto relatedChannel = linkToAxisCombobox->currentData().value<ChannelModel33>();
                             linkCheckbox->setToolTip("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS (Multi-funscript) " + relatedChannel.FriendlyName + " funscript value.\nIf there is no " + relatedChannel.FriendlyName + " funscript then it will default to random motion.");
                             SettingsHandler::setLinkToRelatedAxis(channelName, relatedChannel.AxisName);
                        });
 
 
              ui.MultiplierSettingsGrid->addWidget(multiplierCheckbox, multiplierGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-             ui.MultiplierSettingsGrid->addWidget(multiplierInput, multiplierGridRow, 1, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-             ui.MultiplierSettingsGrid->addWidget(linkCheckbox, multiplierGridRow, 2, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
-             ui.MultiplierSettingsGrid->addWidget(linkToAxisCombobox, multiplierGridRow, 3, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-             ui.MultiplierSettingsGrid->addWidget(damperCheckbox, multiplierGridRow, 4, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
-             ui.MultiplierSettingsGrid->addWidget(damperInput, multiplierGridRow, 5, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+             ui.MultiplierSettingsGrid->addWidget(linkCheckbox, multiplierGridRow, 1, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
+             ui.MultiplierSettingsGrid->addWidget(linkToAxisCombobox, multiplierGridRow, 2, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+             ui.MultiplierSettingsGrid->addWidget(damperCheckbox, multiplierGridRow, 3, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
+             ui.MultiplierSettingsGrid->addWidget(damperInput, multiplierGridRow, 4, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
 
              _multiplierWidgets.append(multiplierCheckbox);
-             _multiplierWidgets.append(multiplierInput);
              _multiplierWidgets.append(linkCheckbox);
              _multiplierWidgets.append(linkToAxisCombobox);
              _multiplierWidgets.append(damperCheckbox);
@@ -770,7 +757,7 @@ void SettingsDialog::setUpTCodeChannelUI()
          invertedCheckbox->setText(axis->FriendlyName);
          invertedCheckbox->setChecked(SettingsHandler::getChannelFunscriptInverseChecked(channelName));
          connect(invertedCheckbox, &QCheckBox::clicked, this,
-                 [this, channelName](bool checked)
+                 [channelName](bool checked)
                    {
                      SettingsHandler::setChannelFunscriptInverseChecked(channelName, checked);
                    });

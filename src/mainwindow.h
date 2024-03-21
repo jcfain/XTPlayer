@@ -151,12 +151,10 @@ private slots:
     void onLibraryLoadingStatusChange(QString message);
     //void libraryListSetIconSize(QSize newSize);
 
-    void on_audioLevel_Change(int decibelL, int decibelR);
-
     void onPasswordIncorrect();
     void on_scriptNotFound(QString message);
     //void on_noScriptsFound(QString message);
-    void on_playVideo(LibraryListItem27 selectedFileListItem, QString funscript = nullptr, bool audioSync = false);
+    void on_playVideo(LibraryListItem27 selectedFileListItem, QString funscript = nullptr);
 
     void on_actionReload_theme_triggered();
 
@@ -345,9 +343,8 @@ private:
     void setThumbSize(int size);
     void resizeThumbs(int size);
     void changeDeoFunscript();
-    void turnOffAudioSync();
 
-    void stopAndPlayMedia(LibraryListItem27 selectedFileListItem, QString customScript = nullptr, bool audioSync = false);
+    void stopAndPlayMedia(LibraryListItem27 selectedFileListItem, QString customScript = nullptr);
     //void waitForMediaTostop(LibraryListItem27 selectedFileListItem, QString customScript = nullptr, bool audioSync = false, bool autoPlay = true);
     void initNetworkEvent();
     void initSerialEvent();

@@ -779,100 +779,6 @@ void MainWindow::on_mainwindow_splitterMove(int pos, int index)
     XTPSettings::setMainWindowSplitterPos(ui->mainFrameSplitter->sizes());
 }
 
-//qint64 strokerUpdateMillis = 50;
-qint64 strokerLastUpdate;
-int lastAction = 500;
-int minAmplitude = 0;
-int maxAmplitude = 0;
-//QElapsedTimer mSecTimer;
-//qint64 timer1 = 0;
-//qint64 timer2 = 0;
-void MainWindow::on_audioLevel_Change(int decibelL,int decibelR)
-{
-//    if (timer2 - timer1 >= 1)
-//    {
-//    timer1 = timer2;
-        if(m_xtengine->connectionHandler()->isOutputDeviceConnected())
-        {
-    //        strokerLastUpdate = time;
-            auto availibleAxis = TCodeChannelLookup::getChannels();
-            auto decibelLInverse = -decibelL;
-            auto decibelRInverse = -decibelR;
-            auto difference = decibelLInverse > decibelRInverse ? decibelLInverse - decibelRInverse : decibelRInverse - decibelLInverse;
-            int average = round(difference / 2);
-            auto amplitude = decibelLInverse > decibelRInverse ? decibelLInverse - average : decibelRInverse - average;
-            if(amplitude > minAmplitude || minAmplitude - amplitude > 25)
-                minAmplitude = amplitude;
-    //        if(amplitude > 0 && amplitude > maxAmplitude)
-    //            maxAmplitude = amplitude;
-            //auto delta = decibelLInverse > decibelRInverse ? amplitude / average : decibelRInverse - average;
-            QString tcode;
-            foreach(auto axis, availibleAxis)
-            {
-                ChannelModel33* channel = TCodeChannelLookup::getChannel(axis);
-                if (channel->AxisName == TCodeChannelLookup::Stroke()  || SettingsHandler::getMultiplierChecked(axis))
-                {
-                    if (channel->Type == AxisType::HalfOscillate || channel->Type == AxisType::None)
-                        continue;
-                    auto multiplierValue = SettingsHandler::getMultiplierValue(axis);
-                    if (channel->AxisName == TCodeChannelLookup::Stroke())
-                        multiplierValue = 1.0f;
-                    auto angle = XMath::mapRange(amplitude * 2, minAmplitude, maxAmplitude, 0, 180);
-                    auto magnifiedAmplitude = XMath::mapRange(amplitude * 2, minAmplitude, maxAmplitude, 0, 100);
-                    auto value = XMath::constrain(XMath::randSine(angle * multiplierValue, magnifiedAmplitude), 0, 100);
-                    //auto value = int(XMath::mapRange(amplitude, minAmplitude, maxAmplitude, 1, 100) * multiplierValue);
-
-                    int distance = value >= lastAction ? value - lastAction : lastAction - value;
-                    if(distance > 25)
-                    {
-                        lastAction = value;
-    //                    LogHandler::Debug("value: "+QString::number(value));
-    //                    LogHandler::Debug("distance: "+QString::number(distance));
-    //                    LogHandler::Debug("amplitude: "+QString::number(amplitude));
-    //                    LogHandler::Debug("minAmplitude: "+QString::number(minAmplitude));
-    //                    LogHandler::Debug("decibelLInverse: "+QString::number(decibelLInverse));
-    //                    LogHandler::Debug("decibelRInverse: "+QString::number(decibelRInverse));
-    //                    LogHandler::Debug("difference: "+QString::number(difference));
-                        auto time = QTime::currentTime().msecsSinceStartOfDay();
-                        int speed = time - strokerLastUpdate;
-                        strokerLastUpdate = time;
-                        //LogHandler::Debug("speed: "+QString::number(speed));
-
-                        char tcodeValueString[4];
-                        sprintf(tcodeValueString, "%03d", m_xtengine->tcodeHandler()->calculateRange(axis.toUtf8(), value));
-                        tcode += " ";
-                        tcode += axis;
-                        tcode += tcodeValueString;
-                        tcode += "I";
-                        float speedModifierValue = SettingsHandler::getDamperValue(axis);
-                        if (SettingsHandler::getDamperChecked(axis) && speedModifierValue > 0.0 && speed > 1000 && distance > 50)
-                        {
-                            tcode += QString::number(round(speed * speedModifierValue));
-                        }
-                        else
-                        {
-                            tcode += QString::number(speed > 0 ? speed : 1000);
-                        }
-                    }
-                }
-            }
-            if(!tcode.isEmpty())
-                m_xtengine->connectionHandler()->sendTCode(tcode);
-        }
-        //timer2 = (round(mSecTimer.nsecsElapsed() / 1000000));
-    //}
-}
-
-
-void MainWindow::turnOffAudioSync()
-{
-    // disconnect(audioSyncFilter, &AudioSyncFilter::levelChanged, this, &MainWindow::on_audioLevel_Change);
-    minAmplitude = 0;
-    maxAmplitude = 0;
-//    strokerUpdateMillis = 1000;
-//    strokerLastUpdate = 500;
-}
-
 void MainWindow::setupLibraryGrid(QGridLayout* layout) {
     layout->addWidget(libraryList, 1, 0, 20, 12);
     layout->addWidget(backLibraryButton, 0, 0);
@@ -1879,8 +1785,7 @@ void MainWindow::playFileFromContextMenu()
 
 void MainWindow::playFileWithAudioSync()
 {
-    LibraryListItem27 selectedFileListItem = libraryList->selectedItem();
-    stopAndPlayMedia(selectedFileListItem, nullptr, true);
+
 }
 
 void MainWindow::playFileWithCustomScript()
@@ -1921,7 +1826,7 @@ void MainWindow::playFileWithCustomMedia()
 }
 
 //Hack because QTAV calls stopped and start out of order
-void MainWindow::stopAndPlayMedia(LibraryListItem27 selectedFileListItem, QString customScript, bool audioSync)
+void MainWindow::stopAndPlayMedia(LibraryListItem27 selectedFileListItem, QString customScript)
 {
     QFile file(selectedFileListItem.path);
     if (file.exists())
@@ -1929,8 +1834,7 @@ void MainWindow::stopAndPlayMedia(LibraryListItem27 selectedFileListItem, QStrin
         if ((!videoHandler->isPlaying() && !m_xtengine->syncHandler()->isPlayingStandAlone())
               || ((videoHandler->isPlaying() || videoHandler->isPaused()) && videoHandler->file() != selectedFileListItem.path)
               || (m_xtengine->syncHandler()->isPlayingStandAlone() && m_xtengine->syncHandler()->getPlayingStandAloneScript() != selectedFileListItem.path)
-              || !customScript.isEmpty()
-              || audioSync)
+              || !customScript.isEmpty())
         {
             videoHandler->setLoading(true);
             if(videoHandler->isPlaying() || m_xtengine->syncHandler()->isPlayingStandAlone())
@@ -1943,7 +1847,7 @@ void MainWindow::stopAndPlayMedia(LibraryListItem27 selectedFileListItem, QStrin
                     _waitForStopFuture.waitForFinished();
                 }
 
-                _waitForStopFuture = QtConcurrent::run([this, selectedFileListItem, customScript, audioSync]()
+                _waitForStopFuture = QtConcurrent::run([this, selectedFileListItem, customScript]()
                 {
                     while(!_mediaStopped)
                     {
@@ -1955,19 +1859,19 @@ void MainWindow::stopAndPlayMedia(LibraryListItem27 selectedFileListItem, QStrin
                             return;
                         }
                     }
-                    emit playVideo(selectedFileListItem, customScript, audioSync);
+                    emit playVideo(selectedFileListItem, customScript);
                 });
             }
             else
             {
-                on_playVideo(selectedFileListItem, customScript, audioSync);
+                on_playVideo(selectedFileListItem, customScript);
             }
         }
     }
 
 }
 
-void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString customScript, bool audioSync)
+void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString customScript)
 {
     QFile file(selectedFileListItem.path);
     if (file.exists())
@@ -1992,19 +1896,9 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
                 _videoPreviewWidget->setFile(selectedFileListItem.path);
                 //videoHandler->load();
             }
-            if(!audioSync)
-            {
-                turnOffAudioSync();
-                scriptFile = customScript.isEmpty() ? selectedFileListItem.zipFile.isEmpty() ? selectedFileListItem.script : selectedFileListItem.zipFile : customScript;
-                invalidScripts = m_xtengine->syncHandler()->load(scriptFile);
-                m_xtengine->mediaLibraryHandler()->findAlternateFunscripts(scriptFile);
-            }
-            else
-            {
-                turnOffAudioSync();
-                //strokerLastUpdate = QTime::currentTime().msecsSinceStartOfDay();
-                //connect(audioSyncFilter, &AudioSyncFilter::levelChanged, this, &MainWindow::on_audioLevel_Change);
-            }
+            scriptFile = customScript.isEmpty() ? selectedFileListItem.zipFile.isEmpty() ? selectedFileListItem.script : selectedFileListItem.zipFile : customScript;
+            invalidScripts = m_xtengine->syncHandler()->load(scriptFile);
+            m_xtengine->mediaLibraryHandler()->findAlternateFunscripts(scriptFile);
             QString filesWithLoadingIssues = "";
             if(selectedFileListItem.type == LibraryListItemType::FunscriptType && m_xtengine->syncHandler()->isLoaded())
                 m_xtengine->syncHandler()->playStandAlone();
@@ -2024,7 +1918,7 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
                 filesWithLoadingIssues += "\n\nThis is may be due to an invalid JSON format.\nTry downloading the script again or asking the script maker.\nYou may also find some information running XTP in debug mode.";
                 DialogHandler::MessageBox(this, filesWithLoadingIssues, XLogLevel::Critical);
             }
-            if(selectedFileListItem.type != LibraryListItemType::FunscriptType && !audioSync && !m_xtengine->syncHandler()->isLoaded() && !invalidScripts.contains(scriptFile))
+            if(selectedFileListItem.type != LibraryListItemType::FunscriptType && !m_xtengine->syncHandler()->isLoaded() && !invalidScripts.contains(scriptFile))
             {
                 on_scriptNotFound(scriptFile);
             }
