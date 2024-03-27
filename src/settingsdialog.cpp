@@ -1151,7 +1151,7 @@ void SettingsDialog::onRange_valueChanged(QString name, int value)
     OutputDeviceHandler* outputDevice = _connectionHandler->getSelectedOutputDevice();
     InputDeviceHandler* inputDevice = _connectionHandler->getSelectedInputDevice();
     if ((!_videoHandler->isPlaying() || _videoHandler->isPaused() || SettingsHandler::getLiveActionPaused())
-        && (!inputDevice || !inputDevice->isPlaying()) && (outputDevice && outputDevice->isRunning()))
+        && (!inputDevice || !inputDevice->isPlaying()) && (outputDevice && outputDevice->isConnected()))
     {
         _connectionHandler->sendTCode(name + QString::number(value).rightJustified(SettingsHandler::getTCodePadding(), '0')+ "S1000");
     }
