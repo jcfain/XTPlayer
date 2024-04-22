@@ -1,5 +1,7 @@
 #include "inputmapwidget.h"
 
+#include "lib/struct/OutputDevicePacket.h"
+
 InputMapWidget::InputMapWidget(ConnectionHandler* connectionHandler, QWidget *parent)
     : QWidget{parent}
 {
@@ -9,25 +11,24 @@ InputMapWidget::InputMapWidget(ConnectionHandler* connectionHandler, QWidget *pa
 //    _resetButton->setEnabled(false);
 //    _discardButton =  ui.buttonBox->button(QDialogButtonBox::StandardButton::Discard);
 //    _discardButton->setEnabled(false);
+
+
     _connectionHandler = connectionHandler;
     _layout = new QGridLayout(this);
     _tableWidget = new QTableWidget(this);
     _tableWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    _tableWidget->setColumnCount(5);
+    _tableWidget->setColumnCount(6);
     QStringList tableHeader;
-    tableHeader <<"Action"<<"Gamepad"<<"Key"<<"Invert"<<"Clear";
+    tableHeader <<"Action"<<"Gamepad"<<"Key"<<"TCode"<<"Invert"<<"Clear";
     _tableWidget->setHorizontalHeaderLabels(tableHeader);
     _tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
     // Widget width 1271
     _tableWidget->horizontalHeader()->setSectionResizeMode(_COLUMNS::ACTION_NAME, QHeaderView::ResizeMode::ResizeToContents);
-    //ui.tableWidget->horizontalHeader()->resizeSection(_COLUMNS::SCRIPT_NAME, 350);
     _tableWidget->horizontalHeader()->setSectionResizeMode(_COLUMNS::GAMEPAD, QHeaderView::ResizeMode::ResizeToContents);
-    //ui.tableWidget->horizontalHeader()->resizeSection(_COLUMNS::SCRIPT_PATH, 450);
     _tableWidget->horizontalHeader()->setSectionResizeMode(_COLUMNS::KEY, QHeaderView::ResizeMode::ResizeToContents);
+    _tableWidget->horizontalHeader()->setSectionResizeMode(_COLUMNS::TCODE, QHeaderView::ResizeMode::ResizeToContents);
     _tableWidget->horizontalHeader()->setSectionResizeMode(_COLUMNS::INVERT, QHeaderView::ResizeMode::ResizeToContents);
-    //ui.tableWidget->horizontalHeader()->resizeSection(_COLUMNS::MEDIA_PATH, 275);
     _tableWidget->horizontalHeader()->setSectionResizeMode(_COLUMNS::EDIT, QHeaderView::ResizeMode::ResizeToContents);
-    //ui.tableWidget->horizontalHeader()->resizeSection(_COLUMNS::SCRIPT_SELECTION, 196);
     //_tableWidget->horizontalHeader()->setStretchLastSection(true);
     connect(_tableWidget, &QTableWidget::cellClicked, this, &InputMapWidget::tableItemClicked);
     connect(this, &InputMapWidget::refreshData, this, &InputMapWidget::setUpData);
@@ -43,12 +44,9 @@ void InputMapWidget::setUpData()
     _tableWidget->setSortingEnabled(false);
     _tableWidget->clearContents();
     _tableWidget->setRowCount(0);
-    QList<QPair<QString, QString>> actions;
-    QMap<QString, QStringList> inverseGamePadMap = SettingsHandler::getGamePadMapInverse();
-    QMap<QString, QStringList> inverseKeyboardMap = SettingsHandler::getKeyboardMapInverse();
 
+    QList<QPair<QString, QString>> actions;
     auto tcodeVersionMap = TCodeChannelLookup::GetSelectedVersionMap();
-    //auto availableAxis = TCodeChannelLookup::getChannels();
     for(auto __begin = tcodeVersionMap.begin(), __end = tcodeVersionMap.end();  __begin != __end; ++__begin) {
         auto channel = TCodeChannelLookup::getChannel(TCodeChannelLookup::ToString(__begin.key()));
         if(channel)
@@ -64,6 +62,10 @@ void InputMapWidget::setUpData()
     for(auto __begin = otherActions.begin(), __end = otherActions.end();  __begin != __end; ++__begin) {
         actions.append({__begin.key(), __begin.value()});
     }
+
+    QMap<QString, QStringList> inverseGamePadMap = SettingsHandler::getGamePadMapInverse();
+    QMap<QString, QStringList> inverseKeyboardMap = SettingsHandler::getKeyboardMapInverse();
+    QMap<QString, QStringList> inverseTCodeCommandMap = SettingsHandler::getTCodeCommandMapInverse();
 
     _tableWidget->setRowCount(actions.count() + 1);
     int row = 0;
@@ -82,6 +84,7 @@ void InputMapWidget::setUpData()
             if(i<keys.size()-1)
                 keyboardKeys += ", ";
         }
+        QString tcodeCommands = inverseTCodeCommandMap.value(action).join(", ");
         QTableWidgetItem *actionNameTableItem = new QTableWidgetItem(actionName);
         actionNameTableItem->setFlags(actionNameTableItem->flags() & ~Qt::ItemIsEditable);
         _tableWidget->setItem(row, _COLUMNS::ACTION_NAME, actionNameTableItem);
@@ -93,6 +96,11 @@ void InputMapWidget::setUpData()
         keyboard->setFlags(keyboard->flags() & ~Qt::ItemIsEditable);
         keyboard->setData(Qt::UserRole, QVariant::fromValue(actionKeyValue));
         _tableWidget->setItem(row, _COLUMNS::KEY, keyboard);
+        QTableWidgetItem *tcode = new QTableWidgetItem(tcodeCommands);
+        tcode->setFlags(tcode->flags() & ~Qt::ItemIsEditable);
+        tcode->setData(Qt::UserRole, QVariant::fromValue(actionKeyValue));
+        _tableWidget->setItem(row, _COLUMNS::TCODE, tcode);
+
 
         QWidget *invertWidget = new QWidget(this);
         QHBoxLayout *invertLayout = new QHBoxLayout(invertWidget);
@@ -156,9 +164,24 @@ void InputMapWidget::setUpData()
                 }
             });
 
+            QPushButton* clearTCodeCommandButton = new QPushButton(this);
+            clearTCodeCommandButton->setText("Clear TCode");
+            clearTCodeCommandButton->setObjectName(action + "ClearTCodeButton");
+            clearTCodeCommandButton->setMaximumWidth(150);
+            connect(clearTCodeCommandButton, &QPushButton::clicked, this, [this, action, actionName]() {
+                QMessageBox::StandardButton reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to clear TCode command bindings for: "+actionName +"?",
+                                                                          QMessageBox::Yes|QMessageBox::No);
+                if (reply == QMessageBox::Yes) {
+                    auto items = _tableWidget->findItems(actionName, Qt::MatchFlag::MatchExactly);
+                    auto item = items.first();
+                    clearTCodeCommandData(item->row());
+                }
+            });
+
             editLayoutayout->addWidget(clearRowButton);
             editLayoutayout->addWidget(clearGamePadButton);
             editLayoutayout->addWidget(clearKeyboardButton);
+            editLayoutayout->addWidget(clearTCodeCommandButton);
             editLayoutayout->setAlignment(Qt::AlignCenter);
             editLayoutayout->setContentsMargins(4,4,4,4);
         }
@@ -210,6 +233,25 @@ void InputMapWidget::setUpData()
     defaultKeyboardLayout->setContentsMargins(4,4,4,4);
     _tableWidget->setCellWidget(row, _COLUMNS::KEY, defaultKeyboardWidget);
 
+    QWidget *defaultTCodeCommandWidget = new QWidget(this);
+    QHBoxLayout *defaultTCodeCommandLayout = new QHBoxLayout(defaultTCodeCommandWidget);
+    QPushButton* defaultTCodeCommandButton = new QPushButton(defaultTCodeCommandWidget);
+    defaultTCodeCommandButton->setText("Default All TCode");
+    defaultTCodeCommandButton->setObjectName("DefaultAllTCodeButton");
+    defaultTCodeCommandButton->setMaximumWidth(150);
+    connect(defaultTCodeCommandButton, &QPushButton::clicked, this, [this]() {
+        QMessageBox::StandardButton reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to default ALL TCode command bindings?",
+                                                                  QMessageBox::Yes|QMessageBox::No);
+        if (reply == QMessageBox::Yes) {
+            SettingsHandler::SetTCodeCommandMapDefaults();
+            emit refreshData();
+        }
+    });
+    defaultTCodeCommandLayout->addWidget(defaultTCodeCommandButton);
+    defaultTCodeCommandLayout->setAlignment(Qt::AlignCenter);
+    defaultTCodeCommandLayout->setContentsMargins(4,4,4,4);
+    _tableWidget->setCellWidget(row, _COLUMNS::TCODE, defaultTCodeCommandWidget);
+
     QWidget *defaultInvertWidget = new QWidget(this);
     _tableWidget->setCellWidget(row, _COLUMNS::INVERT, defaultInvertWidget);
 
@@ -226,9 +268,11 @@ void InputMapWidget::setUpData()
         if (reply == QMessageBox::Yes) {
             SettingsHandler::SetGamepadMapDefaults();
             SettingsHandler::SetKeyboardKeyDefaults();
+            SettingsHandler::SetTCodeCommandMapDefaults();
             emit refreshData();
         }
     });
+
     defaultAllLayout->addWidget(defaultAllButton);
     defaultAllLayout->setAlignment(Qt::AlignCenter);
     defaultAllLayout->setContentsMargins(4,4,4,4);
@@ -270,6 +314,20 @@ void InputMapWidget::clearKeyboardData(int row)
     tableCell->setText("");
 }
 
+void InputMapWidget::clearTCodeCommandData(int row)
+{
+    auto tableCell = _tableWidget->item(row, _COLUMNS::TCODE);
+    auto actionKeyValue = tableCell->data(Qt::UserRole).value<QPair<QString, QString>>();
+    QString action = actionKeyValue.first;
+    QMap<QString, QStringList> inverseMap = SettingsHandler::getTCodeCommandMapInverse();
+    auto mapValues = inverseMap.value(action);
+    foreach (auto key, mapValues)
+    {
+        SettingsHandler::removeTCodeCommandMapKey(key, action);
+    }
+    tableCell->setText("");
+}
+
 void InputMapWidget::tableItemClicked(int row, int column)
 {
     if(DialogHandler::IsDialogOpen()) {
@@ -297,6 +355,19 @@ void InputMapWidget::tableItemClicked(int row, int column)
             if(action != TCodeChannelLookup::None()) {
                 QString actionName = actionKeyValue.second;
                 listenForKeyboardInput(action, actionName);
+            }
+        }
+    }
+    else if(_COLUMNS::TCODE == column)
+    {
+        //Listen for key input
+        auto tableCell = _tableWidget->item(row, _COLUMNS::TCODE);
+        if(tableCell) {
+            auto actionKeyValue = tableCell->data(Qt::UserRole).value<QPair<QString, QString>>();
+            QString action = actionKeyValue.first;
+            if(action != TCodeChannelLookup::None()) {
+                QString actionName = actionKeyValue.second;
+                listenForTCodeCommandInput(action, actionName);
             }
         }
     }
@@ -333,7 +404,7 @@ void InputMapWidget::listenForGamepadInput(QString action, QString actionName)
         });
         _connectionHandler->getGamepadHandler()->listenForInput();
         if(DialogHandler::Dialog(this, "Press a button for action "+actionName, true, false) == QDialog::DialogCode::Rejected) {
-            disconnect(_connectionHandler->getGamepadHandler(), &GamepadHandler::onListenForInputRecieve, nullptr, nullptr);
+            disconnect(_connectionHandler->getGamepadHandler(), &GamepadHandler::onListenForInputRecieve, this, nullptr);
         }
     }
     else
@@ -373,11 +444,104 @@ void InputMapWidget::listenForKeyboardInput(QString action, QString actionName) 
         tableWidget_Changed(keyboardTableCell);
     });
     if(DialogHandler::Dialog(this, "Press key for action "+actionName, false, false) == QDialog::DialogCode::Rejected) {
-        disconnect(this, &InputMapWidget::keyRelease, nullptr, nullptr);
+        disconnect(this, &InputMapWidget::keyRelease, this, nullptr);
         releaseKeyboard();
     }
     setFocus();
     grabKeyboard();
+}
+
+void InputMapWidget::listenForTCodeCommandInput(QString action, QString actionName)
+{
+    auto outputDevice = _connectionHandler->getSelectedOutputDevice();
+    QCheckBox* onReleaseChackbox = new QCheckBox();
+    if(outputDevice && outputDevice->isConnected()) {
+        connect(outputDevice, &OutputDeviceHandler::commandRecieve, this, [this, action, actionName, onReleaseChackbox](OutputDevicePacket commandInput) {
+            bool onRelease = onReleaseChackbox->isChecked();
+            if(commandInput.original.isEmpty() ||
+                (commandInput.type == OutputDeviceCommandType::BUTTON &&
+                    onRelease &&
+                    commandInput.value > 0)) {
+                return;
+            }
+
+            QString command = commandInput.type == OutputDeviceCommandType::BUTTON ? commandInput.original : commandInput.command;
+            QMap<QString, QStringList> tcodeCommandMap = SettingsHandler::getTCodeCommandMap();
+            auto items = _tableWidget->findItems(actionName, Qt::MatchFlag::MatchExactly);
+            auto item = items.first();
+            auto tableCell = _tableWidget->item(item->row(), _COLUMNS::TCODE);
+            auto mapValues = tcodeCommandMap.value(command);
+            auto text = tableCell->text();
+            if (mapValues.contains(action))
+            {
+                if(!text.isEmpty()) {
+                    if(text.contains(", " + command))
+                        tableCell->setText(text.trimmed().remove(", " + command));
+                    else if(text.contains(command + ", "))
+                        tableCell->setText(text.trimmed().remove(command + ", "));
+                    // else if(text.contains(commandInput.command))
+                    //     tableCell->setText(text.trimmed().remove(QRegExp(commandInput.command+"*,")));
+                    else
+                        tableCell->setText(text.trimmed().remove(command));
+                }
+                SettingsHandler::removeTCodeCommandMapKey(command, action);
+            }
+            else
+            {
+                tableCell->setText(text.isEmpty() ? command : text + ", " + command);
+                SettingsHandler::setTCodeCommandMapKey(command, action);
+            }
+            tableWidget_Changed(tableCell);
+        });
+
+    }
+    else
+        DialogHandler::Dialog(this, "No device connected!");
+
+    QFormLayout m_tcodeCommandSelectionLayout;
+    m_tcodeCommandSelectionLayout.addRow("On release", onReleaseChackbox);
+    if(DialogHandler::Dialog(this, &m_tcodeCommandSelectionLayout, true, false) == QDialog::DialogCode::Rejected) {
+        disconnect(outputDevice, &OutputDeviceHandler::commandRecieve, this, nullptr);
+        delete onReleaseChackbox;
+    }
+    // Use dropdown interface. Undecided yet
+    // auto commands = SettingsHandler::getTCodeCommands();
+
+    // QFormLayout m_tcodeCommandSelectionLayout;
+    // QComboBox m_tcodeCommandSelectionCmb;
+    // m_tcodeCommandSelectionLayout.addRow(new QLabel("Command", this), &m_tcodeCommandSelectionCmb);
+    // m_tcodeCommandSelectionCmb.clear();
+    // foreach (auto command, commands) {
+    //     m_tcodeCommandSelectionCmb.addItem(command.command, TCodeCommand::toVariant(command));
+    // }
+    // if(DialogHandler::Dialog(this, &m_tcodeCommandSelectionLayout, true, true) == QDialog::DialogCode::Accepted) {
+    //     auto commandInput = TCodeCommand::fromVariant(m_tcodeCommandSelectionCmb.currentData());
+    //     QString command = commandInput.command;
+    //     QMap<QString, QStringList> tcodeCommandMap = SettingsHandler::getTCodeCommandMap();
+    //     auto items = _tableWidget->findItems(actionName, Qt::MatchFlag::MatchExactly);
+    //     auto item = items.first();
+    //     auto tableCell = _tableWidget->item(item->row(), _COLUMNS::TCODE);
+    //     auto mapValues = tcodeCommandMap.value(command);
+    //     auto text = tableCell->text();
+    //     if (mapValues.contains(action))
+    //     {
+    //         if(!text.isEmpty()) {
+    //             if(text.contains(", " + command))
+    //                 tableCell->setText(text.trimmed().remove(", " + command));
+    //             else if(text.contains(command + ", "))
+    //                 tableCell->setText(text.trimmed().remove(command + ", "));
+    //             else
+    //                 tableCell->setText(text.trimmed().remove(command));
+    //         }
+    //         SettingsHandler::removeTCodeCommandMapKey(command, action);
+    //     }
+    //     else
+    //     {
+    //         tableCell->setText(text.isEmpty() ? command : text + ", " + command);
+    //         SettingsHandler::setTCodeCommandMapKey(command, action);
+    //     }
+    //     tableWidget_Changed(tableCell);
+    // }
 }
 void InputMapWidget::keyReleaseEvent(QKeyEvent *e) {
     emit keyRelease(e);

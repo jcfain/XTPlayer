@@ -17,7 +17,7 @@ class DialogHandler : public QObject
 public:
     explicit DialogHandler(QObject *parent = nullptr);
     static void MessageBox(QWidget* parent, QString message, XLogLevel level);
-    static int Dialog(QWidget* parent, QLayout* layout, bool modal = true);
+    static int Dialog(QWidget* parent, QLayout* layout, bool modal = true, bool showAccept = false);
     static int Dialog(QWidget* parent, QString message, bool modal = true, bool showAccept = true);
     static bool IsDialogOpen();
     static void DialogClose();

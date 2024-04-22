@@ -8,6 +8,8 @@
 #include <QHBoxLayout>
 #include <QCheckBox>
 #include <QKeyEvent>
+#include <QFormLayout>
+#include <QComboBox>
 
 #include <lib/handler/settingshandler.h>
 #include <lib/handler/loghandler.h>
@@ -46,10 +48,12 @@ private:
     QHash<QString, QVariant> _removedLinks;
     ConnectionHandler* _connectionHandler;
 
-    enum _COLUMNS {
+
+    enum _COLUMNS {// Must be in the same order as the column order in table
         ACTION_NAME,
         GAMEPAD,
         KEY,
+        TCODE,
         INVERT,
         EDIT
     };
@@ -58,9 +62,11 @@ private:
     void clearAllData(int row);
     void clearGamePadData(int row);
     void clearKeyboardData(int row);
+    void clearTCodeCommandData(int row);
     void tableItemClicked(int row, int column);
     void listenForGamepadInput(QString action, QString actionName);
     void listenForKeyboardInput(QString action, QString actionName);
+    void listenForTCodeCommandInput(QString action, QString actionName);
 };
 
 #endif // INPUTMAPWIDGET_H

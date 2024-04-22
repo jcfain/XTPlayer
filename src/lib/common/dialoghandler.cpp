@@ -1,5 +1,6 @@
 #include "dialoghandler.h"
 #include <QInputDialog>
+#include <QDialogButtonBox>
 
 DialogHandler::DialogHandler(QObject *parent)
     : QObject{parent}
@@ -29,7 +30,7 @@ void DialogHandler::MessageBox(QWidget* parent, QString message, XLogLevel level
     messageBox.setFixedSize(500,200);
 }
 
-int DialogHandler::Dialog(QWidget* parent, QLayout* layout, bool modal)
+int DialogHandler::Dialog(QWidget* parent, QLayout* layout, bool modal, bool showAccept)
 {
     if(!_dialog) {
         _dialog = new QDialog(parent);
@@ -38,6 +39,18 @@ int DialogHandler::Dialog(QWidget* parent, QLayout* layout, bool modal)
             qDebug("Dialog is gone.");
             _dialog = 0;
         });
+        //layout->setParent(_dialog);
+
+        if(showAccept) {
+            auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok
+                                             | QDialogButtonBox::Cancel, _dialog);
+
+            connect(buttonBox, &QDialogButtonBox::accepted, _dialog, &QDialog::accept);
+            connect(buttonBox, &QDialogButtonBox::rejected, _dialog, &QDialog::reject);
+            connect(buttonBox, &QDialogButtonBox::accepted, DialogAccepted);
+            connect(buttonBox, &QDialogButtonBox::rejected, DialogRejected);
+            layout->addWidget(buttonBox);
+        }
         if(!modal)
             _dialog->setAttribute(Qt::WA_DeleteOnClose);
         else
@@ -139,7 +152,7 @@ void DialogHandler::ShowAboutDialog(QWidget* parent, QString XTPVersion, QString
     layout.addWidget(&sources);
     QLabel qtInfo;
     qtInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    qtInfo.setText("<b>Qt v5.15.0</b><br>"
+    qtInfo.setText("<b>Qt v5.15.2</b><br>"
                    "Distributed under the terms of LGPLv3 or later.<br>"
                    "Source: <a href='https://github.com/qt/qt5/releases/tag/v5.15.0'>https://github.com/qt/qt5/releases/tag/v5.15.0</a>");
     qtInfo.setAlignment(Qt::AlignHCenter);
