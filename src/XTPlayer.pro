@@ -131,11 +131,11 @@ unix:mac {
     INCLUDEPATH += $$PWD/../../HttpServer/src
     CONFIG(debug, debug|release) {
         LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_clang_64bit-Debug/debug -lxtengine
-        LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/src/debug -lhttpServer
+        LIBS += -L$$PWD/../../HttpServer/src/build/debug -lhttpServer
     }
     else:CONFIG(release, debug|release): {
         LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_clang_64bit-Release/release -lxtengine
-        LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release/src/release -lhttpServer
+        LIBS += -L$$PWD/../../HttpServer/src/build/release -lhttpServer
     }
 
     RPATHDIR *= @loader_path/../Frameworks @executable_path/../Frameworks
