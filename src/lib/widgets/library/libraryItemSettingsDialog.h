@@ -8,8 +8,6 @@
 #include <QPushButton>
 #include <QDialogButtonBox>
 #include <QGridLayout>
-#include "lib/handler/loghandler.h"
-#include "lib/handler/settingshandler.h"
 #include "lib/struct/LibraryListItemMetaData258.h"
 
 class LibraryItemSettingsDialog : public QDialog

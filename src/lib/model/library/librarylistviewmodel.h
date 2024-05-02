@@ -6,9 +6,8 @@
 #include <QColor>
 #include <QFont>
 #include "lib/struct/LibraryListItem27.h"
-#include "lib/handler/settingshandler.h"
 #include "lib/handler/medialibraryhandler.h"
-#include "lib/tool/imagefactory.h"
+#include "lib/lookup/enum.h"
 
 class LibraryListViewModel : public QAbstractListModel
 {
