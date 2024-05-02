@@ -30,7 +30,7 @@ mkdir -p "${deployDirectory}lib"
 find "${xtengineLocation}" \( -name "moc_*" -or -name "*.o" -or -name "qrc_*" -or -name "Makefile*" -or -name "*.a" \) -exec rm {} \;
 cp -r "${xtengineLocation}"* "${deployDirectory}lib"
 cp -r "${httpserverLocation}"* "${deployDirectory}lib"
-cp -rf /usr/lib/x86_64-linux-gnu/gstreamer-1.0 "${deployDirectory}lib"
+#cp -rf /usr/lib/x86_64-linux-gnu/gstreamer-1.0 "${deployDirectory}lib"
 find "${xtplayerLocation}" \( -name "moc_*" -or -name "*.o" -or -name "qrc_*" -or -name "Makefile*" -or -name "*.a" \) -exec rm {} \;
 cp "${xtplayerSource}"/XTPlayer.desktop "${xtplayerLocation}"/XTPlayer.desktop
 
