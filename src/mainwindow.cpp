@@ -3434,8 +3434,8 @@ void MainWindow::showInGraphicalShell(QString path)
     QProcess::execute(QLatin1String("/usr/bin/osascript"), scriptArgs);
 #elif defined(Q_OS_LINUX)
     // we cannot select a file here, because no file browser really supports it...
-    const QString folder = fileInfo.isDir() ? fileInfo.absoluteFilePath() : fileInfo.filePath();
-     QDesktopServices::openUrl(fileInfo.path());
+    //const QString folder = fileInfo.isDir() ? fileInfo.absoluteFilePath() : fileInfo.filePath();
+     QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.path()));
 //    QProcess browserProc;
 //    bool success = browserProc.startDetached("gtk-launch \"$(xdg-mime query default inode/directory)\"", QStringList() << folder );
 //    const QString error = QString::fromLocal8Bit(browserProc.readAllStandardError());
