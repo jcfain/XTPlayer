@@ -1,5 +1,8 @@
 #include "librarylistviewmodel.h"
 
+#include "lib/tool/imagefactory.h"
+#include "lib/handler/settingshandler.h"
+
 LibraryListViewModel::LibraryListViewModel(MediaLibraryHandler* mediaLibraryHandler, QObject *parent)
     : QAbstractListModel(parent)
 {

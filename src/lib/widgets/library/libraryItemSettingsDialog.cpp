@@ -1,5 +1,8 @@
 #include "libraryItemSettingsDialog.h"
 
+#include "lib/handler/loghandler.h"
+#include "lib/handler/settingshandler.h"
+
 LibraryItemSettingsDialog::LibraryItemSettingsDialog(QWidget *parent) : QDialog(parent)
 {
     int currentRow = 0;
@@ -88,6 +91,8 @@ void LibraryItemSettingsDialog::getSettings(QWidget *parent, QString key, bool *
 void LibraryItemSettingsDialog::showDialog(LibraryItemSettingsDialog *dialog, bool *ok)
 {
     dialog->offsetSpinBox->setValue(_libraryListItemMetaData.offset);
+    //dialog->setModal(false);
+    //dialog->setWindowFlags(Qt::WindowStaysOnTopHint);
     const int ret = dialog->exec();
     if (ret)
     {

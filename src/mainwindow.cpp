@@ -896,7 +896,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             myMenu.addAction(tr("Delete..."), this, [this, selectedFileListItem]() {
 
                 QMessageBox::StandardButton reply;
-                reply = QMessageBox::question(this, tr("WARNING!"), tr("Are you sure you want to delete the playlist: ") + selectedFileListItem.nameNoExtension,
+                reply = QMessageBox::question(libraryList, tr("WARNING!"), tr("Are you sure you want to delete the playlist: ") + selectedFileListItem.nameNoExtension,
                                               QMessageBox::Yes|QMessageBox::No);
                 if (reply == QMessageBox::Yes)
                 {
@@ -973,11 +973,11 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
     //        });
             myMenu.addAction(tr("Reveal media in directory"), this, [this, selectedFileListItem] () {
                 if(selectedFileListItem.path.isEmpty()) {
-                    DialogHandler::MessageBox(this, "Invalid media path.", XLogLevel::Critical);
+                    DialogHandler::MessageBox(libraryList, "Invalid media path.", XLogLevel::Critical);
                     return;
                 }
                 if(!QFile::exists(selectedFileListItem.path)) {
-                    DialogHandler::MessageBox(this, "Media does not exist.", XLogLevel::Critical);
+                    DialogHandler::MessageBox(libraryList, "Media does not exist.", XLogLevel::Critical);
                     return;
                 }
                 showInGraphicalShell(selectedFileListItem.path);
@@ -986,18 +986,18 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                (selectedFileListItem.type == LibraryListItemType::VR ||selectedFileListItem.type == LibraryListItemType::Video)) {
                 myMenu.addAction(tr("Reveal thumb in directory"), this, [this, selectedFileListItem] () {
                     if(selectedFileListItem.thumbFile.isEmpty()) {
-                        DialogHandler::MessageBox(this, "Invalid thumb path.", XLogLevel::Critical);
+                        DialogHandler::MessageBox(libraryList, "Invalid thumb path.", XLogLevel::Critical);
                         return;
                     }
                     if(!QFile::exists(selectedFileListItem.thumbFile)) {
-                        DialogHandler::MessageBox(this, "Thumb does not exist.", XLogLevel::Critical);
+                        DialogHandler::MessageBox(libraryList, "Thumb does not exist.", XLogLevel::Critical);
                         return;
                     }
                     showInGraphicalShell(selectedFileListItem.thumbFile);
                 });
             }
             myMenu.addAction(tr("Edit media settings..."), this, [this, selectedFileListItem] () {
-                LibraryItemSettingsDialog::getSettings(this, selectedFileListItem.path);
+                LibraryItemSettingsDialog::getSettings(libraryList, selectedFileListItem.path);
             });
         }
 
@@ -1874,59 +1874,58 @@ void MainWindow::stopAndPlayMedia(LibraryListItem27 selectedFileListItem, QStrin
 void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString customScript)
 {
     QFile file(selectedFileListItem.path);
-    if (file.exists())
-    {
-        if ((!videoHandler->isPlaying() && !m_xtengine->syncHandler()->isPlayingStandAlone())
-                || (selectedFileListItem.type == LibraryListItemType::FunscriptType && m_xtengine->syncHandler()->getPlayingStandAloneScript() != selectedFileListItem.path)
-                || (videoHandler->file() != selectedFileListItem.path
-                || !customScript.isEmpty()))
-        {
-            QString scriptFile;
-            QList<QString> invalidScripts;
-            deviceHome();
-            videoHandler->setLoading(true);
-            m_xtengine->syncHandler()->stopAll();
-
-            //playingLibraryListIndex = libraryList->selectedRow();
-            XMediaStateHandler::setPlaying(selectedFileListItem);
-
-            if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
-            {
-                videoHandler->setFile(selectedFileListItem.path);
-                _videoPreviewWidget->setFile(selectedFileListItem.path);
-                //videoHandler->load();
-            }
-            scriptFile = customScript.isEmpty() ? selectedFileListItem.zipFile.isEmpty() ? selectedFileListItem.script : selectedFileListItem.zipFile : customScript;
-            invalidScripts = m_xtengine->syncHandler()->load(scriptFile);
-            m_xtengine->mediaLibraryHandler()->findAlternateFunscripts(scriptFile);
-            QString filesWithLoadingIssues = "";
-            if(selectedFileListItem.type == LibraryListItemType::FunscriptType && m_xtengine->syncHandler()->isLoaded())
-                m_xtengine->syncHandler()->playStandAlone();
-            else if(selectedFileListItem.type == LibraryListItemType::FunscriptType && !m_xtengine->syncHandler()->isLoaded())
-            {
-                on_scriptNotFound("No scripts found for the media with the same name: " + selectedFileListItem.path);
-                skipForward();
-            }
-            else if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
-                videoHandler->play();
-
-            if(!invalidScripts.empty())
-            {
-                filesWithLoadingIssues += "The following scripts had issues loading:\n\n";
-                foreach(auto invalidFunscript, invalidScripts)
-                    filesWithLoadingIssues += "* " + invalidFunscript + "\n";
-                filesWithLoadingIssues += "\n\nThis is may be due to an invalid JSON format.\nTry downloading the script again or asking the script maker.\nYou may also find some information running XTP in debug mode.";
-                DialogHandler::MessageBox(this, filesWithLoadingIssues, XLogLevel::Critical);
-            }
-            if(selectedFileListItem.type != LibraryListItemType::FunscriptType && !m_xtengine->syncHandler()->isLoaded() && !invalidScripts.contains(scriptFile))
-            {
-                on_scriptNotFound(scriptFile);
-            }
-        }
-    }
-    else
+    if (!file.exists())
     {
         DialogHandler::MessageBox(this, tr("File '") + selectedFileListItem.path + tr("' does not exist!"), XLogLevel::Critical);
+        return;
+    }
+
+    if ((!videoHandler->isPlaying() && !m_xtengine->syncHandler()->isPlayingStandAlone())
+            || (selectedFileListItem.type == LibraryListItemType::FunscriptType && m_xtengine->syncHandler()->getPlayingStandAloneScript() != selectedFileListItem.path)
+            || (videoHandler->file() != selectedFileListItem.path
+            || !customScript.isEmpty()))
+    {
+        QString scriptFile;
+        QList<QString> invalidScripts;
+        deviceHome();
+        videoHandler->setLoading(true);
+        m_xtengine->syncHandler()->stopAll();
+
+        //playingLibraryListIndex = libraryList->selectedRow();
+        XMediaStateHandler::setPlaying(selectedFileListItem);
+
+        if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
+        {
+            videoHandler->setFile(selectedFileListItem.path);
+            _videoPreviewWidget->setFile(selectedFileListItem.path);
+            //videoHandler->load();
+        }
+        scriptFile = customScript.isEmpty() ? selectedFileListItem.zipFile.isEmpty() ? selectedFileListItem.script : selectedFileListItem.zipFile : customScript;
+        invalidScripts = m_xtengine->syncHandler()->load(scriptFile);
+        m_xtengine->mediaLibraryHandler()->findAlternateFunscripts(scriptFile);
+        QString filesWithLoadingIssues = "";
+        if(selectedFileListItem.type == LibraryListItemType::FunscriptType && m_xtengine->syncHandler()->isLoaded())
+            m_xtengine->syncHandler()->playStandAlone();
+        else if(selectedFileListItem.type == LibraryListItemType::FunscriptType && !m_xtengine->syncHandler()->isLoaded())
+        {
+            on_scriptNotFound("No scripts found for the media with the same name: " + selectedFileListItem.path);
+            skipForward();
+        }
+        else if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
+            videoHandler->play();
+
+        if(!invalidScripts.empty())
+        {
+            filesWithLoadingIssues += "The following scripts had issues loading:\n\n";
+            foreach(auto invalidFunscript, invalidScripts)
+                filesWithLoadingIssues += "* " + invalidFunscript + "\n";
+            filesWithLoadingIssues += "\n\nThis is may be due to an invalid JSON format.\nTry downloading the script again or asking the script maker.\nYou may also find some information running XTP in debug mode.";
+            DialogHandler::MessageBox(this, filesWithLoadingIssues, XLogLevel::Critical);
+        }
+        if(selectedFileListItem.type != LibraryListItemType::FunscriptType && !m_xtengine->syncHandler()->isLoaded() && !invalidScripts.contains(scriptFile))
+        {
+            on_scriptNotFound(scriptFile);
+        }
     }
 }
 
