@@ -13,12 +13,12 @@ LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(MediaLibraryHandler* me
 //    connect(mediaLibraryHandler, &MediaLibraryHandler::itemUpdated, this,   [this](LibraryListItem27 item) {
 //        invalidate();
 //    } );
-    connect(mediaLibraryHandler, &MediaLibraryHandler::itemRemoved, this,   [this](LibraryListItem27 item, int indexOfItem, int newSize) {
+    connect(mediaLibraryHandler, &MediaLibraryHandler::itemRemoved, this,   [this](int indexOfItem, int newSize) {
 /*        auto index = this->index(indexOfItem, 0);
         emit dataChanged(index, index)*/;
         invalidate();
     } );
-    connect(mediaLibraryHandler, &MediaLibraryHandler::itemAdded, this,   [this](LibraryListItem27 item, int indexOfItem, int newSize) {
+    connect(mediaLibraryHandler, &MediaLibraryHandler::itemAdded, this,   [this](int indexOfItem, int newSize) {
 //        auto index = this->index(indexOfItem, 0);
 //        emit dataChanged(index, index);
 
@@ -109,7 +109,9 @@ bool LibrarySortFilterProxyModel::filterAcceptsRow(int sourceRow,
 {
     //Slow!?
     QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
-    LibraryListItem27 item = index.data(Qt::UserRole).value<LibraryListItem27>();
+    if(!index.isValid())
+        return false;
+    const LibraryListItem27 item = index.data(Qt::UserRole).value<LibraryListItem27>();
     bool isHidden = (item.type == LibraryListItemType::VR && !SettingsHandler::getShowVRInLibraryView()) ||
             ( item.type == LibraryListItemType::FunscriptType && SettingsHandler::getHideStandAloneFunscriptsInLibrary())  ||
             ( item.type != LibraryListItemType::FunscriptType &&

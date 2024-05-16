@@ -11,7 +11,7 @@ LibraryListViewModel::LibraryListViewModel(MediaLibraryHandler* mediaLibraryHand
         beginResetModel();
         endResetModel();
     } );
-    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemUpdated, this,   [this](LibraryListItem27 item, int indexOfItem) {
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemUpdated, this,   [this](int indexOfItem) {
         //beginResetModel();
         if(indexOfItem > -1) {
             auto index = this->index(indexOfItem, 0);
@@ -19,15 +19,15 @@ LibraryListViewModel::LibraryListViewModel(MediaLibraryHandler* mediaLibraryHand
         }
         //endResetModel();
     } );
-    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemRemoved, this,   [this](LibraryListItem27 item, int indexOfItem, int newSize) {
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemRemoved, this,   [this](int indexOfItem, int newSize) {
         m_librarySize = newSize;
         auto index = this->index(indexOfItem, 0);
         //emit dataChanged(index, index);
         removeRow(index.row());
     } );
-    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemAdded, this,   [this](LibraryListItem27 item, int indexOfItem, int newSize) {
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemAdded, this,   [this](int indexOfItem, int newSize) {
         m_librarySize = newSize;
-        auto index = this->index(indexOfItem, 0);
+        //auto index = this->index(indexOfItem, 0);
         //emit dataChanged(index, index);
         insertRow(indexOfItem);
     } );
@@ -87,9 +87,10 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
         return QVariant();
 
     if (index.column() == 0) {
-        auto data =  getData();
-        auto item = data.value(index.row());
-        auto thumbInt = overRideThumbSizeWidth > -1 ? overRideThumbSizeWidth : SettingsHandler::getThumbSize();
+        auto data = getData();
+        const int indexNumber = index.row();
+        const auto item = data[indexNumber];
+        const auto thumbInt = overRideThumbSizeWidth > -1 ? overRideThumbSizeWidth : SettingsHandler::getThumbSize();
         if (role == Qt::DisplayRole)
         {
             return (item.isMFS ? "(MFS) " : "") + item.nameNoExtension;
@@ -113,7 +114,7 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
         else if (role == Qt::ToolTipRole)
         {
             if(item.type != LibraryListItemType::PlaylistInternal && item.toolTip.endsWith("Unknown")) {
-                _mediaLibraryHandler->updateToolTip(item, true);
+                _mediaLibraryHandler->updateToolTip(indexNumber, true);
             }
             return item.toolTip;
         }
