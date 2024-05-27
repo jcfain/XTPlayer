@@ -22,6 +22,7 @@ private:
     QSpinBox* offsetSpinBox;
     QLabel* globalOffsetLabel;
     QLabel* globalOffsetValueLabel;
+    QLabel* smartOffsetValueLabel;
     QSpinBox* globalOffsetSpinBox;
 
 
