@@ -270,13 +270,6 @@ private:
     QAction* actionTypeAsc_Sort;
     QAction* actionTypeDesc_Sort;
     qint64 thumbCaptureTime;
-    //QWidget *normalWindowWidget;
-    //QWidget *fullScreenWidget;
-    //QGridLayout *fullScreenLayout;
-   // QFrame* playerControlsPlaceHolder;
-    //QGridLayout* placeHolderControlsGrid;
-    //QFrame* playerLibraryPlaceHolder;
-    //QGridLayout* placeHolderLibraryGrid;
     bool libraryWindowed = false;
     bool funscriptFileSelectorOpen = false;
     bool thumbProcessIsRunning = false;
@@ -290,26 +283,12 @@ private:
     QString _lastKeyboardTCode;
 
     void on_settingsMessageRecieve(QString message, XLogLevel logLevel);
-//    void saveSingleThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0);
-//    void saveThumb(LibraryListWidgetItem* qListWidgetItem, qint64 position = 0, bool vrMode = false);
-    void onSaveNewThumbLoading(LibraryListItem27 item);
-    void onSaveNewThumb(LibraryListItem27 item, bool vrMode, QString thumbFile);
-    void onSaveThumbError(LibraryListItem27 item, bool vrMode, QString errorMessage);
-//    void startThumbProcess(bool vrMode = false);
-//    void stopThumbProcess();
-//    void saveNewThumbs(bool vrMode = false);
 
-//    LibraryListItem27 createLibraryListItem27FromFunscript(QString funscript);
     bool isLibraryLoading();
     QString selectedPlaylistName;
-    //int playingLibraryListIndex;
-    //LibraryListItem27 playingLibraryListItem;
-    //int selectedLibraryListIndex;
-    //LibraryListItem27 selectedLibraryListItem;
     LibraryListItem27 playingLibraryListItem();
     void onNoLibraryFound();
     void onLibraryNotFound(QStringList paths);
-//    void on_load_library(QString path, bool vrMode);
     void openWelcomeDialog();
     void closeWelcomeDialog();
     void backToMainLibrary();
@@ -355,8 +334,6 @@ private:
     void rewind();
     void fastForward();
     LibraryListItem27 setCurrentLibraryRow(int row);
-//    void syncFunscript();
-//    void syncVRFunscript();
 
     bool eventFilter(QObject *obj, QEvent *event) override;
     void resizeEvent(QResizeEvent* event) override;
