@@ -17,19 +17,18 @@ qtDirectory=/usr/lib/qt5/
 
 #Export directory with qmake to path.
 export PATH="${qtDirectory}":$PATH
-export LD_LIBRARY_PATH="${deployDirectory}lib"
+export LD_LIBRARY_PATH="${deployDirectory}lib;${xtengineLocation};${httpserverLocation}"
 
 #echo LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}
 #echo PATH: ${PATH}
 #echo Home: ${home}
 #echo Target: ${target}
 
+rm -rf "${appDir}"
+
 mkdir -p "${appDir}"
-mkdir -p "${deployDirectory}lib"
-find "${xtengineLocation}" \( -name "moc_*" -or -name "*.o" -or -name "qrc_*" -or -name "Makefile*" -or -name "*.a" \) -exec rm {} \;
-cp -r "${xtengineLocation}"* "${deployDirectory}lib"
-cp -r "${httpserverLocation}"* "${deployDirectory}lib"
-find "${xtplayerLocation}" \( -name "moc_*" -or -name "*.o" -or -name "qrc_*" -or -name "Makefile*" -or -name "*.a" \) -exec rm {} \;
+mkdir -p "${appDir}/usr/bin/www"
+cp -r "${xtplayerLocation}www/"*-min.*  "${appDir}/usr/bin/www/"
 cp "${xtplayerSource}"/XTPlayer.desktop "${xtplayerLocation}"/XTPlayer.desktop
 
 cp "${xtplayerSource}"/src/images/icons/XTP-icon.png ${xtplayerLocation}/XTPlayer.png

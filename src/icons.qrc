@@ -53,5 +53,6 @@
         <file>images/icons/minus.png</file>
         <file>images/icons/shuffle.svg</file>
         <file>images/icons/funscript.svg</file>
+        <file>images/icons/cc.svg</file>
     </qresource>
 </RCC>
