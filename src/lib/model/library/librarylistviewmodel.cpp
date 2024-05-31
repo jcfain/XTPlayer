@@ -9,6 +9,10 @@ LibraryListViewModel::LibraryListViewModel(MediaLibraryHandler* mediaLibraryHand
     _mediaLibraryHandler = mediaLibraryHandler;
     connect(_mediaLibraryHandler, &MediaLibraryHandler::libraryLoaded, this,  [this]() {
         beginResetModel();
+        m_librarySize = getData().count();
+        QModelIndex topLeft = createIndex(0,0);
+        QModelIndex bottomRight = createIndex( m_librarySize, 0);
+        emit dataChanged( topLeft, bottomRight );
         endResetModel();
     } );
     connect(_mediaLibraryHandler, &MediaLibraryHandler::itemUpdated, this,   [this](LibraryListItem27 item, int indexOfItem) {
@@ -26,10 +30,19 @@ LibraryListViewModel::LibraryListViewModel(MediaLibraryHandler* mediaLibraryHand
         removeRow(index.row());
     } );
     connect(_mediaLibraryHandler, &MediaLibraryHandler::itemAdded, this,   [this](LibraryListItem27 item, int indexOfItem, int newSize) {
-        m_librarySize = newSize;
-        auto index = this->index(indexOfItem, 0);
-        //emit dataChanged(index, index);
-        insertRow(indexOfItem);
+        if(indexOfItem > -1)
+        {
+            m_librarySize = newSize;
+            auto index = this->index(indexOfItem, 0);
+            //emit dataChanged(index, index);
+            beginInsertRows(index, indexOfItem, indexOfItem);
+            insertRow(indexOfItem);
+            // m_librarySize = newSize;
+            // auto index = this->index(indexOfItem, 0);
+            // beginInsertRows(QModelIndex(), indexOfItem, indexOfItem);
+            // insertRow(indexOfItem);
+            endInsertRows();
+        }
     } );
 
 }
