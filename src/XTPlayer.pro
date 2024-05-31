@@ -195,7 +195,7 @@ include($$PWD/../../HttpServer/3rdparty/qtpromise/qtpromise.pri)
 #mypackagerule.command = exec my_package_script.sh
 #QMAKE_EXTRA_TARGETS += mypackagerule
 
-copydata.commands = $(COPY_DIR) $$shell_path($$PWD/themes) $$shell_path($$DESTDIR/themes) | $(COPY_DIR) $$shell_path($$PWD/../../XTEngine/src/www) $$shell_path($$DESTDIR/www)
+copydata.commands = $(COPY_DIR) $$shell_path($$PWD/themes) $$OUT_PWD | $(COPY_DIR) $$shell_path($$PWD/../../XTEngine/src/www) $$OUT_PWD
 first.depends = $(first) copydata
 export(first.depends)
 export(copydata.commands)
