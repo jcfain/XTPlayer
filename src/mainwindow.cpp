@@ -1195,11 +1195,19 @@ void MainWindow::on_LibraryList_itemClicked(QModelIndex index)
 
 void MainWindow::regenerateThumbNail()
 {
+    if(m_xtengine->mediaLibraryHandler()->thumbProcessRunning()) {
+        DialogHandler::MessageBox(this, "Thumb process is currently running. Please wait for this process to complete before regenerating.", XLogLevel::Warning);
+        return;
+    }
     m_xtengine->mediaLibraryHandler()->saveSingleThumb(libraryList->selectedItem().ID);
 }
 
 void MainWindow::setThumbNailFromCurrent()
 {
+    if(m_xtengine->mediaLibraryHandler()->thumbProcessRunning()) {
+        DialogHandler::MessageBox(this, "Thumb process is currently running. Please wait for this process to complete before regenerating.", XLogLevel::Warning);
+        return;
+    }
     m_xtengine->mediaLibraryHandler()->saveSingleThumb(libraryList->selectedItem().ID, videoHandler->position());
 }
 
