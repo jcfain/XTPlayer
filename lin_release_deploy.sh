@@ -1,6 +1,10 @@
 #!/bin/bash
 
-version=v0.444b
+echo "Enter version: (ex: 0.423b)"  
+read versionInput
+export version=v${versionInput}
+
+version=v0.452b
 targetDirectory=./Deploy/XTPlayer-${version}_Linux_x86_64
 xteTargetDirectory=./Deploy/XTEngine-${version}_Linux_x86_64
 binDirectory=./build-XTPlayer-Desktop_Qt_5_15_2_GCC_64bit-Release/XTPlayer
