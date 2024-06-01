@@ -42,7 +42,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToMoneyShotButton->setObjectName(QString::fromUtf8("skipToMoneyShotButton"));
     skipToMoneyShotButton->setProperty("cssClass", "playerControlButton");
     skipToMoneyShotButton->setMinimumSize(QSize(20, 15));
-    skipToMoneyShotButton->setToolTip("Skips to the last 10% of the video by default. You can chenge this by right clicking the library item.\nYou can also assign a script to this action on the funscript tab in settings.");
+    skipToMoneyShotButton->setToolTip("Skips to the last most intense section of the associated funscript or the last 10%.\nYou can chenge this by right clicking the library item.\nYou can also assign a script to this action on the funscript tab in settings.");
     QIcon iconMoneyShot;
     iconMoneyShot.addFile(QString::fromUtf8(":/images/icons/skipToMoneyShot.svg"), QSize(), QIcon::Normal, QIcon::Off);
     skipToMoneyShotButton->setIcon(iconMoneyShot);
