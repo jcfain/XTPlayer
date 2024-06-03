@@ -242,6 +242,7 @@ private:
     QLabel* vrConnectionStatusLabel;
     QPushButton* vrRetryConnectionButton;
     QLabel* xtpWebStatusLabel;
+    QLabel* backgroundProcessingStatusLabel;
     XLibraryList* libraryList;
     PlaylistViewModel* _playListViewModel;
     LibrarySortFilterProxyModel* _librarySortFilterProxyModel;

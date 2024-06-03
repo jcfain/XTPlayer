@@ -15,9 +15,17 @@ LibraryListViewModel::LibraryListViewModel(MediaLibraryHandler* mediaLibraryHand
         emit dataChanged( topLeft, bottomRight );
         endResetModel();
     } );
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::metadataProcessEnd, this,  [this]() {
+        beginResetModel();
+        m_librarySize = getData().count();
+        QModelIndex topLeft = createIndex(0,0);
+        QModelIndex bottomRight = createIndex( m_librarySize, 0);
+        emit dataChanged( topLeft, bottomRight );
+        endResetModel();
+    } );
     connect(_mediaLibraryHandler, &MediaLibraryHandler::itemUpdated, this,   [this](LibraryListItem27 item, int indexOfItem) {
         //beginResetModel();
-        if(indexOfItem > -1) {
+        if(indexOfItem > -1 && indexOfItem < getData().length()) {
             auto index = this->index(indexOfItem, 0);
             emit dataChanged(index, index);
         }
@@ -30,7 +38,7 @@ LibraryListViewModel::LibraryListViewModel(MediaLibraryHandler* mediaLibraryHand
         removeRow(index.row());
     } );
     connect(_mediaLibraryHandler, &MediaLibraryHandler::itemAdded, this,   [this](LibraryListItem27 item, int indexOfItem, int newSize) {
-        if(indexOfItem > -1)
+        if(indexOfItem > -1 && indexOfItem <= getData().length())
         {
             m_librarySize = newSize;
             auto index = this->index(indexOfItem, 0);

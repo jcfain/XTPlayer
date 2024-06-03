@@ -90,6 +90,9 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     const QVoice voice = boolinq::from(availableVoices).firstOrDefault([](const QVoice &x) { return x.gender() == QVoice::Female; });
     textToSpeech->setVoice(voice);
 
+    backgroundProcessingStatusLabel = new QLabel(this);
+    ui->statusbar->addWidget(backgroundProcessingStatusLabel);
+
 
     deoConnectionStatusLabel = new QLabel(this);
     deoRetryConnectionButton = new QPushButton(this);
@@ -355,8 +358,9 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(_xSettings, &SettingsDialog::updateLibrary, m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::libraryChange);
     connect(_xSettings, &SettingsDialog::disableHeatmapToggled, _playerControlsFrame, &PlayerControls::on_heatmapToggled);
     connect(_xSettings, &SettingsDialog::cleanUpThumbsDirectory, this, [this] () {
+        ui->statusbar->showMessage("Cleaning thumbs...");
         QtConcurrent::run([this]() {
-            if(m_xtengine->mediaLibraryHandler()->isLibraryLoading()) {
+            if(m_xtengine->mediaLibraryHandler()->isLibraryLoading() || m_xtengine->mediaLibraryHandler()->thumbProcessRunning()) {
                 emit cleanUpThumbsFailed();
                 return;
             }
@@ -392,6 +396,10 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::libraryLoading, this, &MainWindow::onSetLibraryLoading);
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::prepareLibraryLoad, this, &MainWindow::onPrepareLibraryLoad);
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::alternateFunscriptsFound, this, &MainWindow::alternateFunscriptsFound);
+    connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::backgroundProcessStateChange, this, [this](QString message) {
+        backgroundProcessingStatusLabel->setText(message);
+        });
+
 
     connect(action75_Size, &QAction::triggered, this, &MainWindow::on_action75_triggered);
     connect(action100_Size, &QAction::triggered, this, &MainWindow::on_action100_triggered);
@@ -467,13 +475,16 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(this, &MainWindow::playlistLoaded, this, &MainWindow::onPlaylistLoaded);
     connect(this, &MainWindow::backFromPlaylistLoaded, this, &MainWindow::onBackFromPlaylistLoaded);
     connect(this, &MainWindow::cleanUpThumbsFinished, this, [this]() {
+        ui->statusbar->clearMessage();
         _xSettings->onCleanUpThumbsDirectoryComplete();
         DialogHandler::MessageBox(this, "Thumb cleanup finished", XLogLevel::Information);
 
     });
     connect(this, &MainWindow::cleanUpThumbsFailed, this, [this]() {
+
+        ui->statusbar->showMessage("Cleaning thumbs failed...", 60);
         _xSettings->onCleanUpThumbsDirectoryStopped();
-        DialogHandler::MessageBox(this, "Thumb cleanup cannot be run while the media is loading", XLogLevel::Warning);
+        DialogHandler::MessageBox(this, "Thumb cleanup cannot be run while the media is loading or thumb process is running", XLogLevel::Warning);
 
     });
 
@@ -994,7 +1005,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                 });
             }
             myMenu.addAction(tr("Edit media settings..."), this, [this, selectedFileListItem] () {
-                LibraryItemSettingsDialog::getSettings(libraryList, selectedFileListItem.path);
+                LibraryItemSettingsDialog::getSettings(libraryList, selectedFileListItem);
             });
         }
 
@@ -1403,7 +1414,7 @@ void MainWindow::processMetaData(LibraryListItem27 libraryListItem)
 {
     if(libraryListItem.type != LibraryListItemType::VR)
     {
-        auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
+        auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem);
         if(libraryListItemMetaData.lastLoopEnabled && libraryListItemMetaData.lastLoopStart > -1 && libraryListItemMetaData.lastLoopEnd > libraryListItemMetaData.lastLoopStart)
         {
             _playerControlsFrame->SetLoop(true);
@@ -1413,7 +1424,7 @@ void MainWindow::processMetaData(LibraryListItem27 libraryListItem)
 
 void MainWindow::updateMetaData(LibraryListItem27 libraryListItem)
 {
-    auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem.path);
+    auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem);
     if(libraryListItem.type != LibraryListItemType::VR)
     {
         libraryListItemMetaData.lastPlayPosition = videoHandler->position();
@@ -2601,7 +2612,7 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
     {
         connect(_playerControlsFrame, &PlayerControls::loopRangeChanged, this, &MainWindow::onLoopRange_valueChanged);
         videoHandler->setRepeat(-1);
-        auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(playingLibraryListItem().path);
+        auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(playingLibraryListItem());
         if(libraryListItemMetaData.lastLoopStart > -1 && libraryListItemMetaData.lastLoopEnd > libraryListItemMetaData.lastLoopStart)
         {
             QTimer::singleShot(250, this, [this, libraryListItemMetaData]() {
@@ -2897,7 +2908,7 @@ void MainWindow::skipToMoneyShot()
             if(_playerControlsFrame->getAutoLoop())
                 _playerControlsFrame->SetLoop(false);
             LibraryListItem27 selectedLibraryListItem27 = playingLibraryListItem();
-            auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(selectedLibraryListItem27.path);
+            auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(selectedLibraryListItem27);
             if (libraryListItemMetaData.moneyShotMillis > -1 && libraryListItemMetaData.moneyShotMillis < videoHandler->duration())
             {
                 videoHandler->setPosition(libraryListItemMetaData.moneyShotMillis);

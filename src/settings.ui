@@ -1459,17 +1459,6 @@ that has no script of the same name.</string>
          </property>
         </widget>
        </item>
-       <item row="8" column="0">
-        <widget class="QCheckBox" name="MFSDiscoveryDisabledCheckBox">
-         <property name="toolTip">
-          <string>Checking this option will load MFS status on item hover instead of load time.
-This will greatly slows down media reading on load if checked.</string>
-         </property>
-         <property name="text">
-          <string>Disable MFS detection on load</string>
-         </property>
-        </widget>
-       </item>
        <item row="10" column="1">
         <widget class="QPushButton" name="passwordButton">
          <property name="text">
@@ -1529,7 +1518,7 @@ has no script associated with it.</string>
          </property>
         </widget>
        </item>
-       <item row="9" column="0">
+       <item row="8" column="0">
         <widget class="QCheckBox" name="disableFunscriptHeatmapheckBox">
          <property name="text">
           <string>Disable funscript heatmap</string>

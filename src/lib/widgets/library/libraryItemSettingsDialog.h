@@ -9,13 +9,14 @@
 #include <QDialogButtonBox>
 #include <QGridLayout>
 #include "lib/struct/LibraryListItemMetaData258.h"
+#include "lib/struct/LibraryListItem27.h"
 
 class LibraryItemSettingsDialog : public QDialog
 {
     Q_OBJECT
 public:
     explicit LibraryItemSettingsDialog(QWidget *parent = nullptr);
-    static void getSettings(QWidget *parent, QString key,  bool *ok = nullptr);
+    static void getSettings(QWidget *parent, const LibraryListItem27 item,  bool *ok = nullptr);
 
 private:
     QLabel* offsetLabel;

@@ -333,7 +333,6 @@ void SettingsDialog::setupUi()
         connect(SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
 
         ui.rememberWindowSettingsChk->setChecked(XTPSettings::getRememberWindowsSettings());
-        ui.MFSDiscoveryDisabledCheckBox->setChecked(SettingsHandler::getMFSDiscoveryDisabled());
 
         _interfaceInitialized = true;
     }
@@ -1846,18 +1845,10 @@ void SettingsDialog::on_dubugButton_clicked()
     }
 }
 
-
 void SettingsDialog::on_disableTimeLinePreviewChk_clicked(bool checked)
 {
     XTPSettings::setDisableTimeLinePreview(checked);
 }
-
-
-void SettingsDialog::on_MFSDiscoveryDisabledCheckBox_clicked(bool checked)
-{
-    SettingsHandler::setMFSDiscoveryDisabled(checked);
-}
-
 
 void SettingsDialog::on_channelProfilesComboBox_textChange(const QString &profile) {
     if(TCodeChannelLookup::getSelectedChannelProfile() != profile)

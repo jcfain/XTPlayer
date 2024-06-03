@@ -214,8 +214,6 @@ private slots:
 
     void on_disableTimeLinePreviewChk_clicked(bool checked);
 
-    void on_MFSDiscoveryDisabledCheckBox_clicked(bool checked);
-
     void on_channelProfilesComboBox_textChange(const QString &arg1);
 
     void on_addChannelProfileButton_clicked();

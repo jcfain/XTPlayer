@@ -85,9 +85,9 @@ LibraryItemSettingsDialog::LibraryItemSettingsDialog(QWidget *parent) : QDialog(
     setLayout(layout);
 }
 
-void LibraryItemSettingsDialog::getSettings(QWidget *parent, QString key, bool *ok)
+void LibraryItemSettingsDialog::getSettings(QWidget *parent, const LibraryListItem27 item, bool *ok)
 {
-    _libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(key);
+    _libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(item);
     LibraryItemSettingsDialog *dialog = new LibraryItemSettingsDialog(parent);
     showDialog(dialog, ok);
 }

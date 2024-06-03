@@ -180,7 +180,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     playerControlsGrid->addWidget(mediaSettingsBtn, row, 3, 1, 1);
 
     connect(mediaSettingsBtn, &QPushButton::clicked, this, [this]() {
-        LibraryItemSettingsDialog::getSettings(this, XMediaStateHandler::getPlaying().path);
+        LibraryItemSettingsDialog::getSettings(this, XMediaStateHandler::getPlaying());
     });
 
 //    settingsButton = new QPushButton(this);
