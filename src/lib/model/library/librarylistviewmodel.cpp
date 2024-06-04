@@ -23,22 +23,21 @@ LibraryListViewModel::LibraryListViewModel(MediaLibraryHandler* mediaLibraryHand
         emit dataChanged( topLeft, bottomRight );
         endResetModel();
     } );
-    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemUpdated, this,   [this](LibraryListItem27 item, int indexOfItem) {
-        //beginResetModel();
-        if(indexOfItem > -1 && indexOfItem < getData().length()) {
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemUpdated, this,   [this](int indexOfItem, QVector<int> roles) {
+        if(indexOfItem > -1 && indexOfItem < m_librarySize) {
             auto index = this->index(indexOfItem, 0);
-            emit dataChanged(index, index);
+            emit dataChanged(index, index, roles);
         }
         //endResetModel();
     } );
-    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemRemoved, this,   [this](LibraryListItem27 item, int indexOfItem, int newSize) {
-        m_librarySize = newSize;
-        auto index = this->index(indexOfItem, 0);
-        //emit dataChanged(index, index);
-        removeRow(index.row());
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemRemoved, this,   [this](int indexOfItem, int newSize) {
+        if(indexOfItem > -1 && indexOfItem < m_librarySize) {
+            if(removeRow(indexOfItem))
+                m_librarySize = newSize;
+        }
     } );
-    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemAdded, this,   [this](LibraryListItem27 item, int indexOfItem, int newSize) {
-        if(indexOfItem > -1 && indexOfItem <= getData().length())
+    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemAdded, this,   [this](int indexOfItem, int newSize) {
+        if(indexOfItem > -1 && indexOfItem <= m_librarySize)
         {
             m_librarySize = newSize;
             auto index = this->index(indexOfItem, 0);
@@ -63,6 +62,22 @@ int LibraryListViewModel::rowCount(const QModelIndex &parent) const
         return 0;
 
     return m_librarySize;
+}
+
+QModelIndex LibraryListViewModel::index(int row, int column, const QModelIndex &parent) const
+{
+    return createIndex(row, column);
+}
+
+// QModelIndex LibraryListViewModel::parent(const QModelIndex &index) const
+// {
+//     return parent;
+// }
+
+int LibraryListViewModel::columnCount(const QModelIndex &parent) const
+{
+    Q_UNUSED(parent);
+    return 1;
 }
 LibraryListItem27 LibraryListViewModel::getItem(const QModelIndex &index) {
     return index.data(Qt::UserRole).value<LibraryListItem27>();
