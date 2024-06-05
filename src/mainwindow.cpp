@@ -90,9 +90,15 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     const QVoice voice = boolinq::from(availableVoices).firstOrDefault([](const QVoice &x) { return x.gender() == QVoice::Female; });
     textToSpeech->setVoice(voice);
 
+    backgroundProcessingStatusProgress = new QProgressBar(this);
+    backgroundProcessingStatusProgress->setMaximum(100);
+    backgroundProcessingStatusProgress->setMinimum(0);
+    backgroundProcessingStatusProgress->setMaximumWidth(250);
+    backgroundProcessingStatusProgress->setMinimumWidth(250);
+    backgroundProcessingStatusProgress->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+    ui->statusbar->addWidget(backgroundProcessingStatusProgress);
     backgroundProcessingStatusLabel = new QLabel(this);
     ui->statusbar->addWidget(backgroundProcessingStatusLabel);
-
 
     deoConnectionStatusLabel = new QLabel(this);
     deoRetryConnectionButton = new QPushButton(this);
@@ -358,7 +364,6 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(_xSettings, &SettingsDialog::updateLibrary, m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::libraryChange);
     connect(_xSettings, &SettingsDialog::disableHeatmapToggled, _playerControlsFrame, &PlayerControls::on_heatmapToggled);
     connect(_xSettings, &SettingsDialog::cleanUpThumbsDirectory, this, [this] () {
-        ui->statusbar->showMessage("Cleaning thumbs...");
         QtConcurrent::run([this]() {
             if(m_xtengine->mediaLibraryHandler()->isLibraryLoading() || m_xtengine->mediaLibraryHandler()->thumbProcessRunning()) {
                 emit cleanUpThumbsFailed();
@@ -396,9 +401,19 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::libraryLoading, this, &MainWindow::onSetLibraryLoading);
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::prepareLibraryLoad, this, &MainWindow::onPrepareLibraryLoad);
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::alternateFunscriptsFound, this, &MainWindow::alternateFunscriptsFound);
-    connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::backgroundProcessStateChange, this, [this](QString message) {
-        backgroundProcessingStatusLabel->setText(message);
-        });
+    connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::backgroundProcessStateChange, this, [this](QString message, float percentage) {
+        if(percentage > -1) {
+            if(backgroundProcessingStatusProgress->isHidden())
+                backgroundProcessingStatusProgress->show();
+            // backgroundProcessingStatusLabel->setText(message +": "+percentageString + "%");
+            backgroundProcessingStatusLabel->setText("");
+            backgroundProcessingStatusProgress->setValue(percentage);
+            backgroundProcessingStatusProgress->setFormat(message +": "+QString::number(percentage) + "%");
+        } else {
+            backgroundProcessingStatusProgress->hide();
+            backgroundProcessingStatusLabel->setText(message);
+        }
+    });
 
 
     connect(action75_Size, &QAction::triggered, this, &MainWindow::on_action75_triggered);
