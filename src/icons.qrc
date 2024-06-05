@@ -54,5 +54,6 @@
         <file>images/icons/shuffle.svg</file>
         <file>images/icons/funscript.svg</file>
         <file>images/icons/cc.svg</file>
+        <file>images/icons/tag.svg</file>
     </qresource>
 </RCC>
