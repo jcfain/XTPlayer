@@ -254,6 +254,9 @@ private:
     QPushButton* editPlaylistButton;
     QPushButton* cancelEditPlaylistButton;
     QLineEdit* libraryFilterLineEdit;
+    QPushButton* libraryFilterTagsButton;
+    QPushButton* libraryFilterLineEditClear;
+    QWidget* libraryFilterTagsPopup;
     QActionGroup* libraryViewGroup;
     QActionGroup* libraryThumbSizeGroup;
     QAction* action75_Size;
@@ -368,6 +371,7 @@ private:
     qint64 mediaDuration();
 
     void setupLibraryGrid(QGridLayout* layout);
+    void setupTagsPopup();
 };
 extern void startThumbProcess(MainWindow* mainWindow);
 #endif // MAINWINDOW_H

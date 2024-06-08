@@ -1,5 +1,10 @@
 #include "librarysortfilterproxymodel.h"
 
+#include "lib/handler/settingshandler.h"
+#include "librarylistviewmodel.h"
+#include "lib/struct/LibraryListItem27.h"
+#include "xtpsettings.h"
+
 LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(MediaLibraryHandler* mediaLibraryHandler, QObject *parent)
     : QSortFilterProxyModel(parent) {
     setDynamicSortFilter(false);
@@ -40,6 +45,11 @@ void LibrarySortFilterProxyModel::setLibraryViewMode(LibraryView mode) {
     beginResetModel();
     qobject_cast<LibraryListViewModel*>(sourceModel())->setLibraryViewMode(mode);
     endResetModel();
+}
+
+bool LibrarySortFilterProxyModel::hasTags()
+{
+    return !m_tags.empty();
 }
 
 bool LibrarySortFilterProxyModel::lessThan(const QModelIndex &left, const QModelIndex &right) const {
@@ -104,6 +114,7 @@ bool LibrarySortFilterProxyModel::lessThan(const QModelIndex &left, const QModel
 
     return QSortFilterProxyModel::lessThan(left, right);
 }
+#include <QSet>
 bool LibrarySortFilterProxyModel::filterAcceptsRow(int sourceRow,
                                               const QModelIndex &sourceParent) const
 {
@@ -123,35 +134,43 @@ bool LibrarySortFilterProxyModel::filterAcceptsRow(int sourceRow,
     //For some reason sorting random without any playlists crashes. Add dummy and hide it.
     if(item.nameNoExtension == "DummyPlaylistThatNoOneShouldEverSeeOrNameTheSame")
         return false;
-
-    return index.data().toString().contains(filterRegularExpression());
+    LibraryListItemMetaData258 metadata = SettingsHandler::getLibraryListItemMetaData(item);
+    bool hasAllTags = m_tags.empty();
+    foreach (QString tag, m_tags) {
+        if(!metadata.tags.contains(tag)) {
+            hasAllTags = false;
+            break;
+        }
+        if(m_tags.indexOf(tag) == m_tags.length() -1)
+            hasAllTags = true;
+    }
+    return index.data().toString().contains(filterRegularExpression()) && hasAllTags;
 }
+
 bool LibrarySortFilterProxyModel::dateInRange(QDate date) const
 {
     return (!minDate.isValid() || date > minDate)
             && (!maxDate.isValid() || date < maxDate);
 }
 
-void LibrarySortFilterProxyModel::onTextFilterChanged(QString filter)
+void LibrarySortFilterProxyModel::onFilterChanged(QString filter)
 {
-//    FilterWidget::PatternSyntax s = filterWidget->patternSyntax();
-//    QString filter = filterWidget->text();
-//    switch (s) {
-//    case FilterWidget::Wildcard:
-//        filter = QRegularExpression::wildcardToRegularExpression(filter);
-//        break;
-//    case FilterWidget::FixedString:
-//        filter = QRegularExpression::escape(filter);
-//        break;
-//    default:
-//        break;
-//    }
-        QRegularExpression::PatternOptions options = QRegularExpression::CaseInsensitiveOption;
-        //if (filterWidget->caseSensitivity() == Qt::CaseInsensitive)
-        QRegularExpression regularExpression(filter, options);
-        setFilterRegularExpression(regularExpression);
-        invalidateFilter();
-        if(filter.isEmpty())
-            invalidate();
-        //setSortMode(SettingsHandler::getLibrarySortMode());
+    m_filterText = filter;
+    QRegularExpression::PatternOptions options = QRegularExpression::CaseInsensitiveOption;
+    QRegularExpression regularExpression(filter, options);
+    setFilterRegularExpression(regularExpression);
+    invalidateFilter();
+    if(filter.isEmpty())
+        invalidate();
+}
+
+void LibrarySortFilterProxyModel::onTagFilterChanged(bool selected, QString filter)
+{
+    if(selected) {
+        if(!m_tags.contains(filter))
+            m_tags.append(filter);
+    } else {
+        m_tags.removeAll(filter);
+    }
+    invalidateFilter();
 }

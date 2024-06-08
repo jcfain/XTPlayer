@@ -176,7 +176,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     scrollerProperties.setScrollMetric(QScrollerProperties::VerticalOvershootPolicy, overshootPolicy);
     QScroller::scroller(libraryList)->setScrollerProperties(scrollerProperties);
     scroller->setScrollerProperties(scrollerProperties);
-    ui->libraryGrid->addWidget(libraryList, 1, 0, 20, 12);
+    //ui->libraryGrid->addWidget(libraryList, 1, 0, 20, 12);
 
     ui->libraryGrid->setSpacing(5);
     ui->libraryGrid->setColumnMinimumWidth(0, 0);
@@ -190,14 +190,14 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     backLibraryButton->setProperty("id", "backLibraryButton");
     QIcon backIcon("://images/icons/back.svg");
     backLibraryButton->setIcon(backIcon);
-    ui->libraryGrid->addWidget(backLibraryButton, 0, 0);
+    // ui->libraryGrid->addWidget(backLibraryButton, 0, 0);
     backLibraryButton->hide();
 
     windowedLibraryButton = new QPushButton(this);
     windowedLibraryButton->setProperty("id", "windowedLibraryButton");
     QIcon windowedIcon("://images/icons/windowed.svg");
     windowedLibraryButton->setIcon(windowedIcon);
-    ui->libraryGrid->addWidget(windowedLibraryButton, 0, ui->libraryGrid->columnCount() - 1);
+    // ui->libraryGrid->addWidget(windowedLibraryButton, 0, ui->libraryGrid->columnCount() - 1);
 
     libraryWindow = new LibraryWindow(this);
     libraryWindow->setProperty("id", "libraryWindow");
@@ -207,33 +207,87 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     randomizeLibraryButton->setProperty("id", "randomizeLibraryButton");
     QIcon reloadIcon("://images/icons/reload.svg");
     randomizeLibraryButton->setIcon(reloadIcon);
-    ui->libraryGrid->addWidget(randomizeLibraryButton, 0, 1);
+    // ui->libraryGrid->addWidget(randomizeLibraryButton, 0, ui->libraryGrid->columnCount() - 2);
     randomizeLibraryButton->hide();
 
     editPlaylistButton = new QPushButton(this);
     editPlaylistButton->setProperty("id", "editPlaylistButton");
     QIcon editIcon("://images/icons/edit.svg");
     editPlaylistButton->setIcon(editIcon);
-    ui->libraryGrid->addWidget(editPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
+    // ui->libraryGrid->addWidget(editPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
     editPlaylistButton->hide();
 
     savePlaylistButton = new QPushButton(this);
     savePlaylistButton->setProperty("id", "savePlaylistButton");
     QIcon saveIcon("://images/icons/save.svg");
     savePlaylistButton->setIcon(saveIcon);
-    ui->libraryGrid->addWidget(savePlaylistButton, 0, ui->libraryGrid->columnCount() - 3);
+    // ui->libraryGrid->addWidget(savePlaylistButton, 0, ui->libraryGrid->columnCount() - 3);
     savePlaylistButton->hide();
 
     cancelEditPlaylistButton = new QPushButton(this);
     cancelEditPlaylistButton->setProperty("id", "cancelEditPlaylistButton");
     QIcon xIcon("://images/icons/x.svg");
     cancelEditPlaylistButton->setIcon(xIcon);
-    ui->libraryGrid->addWidget(cancelEditPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
+    // ui->libraryGrid->addWidget(cancelEditPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
     cancelEditPlaylistButton->hide();
 
     libraryFilterLineEdit = new QLineEdit(this);
     libraryFilterLineEdit->setPlaceholderText("Filter");
-    ui->libraryGrid->addWidget(libraryFilterLineEdit, 0, 2, 1, ui->libraryGrid->columnCount() - 4);
+    libraryFilterLineEdit->setToolTip("Filter media by text");
+    // ui->libraryGrid->addWidget(libraryFilterLineEdit, 0, 1, 1, ui->libraryGrid->columnCount() - 5);
+    connect(libraryFilterLineEdit, &QLineEdit::textChanged, this, [this](QString value) {
+        _librarySortFilterProxyModel->onFilterChanged(value);
+        libraryFilterLineEditClear->setEnabled(!value.isEmpty() || !libraryFilterTagsPopup->isHidden());
+
+    });
+    libraryFilterTagsButton = new QPushButton(this);
+    libraryFilterTagsButton->setProperty("id", "tagFilterButton");
+    QIcon tagIcon("://images/icons/tag.svg");
+    libraryFilterTagsButton->setIcon(tagIcon);
+    libraryFilterTagsButton->setToolTip("Select tags to filter");
+    libraryFilterTagsButton->setCheckable(true);
+    // ui->libraryGrid->addWidget(libraryFilterTagsButton, 0, 7);
+
+    libraryFilterTagsPopup = new QWidget(libraryFilterTagsButton);
+    libraryFilterTagsPopup->setWindowFlag(Qt::Popup, true);
+    libraryFilterTagsPopup->setLayout(new QGridLayout(libraryFilterTagsPopup));
+    libraryFilterTagsPopup->hide();
+
+    setupTagsPopup();
+    connect(libraryFilterTagsButton, &QPushButton::toggled, this, [this](bool checked) {
+        if(checked) {
+            auto parentWidget = libraryFilterTagsPopup->parentWidget();
+            int parentGlobalX = parentWidget->mapToGlobal( parentWidget->rect().center() ).x();
+            //push it to the left by half of its width
+            int x = parentGlobalX - libraryFilterTagsPopup->width() / 2;
+
+            int y = parentWidget->mapToGlobal( QPoint(0, parentWidget->geometry().height() ) ).y();
+
+            libraryFilterTagsPopup->show();
+            libraryFilterTagsPopup->move(x,y);
+        } else {
+            libraryFilterTagsPopup->hide();
+        }
+    });
+
+    libraryFilterLineEditClear = new QPushButton(this);
+    libraryFilterLineEditClear->setProperty("id", "tagFilterButton");
+    QIcon clearFilterIcon("://images/icons/x.svg");
+    libraryFilterLineEditClear->setToolTip("Clear the current filter criteria");
+    libraryFilterLineEditClear->setIcon(clearFilterIcon);
+    libraryFilterLineEditClear->setEnabled(false);
+    // // ui->libraryGrid->addWidget(libraryFilterLineEditClear, 0, 7);
+    connect(libraryFilterLineEditClear, &QPushButton::clicked, this, [this](){
+        libraryFilterLineEdit->clear();
+
+        QLayoutItem* item;
+        while ( ( item = libraryFilterTagsPopup->layout()->takeAt( 0 ) ) != NULL )
+        {
+            ((QCheckBox)item->widget()).setChecked(false);
+        }
+        libraryFilterLineEditClear->setEnabled(false);
+    });
+
 
     ui->libraryFrame->setFrameShadow(QFrame::Sunken);
 
@@ -248,10 +302,13 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     libraryLoadingLabel->setAlignment(Qt::AlignCenter);
     libraryLoadingInfoLabel->setProperty("cssClass", "libraryLoadingSpinnerText");
     libraryLoadingInfoLabel->setAlignment(Qt::AlignCenter);
-    ui->libraryGrid->addWidget(libraryLoadingLabel, 0, 0, 21, 12);
-    ui->libraryGrid->addWidget(libraryLoadingInfoLabel, 0, 0, 21, 12);
+    // ui->libraryGrid->addWidget(libraryLoadingLabel, 0, 0, 21, 12);
+    // ui->libraryGrid->addWidget(libraryLoadingInfoLabel, 0, 0, 21, 12);
     libraryLoadingLabel->hide();
     libraryLoadingInfoLabel->hide();
+
+    // Handle all library list and action buttons
+    setupLibraryGrid(ui->libraryGrid);
 
     thumbCaptureTime = 35000;
     libraryViewGroup = new QActionGroup(this);
@@ -340,7 +397,6 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(savePlaylistButton, &QPushButton::clicked, this, &MainWindow::savePlaylist);
     connect(editPlaylistButton, &QPushButton::clicked, this, &MainWindow::editPlaylist);
     connect(cancelEditPlaylistButton, &QPushButton::clicked, this, &MainWindow::cancelEditPlaylist);
-    connect(libraryFilterLineEdit, &QLineEdit::textChanged, _librarySortFilterProxyModel, &LibrarySortFilterProxyModel::onTextFilterChanged);
 
     connect(libraryWindow, &LibraryWindow::closeWindow, this, &MainWindow::onLibraryWindowed_Closed);
 
@@ -439,6 +495,9 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(m_xtengine->syncHandler(), &SyncHandler::funscriptSearchResult, this, &MainWindow::onFunscriptSearchResult);
 
     connect(videoHandler, &VideoHandler::positionChanged, this, &MainWindow::on_media_positionChanged, Qt::QueuedConnection);
+    connect(videoHandler, &VideoHandler::positionChanged, this, [this](qint64 position) {
+        XMediaStateHandler::updateDuration(position, videoHandler->duration());
+    });
     connect(videoHandler, &VideoHandler::mediaStatusChanged, this, &MainWindow::on_media_statusChanged, Qt::QueuedConnection);
     connect(videoHandler, &VideoHandler::started, this, &MainWindow::on_media_start, Qt::QueuedConnection);
     connect(videoHandler, &VideoHandler::stopped, this, &MainWindow::on_media_stop, Qt::QueuedConnection);
@@ -805,13 +864,38 @@ void MainWindow::on_mainwindow_splitterMove(int pos, int index)
 void MainWindow::setupLibraryGrid(QGridLayout* layout) {
     layout->addWidget(libraryList, 1, 0, 20, 12);
     layout->addWidget(backLibraryButton, 0, 0);
-    layout->addWidget(randomizeLibraryButton, 0, 1);
+    layout->addWidget(randomizeLibraryButton, 0, ui->libraryGrid->columnCount() - 2);
     layout->addWidget(windowedLibraryButton, 0, ui->libraryGrid->columnCount() - 1);
     layout->addWidget(cancelEditPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
     layout->addWidget(editPlaylistButton, 0, ui->libraryGrid->columnCount() - 2);
     layout->addWidget(savePlaylistButton, 0, ui->libraryGrid->columnCount() - 3);
-    layout->addWidget(libraryFilterLineEdit, 0, 2, 1, ui->libraryGrid->columnCount() - 4);
+    layout->addWidget(libraryFilterLineEdit, 0, 0, 1, ui->libraryGrid->columnCount() - 5);
+    layout->addWidget(libraryFilterTagsButton, 0, 7);
+    layout->addWidget(libraryFilterLineEditClear, 0, 8);
     layout->addWidget(libraryLoadingLabel, 0, 0, 21, 12);
+    layout->addWidget(libraryLoadingInfoLabel, 0, 0, 21, 12);
+}
+
+void MainWindow::setupTagsPopup()
+{
+    QLayoutItem* item;
+    while ( ( item = libraryFilterTagsPopup->layout()->takeAt( 0 ) ) != NULL )
+    {
+        delete item->widget();
+        delete item;
+    }
+    QStringList tags = SettingsHandler::getTags();
+    foreach (QString tag, tags) {
+        QCheckBox* checkbox = new QCheckBox(libraryFilterTagsPopup);
+        checkbox->setText(tag);
+        checkbox->setProperty("value", tag);
+        connect(checkbox, &QCheckBox::clicked, this, [this, checkbox](bool checked){
+            _librarySortFilterProxyModel->onTagFilterChanged(checked, checkbox->text());
+            libraryFilterLineEditClear->setEnabled(!libraryFilterLineEdit->text().isEmpty() || _librarySortFilterProxyModel->hasTags());
+        });
+        libraryFilterTagsPopup->layout()->addWidget(checkbox);
+    }
+
 }
 void MainWindow::onLibraryWindowed_Clicked()
 {
@@ -1117,8 +1201,10 @@ void MainWindow::toggleLibraryLoading(bool loading)
     if(loading)
     {
         libraryLoadingLabel->show();
+        libraryLoadingLabel->raise();
         libraryLoadingMovie->start();
         libraryLoadingInfoLabel->show();
+        libraryLoadingInfoLabel->raise();
     }
     else
     {
@@ -1134,6 +1220,9 @@ void MainWindow::toggleLibraryLoading(bool loading)
     editPlaylistButton->setDisabled(loading);
     cancelEditPlaylistButton->setDisabled(loading);
     windowedLibraryButton->setDisabled(loading);
+    libraryFilterLineEdit->setDisabled(loading);
+    libraryFilterTagsButton->setDisabled(loading);
+    libraryFilterLineEditClear->setDisabled(loading);
     //ui->actionSelect_library->setDisabled(loading);
     ui->actionReload_library->setDisabled(loading);
 
@@ -2732,6 +2821,8 @@ void MainWindow::onPlaylistLoaded(LibraryListItem27 autoPlayItem) {
     editPlaylistButton->show();
     librarySortGroup->setEnabled(false);
     libraryFilterLineEdit->hide();
+    libraryFilterTagsButton->hide();
+    libraryFilterLineEditClear->hide();
     randomizeLibraryButton->hide();
     //changeLibraryDisplayMode(SettingsHandler::getLibraryView());
     //resizeThumbs(SettingsHandler::getThumbSize());
@@ -2780,6 +2871,8 @@ void MainWindow::onBackFromPlaylistLoaded() {
     savePlaylistButton->hide();
     cancelEditPlaylistButton->hide();
     libraryFilterLineEdit->show();
+    libraryFilterTagsButton->show();
+    libraryFilterLineEditClear->show();
     if(SettingsHandler::getLibrarySortMode() == LibrarySortMode::RANDOM)
         randomizeLibraryButton->show();
     libraryList->setDragEnabled(false);

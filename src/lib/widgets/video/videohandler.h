@@ -38,7 +38,7 @@ signals:
     void keyPressed(QKeyEvent* k);
     void keyReleased(QKeyEvent* k);
     void mouseEnter(QEvent* e);
-    void positionChanged(int position);
+    void positionChanged(qint64 position);
     void mediaStatusChanged(XMediaStatus status);
     void mediaStateChanged(XMediaState state);
     void started();
