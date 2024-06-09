@@ -429,6 +429,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
             emit cleanUpThumbsFinished();
         });
     });
+    connect(_xSettings, &SettingsDialog::tagsChanged, this, &MainWindow::setupTagsPopup);
     connect(m_xtengine->syncHandler(), &SyncHandler::channelPositionChange, _xSettings, &SettingsDialog::setAxisProgressBar, Qt::QueuedConnection);
     connect(m_xtengine->syncHandler(), &SyncHandler::funscriptEnded, _xSettings, &SettingsDialog::resetAxisProgressBars, Qt::QueuedConnection);
 

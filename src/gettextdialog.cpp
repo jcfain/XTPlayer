@@ -43,17 +43,19 @@ QString GetTextDialog::show(QWidget *parent, QString variableName, QString curre
 QString GetTextDialog::getText(GetTextDialog *dialog, bool *ok)
 {
     const int ret = dialog->exec();
+    QString returnValue;
     if (ok)
         *ok = !!ret;
-    if (ok)
+    if (ret == QDialog::Accepted)
     {
         bool isValid = true;
-        if(dialog->nameEdit->text().isEmpty())
+        returnValue = dialog->nameEdit->text();
+        if(returnValue.isEmpty())
         {
             isValid = false;
             DialogHandler::MessageBox(dialog, m_variableName+" required!", XLogLevel::Critical);
         }
-        if (!isValid)
+        if (!isValid && ok)
             *ok = false;
     }
     m_variableName = nullptr;
@@ -61,7 +63,7 @@ QString GetTextDialog::getText(GetTextDialog *dialog, bool *ok)
 
     dialog->deleteLater();
 
-    return ok ? dialog->nameEdit->text() : nullptr;
+    return ret == QDialog::Accepted ? returnValue : nullptr;
 }
 
 QString GetTextDialog::m_variableName;

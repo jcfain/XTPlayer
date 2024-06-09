@@ -54,6 +54,7 @@ signals:
     void updateLibrary();
     void cleanUpThumbsDirectory();
     void disableHeatmapToggled(bool disabled);
+    void tagsChanged();
 
 public slots:
     void on_xtpWeb_initInputDevice(DeviceName deviceName, bool checked);
@@ -231,6 +232,10 @@ private slots:
     void on_disableFunscriptHeatmapheckBox_clicked(bool checked);
 
     void on_webPasswordButton_clicked();
+
+    void on_tagSetupButton_clicked();
+
+    void on_smartTagButton_clicked();
 
 private:
 

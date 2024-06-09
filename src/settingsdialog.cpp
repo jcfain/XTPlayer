@@ -8,6 +8,7 @@
 #include "channeltablecomboboxdelegate.h"
 #include "xtpsettings.h"
 #include "gettextdialog.h"
+#include "tagManager.h"
 
 //http://192.168.0.145/toggleContinousTwist
 SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
@@ -1973,3 +1974,19 @@ void SettingsDialog::on_disableFunscriptHeatmapheckBox_clicked(bool checked)
     XTPSettings::setHeatmapDisabled(checked);
     emit disableHeatmapToggled(checked);
 }
+
+void SettingsDialog::on_tagSetupButton_clicked()
+{
+    TagManager tagManager(this);
+    tagManager.exec();
+    emit tagsChanged();
+}
+
+
+void SettingsDialog::on_smartTagButton_clicked()
+{
+    TagManager tagManager(this, true);
+    tagManager.exec();
+    emit tagsChanged();
+}
+

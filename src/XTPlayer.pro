@@ -25,6 +25,7 @@ INCLUDEPATH += $$PWD/lib/common
 
 SOURCES += \
     gettextdialog.cpp \
+    lib/widgets/library/tagManager.cpp \
     main.cpp \
     mainwindow.cpp \
     xtpsettings.cpp \
@@ -57,6 +58,7 @@ SOURCES += \
 
 HEADERS += \
     gettextdialog.h \
+    lib/widgets/library/tagManager.h \
     mainwindow.h \
     xtpsettings.h \
     noMatchingScriptDialog.h \
