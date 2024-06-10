@@ -388,7 +388,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     auto sizes = ui->mainFrameSplitter->sizes();
 
     connect(SettingsHandler::instance(), &SettingsHandler::messageSend, this, &MainWindow::on_settingsMessageRecieve);
-    connect(_xSettings, &SettingsDialog::messageSend, this, &MainWindow::on_settingsMessageRecieve);
+    connect(SettingsHandler::instance(), &SettingsHandler::tagsChanged, this, &MainWindow::setupTagsPopup);
 
     connect(ui->mainFrameSplitter, &QSplitter::splitterMoved, this, &MainWindow::on_mainwindow_splitterMove);
     connect(backLibraryButton, &QPushButton::clicked, this, &MainWindow::backToMainLibrary);
@@ -429,7 +429,8 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
             emit cleanUpThumbsFinished();
         });
     });
-    connect(_xSettings, &SettingsDialog::tagsChanged, this, &MainWindow::setupTagsPopup);
+    connect(_xSettings, &SettingsDialog::messageSend, this, &MainWindow::on_settingsMessageRecieve);
+
     connect(m_xtengine->syncHandler(), &SyncHandler::channelPositionChange, _xSettings, &SettingsDialog::setAxisProgressBar, Qt::QueuedConnection);
     connect(m_xtengine->syncHandler(), &SyncHandler::funscriptEnded, _xSettings, &SettingsDialog::resetAxisProgressBars, Qt::QueuedConnection);
 

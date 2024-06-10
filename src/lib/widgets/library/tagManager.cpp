@@ -32,6 +32,11 @@ void TagManager::on_addButton_clicked()
         DialogHandler::MessageBox(this, "Tag '"+tag+"' is already in the list!", XLogLevel::Warning);
         return;
     }
+    QStringList otherTags = !m_smartTagMode ? SettingsHandler::getUserSmartTags() : SettingsHandler::getUserTags();
+    if(otherTags.contains(tag)) {
+        DialogHandler::MessageBox(this, "Tag '"+tag+"' is already in the list "+(!m_smartTagMode ? "smart tags" : "user tags") + "!", XLogLevel::Warning);
+        return;
+    }
     m_modified = true;
     m_smartTagMode ? SettingsHandler::addUserSmartTag(tag) : SettingsHandler::addUserTag(tag);
     ui.listWidget->addItem(tag);

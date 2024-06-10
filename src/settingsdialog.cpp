@@ -1979,7 +1979,6 @@ void SettingsDialog::on_tagSetupButton_clicked()
 {
     TagManager tagManager(this);
     tagManager.exec();
-    emit tagsChanged();
 }
 
 
@@ -1987,6 +1986,26 @@ void SettingsDialog::on_smartTagButton_clicked()
 {
     TagManager tagManager(this, true);
     tagManager.exec();
-    emit tagsChanged();
+}
+
+void SettingsDialog::on_defaultUserTagsButton_clicked()
+{
+    QMessageBox::StandardButton reply =
+        QMessageBox::question(this, "Reset all user tags?", "This will delete all added user tags. Note: this will not effect smart tags.",
+            QMessageBox::Yes|QMessageBox::No);
+
+    if(reply == QMessageBox::Yes)
+        SettingsHandler::SetUserTagDefaults();
+}
+
+
+void SettingsDialog::on_defaultSmartTagsButton_clicked()
+{
+    QMessageBox::StandardButton reply =
+        QMessageBox::question(this, "Reset all smart tags?", "This will delete all added smart tags. Note: this will not effect user tags.",
+                              QMessageBox::Yes|QMessageBox::No);
+
+    if(reply == QMessageBox::Yes)
+        SettingsHandler::SetSmartTagDefaults();
 }
 
