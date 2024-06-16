@@ -181,6 +181,7 @@
     </property>
     <addaction name="actionSelect_library"/>
     <addaction name="actionReload_library"/>
+    <addaction name="actionProcess_metadata"/>
     <addaction name="actionChange_theme"/>
     <addaction name="actionReload_theme"/>
     <addaction name="separator"/>
@@ -284,6 +285,11 @@
     <string>Manage VR stored data.
 INFO: Every time a video is played in VR the matching script is searched.
 If found it will store it in the user settings.</string>
+   </property>
+  </action>
+  <action name="actionProcess_metadata">
+   <property name="text">
+    <string>Process metadata</string>
    </property>
   </action>
  </widget>

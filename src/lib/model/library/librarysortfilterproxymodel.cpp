@@ -173,4 +173,6 @@ void LibrarySortFilterProxyModel::onTagFilterChanged(bool selected, QString filt
         m_tags.removeAll(filter);
     }
     invalidateFilter();
+    if(m_tags.isEmpty())
+        invalidate();
 }

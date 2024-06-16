@@ -250,7 +250,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
 
     libraryFilterTagsPopup = new QWidget(libraryFilterTagsButton);
     libraryFilterTagsPopup->setWindowFlag(Qt::Popup, true);
-    libraryFilterTagsPopup->setLayout(new QGridLayout(libraryFilterTagsPopup));
+    libraryFilterTagsPopup->setLayout(new QGridLayout(libraryFilterTagsButton));
     libraryFilterTagsPopup->hide();
 
     setupTagsPopup();
@@ -280,10 +280,12 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(libraryFilterLineEditClear, &QPushButton::clicked, this, [this](){
         libraryFilterLineEdit->clear();
 
-        QLayoutItem* item;
-        while ( ( item = libraryFilterTagsPopup->layout()->takeAt( 0 ) ) != NULL )
-        {
-            ((QCheckBox)item->widget()).setChecked(false);
+        auto chackboxes = libraryFilterTagsPopup->findChildren<QCheckBox *>();
+        for(int i = 0; i < chackboxes.count(); ++i)
+            {
+            auto checkbox = chackboxes[i];
+            if(checkbox->isChecked())
+                checkbox->click();
         }
         libraryFilterLineEditClear->setEnabled(false);
     });
@@ -459,19 +461,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::libraryLoading, this, &MainWindow::onSetLibraryLoading);
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::prepareLibraryLoad, this, &MainWindow::onPrepareLibraryLoad);
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::alternateFunscriptsFound, this, &MainWindow::alternateFunscriptsFound);
-    connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::backgroundProcessStateChange, this, [this](QString message, float percentage) {
-        if(percentage > -1) {
-            if(backgroundProcessingStatusProgress->isHidden())
-                backgroundProcessingStatusProgress->show();
-            // backgroundProcessingStatusLabel->setText(message +": "+percentageString + "%");
-            backgroundProcessingStatusLabel->setText("");
-            backgroundProcessingStatusProgress->setValue(percentage);
-            backgroundProcessingStatusProgress->setFormat(message +": "+QString::number(percentage) + "%");
-        } else {
-            backgroundProcessingStatusProgress->hide();
-            backgroundProcessingStatusLabel->setText(message);
-        }
-    });
+    connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::backgroundProcessStateChange, this,  &MainWindow::setLoadingStatus);
 
 
     connect(action75_Size, &QAction::triggered, this, &MainWindow::on_action75_triggered);
@@ -563,6 +553,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
         DialogHandler::MessageBox(this, "Thumb cleanup cannot be run while the media is loading or thumb process is running", XLogLevel::Warning);
 
     });
+    connect(this, &MainWindow::backgroundProcessStateChange, this,  &MainWindow::setLoadingStatus);
 
 
     //    connect(this, &MainWindow::setLoading, this, &MainWindow::on_setLoading);
@@ -899,6 +890,21 @@ void MainWindow::setupTagsPopup()
     }
 
 }
+
+void MainWindow::setLoadingStatus(QString message, float percentage)
+{
+    if(percentage > -1) {
+        if(backgroundProcessingStatusProgress->isHidden())
+            backgroundProcessingStatusProgress->show();
+        // backgroundProcessingStatusLabel->setText(message +": "+percentageString + "%");
+        backgroundProcessingStatusLabel->setText("");
+        backgroundProcessingStatusProgress->setValue(percentage);
+        backgroundProcessingStatusProgress->setFormat(message +": "+QString::number(percentage) + "%");
+    } else {
+        backgroundProcessingStatusProgress->hide();
+        backgroundProcessingStatusLabel->setText(message);
+    }
+}
 void MainWindow::onLibraryWindowed_Clicked()
 {
     _libraryDockMode = true;
@@ -1108,6 +1114,14 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             myMenu.addAction(tr("Edit media settings..."), this, [this, selectedFileListItem] () {
                 LibraryItemSettingsDialog::getSettings(libraryList, selectedFileListItem);
             });
+            myMenu.addAction(tr("Process metadata"), this, [this, selectedFileListItem] () {
+                if(!m_xtengine->mediaLibraryHandler()->metadataProcessing()) {
+                    auto item = m_xtengine->mediaLibraryHandler()->findItemByID(selectedFileListItem.ID);
+                    m_xtengine->mediaLibraryHandler()->processMetadata(*item);
+                } else {
+                    DialogHandler::MessageBox(libraryList, "Please wait for metadata process to complete!", XLogLevel::Warning);
+                }
+            });
         }
 
         // Show context menu at handling position
@@ -1174,6 +1188,7 @@ void MainWindow::onPrepareLibraryLoad()
 {
     libraryList->setIconSize({SettingsHandler::getThumbSize(),SettingsHandler::getThumbSize()});
     ui->actionReload_library->setDisabled(true);
+    ui->actionProcess_metadata->setDisabled(true);
     //ui->actionSelect_library->setDisabled(true);
     _playerControlsFrame->setDisabled(true);
 }
@@ -1227,6 +1242,7 @@ void MainWindow::toggleLibraryLoading(bool loading)
     libraryFilterLineEditClear->setDisabled(loading);
     //ui->actionSelect_library->setDisabled(loading);
     ui->actionReload_library->setDisabled(loading);
+    ui->actionProcess_metadata->setDisabled(loading);
 
     ui->actionThumbnail->setDisabled(loading);
     ui->actionList->setDisabled(loading);
@@ -2801,6 +2817,7 @@ void MainWindow::loadPlaylistIntoLibrary(QString playlistName, bool autoPlay)
             onLibraryLoadingStatusChange("Loading playlist...");
 
             loadingLibraryFuture = QtConcurrent::run([this, playlistName, autoPlay]() {
+                emit backgroundProcessStateChange("Loading playlist", -1);
                 selectedPlaylistName = playlistName;
                 auto playlist = m_xtengine->mediaLibraryHandler()->getPlaylist(selectedPlaylistName);
                 _playListViewModel->populate(playlist);
@@ -2813,6 +2830,8 @@ void MainWindow::loadPlaylistIntoLibrary(QString playlistName, bool autoPlay)
                 {
                     emit playlistLoaded();
                 }
+
+                emit backgroundProcessStateChange(nullptr, -1);
             });
     }
     else
@@ -3081,3 +3100,19 @@ void MainWindow::on_actionStored_DLNA_links_triggered()
 {
     _dlnaScriptLinksDialog->showDialog();
 }
+
+void MainWindow::on_actionProcess_metadata_triggered()
+{
+    if(DialogHandler::Dialog(this, "This will set metadata using the algrorith on first scan.\nAdding smart tags and mfs tags based on the scan.\nIt will not change any user tags set by you.") == QDialog::Accepted)
+    {
+        if(!m_xtengine->mediaLibraryHandler()->isLibraryLoading() &&
+            !m_xtengine->mediaLibraryHandler()->metadataProcessing() &&
+            !m_xtengine->mediaLibraryHandler()->thumbProcessRunning())
+        {
+            m_xtengine->mediaLibraryHandler()->startMetadataProcess(true);
+        } else {
+            DialogHandler::MessageBox(this, "Please wait for the current media process has\nfinished before running a metadata process.", XLogLevel::Warning);
+        }
+    }
+}
+

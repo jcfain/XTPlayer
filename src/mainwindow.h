@@ -163,6 +163,8 @@ private slots:
     void onPlaylistLoaded(LibraryListItem27 autoPlayItem = LibraryListItem27());
     void onBackFromPlaylistLoaded();
 
+    void on_actionProcess_metadata_triggered();
+
 signals:
     void keyPressed(QKeyEvent * event);
     void keyReleased(QKeyEvent * event);
@@ -182,6 +184,7 @@ signals:
     void backFromPlaylistLoaded();
     void cleanUpThumbsFinished();
     void cleanUpThumbsFailed();
+    void backgroundProcessStateChange(QString message, float percentage);
     //void randomizeComplete();
 protected:
     virtual void keyPressEvent(QKeyEvent *event) override
@@ -372,6 +375,8 @@ private:
 
     void setupLibraryGrid(QGridLayout* layout);
     void setupTagsPopup();
+
+    void setLoadingStatus(QString message, float percentage);
 };
 extern void startThumbProcess(MainWindow* mainWindow);
 #endif // MAINWINDOW_H
