@@ -1,5 +1,9 @@
 #include "libraryItemSettingsDialog.h"
 
+#include <cmath>
+#include <QCheckBox>
+#include <QGroupBox>
+
 #include "lib/handler/loghandler.h"
 #include "lib/handler/settingshandler.h"
 
@@ -65,9 +69,42 @@ LibraryItemSettingsDialog::LibraryItemSettingsDialog(QWidget *parent) : QDialog(
         moneyShotLineEdit->setText(QString::number(-1));
         _libraryListItemMetaData.moneyShotMillis = -1;
     });
+
+    QGroupBox* tagsWidget = new QGroupBox(this);
+    tagsWidget->setTitle("Tags");
+    QGridLayout* tagsLayout = new QGridLayout(this);
+    tagsWidget->setLayout(tagsLayout);
+
+    QStringList userTags = SettingsHandler::getTags();
+    int currentTagRow = 0;
+    int currentTagColumn = 0;
+    int maxRows = round(userTags.count()/4);
+    foreach (QString tag, userTags) {
+        QCheckBox* tagCheckbox = new QCheckBox(this);
+        tagCheckbox->setText(tag);
+        tagCheckbox->setChecked(_libraryListItemMetaData.tags.contains(tag));
+        connect(tagCheckbox, &QCheckBox::clicked, this, [this, tag](bool checked){
+            if(!checked) {
+                m_itemTagsToRemove.append(tag);
+                m_itemTagsToAdd.removeAll(tag);
+            } else if(checked) {
+                m_itemTagsToAdd.append(tag);
+                m_itemTagsToRemove.removeAll(tag);
+            }
+        });
+        tagsLayout->addWidget(tagCheckbox, currentTagRow, currentTagColumn);
+        currentTagRow++;
+        if(currentTagRow > maxRows) {
+            currentTagRow = 0;
+            currentTagColumn++;
+        }
+    }
+
     layout->addWidget(moneyShotLabel, currentRow, 0, 1, 1);
     layout->addWidget(moneyShotLineEdit, currentRow, 1, 1, 1);
     layout->addWidget(resetMoneyShotButton, currentRow, 2, 1, 1);
+    currentRow++;
+    layout->addWidget(tagsWidget, currentRow, 0, 1, 3);
     currentRow++;
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox
@@ -110,6 +147,13 @@ void LibraryItemSettingsDialog::showDialog(LibraryItemSettingsDialog *dialog, bo
 //        if (re.exactMatch(ms))
 //            _libraryListItemMetaData.moneyShotMillis = ms.isEmpty() ? -1 : ms.toLongLong();
         SettingsHandler::setLiveOffset(_libraryListItemMetaData.offset);
+        foreach (QString tag, dialog->m_itemTagsToRemove) {
+            _libraryListItemMetaData.tags.removeAll(tag);
+        }
+        foreach (QString tag, dialog->m_itemTagsToAdd) {
+            _libraryListItemMetaData.tags.removeAll(tag);
+            _libraryListItemMetaData.tags.append(tag);
+        }
         SettingsHandler::updateLibraryListItemMetaData(_libraryListItemMetaData);
     }
     dialog->deleteLater();

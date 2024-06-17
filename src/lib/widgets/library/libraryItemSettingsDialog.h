@@ -25,6 +25,8 @@ private:
     QLabel* globalOffsetValueLabel;
     QLabel* smartOffsetValueLabel;
     QSpinBox* globalOffsetSpinBox;
+    QStringList m_itemTagsToAdd;
+    QStringList m_itemTagsToRemove;
 
 
     QLabel* moneyShotLabel;
