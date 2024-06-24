@@ -72,7 +72,7 @@ LibraryItemSettingsDialog::LibraryItemSettingsDialog(QWidget *parent) : QDialog(
 
     QGroupBox* tagsWidget = new QGroupBox(this);
     tagsWidget->setTitle("Tags");
-    QGridLayout* tagsLayout = new QGridLayout(this);
+    QGridLayout* tagsLayout = new QGridLayout(tagsWidget);
     tagsWidget->setLayout(tagsLayout);
 
     QStringList userTags = SettingsHandler::getTags();
@@ -119,7 +119,7 @@ LibraryItemSettingsDialog::LibraryItemSettingsDialog(QWidget *parent) : QDialog(
     conn = connect(buttonBox, &QDialogButtonBox::rejected,
                    this, &LibraryItemSettingsDialog::reject);
     Q_ASSERT(conn);
-    setLayout(layout);
+    //setLayout(layout);
 }
 
 void LibraryItemSettingsDialog::getSettings(QWidget *parent, const LibraryListItem27 item, bool *ok)

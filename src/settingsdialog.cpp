@@ -329,6 +329,10 @@ void SettingsDialog::setupUi()
 
         ui.disableFunscriptHeatmapheckBox->setChecked(XTPSettings::getHeatmapDisabled());
 
+        int percentage = SettingsHandler::getViewedThreshold()*100;
+        ui.viewedPercentageSpinBox->setValue(percentage);
+        ui.viewedPercentageSpinBox->setSuffix("%");
+
         updateIPAddress();
 
         connect(SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
@@ -2007,5 +2011,11 @@ void SettingsDialog::on_defaultSmartTagsButton_clicked()
 
     if(reply == QMessageBox::Yes)
         SettingsHandler::SetSmartTagDefaults();
+}
+
+void SettingsDialog::on_viewedPercentageSpinBox_valueChanged(int arg1)
+{
+    float percentage = arg1/(float)100;
+    SettingsHandler::setViewedThreshold(percentage);
 }
 

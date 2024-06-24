@@ -240,6 +240,8 @@ private slots:
 
     void on_defaultSmartTagsButton_clicked();
 
+    void on_viewedPercentageSpinBox_valueChanged(int arg1);
+
 private:
 
     Ui::SettingsDialog ui;
