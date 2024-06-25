@@ -66,6 +66,7 @@ public:
     void resetMediaControlStatus(bool playing);
     void setSkipToMoneyShotEnabled(bool enabled);
     void setActions(QHash<qint64, int> actions);
+    void clearActions();
     void setAltScripts(QList<ScriptInfo> scriptInfos);
     bool alternateFunscriptNext();
     bool alternateFunscriptPrev();

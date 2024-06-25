@@ -442,10 +442,15 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     });
     connect(m_xtengine->syncHandler(), &SyncHandler::funscriptLoaded, this, [this](QString funscriptPath) {
         // Generate first load moneyshot based off heatmap if not already set.
-        auto funscript = m_xtengine->syncHandler()->getFunscriptHandler()->currentFunscript();
-        if(funscript) {
-            _playerControlsFrame->setActions(funscript->actions);
-        }
+        auto funscriptHandler = m_xtengine->syncHandler()->getFunscriptHandler();
+        if(funscriptHandler)
+        {
+            auto funscript = funscriptHandler->currentFunscript();
+            if(funscript) {
+                _playerControlsFrame->setActions(funscript->actions);
+            }
+        } else
+            _playerControlsFrame->clearActions();
     });
 
     _xSettings->init(videoHandler, m_xtengine->connectionHandler());
@@ -1488,8 +1493,7 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
             || (videoHandler->file() != selectedFileListItem.path
             || !customScript.isEmpty()))
     {
-        QString scriptFile;
-        QList<QString> invalidScripts;
+        //QString scriptFile;
         deviceHome();
         videoHandler->setLoading(true);
         m_xtengine->syncHandler()->stopAll();
@@ -1503,9 +1507,10 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
             _videoPreviewWidget->setFile(selectedFileListItem.path);
             //videoHandler->load();
         }
-        scriptFile = customScript.isEmpty() ? selectedFileListItem.zipFile.isEmpty() ? selectedFileListItem.script : selectedFileListItem.zipFile : customScript;
-        invalidScripts = m_xtengine->syncHandler()->load(scriptFile);
-        m_xtengine->mediaLibraryHandler()->findAlternateFunscripts(scriptFile);
+        selectedFileListItem.script = customScript.isEmpty() ? selectedFileListItem.zipFile.isEmpty() ? selectedFileListItem.script : selectedFileListItem.zipFile : customScript;
+        SyncLoadState loadState = m_xtengine->syncHandler()->load(selectedFileListItem);
+        if(loadState.hasScript)
+            m_xtengine->mediaLibraryHandler()->findAlternateFunscripts(loadState.mainScript);
         QString filesWithLoadingIssues = "";
         if(selectedFileListItem.type == LibraryListItemType::FunscriptType && m_xtengine->syncHandler()->isLoaded())
             m_xtengine->syncHandler()->playStandAlone();
@@ -1517,17 +1522,17 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
         else if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
             videoHandler->play();
 
-        if(!invalidScripts.empty())
+        if(!loadState.invalidScripts.empty())
         {
             filesWithLoadingIssues += "The following scripts had issues loading:\n\n";
-            foreach(auto invalidFunscript, invalidScripts)
+            foreach(auto invalidFunscript, loadState.invalidScripts)
                 filesWithLoadingIssues += "* " + invalidFunscript + "\n";
             filesWithLoadingIssues += "\n\nThis is may be due to an invalid JSON format.\nTry downloading the script again or asking the script maker.\nYou may also find some information running XTP in debug mode.";
             DialogHandler::MessageBox(this, filesWithLoadingIssues, XLogLevel::Critical);
         }
-        if(selectedFileListItem.type != LibraryListItemType::FunscriptType && !m_xtengine->syncHandler()->isLoaded() && !invalidScripts.contains(scriptFile))
+        if(selectedFileListItem.type != LibraryListItemType::FunscriptType && !m_xtengine->syncHandler()->isLoaded() && !loadState.invalidScripts.contains(selectedFileListItem.script))
         {
-            on_scriptNotFound(scriptFile);
+            on_scriptNotFound(selectedFileListItem.script);
         }
     }
 }
@@ -1562,7 +1567,9 @@ void MainWindow::updateMetaData(LibraryListItem27 libraryListItem)
 
 void MainWindow::alternateFunscriptSelected(ScriptInfo script)
 {
-    m_xtengine->syncHandler()->swap(script.path);
+    auto playingItem = XMediaStateHandler::getPlaying();
+    playingItem.script = script.path;
+    m_xtengine->syncHandler()->swap(playingItem);
 }
 
 void MainWindow::alternateFunscriptsFound(QList<ScriptInfo> scriptInfos)

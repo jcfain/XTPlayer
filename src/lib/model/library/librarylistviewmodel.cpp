@@ -152,10 +152,15 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
         }
         else if (role == Qt::ForegroundRole)
         {
-            if (item.type != LibraryListItemType::PlaylistInternal && !item.hasScript)
-                return QColor(Qt::gray);
-            if(item.isMFS)
-                return QColor(Qt::green);
+            if(item.type != LibraryListItemType::PlaylistInternal)
+            {
+                if (!item.hasScript && item.isMFS)
+                    return QColor(Qt::GlobalColor::cyan);
+                if (!item.hasScript)
+                    return QColor(Qt::gray);
+                if(item.isMFS)
+                    return QColor(Qt::green);
+            }
         }
         else if (role == Qt::BackgroundRole)
         {

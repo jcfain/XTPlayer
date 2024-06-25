@@ -596,6 +596,11 @@ void PlayerControls::setActions(QHash<qint64, int> actions) {
         lblHeatmap->setActions(actions);
 }
 
+void PlayerControls::clearActions()
+{
+    lblHeatmap->clearMap();
+}
+
 void PlayerControls::onAlternateFunscriptSelected(QString script)
 {
     auto scriptPath = alternateStriptCmb->currentData(Qt::UserRole).value<ScriptInfo>();

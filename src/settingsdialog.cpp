@@ -679,8 +679,8 @@ void SettingsDialog::setUpTCodeChannelUI()
          connect(axisRangeSlider, QOverload<QString>::of(&RangeSlider::mouseRelease), this, &SettingsDialog::onRange_mouseRelease);
 
          // Multipliers
-         if(axis->Dimension != AxisDimension::Heave)
-         {
+         // if(axis->Dimension != AxisDimension::Heave)
+         // {
              QCheckBox* multiplierCheckbox = new QCheckBox(this);
              multiplierCheckbox->setText(axis->FriendlyName);
              multiplierCheckbox->setChecked(SettingsHandler::getMultiplierChecked(channelName));
@@ -756,7 +756,7 @@ void SettingsDialog::setUpTCodeChannelUI()
              _multiplierWidgets.append(damperInput);
 
              multiplierGridRow++;
-         }
+         // }
          QCheckBox* invertedCheckbox = new QCheckBox(this);
          invertedCheckbox->setText(axis->FriendlyName);
          invertedCheckbox->setChecked(SettingsHandler::getChannelFunscriptInverseChecked(channelName));
