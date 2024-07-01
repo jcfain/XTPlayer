@@ -48,7 +48,7 @@ void TagManager::on_removeButton_clicked()
     {
         foreach(auto item, ui.listWidget->selectedItems())
         {
-            SettingsHandler::removeUserTag(item->text());
+            m_smartTagMode ? SettingsHandler::removeUserSmartTag(item->text()) : SettingsHandler::removeUserTag(item->text());
         }
         qDeleteAll(ui.listWidget->selectedItems());
         m_modified = true;

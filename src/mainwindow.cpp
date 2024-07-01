@@ -438,7 +438,9 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
 
     connect(m_xtengine->syncHandler(),  &SyncHandler::funscriptStandaloneDurationChanged, this, [this](qint64 value) {
         _playerControlsFrame->setDuration(value);
-        processMetaData(playingLibraryListItem());
+        auto item = XMediaStateHandler::getPlaying();
+        if(item)
+            processMetaData(item);
     });
     connect(m_xtengine->syncHandler(), &SyncHandler::funscriptLoaded, this, [this](QString funscriptPath) {
         // Generate first load moneyshot based off heatmap if not already set.
@@ -513,7 +515,9 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(videoHandler, &VideoHandler::durationChange, this, [this](qint64 value) {
         //m_heatmap->drawPixmapAsync(_playerControlsFrame->width(), 25, m_xtengine->syncHandler()->getFunscriptHandler(), value);
         _playerControlsFrame->setDuration(value);
-        processMetaData(playingLibraryListItem());
+        auto item = XMediaStateHandler::getPlaying();
+        if(item)
+            processMetaData(item);
     });
 
     connect(_playerControlsFrame, &PlayerControls::seekSliderMoved, this, &MainWindow::on_timeline_currentTimeMove);
@@ -646,8 +650,9 @@ void MainWindow::onAboutToQuit()
     LogHandler::Info("XTPlayer about to quit");
     XTPSettings::setLibraryWindowOpen(_libraryDockMode);
     closeWelcomeDialog();
-    if(!playingLibraryListItem().ID.isEmpty())
-        updateMetaData(playingLibraryListItem());
+    auto item = XMediaStateHandler::getPlaying();
+    if(item)
+        updateMetaData(item);
     XTPSettings::save();
     loadingLibraryStop = true;
     _waitForStopFutureCancel = true;
@@ -1067,9 +1072,10 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                     QAction* regenerateThumbAction = myMenu.addAction(tr("Regenerate thumbnail"), this, &MainWindow::regenerateThumbNail);
                     regenerateThumbAction->setToolTip("Overwrites the current image file with a randomly chosen time.");
 
-                    if(!playingLibraryListItem().ID.isEmpty() && (videoHandler->isPlaying() || videoHandler->isPaused()))
+                    auto item = XMediaStateHandler::getPlaying();
+                    if(item && (videoHandler->isPlaying() || videoHandler->isPaused()))
                     {
-                        if(playingLibraryListItem().ID == selectedFileListItem.ID)
+                        if(item->ID == selectedFileListItem.ID)
                             myMenu.addAction(tr("Set thumbnail from current"), this, &MainWindow::setThumbNailFromCurrent);
                     }
                     if(selectedFileListItem.thumbFileExists && selectedFileListItem.managedThumb)
@@ -1081,9 +1087,10 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                         myMenu.addAction(tr("Unlock thumb"), this, &MainWindow::unlockThumb);
                 }
             }
-            if(!playingLibraryListItem().ID.isEmpty() && (videoHandler->isPlaying() || videoHandler->isPaused()))
+            auto item = XMediaStateHandler::getPlaying();
+            if(item && (videoHandler->isPlaying() || videoHandler->isPaused()))
             {
-                if(playingLibraryListItem().ID == selectedFileListItem.ID)
+                if(item->ID == selectedFileListItem.ID)
                     myMenu.addAction(tr("Set moneyshot from current"), this, [this, selectedFileListItem] () {
                         SettingsHandler::instance()->setMoneyShot(selectedFileListItem, videoHandler->position());
                     });
@@ -1117,7 +1124,8 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                 });
             }
             myMenu.addAction(tr("Edit media settings..."), this, [this, selectedFileListItem] () {
-                LibraryItemSettingsDialog::getSettings(libraryList, selectedFileListItem);
+                auto item = m_xtengine->mediaLibraryHandler()->findItemByMediaPath(selectedFileListItem.path);
+                LibraryItemSettingsDialog::getSettings(libraryList, item);
             });
             myMenu.addAction(tr("Process metadata"), this, [this, selectedFileListItem] () {
                 if(!m_xtengine->mediaLibraryHandler()->metadataProcessing()) {
@@ -1312,23 +1320,21 @@ void MainWindow::on_actionSelect_library_triggered()
 
 void MainWindow::on_LibraryList_itemClicked(QModelIndex index)
 {
-    if(index.isValid())
-    {
-        LibraryListItem27 selectedFileListItem = index.data().value<LibraryListItem27>();
-        if((videoHandler->isPlaying() && !videoHandler->isPaused()))
-        {
-            auto playingFile = videoHandler->file();
-            _playerControlsFrame->setPlayIcon(playingFile == selectedFileListItem.path);
-        }
-        else if(m_xtengine->syncHandler()->isPlayingStandAlone() && !m_xtengine->syncHandler()->isPaused())
-        {
-            auto playingFile = m_xtengine->syncHandler()->getPlayingStandAloneScript();
-            _playerControlsFrame->setPlayIcon(playingFile == selectedFileListItem.path);
-        }
-        ui->statusbar->showMessage(selectedFileListItem.nameNoExtension);
-//        selectedLibraryListItem = (LibraryListWidgetItem*)item;
-//        selectedLibraryListIndex = libraryList->currentRow();
-    }
+    // if(index.isValid() && !videoHandler->isPlaying() && !m_xtengine->syncHandler()->isPlayingStandAlone())
+    // {
+        // LibraryListItem27 selectedFileListItem = index.data().value<LibraryListItem27>();
+        // if((videoHandler->isPlaying() && !videoHandler->isPaused()))
+        // {
+        //     auto playingFile = videoHandler->file();
+        //     _playerControlsFrame->setPlayIcon(playingFile == selectedFileListItem.path);
+        // }
+        // else if(m_xtengine->syncHandler()->isPlayingStandAlone() && !m_xtengine->syncHandler()->isPaused())
+        // {
+        //     auto playingFile = m_xtengine->syncHandler()->getPlayingStandAloneScript();
+        //     _playerControlsFrame->setPlayIcon(playingFile == selectedFileListItem.path);
+        // }
+        // ui->statusbar->showMessage(selectedFileListItem.nameNoExtension);
+    // }
 }
 
 void MainWindow::regenerateThumbNail()
@@ -1499,7 +1505,9 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
         m_xtengine->syncHandler()->stopAll();
 
         //playingLibraryListIndex = libraryList->selectedRow();
-        XMediaStateHandler::setPlaying(selectedFileListItem);
+
+        auto item = m_xtengine->mediaLibraryHandler()->findItemByMediaPath(selectedFileListItem.path);
+        XMediaStateHandler::setPlaying(item);
 
         if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
         {
@@ -1537,39 +1545,44 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
     }
 }
 
-void MainWindow::processMetaData(LibraryListItem27 libraryListItem)
+void MainWindow::processMetaData(const LibraryListItem27& libraryListItem)
 {
     if(libraryListItem.type != LibraryListItemType::VR)
     {
-        auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem);
-        if(libraryListItemMetaData.lastLoopEnabled && libraryListItemMetaData.lastLoopStart > -1 && libraryListItemMetaData.lastLoopEnd > libraryListItemMetaData.lastLoopStart)
+        if(libraryListItem.metadata.lastLoopEnabled && libraryListItem.metadata.lastLoopStart > -1 && libraryListItem.metadata.lastLoopEnd > libraryListItem.metadata.lastLoopStart)
         {
             _playerControlsFrame->SetLoop(true);
         }
     }
 }
 
-void MainWindow::updateMetaData(LibraryListItem27 libraryListItem)
+void MainWindow::updateMetaData(LibraryListItem27* libraryListItem)
 {
-    auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(libraryListItem);
-    if(libraryListItem.type != LibraryListItemType::VR)
+    if(libraryListItem)
     {
-        libraryListItemMetaData.lastPlayPosition = videoHandler->position();
-        libraryListItemMetaData.lastLoopEnabled = _playerControlsFrame->getAutoLoop();
-        if(libraryListItemMetaData.lastLoopEnabled)
+        if(libraryListItem->type != LibraryListItemType::VR)
         {
-            libraryListItemMetaData.lastLoopStart = _playerControlsFrame->getStartLoop();
-            libraryListItemMetaData.lastLoopEnd = _playerControlsFrame->getEndLoop();
+            libraryListItem->metadata.lastPlayPosition = videoHandler->position();
+            libraryListItem->metadata.lastLoopEnabled = _playerControlsFrame->getAutoLoop();
+            if(libraryListItem->metadata.lastLoopEnabled)
+            {
+                libraryListItem->metadata.lastLoopStart = _playerControlsFrame->getStartLoop();
+                libraryListItem->metadata.lastLoopEnd = _playerControlsFrame->getEndLoop();
+            }
         }
+        SettingsHandler::updateLibraryListItemMetaData(libraryListItem);
     }
-    SettingsHandler::updateLibraryListItemMetaData(libraryListItemMetaData);
 }
 
 void MainWindow::alternateFunscriptSelected(ScriptInfo script)
 {
     auto playingItem = XMediaStateHandler::getPlaying();
-    playingItem.script = script.path;
-    m_xtengine->syncHandler()->swap(playingItem);
+    if(playingItem)
+    {
+        auto swappedScriptItem = LibraryListItem27(playingItem);
+        swappedScriptItem.script = script.path;
+        m_xtengine->syncHandler()->swap(swappedScriptItem);
+    }
 }
 
 void MainWindow::alternateFunscriptsFound(QList<ScriptInfo> scriptInfos)
@@ -1765,25 +1778,8 @@ void MainWindow::on_PlayBtn_clicked()
 {
     if (libraryList->count() > 0)
     {
-        LibraryListItem27* selectedItem;
-//        if(libraryList->selectedItems().length() == 0)
-//        {
-//            selectedItem = setCurrentLibraryRow(0);
-//        }
-//        else
-//        {
-//            selectedItem = libraryList->selectedItem();
-//        }
         LibraryListItem27 selectedFileListItem = libraryList->selectedItem();
-        if(selectedFileListItem.type == LibraryListItemType::PlaylistInternal)
-        {
-            loadPlaylistIntoLibrary(selectedFileListItem.nameNoExtension, true);
-        }
-        else if((videoHandler->isPlaying() && selectedFileListItem.path != videoHandler->file()) || (!videoHandler->isPlaying() && !m_xtengine->syncHandler()->isPlayingStandAlone()))
-        {
-            stopAndPlayMedia(selectedFileListItem);
-        }
-        else if(videoHandler->isPaused() || videoHandler->isPlaying())
+        if(videoHandler->isPaused() || videoHandler->isPlaying())
         {
             videoHandler->togglePause();
             m_xtengine->syncHandler()->togglePause();
@@ -1791,6 +1787,14 @@ void MainWindow::on_PlayBtn_clicked()
         else if(m_xtengine->syncHandler()->isPlayingStandAlone())
         {
             m_xtengine->syncHandler()->togglePause();
+        }
+        else if(selectedFileListItem.type == LibraryListItemType::PlaylistInternal)
+        {
+            loadPlaylistIntoLibrary(selectedFileListItem.nameNoExtension, true);
+        }
+        else
+        {
+            stopAndPlayMedia(selectedFileListItem);
         }
     }
 }
@@ -1870,8 +1874,10 @@ void MainWindow::on_seekslider_hover(int position, qint64 sliderValue)
     //    if (!Config::instance().previewEnabled())
     //        return;
 
+
+    auto item = XMediaStateHandler::getPlaying();
     if(!XTPSettings::getDisableTimeLinePreview() &&
-            playingLibraryListItem().type == LibraryListItemType::Video &&
+        item && item->type == LibraryListItemType::Video &&
             !m_xtengine->syncHandler()->isPlayingStandAlone() &&
             !_playerControlsFrame->getTimeLineMousePressed() &&
             (videoHandler->isPlaying() || videoHandler->isPaused()))
@@ -2003,8 +2009,9 @@ void MainWindow::on_standaloneFunscript_start()
 void MainWindow::on_standaloneFunscript_stop()
 {
     LogHandler::Debug("Enter on_standaloneFunscript_stop");
-    if(!playingLibraryListItem().ID.isEmpty())
-        updateMetaData(playingLibraryListItem());
+    auto item = XMediaStateHandler::getPlaying();
+    if(item)
+        updateMetaData(item);
     videoHandler->setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(false);
     XMediaStateHandler::stop();
@@ -2028,8 +2035,9 @@ void MainWindow::on_media_start()
 void MainWindow::on_media_stop()
 {
     LogHandler::Debug("Enter on_media_stop");
-    if(!playingLibraryListItem().ID.isEmpty())
-        updateMetaData(playingLibraryListItem());
+    auto item = XMediaStateHandler::getPlaying();
+    if(item)
+        updateMetaData(item);
     m_xtengine->syncHandler()->on_other_media_state_change(XMediaState::Stopped);
     videoHandler->setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(false);
@@ -2531,11 +2539,6 @@ bool MainWindow::isLibraryLoading()
     return m_xtengine->mediaLibraryHandler()->isLibraryLoading() || loadingLibraryFuture.isRunning();
 }
 
-LibraryListItem27 MainWindow::playingLibraryListItem()
-{
-    return XMediaStateHandler::getPlaying();
-}
-
 void MainWindow::resizeThumbs(int size)
 {
 //    if(!isLibraryLoading())
@@ -2741,20 +2744,20 @@ void MainWindow::on_loopToggleButton_toggled(bool checked)
     {
         connect(_playerControlsFrame, &PlayerControls::loopRangeChanged, this, &MainWindow::onLoopRange_valueChanged);
         videoHandler->setRepeat(-1);
-        auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(playingLibraryListItem());
-        if(libraryListItemMetaData.lastLoopStart > -1 && libraryListItemMetaData.lastLoopEnd > libraryListItemMetaData.lastLoopStart)
+        auto item = XMediaStateHandler::getPlaying();
+        if(item && item->metadata.lastLoopStart > -1 && item->metadata.lastLoopEnd > item->metadata.lastLoopStart)
         {
-            QTimer::singleShot(250, this, [this, libraryListItemMetaData]() {
-                _playerControlsFrame->setStartLoop(libraryListItemMetaData.lastLoopStart);
-                _playerControlsFrame->setEndLoop(libraryListItemMetaData.lastLoopEnd);
+            QTimer::singleShot(250, this, [this, item]() {
+                _playerControlsFrame->setStartLoop(item->metadata.lastLoopStart);
+                _playerControlsFrame->setEndLoop(item->metadata.lastLoopEnd);
             });
 //            qint64 sliderToVideoPosition = XMath::mapRange(libraryListItemMetaData.lastLoopStart,  (qint64)0, (qint64)100, (qint64)0, videoHandler->duration());
 //            videoHandler->setPosition(sliderToVideoPosition +100);
         }
-        else
+        else if(item)
         {
             //qint64 videoToSliderPosition = XMath::mapRange(videoHandler->position(),  (qint64)0, videoHandler->duration(), (qint64)0, (qint64)100);
-            updateMetaData(playingLibraryListItem());
+            updateMetaData(item);
             _playerControlsFrame->setStartLoop(mediaPosition());
         }
         //_playerControlsFrame->setLoopMinimumRange(1000);
@@ -3043,11 +3046,11 @@ void MainWindow::skipToMoneyShot()
         if(videoHandler->isPlaying()) {
             if(_playerControlsFrame->getAutoLoop())
                 _playerControlsFrame->SetLoop(false);
-            LibraryListItem27 selectedLibraryListItem27 = playingLibraryListItem();
-            auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(selectedLibraryListItem27);
-            if (libraryListItemMetaData.moneyShotMillis > -1 && libraryListItemMetaData.moneyShotMillis < videoHandler->duration())
+            //LibraryListItem27 selectedLibraryListItem27 = playingLibraryListItem();
+            auto item = XMediaStateHandler::getPlaying();
+            if (item && item->metadata.moneyShotMillis > -1 && item->metadata.moneyShotMillis < videoHandler->duration())
             {
-                videoHandler->setPosition(libraryListItemMetaData.moneyShotMillis);
+                videoHandler->setPosition(item->metadata.moneyShotMillis);
             }
             else
             {
@@ -3079,7 +3082,7 @@ void MainWindow::skipToMoneyShot()
 
 void MainWindow::skipToNextAction()
 {
-    if(m_xtengine->syncHandler()->isLoaded())
+    if(m_xtengine->syncHandler()->isPlayingInternal())
     {
         if(_playerControlsFrame->getAutoLoop())
             _playerControlsFrame->SetLoop(false);

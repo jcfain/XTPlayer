@@ -126,7 +126,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     altScriptBtn = new QPushButton(this);
     altScriptBtn->setObjectName(QString::fromUtf8("altScriptBtn"));
     altScriptBtn->setProperty("cssClass", "playerControlButton");
-    altScriptBtn->setEnabled(true);
+    altScriptBtn->setEnabled(false);
     altScriptBtn->setToolTip("Select an alternative script if any were found with names that start with the video name.\n"
                              "If you want alternate scripts to show up here. the script name needs to be in the following format\n"
                              "<videoname><modName>.funscript\n"
@@ -167,9 +167,9 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 
 
     mediaSettingsBtn = new QPushButton(this);
+    mediaSettingsBtn->setEnabled(false);
     mediaSettingsBtn->setObjectName(QString::fromUtf8("mediaSettingsBtn"));
     mediaSettingsBtn->setProperty("cssClass", "playerControlButton");
-    mediaSettingsBtn->setEnabled(true);
     mediaSettingsBtn->setToolTip("Open the current media settings dialog");
     mediaSettingsBtn->setMinimumSize(QSize(0, 20));
     QIcon iconMediaSettings;
@@ -180,7 +180,9 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     playerControlsGrid->addWidget(mediaSettingsBtn, row, 3, 1, 1);
 
     connect(mediaSettingsBtn, &QPushButton::clicked, this, [this]() {
-        LibraryItemSettingsDialog::getSettings(this, XMediaStateHandler::getPlaying());
+        auto item = XMediaStateHandler::getPlaying();
+        if(item)
+            LibraryItemSettingsDialog::getSettings(this, item);
     });
 
 //    settingsButton = new QPushButton(this);
@@ -348,6 +350,7 @@ void PlayerControls::resetMediaControlStatus(bool playing)
     loopToggleButton->setEnabled(playing);
     mediaSettingsBtn->setEnabled(playing);
     _stopBtn->setEnabled(playing);
+    altScriptBtn->setEnabled(playing);
     setPlayIcon(playing);
     if(!playing)
     {
@@ -632,6 +635,8 @@ void PlayerControls::setAltScripts(QList<ScriptInfo> scriptInfos)
 
     altScriptBtn->setText(QString::number(alternateCount));
     connect(alternateStriptCmb, &QComboBox::currentTextChanged, this, &PlayerControls::onAlternateFunscriptSelected);
+
+    altScriptBtn->setEnabled(alternateCount > 0);
 }
 
 bool PlayerControls::alternateFunscriptNext()

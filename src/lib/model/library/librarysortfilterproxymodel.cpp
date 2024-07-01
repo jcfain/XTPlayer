@@ -134,10 +134,9 @@ bool LibrarySortFilterProxyModel::filterAcceptsRow(int sourceRow,
     //For some reason sorting random without any playlists crashes. Add dummy and hide it.
     if(item.nameNoExtension == "DummyPlaylistThatNoOneShouldEverSeeOrNameTheSame")
         return false;
-    LibraryListItemMetaData258 metadata = SettingsHandler::getLibraryListItemMetaData(item);
     bool hasAllTags = m_tags.empty();
     foreach (QString tag, m_tags) {
-        if(!metadata.tags.contains(tag)) {
+        if(!item.metadata.tags.contains(tag)) {
             hasAllTags = false;
             break;
         }

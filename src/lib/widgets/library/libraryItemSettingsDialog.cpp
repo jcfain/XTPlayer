@@ -38,13 +38,13 @@ LibraryItemSettingsDialog::LibraryItemSettingsDialog(QWidget *parent) : QDialog(
     offsetSpinBox->setSingleStep(1);
     connect(offsetSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value) {
         SettingsHandler::setLiveOffset(value);
-        _libraryListItemMetaData.offset = value;
+        _libraryListItem->metadata.offset = value;
         updateOffsetLabel();
     });
     //offsetSpinBox->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
     offsetSpinBox->setMinimum(std::numeric_limits<int>::lowest());
     offsetSpinBox->setMaximum(std::numeric_limits<int>::max());
-    offsetSpinBox->setValue(_libraryListItemMetaData.offset);
+    offsetSpinBox->setValue(_libraryListItem->metadata.offset);
     layout->addWidget(offsetLabel, currentRow, 0, 1, 1);
     layout->addWidget(offsetSpinBox, currentRow, 1, 1, 2);
     currentRow++;
@@ -61,13 +61,13 @@ LibraryItemSettingsDialog::LibraryItemSettingsDialog(QWidget *parent) : QDialog(
     QString maxLong = "9223372036854775807";
     moneyShotLineEdit->setMaxLength(maxLong.length());
     moneyShotLineEdit->setReadOnly(true);
-    moneyShotLineEdit->setText(QString::number(_libraryListItemMetaData.moneyShotMillis));
+    moneyShotLineEdit->setText(QString::number(_libraryListItem->metadata.moneyShotMillis));
 
     resetMoneyShotButton = new QPushButton(this);
     resetMoneyShotButton->setText("Reset");
     connect(resetMoneyShotButton, &QPushButton::clicked, this, [this](bool checked) {
         moneyShotLineEdit->setText(QString::number(-1));
-        _libraryListItemMetaData.moneyShotMillis = -1;
+        _libraryListItem->metadata.moneyShotMillis = -1;
     });
 
     QGroupBox* tagsWidget = new QGroupBox(this);
@@ -82,7 +82,7 @@ LibraryItemSettingsDialog::LibraryItemSettingsDialog(QWidget *parent) : QDialog(
     foreach (QString tag, userTags) {
         QCheckBox* tagCheckbox = new QCheckBox(this);
         tagCheckbox->setText(tag);
-        tagCheckbox->setChecked(_libraryListItemMetaData.tags.contains(tag));
+        tagCheckbox->setChecked(_libraryListItem->metadata.tags.contains(tag));
         connect(tagCheckbox, &QCheckBox::clicked, this, [this, tag](bool checked){
             if(!checked) {
                 m_itemTagsToRemove.append(tag);
@@ -122,16 +122,19 @@ LibraryItemSettingsDialog::LibraryItemSettingsDialog(QWidget *parent) : QDialog(
     //setLayout(layout);
 }
 
-void LibraryItemSettingsDialog::getSettings(QWidget *parent, const LibraryListItem27 item, bool *ok)
+void LibraryItemSettingsDialog::getSettings(QWidget *parent, LibraryListItem27* item, bool *ok)
 {
-    _libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(item);
-    LibraryItemSettingsDialog *dialog = new LibraryItemSettingsDialog(parent);
-    showDialog(dialog, ok);
+    if(item)
+    {
+        _libraryListItem = item;
+        LibraryItemSettingsDialog *dialog = new LibraryItemSettingsDialog(parent);
+        showDialog(dialog, ok);
+    }
 }
 
 void LibraryItemSettingsDialog::showDialog(LibraryItemSettingsDialog *dialog, bool *ok)
 {
-    dialog->offsetSpinBox->setValue(_libraryListItemMetaData.offset);
+    dialog->offsetSpinBox->setValue(_libraryListItem->metadata.offset);
     //dialog->setModal(false);
     //dialog->setWindowFlags(Qt::WindowStaysOnTopHint);
     const int ret = dialog->exec();
@@ -140,21 +143,21 @@ void LibraryItemSettingsDialog::showDialog(LibraryItemSettingsDialog *dialog, bo
         if(dialog->offsetSpinBox->text().isEmpty())
         {
             dialog->offsetSpinBox->setValue(0);
-            _libraryListItemMetaData.offset = 0;
+            _libraryListItem->metadata.offset = 0;
         }
 //        auto ms = dialog->moneyShotLineEdit->text();
 //        QRegExp re("\\d*");  // a digit (\d), zero or more times (*)
 //        if (re.exactMatch(ms))
 //            _libraryListItemMetaData.moneyShotMillis = ms.isEmpty() ? -1 : ms.toLongLong();
-        SettingsHandler::setLiveOffset(_libraryListItemMetaData.offset);
+        SettingsHandler::setLiveOffset(_libraryListItem->metadata.offset);
         foreach (QString tag, dialog->m_itemTagsToRemove) {
-            _libraryListItemMetaData.tags.removeAll(tag);
+            _libraryListItem->metadata.tags.removeAll(tag);
         }
         foreach (QString tag, dialog->m_itemTagsToAdd) {
-            _libraryListItemMetaData.tags.removeAll(tag);
-            _libraryListItemMetaData.tags.append(tag);
+            _libraryListItem->metadata.tags.removeAll(tag);
+            _libraryListItem->metadata.tags.append(tag);
         }
-        SettingsHandler::updateLibraryListItemMetaData(_libraryListItemMetaData);
+        SettingsHandler::updateLibraryListItemMetaData(_libraryListItem);
     }
     dialog->deleteLater();
 }
@@ -162,7 +165,7 @@ void LibraryItemSettingsDialog::showDialog(LibraryItemSettingsDialog *dialog, bo
 void LibraryItemSettingsDialog::updateOffsetLabel()
 {
     auto offsetText = QString::number(SettingsHandler::getoffSet()) + "ms";
-    if(_libraryListItemMetaData.offset) {
+    if(_libraryListItem->metadata.offset) {
         globalOffsetValueLabel->setStyleSheet("*{color:red}");
         globalOffsetValueLabel->setText(offsetText + " (overridden)");
     } else {
@@ -180,4 +183,4 @@ void LibraryItemSettingsDialog::updateOffsetLabel()
 
 }
 
-LibraryListItemMetaData258 LibraryItemSettingsDialog::_libraryListItemMetaData;
+LibraryListItem27* LibraryItemSettingsDialog::_libraryListItem;

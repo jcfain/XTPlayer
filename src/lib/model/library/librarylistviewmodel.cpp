@@ -128,7 +128,7 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
         auto thumbInt = overRideThumbSizeWidth > -1 ? overRideThumbSizeWidth : SettingsHandler::getThumbSize();
         if (role == Qt::DisplayRole)
         {
-            return (item.isMFS ? "(MFS) " : "") + item.nameNoExtension;
+            return (item.metadata.isMFS ? "(MFS) " : "") + item.nameNoExtension;
         }
         else if(Qt::DecorationRole == role)
         {
@@ -148,17 +148,17 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
         }
         else if (role == Qt::ToolTipRole)
         {
-            return item.toolTip;
+            return item.metadata.toolTip;
         }
         else if (role == Qt::ForegroundRole)
         {
             if(item.type != LibraryListItemType::PlaylistInternal)
             {
-                if (!item.hasScript && item.isMFS)
+                if (!item.hasScript && item.metadata.isMFS)
                     return QColor(Qt::GlobalColor::cyan);
                 if (!item.hasScript)
                     return QColor(Qt::gray);
-                if(item.isMFS)
+                if(item.metadata.isMFS)
                     return QColor(Qt::green);
             }
         }
@@ -169,7 +169,7 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
         else if (role == Qt::FontRole)
         {
             QFont font;
-            if(item.isMFS)
+            if(item.metadata.isMFS)
                 font.setBold(true);
             if(_libraryViewMode == LibraryView::Thumb)
                 font.setPointSizeF((thumbInt * 0.25) * 0.25);

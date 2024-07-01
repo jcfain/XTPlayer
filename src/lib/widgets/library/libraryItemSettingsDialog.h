@@ -16,7 +16,7 @@ class LibraryItemSettingsDialog : public QDialog
     Q_OBJECT
 public:
     explicit LibraryItemSettingsDialog(QWidget *parent = nullptr);
-    static void getSettings(QWidget *parent, const LibraryListItem27 item,  bool *ok = nullptr);
+    static void getSettings(QWidget *parent, LibraryListItem27* item,  bool *ok = nullptr);
 
 private:
     QLabel* offsetLabel;
@@ -33,7 +33,7 @@ private:
     QLineEdit* moneyShotLineEdit;
     QPushButton* resetMoneyShotButton;
 
-    static LibraryListItemMetaData258 _libraryListItemMetaData;
+    static LibraryListItem27* _libraryListItem;
     static void showDialog(LibraryItemSettingsDialog *dialog, bool *ok);
     void updateOffsetLabel();
 };

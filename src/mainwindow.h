@@ -294,7 +294,6 @@ private:
 
     bool isLibraryLoading();
     QString selectedPlaylistName;
-    LibraryListItem27 playingLibraryListItem();
     void onNoLibraryFound();
     void onLibraryNotFound(QStringList paths);
     void openWelcomeDialog();
@@ -365,8 +364,8 @@ private:
     void on_input_device_connectionChanged(ConnectionChangedSignal event);
     void donate();
     void showInGraphicalShell(QString path);
-    void processMetaData(LibraryListItem27 LibraryListItem27);
-    void updateMetaData(LibraryListItem27 LibraryListItem27);
+    void processMetaData(const LibraryListItem27& LibraryListItem27);
+    void updateMetaData(LibraryListItem27* LibraryListItem27);
     void alternateFunscriptSelected(ScriptInfo script);
     void alternateFunscriptsFound(QList<ScriptInfo> scriptInfos);
 
