@@ -179,9 +179,16 @@
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuProcess_metadata">
+     <property name="title">
+      <string>Metadata</string>
+     </property>
+     <addaction name="actionCleanMetadata"/>
+     <addaction name="actionUpdateMetadata"/>
+    </widget>
     <addaction name="actionSelect_library"/>
     <addaction name="actionReload_library"/>
-    <addaction name="actionProcess_metadata"/>
+    <addaction name="menuProcess_metadata"/>
     <addaction name="actionChange_theme"/>
     <addaction name="actionReload_theme"/>
     <addaction name="separator"/>
@@ -287,9 +294,14 @@ INFO: Every time a video is played in VR the matching script is searched.
 If found it will store it in the user settings.</string>
    </property>
   </action>
-  <action name="actionProcess_metadata">
+  <action name="actionCleanMetadata">
    <property name="text">
-    <string>Process metadata</string>
+    <string>Clean</string>
+   </property>
+  </action>
+  <action name="actionUpdateMetadata">
+   <property name="text">
+    <string>Update</string>
    </property>
   </action>
  </widget>

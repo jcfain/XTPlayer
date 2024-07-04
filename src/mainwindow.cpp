@@ -1193,7 +1193,8 @@ void MainWindow::onPrepareLibraryLoad()
 {
     libraryList->setIconSize({SettingsHandler::getThumbSize(),SettingsHandler::getThumbSize()});
     ui->actionReload_library->setDisabled(true);
-    ui->actionProcess_metadata->setDisabled(true);
+    ui->actionCleanMetadata->setDisabled(true);
+    ui->actionUpdateMetadata->setDisabled(true);
     //ui->actionSelect_library->setDisabled(true);
     _playerControlsFrame->setDisabled(true);
 }
@@ -1247,7 +1248,8 @@ void MainWindow::toggleLibraryLoading(bool loading)
     libraryFilterLineEditClear->setDisabled(loading);
     //ui->actionSelect_library->setDisabled(loading);
     ui->actionReload_library->setDisabled(loading);
-    ui->actionProcess_metadata->setDisabled(loading);
+    ui->actionCleanMetadata->setDisabled(loading);
+    ui->actionUpdateMetadata->setDisabled(loading);
 
     ui->actionThumbnail->setDisabled(loading);
     ui->actionList->setDisabled(loading);
@@ -3103,7 +3105,22 @@ void MainWindow::on_actionStored_DLNA_links_triggered()
     _dlnaScriptLinksDialog->showDialog();
 }
 
-void MainWindow::on_actionProcess_metadata_triggered()
+void MainWindow::on_actionCleanMetadata_triggered()
+{
+    if(DialogHandler::Dialog(this, "This will compare the metadata with the currently loaded libraries\nand delete any that do not exists any more.\nDO NOT RUN unless you have all your media currently loaded!") == QDialog::Accepted)
+    {
+        if(!m_xtengine->mediaLibraryHandler()->isLibraryLoading() &&
+            !m_xtengine->mediaLibraryHandler()->metadataProcessing() &&
+            !m_xtengine->mediaLibraryHandler()->thumbProcessRunning())
+        {
+            m_xtengine->mediaLibraryHandler()->startMetadataCleanProcess();
+        } else {
+            DialogHandler::MessageBox(this, "Please wait for the current media process has\nfinished before running a metadata process.", XLogLevel::Warning);
+        }
+    }
+}
+
+void MainWindow::on_actionUpdateMetadata_triggered()
 {
     if(DialogHandler::Dialog(this, "This will set metadata using the algrorith on first scan.\nAdding smart tags and mfs tags based on the scan.\nIt will not change any user tags set by you.") == QDialog::Accepted)
     {

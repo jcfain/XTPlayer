@@ -163,7 +163,9 @@ private slots:
     void onPlaylistLoaded(LibraryListItem27 autoPlayItem = LibraryListItem27());
     void onBackFromPlaylistLoaded();
 
-    void on_actionProcess_metadata_triggered();
+    void on_actionCleanMetadata_triggered();
+
+    void on_actionUpdateMetadata_triggered();
 
 signals:
     void keyPressed(QKeyEvent * event);
