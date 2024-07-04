@@ -182,8 +182,6 @@ signals:
     void playlistLoaded(LibraryListItem27 autoPlayItem = LibraryListItem27());
     void libraryItemFound(LibraryListItem27 item);
     void backFromPlaylistLoaded();
-    void cleanUpThumbsFinished();
-    void cleanUpThumbsFailed();
     void backgroundProcessStateChange(QString message, float percentage);
     //void randomizeComplete();
 protected:

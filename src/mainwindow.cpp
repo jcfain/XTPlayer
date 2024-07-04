@@ -7,6 +7,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
 {
     m_xtengine = xtengine;
     xtengine->setParent(this);
+    connect(m_xtengine, &XTEngine::stopAllMedia, this, &MainWindow::stopMedia);
 
     connect(this, &XTEngine::destroyed, this, []() {
         LogHandler::Debug("XTPlayer destroyed");
@@ -421,16 +422,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(_xSettings, &SettingsDialog::onOpenWelcomeDialog, this, &MainWindow::openWelcomeDialog);
     connect(_xSettings, &SettingsDialog::updateLibrary, m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::libraryChange);
     connect(_xSettings, &SettingsDialog::disableHeatmapToggled, _playerControlsFrame, &PlayerControls::on_heatmapToggled);
-    connect(_xSettings, &SettingsDialog::cleanUpThumbsDirectory, this, [this] () {
-        QtConcurrent::run([this]() {
-            if(m_xtengine->mediaLibraryHandler()->isLibraryLoading() || m_xtengine->mediaLibraryHandler()->thumbProcessRunning()) {
-                emit cleanUpThumbsFailed();
-                return;
-            }
-            m_xtengine->mediaLibraryHandler()->cleanGlobalThumbDirectory();
-            emit cleanUpThumbsFinished();
-        });
-    });
+    connect(_xSettings, &SettingsDialog::cleanUpThumbsDirectory, m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::cleanGlobalThumbDirectory);
     connect(_xSettings, &SettingsDialog::messageSend, this, &MainWindow::on_settingsMessageRecieve);
 
     connect(m_xtengine->syncHandler(), &SyncHandler::channelPositionChange, _xSettings, &SettingsDialog::setAxisProgressBar, Qt::QueuedConnection);
@@ -549,13 +541,13 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(this, &MainWindow::stopAndPlayVideo, this, &MainWindow::stopAndPlayMedia);
     connect(this, &MainWindow::playlistLoaded, this, &MainWindow::onPlaylistLoaded);
     connect(this, &MainWindow::backFromPlaylistLoaded, this, &MainWindow::onBackFromPlaylistLoaded);
-    connect(this, &MainWindow::cleanUpThumbsFinished, this, [this]() {
+    connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::cleanUpThumbsFinished, this, [this]() {
         ui->statusbar->clearMessage();
         _xSettings->onCleanUpThumbsDirectoryComplete();
-        DialogHandler::MessageBox(this, "Thumb cleanup finished", XLogLevel::Information);
+        //DialogHandler::MessageBox(this, "Thumb cleanup finished", XLogLevel::Information);
 
     });
-    connect(this, &MainWindow::cleanUpThumbsFailed, this, [this]() {
+    connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::cleanUpThumbsFailed, this, [this]() {
 
         ui->statusbar->showMessage("Cleaning thumbs failed...", 60);
         _xSettings->onCleanUpThumbsDirectoryStopped();
