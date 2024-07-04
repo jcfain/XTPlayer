@@ -1577,6 +1577,13 @@ has no script associated with it.</string>
          </property>
         </widget>
        </item>
+       <item row="9" column="0">
+        <widget class="QCheckBox" name="disableHeartbeatChk">
+         <property name="text">
+          <string>Disable UDP heartbeat</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="helpTab">

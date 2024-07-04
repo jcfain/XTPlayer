@@ -328,6 +328,7 @@ void SettingsDialog::setupUi()
         ui.hideMediaWithoutFunscriptsCheckbox->setChecked(XTPSettings::getHideMediaWithoutFunscripts());
 
         ui.disableFunscriptHeatmapheckBox->setChecked(XTPSettings::getHeatmapDisabled());
+        ui.disableHeartbeatChk->setChecked(SettingsHandler::getDisableHeartBeat());
 
         int percentage = SettingsHandler::getViewedThreshold()*100;
         ui.viewedPercentageSpinBox->setValue(percentage);
@@ -2017,5 +2018,12 @@ void SettingsDialog::on_viewedPercentageSpinBox_valueChanged(int arg1)
 {
     float percentage = arg1/(float)100;
     SettingsHandler::setViewedThreshold(percentage);
+}
+
+
+void SettingsDialog::on_disableHeartbeatChk_clicked(bool checked)
+{
+    SettingsHandler::setDisableHeartBeat(checked);
+    set_requires_restart(true);
 }
 

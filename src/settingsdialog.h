@@ -242,6 +242,8 @@ private slots:
 
     void on_viewedPercentageSpinBox_valueChanged(int arg1);
 
+    void on_disableHeartbeatChk_clicked(bool checked);
+
 private:
 
     Ui::SettingsDialog ui;
