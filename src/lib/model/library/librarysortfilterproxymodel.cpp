@@ -121,7 +121,7 @@ bool LibrarySortFilterProxyModel::filterAcceptsRow(int sourceRow,
     //Slow!?
     QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
     LibraryListItem27 item = index.data(Qt::UserRole).value<LibraryListItem27>();
-    bool isHidden = (item.type == LibraryListItemType::VR && !SettingsHandler::getShowVRInLibraryView()) ||
+    bool isHidden = (item.type == LibraryListItemType::External || item.type == LibraryListItemType::VR && !SettingsHandler::getShowVRInLibraryView()) ||
             ( item.type == LibraryListItemType::FunscriptType && SettingsHandler::getHideStandAloneFunscriptsInLibrary())  ||
             ( item.type != LibraryListItemType::FunscriptType &&
                 item.type != LibraryListItemType::PlaylistInternal &&
