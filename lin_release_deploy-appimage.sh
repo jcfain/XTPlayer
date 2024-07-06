@@ -25,7 +25,9 @@ rm -rf "${appDir}"
 
 mkdir -p "${appDir}"
 mkdir -p "${appDir}"/usr/bin/www
+mkdir -p "${appDir}"/usr/bin/themes
 cp -r "${xtplayerLocation}"www/*-min.*  "${appDir}"/usr/bin/www/
+cp -r "${xtplayerLocation}"themes/*.*  "${appDir}"/usr/bin/themes/
 cp "${xtplayerSource}"/XTPlayer.desktop "${xtplayerLocation}"/XTPlayer.desktop
 
 cp "${xtplayerSource}"/src/images/icons/XTP-icon.png "${xtplayerLocation}"/XTPlayer.png
