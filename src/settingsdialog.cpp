@@ -715,8 +715,8 @@ void SettingsDialog::setUpTCodeChannelUI()
 
              QCheckBox* linkCheckbox = new QCheckBox(this);
              auto relatedChannel = TCodeChannelLookup::getChannel(axis->RelatedChannel);
-             linkCheckbox->setToolTip("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS " + relatedChannel->FriendlyName + " funscript value.\nIf there is no " + relatedChannel->FriendlyName + " funscript then it will default to random motion.");
-             linkCheckbox->setText("Link to MFS: ");
+             linkCheckbox->setToolTip("This will link the channel to the related script.\nThis will remove the random calculation and just link\nthe current MFS " + relatedChannel->FriendlyName + " funscript value.\nIf there is no " + relatedChannel->FriendlyName + " funscript then it will default to random motion.");
+             linkCheckbox->setText("Link to script: ");
              linkCheckbox->setChecked(SettingsHandler::getLinkToRelatedAxisChecked(channelName));
              connect(linkCheckbox, &QCheckBox::clicked, this,
                      [channelName](bool checked)
