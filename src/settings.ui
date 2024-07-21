@@ -1311,20 +1311,6 @@ will be hit for the next chunk.</string>
        <string>System</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
-       <item row="5" column="0">
-        <widget class="QCheckBox" name="hideWelcomeDialog">
-         <property name="text">
-          <string>Hide welcome dialog</string>
-         </property>
-        </widget>
-       </item>
-       <item row="17" column="0">
-        <widget class="QPushButton" name="cleanupThumbsPushButton">
-         <property name="text">
-          <string>Clean up generated thumbs</string>
-         </property>
-        </widget>
-       </item>
        <item row="17" column="1">
         <widget class="QLabel" name="cleanUpThumbsStatus">
          <property name="text">
@@ -1332,92 +1318,10 @@ will be hit for the next chunk.</string>
          </property>
         </widget>
        </item>
-       <item row="14" column="1">
-        <widget class="QPushButton" name="thumbDirButton">
+       <item row="8" column="0">
+        <widget class="QCheckBox" name="disableFunscriptHeatmapheckBox">
          <property name="text">
-          <string>Change thumb directory</string>
-         </property>
-        </widget>
-       </item>
-       <item row="10" column="1">
-        <widget class="QPushButton" name="passwordButton">
-         <property name="text">
-          <string>Set password</string>
-         </property>
-        </widget>
-       </item>
-       <item row="19" column="0">
-        <widget class="QPushButton" name="dubugButton">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Debug</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QCheckBox" name="rememberWindowSettingsChk">
-         <property name="text">
-          <string>Remember window size and position</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="1">
-        <widget class="QCheckBox" name="showLoneFunscriptsInLibraryCheckbox">
-         <property name="toolTip">
-          <string>If checked, funscripts in your library folder will be shown if they do not have an associated video.</string>
-         </property>
-         <property name="text">
-          <string>Hide stand alone funscripts in library</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QPushButton" name="exportButton">
-         <property name="text">
-          <string>Export settings</string>
-         </property>
-        </widget>
-       </item>
-       <item row="15" column="0">
-        <widget class="QPushButton" name="tagSetupButton">
-         <property name="text">
-          <string>Tag setup</string>
-         </property>
-        </widget>
-       </item>
-       <item row="16" column="0">
-        <widget class="QPushButton" name="defaultUserTagsButton">
-         <property name="text">
-          <string>Default tags</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
-        <widget class="QCheckBox" name="skipStandAloneFunscriptsInMainLibraryPlaylist">
-         <property name="toolTip">
-          <string>If checked, the library will skip playing standalone funscripts when the previous item finishes playing.</string>
-         </property>
-         <property name="text">
-          <string>Skip stand alone funscripts in playlist</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QCheckBox" name="disableTextToSpeechCheckBox">
-         <property name="toolTip">
-          <string>This disables all speech in the app.</string>
-         </property>
-         <property name="text">
-          <string>Disable speech</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QPushButton" name="importButton">
-         <property name="text">
-          <string>Import settings</string>
+          <string>Disable funscript heatmap</string>
          </property>
         </widget>
        </item>
@@ -1434,10 +1338,44 @@ will be hit for the next chunk.</string>
          </property>
         </widget>
        </item>
-       <item row="8" column="0">
-        <widget class="QCheckBox" name="disableFunscriptHeatmapheckBox">
+       <item row="8" column="1">
+        <widget class="QCheckBox" name="hideMediaWithoutFunscriptsCheckbox">
          <property name="text">
-          <string>Disable funscript heatmap</string>
+          <string>Hide media without funscript</string>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="0">
+        <widget class="QCheckBox" name="disableHeartbeatChk">
+         <property name="text">
+          <string>Disable UDP heartbeat</string>
+         </property>
+        </widget>
+       </item>
+       <item row="19" column="0">
+        <widget class="QPushButton" name="dubugButton">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Debug</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QCheckBox" name="skipStandAloneFunscriptsInMainLibraryPlaylist">
+         <property name="toolTip">
+          <string>If checked, the library will skip playing standalone funscripts when the previous item finishes playing.</string>
+         </property>
+         <property name="text">
+          <string>Skip stand alone funscripts in playlist</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QPushButton" name="importButton">
+         <property name="text">
+          <string>Import settings</string>
          </property>
         </widget>
        </item>
@@ -1448,26 +1386,44 @@ will be hit for the next chunk.</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
-        <widget class="QCheckBox" name="disableNoScriptFoundInLibrary">
-         <property name="toolTip">
-          <string>This will disable the warning that pops up\n
-when you play a video from the library window\n
-that has no script of the same name.</string>
-         </property>
+       <item row="16" column="1">
+        <widget class="QPushButton" name="defaultSmartTagsButton">
          <property name="text">
-          <string>Disable no script warning in library</string>
+          <string>Default smart tags</string>
          </property>
         </widget>
        </item>
-       <item row="15" column="1">
-        <widget class="QPushButton" name="smartTagButton">
+       <item row="21" column="0">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Auto mark viewed percentage</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="10" column="1">
+        <widget class="QPushButton" name="passwordButton">
+         <property name="text">
+          <string>Set password</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QCheckBox" name="disableTextToSpeechCheckBox">
          <property name="toolTip">
-          <string>Smart tags will search the path for the tag and apply it to the metadata on media load.
- Important: New tags will not take effect until metadata has been processed again.</string>
+          <string>This disables all speech in the app.</string>
          </property>
          <property name="text">
-          <string>Smart tag setup</string>
+          <string>Disable speech</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QCheckBox" name="showVRInLibraryViewCheckbox">
+         <property name="text">
+          <string>Show VR items in library view</string>
          </property>
         </widget>
        </item>
@@ -1481,6 +1437,13 @@ that has no script of the same name.</string>
          </property>
         </widget>
        </item>
+       <item row="16" column="0">
+        <widget class="QPushButton" name="defaultUserTagsButton">
+         <property name="text">
+          <string>Default tags</string>
+         </property>
+        </widget>
+       </item>
        <item row="10" column="0">
         <widget class="QPushButton" name="libraryExclusionsBtn">
          <property name="text">
@@ -1488,17 +1451,56 @@ that has no script of the same name.</string>
          </property>
         </widget>
        </item>
-       <item row="8" column="1">
-        <widget class="QCheckBox" name="hideMediaWithoutFunscriptsCheckbox">
+       <item row="22" column="1">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="3" column="0">
+        <widget class="QCheckBox" name="disableNoScriptFoundInLibrary">
+         <property name="toolTip">
+          <string>This will disable the warning that pops up\n
+when you play a video from the library window\n
+that has no script of the same name.</string>
+         </property>
          <property name="text">
-          <string>Hide media without funscript</string>
+          <string>Disable no script warning in library</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="1">
-        <widget class="QCheckBox" name="showVRInLibraryViewCheckbox">
+       <item row="3" column="1">
+        <widget class="QCheckBox" name="disableTimeLinePreviewChk">
          <property name="text">
-          <string>Show VR items in library view</string>
+          <string>Disable timeline preview</string>
+         </property>
+        </widget>
+       </item>
+       <item row="15" column="0">
+        <widget class="QPushButton" name="tagSetupButton">
+         <property name="text">
+          <string>Tag setup</string>
+         </property>
+        </widget>
+       </item>
+       <item row="17" column="0">
+        <widget class="QPushButton" name="cleanupThumbsPushButton">
+         <property name="text">
+          <string>Clean up generated thumbs</string>
+         </property>
+        </widget>
+       </item>
+       <item row="14" column="1">
+        <widget class="QPushButton" name="thumbDirButton">
+         <property name="text">
+          <string>Change thumb directory</string>
          </property>
         </widget>
        </item>
@@ -1517,53 +1519,38 @@ has no script associated with it.</string>
        <item row="1" column="0" colspan="2">
         <widget class="QComboBox" name="tCodeVersionComboBox"/>
        </item>
-       <item row="3" column="1">
-        <widget class="QCheckBox" name="disableTimeLinePreviewChk">
+       <item row="15" column="1">
+        <widget class="QPushButton" name="smartTagButton">
+         <property name="toolTip">
+          <string>Smart tags will search the path for the tag and apply it to the metadata on media load.
+ Important: New tags will not take effect until metadata has been processed again.</string>
+         </property>
          <property name="text">
-          <string>Disable timeline preview</string>
+          <string>Smart tag setup</string>
          </property>
         </widget>
        </item>
-       <item row="16" column="1">
-        <widget class="QPushButton" name="defaultSmartTagsButton">
+       <item row="0" column="1">
+        <widget class="QPushButton" name="exportButton">
          <property name="text">
-          <string>Default smart tags</string>
+          <string>Export settings</string>
          </property>
         </widget>
        </item>
-       <item row="22" column="0">
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+       <item row="5" column="1">
+        <widget class="QCheckBox" name="showLoneFunscriptsInLibraryCheckbox">
+         <property name="toolTip">
+          <string>If checked, funscripts in your library folder will be shown if they do not have an associated video.</string>
          </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item row="0" column="2" colspan="2">
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item row="21" column="0">
-        <widget class="QLabel" name="label_5">
          <property name="text">
-          <string>Auto mark viewed percentage</string>
+          <string>Hide stand alone funscripts in library</string>
          </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QCheckBox" name="hideWelcomeDialog">
+         <property name="text">
+          <string>Hide welcome dialog</string>
          </property>
         </widget>
        </item>
@@ -1577,11 +1564,106 @@ has no script associated with it.</string>
          </property>
         </widget>
        </item>
-       <item row="9" column="0">
-        <widget class="QCheckBox" name="disableHeartbeatChk">
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="rememberWindowSettingsChk">
          <property name="text">
-          <string>Disable UDP heartbeat</string>
+          <string>Remember window size and position</string>
          </property>
+        </widget>
+       </item>
+       <item row="0" column="3" colspan="2">
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Expanding</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="2" rowspan="4">
+        <widget class="QGroupBox" name="schedulerGroupbox">
+         <property name="title">
+          <string>Schedule media library refresh</string>
+         </property>
+         <widget class="QWidget" name="formLayoutWidget_2">
+          <property name="geometry">
+           <rect>
+            <x>-1</x>
+            <y>20</y>
+            <width>251</width>
+            <height>101</height>
+           </rect>
+          </property>
+          <layout class="QFormLayout" name="formLayout_4">
+           <property name="labelAlignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="horizontalSpacing">
+            <number>6</number>
+           </property>
+           <property name="verticalSpacing">
+            <number>6</number>
+           </property>
+           <property name="leftMargin">
+            <number>6</number>
+           </property>
+           <property name="topMargin">
+            <number>6</number>
+           </property>
+           <property name="rightMargin">
+            <number>6</number>
+           </property>
+           <property name="bottomMargin">
+            <number>6</number>
+           </property>
+           <item row="0" column="0">
+            <widget class="QCheckBox" name="schedulerEnabledChk">
+             <property name="text">
+              <string>Enabled</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="schedulerIntervalLabel">
+             <property name="text">
+              <string>At time</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QCheckBox" name="fullMetadataProcessChk">
+             <property name="text">
+              <string>Full metadata process</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QTimeEdit" name="scheduleLibraryLoadAtTime">
+             <property name="maximumDate">
+              <date>
+               <year>3000</year>
+               <month>1</month>
+               <day>1</day>
+              </date>
+             </property>
+             <property name="minimumDate">
+              <date>
+               <year>1979</year>
+               <month>1</month>
+               <day>1</day>
+              </date>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
       </layout>

@@ -340,7 +340,12 @@ void SettingsDialog::setupUi()
 
         ui.rememberWindowSettingsChk->setChecked(XTPSettings::getRememberWindowsSettings());
 
-        _interfaceInitialized = true;
+        ui.schedulerEnabledChk->setChecked(SettingsHandler::scheduleLibraryLoadEnabled());
+        ui.scheduleLibraryLoadAtTime->setTime(SettingsHandler::scheduleLibraryLoadTime());
+        ui.fullMetadataProcessChk->setChecked(SettingsHandler::scheduleLibraryLoadFullProcess());
+
+        connect(ui.schedulerEnabledChk, &QCheckBox::clicked, this, &SettingsDialog::schedulerEnabledChk_clicked);
+        connect(ui.fullMetadataProcessChk, &QCheckBox::clicked, this, &SettingsDialog::fullMetadataProcessChk_clicked);
     }
 }
 
@@ -2025,5 +2030,21 @@ void SettingsDialog::on_disableHeartbeatChk_clicked(bool checked)
 {
     SettingsHandler::setDisableHeartBeat(checked);
     set_requires_restart(true);
+}
+
+void SettingsDialog::schedulerEnabledChk_clicked(bool checked)
+{
+    SettingsHandler::setScheduleLibraryLoadEnabled(checked);
+    emit scheduleLibraryLoadEnableChange(checked);
+}
+
+void SettingsDialog::on_scheduleLibraryLoadAtTime_userTimeChanged(const QTime &time)
+{
+    SettingsHandler::setScheduleLibraryLoadTime(time);
+}
+
+void SettingsDialog::fullMetadataProcessChk_clicked(bool checked)
+{
+    SettingsHandler::setScheduleLibraryLoadFullProcess(checked);
 }
 

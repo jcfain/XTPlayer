@@ -54,6 +54,7 @@ signals:
     void updateLibrary();
     void cleanUpThumbsDirectory();
     void disableHeatmapToggled(bool disabled);
+    void scheduleLibraryLoadEnableChange(bool enabled);
 
 public slots:
     void on_xtpWeb_initInputDevice(DeviceName deviceName, bool checked);
@@ -243,6 +244,12 @@ private slots:
     void on_viewedPercentageSpinBox_valueChanged(int arg1);
 
     void on_disableHeartbeatChk_clicked(bool checked);
+
+    void schedulerEnabledChk_clicked(bool checked);
+
+    void fullMetadataProcessChk_clicked(bool checked);
+
+    void on_scheduleLibraryLoadAtTime_userTimeChanged(const QTime &time);
 
 private:
 
