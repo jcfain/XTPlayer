@@ -424,7 +424,6 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(_xSettings, &SettingsDialog::disableHeatmapToggled, _playerControlsFrame, &PlayerControls::on_heatmapToggled);
     connect(_xSettings, &SettingsDialog::cleanUpThumbsDirectory, m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::cleanGlobalThumbDirectory);
     connect(_xSettings, &SettingsDialog::messageSend, this, &MainWindow::on_settingsMessageRecieve);
-    connect(_xSettings, &SettingsDialog::scheduleLibraryLoadEnableChange, m_xtengine, &XTEngine::scheduleLibraryLoadEnableChange);
 
     connect(m_xtengine->syncHandler(), &SyncHandler::channelPositionChange, _xSettings, &SettingsDialog::setAxisProgressBar, Qt::QueuedConnection);
     connect(m_xtengine->syncHandler(), &SyncHandler::funscriptEnded, _xSettings, &SettingsDialog::resetAxisProgressBars, Qt::QueuedConnection);

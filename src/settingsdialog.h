@@ -54,7 +54,6 @@ signals:
     void updateLibrary();
     void cleanUpThumbsDirectory();
     void disableHeatmapToggled(bool disabled);
-    void scheduleLibraryLoadEnableChange(bool enabled);
 
 public slots:
     void on_xtpWeb_initInputDevice(DeviceName deviceName, bool checked);

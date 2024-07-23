@@ -2035,7 +2035,6 @@ void SettingsDialog::on_disableHeartbeatChk_clicked(bool checked)
 void SettingsDialog::schedulerEnabledChk_clicked(bool checked)
 {
     SettingsHandler::setScheduleLibraryLoadEnabled(checked);
-    emit scheduleLibraryLoadEnableChange(checked);
 }
 
 void SettingsDialog::on_scheduleLibraryLoadAtTime_userTimeChanged(const QTime &time)
