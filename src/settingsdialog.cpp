@@ -10,18 +10,19 @@
 #include "gettextdialog.h"
 #include "tagManager.h"
 
-//http://192.168.0.145/toggleContinousTwist
 SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent), _inputMapWidget(0)
 {
     ui.setupUi(this);
     setModal(false);
-    connect(ui.buttonBox, & QDialogButtonBox::clicked, this, &SettingsDialog::on_dialogButtonboxClicked);
+    connect(ui.buttonBox, &QDialogButtonBox::clicked, this, &SettingsDialog::on_dialogButtonboxClicked);
     connect(this, &SettingsDialog::loadingDialogClose, this, &SettingsDialog::on_close_loading_dialog);
-
 }
+
 SettingsDialog::~SettingsDialog()
 {
 }
+
+// TODO: Combine the following two functions...
 void SettingsDialog::on_settingsChange(bool dirty)
 {
     saveAllBtn->setEnabled(dirty);
@@ -333,8 +334,6 @@ void SettingsDialog::setupUi()
 
         updateIPAddress();
 
-        connect(SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
-
         ui.rememberWindowSettingsChk->setChecked(XTPSettings::getRememberWindowsSettings());
 
         ui.schedulerEnabledChk->setChecked(SettingsHandler::scheduleLibraryLoadEnabled());
@@ -345,6 +344,14 @@ void SettingsDialog::setupUi()
         connect(ui.fullMetadataProcessChk, &QCheckBox::clicked, this, &SettingsDialog::fullMetadataProcessChk_clicked);
 
         connect(ui.randomMotionGroupbox, &QGroupBox::clicked, this, &SettingsDialog::on_enableMultiplierCheckbox_clicked);
+
+        ui.processMetadataOnStartChk->setChecked(SettingsHandler::processMetadataOnStart());
+        connect(ui.processMetadataOnStartChk, &QCheckBox::clicked, this, &SettingsDialog::processMetadataOnStart_clicked);
+
+
+
+        connect(SettingsHandler::instance(), &SettingsHandler::restartRequired, this, &SettingsDialog::set_requires_restart);
+        connect(SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
     }
 }
 
@@ -2078,5 +2085,10 @@ void SettingsDialog::on_scheduleLibraryLoadAtTime_userTimeChanged(const QTime &t
 void SettingsDialog::fullMetadataProcessChk_clicked(bool checked)
 {
     SettingsHandler::setScheduleLibraryLoadFullProcess(checked);
+}
+
+void SettingsDialog::processMetadataOnStart_clicked(bool checked)
+{
+    SettingsHandler::setProcessMetadataOnStart(checked);
 }
 

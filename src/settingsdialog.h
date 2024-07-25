@@ -247,6 +247,7 @@ private slots:
     void schedulerEnabledChk_clicked(bool checked);
 
     void fullMetadataProcessChk_clicked(bool checked);
+    void processMetadataOnStart_clicked(bool checked);
 
     void on_scheduleLibraryLoadAtTime_userTimeChanged(const QTime &time);
 

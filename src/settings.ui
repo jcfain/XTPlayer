@@ -1645,6 +1645,13 @@ has no script associated with it.</string>
          </widget>
         </widget>
        </item>
+       <item row="9" column="1">
+        <widget class="QCheckBox" name="processMetadataOnStartChk">
+         <property name="text">
+          <string>Process all metadata on start</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="helpTab">
