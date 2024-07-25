@@ -258,7 +258,6 @@ private:
     void initInputDevice();
     void setupUi();
     void setupGamepadMap();
-    void setUpMultiplierUi(bool enabled);
     void enableOrDisableDeviceConnectionUI(DeviceName deviceName);
     void updateIPAddress();
     void askHowToResetChannelProfileDefaults();

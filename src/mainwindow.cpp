@@ -1024,15 +1024,21 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
         {
             if(isPlaylistMode())
             {
-                myMenu.addAction(tr("Remove from playlist"), this, &MainWindow::removeFromPlaylist);
+                QAction* action = myMenu.addAction(tr("Remove from playlist"), this, &MainWindow::removeFromPlaylist);
+                connect(action, &QAction::hovered, this, &MainWindow::on_action_hover);
+                action->setToolTip("Delete this item from the playlist.");
             }
             if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
             {
-                myMenu.addAction(tr("Play with chosen funscript..."), this, &MainWindow::playFileWithCustomScript);
+                QAction* action = myMenu.addAction(tr("Play with chosen funscript..."), this, &MainWindow::playFileWithCustomScript);
+                connect(action, &QAction::hovered, this, &MainWindow::on_action_hover);
+                action->setToolTip("Choose a script to play with this media item");
             }
             if(selectedFileListItem.type == LibraryListItemType::FunscriptType)
             {
-                myMenu.addAction(tr("Play with chosen video..."), this, &MainWindow::playFileWithCustomMedia);
+                QAction* action = myMenu.addAction(tr("Play with chosen video..."), this, &MainWindow::playFileWithCustomMedia);
+                connect(action, &QAction::hovered, this, &MainWindow::on_action_hover);
+                action->setToolTip("Choose a media item to play with this script");
             }
             // Experimental
             //myMenu.addAction("Play with audio sync (Experimental)", this, &MainWindow::playFileWithAudioSync);
@@ -1062,34 +1068,47 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                 {
                     QAction* regenerateThumbAction = myMenu.addAction(tr("Regenerate thumbnail"), this, &MainWindow::regenerateThumbNail);
                     regenerateThumbAction->setToolTip("Overwrites the current image file with a randomly chosen time.");
+                    connect(regenerateThumbAction, &QAction::hovered, this, &MainWindow::on_action_hover);
 
-                    auto item = XMediaStateHandler::getPlaying();
-                    if(item && (videoHandler->isPlaying() || videoHandler->isPaused()))
-                    {
-                        if(item->ID == selectedFileListItem.ID)
-                            myMenu.addAction(tr("Set thumbnail from current"), this, &MainWindow::setThumbNailFromCurrent);
+                    auto playingID = XMediaStateHandler::getPlayingID();
+                    QAction* thumbnailFromCurrent = myMenu.addAction(tr("Set thumbnail from current"), this, &MainWindow::setThumbNailFromCurrent);
+                    bool isItemPlaying = !playingID.isEmpty() && playingID == selectedFileListItem.ID;
+                    connect(thumbnailFromCurrent, &QAction::hovered, this, &MainWindow::on_action_hover);
+                    thumbnailFromCurrent->setEnabled(isItemPlaying);
+                    thumbnailFromCurrent->setToolTip("Set the thumb from the current playing position.\nThis item must be playing or paused.");
+                    // if(!playingID.isEmpty() && (videoHandler->isPlaying() || videoHandler->isPaused()))
+                    // {
+                    //     if(playingID == selectedFileListItem.ID)
+                    //         myMenu.addAction(tr("Set thumbnail from current"), this, &MainWindow::setThumbNailFromCurrent);
+                    // }
+                    if(selectedFileListItem.thumbFileExists && selectedFileListItem.managedThumb) {
+                        QAction* action = myMenu.addAction(tr("Lock thumb"), this, &MainWindow::lockThumb);
+
+                        connect(action, &QAction::hovered, this, &MainWindow::on_action_hover);
+                        action->setToolTip("Lock the current thumb to prevent accidental over writes.");
                     }
-                    if(selectedFileListItem.thumbFileExists && selectedFileListItem.managedThumb)
-                        myMenu.addAction(tr("Lock thumb"), this, &MainWindow::lockThumb);
                 }
                 else
                 {
-                    if(selectedFileListItem.thumbFileExists && selectedFileListItem.managedThumb)
-                        myMenu.addAction(tr("Unlock thumb"), this, &MainWindow::unlockThumb);
+                    if(selectedFileListItem.thumbFileExists && selectedFileListItem.managedThumb) {
+                        QAction* action = myMenu.addAction(tr("Unlock thumb"), this, &MainWindow::unlockThumb);
+                        connect(action, &QAction::hovered, this, &MainWindow::on_action_hover);
+                        action->setToolTip("Unlock thumb for regeneration");
+                    }
                 }
             }
-            auto item = XMediaStateHandler::getPlaying();
-            if(item && (videoHandler->isPlaying() || videoHandler->isPaused()))
-            {
-                if(item->ID == selectedFileListItem.ID)
-                    myMenu.addAction(tr("Set moneyshot from current"), this, [this, selectedFileListItem] () {
-                        SettingsHandler::instance()->setMoneyShot(selectedFileListItem, videoHandler->position());
-                    });
-            }
+            auto itemID = XMediaStateHandler::getPlayingID();
+            QAction* moneyShotAction = myMenu.addAction(tr("Set moneyshot from current"), this, [this, selectedFileListItem] () {
+                SettingsHandler::instance()->setMoneyShot(selectedFileListItem, videoHandler->position());
+            });
+            moneyShotAction->setEnabled(itemID == selectedFileListItem.ID);
+            connect(moneyShotAction, &QAction::hovered, this, &MainWindow::on_action_hover);
+            moneyShotAction->setToolTip("Sets the skip to moneyshot time to the current playing position.\nThis item must be playing or paused.");
+
     //        myMenu.addAction("Add bookmark from current", this, [this, selectedFileListItem] () {
     //            onAddBookmark(selectedFileListItem, "Book mark 1", videoHandler->position());
     //        });
-            myMenu.addAction(tr("Reveal media in directory"), this, [this, selectedFileListItem] () {
+            QAction* revealAction = myMenu.addAction(tr("Open media directory"), this, [this, selectedFileListItem] () {
                 if(selectedFileListItem.path.isEmpty()) {
                     DialogHandler::MessageBox(libraryList, "Invalid media path.", XLogLevel::Critical);
                     return;
@@ -1100,9 +1119,12 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                 }
                 showInGraphicalShell(selectedFileListItem.path);
             });
+            connect(revealAction, &QAction::hovered, this, &MainWindow::on_action_hover);
+            revealAction->setToolTip("Open the media item in the systems file explorer");
+
             if(selectedFileListItem.thumbState == ThumbState::Ready &&
                (selectedFileListItem.type == LibraryListItemType::VR ||selectedFileListItem.type == LibraryListItemType::Video)) {
-                myMenu.addAction(tr("Reveal thumb in directory"), this, [this, selectedFileListItem] () {
+                QAction* revealThumbAction = myMenu.addAction(tr("Open thumb directory"), this, [this, selectedFileListItem] () {
                     if(selectedFileListItem.thumbFile.isEmpty()) {
                         DialogHandler::MessageBox(libraryList, "Invalid thumb path.", XLogLevel::Critical);
                         return;
@@ -1113,12 +1135,18 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                     }
                     showInGraphicalShell(selectedFileListItem.thumbFile);
                 });
+
+                connect(revealThumbAction, &QAction::hovered, this, &MainWindow::on_action_hover);
+                revealThumbAction->setToolTip("Open the thumb file in the systems file explorer");
             }
-            myMenu.addAction(tr("Edit media settings..."), this, [this, selectedFileListItem] () {
+            QAction* metadataAction = myMenu.addAction(tr("Edit metadata..."), this, [this, selectedFileListItem] () {
                 auto item = m_xtengine->mediaLibraryHandler()->findItemByMediaPath(selectedFileListItem.path);
                 LibraryItemSettingsDialog::getSettings(libraryList, item);
             });
-            myMenu.addAction(tr("Process metadata"), this, [this, selectedFileListItem] () {
+            connect(metadataAction, &QAction::hovered, this, &MainWindow::on_action_hover);
+            metadataAction->setToolTip("Edit the media items metadata");
+
+            QAction* processMetadataAction = myMenu.addAction(tr("Update metadata"), this, [this, selectedFileListItem] () {
                 if(!m_xtengine->mediaLibraryHandler()->metadataProcessing()) {
                     auto item = m_xtengine->mediaLibraryHandler()->findItemByID(selectedFileListItem.ID);
                     m_xtengine->mediaLibraryHandler()->processMetadata(*item);
@@ -1126,6 +1154,8 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                     DialogHandler::MessageBox(libraryList, "Please wait for metadata process to complete!", XLogLevel::Warning);
                 }
             });
+            connect(processMetadataAction, &QAction::hovered, this, &MainWindow::on_action_hover);
+            processMetadataAction->setToolTip("Update the current media items metadata");
         }
 
         // Show context menu at handling position
@@ -3132,5 +3162,11 @@ void MainWindow::on_actionUpdateMetadata_triggered()
             DialogHandler::MessageBox(this, "Please wait for the current media process has\nfinished before running a metadata process.", XLogLevel::Warning);
         }
     }
+}
+
+void MainWindow::on_action_hover()
+{
+    QAction* act = static_cast<QAction*>(QObject::sender());
+    QToolTip::showText(QCursor::pos(), act->toolTip(), act->parentWidget());
 }
 

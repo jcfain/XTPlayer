@@ -11,7 +11,7 @@
 #include "tagManager.h"
 
 //http://192.168.0.145/toggleContinousTwist
-SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent)
+SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent), _inputMapWidget(0)
 {
     ui.setupUi(this);
     setModal(false);
@@ -79,8 +79,6 @@ void SettingsDialog::initLive()
 //    if(_videoHandler->isPlaying())
 //        _hasVideoPlayed = true;
 //    ui.videoRendererComboBox->setEnabled(!_hasVideoPlayed);
-    ui.enableMultiplierCheckbox->setChecked(SettingsHandler::getMultiplierEnabled());
-    setUpMultiplierUi(SettingsHandler::getMultiplierEnabled());
     ui.disableNoScriptFoundInLibrary->setChecked(SettingsHandler::getDisableNoScriptFound());
     if(!SettingsHandler::GetHashedPass().isEmpty())
         ui.passwordButton->setText("Change password");
@@ -228,7 +226,6 @@ void SettingsDialog::setupUi()
 
         ui.disableTCodeValidationCheckbox->setChecked(SettingsHandler::getDisableTCodeValidation());
 
-        ui.RangeSettingsGrid->setSpacing(5);
 
         setUpTCodeChannelProfiles();
         setUpTCodeChannelUI();
@@ -346,6 +343,8 @@ void SettingsDialog::setupUi()
 
         connect(ui.schedulerEnabledChk, &QCheckBox::clicked, this, &SettingsDialog::schedulerEnabledChk_clicked);
         connect(ui.fullMetadataProcessChk, &QCheckBox::clicked, this, &SettingsDialog::fullMetadataProcessChk_clicked);
+
+        connect(ui.randomMotionGroupbox, &QGroupBox::clicked, this, &SettingsDialog::on_enableMultiplierCheckbox_clicked);
     }
 }
 
@@ -388,7 +387,7 @@ void SettingsDialog::updateIPAddress() {
 
 void SettingsDialog::setupGamepadMap()
 {
-    if(_interfaceInitialized)
+    if(_inputMapWidget)
     {
 //        QLayoutItem *child;
 //        while ((child = ui.gamePadMapGridLayout->takeAt(0)) != 0)
@@ -405,14 +404,14 @@ void SettingsDialog::setupGamepadMap()
     }
     _inputMapWidget = new InputMapWidget(_connectionHandler, this);
     ui.gamePadMapGridLayout->addWidget(_inputMapWidget, 0, 0, 1, 11);
-    QLabel* instructionsLabel = new QLabel(this);
+    QLabel* instructionsLabel = new QLabel(_inputMapWidget);
     instructionsLabel->setText("Click a cell in either Gamepad or Key column for an action to assign an input.");
     ui.gamePadMapGridLayout->addWidget(instructionsLabel, 1, 0, 1, 6, Qt::AlignLeft);
     instructionsLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-    QLabel* speedLabel = new QLabel(this);
+    QLabel* speedLabel = new QLabel(_inputMapWidget);
     speedLabel->setText("Default speed");
     speedLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-    QSpinBox* speedInput = new QSpinBox(this);
+    QSpinBox* speedInput = new QSpinBox(_inputMapWidget);
     speedInput->setMinimum(1);
     speedInput->setMaximum(std::numeric_limits<int>::max());
     speedInput->setMinimumWidth(75);
@@ -423,10 +422,10 @@ void SettingsDialog::setupGamepadMap()
     connect(speedInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_speedInput_valueChanged);
     ui.gamePadMapGridLayout->addWidget(speedLabel, 1, 7, Qt::AlignRight);
     ui.gamePadMapGridLayout->addWidget(speedInput, 1, 8, Qt::AlignLeft);
-    QLabel* speedIncrementLabel = new QLabel(this);
+    QLabel* speedIncrementLabel = new QLabel(_inputMapWidget);
     speedIncrementLabel->setText("Speed change step");
     speedIncrementLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-    QSpinBox* speedIncrmentInput = new QSpinBox(this);
+    QSpinBox* speedIncrmentInput = new QSpinBox(_inputMapWidget);
     speedIncrmentInput->setMinimum(1);
     speedIncrmentInput->setMaximum(std::numeric_limits<int>::max());
     speedIncrmentInput->setMinimumWidth(75);
@@ -588,340 +587,374 @@ void SettingsDialog::setUpTCodeChannelProfiles() {
 
 void SettingsDialog::setUpTCodeChannelUI()
 {
-    if(_interfaceInitialized)
+    if(ui.rangeLimitGroupbox->layout())
     {
+        QGridLayout* rangeLimitLayout = (QGridLayout*)ui.rangeLimitGroupbox->layout();
         QLayoutItem *child;
-        while ((child = ui.RangeSettingsGrid->takeAt(0)) != 0)
+        while ((child = rangeLimitLayout->takeAt(0)) != 0)
         {
             //setParent is NULL, preventing the interface from disappearing after deletion.
             if(child->widget())
             {
                 child->widget()->setParent(NULL);
+                QWidget* widget = child->widget();
+                delete widget;
             }
-
             delete child;
         }
-        while ((child = ui.MultiplierSettingsGrid->takeAt(0)) != 0)
+        delete rangeLimitLayout;
+    }
+    if(ui.randomMotionGroupbox->layout())
+    {
+        QGridLayout* randomMotionlayout = (QGridLayout*)ui.randomMotionGroupbox->layout();
+        QLayoutItem *child;
+        while ((child = randomMotionlayout->takeAt(0)) != 0)
         {
-            bool dontDelete = false;
             if(child->widget())
             {
-                if(child->widget()->objectName() != "enableMultiplierCheckbox")
-                    child->widget()->setParent(NULL);
-                else
-                    dontDelete = true;
+                child->widget()->setParent(NULL);
+                QWidget* widget = child->widget();
+                delete widget;
             }
-
-            if(!dontDelete)
-                delete child;
+            delete child;
         }
+        delete randomMotionlayout;
+    }
+    if(ui.inversionGroupBox->layout())
+    {
+        QGridLayout* inversionlayout = (QGridLayout*)ui.inversionGroupBox->layout();
+        QLayoutItem *child;
+        while ((child = inversionlayout->takeAt(0)) != 0)
+        {
+            if(child->widget())
+            {
+                child->widget()->setParent(NULL);
+                QWidget* widget = child->widget();
+                delete widget;
+            }
+            delete child;
+        }
+        delete inversionlayout;
     }
 
+    QGridLayout* rangeGrid = new QGridLayout();
+    rangeGrid->setSizeConstraint(QLayout::SetMinimumSize);
+    // rangeGrid->setHorizontalSpacing(2);
+    // rangeGrid->setVerticalSpacing(0);
+    rangeGrid->setSpacing(5);
+    QGridLayout* randomGrid = new QGridLayout();
+    randomGrid->setSizeConstraint(QLayout::SetMinimumSize);
+    QGridLayout* inversionGrid = new QGridLayout();
+    inversionGrid->setSizeConstraint(QLayout::SetMinimumSize);
+    ui.rangeLimitGroupbox->setLayout(rangeGrid);
+    ui.randomMotionGroupbox->setLayout(randomGrid);
+    ui.inversionGroupBox->setLayout(inversionGrid);
+    QFont font( "Sans Serif", 8);
+    int sliderGridRow = 0;
+    int randomMotionGridRow = 0;
+    int inversionGridRow = 0;
+    auto tcodeChannels = TCodeChannelLookup::GetSelectedVersionMap();
+    ui.randomMotionGroupbox->setChecked(SettingsHandler::getMultiplierEnabled());
+    //QCheckBox* enableCheckbox = new QCheckBox("Enable", this);
+    //enableCheckbox->setChecked(SettingsHandler::getMultiplierEnabled());
+    //connect(enableCheckbox, &QCheckBox::clicked, this, &SettingsDialog::on_enableMultiplierCheckbox_clicked);
+    //randomGrid->addWidget(enableCheckbox, multiplierGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+    //multiplierGridRow++;
 
-     QFont font( "Sans Serif", 8);
-     int sliderGridRow = 0;
-     int multiplierGridRow = 1;
-     int funscriptSettingsGridRow = 0;
-     auto tcodeChannels = TCodeChannelLookup::GetSelectedVersionMap();
-     _multiplierWidgets.clear();
-     qDeleteAll(_multiplierWidgets);
-     foreach(auto channel, tcodeChannels.keys())
-     {
-         QString channelName = TCodeChannelLookup::ToString(channel);
-         auto axis = TCodeChannelLookup::getChannel(channelName);
-         if(axis == nullptr || axis->Type == AxisType::None || axis->Type == AxisType::HalfOscillate)
-             continue;
+    rangeLabels.clear();
+    rangeMinLabels.clear();
+    rangeMaxLabels.clear();
+    rangeSliders.clear();
+    _multiplierWidgets.clear();
+    foreach(auto channel, tcodeChannels.keys())
+    {
+        QString channelName = TCodeChannelLookup::ToString(channel);
+        auto axis = TCodeChannelLookup::getChannel(channelName);
+        if(axis == nullptr || axis->Type == AxisType::None || axis->Type == AxisType::HalfOscillate)
+            continue;
 
-         int userMin = axis->UserMin;
-         int userMid = axis->UserMid;
-         int userMax = axis->UserMax;
-         QLabel* rangeMinLabel = new QLabel(QString::number(userMin));
-         rangeMinLabel->setObjectName(axis->AxisName+"RangeMinLabel");
-         rangeMinLabel->setFont(font);
-         rangeMinLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-         ui.RangeSettingsGrid->addWidget(rangeMinLabel, sliderGridRow, 0);
-         rangeMinLabels.insert(channelName, rangeMinLabel);
+        int userMin = axis->UserMin;
+        int userMid = axis->UserMid;
+        int userMax = axis->UserMax;
+        QLabel* rangeMinLabel = new QLabel(QString::number(userMin), ui.rangeLimitGroupbox);
+        rangeMinLabel->setObjectName(axis->AxisName+"RangeMinLabel");
+        rangeMinLabel->setFont(font);
+        rangeMinLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+        rangeGrid->addWidget(rangeMinLabel, sliderGridRow, 0);
+        rangeMinLabels.insert(channelName, rangeMinLabel);
 
-         QLabel* rangeLabel = new QLabel(axis->FriendlyName + " mid: " + QString::number(userMid));
-         rangeLabel->setObjectName(axis->AxisName+"RangeLabel");
-         rangeLabel->setFont(font);
-         rangeLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-         ui.RangeSettingsGrid->addWidget(rangeLabel, sliderGridRow, 1, 1, 2, Qt::AlignHCenter | Qt::AlignVCenter);
-         rangeLabels.insert(channelName, rangeLabel);
+        QLabel* rangeLabel = new QLabel(axis->FriendlyName + " mid: " + QString::number(userMid), ui.rangeLimitGroupbox);
+        rangeLabel->setObjectName(axis->AxisName+"RangeLabel");
+        rangeLabel->setFont(font);
+        rangeLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        rangeGrid->addWidget(rangeLabel, sliderGridRow, 1, 1, 2, Qt::AlignHCenter | Qt::AlignVCenter);
+        rangeLabels.insert(channelName, rangeLabel);
 
-         QLabel* rangeMaxLabel = new QLabel(QString::number(userMax));
-         rangeMaxLabel->setObjectName(axis->AxisName+"RangeMaxLabel");
-         rangeMaxLabel->setFont(font);
-         rangeMaxLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-         ui.RangeSettingsGrid->addWidget(rangeMaxLabel, sliderGridRow, 3);
-         rangeMaxLabels.insert(channelName, rangeMaxLabel);
+        QLabel* rangeMaxLabel = new QLabel(QString::number(userMax), ui.rangeLimitGroupbox);
+        rangeMaxLabel->setObjectName(axis->AxisName+"RangeMaxLabel");
+        rangeMaxLabel->setFont(font);
+        rangeMaxLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        rangeGrid->addWidget(rangeMaxLabel, sliderGridRow, 3);
+        rangeMaxLabels.insert(channelName, rangeMaxLabel);
 
-         RangeSlider* axisRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, this);
-         axisRangeSlider->setObjectName(axis->AxisName+"RangeSlider");
-         axisRangeSlider->SetRange(axis->Min, axis->Max);
-         axisRangeSlider->setLowerValue(userMin);
-         axisRangeSlider->setUpperValue(userMax);
-         axisRangeSlider->SetMinimumRange(1);
-         axisRangeSlider->setName(channelName);// Required
-         sliderGridRow++;
-         ui.RangeSettingsGrid->addWidget(axisRangeSlider, sliderGridRow,0,1,4);
-         rangeSliders.insert(channelName, axisRangeSlider);
-         sliderGridRow++;
+        RangeSlider* axisRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, ui.rangeLimitGroupbox);
+        axisRangeSlider->setObjectName(axis->AxisName+"RangeSlider");
+        axisRangeSlider->SetRange(axis->Min, axis->Max);
+        axisRangeSlider->setLowerValue(userMin);
+        axisRangeSlider->setUpperValue(userMax);
+        axisRangeSlider->SetMinimumRange(1);
+        axisRangeSlider->setName(channelName);// Required
+        sliderGridRow++;
+        rangeGrid->addWidget(axisRangeSlider, sliderGridRow,0,1,4);
+        rangeSliders.insert(channelName, axisRangeSlider);
+        sliderGridRow++;
 
-         QProgressBar* funscriptProgressbar = new QProgressBar(this);
-         funscriptProgressbar->setObjectName(axis->AxisName+"FunscriptStatus");
-         funscriptProgressbar->setMinimum(0);
-         funscriptProgressbar->setMaximum(100);
-         funscriptProgressbar->setMaximumHeight(5);
-         ui.RangeSettingsGrid->addWidget(funscriptProgressbar, sliderGridRow,0,1,4);
-         axisProgressbars.insert(channelName, funscriptProgressbar);
-         sliderGridRow++;
+        QProgressBar* funscriptProgressbar = new QProgressBar(ui.rangeLimitGroupbox);
+        funscriptProgressbar->setObjectName(axis->AxisName+"FunscriptStatus");
+        funscriptProgressbar->setMinimum(0);
+        funscriptProgressbar->setMaximum(100);
+        funscriptProgressbar->setMaximumHeight(5);
+        rangeGrid->addWidget(funscriptProgressbar, sliderGridRow,0,1,4);
+        axisProgressbars.insert(channelName, funscriptProgressbar);
+        sliderGridRow++;
 
-         connect(this, &SettingsDialog::onAxisValueChange, this, &SettingsDialog::on_axis_valueChange);
-         connect(this, &SettingsDialog::onAxisValueReset, this, &SettingsDialog::on_axis_valueReset);
-         connect(axisRangeSlider, QOverload<QString, int>::of(&RangeSlider::lowerValueChanged), this, &SettingsDialog::onRange_valueChanged);
-         connect(axisRangeSlider, QOverload<QString, int>::of(&RangeSlider::upperValueChanged), this, &SettingsDialog::onRange_valueChanged);
-         // mouse release work around for gamepad recalculation reseting on every valueChange event.
-         connect(axisRangeSlider, QOverload<QString>::of(&RangeSlider::mouseRelease), this, &SettingsDialog::onRange_mouseRelease);
+        connect(this, &SettingsDialog::onAxisValueChange, this, &SettingsDialog::on_axis_valueChange);
+        connect(this, &SettingsDialog::onAxisValueReset, this, &SettingsDialog::on_axis_valueReset);
+        connect(axisRangeSlider, QOverload<QString, int>::of(&RangeSlider::lowerValueChanged), this, &SettingsDialog::onRange_valueChanged);
+        connect(axisRangeSlider, QOverload<QString, int>::of(&RangeSlider::upperValueChanged), this, &SettingsDialog::onRange_valueChanged);
+        // mouse release work around for gamepad recalculation reseting on every valueChange event.
+        connect(axisRangeSlider, QOverload<QString>::of(&RangeSlider::mouseRelease), this, &SettingsDialog::onRange_mouseRelease);
 
-         // Multipliers
-         // if(axis->Dimension != AxisDimension::Heave)
-         // {
-             QCheckBox* multiplierCheckbox = new QCheckBox(this);
-             multiplierCheckbox->setText(axis->FriendlyName);
-             multiplierCheckbox->setChecked(SettingsHandler::getMultiplierChecked(channelName));
-             connect(multiplierCheckbox, &QCheckBox::clicked, this,
-                     [this, channelName](bool checked)
-                       {
-                         SettingsHandler::setMultiplierChecked(channelName, checked);
-                         if(!checked)
-                             emit TCodeHomeClicked();
-                       });
-             QCheckBox* damperCheckbox = new QCheckBox(this);
-             damperCheckbox->setText("Speed");
-             damperCheckbox->setChecked(SettingsHandler::getDamperChecked(channelName));
-             QDoubleSpinBox* damperInput = new QDoubleSpinBox(this);
-             damperInput->setToolTip("Multiply the speed by the value.\n4000 * 0.5 = 2000");
-             damperInput->setDecimals(1);
-             damperInput->setSingleStep(0.1f);
-             damperInput->setMinimum(0.1f);
-             damperInput->setMaximum(std::numeric_limits<int>::max());
-             damperInput->setValue(SettingsHandler::getDamperValue(channelName));
-             connect(damperInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
-                     [channelName](float value)
-                       {
-                         SettingsHandler::setDamperValue(channelName, value);
-                       });
-             connect(damperCheckbox, &QCheckBox::clicked, this,
-                     [channelName](bool checked)
-                       {
-                         SettingsHandler::setDamperChecked(channelName, checked);
-                       });
-
-             QCheckBox* linkCheckbox = new QCheckBox(this);
-             auto relatedChannel = TCodeChannelLookup::getChannel(axis->RelatedChannel);
-             linkCheckbox->setToolTip("This will link the channel to the related script.\nThis will remove the random calculation and just link\nthe current MFS " + relatedChannel->FriendlyName + " funscript value.\nIf there is no " + relatedChannel->FriendlyName + " funscript then it will default to random motion.");
-             linkCheckbox->setText("Link to script: ");
-             linkCheckbox->setChecked(SettingsHandler::getLinkToRelatedAxisChecked(channelName));
-             connect(linkCheckbox, &QCheckBox::clicked, this,
-                     [channelName](bool checked)
-                       {
-                         SettingsHandler::setLinkToRelatedAxisChecked(channelName, checked);
-                       });
-
-             QComboBox* linkToAxisCombobox = new QComboBox(this);
-             foreach(auto axis, tcodeChannels.keys())
-             {
-                 auto channel =  TCodeChannelLookup::getChannel(TCodeChannelLookup::ToString(axis));
-                 if(channel == nullptr || channel->AxisName == channelName || channel->Type == AxisType::HalfOscillate)
-                     continue;
-                 QVariant variant;
-                 variant.setValue(*channel);
-                 linkToAxisCombobox->addItem(channel->FriendlyName, variant);
-             }
-             linkToAxisCombobox->setCurrentText(relatedChannel->FriendlyName);
-             connect(linkToAxisCombobox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
-                     [channelName, linkToAxisCombobox, linkCheckbox](int value)
-                       {
-                            auto relatedChannel = linkToAxisCombobox->currentData().value<ChannelModel33>();
-                            linkCheckbox->setToolTip("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS (Multi-funscript) " + relatedChannel.FriendlyName + " funscript value.\nIf there is no " + relatedChannel.FriendlyName + " funscript then it will default to random motion.");
-                            SettingsHandler::setLinkToRelatedAxis(channelName, relatedChannel.AxisName);
-                       });
-
-
-             ui.MultiplierSettingsGrid->addWidget(multiplierCheckbox, multiplierGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-             ui.MultiplierSettingsGrid->addWidget(linkCheckbox, multiplierGridRow, 1, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
-             ui.MultiplierSettingsGrid->addWidget(linkToAxisCombobox, multiplierGridRow, 2, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-             ui.MultiplierSettingsGrid->addWidget(damperCheckbox, multiplierGridRow, 3, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
-             ui.MultiplierSettingsGrid->addWidget(damperInput, multiplierGridRow, 4, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-
-             _multiplierWidgets.append(multiplierCheckbox);
-             _multiplierWidgets.append(linkCheckbox);
-             _multiplierWidgets.append(linkToAxisCombobox);
-             _multiplierWidgets.append(damperCheckbox);
-             _multiplierWidgets.append(damperInput);
-
-             multiplierGridRow++;
-         // }
-         QCheckBox* invertedCheckbox = new QCheckBox(this);
-         invertedCheckbox->setText(axis->FriendlyName);
-         invertedCheckbox->setChecked(SettingsHandler::getChannelFunscriptInverseChecked(channelName));
-         connect(invertedCheckbox, &QCheckBox::clicked, this,
+        QCheckBox* multiplierCheckbox = new QCheckBox(ui.randomMotionGroupbox);
+        multiplierCheckbox->setText(axis->FriendlyName);
+        multiplierCheckbox->setChecked(SettingsHandler::getMultiplierChecked(channelName));
+        connect(multiplierCheckbox, &QCheckBox::clicked, this,
+                 [this, channelName](bool checked)
+                   {
+                     SettingsHandler::setMultiplierChecked(channelName, checked);
+                     if(!checked)
+                         emit TCodeHomeClicked();
+                   });
+        QCheckBox* damperCheckbox = new QCheckBox(ui.randomMotionGroupbox);
+        damperCheckbox->setText("Speed");
+        damperCheckbox->setChecked(SettingsHandler::getDamperChecked(channelName));
+        QDoubleSpinBox* damperInput = new QDoubleSpinBox(ui.randomMotionGroupbox);
+        damperInput->setToolTip("Multiply the speed by the value.\n4000 * 0.5 = 2000");
+        damperInput->setDecimals(1);
+        damperInput->setSingleStep(0.1f);
+        damperInput->setMinimum(0.1f);
+        damperInput->setMaximum(std::numeric_limits<int>::max());
+        damperInput->setValue(SettingsHandler::getDamperValue(channelName));
+        connect(damperInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+                 [channelName](float value)
+                   {
+                     SettingsHandler::setDamperValue(channelName, value);
+                   });
+        connect(damperCheckbox, &QCheckBox::clicked, this,
                  [channelName](bool checked)
                    {
-                     SettingsHandler::setChannelFunscriptInverseChecked(channelName, checked);
+                     SettingsHandler::setDamperChecked(channelName, checked);
                    });
-         ui.FunscriptSettingsGrid->addWidget(invertedCheckbox, funscriptSettingsGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
 
-         funscriptSettingsGridRow++;
-     }
+        QCheckBox* linkCheckbox = new QCheckBox(ui.randomMotionGroupbox);
+        auto relatedChannel = TCodeChannelLookup::getChannel(axis->RelatedChannel);
+        linkCheckbox->setToolTip("This will link the channel to the related script.\nThis will remove the random calculation and just link\nthe current MFS " + relatedChannel->FriendlyName + " funscript value.\nIf there is no " + relatedChannel->FriendlyName + " funscript then it will default to random motion.");
+        linkCheckbox->setText("Link to script: ");
+        linkCheckbox->setChecked(SettingsHandler::getLinkToRelatedAxisChecked(channelName));
+        connect(linkCheckbox, &QCheckBox::clicked, this,
+                 [channelName](bool checked)
+                   {
+                     SettingsHandler::setLinkToRelatedAxisChecked(channelName, checked);
+                   });
 
-     setUpMultiplierUi(SettingsHandler::getMultiplierEnabled());
-
-     QPushButton* zeroOutButton = new QPushButton(this);
-     zeroOutButton->setText("Send device home");
-     connect(zeroOutButton, & QPushButton::clicked, this, &SettingsDialog::on_tCodeHome_clicked);
-     ui.RangeSettingsGrid->addWidget(zeroOutButton, sliderGridRow + 1, 0);
-
-     QLabel* xRangeStepLabel = new QLabel(this);
-     xRangeStepLabel->setText("Stroke range change step");
-     xRangeStepLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-     QSpinBox* xRangeStepInput = new QSpinBox(this);
-     xRangeStepInput->setToolTip("The amount to modify the stroke range when using keyboard/gamepad.");
-     xRangeStepInput->setMinimum(1);
-     xRangeStepInput->setMaximum(INT_MAX);
-     xRangeStepInput->setMinimumWidth(75);
-     xRangeStepInput->setSingleStep(50);
-     xRangeStepInput->setValue(SettingsHandler::getGamepadSpeedIncrement());
-     xRangeStepInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-     connect(xRangeStepInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::xRangeStepInput_valueChanged);
-     ui.RangeSettingsGrid->addWidget(xRangeStepLabel, sliderGridRow + 1, 2);
-     ui.RangeSettingsGrid->addWidget(xRangeStepInput, sliderGridRow + 1, 3);
+        QComboBox* linkToAxisCombobox = new QComboBox(ui.randomMotionGroupbox);
+        foreach(auto axis, tcodeChannels.keys())
+        {
+            auto channel =  TCodeChannelLookup::getChannel(TCodeChannelLookup::ToString(axis));
+            if(channel == nullptr || channel->AxisName == channelName || channel->Type == AxisType::HalfOscillate)
+                 continue;
+            QVariant variant;
+            variant.setValue(*channel);
+            linkToAxisCombobox->addItem(channel->FriendlyName, variant);
+        }
+        linkToAxisCombobox->setCurrentText(relatedChannel->FriendlyName);
+        connect(linkToAxisCombobox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+                 [channelName, linkToAxisCombobox, linkCheckbox](int value)
+                   {
+                        auto relatedChannel = linkToAxisCombobox->currentData().value<ChannelModel33>();
+                        linkCheckbox->setToolTip("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS (Multi-funscript) " + relatedChannel.FriendlyName + " funscript value.\nIf there is no " + relatedChannel.FriendlyName + " funscript then it will default to random motion.");
+                        SettingsHandler::setLinkToRelatedAxis(channelName, relatedChannel.AxisName);
+                   });
 
 
-     QLabel* lubePulseAmountLabel = new QLabel(this);
-     lubePulseAmountLabel->setText("Pulse lube amount");
-     lubePulseAmountLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-     QLabel* lubePulseFrequencyLabel = new QLabel(this);
-     lubePulseFrequencyLabel->setText("Pulse lube frequency");
-     lubePulseFrequencyLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-     QCheckBox* lubePulseCheckbox = new QCheckBox("Pulse lube enabled", this);
-     lubePulseCheckbox->setToolTip("Enable a tcode signal to be sent to the selected channel every n ms");
-     connect(lubePulseCheckbox, &QCheckBox::clicked, this, &SettingsDialog::lubePulseEnabled_valueChanged);
-     lubePulseCheckbox->setChecked(SettingsHandler::getLubePulseEnabled());
-     QSpinBox* libePulseAmountInput = new QSpinBox(this);
-     auto max = TCodeChannelLookup::getTCodeMaxValue();
-     libePulseAmountInput->setToolTip("TCode value to be sent to the selected channel between 0-"+QString::number(max));
-     libePulseAmountInput->setMinimum(0);
-     libePulseAmountInput->setMaximum(max);
-     libePulseAmountInput->setMinimumWidth(75);
-     libePulseAmountInput->setSingleStep(100);
-     libePulseAmountInput->setValue(SettingsHandler::getLubePulseAmount());
-     libePulseAmountInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-     connect(libePulseAmountInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::lubeAmount_valueChanged);
-     QSpinBox* libePulseFrequencyInput = new QSpinBox(this);
-     libePulseFrequencyInput->setToolTip("Time between pulse sent values in milliseconds");
-     libePulseFrequencyInput->setMinimum(0);
-     libePulseFrequencyInput->setMaximum(INT_MAX);
-     libePulseFrequencyInput->setMinimumWidth(75);
-     libePulseFrequencyInput->setSingleStep(500);
-     libePulseFrequencyInput->setSuffix("ms");
-     libePulseFrequencyInput->setValue(SettingsHandler::getLubePulseFrequency());
-     libePulseFrequencyInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-     connect(libePulseFrequencyInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::lubeFrequency_valueChanged);
-     ui.otherMotionGridLayout->addWidget(lubePulseCheckbox, 0, 0);
-     ui.otherMotionGridLayout->addWidget(lubePulseAmountLabel, 1, 0);
-     lubePulseCheckbox->raise();
-     lubePulseCheckbox->setStyleSheet("* {background: transparent}");
+         randomGrid->addWidget(multiplierCheckbox, randomMotionGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+         randomGrid->addWidget(linkCheckbox, randomMotionGridRow, 1, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
+         randomGrid->addWidget(linkToAxisCombobox, randomMotionGridRow, 2, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+         randomGrid->addWidget(damperCheckbox, randomMotionGridRow, 3, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
+         randomGrid->addWidget(damperInput, randomMotionGridRow, 4, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
 
-     QLabel* customTCodeLabel = new QLabel(this);
-     customTCodeLabel->setText("Custom TCode");
-     QListWidget* customTCodeListWidget = new QListWidget(this);
-     customTCodeListWidget->setObjectName(tr("customTCodeCommandList"));
-     customTCodeListWidget->setMinimumSize(100, 150);
-     customTCodeListWidget->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
-     customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
-     connect(customTCodeListWidget, & QListWidget::doubleClicked, this, [this, customTCodeListWidget](const QModelIndex index) {
-         if(customTCodeListWidget->selectedItems().length()) {
-             bool ok;
-             QString selected = customTCodeListWidget->selectedItems().first()->text();
-             auto newValue = GetTextDialog::show(this, "Custom TCode", selected, &ok);
-             if(ok) {
-                 MediaActions actions;
-                 if(actions.Values.contains(newValue)) {
-                     DialogHandler::MessageBox(this, "Reserved value: "+newValue, XLogLevel::Critical);
-                 } else if(customTCodeListWidget->findItems(newValue, Qt::MatchExactly).isEmpty()) {
-                     SettingsHandler::editCustomTCodeCommand(selected, newValue);
-                     customTCodeListWidget->clear();
-                     customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
-                     set_requires_restart(true);
-                 } else {
-                     DialogHandler::MessageBox(this, "Duplicate value: "+newValue, XLogLevel::Critical);
-                 }
-             }
-         }
-     });
+        _multiplierWidgets.append(multiplierCheckbox);
+        _multiplierWidgets.append(linkCheckbox);
+        _multiplierWidgets.append(linkToAxisCombobox);
+        _multiplierWidgets.append(damperCheckbox);
+        _multiplierWidgets.append(damperInput);
 
-     QPushButton* customTCodeAddbutton = new QPushButton(this);
-     customTCodeAddbutton->setText("Add");
-     connect(customTCodeAddbutton, &QPushButton::clicked, this, [this, customTCodeListWidget]() {
-         bool ok;
-         auto value = GetTextDialog::show(this, "Custom TCode", nullptr, &ok);
-         if(ok) {
-             MediaActions actions;
-             if(actions.Values.contains(value)) {
-                 DialogHandler::MessageBox(this, "Reserved value: "+value, XLogLevel::Critical);
-             } else if(customTCodeListWidget->findItems(value, Qt::MatchExactly).isEmpty()) {
-                 SettingsHandler::addCustomTCodeCommand(value);
-                 customTCodeListWidget->clear();
-                 customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
-                 MediaActions::AddOtherAction(value, "TCode command: " + value, ActionType::TCODE);
-                 set_requires_restart(true);
-             } else {
-                DialogHandler::MessageBox(this, "Duplicate value: "+value, XLogLevel::Critical);
-             }
-         }
-     });
+         randomMotionGridRow++;
 
-     QPushButton* customTCodeRemovebutton = new QPushButton(this);
-     customTCodeRemovebutton->setEnabled(false);
-     customTCodeRemovebutton->setText("Remove");
-     connect(customTCodeRemovebutton, &QPushButton::clicked, this, [this, customTCodeListWidget, customTCodeRemovebutton]() {
-         auto amount = customTCodeListWidget->selectedItems().length();
-         if(amount) {
-             auto ok = DialogHandler::Dialog(this, "Remove selected " + QString::number(amount) + " item(s)?");
-             if(ok) {
-                 for(auto selected: customTCodeListWidget->selectedItems()) {
-                    SettingsHandler::removeCustomTCodeCommand(selected->text());
-                 }
-                 customTCodeListWidget->clear();
-                 customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
-                 customTCodeRemovebutton->setEnabled(false);
-                 set_requires_restart(true);
-             }
-         }
-     });
+        QCheckBox* invertedCheckbox = new QCheckBox(ui.inversionGroupBox);
+        invertedCheckbox->setText(axis->FriendlyName);
+        invertedCheckbox->setChecked(SettingsHandler::getChannelFunscriptInverseChecked(channelName));
+        connect(invertedCheckbox, &QCheckBox::clicked, this,
+             [channelName](bool checked)
+               {
+                 SettingsHandler::setChannelFunscriptInverseChecked(channelName, checked);
+               });
+        inversionGrid->addWidget(invertedCheckbox, inversionGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
 
-     connect(customTCodeListWidget, & QListWidget::itemClicked, this, [customTCodeListWidget, customTCodeRemovebutton](QListWidgetItem* item) {
+        inversionGridRow++;
+    }
+
+    //setUpMultiplierUi(SettingsHandler::getMultiplierEnabled());
+
+    QPushButton* zeroOutButton = new QPushButton(ui.rangeLimitGroupbox);
+    zeroOutButton->setText("Send device home");
+    connect(zeroOutButton, & QPushButton::clicked, this, &SettingsDialog::on_tCodeHome_clicked);
+    rangeGrid->addWidget(zeroOutButton, sliderGridRow + 1, 0);
+
+    QLabel* xRangeStepLabel = new QLabel(ui.rangeLimitGroupbox);
+    xRangeStepLabel->setText("Stroke range change step");
+    xRangeStepLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    QSpinBox* xRangeStepInput = new QSpinBox(ui.rangeLimitGroupbox);
+    xRangeStepInput->setToolTip("The amount to modify the stroke range when using keyboard/gamepad.");
+    xRangeStepInput->setMinimum(1);
+    xRangeStepInput->setMaximum(INT_MAX);
+    xRangeStepInput->setMinimumWidth(75);
+    xRangeStepInput->setSingleStep(50);
+    xRangeStepInput->setValue(SettingsHandler::getGamepadSpeedIncrement());
+    xRangeStepInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+    connect(xRangeStepInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::xRangeStepInput_valueChanged);
+    rangeGrid->addWidget(xRangeStepLabel, sliderGridRow + 1, 2);
+    rangeGrid->addWidget(xRangeStepInput, sliderGridRow + 1, 3);
+
+    if(ui.otherMotionGridLayout->isEmpty())
+    {
+        QLabel* lubePulseAmountLabel = new QLabel(this);
+        lubePulseAmountLabel->setText("Pulse lube amount");
+        lubePulseAmountLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        QLabel* lubePulseFrequencyLabel = new QLabel(this);
+        lubePulseFrequencyLabel->setText("Pulse lube frequency");
+        lubePulseFrequencyLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        QCheckBox* lubePulseCheckbox = new QCheckBox("Pulse lube enabled", this);
+        lubePulseCheckbox->setToolTip("Enable a tcode signal to be sent to the selected channel every n ms");
+        connect(lubePulseCheckbox, &QCheckBox::clicked, this, &SettingsDialog::lubePulseEnabled_valueChanged);
+        lubePulseCheckbox->setChecked(SettingsHandler::getLubePulseEnabled());
+        QSpinBox* libePulseAmountInput = new QSpinBox(this);
+        auto max = TCodeChannelLookup::getTCodeMaxValue();
+        libePulseAmountInput->setToolTip("TCode value to be sent to the selected channel between 0-"+QString::number(max));
+        libePulseAmountInput->setMinimum(0);
+        libePulseAmountInput->setMaximum(max);
+        libePulseAmountInput->setMinimumWidth(75);
+        libePulseAmountInput->setSingleStep(100);
+        libePulseAmountInput->setValue(SettingsHandler::getLubePulseAmount());
+        libePulseAmountInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+        connect(libePulseAmountInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::lubeAmount_valueChanged);
+        QSpinBox* libePulseFrequencyInput = new QSpinBox(this);
+        libePulseFrequencyInput->setToolTip("Time between pulse sent values in milliseconds");
+        libePulseFrequencyInput->setMinimum(0);
+        libePulseFrequencyInput->setMaximum(INT_MAX);
+        libePulseFrequencyInput->setMinimumWidth(75);
+        libePulseFrequencyInput->setSingleStep(500);
+        libePulseFrequencyInput->setSuffix("ms");
+        libePulseFrequencyInput->setValue(SettingsHandler::getLubePulseFrequency());
+        libePulseFrequencyInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+        connect(libePulseFrequencyInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::lubeFrequency_valueChanged);
+        ui.otherMotionGridLayout->addWidget(lubePulseCheckbox, 0, 0);
+        ui.otherMotionGridLayout->addWidget(lubePulseAmountLabel, 1, 0);
+        lubePulseCheckbox->raise();
+        lubePulseCheckbox->setStyleSheet("* {background: transparent}");
+
+        QLabel* customTCodeLabel = new QLabel(this);
+        customTCodeLabel->setText("Custom TCode");
+        QListWidget* customTCodeListWidget = new QListWidget(this);
+        customTCodeListWidget->setObjectName(tr("customTCodeCommandList"));
+        customTCodeListWidget->setMinimumSize(100, 150);
+        customTCodeListWidget->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
+        customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
+        connect(customTCodeListWidget, & QListWidget::doubleClicked, this, [this, customTCodeListWidget](const QModelIndex index) {
+            if(customTCodeListWidget->selectedItems().length()) {
+                bool ok;
+                QString selected = customTCodeListWidget->selectedItems().first()->text();
+                auto newValue = GetTextDialog::show(this, "Custom TCode", selected, &ok);
+                if(ok) {
+                    MediaActions actions;
+                    if(actions.Values.contains(newValue)) {
+                        DialogHandler::MessageBox(this, "Reserved value: "+newValue, XLogLevel::Critical);
+                    } else if(customTCodeListWidget->findItems(newValue, Qt::MatchExactly).isEmpty()) {
+                        SettingsHandler::editCustomTCodeCommand(selected, newValue);
+                        customTCodeListWidget->clear();
+                        customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
+                        set_requires_restart(true);
+                    } else {
+                        DialogHandler::MessageBox(this, "Duplicate value: "+newValue, XLogLevel::Critical);
+                    }
+                }
+            }
+        });
+
+        QPushButton* customTCodeAddbutton = new QPushButton(this);
+        customTCodeAddbutton->setText("Add");
+        connect(customTCodeAddbutton, &QPushButton::clicked, this, [this, customTCodeListWidget]() {
+            bool ok;
+            auto value = GetTextDialog::show(this, "Custom TCode", nullptr, &ok);
+            if(ok) {
+                MediaActions actions;
+                if(actions.Values.contains(value)) {
+                    DialogHandler::MessageBox(this, "Reserved value: "+value, XLogLevel::Critical);
+                } else if(customTCodeListWidget->findItems(value, Qt::MatchExactly).isEmpty()) {
+                    SettingsHandler::addCustomTCodeCommand(value);
+                    customTCodeListWidget->clear();
+                    customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
+                    MediaActions::AddOtherAction(value, "TCode command: " + value, ActionType::TCODE);
+                    set_requires_restart(true);
+                } else {
+                    DialogHandler::MessageBox(this, "Duplicate value: "+value, XLogLevel::Critical);
+                }
+            }
+        });
+
+        QPushButton* customTCodeRemovebutton = new QPushButton(this);
+        customTCodeRemovebutton->setEnabled(false);
+        customTCodeRemovebutton->setText("Remove");
+        connect(customTCodeRemovebutton, &QPushButton::clicked, this, [this, customTCodeListWidget, customTCodeRemovebutton]() {
+            auto amount = customTCodeListWidget->selectedItems().length();
+            if(amount) {
+                auto ok = DialogHandler::Dialog(this, "Remove selected " + QString::number(amount) + " item(s)?");
+                if(ok) {
+                    for(auto selected: customTCodeListWidget->selectedItems()) {
+                        SettingsHandler::removeCustomTCodeCommand(selected->text());
+                    }
+                    customTCodeListWidget->clear();
+                    customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
+                    customTCodeRemovebutton->setEnabled(false);
+                    set_requires_restart(true);
+                }
+            }
+        });
+
+        connect(customTCodeListWidget, & QListWidget::itemClicked, this, [customTCodeListWidget, customTCodeRemovebutton](QListWidgetItem* item) {
          customTCodeRemovebutton->setEnabled(customTCodeListWidget->selectedItems().length());
-     });
+        });
 
-     ui.otherMotionGridLayout->addWidget(libePulseAmountInput, 1, 1);
-     ui.otherMotionGridLayout->addWidget(lubePulseFrequencyLabel, 2, 0);
-     ui.otherMotionGridLayout->addWidget(libePulseFrequencyInput, 2, 1);
-     ui.otherMotionGridLayout->addWidget(customTCodeLabel, 3, 0);
-     ui.otherMotionGridLayout->addWidget(customTCodeListWidget, 4, 0, 1, 2);
-     ui.otherMotionGridLayout->addWidget(customTCodeAddbutton, 5, 0);
-     ui.otherMotionGridLayout->addWidget(customTCodeRemovebutton, 5, 1);
+        ui.otherMotionGridLayout->addWidget(libePulseAmountInput, 1, 1);
+        ui.otherMotionGridLayout->addWidget(lubePulseFrequencyLabel, 2, 0);
+        ui.otherMotionGridLayout->addWidget(libePulseFrequencyInput, 2, 1);
+        ui.otherMotionGridLayout->addWidget(customTCodeLabel, 3, 0);
+        ui.otherMotionGridLayout->addWidget(customTCodeListWidget, 4, 0, 1, 2);
+        ui.otherMotionGridLayout->addWidget(customTCodeAddbutton, 5, 0);
+        ui.otherMotionGridLayout->addWidget(customTCodeRemovebutton, 5, 1);
+    }
 
-     setupGamepadMap();
-
-}
-
-void SettingsDialog::setUpMultiplierUi(bool enabled)
-{
-    foreach(auto widget, _multiplierWidgets)
-        widget->setHidden(!enabled);
+    setupGamepadMap();
 }
 
 void SettingsDialog::setAxisProgressBar(QString axis, int value)
@@ -1270,7 +1303,7 @@ void SettingsDialog::on_deoPortTxt_editingFinished()
 void SettingsDialog::on_enableMultiplierCheckbox_clicked(bool checked)
 {
     SettingsHandler::setMultiplierEnabled(checked);
-    setUpMultiplierUi(checked);
+    //setUpMultiplierUi(checked);
 }
 
 void SettingsDialog::on_serialConnectButton_clicked()

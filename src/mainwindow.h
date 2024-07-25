@@ -166,6 +166,7 @@ private slots:
     void on_actionCleanMetadata_triggered();
 
     void on_actionUpdateMetadata_triggered();
+    void on_action_hover();
 
 signals:
     void keyPressed(QKeyEvent * event);
