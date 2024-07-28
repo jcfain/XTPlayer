@@ -21,12 +21,12 @@ AddChannelDialog::AddChannelDialog(QWidget* parent) : QDialog(parent)
     QLabel* typeLabel = new QLabel(this);
     typeLabel->setText("Type");
     type = new QComboBox(this);
-    type->addItems(QStringList(AxisTypes.keys()));
+    type->addItems(QStringList(ChannelTypes.keys()));
     type->setCurrentText("None");
     QLabel* dimensionLabel = new QLabel(this);
     dimensionLabel->setText("Dimension");
     dimension = new QComboBox(this);
-    dimension->addItems(QStringList(AxisDimensions.keys()));
+    dimension->addItems(QStringList(ChannelDimensions.keys()));
     dimension->setCurrentText("None");
     connect(type, &QComboBox::currentTextChanged, this, &AddChannelDialog::onTypeChanged);
 
@@ -79,23 +79,23 @@ ChannelModel33 AddChannelDialog::getNewChannel(QWidget *parent, bool *ok)
         channelModel.Channel = dialog->channelName->text();
         channelModel.FriendlyName = dialog->friendlyName->text();
         QString modifier = "";
-        if(AxisTypes[dialog->type->currentText()] == AxisType::HalfOscillate && dialog->positiveModifier->isChecked())
+        if(ChannelTypes[dialog->type->currentText()] == ChannelType::HalfOscillate && dialog->positiveModifier->isChecked())
             modifier = "+";
-        else if (AxisTypes[dialog->type->currentText()] == AxisType::HalfOscillate && dialog->negativeModifier->isChecked())
+        else if (ChannelTypes[dialog->type->currentText()] == ChannelType::HalfOscillate && dialog->negativeModifier->isChecked())
             modifier = "-";
-        else if (AxisTypes[dialog->type->currentText()] == AxisType::HalfOscillate)
+        else if (ChannelTypes[dialog->type->currentText()] == ChannelType::HalfOscillate)
         {
             isValid = false;
             DialogHandler::MessageBox(parent, "Modifier (+/-) required for half range types!", XLogLevel::Critical);
         }
         channelModel.AxisName = dialog->channelName->text() + modifier;
-        channelModel.Type = AxisTypes[dialog->type->currentText()];
-        channelModel.Dimension = AxisDimensions[dialog->dimension->currentText()];
+        channelModel.Type = ChannelTypes[dialog->type->currentText()];
+        channelModel.Dimension = ChannelDimensions[dialog->dimension->currentText()];
         channelModel.Min = 0;
-        channelModel.Mid = channelModel.Type == AxisType::Ramp ? 0 : TCodeChannelLookup::getSelectedTCodeVersion() == TCodeVersion::v2 ? 500 : 5000;
+        channelModel.Mid = channelModel.Type == ChannelType::Ramp ? 0 : TCodeChannelLookup::getSelectedTCodeVersion() == TCodeVersion::v2 ? 500 : 5000;
         channelModel.Max = TCodeChannelLookup::getSelectedTCodeVersion() == TCodeVersion::v2 ? 999: 9999;
         channelModel.UserMin = 0;
-        channelModel.UserMid = channelModel.Type == AxisType::Ramp ? 0 : TCodeChannelLookup::getSelectedTCodeVersion() == TCodeVersion::v2 ? 500 : 5000;
+        channelModel.UserMid = channelModel.Type == ChannelType::Ramp ? 0 : TCodeChannelLookup::getSelectedTCodeVersion() == TCodeVersion::v2 ? 500 : 5000;
         channelModel.UserMax = TCodeChannelLookup::getSelectedTCodeVersion() == TCodeVersion::v2 ? 999 : 9999;
         channelModel.DamperEnabled = false;
         channelModel.DamperValue = 0.2f;
@@ -126,7 +126,7 @@ ChannelModel33 AddChannelDialog::getNewChannel(QWidget *parent, bool *ok)
 
 void AddChannelDialog::onTypeChanged(QString value)
 {
-    if(AxisTypes[value] == AxisType::HalfOscillate)
+    if(ChannelTypes[value] == ChannelType::HalfOscillate)
         modifierFrame->show();
     else
     {

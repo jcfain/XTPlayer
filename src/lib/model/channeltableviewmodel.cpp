@@ -152,12 +152,12 @@ bool ChannelTableViewModel::setData(const QModelIndex &index, const QVariant &va
         }
         else if (index.column() == 6)
         {
-            channel->Dimension = (AxisDimension)value.toInt();
+            channel->Dimension = (ChannelDimension)value.toInt();
             //SettingsHandler::setAxis(key, valueModel);
         }
         else if (index.column() == 7)
         {
-            channel->Type = (AxisType)value.toInt();
+            channel->Type = (ChannelType)value.toInt();
             //SettingsHandler::setAxis(key, valueModel);
         }
         else if (index.column() == 8)

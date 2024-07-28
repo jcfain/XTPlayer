@@ -106,7 +106,7 @@ void InputMapWidget::setUpData()
         QHBoxLayout *invertLayout = new QHBoxLayout(invertWidget);
         if(TCodeChannelLookup::hasChannel(action)) {
             auto channel = TCodeChannelLookup::getChannel(action);
-            if(channel->Type == AxisType::Oscillate) {
+            if(channel->Type == ChannelType::Oscillate) {
                 QCheckBox* invertCheckbox = new QCheckBox(this);
                 invertCheckbox->setChecked(channel->GamepadInverted);
                 invertCheckbox->setObjectName(action + "InvertCheckbox");

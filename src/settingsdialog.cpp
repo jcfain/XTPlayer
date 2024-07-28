@@ -207,13 +207,13 @@ void SettingsDialog::setupUi()
         ui.channelTableView->setSelectionMode(QAbstractItemView::ExtendedSelection);
         ChannelTableComboboxDelegate* channelTypeCombobox = new ChannelTableComboboxDelegate(ui.channelTableView);
         QMap<QString, int> axisTypes;
-        foreach(auto key, AxisTypes.keys())
-            axisTypes.insert(key, (int)AxisTypes.value(key));
+        foreach(auto key, ChannelTypes.keys())
+            axisTypes.insert(key, (int)ChannelTypes.value(key));
         channelTypeCombobox->setData(axisTypes);
         ChannelTableComboboxDelegate* channelDimensionCombobox = new ChannelTableComboboxDelegate(ui.channelTableView);
         QMap<QString, int> axisDimensions;
-        foreach(auto key, AxisDimensions.keys())
-            axisDimensions.insert(key, (int)AxisDimensions.value(key));
+        foreach(auto key, ChannelDimensions.keys())
+            axisDimensions.insert(key, (int)ChannelDimensions.value(key));
         channelDimensionCombobox->setData(axisDimensions);
         ui.channelTableView->setItemDelegateForColumn(7, channelTypeCombobox);
         ui.channelTableView->setItemDelegateForColumn(6, channelDimensionCombobox);
@@ -677,7 +677,7 @@ void SettingsDialog::setUpTCodeChannelUI()
     {
         QString channelName = TCodeChannelLookup::ToString(channel);
         auto axis = TCodeChannelLookup::getChannel(channelName);
-        if(axis == nullptr || axis->Type == AxisType::None || axis->Type == AxisType::HalfOscillate)
+        if(axis == nullptr || axis->Type == ChannelType::None || axis->Type == ChannelType::HalfOscillate)
             continue;
 
         int userMin = axis->UserMin;
@@ -778,7 +778,7 @@ void SettingsDialog::setUpTCodeChannelUI()
         foreach(auto axis, tcodeChannels.keys())
         {
             auto channel =  TCodeChannelLookup::getChannel(TCodeChannelLookup::ToString(axis));
-            if(channel == nullptr || channel->AxisName == channelName || channel->Type == AxisType::HalfOscillate)
+            if(channel == nullptr || channel->AxisName == channelName || channel->Type == ChannelType::HalfOscillate)
                  continue;
             QVariant variant;
             variant.setValue(*channel);
@@ -964,12 +964,12 @@ void SettingsDialog::setUpTCodeChannelUI()
     setupGamepadMap();
 }
 
-void SettingsDialog::setAxisProgressBar(QString axis, int value)
+void SettingsDialog::setAxisProgressBar(QString axis, int value, int time, ChannelTimeType timeType)
 {
-    emit onAxisValueChange(axis, value);
+    emit onAxisValueChange(axis, value, time, timeType);
 }
 
-void SettingsDialog::on_axis_valueChange(QString axis, int value)
+void SettingsDialog::on_axis_valueChange(QString axis, int value, int time, ChannelTimeType timeType)
 {
     if (ui.settingsTabWidget->currentWidget() == ui.motionTab)
     {

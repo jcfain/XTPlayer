@@ -32,7 +32,7 @@ public:
     void init(VideoHandler* videoHandler, ConnectionHandler* connectionHandler);
     void initLive();
     void dispose();
-    void setAxisProgressBar(QString axis, int value);
+    void setAxisProgressBar(QString axis, int value, int time, ChannelTimeType timeType);
     void resetAxisProgressBars();
     void latestYoutubeDownloaded();
 
@@ -47,7 +47,7 @@ public:
 
 signals:
     void TCodeHomeClicked();
-    void onAxisValueChange(QString axis, int value);
+    void onAxisValueChange(QString axis, int value, int time, ChannelTimeType timeType);
     void onAxisValueReset();
     void onOpenWelcomeDialog();
     void messageSend(QString message, XLogLevel loglevel);
@@ -129,7 +129,7 @@ private slots:
 
     void on_tCodeHome_clicked();
 
-    void on_axis_valueChange(QString axis, int value);
+    void on_axis_valueChange(QString axis, int value, int time, ChannelTimeType timeType);
     void on_axis_valueReset();
 
     void on_libraryExclusionsBtn_clicked();
