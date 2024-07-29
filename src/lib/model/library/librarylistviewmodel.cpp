@@ -135,11 +135,11 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
             int scaled = qRound(thumbInt * 0.75);
             QSize thumbSize = {scaled, scaled};
             if(item.thumbState == ThumbState::Waiting)
-                return ImageFactory::resizeCache(item.thumbFileLoading, item.ID, thumbSize);
+                return ImageFactory::resizeCache(LOADING_IMAGE, item.ID, thumbSize);
             else if(item.thumbState == ThumbState::Loading)
-                return ImageFactory::resizeCache(item.thumbFileLoadingCurrent, item.ID, thumbSize);
+                return ImageFactory::resizeCache(LOADING_CURRENT_IMAGE, item.ID, thumbSize);
             else if(item.thumbState == ThumbState::Error)
-                return ImageFactory::resizeCache(item.thumbFileError, item.ID, thumbSize);
+                return ImageFactory::resizeCache(ERROR_IMAGE, item.ID, thumbSize);
             return ImageFactory::resizeCache(item.thumbFile, item.ID, thumbSize);
         }
         else if(role == Qt::UserRole)

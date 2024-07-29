@@ -432,7 +432,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
         _playerControlsFrame->setDuration(value);
         auto item = XMediaStateHandler::getPlaying();
         if(item)
-            processMetaData(item);
+            processMetaData(*item);
     });
     connect(m_xtengine->syncHandler(), &SyncHandler::funscriptLoaded, this, [this](QString funscriptPath) {
         // Generate first load moneyshot based off heatmap if not already set.
@@ -508,7 +508,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
         _playerControlsFrame->setDuration(value);
         auto item = XMediaStateHandler::getPlaying();
         if(item)
-            processMetaData(item);
+            processMetaData(*item);
     });
 
     connect(_playerControlsFrame, &PlayerControls::seekSliderMoved, this, &MainWindow::on_timeline_currentTimeMove);
@@ -1099,7 +1099,8 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             }
             auto itemID = XMediaStateHandler::getPlayingID();
             QAction* moneyShotAction = myMenu.addAction(tr("Set moneyshot from current"), this, [this, selectedFileListItem] () {
-                SettingsHandler::instance()->setMoneyShot(selectedFileListItem, videoHandler->position());
+                auto item = m_xtengine->mediaLibraryHandler()->findItemByID(selectedFileListItem.ID);
+                SettingsHandler::instance()->setMoneyShot(*item, videoHandler->position());
             });
             moneyShotAction->setEnabled(itemID == selectedFileListItem.ID);
             connect(moneyShotAction, &QAction::hovered, this, &MainWindow::on_action_hover);
@@ -1593,7 +1594,7 @@ void MainWindow::updateMetaData(LibraryListItem27* libraryListItem)
                 libraryListItem->metadata.lastLoopEnd = _playerControlsFrame->getEndLoop();
             }
         }
-        SettingsHandler::updateLibraryListItemMetaData(libraryListItem);
+        SettingsHandler::updateLibraryListItemMetaData(*libraryListItem);
     }
 }
 
@@ -1602,7 +1603,7 @@ void MainWindow::alternateFunscriptSelected(ScriptInfo script)
     auto playingItem = XMediaStateHandler::getPlaying();
     if(playingItem)
     {
-        auto swappedScriptItem = LibraryListItem27(playingItem);
+        auto swappedScriptItem = LibraryListItem27(*playingItem);
         swappedScriptItem.script = script.path;
         m_xtengine->syncHandler()->swap(swappedScriptItem);
     }
@@ -1900,8 +1901,8 @@ void MainWindow::on_seekslider_hover(int position, qint64 sliderValue)
 
     auto item = XMediaStateHandler::getPlaying();
     if(!XTPSettings::getDisableTimeLinePreview() &&
-        item && item->type == LibraryListItemType::Video &&
-            !m_xtengine->syncHandler()->isPlayingStandAlone() &&
+        item && (item->type == LibraryListItemType::Video || item->type == LibraryListItemType::VR)
+            && !m_xtengine->syncHandler()->isPlayingStandAlone() &&
             !_playerControlsFrame->getTimeLineMousePressed() &&
             (videoHandler->isPlaying() || videoHandler->isPaused()))
     {

@@ -157,7 +157,7 @@ void LibraryItemSettingsDialog::showDialog(LibraryItemSettingsDialog *dialog, bo
             _libraryListItem->metadata.tags.removeAll(tag);
             _libraryListItem->metadata.tags.append(tag);
         }
-        SettingsHandler::updateLibraryListItemMetaData(_libraryListItem);
+        SettingsHandler::updateLibraryListItemMetaData(*_libraryListItem);
     }
     dialog->deleteLater();
 }
