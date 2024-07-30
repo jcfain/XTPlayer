@@ -1,6 +1,6 @@
 #include "playercontrols.h"
 
-#include "../library/libraryItemSettingsDialog.h"
+#include "../library/LibraryItemMetadataDialog.h"
 #include "lib/handler/xmediastatehandler.h"
 
 PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(parent, f)
@@ -182,7 +182,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     connect(mediaSettingsBtn, &QPushButton::clicked, this, [this]() {
         auto item = XMediaStateHandler::getPlaying();
         if(item)
-            LibraryItemSettingsDialog::getSettings(this, item);
+            LibraryItemMetadataDialog::getSettings(this, item);
     });
 
 //    settingsButton = new QPushButton(this);

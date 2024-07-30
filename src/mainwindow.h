@@ -45,7 +45,7 @@
 #include "settingsdialog.h"
 #include "librarywindow.h"
 #include "addplaylistdialog.h"
-#include "libraryItemSettingsDialog.h"
+#include "LibraryItemMetadataDialog.h"
 #include "noMatchingScriptDialog.h"
 #include "playercontrols.h"
 #include "welcomedialog.h"

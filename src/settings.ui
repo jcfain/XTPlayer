@@ -1566,10 +1566,23 @@ has no script associated with it.</string>
          </property>
         </spacer>
        </item>
-       <item row="0" column="2" rowspan="4">
+       <item row="9" column="1">
+        <widget class="QCheckBox" name="processMetadataOnStartChk">
+         <property name="text">
+          <string>Process all metadata on start</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2" rowspan="5">
         <widget class="QGroupBox" name="schedulerGroupbox">
          <property name="title">
           <string>Schedule media library refresh</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
          </property>
          <widget class="QWidget" name="formLayoutWidget_2">
           <property name="geometry">
@@ -1577,7 +1590,7 @@ has no script associated with it.</string>
             <x>-1</x>
             <y>20</y>
             <width>251</width>
-            <height>101</height>
+            <height>111</height>
            </rect>
           </property>
           <layout class="QFormLayout" name="formLayout_4">
@@ -1603,27 +1616,13 @@ has no script associated with it.</string>
             <number>6</number>
            </property>
            <item row="0" column="0">
-            <widget class="QCheckBox" name="schedulerEnabledChk">
-             <property name="text">
-              <string>Enabled</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
             <widget class="QLabel" name="schedulerIntervalLabel">
              <property name="text">
               <string>At time</string>
              </property>
             </widget>
            </item>
-           <item row="2" column="1">
-            <widget class="QCheckBox" name="fullMetadataProcessChk">
-             <property name="text">
-              <string>Full metadata process</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
+           <item row="0" column="1">
             <widget class="QTimeEdit" name="scheduleLibraryLoadAtTime">
              <property name="maximumDate">
               <date>
@@ -1641,15 +1640,22 @@ has no script associated with it.</string>
              </property>
             </widget>
            </item>
+           <item row="1" column="1">
+            <widget class="QCheckBox" name="fullMetadataProcessChk">
+             <property name="text">
+              <string>Full metadata process</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QCheckBox" name="syncSettingsChk">
+             <property name="text">
+              <string>Sync settings to disk</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </widget>
-        </widget>
-       </item>
-       <item row="9" column="1">
-        <widget class="QCheckBox" name="processMetadataOnStartChk">
-         <property name="text">
-          <string>Process all metadata on start</string>
-         </property>
         </widget>
        </item>
       </layout>

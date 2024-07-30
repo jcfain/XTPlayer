@@ -1,4 +1,4 @@
-#include "libraryItemSettingsDialog.h"
+#include "LibraryItemMetadataDialog.h"
 
 #include <cmath>
 #include <QCheckBox>
@@ -6,8 +6,9 @@
 
 #include "lib/handler/loghandler.h"
 #include "lib/handler/settingshandler.h"
+#include "lib/struct/LibraryListItemMetaData258.h"
 
-LibraryItemSettingsDialog::LibraryItemSettingsDialog(QWidget *parent) : QDialog(parent)
+LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(parent)
 {
     int currentRow = 0;
     QGridLayout* layout = new QGridLayout(this);
@@ -35,7 +36,7 @@ LibraryItemSettingsDialog::LibraryItemSettingsDialog(QWidget *parent) : QDialog(
     offsetLabel->setText("Offset");
     offsetSpinBox = new QSpinBox(this);
     offsetSpinBox->setSuffix("ms");
-    offsetSpinBox->setSingleStep(1);
+    offsetSpinBox->setSingleStep(SettingsHandler::getFunscriptOffsetStep());
     connect(offsetSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value) {
         SettingsHandler::setLiveOffset(value);
         _libraryListItem->metadata.offset = value;
@@ -45,6 +46,20 @@ LibraryItemSettingsDialog::LibraryItemSettingsDialog(QWidget *parent) : QDialog(
     offsetSpinBox->setMinimum(std::numeric_limits<int>::lowest());
     offsetSpinBox->setMaximum(std::numeric_limits<int>::max());
     offsetSpinBox->setValue(_libraryListItem->metadata.offset);
+    layout->addWidget(offsetLabel, currentRow, 0, 1, 1);
+    layout->addWidget(offsetSpinBox, currentRow, 1, 1, 2);
+    currentRow++;
+
+    QLabel* funscriptModifierLabel = new QLabel(this);
+    funscriptModifierLabel->setText("Funscript range");
+    QDoubleSpinBox* funscriptModifierSpinBox = new QDoubleSpinBox(this);
+    funscriptModifierSpinBox->setSuffix("%");
+    funscriptModifierSpinBox->setSingleStep(SettingsHandler::getFunscriptModifierStep());
+    funscriptModifierSpinBox->setValue(_libraryListItem->metadata.funscriptModifier);
+    connect(funscriptModifierSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this](int value) {
+        //SettingsHandler::setLiveOffset(value);
+        _libraryListItem->metadata.funscriptModifier = value;
+    });
     layout->addWidget(offsetLabel, currentRow, 0, 1, 1);
     layout->addWidget(offsetSpinBox, currentRow, 1, 1, 2);
     currentRow++;
@@ -114,25 +129,25 @@ LibraryItemSettingsDialog::LibraryItemSettingsDialog(QWidget *parent) : QDialog(
     currentRow++;
 
     bool conn = connect(buttonBox, &QDialogButtonBox::accepted,
-                   this, &LibraryItemSettingsDialog::accept);
+                   this, &LibraryItemMetadataDialog::accept);
     Q_ASSERT(conn);
     conn = connect(buttonBox, &QDialogButtonBox::rejected,
-                   this, &LibraryItemSettingsDialog::reject);
+                   this, &LibraryItemMetadataDialog::reject);
     Q_ASSERT(conn);
     //setLayout(layout);
 }
 
-void LibraryItemSettingsDialog::getSettings(QWidget *parent, LibraryListItem27* item, bool *ok)
+void LibraryItemMetadataDialog::getSettings(QWidget *parent, LibraryListItem27* item, bool *ok)
 {
     if(item)
     {
         _libraryListItem = item;
-        LibraryItemSettingsDialog *dialog = new LibraryItemSettingsDialog(parent);
+        LibraryItemMetadataDialog *dialog = new LibraryItemMetadataDialog(parent);
         showDialog(dialog, ok);
     }
 }
 
-void LibraryItemSettingsDialog::showDialog(LibraryItemSettingsDialog *dialog, bool *ok)
+void LibraryItemMetadataDialog::showDialog(LibraryItemMetadataDialog *dialog, bool *ok)
 {
     dialog->offsetSpinBox->setValue(_libraryListItem->metadata.offset);
     //dialog->setModal(false);
@@ -158,11 +173,12 @@ void LibraryItemSettingsDialog::showDialog(LibraryItemSettingsDialog *dialog, bo
             _libraryListItem->metadata.tags.append(tag);
         }
         SettingsHandler::updateLibraryListItemMetaData(*_libraryListItem);
+        emit dialog->save();
     }
     dialog->deleteLater();
 }
 
-void LibraryItemSettingsDialog::updateOffsetLabel()
+void LibraryItemMetadataDialog::updateOffsetLabel()
 {
     auto offsetText = QString::number(SettingsHandler::getoffSet()) + "ms";
     if(_libraryListItem->metadata.offset) {
@@ -183,4 +199,4 @@ void LibraryItemSettingsDialog::updateOffsetLabel()
 
 }
 
-LibraryListItem27* LibraryItemSettingsDialog::_libraryListItem;
+LibraryListItem27* LibraryItemMetadataDialog::_libraryListItem;

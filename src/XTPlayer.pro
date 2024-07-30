@@ -25,6 +25,7 @@ INCLUDEPATH += $$PWD/lib/common
 
 SOURCES += \
     gettextdialog.cpp \
+    lib/widgets/library/LibraryItemMetadataDialog.cpp \
     lib/widgets/library/tagManager.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -42,7 +43,6 @@ SOURCES += \
     lib/model/library/librarylistviewmodel.cpp \
     lib/model/library/librarysortfilterproxymodel.cpp \
     lib/model/library/playlistviewmodel.cpp \
-    lib/widgets/library/libraryItemSettingsDialog.cpp \
     lib/widgets/library/libraryManager.cpp \
     lib/widgets/library/libraryexclusions.cpp \
     lib/widgets/library/librarywindow.cpp \
@@ -58,6 +58,7 @@ SOURCES += \
 
 HEADERS += \
     gettextdialog.h \
+    lib/widgets/library/LibraryItemMetadataDialog.h \
     lib/widgets/library/tagManager.h \
     mainwindow.h \
     xtpsettings.h \
@@ -74,7 +75,6 @@ HEADERS += \
     lib/model/library/librarylistviewmodel.h \
     lib/model/library/librarysortfilterproxymodel.h \
     lib/model/library/playlistviewmodel.h \
-    lib/widgets/library/libraryItemSettingsDialog.h \
     lib/widgets/library/libraryManager.h \
     lib/widgets/library/libraryexclusions.h \
     lib/widgets/library/librarywindow.h \

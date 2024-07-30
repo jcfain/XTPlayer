@@ -1142,7 +1142,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             }
             QAction* metadataAction = myMenu.addAction(tr("Edit metadata..."), this, [this, selectedFileListItem] () {
                 auto item = m_xtengine->mediaLibraryHandler()->findItemByMediaPath(selectedFileListItem.path);
-                LibraryItemSettingsDialog::getSettings(libraryList, item);
+                LibraryItemMetadataDialog::getSettings(libraryList, item);
             });
             connect(metadataAction, &QAction::hovered, this, &MainWindow::on_action_hover);
             metadataAction->setToolTip("Edit the media items metadata");
@@ -1571,12 +1571,9 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
 
 void MainWindow::processMetaData(const LibraryListItem27& libraryListItem)
 {
-    if(libraryListItem.type != LibraryListItemType::VR)
+    if(libraryListItem.metadata.lastLoopEnabled && libraryListItem.metadata.lastLoopStart > -1 && libraryListItem.metadata.lastLoopEnd > libraryListItem.metadata.lastLoopStart)
     {
-        if(libraryListItem.metadata.lastLoopEnabled && libraryListItem.metadata.lastLoopStart > -1 && libraryListItem.metadata.lastLoopEnd > libraryListItem.metadata.lastLoopStart)
-        {
-            _playerControlsFrame->SetLoop(true);
-        }
+        _playerControlsFrame->SetLoop(true);
     }
 }
 
@@ -1584,15 +1581,12 @@ void MainWindow::updateMetaData(LibraryListItem27* libraryListItem)
 {
     if(libraryListItem)
     {
-        if(libraryListItem->type != LibraryListItemType::VR)
+        libraryListItem->metadata.lastPlayPosition = videoHandler->position();
+        libraryListItem->metadata.lastLoopEnabled = _playerControlsFrame->getAutoLoop();
+        if(libraryListItem->metadata.lastLoopEnabled)
         {
-            libraryListItem->metadata.lastPlayPosition = videoHandler->position();
-            libraryListItem->metadata.lastLoopEnabled = _playerControlsFrame->getAutoLoop();
-            if(libraryListItem->metadata.lastLoopEnabled)
-            {
-                libraryListItem->metadata.lastLoopStart = _playerControlsFrame->getStartLoop();
-                libraryListItem->metadata.lastLoopEnd = _playerControlsFrame->getEndLoop();
-            }
+            libraryListItem->metadata.lastLoopStart = _playerControlsFrame->getStartLoop();
+            libraryListItem->metadata.lastLoopEnd = _playerControlsFrame->getEndLoop();
         }
         SettingsHandler::updateLibraryListItemMetaData(*libraryListItem);
     }

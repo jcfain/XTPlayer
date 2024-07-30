@@ -336,12 +336,14 @@ void SettingsDialog::setupUi()
 
         ui.rememberWindowSettingsChk->setChecked(XTPSettings::getRememberWindowsSettings());
 
-        ui.schedulerEnabledChk->setChecked(SettingsHandler::scheduleLibraryLoadEnabled());
+        ui.schedulerGroupbox->setChecked(SettingsHandler::scheduleLibraryLoadEnabled());
         ui.scheduleLibraryLoadAtTime->setTime(SettingsHandler::scheduleLibraryLoadTime());
         ui.fullMetadataProcessChk->setChecked(SettingsHandler::scheduleLibraryLoadFullProcess());
+        ui.syncSettingsChk->setChecked(SettingsHandler::scheduleSettingsSync());
 
-        connect(ui.schedulerEnabledChk, &QCheckBox::clicked, this, &SettingsDialog::schedulerEnabledChk_clicked);
+        connect(ui.schedulerGroupbox, &QGroupBox::clicked, this, &SettingsDialog::schedulerEnabledChk_clicked);
         connect(ui.fullMetadataProcessChk, &QCheckBox::clicked, this, &SettingsDialog::fullMetadataProcessChk_clicked);
+        connect(ui.syncSettingsChk, &QCheckBox::clicked, this, &SettingsDialog::fullMetadataProcessChk_clicked);
 
         connect(ui.randomMotionGroupbox, &QGroupBox::clicked, this, &SettingsDialog::on_enableMultiplierCheckbox_clicked);
 
@@ -2059,14 +2061,14 @@ void SettingsDialog::on_defaultSmartTagsButton_clicked()
         SettingsHandler::SetSmartTagDefaults();
 }
 
-void SettingsDialog::on_viewedPercentageSpinBox_valueChanged(int arg1)
+void SettingsDialog::onViewedPercentageSpinBoxValueChanged(int arg1)
 {
     float percentage = arg1/(float)100;
     SettingsHandler::setViewedThreshold(percentage);
 }
 
 
-void SettingsDialog::on_disableHeartbeatChk_clicked(bool checked)
+void SettingsDialog::onDisableHeartbeatChkClicked(bool checked)
 {
     SettingsHandler::setDisableHeartBeat(checked);
     set_requires_restart(true);
@@ -2077,7 +2079,7 @@ void SettingsDialog::schedulerEnabledChk_clicked(bool checked)
     SettingsHandler::setScheduleLibraryLoadEnabled(checked);
 }
 
-void SettingsDialog::on_scheduleLibraryLoadAtTime_userTimeChanged(const QTime &time)
+void SettingsDialog::onScheduleLibraryLoadAtTimeUserTimeChanged(const QTime &time)
 {
     SettingsHandler::setScheduleLibraryLoadTime(time);
 }
@@ -2092,3 +2094,7 @@ void SettingsDialog::processMetadataOnStart_clicked(bool checked)
     SettingsHandler::setProcessMetadataOnStart(checked);
 }
 
+void SettingsDialog::settingsSyncChkClicked(bool checked)
+{
+    SettingsHandler::setScheduleSettingsSync(checked);
+}

@@ -1,5 +1,5 @@
-#ifndef LIBRARYLISTITEMSETTINGSDIALOG_H
-#define LIBRARYLISTITEMSETTINGSDIALOG_H
+#ifndef LIBRARYITEMMETADATADIALOG_H
+#define LIBRARYITEMMETADATADIALOG_H
 
 #include <QDialog>
 #include <QLabel>
@@ -8,14 +8,15 @@
 #include <QPushButton>
 #include <QDialogButtonBox>
 #include <QGridLayout>
-#include "lib/struct/LibraryListItemMetaData258.h"
 #include "lib/struct/LibraryListItem27.h"
 
-class LibraryItemSettingsDialog : public QDialog
+class LibraryItemMetadataDialog : public QDialog
 {
     Q_OBJECT
+signals:
+    void save();
 public:
-    explicit LibraryItemSettingsDialog(QWidget *parent = nullptr);
+    explicit LibraryItemMetadataDialog(QWidget *parent = nullptr);
     static void getSettings(QWidget *parent, LibraryListItem27* item,  bool *ok = nullptr);
 
 private:
@@ -34,8 +35,8 @@ private:
     QPushButton* resetMoneyShotButton;
 
     static LibraryListItem27* _libraryListItem;
-    static void showDialog(LibraryItemSettingsDialog *dialog, bool *ok);
+    static void showDialog(LibraryItemMetadataDialog *dialog, bool *ok);
     void updateOffsetLabel();
 };
 
-#endif // LIBRARYLISTITEMSETTINGSDIALOG_H
+#endif // LIBRARYITEMMETADATADIALOG_H

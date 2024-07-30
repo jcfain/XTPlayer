@@ -240,16 +240,17 @@ private slots:
 
     void on_defaultSmartTagsButton_clicked();
 
-    void on_viewedPercentageSpinBox_valueChanged(int arg1);
+    void onViewedPercentageSpinBoxValueChanged(int arg1);
 
-    void on_disableHeartbeatChk_clicked(bool checked);
+    void onDisableHeartbeatChkClicked(bool checked);
 
     void schedulerEnabledChk_clicked(bool checked);
 
     void fullMetadataProcessChk_clicked(bool checked);
     void processMetadataOnStart_clicked(bool checked);
+    void settingsSyncChkClicked(bool checked);
 
-    void on_scheduleLibraryLoadAtTime_userTimeChanged(const QTime &time);
+    void onScheduleLibraryLoadAtTimeUserTimeChanged(const QTime &time);
 
 private:
 
