@@ -23,7 +23,8 @@ int XLibraryList::selectedRow() {
 
 void XLibraryList::setCurrentRow(int index) {
     QModelIndex indexOfTheCellIWant = model()->index(index, 0);
-    this->selectionModel()->setCurrentIndex(indexOfTheCellIWant, QItemSelectionModel::SelectionFlag::SelectCurrent);
+    auto selectionModel = this->selectionModel();
+    selectionModel->setCurrentIndex(indexOfTheCellIWant, QItemSelectionModel::SelectionFlag::SelectCurrent);
 }
 
 LibraryListItem27 XLibraryList::item(QModelIndex index) {

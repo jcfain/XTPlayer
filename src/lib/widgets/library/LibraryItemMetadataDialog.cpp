@@ -6,6 +6,7 @@
 
 #include "lib/handler/loghandler.h"
 #include "lib/handler/settingshandler.h"
+#include "lib/handler/funscripthandler.h"
 #include "lib/struct/LibraryListItemMetaData258.h"
 
 LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(parent)
@@ -52,16 +53,18 @@ LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(
 
     QLabel* funscriptModifierLabel = new QLabel(this);
     funscriptModifierLabel->setText("Funscript range");
-    QDoubleSpinBox* funscriptModifierSpinBox = new QDoubleSpinBox(this);
+    funscriptModifierSpinBox = new QDoubleSpinBox(this);
+    funscriptModifierSpinBox->setMinimum(std::numeric_limits<double>::lowest());
+    funscriptModifierSpinBox->setMaximum(std::numeric_limits<double>::max());
     funscriptModifierSpinBox->setSuffix("%");
     funscriptModifierSpinBox->setSingleStep(SettingsHandler::getFunscriptModifierStep());
     funscriptModifierSpinBox->setValue(_libraryListItem->metadata.funscriptModifier);
-    connect(funscriptModifierSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this](int value) {
-        //SettingsHandler::setLiveOffset(value);
-        _libraryListItem->metadata.funscriptModifier = value;
+    connect(funscriptModifierSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [](int value) {
+        //_libraryListItem->metadata.funscriptModifier = value;
+        FunscriptHandler::setModifier(value);
     });
-    layout->addWidget(offsetLabel, currentRow, 0, 1, 1);
-    layout->addWidget(offsetSpinBox, currentRow, 1, 1, 2);
+    layout->addWidget(funscriptModifierLabel, currentRow, 0, 1, 1);
+    layout->addWidget(funscriptModifierSpinBox, currentRow, 1, 1, 2);
     currentRow++;
 
     moneyShotLabel = new QLabel(this);
@@ -158,13 +161,19 @@ void LibraryItemMetadataDialog::showDialog(LibraryItemMetadataDialog *dialog, bo
         if(dialog->offsetSpinBox->text().isEmpty())
         {
             dialog->offsetSpinBox->setValue(0);
-            _libraryListItem->metadata.offset = 0;
+        }
+        if(dialog->funscriptModifierSpinBox->text().isEmpty())
+        {
+            dialog->funscriptModifierSpinBox->setValue(100.0);
         }
 //        auto ms = dialog->moneyShotLineEdit->text();
 //        QRegExp re("\\d*");  // a digit (\d), zero or more times (*)
 //        if (re.exactMatch(ms))
 //            _libraryListItemMetaData.moneyShotMillis = ms.isEmpty() ? -1 : ms.toLongLong();
+        _libraryListItem->metadata.offset = dialog->offsetSpinBox->value();
+        _libraryListItem->metadata.funscriptModifier = dialog->funscriptModifierSpinBox->value();
         SettingsHandler::setLiveOffset(_libraryListItem->metadata.offset);
+        FunscriptHandler::setModifier(_libraryListItem->metadata.funscriptModifier);
         foreach (QString tag, dialog->m_itemTagsToRemove) {
             _libraryListItem->metadata.tags.removeAll(tag);
         }
@@ -172,7 +181,7 @@ void LibraryItemMetadataDialog::showDialog(LibraryItemMetadataDialog *dialog, bo
             _libraryListItem->metadata.tags.removeAll(tag);
             _libraryListItem->metadata.tags.append(tag);
         }
-        SettingsHandler::updateLibraryListItemMetaData(*_libraryListItem);
+        SettingsHandler::updateLibraryListItemMetaData(*_libraryListItem, true);
         emit dialog->save();
     }
     dialog->deleteLater();

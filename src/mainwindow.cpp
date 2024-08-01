@@ -1539,7 +1539,9 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
             _videoPreviewWidget->setFile(selectedFileListItem.path);
             //videoHandler->load();
         }
-        selectedFileListItem.script = customScript.isEmpty() ? selectedFileListItem.zipFile.isEmpty() ? selectedFileListItem.script : selectedFileListItem.zipFile : customScript;
+        //selectedFileListItem.script = customScript.isEmpty() ? selectedFileListItem.zipFile.isEmpty() ? selectedFileListItem.script : selectedFileListItem.zipFile : customScript;
+        if(!customScript.isEmpty())
+            m_xtengine->syncHandler()->buildScriptItem(selectedFileListItem, customScript);
         SyncLoadState loadState = m_xtengine->syncHandler()->load(selectedFileListItem);
         if(loadState.hasScript)
             m_xtengine->mediaLibraryHandler()->findAlternateFunscripts(loadState.mainScript);
@@ -1592,14 +1594,12 @@ void MainWindow::updateMetaData(LibraryListItem27* libraryListItem)
     }
 }
 
-void MainWindow::alternateFunscriptSelected(ScriptInfo script)
+void MainWindow::alternateFunscriptSelected(const ScriptInfo &script)
 {
     auto playingItem = XMediaStateHandler::getPlaying();
     if(playingItem)
     {
-        auto swappedScriptItem = LibraryListItem27(*playingItem);
-        swappedScriptItem.script = script.path;
-        m_xtengine->syncHandler()->swap(swappedScriptItem);
+        m_xtengine->syncHandler()->swap(*playingItem, script);
     }
 }
 
@@ -2198,7 +2198,7 @@ void MainWindow::on_media_statusChanged(XMediaStatus status)
     }
 }
 
-void MainWindow::skipForward()
+void MainWindow::skipForward(uint8_t iterationCount)
 {
     if (libraryList->count() > 0)
     {
@@ -2211,11 +2211,13 @@ void MainWindow::skipForward()
         else
         {
             libraryListItem = setCurrentLibraryRow(0);
+            iterationCount++;
         }
 
         if(libraryListItem.type == LibraryListItemType::PlaylistInternal || (SettingsHandler::getSkipPlayingStandAloneFunscriptsInLibrary() && libraryListItem.type == LibraryListItemType::FunscriptType))
         {
-            skipForward();
+            if(iterationCount < 2)
+                skipForward(iterationCount);// Avoid infinit loop when only funscripts or playlists are shown
         }
         else
             stopAndPlayMedia(libraryListItem);

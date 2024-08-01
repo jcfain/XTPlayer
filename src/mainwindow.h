@@ -335,7 +335,7 @@ private:
     //void waitForMediaTostop(LibraryListItem27 selectedFileListItem, QString customScript = nullptr, bool audioSync = false, bool autoPlay = true);
     void initNetworkEvent();
     void initSerialEvent();
-    void skipForward();
+    void skipForward(uint8_t iterationCount = 0);
     void skipToMoneyShot();
     void skipToNextAction();
     void skipBack();
@@ -367,7 +367,7 @@ private:
     void showInGraphicalShell(QString path);
     void processMetaData(const LibraryListItem27& LibraryListItem27);
     void updateMetaData(LibraryListItem27* LibraryListItem27);
-    void alternateFunscriptSelected(ScriptInfo script);
+    void alternateFunscriptSelected(const ScriptInfo &script);
     void alternateFunscriptsFound(QList<ScriptInfo> scriptInfos);
 
     qint64 mediaPosition();
