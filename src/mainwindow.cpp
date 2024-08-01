@@ -459,7 +459,6 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::libraryLoadingStatus, this, &MainWindow::onLibraryLoadingStatusChange);
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::libraryLoading, this, &MainWindow::onSetLibraryLoading);
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::prepareLibraryLoad, this, &MainWindow::onPrepareLibraryLoad);
-    connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::alternateFunscriptsFound, this, &MainWindow::alternateFunscriptsFound);
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::backgroundProcessStateChange, this,  &MainWindow::setLoadingStatus);
 
     connect(action75_Size, &QAction::triggered, this, &MainWindow::on_action75_triggered);
@@ -1543,8 +1542,7 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
         if(!customScript.isEmpty())
             m_xtengine->syncHandler()->buildScriptItem(selectedFileListItem, customScript);
         SyncLoadState loadState = m_xtengine->syncHandler()->load(selectedFileListItem);
-        if(loadState.hasScript)
-            m_xtengine->mediaLibraryHandler()->findAlternateFunscripts(loadState.mainScript);
+        _playerControlsFrame->setAltScripts(item->metadata.scripts);
         QString filesWithLoadingIssues = "";
         if(selectedFileListItem.type == LibraryListItemType::FunscriptType && m_xtengine->syncHandler()->isLoaded())
             m_xtengine->syncHandler()->playStandAlone();
@@ -1601,11 +1599,6 @@ void MainWindow::alternateFunscriptSelected(const ScriptInfo &script)
     {
         m_xtengine->syncHandler()->swap(*playingItem, script);
     }
-}
-
-void MainWindow::alternateFunscriptsFound(QList<ScriptInfo> scriptInfos)
-{
-    _playerControlsFrame->setAltScripts(scriptInfos);
 }
 
 void MainWindow::on_mainwindow_change(QEvent* event)

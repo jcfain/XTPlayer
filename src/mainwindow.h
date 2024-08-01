@@ -368,7 +368,6 @@ private:
     void processMetaData(const LibraryListItem27& LibraryListItem27);
     void updateMetaData(LibraryListItem27* LibraryListItem27);
     void alternateFunscriptSelected(const ScriptInfo &script);
-    void alternateFunscriptsFound(QList<ScriptInfo> scriptInfos);
 
     qint64 mediaPosition();
     qint64 mediaDuration();
