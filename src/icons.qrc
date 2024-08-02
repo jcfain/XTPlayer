@@ -56,5 +56,6 @@
         <file>images/icons/cc.svg</file>
         <file>images/icons/tag.svg</file>
         <file>images/icons/equalizer.svg</file>
+        <file>images/icons/home.svg</file>
     </qresource>
 </RCC>

@@ -186,8 +186,6 @@ private slots:
 
     void on_vrLibraryLineEdit_textEdited(const QString &arg1);
 
-    void on_finscriptModifierSpinBox_valueChanged(int arg1);
-
     void on_xtpWebHandlerCheckbox_clicked(bool checked);
 
     void on_useMediaDirectoryCheckbox_clicked(bool checked);

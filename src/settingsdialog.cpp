@@ -86,7 +86,6 @@ void SettingsDialog::initLive()
     if(!SettingsHandler::hashedWebPass().isEmpty())
         ui.webPasswordButton->setText("Change password");
     ui.hideWelcomeDialog->setChecked(SettingsHandler::getHideWelcomeScreen());
-    ui.finscriptModifierSpinBox->setValue(FunscriptHandler::getModifier());
 //    auto availableAxis = SettingsHandler::getAvailableAxis();
 //    foreach(auto channel, availableAxis->keys())
 //    {
@@ -1202,7 +1201,7 @@ void SettingsDialog::onRange_valueChanged(QString name, int value)
     mainLabel->setText(channel->FriendlyName + " mid: " + QString::number(XMath::middle(min, max)));
     OutputDeviceHandler* outputDevice = _connectionHandler->getSelectedOutputDevice();
     InputDeviceHandler* inputDevice = _connectionHandler->getSelectedInputDevice();
-    if ((!_videoHandler->isPlaying() || _videoHandler->isPaused() || SettingsHandler::getLiveActionPaused())
+    if ((!_videoHandler->isPlaying() || _videoHandler->isPaused())
         && (!inputDevice || !inputDevice->isPlaying()) && (outputDevice && outputDevice->isConnected()))
     {
         _connectionHandler->sendTCode(name + QString::number(value).rightJustified(SettingsHandler::getTCodePadding(), '0')+ "S1000");
@@ -1761,11 +1760,6 @@ void SettingsDialog::on_httpRootLineEdit_textEdited(const QString &selectedDirec
 void SettingsDialog::on_vrLibraryLineEdit_textEdited(const QString &selectedDirectory)
 {
     SettingsHandler::addSelectedVRLibrary(selectedDirectory);
-}
-
-void SettingsDialog::on_finscriptModifierSpinBox_valueChanged(int value)
-{
-    FunscriptHandler::setModifier(value);
 }
 
 void SettingsDialog::on_useMediaDirectoryCheckbox_clicked(bool checked)
