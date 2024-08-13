@@ -741,6 +741,7 @@ void MainWindow::mediaAction(QString action, QString actionText)
         if (videoHandler->isPaused() || videoHandler->isPlaying())
         {
             videoHandler->togglePause();
+            //m_xtengine->syncHandler()->setPause(videoHandler->isPaused());
         }
 //        else if(SettingsHandler::getDeoEnabled() && _xSettings->getDeoHandler()->isConnected())
 //        {
@@ -1793,7 +1794,7 @@ void MainWindow::on_PlayBtn_clicked()
         if(videoHandler->isPaused() || videoHandler->isPlaying())
         {
             videoHandler->togglePause();
-            m_xtengine->syncHandler()->togglePause();
+            //m_xtengine->syncHandler()->setPause(videoHandler->isPaused());
         }
         else if(m_xtengine->syncHandler()->isPlayingStandAlone())
         {

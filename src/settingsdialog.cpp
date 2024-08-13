@@ -47,7 +47,7 @@ void SettingsDialog::init(VideoHandler* videoHandler, ConnectionHandler* connect
     _videoHandler = videoHandler;
     _connectionHandler = connectionHandler;
 
-    ui.useWebSocketsCheckbox->setHidden(true);//Fast sends buffer in QWebSocket and sends late
+    //ui.useWebSocketsCheckbox->setHidden(true);//Fast sends buffer in QWebSocket and sends late
     ui.dubugButton->hide();// Doesnt restart in debug mode.
     ui.useMediaDirectoryCheckbox->hide();//Not fully developed.
 

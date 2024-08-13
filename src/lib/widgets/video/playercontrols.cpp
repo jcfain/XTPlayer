@@ -620,12 +620,20 @@ void PlayerControls::setAltScripts(QList<ScriptInfo> scriptInfos)
         if(!QFileInfo::exists(scriptInfo.path))
             continue;
         QString type = "";
-        if(scriptInfo.containerType == ScriptContainerType::MFS)
+        if(scriptInfo.containerType == ScriptContainerType::MFS && scriptInfo.type == ScriptType::MAIN)
+        {
             continue;
+        }
+        else if(scriptInfo.containerType == ScriptContainerType::MFS)
+        {
+            type = " ("+scriptInfo.track+")";
+        }
         else if(scriptInfo.containerType == ScriptContainerType::ZIP)
+        {
             type = " (ZIP)";
+        }
         alternateStriptCmb->addItem(scriptInfo.name + type, QVariant::fromValue(scriptInfo));
-        if(scriptInfo.type != ScriptType::MAIN)
+        if(scriptInfo.type != ScriptType::MAIN) // Dont count the "Default" main script
             alternateCount++;
     }
     if(alternateCount)
