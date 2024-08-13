@@ -620,7 +620,8 @@ void PlayerControls::setAltScripts(QList<ScriptInfo> scriptInfos)
         if(!QFileInfo::exists(scriptInfo.path))
             continue;
         QString type = "";
-        if(scriptInfo.containerType == ScriptContainerType::MFS && scriptInfo.type == ScriptType::MAIN)
+        if((scriptInfo.containerType == ScriptContainerType::MFS || scriptInfo.containerType == ScriptContainerType::ZIP) &&
+            scriptInfo.type == ScriptType::MAIN)
         {
             continue;
         }

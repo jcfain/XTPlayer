@@ -1328,7 +1328,7 @@ void MainWindow::on_actionSelect_library_triggered()
         QSet<QString> additions = QSet<QString>(currentPaths.begin(),currentPaths.end()).subtract(QSet<QString>(oldPaths.begin(), oldPaths.end()));
         QSet<QString> subtraction = QSet<QString>(oldPaths.begin(), oldPaths.end()).subtract(QSet<QString>(currentPaths.begin(),currentPaths.end()));
         if(!subtraction.isEmpty() || !additions.empty()) {
-            auto message = m_xtengine->mediaLibraryHandler()->isLibraryLoading() ? "Stop current loading process and restart with new list now?" : "Load all libraries now?";
+            auto message = m_xtengine->mediaLibraryHandler()->isLibraryProcessing() ? "Stop current loading process and restart with new list now?" : "Load all libraries now?";
             if(DialogHandler::Dialog(this, message) == QDialog::DialogCode::Accepted) {
                 m_xtengine->mediaLibraryHandler()->loadLibraryAsync();
             }
@@ -2550,7 +2550,7 @@ void MainWindow::setThumbSize(int size)
 }
 bool MainWindow::isLibraryLoading()
 {
-    return m_xtengine->mediaLibraryHandler()->isLibraryLoading() || loadingLibraryFuture.isRunning();
+    return m_xtengine->mediaLibraryHandler()->isLibraryProcessing() || loadingLibraryFuture.isRunning();
 }
 
 void MainWindow::resizeThumbs(int size)
@@ -3129,7 +3129,7 @@ void MainWindow::on_actionCleanMetadata_triggered()
 {
     if(DialogHandler::Dialog(this, "This will compare the metadata with the currently loaded libraries\nand delete any that do not exists any more.\nDO NOT RUN unless you have all your media currently loaded!") == QDialog::Accepted)
     {
-        if(!m_xtengine->mediaLibraryHandler()->isLibraryLoading() &&
+        if(!m_xtengine->mediaLibraryHandler()->isLibraryProcessing() &&
             !m_xtengine->mediaLibraryHandler()->metadataProcessing() &&
             !m_xtengine->mediaLibraryHandler()->thumbProcessRunning())
         {
@@ -3144,7 +3144,7 @@ void MainWindow::on_actionUpdateMetadata_triggered()
 {
     if(DialogHandler::Dialog(this, "This will set metadata using the algrorith on first scan.\nAdding smart tags and mfs tags based on the scan.\nIt will not change any user tags set by you.") == QDialog::Accepted)
     {
-        if(!m_xtengine->mediaLibraryHandler()->isLibraryLoading() &&
+        if(!m_xtengine->mediaLibraryHandler()->isLibraryProcessing() &&
             !m_xtengine->mediaLibraryHandler()->metadataProcessing() &&
             !m_xtengine->mediaLibraryHandler()->thumbProcessRunning())
         {
