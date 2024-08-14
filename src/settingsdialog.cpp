@@ -1729,12 +1729,23 @@ void SettingsDialog::on_browseHttpRootButton_clicked()
 void SettingsDialog::on_browseVRLibraryButton_clicked()
 {
     QString selectedDirectory = QFileDialog::getExistingDirectory(this, tr("Choose VR library"), SettingsHandler::getLastSelectedLibrary());
-    if (selectedDirectory != Q_NULLPTR)
+    on_vrLibraryLineEdit_textEdited(selectedDirectory);
+}
+
+void SettingsDialog::on_vrLibraryLineEdit_textEdited(const QString &selectedDirectory)
+{
+    if (!selectedDirectory.isEmpty() && QFile::exists(selectedDirectory))
     {
-        SettingsHandler::addSelectedVRLibrary(selectedDirectory);
-        ui.vrLibraryLineEdit->setText(selectedDirectory);
+        QStringList messages;
+        if(SettingsHandler::addSelectedVRLibrary(selectedDirectory, messages))
+            ui.vrLibraryLineEdit->setText(selectedDirectory);
+        else
+            DialogHandler::MessageBox(this, messages.join("\n"), XLogLevel::Warning);
+    } else if(!selectedDirectory.isEmpty()) {
+        DialogHandler::MessageBox(this, "Invalid directory!", XLogLevel::Warning);
     }
 }
+
 
 void SettingsDialog::on_httpPort_valueChanged(int value)
 {
@@ -1755,11 +1766,6 @@ void SettingsDialog::on_httpRootLineEdit_textEdited(const QString &selectedDirec
     SettingsHandler::setHttpServerRoot(selectedDirectory);
     if(SettingsHandler::getEnableHttpServer())
         set_requires_restart(true);
-}
-
-void SettingsDialog::on_vrLibraryLineEdit_textEdited(const QString &selectedDirectory)
-{
-    SettingsHandler::addSelectedVRLibrary(selectedDirectory);
 }
 
 void SettingsDialog::on_useMediaDirectoryCheckbox_clicked(bool checked)

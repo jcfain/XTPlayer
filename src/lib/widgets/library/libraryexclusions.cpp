@@ -1,5 +1,7 @@
 #include "libraryexclusions.h"
 #include <QTreeView>
+#include "dialoghandler.h"
+#include "lib/tool/file-util.h"
 
 LibraryExclusions::LibraryExclusions(QWidget* parent) : QDialog(parent)
 {
@@ -29,28 +31,21 @@ void LibraryExclusions::on_addButton_clicked()
     QString library = SettingsHandler::getLastSelectedLibrary();
     file_dialog.setDirectory(library);
     //file_dialog.setOption(QFileDialog::DontUseNativeDialog, true);
-    file_dialog.setFileMode(QFileDialog::DirectoryOnly);
-    //file_dialog.setOption(QFileDialog::ShowDirsOnly, true);
-
-    //to make it possible to select multiple directories:
-//    QListView* file_view = file_dialog.findChild<QListView*>("listView");
-//    if (file_view)
-//        file_view->setSelectionMode(QAbstractItemView::MultiSelection);
-//    QTreeView* f_tree_view = file_dialog.findChild<QTreeView*>();
-//    if (f_tree_view)
-//        f_tree_view->setSelectionMode(QAbstractItemView::MultiSelection);
+    //file_dialog.setFileMode(QFileDialog::DirectoryOnly);
+    file_dialog.setFileMode(QFileDialog::FileMode::Directory);
+    file_dialog.setOption(QFileDialog::ShowDirsOnly, true);
 
     if(file_dialog.exec())
     {
         QStringList paths = file_dialog.selectedFiles();
-        if(!paths.contains(library))
+        QStringList duplicates;
+        foreach(auto path, paths)
         {
-            foreach(auto path, paths)
-            {
-                SettingsHandler::addToLibraryExclusions(path);
+            if(SettingsHandler::addToLibraryExclusions(path, duplicates))
                 ui.listWidget->addItem(path);
-            }
         }
+        if(!duplicates.isEmpty())
+            DialogHandler::MessageBox(this, duplicates.join("\n"), XLogLevel::Warning);
     }
 }
 

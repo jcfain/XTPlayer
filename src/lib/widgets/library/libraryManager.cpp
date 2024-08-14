@@ -1,4 +1,5 @@
 #include "libraryManager.h"
+#include "lib/tool/file-util.h"
 
 LibraryManager::LibraryManager(QWidget* parent) : QDialog(parent)
 {
@@ -15,35 +16,23 @@ void LibraryManager::on_addButton_clicked()
     QFileDialog file_dialog;
     QString path  = QFileInfo(SettingsHandler::getLastSelectedLibrary()).dir().path();
     file_dialog.setDirectory(path);
-    file_dialog.setFileMode(QFileDialog::DirectoryOnly);
+    file_dialog.setFileMode(QFileDialog::FileMode::Directory);
+    file_dialog.setOption(QFileDialog::ShowDirsOnly, true);
 
-    auto currentPaths = SettingsHandler::getSelectedLibrary();
+    // auto currentPaths = SettingsHandler::getSelectedLibrary();
+    // auto currentVRPaths = SettingsHandler::getVRLibrary();
+    // auto currentExcludedPaths = SettingsHandler::getLibraryExclusions();
     if(file_dialog.exec())
     {
         QStringList paths = file_dialog.selectedFiles();
+        QStringList duplicates;
         foreach(auto path, paths)
         {
-            bool duplicate = false;
-            foreach (auto currentPath, currentPaths) {
-                if(currentPath==path) {
-                    DialogHandler::MessageBox(this, "Directory '"+path+"' is already in the selected list!", XLogLevel::Warning);
-                    duplicate = true;
-                    break;
-                } else if(currentPath.startsWith(path)) {
-                    DialogHandler::MessageBox(this, "Directory '"+path+"'\nis a parent of\n'"+currentPath+"'", XLogLevel::Warning);
-                    duplicate = true;
-                    break;
-                } else if(path.startsWith(currentPath)) {
-                    DialogHandler::MessageBox(this, "Directory '"+path+"'\nis a child of\n'"+currentPath+"'", XLogLevel::Warning);
-                    duplicate = true;
-                    break;
-                }
-            }
-            if(duplicate)
-                continue;
-            SettingsHandler::addSelectedLibrary(path);
-            ui.listWidget->addItem(path);
+            if(SettingsHandler::addSelectedLibrary(path, duplicates))
+                ui.listWidget->addItem(path);
         }
+        if(!duplicates.isEmpty())
+            DialogHandler::MessageBox(this, duplicates.join("\n"), XLogLevel::Warning);
     }
 }
 

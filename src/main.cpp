@@ -124,9 +124,12 @@ int main(int argc, char *argv[])
         LogHandler::Info("Adding media folder..");
         QString targetDir = parser.value(addLibraryFolderOption);
         if(!targetDir.isEmpty() && QFileInfo::exists(targetDir)) {
-            SettingsHandler::addSelectedLibrary(targetDir);
-            SettingsHandler::Save();
-            LogHandler::Info("Success!");
+            QStringList errors;
+            if(SettingsHandler::addSelectedLibrary(targetDir, errors)) {
+                SettingsHandler::Save();
+                LogHandler::Info("Success!");
+            } else
+                LogHandler::Error(errors.join("\n"));
         } else {
             LogHandler::Error("Invalid directory: '"+ targetDir +"'");
         }
@@ -200,9 +203,12 @@ int main(int argc, char *argv[])
         LogHandler::Info("Excluding folder..");
         QString targetDir = parser.value(excludeLibraryFolderOption);
         if(!targetDir.isEmpty() && QFileInfo::exists(targetDir)) {
-            SettingsHandler::addToLibraryExclusions(targetDir);
-            SettingsHandler::Save();
-            LogHandler::Info("Success!");
+            QStringList errors;
+            if(SettingsHandler::addToLibraryExclusions(targetDir, errors)) {
+                SettingsHandler::Save();
+                LogHandler::Info("Success!");
+            } else
+                LogHandler::Error(errors.join("\n"));
         } else {
             LogHandler::Error("Invalid directory: '"+ targetDir +"'");
         }
