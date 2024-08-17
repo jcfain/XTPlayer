@@ -11,6 +11,7 @@
 #include <QDesktopServices>
 #include <QClipboard>
 #include <QNetworkInterface>
+#include <QTextToSpeech>
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/handler/crypthandler.h"
 #include "lib/handler/connectionhandler.h"
@@ -64,6 +65,7 @@ public slots:
     void set_channelProfilesComboBox_value(const QString &arg1);
     void onCleanUpThumbsDirectoryComplete();
     void onCleanUpThumbsDirectoryStopped();
+    void initializeVoice(QTextToSpeech* tts);
 
 private slots:
     void on_serialOutputRdo_clicked();
@@ -111,8 +113,6 @@ private slots:
     void lubePulseEnabled_valueChanged(bool value);
     void lubeFrequency_valueChanged(int value);
     void lubeAmount_valueChanged(int value);
-
-    void on_disableTextToSpeechCheckBox_clicked(bool checked);
 
     void on_invertFunscriptXCheckBox_clicked(bool checked);
 
@@ -250,6 +250,20 @@ private slots:
 
     void onScheduleLibraryLoadAtTimeUserTimeChanged(const QTime &time);
 
+    void on_voiceVolumeSlider_sliderReleased();
+
+    void on_voiceGroupBox_clicked(bool checked);
+
+    void on_voicePitchSlider_sliderReleased();
+
+    void on_voiceRateSlider_sliderReleased();
+
+    void on_voiceVolumeSlider_sliderMoved(int position);
+
+    void on_voicePitchSlider_sliderMoved(int position);
+
+    void on_voiceRateSlider_sliderMoved(int position);
+
 private:
 
     Ui::SettingsDialog ui;
@@ -265,6 +279,7 @@ private:
     QList<QWidget*> _multiplierWidgets;
 
     LibraryExclusions* _libraryExclusions;
+    QTextToSpeech* m_tts = 0;
     bool _interfaceInitialized = false;
     QList<SerialComboboxItem> serialPorts;
     SerialComboboxItem selectedSerialPort;

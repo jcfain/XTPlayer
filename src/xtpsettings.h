@@ -48,6 +48,15 @@ public:
     static void setHeatmapDisabled(bool checked);
     static bool getHeatmapDisabled();
 
+    static double voiceVolume();
+    static void setVoiceVolume(double value);
+    static double voicePitch();
+    static void setVoicePitch(double value);
+    static double voiceRate();
+    static void setVoiceRate(double value);
+    static QString voiceName();
+    static void setVoiceName(QString value);
+
 
 private:
     static QSettings* getSettings();

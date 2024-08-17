@@ -167,6 +167,46 @@ bool XTPSettings::getHeatmapDisabled() {
     return m_heatmapDisabled;
 }
 
+double XTPSettings::voiceVolume()
+{
+    return getSettings()->value("voiceVolume", 0.5).toDouble();
+}
+
+void XTPSettings::setVoiceVolume(double value)
+{
+    getSettings()->setValue("voiceVolume", value);
+}
+
+double XTPSettings::voicePitch()
+{
+    return getSettings()->value("voicePitch", 0.0).toDouble();
+}
+
+void XTPSettings::setVoicePitch(double value)
+{
+    getSettings()->setValue("voicePitch", value);
+}
+
+double XTPSettings::voiceRate()
+{
+    return getSettings()->value("voiceRate", 0.0).toDouble();
+}
+
+void XTPSettings::setVoiceRate(double value)
+{
+    getSettings()->setValue("voiceRate", value);
+}
+
+QString XTPSettings::voiceName()
+{
+    return getSettings()->value("voiceName").toString();
+}
+
+void XTPSettings::setVoiceName(QString value)
+{
+    getSettings()->setValue("voiceName", value);
+}
+
 //Private
 QSettings* XTPSettings::getSettings() {
     return SettingsHandler::getSettings();

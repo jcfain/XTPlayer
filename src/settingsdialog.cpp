@@ -96,6 +96,47 @@ void SettingsDialog::initLive()
 //    }
 }
 
+void SettingsDialog::initializeVoice(QTextToSpeech *tts)
+{
+    m_tts = tts;
+
+    auto availableVoices = tts->availableVoices();
+    foreach (QVoice voice, availableVoices) {
+        ui.voiceCombobox->addItem(voice.name(), QVariant(availableVoices.indexOf(voice)));
+    }
+    QString voiceName = XTPSettings::voiceName();
+    auto voice = std::find_if(availableVoices.begin(), availableVoices.end(), [voiceName](const QVoice &x) {
+        return x.name() == voiceName ||  x.gender() == QVoice::Female;
+    });
+    if(voice != availableVoices.end()) {
+        if(voiceName.isEmpty() || voice->name() != voiceName) {
+            XTPSettings::setVoiceName(voice->name());
+        }
+        tts->setVoice(*voice);
+        ui.voiceCombobox->setCurrentIndex(availableVoices.indexOf(*voice));
+    }
+    connect(ui.voiceCombobox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
+        if(m_tts) {
+            auto availableVoices = m_tts->availableVoices();
+            m_tts->setVoice(availableVoices[index]);
+            XTPSettings::setVoiceName(availableVoices[index].name());
+            m_tts->say("Testing, one two three");
+        }
+    });
+
+    double volume = XTPSettings::voiceVolume();
+    tts->setVolume(volume);
+    ui.voiceVolumeSlider->setValue(volume * 100);
+    on_voiceVolumeSlider_sliderMoved(volume * 100);
+    double pitch = XTPSettings::voicePitch();
+    tts->setPitch(pitch);
+    ui.voicePitchSlider->setValue(pitch * 100);
+    on_voicePitchSlider_sliderMoved(pitch * 100);
+    double rate = XTPSettings::voiceRate();
+    tts->setRate(rate);
+    ui.voiceRateSlider->setValue(rate * 100);
+    on_voiceRateSlider_sliderMoved(rate * 100);
+}
 
 void SettingsDialog::reject()
 {
@@ -238,7 +279,7 @@ void SettingsDialog::setupUi()
         {
             ui.networkOutputRdo->setChecked(true);
         }
-        ui.useWebSocketsCheckbox->setChecked(SettingsHandler::getSelectedNetworkDevice() == NetworkDeviceType::WEBSOCKET);
+        ui.useWebSocketsCheckbox->setChecked(SettingsHandler::getSelectedNetworkDevice() == NetworkProtocol::WEBSOCKET);
 
         enableOrDisableDeviceConnectionUI(SettingsHandler::getSelectedOutputDevice());
         bool deoEnabled = SettingsHandler::getSelectedInputDevice() == DeviceName::HereSphere;
@@ -262,7 +303,7 @@ void SettingsDialog::setupUi()
 
         ui.gamePadCheckbox->setChecked(SettingsHandler::getGamepadEnabled());
         ui.videoIncrementSpinBox->setValue(SettingsHandler::getVideoIncrement());
-        ui.disableTextToSpeechCheckBox->setChecked(SettingsHandler::getDisableSpeechToText());
+        ui.voiceGroupBox->setChecked(!SettingsHandler::getDisableSpeechToText());
         ui.disableVRScriptNotFoundCheckbox->setChecked(SettingsHandler::getDisableVRScriptSelect());
 
         connect(ui.SerialOutputCmb, &QComboBox::currentTextChanged, this, [](const QString value)
@@ -1299,7 +1340,7 @@ void SettingsDialog::on_useWebSocketsCheckbox_clicked(bool checked)
     if(SettingsHandler::getSelectedOutputDevice() == DeviceName::Network)
         ui.networkConnectButton->setEnabled(true);
     _connectionHandler->disposeOutputDevice(DeviceName::Network);
-    SettingsHandler::setSelectedNetworkDevice(checked ? NetworkDeviceType::WEBSOCKET : NetworkDeviceType::UDP);
+    SettingsHandler::setSelectedNetworkDevice(checked ? NetworkProtocol::WEBSOCKET : NetworkProtocol::UDP);
 }
 
 void SettingsDialog::on_deoPortTxt_editingFinished()
@@ -1475,11 +1516,6 @@ void SettingsDialog::on_gamePadCheckbox_clicked(bool checked)
 void SettingsDialog::on_videoIncrement_valueChanged(int value)
 {
     SettingsHandler::setVideoIncrement(value);
-}
-
-void SettingsDialog::on_disableTextToSpeechCheckBox_clicked(bool checked)
-{
-    SettingsHandler::setDisableSpeechToText(checked);
 }
 
 void SettingsDialog::on_invertFunscriptXCheckBox_clicked(bool checked)
@@ -2099,3 +2135,63 @@ void SettingsDialog::settingsSyncChkClicked(bool checked)
 {
     SettingsHandler::setScheduleSettingsSync(checked);
 }
+
+void SettingsDialog::on_voiceGroupBox_clicked(bool checked)
+{
+    SettingsHandler::setDisableSpeechToText(!checked);
+}
+
+void SettingsDialog::on_voiceVolumeSlider_sliderReleased()
+{
+    if(m_tts) {
+        int sliderValue = ui.voiceVolumeSlider->value();
+        double volume = sliderValue ? sliderValue / 100.0f : 0.0f;
+        m_tts->setVolume(volume);
+        XTPSettings::setVoiceVolume(volume);
+        m_tts->say("Testing, one two three");
+    }
+}
+
+void SettingsDialog::on_voicePitchSlider_sliderReleased()
+{
+    if(m_tts) {
+        int sliderValue = ui.voicePitchSlider->value();
+        double pitch = sliderValue ? sliderValue / 100.0f : 0.0f;
+        m_tts->setPitch(pitch);
+        XTPSettings::setVoicePitch(pitch);
+        m_tts->say("Testing, one two three");
+    }
+}
+
+void SettingsDialog::on_voiceRateSlider_sliderReleased()
+{
+    if(m_tts) {
+        int sliderValue = ui.voiceRateSlider->value();
+        double rate = sliderValue ? sliderValue / 100.0f : 0.0f;
+        m_tts->setRate(rate);
+        XTPSettings::setVoiceRate(rate);
+        m_tts->say("Testing, one two three");
+    }
+}
+
+
+void SettingsDialog::on_voiceVolumeSlider_sliderMoved(int position)
+{
+    double volume = position ? position / 100.0f : 0.0f;
+    ui.voiceVolumeLbl->setText("Volume "+ QString::number(volume));
+}
+
+
+void SettingsDialog::on_voicePitchSlider_sliderMoved(int position)
+{
+    double pitch = position ? position / 100.0f : 0.0f;
+    ui.voicePitchLbl->setText("Pitch "+ QString::number(pitch));
+}
+
+
+void SettingsDialog::on_voiceRateSlider_sliderMoved(int position)
+{
+    double rate = position ? position / 100.0f : 0.0f;
+    ui.voiceRateLbl->setText("Rate "+ QString::number(rate));
+}
+

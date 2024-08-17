@@ -86,10 +86,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     loadingSplash->showMessage(fullVersion + "\nLoading UI...", Qt::AlignBottom, Qt::white);
 
     textToSpeech = new QTextToSpeech(this);
-    auto availableVoices = textToSpeech->availableVoices();
-
-    const QVoice voice = boolinq::from(availableVoices).firstOrDefault([](const QVoice &x) { return x.gender() == QVoice::Female; });
-    textToSpeech->setVoice(voice);
+    _xSettings->initializeVoice(textToSpeech);
 
     backgroundProcessingStatusProgress = new QProgressBar(this);
     backgroundProcessingStatusProgress->setMaximum(100);
