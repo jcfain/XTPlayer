@@ -326,6 +326,7 @@ void SettingsDialog::setupUi()
 
         ui.disableFunscriptHeatmapheckBox->setChecked(XTPSettings::getHeatmapDisabled());
         ui.disableHeartbeatChk->setChecked(SettingsHandler::getDisableHeartBeat());
+        connect(ui.disableHeartbeatChk, &QCheckBox::clicked, this, &SettingsDialog::onDisableHeartbeatChkClicked);
 
         int percentage = SettingsHandler::getViewedThreshold()*100;
         ui.viewedPercentageSpinBox->setValue(percentage);
