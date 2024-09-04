@@ -17,7 +17,7 @@ LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(
     globalOffsetLabel = new QLabel(this);
     globalOffsetLabel->setText("Global offset");
     globalOffsetValueLabel = new QLabel(this);
-    smartOffsetValueLabel = new QLabel(this);
+    // smartOffsetValueLabel = new QLabel(this);
     updateOffsetLabel();
 //    globalOffsetSpinBox = new QSpinBox(this);
 //    globalOffsetSpinBox->setSuffix("ms");
@@ -30,8 +30,8 @@ LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(
     layout->addWidget(globalOffsetValueLabel, currentRow, 1, 1, 2);
     currentRow++;
 
-    layout->addWidget(smartOffsetValueLabel, currentRow, 1, 1, 2);
-    currentRow++;
+    // layout->addWidget(smartOffsetValueLabel, currentRow, 1, 1, 2);
+    // currentRow++;
 
     offsetLabel = new QLabel(this);
     offsetLabel->setText("Offset");
@@ -198,13 +198,13 @@ void LibraryItemMetadataDialog::updateOffsetLabel()
         globalOffsetValueLabel->setText(offsetText + " (in effect)");
     }
 
-    if(SettingsHandler::isSmartOffSet()) {
-        smartOffsetValueLabel->setText(QString::number(SettingsHandler::getSmartOffSet()) + "ms (Smart)");
-        smartOffsetValueLabel->setStyleSheet("*{color:green}");
-    } else {
-        smartOffsetValueLabel->setText("Smart offset disabled");
-        smartOffsetValueLabel->setStyleSheet("*{color:red}");
-    }
+    // if(SettingsHandler::isSmartOffSet()) {
+    //     smartOffsetValueLabel->setText(QString::number(SettingsHandler::getSmartOffSet()) + "ms (Smart)");
+    //     smartOffsetValueLabel->setStyleSheet("*{color:green}");
+    // } else {
+    //     smartOffsetValueLabel->setText("Smart offset disabled");
+    //     smartOffsetValueLabel->setStyleSheet("*{color:red}");
+    // }
 
 }
 
