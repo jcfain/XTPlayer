@@ -1,7 +1,7 @@
 #!/bin/bash
 
 home=~/
-target='/mnt/raspberrypi/STK/Hardware/my software/'
+target='/media/NAS/MyBook/STK/Hardware/my software/'
 architecture="x86_64"
 xtplayerSource="${home}"git/XTPlayer
 xtplayerLocation="${home}"git/XTPlayer/build-XTPlayer-Desktop_Qt_5_15_2_GCC_64bit-Release/

@@ -8,7 +8,7 @@ SET deployZipDir=.\bin\
 SET stagingDirectory=.\bin\latest
 SET sevenZipLocation="C:\Program Files\7-Zip\7z.exe"
 rem this is where the zip file will be copied for backup
-SET releaseDirectory="\\RASPBERRYPI.local\STK\Hardware\my software\"
+SET releaseDirectory="\\naspi.local\MyBook\STK\Hardware\my software\"
 SET httpServerDll=..\build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release\src\release\httpServer.dll
 SET zlibDll=..\build-zlib-1.3.1-Desktop_Qt_5_15_2_MinGW_64_bit-Release\libzlib.dll
 
