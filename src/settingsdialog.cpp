@@ -42,8 +42,9 @@ void SettingsDialog::dispose()
     _connectionHandler->dispose();
 }
 
-void SettingsDialog::init(VideoHandler* videoHandler, ConnectionHandler* connectionHandler)
+void SettingsDialog::init(MediaLibraryHandler* medialLibraryHandler, VideoHandler* videoHandler, ConnectionHandler* connectionHandler)
 {
+    m_medialLibraryHandler = medialLibraryHandler;
     _videoHandler = videoHandler;
     _connectionHandler = connectionHandler;
 
@@ -2174,20 +2175,17 @@ void SettingsDialog::on_voiceRateSlider_sliderReleased()
     }
 }
 
-
 void SettingsDialog::on_voiceVolumeSlider_sliderMoved(int position)
 {
     double volume = position ? position / 100.0f : 0.0f;
     ui.voiceVolumeLbl->setText("Volume "+ QString::number(volume));
 }
 
-
 void SettingsDialog::on_voicePitchSlider_sliderMoved(int position)
 {
     double pitch = position ? position / 100.0f : 0.0f;
     ui.voicePitchLbl->setText("Pitch "+ QString::number(pitch));
 }
-
 
 void SettingsDialog::on_voiceRateSlider_sliderMoved(int position)
 {

@@ -444,11 +444,18 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
             _playerControlsFrame->clearActions();
     });
 
-    _xSettings->init(videoHandler, m_xtengine->connectionHandler());
+    _xSettings->init(m_xtengine->mediaLibraryHandler(), videoHandler, m_xtengine->connectionHandler());
 
     //connect(this, &MainWindow::libraryIconResized, this, &MainWindow::libraryListSetIconSize);
 
     connect(ui->actionReload_library, &QAction::triggered, m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::loadLibraryAsync);
+    connect(ui->actionFix_offset_1024, &QAction::triggered, this, [this]() {
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this, "Warning!", "This will go through all media items and\nset offsets that are equal to 1024 to 0.\n\nContinue?",
+                                      QMessageBox::Yes|QMessageBox::No);
+        if (reply == QMessageBox::Yes)
+            m_xtengine->mediaLibraryHandler()->startMetadata1024Cleanup();
+    });
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::noLibraryFound, this, &MainWindow::onNoLibraryFound);
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::libraryNotFound, this, &MainWindow::onLibraryNotFound);
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::libraryLoaded, this, &MainWindow::onSetLibraryLoaded);

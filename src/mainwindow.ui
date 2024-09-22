@@ -185,6 +185,7 @@
      </property>
      <addaction name="actionCleanMetadata"/>
      <addaction name="actionUpdateMetadata"/>
+     <addaction name="actionFix_offset_1024"/>
     </widget>
     <addaction name="actionSelect_library"/>
     <addaction name="actionReload_library"/>
@@ -302,6 +303,11 @@ If found it will store it in the user settings.</string>
   <action name="actionUpdateMetadata">
    <property name="text">
     <string>Update</string>
+   </property>
+  </action>
+  <action name="actionFix_offset_1024">
+   <property name="text">
+    <string>Fix offset 1024</string>
    </property>
   </action>
  </widget>

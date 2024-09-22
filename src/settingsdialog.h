@@ -30,7 +30,7 @@ public:
     SettingsDialog(QWidget* parent = nullptr);
     ~SettingsDialog();
 
-    void init(VideoHandler* videoHandler, ConnectionHandler* connectionHandler);
+    void init(MediaLibraryHandler* medialLibraryHandler, VideoHandler* videoHandler, ConnectionHandler* connectionHandler);
     void initLive();
     void dispose();
     void setAxisProgressBar(QString axis, int value, int time, ChannelTimeType timeType);
@@ -283,6 +283,7 @@ private:
     bool _interfaceInitialized = false;
     QList<SerialComboboxItem> serialPorts;
     SerialComboboxItem selectedSerialPort;
+    MediaLibraryHandler* m_medialLibraryHandler;
     VideoHandler* _videoHandler;
     ConnectionHandler* _connectionHandler;
     InputMapWidget* _inputMapWidget;
