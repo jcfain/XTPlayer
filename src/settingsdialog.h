@@ -69,8 +69,9 @@ public slots:
 
 private slots:
     void on_serialOutputRdo_clicked();
-
     void on_networkOutputRdo_clicked();
+    void on_bleOutputRdo_clicked();
+
     void setUpTCodeChannelProfiles();
     void setUpTCodeChannelUI();
 
@@ -263,6 +264,10 @@ private slots:
     void on_voicePitchSlider_sliderMoved(int position);
 
     void on_voiceRateSlider_sliderMoved(int position);
+
+    void on_bleConnectButton_clicked();
+
+    void onUseDTRAndRTSChkClicked(bool checked);
 
 private:
 

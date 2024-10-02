@@ -90,6 +90,14 @@ bool LibrarySortFilterProxyModel::lessThan(const QModelIndex &left, const QModel
         {
             return leftData.modifiedDate > rightData.modifiedDate;
         }
+        else if(_sortMode == LibrarySortMode::ADDED_ASC)
+        {
+            return leftData.metadata.dateAdded < rightData.metadata.dateAdded;
+        }
+        else if(_sortMode == LibrarySortMode::ADDED_DESC)
+        {
+            return leftData.metadata.dateAdded > rightData.metadata.dateAdded;
+        }
         else if(_sortMode == LibrarySortMode::NAME_ASC)
         {
             return left.data().toString().localeAwareCompare(right.data().toString()) < 0;

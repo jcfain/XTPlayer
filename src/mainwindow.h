@@ -119,6 +119,8 @@ private slots:
     void on_actionRandom_triggered();
     void on_actionCreatedAsc_triggered();
     void on_actionCreatedDesc_triggered();
+    void on_actionAddedAsc_triggered();
+    void on_actionAddedDesc_triggered();
     void on_actionTypeAsc_triggered();
     void on_actionTypeDesc_triggered();
     void onAboutToQuit();
@@ -276,6 +278,8 @@ private:
     QAction* actionRandom_Sort;
     QAction* actionCreatedAsc_Sort;
     QAction* actionCreatedDesc_Sort;
+    QAction* actionAddedAsc_Sort;
+    QAction* actionAddedDesc_Sort;
     QAction* actionTypeAsc_Sort;
     QAction* actionTypeDesc_Sort;
     qint64 thumbCaptureTime;

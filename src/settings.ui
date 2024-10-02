@@ -119,173 +119,10 @@
         <enum>QFormLayout::ExpandingFieldsGrow</enum>
        </property>
        <item row="0" column="0" colspan="2">
-        <layout class="QGridLayout" name="ConnectionSettings" rowstretch="0,0,0,0,0,0" columnstretch="0,0,0,0,0,0,0,0,0,0,0,0,0">
+        <layout class="QGridLayout" name="ConnectionSettings" rowstretch="0,0,0,0,0,0,0" columnstretch="0,0,0,0,0,0,0,0,0,0,0,0,0">
          <property name="spacing">
           <number>6</number>
          </property>
-         <item row="4" column="3">
-          <widget class="QLabel" name="xtpWebStatuslbl">
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0" colspan="2">
-          <widget class="QCheckBox" name="deoCheckbox">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>25</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>HereSphere</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0" colspan="2">
-          <widget class="QCheckBox" name="whirligigCheckBox">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>25</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Whirligig</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="11">
-          <widget class="QLabel" name="serialStatuslbl">
-           <property name="minimumSize">
-            <size>
-             <width>25</width>
-             <height>25</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Timed out</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="12">
-          <widget class="QPushButton" name="whirligigConnectButton">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>25</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Connect</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="0" colspan="2">
-          <widget class="QCheckBox" name="gamePadCheckbox">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>25</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Gamepad</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="3" colspan="2">
-          <widget class="QLabel" name="gamepadStatusLbl">
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0" colspan="2">
-          <widget class="QRadioButton" name="networkOutputRdo">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>25</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Network</string>
-           </property>
-           <property name="checked">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="12">
-          <widget class="QPushButton" name="deoConnectButton">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>25</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Connect</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="11">
-          <widget class="QLabel" name="whirligigStatuslbl">
-           <property name="minimumSize">
-            <size>
-             <width>25</width>
-             <height>25</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Timed out</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="12">
-          <widget class="QPushButton" name="networkConnectButton">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>25</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Connect</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0" colspan="2">
-          <widget class="QCheckBox" name="xtpWebHandlerCheckbox">
-           <property name="text">
-            <string>XTP Web</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="11">
-          <widget class="QLabel" name="networkStatuslbl">
-           <property name="minimumSize">
-            <size>
-             <width>25</width>
-             <height>25</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Timed out</string>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="12">
           <widget class="QPushButton" name="serialConnectButton">
            <property name="sizePolicy">
@@ -305,8 +142,38 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="11">
-          <widget class="QLabel" name="deoStatuslbl">
+         <item row="6" column="3" colspan="2">
+          <widget class="QLabel" name="gamepadStatusLbl">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="12">
+          <widget class="QCheckBox" name="useWebSocketsCheckbox">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="text">
+            <string>Use WebSocket</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="12">
+          <widget class="QPushButton" name="networkConnectButton">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Connect</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="11">
+          <widget class="QLabel" name="serialStatuslbl">
            <property name="minimumSize">
             <size>
              <width>25</width>
@@ -315,6 +182,74 @@
            </property>
            <property name="text">
             <string>Timed out</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="3" colspan="7">
+          <widget class="QLineEdit" name="deoAddressTxt">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="3">
+          <widget class="QLabel" name="xtpWebStatuslbl">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0" colspan="2">
+          <widget class="QCheckBox" name="gamePadCheckbox">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Gamepad</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0" colspan="2">
+          <widget class="QCheckBox" name="deoCheckbox">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>HereSphere</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0" colspan="2">
+          <widget class="QRadioButton" name="networkOutputRdo">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Network</string>
+           </property>
+           <property name="checked">
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -334,22 +269,16 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="10">
-          <widget class="QLineEdit" name="deoPortTxt">
+         <item row="1" column="3" colspan="7">
+          <widget class="QLineEdit" name="networkAddressTxt">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
            <property name="minimumSize">
             <size>
              <width>0</width>
              <height>25</height>
             </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>100</width>
-             <height>100</height>
-            </size>
-           </property>
-           <property name="maxLength">
-            <number>5</number>
            </property>
           </widget>
          </item>
@@ -369,6 +298,64 @@
            </property>
            <property name="maxLength">
             <number>5</number>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="11">
+          <widget class="QLabel" name="networkStatuslbl">
+           <property name="minimumSize">
+            <size>
+             <width>25</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Timed out</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="12">
+          <widget class="QPushButton" name="whirligigConnectButton">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Connect</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="11">
+          <widget class="QLabel" name="deoStatuslbl">
+           <property name="minimumSize">
+            <size>
+             <width>25</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Timed out</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="11">
+          <widget class="QLabel" name="whirligigStatuslbl">
+           <property name="minimumSize">
+            <size>
+             <width>25</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Timed out</string>
            </property>
           </widget>
          </item>
@@ -401,6 +388,25 @@
            </property>
           </widget>
          </item>
+         <item row="3" column="10">
+          <widget class="QLineEdit" name="deoPortTxt">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>100</height>
+            </size>
+           </property>
+           <property name="maxLength">
+            <number>5</number>
+           </property>
+          </widget>
+         </item>
          <item row="0" column="3" colspan="7">
           <widget class="QComboBox" name="SerialOutputCmb">
            <property name="minimumSize">
@@ -411,42 +417,57 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="3" colspan="7">
-          <widget class="QLineEdit" name="deoAddressTxt">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
+         <item row="5" column="0" colspan="2">
+          <widget class="QCheckBox" name="xtpWebHandlerCheckbox">
+           <property name="text">
+            <string>XTP Web</string>
            </property>
+          </widget>
+         </item>
+         <item row="4" column="0" colspan="2">
+          <widget class="QCheckBox" name="whirligigCheckBox">
            <property name="minimumSize">
             <size>
              <width>0</width>
              <height>25</height>
             </size>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="12">
-          <widget class="QCheckBox" name="useWebSocketsCheckbox">
-           <property name="enabled">
-            <bool>true</bool>
            </property>
            <property name="text">
-            <string>Use WebSocket</string>
+            <string>Whirligig</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="3" colspan="7">
-          <widget class="QLineEdit" name="networkAddressTxt">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
+         <item row="3" column="12">
+          <widget class="QPushButton" name="deoConnectButton">
            <property name="minimumSize">
             <size>
              <width>0</width>
              <height>25</height>
             </size>
+           </property>
+           <property name="text">
+            <string>Connect</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0" colspan="2">
+          <widget class="QRadioButton" name="bleOutputRdo">
+           <property name="text">
+            <string>BLE</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="11">
+          <widget class="QLabel" name="bleStatuslbl">
+           <property name="text">
+            <string>Timed out</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="12">
+          <widget class="QPushButton" name="bleConnectButton">
+           <property name="text">
+            <string>Connect</string>
            </property>
           </widget>
          </item>
@@ -1548,7 +1569,7 @@ will be hit for the next chunk.</string>
           <item row="3" column="1">
            <widget class="QSpinBox" name="viewedPercentageSpinBox">
             <property name="suffix">
-             <string/>
+             <string>%</string>
             </property>
             <property name="minimum">
              <number>5</number>
@@ -1767,6 +1788,26 @@ that has no script of the same name.</string>
              </widget>
             </item>
            </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="7" column="1">
+        <widget class="QGroupBox" name="groupBox_5">
+         <property name="title">
+          <string>Serial</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_20">
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="useDTRAndRTSChk">
+            <property name="toolTip">
+             <string>DTR and RTS can speed up the serial connection but causes a reboot.
+Be sure to cut power to servos before connecting.</string>
+            </property>
+            <property name="text">
+             <string>Use DTR/RTS</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>

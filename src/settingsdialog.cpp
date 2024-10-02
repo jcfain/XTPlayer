@@ -48,10 +48,15 @@ void SettingsDialog::init(MediaLibraryHandler* medialLibraryHandler, VideoHandle
     _videoHandler = videoHandler;
     _connectionHandler = connectionHandler;
 
-    //ui.useWebSocketsCheckbox->setHidden(true);//Fast sends buffer in QWebSocket and sends late
+    ui.useWebSocketsCheckbox->setHidden(true);//Fast sends buffer in QWebSocket and sends late
     ui.dubugButton->hide();// Doesnt restart in debug mode.
     ui.useMediaDirectoryCheckbox->hide();//Not fully developed.
 
+#ifdef _WIN32
+    ui.bleConnectButton->setVisible(false);
+    ui.bleOutputRdo->setVisible(false);
+    ui.bleStatuslbl->setVisible(false);
+#endif
     setupUi();
 }
 
@@ -204,6 +209,10 @@ void SettingsDialog::setupUi()
     {
         ui.networkOutputRdo->setChecked(true);
     }
+    else if (SettingsHandler::getSelectedOutputDevice() == DeviceName::BLE)
+    {
+        ui.bleOutputRdo->setChecked(true);
+    }
     if (!_interfaceInitialized)
     {
         ui.restartRequiredLabel->hide();
@@ -272,14 +281,6 @@ void SettingsDialog::setupUi()
         setUpTCodeChannelProfiles();
         setUpTCodeChannelUI();
 
-        if(SettingsHandler::getSelectedOutputDevice() == DeviceName::Serial)
-        {
-            ui.serialOutputRdo->setChecked(true);
-        }
-        else if (SettingsHandler::getSelectedOutputDevice() == DeviceName::Network)
-        {
-            ui.networkOutputRdo->setChecked(true);
-        }
         ui.useWebSocketsCheckbox->setChecked(SettingsHandler::getSelectedNetworkDevice() == NetworkProtocol::WEBSOCKET);
 
         enableOrDisableDeviceConnectionUI(SettingsHandler::getSelectedOutputDevice());
@@ -1104,9 +1105,14 @@ void SettingsDialog::on_xtpWeb_initOutputDevice(DeviceName deviceName, bool chec
         ui.networkOutputRdo->setChecked(checked);
         on_networkOutputRdo_clicked();
         ui.networkConnectButton->setEnabled(false);
+    } else if(deviceName == DeviceName::BLE) {
+        ui.bleOutputRdo->setChecked(checked);
+        on_bleConnectButton_clicked();
+        ui.bleConnectButton->setEnabled(false);
     } else if(deviceName == DeviceName::None) {
         ui.serialOutputRdo->setChecked(false);
         ui.networkOutputRdo->setChecked(false);
+        ui.bleOutputRdo->setChecked(false);
     }
 }
 
@@ -1129,10 +1135,11 @@ void SettingsDialog::setDeviceStatusStyle(ConnectionStatus status, DeviceName de
     QString statusUnicode = "\u2717";
     QString statusColor = "red";
     QFont font( "Sans Serif", 12);
-    if(deviceName == DeviceName::Serial || deviceName == DeviceName::Network)
+    if(deviceName == DeviceName::Serial || deviceName == DeviceName::Network || deviceName == DeviceName::BLE )
     {
         ui.serialStatuslbl->clear();
         ui.networkStatuslbl->clear();
+        ui.bleStatuslbl->clear();
     }
     else if(deviceName == DeviceName::HereSphere ||
             deviceName == DeviceName::Whirligig ||
@@ -1165,6 +1172,12 @@ void SettingsDialog::setDeviceStatusStyle(ConnectionStatus status, DeviceName de
         ui.networkStatuslbl->setText(statusUnicode + " " + message);
         ui.networkStatuslbl->setFont(font);
         ui.networkStatuslbl->setStyleSheet("color: " + statusColor);
+    }
+    else if (deviceName == DeviceName::BLE)
+    {
+        ui.bleStatuslbl->setText(statusUnicode + " " + message);
+        ui.bleStatuslbl->setFont(font);
+        ui.bleStatuslbl->setStyleSheet("color: " + statusColor);
     }
     else if (deviceName == DeviceName::HereSphere)
     {
@@ -1204,6 +1217,12 @@ void SettingsDialog::on_networkOutputRdo_clicked()
     SettingsHandler::setSelectedOutputDevice(DeviceName::Network);
 }
 
+void SettingsDialog::on_bleOutputRdo_clicked()
+{
+    enableOrDisableDeviceConnectionUI(DeviceName::BLE);
+    SettingsHandler::setSelectedOutputDevice(DeviceName::BLE);
+}
+
 void SettingsDialog::enableOrDisableDeviceConnectionUI(DeviceName deviceName)
 {
     if(deviceName == DeviceName::Network)
@@ -1215,15 +1234,28 @@ void SettingsDialog::enableOrDisableDeviceConnectionUI(DeviceName deviceName)
         ui.networkConnectButton->setEnabled(true);
         ui.serialRefreshBtn->setEnabled(false);
         ui.useWebSocketsCheckbox->setEnabled(true);
+        ui.bleConnectButton->setEnabled(false);
     }
     else if(deviceName == DeviceName::Serial)
     {
-        ui.SerialOutputCmb->setEnabled(true);;
+        ui.SerialOutputCmb->setEnabled(true);
         ui.networkAddressTxt->setEnabled(false);
         ui.networkPortTxt->setEnabled(false);
         ui.networkConnectButton->setEnabled(false);
         ui.serialConnectButton->setEnabled(true);
         ui.serialRefreshBtn->setEnabled(true);
+        ui.useWebSocketsCheckbox->setEnabled(false);
+        ui.bleConnectButton->setEnabled(false);
+    }
+    else if(deviceName == DeviceName::BLE)
+    {
+        ui.bleConnectButton->setEnabled(true);
+        ui.SerialOutputCmb->setEnabled(false);
+        ui.networkAddressTxt->setEnabled(false);
+        ui.networkPortTxt->setEnabled(false);
+        ui.networkConnectButton->setEnabled(false);
+        ui.serialConnectButton->setEnabled(false);
+        ui.serialRefreshBtn->setEnabled(false);
         ui.useWebSocketsCheckbox->setEnabled(false);
     }
 }
@@ -1297,6 +1329,10 @@ void SettingsDialog::on_output_device_connectionChanged(ConnectionChangedSignal 
     else if (event.deviceName == DeviceName::Network)
     {
         ui.networkConnectButton->setEnabled(event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected);
+    }
+    else if (event.deviceName == DeviceName::BLE)
+    {
+        ui.bleConnectButton->setEnabled(event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected);
     }
     setDeviceStatusStyle(event.status, event.deviceName);
 }
@@ -1392,6 +1428,12 @@ void SettingsDialog::on_networkConnectButton_clicked()
     {
         DialogHandler::MessageBox(this, "Invalid network address!", XLogLevel::Critical);
     }
+}
+
+void SettingsDialog::on_bleConnectButton_clicked()
+{
+    ui.networkConnectButton->setEnabled(false);
+    _connectionHandler->initOutputDevice(DeviceName::BLE);
 }
 
 void SettingsDialog::on_deoConnectButton_clicked()
@@ -2193,3 +2235,18 @@ void SettingsDialog::on_voiceRateSlider_sliderMoved(int position)
     ui.voiceRateLbl->setText("Rate "+ QString::number(rate));
 }
 
+void SettingsDialog::onUseDTRAndRTSChkClicked(bool checked)
+{
+    if(!checked)
+    {
+        SettingsHandler::setUseDTRAndRTS(checked);
+        return;
+    }
+    QMessageBox::StandardButton reply =
+        QMessageBox::question(this, "Warning!", "DTR and RTS can speed up the serial connection but causes a board reboot.\nBe sure to cut power to servos before connecting.",
+                              QMessageBox::Yes|QMessageBox::No);
+
+    if(reply == QMessageBox::Yes)
+        SettingsHandler::setUseDTRAndRTS(checked);
+
+}

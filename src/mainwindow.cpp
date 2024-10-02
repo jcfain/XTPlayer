@@ -358,6 +358,10 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     actionCreatedAsc_Sort->setCheckable(true);
     actionCreatedDesc_Sort = submenuSort->addAction( "Created (Desc)" );
     actionCreatedDesc_Sort->setCheckable(true);
+    actionAddedAsc_Sort = submenuSort->addAction( "Added (Asc)" );
+    actionAddedAsc_Sort->setCheckable(true);
+    actionAddedDesc_Sort = submenuSort->addAction( "Added (Desc)" );
+    actionAddedDesc_Sort->setCheckable(true);
     actionTypeAsc_Sort = submenuSort->addAction( "Type (Asc)" );
     actionTypeAsc_Sort->setCheckable(true);
     actionTypeDesc_Sort = submenuSort->addAction( "Type (Desc)" );
@@ -367,6 +371,8 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     librarySortGroup->addAction(actionRandom_Sort);
     librarySortGroup->addAction(actionCreatedAsc_Sort);
     librarySortGroup->addAction(actionCreatedDesc_Sort);
+    librarySortGroup->addAction(actionAddedAsc_Sort);
+    librarySortGroup->addAction(actionAddedDesc_Sort);
     librarySortGroup->addAction(actionTypeAsc_Sort);
     librarySortGroup->addAction(actionTypeDesc_Sort);
 
@@ -450,6 +456,10 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
 
     connect(ui->actionReload_library, &QAction::triggered, m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::loadLibraryAsync);
     connect(ui->actionFix_offset_1024, &QAction::triggered, this, [this]() {
+        if(m_xtengine->mediaLibraryHandler()->isMetadataProcessing()) {
+            DialogHandler::MessageBox(libraryList, "Please wait for metadata process to complete!", XLogLevel::Warning);
+            return;
+        }
         QMessageBox::StandardButton reply;
         reply = QMessageBox::question(this, "Warning!", "This will go through all media items and\nset offsets that are equal to 1024 to 0.\n\nContinue?",
                                       QMessageBox::Yes|QMessageBox::No);
@@ -478,6 +488,8 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(actionRandom_Sort, &QAction::triggered, this, &MainWindow::on_actionRandom_triggered);
     connect(actionCreatedAsc_Sort, &QAction::triggered, this, &MainWindow::on_actionCreatedAsc_triggered);
     connect(actionCreatedDesc_Sort, &QAction::triggered, this, &MainWindow::on_actionCreatedDesc_triggered);
+    connect(actionAddedAsc_Sort, &QAction::triggered, this, &MainWindow::on_actionAddedAsc_triggered);
+    connect(actionAddedDesc_Sort, &QAction::triggered, this, &MainWindow::on_actionAddedDesc_triggered);
     connect(actionTypeAsc_Sort, &QAction::triggered, this, &MainWindow::on_actionTypeAsc_triggered);
     connect(actionTypeDesc_Sort, &QAction::triggered, this, &MainWindow::on_actionTypeDesc_triggered);
 
@@ -1145,6 +1157,10 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                 revealThumbAction->setToolTip("Open the thumb file in the systems file explorer");
             }
             QAction* metadataAction = myMenu.addAction(tr("Edit metadata..."), this, [this, selectedFileListItem] () {
+                if(m_xtengine->mediaLibraryHandler()->isMetadataProcessing()) {
+                    DialogHandler::MessageBox(libraryList, "Please wait for metadata process to complete!", XLogLevel::Warning);
+                    return;
+                }
                 auto item = m_xtengine->mediaLibraryHandler()->findItemByMediaPath(selectedFileListItem.path);
                 LibraryItemMetadataDialog::getSettings(libraryList, item);
             });
@@ -1229,6 +1245,7 @@ void MainWindow::onPrepareLibraryLoad()
     ui->actionReload_library->setDisabled(true);
     ui->actionCleanMetadata->setDisabled(true);
     ui->actionUpdateMetadata->setDisabled(true);
+    ui->actionFix_offset_1024->setDisabled(true);
     //ui->actionSelect_library->setDisabled(true);
     _playerControlsFrame->setDisabled(true);
 }
@@ -1284,6 +1301,7 @@ void MainWindow::toggleLibraryLoading(bool loading)
     ui->actionReload_library->setDisabled(loading);
     ui->actionCleanMetadata->setDisabled(loading);
     ui->actionUpdateMetadata->setDisabled(loading);
+    ui->actionFix_offset_1024->setDisabled(loading);
 
     ui->actionThumbnail->setDisabled(loading);
     ui->actionList->setDisabled(loading);
@@ -2598,6 +2616,12 @@ void MainWindow::updateLibrarySortUI(LibrarySortMode mode)
         case LibrarySortMode::CREATED_DESC:
             actionCreatedDesc_Sort->setChecked(true);
         break;
+        case LibrarySortMode::ADDED_ASC:
+            actionAddedAsc_Sort->setChecked(true);
+            break;
+        case LibrarySortMode::ADDED_DESC:
+            actionAddedDesc_Sort->setChecked(true);
+            break;
         case LibrarySortMode::RANDOM:
             actionRandom_Sort->setChecked(true);
         break;
@@ -2634,6 +2658,16 @@ void MainWindow::on_actionCreatedDesc_triggered()
 {
     SettingsHandler::setLibrarySortMode(LibrarySortMode::CREATED_DESC);
     sortLibraryList(LibrarySortMode::CREATED_DESC);
+}
+void MainWindow::on_actionAddedAsc_triggered()
+{
+    SettingsHandler::setLibrarySortMode(LibrarySortMode::ADDED_ASC);
+    sortLibraryList(LibrarySortMode::ADDED_ASC);
+}
+void MainWindow::on_actionAddedDesc_triggered()
+{
+    SettingsHandler::setLibrarySortMode(LibrarySortMode::ADDED_DESC);
+    sortLibraryList(LibrarySortMode::ADDED_DESC);
 }
 void MainWindow::on_actionTypeAsc_triggered()
 {

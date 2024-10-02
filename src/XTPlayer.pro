@@ -1,4 +1,4 @@
-QT += core gui serialport network gamepad texttospeech compress websockets multimedia multimediawidgets
+QT += core gui serialport network gamepad texttospeech compress websockets multimedia multimediawidgets bluetooth
 
 greaterThan(QT_MAJOR_VERSION, 4) {
     QT += widgets
