@@ -269,6 +269,10 @@ private slots:
 
     void onUseDTRAndRTSChkClicked(bool checked);
 
+    void on_defaultWebDirBtn_clicked();
+
+    void on_defaultVRLibraryBtn_clicked();
+
 private:
 
     Ui::SettingsDialog ui;

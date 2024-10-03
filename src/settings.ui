@@ -1032,26 +1032,10 @@
         <string>XTP web options</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_6">
-        <item row="3" column="2">
-         <widget class="QLabel" name="label_9">
-          <property name="toolTip">
-           <string/>
-          </property>
+        <item row="0" column="9">
+         <widget class="QPushButton" name="browseHttpRootButton">
           <property name="text">
-           <string>Thumb quality</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="httpRootLabel">
-          <property name="text">
-           <string>Http root directory</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           <string>Browse</string>
           </property>
          </widget>
         </item>
@@ -1074,13 +1058,70 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="6">
-         <widget class="QLabel" name="label_8">
+        <item row="0" column="1" colspan="7">
+         <widget class="QLineEdit" name="httpRootLineEdit">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="vrLibraryLabel">
           <property name="text">
-           <string>Web socket port</string>
+           <string>VR library</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="7">
+         <widget class="QSpinBox" name="webSocketPortSpinBox">
+          <property name="toolTip">
+           <string>0 = auto</string>
+          </property>
+          <property name="maximum">
+           <number>65535</number>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="chunkSizeLabel">
+          <property name="text">
+           <string>Chunk size</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1" colspan="7">
+         <widget class="QLineEdit" name="vrLibraryLineEdit">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2">
+         <widget class="QLabel" name="label_9">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="text">
+           <string>Thumb quality</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="5">
+         <widget class="QSpinBox" name="httpPortSpinBox">
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>65535</number>
           </property>
          </widget>
         </item>
@@ -1088,6 +1129,16 @@
          <widget class="QLabel" name="label_4">
           <property name="text">
            <string>Web server port</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="6">
+         <widget class="QLabel" name="label_8">
+          <property name="text">
+           <string>Web socket port</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -1112,78 +1163,41 @@ will be hit for the next chunk.</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="vrLibraryLabel">
-          <property name="text">
-           <string>VR library</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="7">
-         <widget class="QSpinBox" name="webSocketPortSpinBox">
-          <property name="toolTip">
-           <string>0 = auto</string>
-          </property>
-          <property name="maximum">
-           <number>65535</number>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="5">
-         <widget class="QSpinBox" name="httpPortSpinBox">
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <number>65535</number>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QLabel" name="chunkSizeLabel">
-          <property name="text">
-           <string>Chunk size</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="8">
-         <widget class="QPushButton" name="webPasswordButton">
-          <property name="text">
-           <string>Set password</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="8">
+        <item row="2" column="9">
          <widget class="QPushButton" name="browseVRLibraryButton">
           <property name="text">
            <string>Browse</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="8">
-         <widget class="QPushButton" name="browseHttpRootButton">
+        <item row="0" column="0">
+         <widget class="QLabel" name="httpRootLabel">
           <property name="text">
-           <string>Browse</string>
+           <string>Http root directory</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
-        <item row="0" column="1" colspan="7">
-         <widget class="QLineEdit" name="httpRootLineEdit">
-          <property name="enabled">
-           <bool>true</bool>
+        <item row="2" column="8">
+         <widget class="QPushButton" name="defaultVRLibraryBtn">
+          <property name="text">
+           <string>Default</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="1" colspan="7">
-         <widget class="QLineEdit" name="vrLibraryLineEdit">
-          <property name="enabled">
-           <bool>false</bool>
+        <item row="0" column="8">
+         <widget class="QPushButton" name="defaultWebDirBtn">
+          <property name="text">
+           <string>Default</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="8" colspan="2">
+         <widget class="QPushButton" name="webPasswordButton">
+          <property name="text">
+           <string>Set password</string>
           </property>
          </widget>
         </item>

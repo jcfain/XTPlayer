@@ -2250,3 +2250,17 @@ void SettingsDialog::onUseDTRAndRTSChkClicked(bool checked)
         SettingsHandler::setUseDTRAndRTS(checked);
 
 }
+
+void SettingsDialog::on_defaultWebDirBtn_clicked()
+{
+    SettingsHandler::setHttpServerRootDefault();
+    ui.httpRootLineEdit->setText(SettingsHandler::getHttpServerRoot());
+}
+
+
+void SettingsDialog::on_defaultVRLibraryBtn_clicked()
+{
+    SettingsHandler::removeAllVRLibraries();
+    ui.vrLibraryLineEdit->setText(SettingsHandler::getLastSelectedVRLibrary());
+}
+
