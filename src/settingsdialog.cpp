@@ -52,11 +52,11 @@ void SettingsDialog::init(MediaLibraryHandler* medialLibraryHandler, VideoHandle
     ui.dubugButton->hide();// Doesnt restart in debug mode.
     ui.useMediaDirectoryCheckbox->hide();//Not fully developed.
 
-#ifdef _WIN32
+// #ifdef _WIN32
     ui.bleConnectButton->setVisible(false);
     ui.bleOutputRdo->setVisible(false);
     ui.bleStatuslbl->setVisible(false);
-#endif
+// #endif
     setupUi();
 }
 
@@ -1219,6 +1219,7 @@ void SettingsDialog::on_networkOutputRdo_clicked()
 
 void SettingsDialog::on_bleOutputRdo_clicked()
 {
+    DialogHandler::Dialog(this, "BLE is experimental and I could not get it to work.\nIf you do let me know. Maybe it will help me trouble shoot.\nIn otherwords, dont expect much.");
     enableOrDisableDeviceConnectionUI(DeviceName::BLE);
     SettingsHandler::setSelectedOutputDevice(DeviceName::BLE);
 }
