@@ -1533,8 +1533,7 @@ void SettingsDialog::on_resetAllButton_clicked()
                                       "Restart", "Uninstall", "Quit", 0, 2);
         if (reply == 0)
         {
-            QApplication::quit();
-            QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
+            SettingsHandler::Restart();
         }
         else if (reply == 1)
         {
