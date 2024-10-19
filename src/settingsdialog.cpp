@@ -335,7 +335,7 @@ void SettingsDialog::setupUi()
         ui.webAddressLinkLabel->setVisible(SettingsHandler::getEnableHttpServer());
         ui.httpRootLineEdit->setText(SettingsHandler::getHttpServerRoot());
         ui.vrLibraryLineEdit->setText(SettingsHandler::getLastSelectedVRLibrary());
-        ui.chunkSizeDoubleSpinBox->setValue(SettingsHandler::getHTTPChunkSize() / 1048576);
+        ui.chunkSizeDoubleSpinBox->setValue(SettingsHandler::getHTTPChunkSizeMB());
         ui.httpPortSpinBox->setValue(SettingsHandler::getHTTPPort());
         ui.webSocketPortSpinBox->setValue(SettingsHandler::getWebSocketPort());
         ui.httpThumbQualitySpinBox->setValue(SettingsHandler::getHttpThumbQuality());
@@ -1838,7 +1838,7 @@ void SettingsDialog::on_webSocketPort_valueChanged(int value)
 
 void SettingsDialog::on_chunkSizeDouble_valueChanged(double value)
 {
-    SettingsHandler::setHTTPChunkSize(value * 1048576);
+    SettingsHandler::setHTTPChunkSizeMB(value);
 }
 
 void SettingsDialog::on_httpRootLineEdit_textEdited(const QString &selectedDirectory)
