@@ -1,10 +1,10 @@
 #!/bin/bash
 
 home=~/
-target='/media/NAS/MyBook/STK/Hardware/my software/'
+target='/media/NAS/EasyStore/STK/Dev/XTP/XTP-Release/'
 architecture="x86_64"
 xtplayerSource="${home}"git/XTPlayer
-xtplayerLocation="${home}"git/XTPlayer/build-XTPlayer-Desktop_Qt_5_15_2_GCC_64bit-Release/
+xtplayerLocation="${home}"git/XTPlayer/build-XTPlayer-Desktop-Release/
 xtengineLocation="${home}"git/XTEngine/build-XTEngine-Desktop-Release/release/
 httpserverLocation="${home}"git/HttpServer/src/build/release/
 deployDirectory="${home}"git/XTPlayer/Deploy/

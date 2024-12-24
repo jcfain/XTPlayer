@@ -16,10 +16,11 @@ linuxdeployBinary="${home}"git/linuxdeploy/linuxdeploy-"${architecture}".AppImag
 export PATH="${qtDirectory}":$PATH
 export LD_LIBRARY_PATH="${deployDirectory}lib;${xtengineLocation};${httpserverLocation}"
 
-#echo LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}
-#echo PATH: ${PATH}
-#echo Home: ${home}
-#echo Target: ${target}
+echo LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}
+echo PATH: ${PATH}
+echo Home: ${home}
+echo Target: ${target}
+echo appDit: ${appDir}
 
 rm -rf "${appDir}"
 
