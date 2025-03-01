@@ -1161,7 +1161,11 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                     DialogHandler::MessageBox(libraryList, "Please wait for metadata process to complete!", XLogLevel::Warning);
                     return;
                 }
-                auto item = m_xtengine->mediaLibraryHandler()->findItemByMediaPath(selectedFileListItem.path);
+                auto item = m_xtengine->mediaLibraryHandler()->findItemByReference(&selectedFileListItem);
+                if(!item) {
+                    DialogHandler::MessageBox(libraryList, "Could not find media item in current library", XLogLevel::Critical);
+                    return;
+                }
                 LibraryItemMetadataDialog::getSettings(libraryList, item);
             });
             connect(metadataAction, &QAction::hovered, this, &MainWindow::on_action_hover);
@@ -1169,7 +1173,11 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
 
             QAction* processMetadataAction = myMenu.addAction(tr("Update metadata"), this, [this, selectedFileListItem] () {
                 if(!m_xtengine->mediaLibraryHandler()->metadataProcessing()) {
-                    auto item = m_xtengine->mediaLibraryHandler()->findItemByID(selectedFileListItem.ID);
+                    auto item = m_xtengine->mediaLibraryHandler()->findItemByReference(&selectedFileListItem);
+                    if(!item) {
+                        DialogHandler::MessageBox(libraryList, "Could not find media item in current library", XLogLevel::Critical);
+                        return;
+                    }
                     m_xtengine->mediaLibraryHandler()->processMetadata(*item);
                 } else {
                     DialogHandler::MessageBox(libraryList, "Please wait for metadata process to complete!", XLogLevel::Warning);

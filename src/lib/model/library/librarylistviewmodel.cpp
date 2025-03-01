@@ -154,6 +154,8 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
         {
             if(item.type != LibraryListItemType::PlaylistInternal)
             {
+                if(item.error)
+                    return QColor(Qt::GlobalColor::red);
                 if (!item.hasScript && item.metadata.isMFS)
                     return QColor(Qt::GlobalColor::cyan);
                 if (!item.hasScript)
