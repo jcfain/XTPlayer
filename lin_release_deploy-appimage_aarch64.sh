@@ -1,7 +1,7 @@
 #!/bin/bash
 
 home=~/
-target='/media/NAS/MyBook/STK/Hardware/my software/'
+target='/media/NAS/main/STK/Dev/XTP/XTP-Release/'
 architecture="aarch64"
 xtplayerSource="${home}"git/XTPlayer
 xtplayerLocation="${home}"git/XTPlayer/build-XTPlayer-Desktop-Release/
