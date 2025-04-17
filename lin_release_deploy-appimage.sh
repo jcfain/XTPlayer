@@ -10,7 +10,7 @@ read versionInput
 export version=v${versionInput}
 
 appDir="${deployDirectory}"XTPlayer-"${version}"-Linux-"${architecture}"
-linuxdeployBinary="${home}"git/linuxdeploy/linuxdeploy-"${architecture}".AppImage
+linuxdeployBinary="${xtplayerSource}"/linuxdeploy/"${architecture}"/linuxdeploy-"${architecture}".AppImage
 
 #Export directory with qmake to path.
 export PATH="${qtDirectory}":$PATH
@@ -20,7 +20,7 @@ echo LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}
 echo PATH: ${PATH}
 echo Home: ${home}
 echo Target: ${target}
-echo appDit: ${appDir}
+echo appDir: ${appDir}
 
 rm -rf "${appDir}"
 
