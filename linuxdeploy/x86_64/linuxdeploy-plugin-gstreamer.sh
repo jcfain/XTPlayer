@@ -76,8 +76,10 @@ helpers_target_dir="$APPDIR"/usr/lib/gstreamer"$GSTREAMER_VERSION"/gstreamer-"$G
 
 if [ "$GSTREAMER_PLUGINS_DIR" != "" ]; then
     plugins_dir="${GSTREAMER_PLUGINS_DIR}"
-else
+elif [ -d /usr/lib/"$(uname -m)"-linux-gnu/gstreamer-"$GSTREAMER_VERSION" ]; then
     plugins_dir=/usr/lib/$(uname -m)-linux-gnu/gstreamer-"$GSTREAMER_VERSION"
+else
+    plugins_dir=/usr/lib/gstreamer-"$GSTREAMER_VERSION"
 fi
 
 if [ "$GSTREAMER_HELPERS_DIR" != "" ]; then
