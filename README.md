@@ -21,7 +21,7 @@ XTPlayer is a cross platform TCode media player.
              During installation, make sure to get Qt 5.15.2. ONLY Qt 5.15.2 is supported at this time.
      2. Required libraries needed:
           * https://github.com/nezticle/qtcompress
-               * Follow the instructions on the github
+               * Follow the instructions on the github. (Note: It doesnt mention perl on the github. I had to install strwberry perl in windows to get qtcompress to build)
           * https://github.com/addisonElliott/HttpServer
                * Follow the instructions on the github
                * build both Debug and Release
