@@ -152,27 +152,19 @@ win32{
     #LIBS += -L$$QT.core.libs -lQtAV1 -lQtAVWidgets1
     build_pass: CONFIG(debug, debug|release) {
         DESTDIR = $$shell_path($$OUT_PWD/debug)
-        #CONFIG(release, debug|release):
+        LIBS += -L$$PWD/../../XTEngine/src/build/Desktop_Qt_5_15_2_MinGW_64_bit-Debug/debug -lXTEngine
 
-        #include($$PWD/../../HttpServer/HttpServer.pro)
-        #LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/debug -lhttpServer
-        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/debug -lXTEngine
-        LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/src/debug -lhttpServer
-        LIBS += -L$$PWD/../../build-zlib-1.3.1-Desktop_Qt_5_15_2_MinGW_64_bit-Release -lzlib
-#        TEMPLATE = subdirs
-#        #SOURCE_ROOT += ../../
-#        SUBDIRS += libQtAV
-#        depends += libQtAV
-#        libQtAV.file = ../../QtAV/QtAV.pro
-#        include(../../QtAV/root.pri)
-#        include(../../QtAV/src/libQtAV.pri)
+        LIBS += -L$$PWD/../../HttpServer/build/debug -lhttpServer
+        INCLUDEPATH += $$PWD/../../HttpServer/build/debug
+        LIBS += -L$$PWD/../../zlib-1.3.1/build/Desktop_Qt_5_15_2_MinGW_64_bit-Debug -lzlib
     }
     else:build_pass:CONFIG(release, debug|release): {
         DESTDIR = $$shell_path($$OUT_PWD/release)
-        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_MinGW_64_bit-Release/release -lXTEngine
-        LIBS += -L$$PWD/../../build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release/src/release -lhttpServer
-        LIBS += -L$$PWD/../../build-zlib-1.3.1-Desktop_Qt_5_15_2_MinGW_64_bit-Release -lzlib
-        #INCLUDEPATH += ../../QtAV-Builds/Release/x64/include
+        LIBS += -L$$PWD/../../XTEngine/src/build/Desktop_Qt_5_15_2_MinGW_64_bit-Release/release -lXTEngine
+
+        LIBS += -L$$PWD/../../HttpServer/build/release -lhttpServer
+        INCLUDEPATH += $$PWD/../../HttpServer/build/release
+        LIBS += -L$$PWD/../../zlib-1.3.1/build/Desktop_Qt_5_15_2_MinGW_64_bit-Release -lzlib
     }
     INCLUDEPATH += $$PWD/../../XTEngine/src
     DEPENDPATH += $$PWD/../../XTEngine/src
