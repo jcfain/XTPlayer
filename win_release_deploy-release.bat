@@ -1,16 +1,16 @@
 @echo off
 
 SET QtDir=C:\Qt\5.15.2\mingw81_64\bin\
-SET buildDir=.\build-XTPlayer-Desktop_Qt_5_15_2_MinGW_64_bit-Release\
-SET engineBuildDir=..\XTEngine\build-XTEngine-Desktop_Qt_5_15_2_MinGW_64_bit-Release\
+SET buildDir=.\src\build\Desktop_Qt_5_15_2_MinGW_64_bit-Release\
+SET engineBuildDir=..\XTEngine\src\build\Desktop_Qt_5_15_2_MinGW_64_bit-Release\
 SET deployDir=.\bin\release\
 SET deployZipDir=.\bin\
 SET stagingDirectory=.\bin\latest
 SET sevenZipLocation="C:\Program Files\7-Zip\7z.exe"
 rem this is where the zip file will be copied for backup
-SET releaseDirectory="\\naspi.local\MyBook\STK\Hardware\my software\"
-SET httpServerDll=..\build-HttpServer-Desktop_Qt_5_15_2_MinGW_64_bit-Release\src\release\httpServer.dll
-SET zlibDll=..\build-zlib-1.3.1-Desktop_Qt_5_15_2_MinGW_64_bit-Release\libzlib.dll
+SET releaseDirectory="\\192.168.0.218\main\STK\Dev\XTP\XTP-Release\"
+SET httpServerDll=..\HttpServer\build\release\httpServer.dll
+SET zlibDll=..\zlib-1.3.1\build\Desktop_Qt_5_15_2_MinGW_64_bit-Release\libzlib.dll
 
 SET /P version=Enter a version (example: 0.423b):
 IF NOT DEFINED version SET "version=UNKNOWN"
