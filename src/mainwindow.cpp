@@ -2034,7 +2034,7 @@ void MainWindow::on_media_positionChanged(qint64 positionIgnored)
 //        }
         }
     }
-    LogHandler::Debug("Media position: "+ QString::number(position));
+    // LogHandler::Debug("Media position: "+ QString::number(position));
     _playerControlsFrame->updateTimeDurationLabels(position, duration);
     _playerControlsFrame->setTime(position);
     //    QString timeCurrent = QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss"));
