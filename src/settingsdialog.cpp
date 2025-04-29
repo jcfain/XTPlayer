@@ -2268,5 +2268,6 @@ void SettingsDialog::on_defaultVRLibraryBtn_clicked()
 void SettingsDialog::on_playbackRateSpinBox_valueChanged(double arg1)
 {
     SettingsHandler::setPlaybackRateStep(arg1);
+    set_requires_restart(true);
 }
 

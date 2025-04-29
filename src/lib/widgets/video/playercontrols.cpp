@@ -40,7 +40,6 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 
     playbackRateInput = new QDoubleSpinBox(this);
     playbackRateInput->setMinimum(0.0);
-    playbackRateInput->setMaximum(1.9999999999);
     playbackRateInput->setSingleStep(SettingsHandler::getPlaybackRateStep());
     playbackRateInput->setValue(1.0);
     playbackRateInput->setEnabled(false);
@@ -465,7 +464,7 @@ bool PlayerControls::getTimeLineMousePressed() {
 }
 void PlayerControls::updateTimeDurationLabels(qint64 time, qint64 duration)
 {
-    lblCurrentTime->setText(mSecondFormat(time));
+    // lblCurrentTime->setText(mSecondFormat(time));
     lblDuration->setText(mSecondFormat(duration));
 }
 void PlayerControls::setTime(qint64 time)
