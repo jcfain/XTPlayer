@@ -587,7 +587,7 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>1248</width>
+            <width>1245</width>
             <height>1222</height>
            </rect>
           </property>
@@ -983,6 +983,19 @@
         </rect>
        </property>
        <layout class="QFormLayout" name="formLayout_2">
+        <property name="labelAlignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_2">
+          <property name="toolTip">
+           <string>This sets the value the video will either skip forward or back via shortcuts.</string>
+          </property>
+          <property name="text">
+           <string>Video time step in secs</string>
+          </property>
+         </widget>
+        </item>
         <item row="0" column="1">
          <widget class="QSpinBox" name="videoIncrementSpinBox">
           <property name="toolTip">
@@ -999,15 +1012,15 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_2">
-          <property name="toolTip">
-           <string>This sets the value the video will either skip forward or back via shortcuts.</string>
-          </property>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_6">
           <property name="text">
-           <string>Video time step in secs</string>
+           <string>Playback rate step</string>
           </property>
          </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QDoubleSpinBox" name="playbackRateSpinBox"/>
         </item>
        </layout>
       </widget>

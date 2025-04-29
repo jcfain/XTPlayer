@@ -36,7 +36,17 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToActionButton->setFlat(true);
     skipToActionButton->setEnabled(false);
 
-    playerControlsGrid->addWidget(skipToActionButton, row, 1, 1, 5);
+    playerControlsGrid->addWidget(skipToActionButton, row, 1, 1, 4);
+
+    playbackRateInput = new QDoubleSpinBox(this);
+    playbackRateInput->setMinimum(0.0);
+    playbackRateInput->setMaximum(1.9999999999);
+    playbackRateInput->setSingleStep(SettingsHandler::getPlaybackRateStep());
+    playbackRateInput->setValue(1.0);
+    playbackRateInput->setEnabled(false);
+    connect(playbackRateInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, PlayerControls::playbackSpeedValueChanged);
+    // connect(playbackRateInput, &QSlider::valueChanged, this, PlayerControls::playbackSpeedValueChanged);
+    playerControlsGrid->addWidget(playbackRateInput, row, 5, 1, 1);
 
     skipToMoneyShotButton = new QPushButton(this);
     skipToMoneyShotButton->setObjectName(QString::fromUtf8("skipToMoneyShotButton"));
@@ -49,6 +59,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToMoneyShotButton->setIconSize(QSize(15, 15));
     skipToMoneyShotButton->setFlat(true);
     skipToMoneyShotButton->setEnabled(false);
+
 
     playerControlsGrid->addWidget(skipToMoneyShotButton, row, 6, 1, 5);
 
@@ -351,7 +362,9 @@ void PlayerControls::resetMediaControlStatus(bool playing)
     mediaSettingsBtn->setEnabled(playing);
     _stopBtn->setEnabled(playing);
     altScriptBtn->setEnabled(playing);
+    playbackRateInput->setEnabled(playing);
     setPlayIcon(playing);
+    playbackRateInput->setValue(1.0);
     if(!playing)
     {
         updateTimeDurationLabels(0, 0);
@@ -670,4 +683,9 @@ bool PlayerControls::alternateFunscriptPrev()
         return true;
     }
     return false;
+}
+
+void PlayerControls::setPlayBackSpeed(qreal value)
+{
+    playbackRateInput->setValue(value);
 }

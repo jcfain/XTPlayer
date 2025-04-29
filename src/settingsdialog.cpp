@@ -384,6 +384,8 @@ void SettingsDialog::setupUi()
         ui.fullMetadataProcessChk->setChecked(SettingsHandler::scheduleLibraryLoadFullProcess());
         ui.syncSettingsChk->setChecked(SettingsHandler::scheduleSettingsSync());
 
+        ui.playbackRateSpinBox->setValue(SettingsHandler::getPlaybackRateStep());
+
         connect(ui.schedulerGroupbox, &QGroupBox::clicked, this, &SettingsDialog::schedulerEnabledChk_clicked);
         connect(ui.fullMetadataProcessChk, &QCheckBox::clicked, this, &SettingsDialog::fullMetadataProcessChk_clicked);
         connect(ui.syncSettingsChk, &QCheckBox::clicked, this, &SettingsDialog::fullMetadataProcessChk_clicked);
@@ -392,8 +394,6 @@ void SettingsDialog::setupUi()
 
         ui.processMetadataOnStartChk->setChecked(SettingsHandler::processMetadataOnStart());
         connect(ui.processMetadataOnStartChk, &QCheckBox::clicked, this, &SettingsDialog::processMetadataOnStart_clicked);
-
-
 
         connect(SettingsHandler::instance(), &SettingsHandler::restartRequired, this, &SettingsDialog::set_requires_restart);
         connect(SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
@@ -2262,5 +2262,11 @@ void SettingsDialog::on_defaultVRLibraryBtn_clicked()
 {
     SettingsHandler::removeAllVRLibraries();
     ui.vrLibraryLineEdit->setText(SettingsHandler::getLastSelectedVRLibrary());
+}
+
+
+void SettingsDialog::on_playbackRateSpinBox_valueChanged(double arg1)
+{
+    SettingsHandler::setPlaybackRateStep(arg1);
 }
 

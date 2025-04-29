@@ -547,6 +547,10 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     });
     connect(_playerControlsFrame, &PlayerControls::skipBack, this, &MainWindow::on_skipBackButton_clicked);
     connect(_playerControlsFrame, &PlayerControls::alternateFunscriptSelected, this, &MainWindow::alternateFunscriptSelected);
+    connect(_playerControlsFrame, &PlayerControls::playbackSpeedValueChanged, this, [this](qreal value) {
+        XMediaStateHandler::setPlaybackSpeed(value);
+        videoHandler->setSpeed(value);
+    });
 
     connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
     connect(this, &MainWindow::keyReleased, this, &MainWindow::on_key_press);
@@ -2085,6 +2089,7 @@ void MainWindow::on_media_stop()
     _playerControlsFrame->resetMediaControlStatus(false);
     m_xtengine->syncHandler()->stopOtherMediaFunscript();
     XMediaStateHandler::stop();
+    videoHandler->setSpeed(1.0);
     _videoPreviewWidget->stop();
     _mediaStopped = true;
 }

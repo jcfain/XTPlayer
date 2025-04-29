@@ -273,6 +273,8 @@ private slots:
 
     void on_defaultVRLibraryBtn_clicked();
 
+    void on_playbackRateSpinBox_valueChanged(double arg1);
+
 private:
 
     Ui::SettingsDialog ui;

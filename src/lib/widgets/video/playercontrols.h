@@ -7,6 +7,7 @@
 #include <QComboBox>
 #include <QLabel>
 #include <QDialog>
+#include <QDoubleSpinBox>
 
 #include "lib/tool/xmath.h"
 #include "lib/struct/ScriptInfo.h"
@@ -36,6 +37,7 @@ signals:
     void seekSliderHover(int position, qint64 sliderValue);
     void seekSliderLeave();
     void alternateFunscriptSelected(ScriptInfo script);
+    void playbackSpeedValueChanged(qreal value);
 public slots:
     void on_heatmapToggled(bool disabled);
 public:
@@ -70,6 +72,7 @@ public:
     void setAltScripts(QList<ScriptInfo> scriptInfos);
     bool alternateFunscriptNext();
     bool alternateFunscriptPrev();
+    void setPlayBackSpeed(qreal value);
 
 private:
     QGridLayout *playerControlsGrid;
@@ -82,6 +85,7 @@ private:
     QPushButton *fullScreenBtn;
     QPushButton *altScriptBtn;
     QPushButton *mediaSettingsBtn;
+    QDoubleSpinBox* playbackRateInput;
     //QPushButton *settingsButton;
     RangeSlider *VolumeSlider;
     QDialog* altScriptDialog;
