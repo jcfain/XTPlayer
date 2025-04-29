@@ -43,7 +43,9 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     playbackRateInput->setSingleStep(SettingsHandler::getPlaybackRateStep());
     playbackRateInput->setValue(1.0);
     playbackRateInput->setEnabled(false);
-    connect(playbackRateInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, PlayerControls::playbackSpeedValueChanged);
+    connect(playbackRateInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this](double value) {
+        emit playbackSpeedValueChanged(value);
+    });
     // connect(playbackRateInput, &QSlider::valueChanged, this, PlayerControls::playbackSpeedValueChanged);
     playerControlsGrid->addWidget(playbackRateInput, row, 5, 1, 1);
 
