@@ -371,7 +371,6 @@ private:
     void showInGraphicalShell(QString path);
     void processMetaData(const LibraryListItem27& LibraryListItem27);
     void updateMetaData(LibraryListItem27* LibraryListItem27);
-    void alternateFunscriptSelected(const ScriptInfo &script);
 
     qint64 mediaPosition();
     qint64 mediaDuration();

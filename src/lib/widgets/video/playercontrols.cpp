@@ -362,7 +362,6 @@ void PlayerControls::resetMediaControlStatus(bool playing)
     loopToggleButton->setEnabled(playing);
     mediaSettingsBtn->setEnabled(playing);
     _stopBtn->setEnabled(playing);
-    altScriptBtn->setEnabled(playing);
     playbackRateInput->setEnabled(playing);
     setPlayIcon(playing);
     playbackRateInput->setValue(1.0);
@@ -631,25 +630,10 @@ void PlayerControls::setAltScripts(QList<ScriptInfo> scriptInfos)
     alternateStriptCmb->clear();
     int alternateCount = 0;
     foreach(auto scriptInfo, scriptInfos) {
-        if(!QFileInfo::exists(scriptInfo.path))
-            continue;
-        QString type = "";
-        if((scriptInfo.containerType == ScriptContainerType::MFS || scriptInfo.containerType == ScriptContainerType::ZIP) &&
-            scriptInfo.type == ScriptType::MAIN)
-        {
-            continue;
-        }
-        else if(scriptInfo.containerType == ScriptContainerType::MFS)
-        {
-            type = " ("+scriptInfo.track+")";
-        }
-        else if(scriptInfo.containerType == ScriptContainerType::ZIP)
-        {
-            type = " (ZIP)";
-        }
-        alternateStriptCmb->addItem(scriptInfo.name + type, QVariant::fromValue(scriptInfo));
+        alternateStriptCmb->addItem(scriptInfo.name + " " + scriptInfo.containerTypeName, QVariant::fromValue(scriptInfo));
         if(scriptInfo.type != ScriptType::MAIN) // Dont count the "Default" main script
             alternateCount++;
+
     }
     if(alternateCount)
         altScriptBtn->setStyleSheet("*{ color:green }");

@@ -546,7 +546,9 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
         m_xtengine->settingsActionHandler()->media_action(actions.SkipToAction);
     });
     connect(_playerControlsFrame, &PlayerControls::skipBack, this, &MainWindow::on_skipBackButton_clicked);
-    connect(_playerControlsFrame, &PlayerControls::alternateFunscriptSelected, this, &MainWindow::alternateFunscriptSelected);
+    connect(_playerControlsFrame, &PlayerControls::alternateFunscriptSelected, this, [this](ScriptInfo script) {
+        m_xtengine->syncHandler()->swap(script);
+    });
     connect(_playerControlsFrame, &PlayerControls::playbackSpeedValueChanged, this, [this](qreal value) {
         XMediaStateHandler::setPlaybackSpeed(value);
         videoHandler->setSpeed(value);
@@ -1577,7 +1579,7 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
         if(!customScript.isEmpty())
             m_xtengine->syncHandler()->buildScriptItem(selectedFileListItem, customScript);
         SyncLoadState loadState = m_xtengine->syncHandler()->load(selectedFileListItem);
-        _playerControlsFrame->setAltScripts(item->metadata.scripts);
+        _playerControlsFrame->setAltScripts(m_xtengine->mediaLibraryHandler()->filterAlternateFunscriptsForMediaItem(item->metadata.scripts));
         QString filesWithLoadingIssues = "";
         if(selectedFileListItem.type == LibraryListItemType::FunscriptType && m_xtengine->syncHandler()->isLoaded())
             m_xtengine->syncHandler()->playStandAlone();
@@ -1624,15 +1626,6 @@ void MainWindow::updateMetaData(LibraryListItem27* libraryListItem)
             libraryListItem->metadata.lastLoopEnd = _playerControlsFrame->getEndLoop();
         }
         SettingsHandler::updateLibraryListItemMetaData(*libraryListItem);
-    }
-}
-
-void MainWindow::alternateFunscriptSelected(const ScriptInfo &script)
-{
-    auto playingItem = XMediaStateHandler::getPlaying();
-    if(playingItem)
-    {
-        m_xtengine->syncHandler()->swap(*playingItem, script);
     }
 }
 
