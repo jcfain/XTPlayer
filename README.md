@@ -13,9 +13,15 @@ XTPlayer is a cross platform TCode media player.
     * Sync with DeoVR/HereSphere and Whirligig VR meadia players
     * Built in web server for viewing media collection with a variaty of devices.
     * And much more
+    
+## Installing
+      1. Grab the latest release package for your OS from the releases https://github.com/jcfain/XTPlayer/releases/latest.
+      2. Extract it to a place where your user has permissions to.
+      3. Run the executable.
+      4. Choose at least one path to the media/funscripts to add.
+      5. The application will scan the directory and all subdirectories for media and their funscripts then start generating thumbnails. This can take sometime on first startup depending on how many files you have.
 
-
-## Building on Windows
+## Building from source on Windows
      1. Download and install the following apps
           *  QT Creator Community Open source edition: https://www.qt.io/download 
              During installation, make sure to get Qt 5.15.2. ONLY Qt 5.15.2 is supported at this time.
