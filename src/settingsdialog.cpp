@@ -9,6 +9,7 @@
 #include "xtpsettings.h"
 #include "gettextdialog.h"
 #include "tagManager.h"
+#include "lib/tool/qsettings_json.hpp"
 
 SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent), _inputMapWidget(0)
 {
@@ -385,6 +386,7 @@ void SettingsDialog::setupUi()
         ui.syncSettingsChk->setChecked(SettingsHandler::scheduleSettingsSync());
 
         ui.playbackRateSpinBox->setValue(SettingsHandler::getPlaybackRateStep());
+        connect(ui.playbackRateSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &SettingsDialog::on_playbackRateSpinBoxValueChanged);
 
         connect(ui.schedulerGroupbox, &QGroupBox::clicked, this, &SettingsDialog::schedulerEnabledChk_clicked);
         connect(ui.fullMetadataProcessChk, &QCheckBox::clicked, this, &SettingsDialog::fullMetadataProcessChk_clicked);
@@ -1888,26 +1890,25 @@ void SettingsDialog::on_httpThumbQualitySpinBox_editingFinished()
 
 void SettingsDialog::Export(QWidget* parent)
 {
-    QString selectedFile = QFileDialog::getSaveFileName(parent, QApplication::applicationDirPath() + "/Save settings ini", "settings_export-"+XTPSettings::XTPVersion+".ini", "INI Files (*.ini)");
+    QString ext;
+    QString selectedFile = QFileDialog::getSaveFileName(parent, QApplication::applicationDirPath() + "/Save settings", "settings_export-"+XTPSettings::XTPVersion, "JSON Files (*.json);;INI Files (*.ini)", &ext);
     if(!selectedFile.isEmpty())
     {
-        QSettings* settingsExport = new QSettings(selectedFile, QSettings::Format::IniFormat);
-        save(settingsExport);
-        delete settingsExport;
+        bool isJSON = ext == "JSON Files (*.json)";
+        selectedFile += isJSON ? selectedFile.endsWith(".json") ? "" : ".json" : selectedFile.endsWith(".ini") ? "" : ".ini";
+        XTPSettings::exportToFile(selectedFile, isJSON ? JsonFormat : QSettings::Format::IniFormat);
         emit messageSend("Settings saved to "+ selectedFile, XLogLevel::Information);
     }
 }
 
 void SettingsDialog::Import(QWidget* parent)
 {
-    QString selectedFile = QFileDialog::getOpenFileName(parent, "Choose settings ini", QApplication::applicationDirPath(), "INI Files (*.ini)");
+    QString ext;
+    QString selectedFile = QFileDialog::getOpenFileName(parent, "Choose settings", QApplication::applicationDirPath(), "JSON Files (*.json);;INI Files (*.ini)", &ext);
     if(!selectedFile.isEmpty())
     {
-        QSettings* settingsImport = new QSettings(selectedFile, QSettings::Format::IniFormat);
-        XTPSettings::import(settingsImport);
-        save();
-        SettingsHandler::setSaveOnExit(false);
-        delete settingsImport;
+        QSettings::Format format = ext == "JSON Files (*.json)" ? JsonFormat : QSettings::Format::IniFormat;
+        XTPSettings::importFromFile(selectedFile, format);
         requestRestart(parent);
     }
 }
@@ -2265,7 +2266,7 @@ void SettingsDialog::on_defaultVRLibraryBtn_clicked()
 }
 
 
-void SettingsDialog::on_playbackRateSpinBox_valueChanged(double arg1)
+void SettingsDialog::on_playbackRateSpinBoxValueChanged(double arg1)
 {
     SettingsHandler::setPlaybackRateStep(arg1);
     set_requires_restart(true);

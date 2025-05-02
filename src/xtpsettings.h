@@ -17,7 +17,8 @@ public:
 
     static void save(QSettings* settingsToSaveTo = 0);
     static void load(QSettings* settingsToLoadFrom = 0);
-    static void import(QSettings* settingsToImportFrom = 0);
+    static void exportToFile(QString file, QSettings::Format format);
+    static void importFromFile(QString file, QSettings::Format format);
 
     static QString getSelectedTheme();
     static void setSelectedTheme(QString value);
