@@ -14,9 +14,9 @@ XTPlayer is a cross platform TCode media player.
     * Built in web server for viewing media collection with a variaty of devices.
     * And much more
     
-## Installing
-      1. Grab the latest release package for your OS from the [release section on this page](https://github.com/jcfain/XTPlayer/releases/latest).
-      2. Extract it to a place where your user has permissions to.
+## Installing from [release package](https://github.com/jcfain/XTPlayer/releases/latest)
+      1. Grab the latest release package for your OS from the release section on this page. https://github.com/jcfain/XTPlayer/releases/latest.
+      2. On windows, extract the zip to a place where your user has permissions to.
       3. Run the executable.
       4. Choose at least one path to the media/funscripts to add.
       5. The application will scan the directory and all subdirectories for media and their funscripts then start generating thumbnails. This can take sometime on first startup depending on how many files you have.
