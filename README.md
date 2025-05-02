@@ -15,7 +15,7 @@ XTPlayer is a cross platform TCode media player.
     * And much more
     
 ## Installing
-      1. Grab the latest release package for your OS from the releases https://github.com/jcfain/XTPlayer/releases/latest.
+      1. Grab the latest release package for your OS from the [release section on this page](https://github.com/jcfain/XTPlayer/releases/latest).
       2. Extract it to a place where your user has permissions to.
       3. Run the executable.
       4. Choose at least one path to the media/funscripts to add.
