@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 
 #include <QApplication>
+#include "lib/tool/qsettings_json.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -54,8 +55,14 @@ int main(int argc, char *argv[])
 
     QCommandLineOption headlessOption(QStringList() << "s" << "server", "Run without GUI.");
     parser.addOption(headlessOption);
-    QCommandLineOption importOption(QStringList() << "i" << "import", "Import settings from an ini <file>", "file");
-    parser.addOption(importOption);
+    QCommandLineOption importIniOption(QStringList() << "ii" << "importINI", "Import settings from an ini <file>", "file");
+    parser.addOption(importIniOption);
+    QCommandLineOption exportIniOption(QStringList() << "ei" << "exportINI", "Export settings to an ini <file>", "file");
+    parser.addOption(exportIniOption);
+    QCommandLineOption importJsonOption(QStringList() << "ij" << "importJSON", "Import settings from a JSON <file>", "file");
+    parser.addOption(importJsonOption);
+    QCommandLineOption exportJsonOption(QStringList() << "ej" << "exportJSON", "Export settings to a JSON <file>", "file");
+    parser.addOption(exportJsonOption);
 
     QCommandLineOption addLibraryFolderOption(QStringList() << "a" << "add-media-folder", "Add media folder <folder>", "folder");
     parser.addOption(addLibraryFolderOption);
@@ -251,25 +258,38 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    if(parser.isSet(importOption)) {
-        LogHandler::Info("Import settings from file");
-        QString targetFile = parser.value(importOption);
-        if(!targetFile.endsWith("ini")) {
-            LogHandler::Error("Invalid file: only ini files are valid: '"+ targetFile +"'");
+    if(parser.isSet(importIniOption) || parser.isSet(importJsonOption) ) {
+        QSettings::Format format = parser.isSet(importIniOption) ? QSettings::Format::IniFormat : JSONSettingsFormatter::JsonFormat;
+        QString extension = format == QSettings::Format::IniFormat ? "ini" : "json";
+        LogHandler::Info("Import settings from "+extension+" file");
+        QString targetFile = format == QSettings::Format::IniFormat  ? parser.value(importIniOption) : parser.value(importJsonOption);
+        if(!targetFile.endsWith(extension)) {
+            LogHandler::Error("Invalid file: only "+extension+" files are valid: '"+ targetFile +"'");
             delete xtengine;
             delete a;
             return 1;
         }
-        if(SettingsHandler::Import(targetFile)) {
-            LogHandler::Info("Success!");
+        if(!XTPSettings::importFromFile(targetFile, format)) {
             delete xtengine;
             delete a;
-            return 0;
+            return 1;
         }
-        LogHandler::Info("Error importing file: '"+ targetFile +"'");
+        LogHandler::Info("Success!");
         delete xtengine;
         delete a;
-        return 1;
+        return 0;
+    }
+
+    if(parser.isSet(exportIniOption) || parser.isSet(exportJsonOption)) {
+        QSettings::Format format = parser.isSet(exportIniOption) ? QSettings::Format::IniFormat : JSONSettingsFormatter::JsonFormat;
+        QString extension = format == QSettings::Format::IniFormat ? "ini" : "json";
+        LogHandler::Info("Export settings to "+extension+" file");
+        QString targetFile = format == QSettings::Format::IniFormat ? parser.value(exportIniOption) : parser.value(exportJsonOption);
+        XTPSettings::exportToFile(targetFile, format);
+        LogHandler::Info("Success!");
+        delete xtengine;
+        delete a;
+        return 0;
     }
 
     if(parser.isSet(webServerChunkSizeOption)) {

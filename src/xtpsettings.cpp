@@ -68,16 +68,23 @@ void XTPSettings::load(QSettings* settingsToLoadFrom) {
     }
 }
 
-void XTPSettings::exportToFile(QString file, QSettings::Format format)
+bool XTPSettings::exportToFile(QString file, QSettings::Format format)
 {
     QSettings settingsExport(file, format);
-    save(&settingsExport);
-    SettingsHandler::Save(&settingsExport);
+    settingsExport.clear();
+    SettingsHandler::Save();
+    SettingsHandler::copy(SettingsHandler::getSettings(), &settingsExport);
+    save();
+    SettingsHandler::copy(getSettings(), &settingsExport);
+    save();
+    settingsExport.sync();
+    return true;
 }
 
-void XTPSettings::importFromFile(QString file, QSettings::Format format) {
+bool XTPSettings::importFromFile(QString file, QSettings::Format format) {
     if(!QFile::exists(file)) {
         LogHandler::Error("Invalid path when importing settings");
+        return false;
     }
     QSettings settingsToImportFrom(file, format);
     load(&settingsToImportFrom);
@@ -85,6 +92,7 @@ void XTPSettings::importFromFile(QString file, QSettings::Format format) {
     SettingsHandler::Load(&settingsToImportFrom);
     SettingsHandler::Save();
     SettingsHandler::setSaveOnExit(false);
+    return true;
 }
 
 

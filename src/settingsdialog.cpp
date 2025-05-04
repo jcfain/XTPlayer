@@ -3,13 +3,13 @@
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/serialhandler.h"
 #include "lib/handler/funscripthandler.h"
+#include "lib/tool/qsettings_json.h"
 
 #include "addchanneldialog.h"
 #include "channeltablecomboboxdelegate.h"
 #include "xtpsettings.h"
 #include "gettextdialog.h"
 #include "tagManager.h"
-#include "lib/tool/qsettings_json.hpp"
 
 SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent), _inputMapWidget(0)
 {
@@ -1896,7 +1896,7 @@ void SettingsDialog::Export(QWidget* parent)
     {
         bool isJSON = ext == "JSON Files (*.json)";
         selectedFile += isJSON ? selectedFile.endsWith(".json") ? "" : ".json" : selectedFile.endsWith(".ini") ? "" : ".ini";
-        XTPSettings::exportToFile(selectedFile, isJSON ? JsonFormat : QSettings::Format::IniFormat);
+        XTPSettings::exportToFile(selectedFile, isJSON ? JSONSettingsFormatter::JsonFormat : QSettings::Format::IniFormat);
         emit messageSend("Settings saved to "+ selectedFile, XLogLevel::Information);
     }
 }
@@ -1907,7 +1907,7 @@ void SettingsDialog::Import(QWidget* parent)
     QString selectedFile = QFileDialog::getOpenFileName(parent, "Choose settings", QApplication::applicationDirPath(), "JSON Files (*.json);;INI Files (*.ini)", &ext);
     if(!selectedFile.isEmpty())
     {
-        QSettings::Format format = ext == "JSON Files (*.json)" ? JsonFormat : QSettings::Format::IniFormat;
+        QSettings::Format format = ext == "JSON Files (*.json)" ? JSONSettingsFormatter::JsonFormat : QSettings::Format::IniFormat;
         XTPSettings::importFromFile(selectedFile, format);
         requestRestart(parent);
     }
