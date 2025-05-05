@@ -57,11 +57,11 @@ int main(int argc, char *argv[])
     parser.addOption(headlessOption);
     QCommandLineOption importIniOption(QStringList() << "ii" << "importINI", "Import settings from an ini <file>", "file");
     parser.addOption(importIniOption);
-    QCommandLineOption exportIniOption(QStringList() << "ei" << "exportINI", "Export settings to an ini <file>", "file");
+    QCommandLineOption exportIniOption(QStringList() << "ei" << "exportINI", "Export settings to an ini <file>. This directory path needs to exist and end with a filename.", "file");
     parser.addOption(exportIniOption);
     QCommandLineOption importJsonOption(QStringList() << "ij" << "importJSON", "Import settings from a JSON <file>", "file");
     parser.addOption(importJsonOption);
-    QCommandLineOption exportJsonOption(QStringList() << "ej" << "exportJSON", "Export settings to a JSON <file>", "file");
+    QCommandLineOption exportJsonOption(QStringList() << "ej" << "exportJSON", "Export settings to a JSON <file>. This directory path needs to exist and end with a filename.", "file");
     parser.addOption(exportJsonOption);
 
     QCommandLineOption addLibraryFolderOption(QStringList() << "a" << "add-media-folder", "Add media folder <folder>", "folder");
@@ -263,12 +263,6 @@ int main(int argc, char *argv[])
         QString extension = format == QSettings::Format::IniFormat ? "ini" : "json";
         LogHandler::Info("Import settings from "+extension+" file");
         QString targetFile = format == QSettings::Format::IniFormat  ? parser.value(importIniOption) : parser.value(importJsonOption);
-        if(!targetFile.endsWith(extension)) {
-            LogHandler::Error("Invalid file: only "+extension+" files are valid: '"+ targetFile +"'");
-            delete xtengine;
-            delete a;
-            return 1;
-        }
         if(!XTPSettings::importFromFile(targetFile, format)) {
             delete xtengine;
             delete a;
@@ -285,7 +279,11 @@ int main(int argc, char *argv[])
         QString extension = format == QSettings::Format::IniFormat ? "ini" : "json";
         LogHandler::Info("Export settings to "+extension+" file");
         QString targetFile = format == QSettings::Format::IniFormat ? parser.value(exportIniOption) : parser.value(exportJsonOption);
-        XTPSettings::exportToFile(targetFile, format);
+        if(!XTPSettings::exportToFile(targetFile, format)) {
+            delete xtengine;
+            delete a;
+            return 1;
+        }
         LogHandler::Info("Success!");
         delete xtengine;
         delete a;

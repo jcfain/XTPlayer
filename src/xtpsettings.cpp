@@ -8,7 +8,7 @@ const QString XTPSettings::XTPVersionTimeStamp = QString(XTPVersion +" %1T%2").a
 XTPSettings::XTPSettings() {}
 
 void XTPSettings::save(QSettings* settingsToSaveTo) {
-    LogHandler::Info("Saving XTP settings");
+    LogHandler::Debug("Saving XTP settings");
     if(!settingsToSaveTo)
         settingsToSaveTo = getSettings();
     settingsToSaveTo->setValue("selectedTheme", m_selectedTheme);
@@ -31,7 +31,7 @@ void XTPSettings::save(QSettings* settingsToSaveTo) {
 
     settingsToSaveTo->sync();
     //SettingsHandler::Save(settingsToSaveTo);
-    LogHandler::Info("Save complete");
+    LogHandler::Debug("Save complete");
 }
 
 void XTPSettings::load(QSettings* settingsToLoadFrom) {
@@ -70,29 +70,33 @@ void XTPSettings::load(QSettings* settingsToLoadFrom) {
 
 bool XTPSettings::exportToFile(QString file, QSettings::Format format)
 {
-    QSettings settingsExport(file, format);
-    settingsExport.clear();
-    SettingsHandler::Save();
-    SettingsHandler::copy(SettingsHandler::getSettings(), &settingsExport);
     save();
-    SettingsHandler::copy(getSettings(), &settingsExport);
-    save();
-    settingsExport.sync();
-    return true;
+    return SettingsHandler::Export(file, format);
+    // QSettings settingsExport(file, format);
+    // settingsExport.clear();
+    // save();
+    // SettingsHandler::Save();
+    // SettingsHandler::copy(SettingsHandler::getSettings(), &settingsExport);
+    // settingsExport.sync();
+    // return true;
 }
 
-bool XTPSettings::importFromFile(QString file, QSettings::Format format) {
-    if(!QFile::exists(file)) {
-        LogHandler::Error("Invalid path when importing settings");
-        return false;
-    }
-    QSettings settingsToImportFrom(file, format);
-    load(&settingsToImportFrom);
-    save();
-    SettingsHandler::Load(&settingsToImportFrom);
-    SettingsHandler::Save();
-    SettingsHandler::setSaveOnExit(false);
-    return true;
+bool XTPSettings::importFromFile(QString file, QSettings::Format format)
+{
+    return SettingsHandler::Import(file, format);
+    // if(!QFile::exists(file)) {
+    //     LogHandler::Error("Invalid path when importing settings");
+    //     return false;
+    // }
+    // QSettings settingsToImportFrom(file, format);
+    // QSettings* currentSettings = SettingsHandler::getSettings();
+    // currentSettings->clear();
+    // load(&settingsToImportFrom);
+    // save();
+    // SettingsHandler::Load(&settingsToImportFrom);
+    // SettingsHandler::Save();
+    // SettingsHandler::setSaveOnExit(false);
+    // return true;
 }
 
 

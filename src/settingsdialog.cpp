@@ -1896,7 +1896,8 @@ void SettingsDialog::Export(QWidget* parent)
     {
         bool isJSON = ext == "JSON Files (*.json)";
         selectedFile += isJSON ? selectedFile.endsWith(".json") ? "" : ".json" : selectedFile.endsWith(".ini") ? "" : ".ini";
-        XTPSettings::exportToFile(selectedFile, isJSON ? JSONSettingsFormatter::JsonFormat : QSettings::Format::IniFormat);
+        if(!XTPSettings::exportToFile(selectedFile, isJSON ? JSONSettingsFormatter::JsonFormat : QSettings::Format::IniFormat))
+            return;
         emit messageSend("Settings saved to "+ selectedFile, XLogLevel::Information);
     }
 }
@@ -1908,7 +1909,8 @@ void SettingsDialog::Import(QWidget* parent)
     if(!selectedFile.isEmpty())
     {
         QSettings::Format format = ext == "JSON Files (*.json)" ? JSONSettingsFormatter::JsonFormat : QSettings::Format::IniFormat;
-        XTPSettings::importFromFile(selectedFile, format);
+        if(!XTPSettings::importFromFile(selectedFile, format))
+            return;
         requestRestart(parent);
     }
 }
