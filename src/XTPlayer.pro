@@ -189,11 +189,30 @@ include($$PWD/../../HttpServer/3rdparty/qtpromise/qtpromise.pri)
 #mypackagerule.command = exec my_package_script.sh
 #QMAKE_EXTRA_TARGETS += mypackagerule
 
-copydata.commands = $(COPY_DIR) $$shell_path($$PWD/themes) $$shell_path($$DESTDIR/themes) | $(COPY_DIR) $$shell_path($$PWD/../../XTEngine/src/www) $$shell_path($$DESTDIR/www)
+copydata.commands = $(COPY_DIR) $$shell_quote($$PWD/themes) $$shell_quote($$DESTDIR) | $(COPY_DIR) $$shell_quote($$PWD/../../XTEngine/src/www) $$shell_quote($$DESTDIR)
 first.depends = $(first) copydata
 export(first.depends)
 export(copydata.commands)
 QMAKE_EXTRA_TARGETS += first copydata
+
+# defineTest(copyToDestDir) {
+#     files = $$1
+#     dir = $$2
+#     # replace slashes in destination path for Windows
+#     win32:dir ~= s,/,\\,g
+
+#     for(file, files) {
+#         # replace slashes in source path for Windows
+#         win32:file ~= s,/,\\,g
+
+#         QMAKE_POST_LINK += $$QMAKE_COPY_DIR $$shell_quote($$file) $$shell_quote($$dir) $$escape_expand(\\n\\t)
+#     }
+
+#     export(QMAKE_POST_LINK)
+# }
+
+# copyToDestDir($$PWD/../../XTEngine/src/www, $$DESTDIR)
+# copyToDestDir($$PWD/themes, $$DESTDIR)
 
 #QMAKE_EXTRA_TARGETS += foo bar
 #foo.target = $$shell_path($$DESTDIR/themes)
