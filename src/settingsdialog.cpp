@@ -388,6 +388,9 @@ void SettingsDialog::setupUi()
         ui.playbackRateSpinBox->setValue(SettingsHandler::getPlaybackRateStep());
         connect(ui.playbackRateSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &SettingsDialog::on_playbackRateSpinBoxValueChanged);
 
+        ui.disableAutoThumbGenChk->setChecked(SettingsHandler::getDisableAutoThumbGeneration());
+        connect(ui.disableAutoThumbGenChk, &QCheckBox::clicked, this, &SettingsDialog::onDisableAutoThumbGenChkChanged);
+
         connect(ui.schedulerGroupbox, &QGroupBox::clicked, this, &SettingsDialog::schedulerEnabledChk_clicked);
         connect(ui.fullMetadataProcessChk, &QCheckBox::clicked, this, &SettingsDialog::fullMetadataProcessChk_clicked);
         connect(ui.syncSettingsChk, &QCheckBox::clicked, this, &SettingsDialog::fullMetadataProcessChk_clicked);
@@ -2272,5 +2275,10 @@ void SettingsDialog::on_playbackRateSpinBoxValueChanged(double arg1)
 {
     SettingsHandler::setPlaybackRateStep(arg1);
     set_requires_restart(true);
+}
+
+void SettingsDialog::onDisableAutoThumbGenChkChanged(bool checked)
+{
+    SettingsHandler::setDisableAutoThumbGeneration(checked);
 }
 

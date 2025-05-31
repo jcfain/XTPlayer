@@ -587,7 +587,7 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>1245</width>
+            <width>1248</width>
             <height>1222</height>
            </rect>
           </property>
@@ -1369,19 +1369,6 @@ will be hit for the next chunk.</string>
               </property>
              </widget>
             </item>
-            <item row="2" column="1">
-             <widget class="QCheckBox" name="useMediaDirectoryCheckbox">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="toolTip">
-               <string>I didnt get a chance to test this option. If checked XTP will generate the thumbfiles  in the same folder as video. videoname.jpg</string>
-              </property>
-              <property name="text">
-               <string>Use media directory for thumbs</string>
-              </property>
-             </widget>
-            </item>
             <item row="3" column="0">
              <widget class="QPushButton" name="thumbDirButton">
               <property name="text">
@@ -1446,6 +1433,13 @@ will be hit for the next chunk.</string>
              <widget class="QPushButton" name="libraryExclusionsBtn">
               <property name="text">
                <string>Library exclusions</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QCheckBox" name="disableAutoThumbGenChk">
+              <property name="text">
+               <string>Disable auto thumb generation</string>
               </property>
              </widget>
             </item>
@@ -1837,6 +1831,19 @@ Be sure to cut power to servos before connecting.</string>
            </widget>
           </item>
          </layout>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QCheckBox" name="useMediaDirectoryCheckbox">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="toolTip">
+          <string>I didnt get a chance to test this option. If checked XTP will generate the thumbfiles  in the same folder as video. videoname.jpg</string>
+         </property>
+         <property name="text">
+          <string>Use media directory for thumbs</string>
+         </property>
         </widget>
        </item>
       </layout>

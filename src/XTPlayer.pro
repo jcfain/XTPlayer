@@ -1,7 +1,10 @@
-QT += core gui serialport network gamepad texttospeech compress websockets multimedia multimediawidgets bluetooth
+QT += core gui serialport network texttospeech compress websockets multimedia multimediawidgets bluetooth
 
+greaterThan(QT_MAJOR_VERSION, 5) {
+    QT += widgets httpserver
+}
 greaterThan(QT_MAJOR_VERSION, 4) {
-    QT += widgets
+    QT += widgets gamepad
 }
 CONFIG += c++17
 

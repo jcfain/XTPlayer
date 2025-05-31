@@ -140,6 +140,8 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
                 return ImageFactory::resizeCache(LOADING_CURRENT_IMAGE, item.ID, thumbSize);
             else if(item.thumbState == ThumbState::Error)
                 return ImageFactory::resizeCache(ERROR_IMAGE, item.ID, thumbSize);
+            else if(item.thumbState == ThumbState::Unknown)
+                return ImageFactory::resizeCache(UNKNOWN_IMAGE, item.ID, thumbSize);
             return ImageFactory::resizeCache(item.thumbFile, item.ID, thumbSize);
         }
         else if(role == Qt::UserRole)

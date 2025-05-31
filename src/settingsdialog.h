@@ -275,6 +275,8 @@ private slots:
 
     void on_playbackRateSpinBoxValueChanged(double arg1);
 
+    void onDisableAutoThumbGenChkChanged(bool checked);
+
 private:
 
     Ui::SettingsDialog ui;
