@@ -1,4 +1,4 @@
-#include "videohandler.h"
+#include "videohandlerQt5.h"
 VideoHandler::VideoHandler(PlayerControls* controls, XLibraryList* libraryList, QWidget *parent) : QWidget(parent),
     m_libraryListFrame(0),
     _player(0),
@@ -8,12 +8,10 @@ VideoHandler::VideoHandler(PlayerControls* controls, XLibraryList* libraryList, 
     m_libraryList(libraryList)
 {
     _player = new QMediaPlayer(this);
-    m_audioOutput = new QAudioOutput(this);
-    _player->setAudioOutput(m_audioOutput);
-    m_audioOutput->setVolume(SettingsHandler::getPlayerVolume());
+    _player->setVolume(SettingsHandler::getPlayerVolume());
     connect(_player, &QMediaPlayer::positionChanged, this, &VideoHandler::on_media_positionChanged, Qt::QueuedConnection);
     connect(_player, &QMediaPlayer::mediaStatusChanged, this, &VideoHandler::on_media_statusChanged, Qt::QueuedConnection);
-    connect(_player, &QMediaPlayer::playbackStateChanged, this, &VideoHandler::on_media_stateChanged, Qt::QueuedConnection);
+    connect(_player, &QMediaPlayer::stateChanged, this, &VideoHandler::on_media_stateChanged, Qt::QueuedConnection);
     connect(_player, &QMediaPlayer::durationChanged, this, &VideoHandler::durationChange, Qt::QueuedConnection);
     //connect(_player, &QMediaPlayer::error, this, &VideoHandler::on_media_error, Qt::QueuedConnection);
 
@@ -36,7 +34,7 @@ void VideoHandler::createLayout()
     _mediaGrid = new QGridLayout(this);
     setContentsMargins(contentsMargins().left(), contentsMargins().top(), contentsMargins().right(), 0);
 
-    // _mediaGrid->setMargin(0);
+    _mediaGrid->setMargin(0);
     _mediaGrid->setContentsMargins(0,0,0,0);
     setLayout(_mediaGrid);
 
@@ -62,13 +60,22 @@ void VideoHandler::createLayout()
     connect(_videoWidget, &XVideoWidget::singleClicked, this, [this](QMouseEvent* e) {emit singleClicked(e);});
     connect(_videoWidget, &XVideoWidget::keyPressed, this, [this](QKeyEvent* e) {emit keyPressed(e);});
     connect(_videoWidget, &XVideoWidget::keyReleased, this, [this](QKeyEvent* e) {emit keyReleased(e);});
-    connect(_videoWidget, &XVideoWidget::mouseEnter, this, [this](QEnterEvent* e) {emit mouseEnter(e);});
+    connect(_videoWidget, &XVideoWidget::mouseEnter, this, [this](QEvent* e) {emit mouseEnter(e);});
     connect(&m_overlayTimer, &QTimer::timeout, this, [this]() {
         hideControlsTimeout();
         hideLibraryTimeout();
     });
     _mediaGrid->addWidget(_videoWidget);
     _player->setVideoOutput(_videoWidget);
+}
+
+VideoHandler::~VideoHandler()
+{
+    delete _mediaGrid;
+    delete _player;
+    delete _videoWidget;
+    if(_fullscreenWidget)
+        delete _fullscreenWidget;
 }
 
 void VideoHandler::mouseMove( QMouseEvent* e ) {
@@ -228,7 +235,7 @@ void VideoHandler::on_media_statusChanged(QMediaPlayer::MediaStatus status)
     }
 }
 
-void VideoHandler::on_media_stateChanged(QMediaPlayer::PlaybackState state)
+void VideoHandler::on_media_stateChanged(QMediaPlayer::State state)
 {
     auto xstate = convertMediaState(state);
     if(xstate == XMediaState::Playing && _currentState != XMediaState::Paused) {
@@ -251,14 +258,13 @@ void VideoHandler::on_media_start()
 void VideoHandler::on_media_stop()
 {
     LogHandler::Info("on_media_stop");
-    // _player->setMedia(QMediaContent());
-    _player->stop();
+    _player->setMedia(QMediaContent());
     emit stopped();
 }
 
 bool VideoHandler::isPlaying()
 {
-    return _player ? _player->playbackState() == QMediaPlayer::PlayingState || _player->playbackState() == QMediaPlayer::PausedState : false;
+    return _player ? _player->state() == QMediaPlayer::PlayingState || _player->state() == QMediaPlayer::PausedState : false;
 }
 
 void VideoHandler::load()
@@ -298,37 +304,37 @@ void VideoHandler::setFile(QString file)
 {
     _currentFile = file;
     QUrl mediaUrl = QUrl::fromLocalFile(file);
-    // QMediaContent mc(mediaUrl);
-    _player->setSource(mediaUrl);
+    QMediaContent mc(mediaUrl);
+    _player->setMedia(mc);
 }
 
 bool VideoHandler::isPaused()
 {
-    return _player->playbackState() == QMediaPlayer::PausedState;
+    return _player->state() == QMediaPlayer::PausedState;
 }
 
 bool VideoHandler::isMute()
 {
-    return m_audioOutput->isMuted();
+    return _player->isMuted();
 }
 
 void VideoHandler::toggleMute()
 {
     if (!isMute())
     {
-        volumeBeforeMute = m_audioOutput->volume();
-        m_audioOutput->setMuted(true);
+        volumeBeforeMute = _player->volume();
+        _player->setMuted(true);
     }
     else
     {
-        m_audioOutput->setMuted(false);
-        m_audioOutput->setVolume(volumeBeforeMute);
+        _player->setMuted(false);
+        _player->setVolume(volumeBeforeMute);
     }
 }
 
 void VideoHandler::setVolume(int value)
 {
-    m_audioOutput->setVolume(value);
+    _player->setVolume(value);
 }
 void VideoHandler::setRepeat(int max)
 {
@@ -336,7 +342,7 @@ void VideoHandler::setRepeat(int max)
 }
 XMediaState VideoHandler::state()
 {
-    return convertMediaState(_player->playbackState());
+    return convertMediaState(_player->state());
 }
 
 void VideoHandler::setPosition(qint64 position)
@@ -405,32 +411,15 @@ XMediaStatus VideoHandler::convertMediaStatus(QMediaPlayer::MediaStatus status) 
             return XMediaStatus::BufferingMedia;
         case QMediaPlayer::MediaStatus::BufferedMedia:
             return XMediaStatus::BufferedMedia;
-#if BUILD_QT5
         case QMediaPlayer::MediaStatus::UnknownMediaStatus:
             return XMediaStatus::UnknownMediaStatus;
-#endif
         case QMediaPlayer::MediaStatus::StalledMedia:
             return XMediaStatus::StalledMedia;
         case QMediaPlayer::MediaStatus::InvalidMedia:
             return XMediaStatus::InvalidMedia;
     }
-
-    return XMediaStatus::InvalidMedia;
 }
 
-#if BUILD_QT6
-XMediaState VideoHandler::convertMediaState(QMediaPlayer::PlaybackState status) {
-    switch(status) {
-    case QMediaPlayer::PlaybackState::PausedState:
-        return XMediaState::Paused;
-    case QMediaPlayer::PlaybackState::PlayingState:
-        return XMediaState::Playing;
-    case QMediaPlayer::PlaybackState::StoppedState:
-        return XMediaState::Stopped;
-    }
-    return XMediaState::Stopped;
-}
-#else
 XMediaState VideoHandler::convertMediaState(QMediaPlayer::State status) {
     switch(status) {
         case QMediaPlayer::State::PausedState:
@@ -440,9 +429,7 @@ XMediaState VideoHandler::convertMediaState(QMediaPlayer::State status) {
         case QMediaPlayer::State::StoppedState:
             return XMediaState::Stopped;
     }
-    return XMediaState::Stopped;
 }
-#endif
 
 
 void VideoHandler::hideControls()

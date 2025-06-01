@@ -1,10 +1,17 @@
-QT += core gui serialport network texttospeech compress websockets multimedia multimediawidgets bluetooth
+QT += core gui serialport network texttospeech  websockets multimedia multimediawidgets bluetooth
 
-greaterThan(QT_MAJOR_VERSION, 5) {
-    QT += widgets httpserver
-}
+
 greaterThan(QT_MAJOR_VERSION, 4) {
-    QT += widgets gamepad
+    QT += widgets
+}
+equals(QT_MAJOR_VERSION, 5) {
+    QT +=  gamepad compress
+    DEFINES += BUILD_QT5=1
+}
+equals(QT_MAJOR_VERSION, 6) {
+    QT += httpserver gamepadlegacy
+    DEFINES += BUILD_QT6=1
+    DEFINES += DISABLE_WEB=1
 }
 CONFIG += c++17
 
@@ -30,6 +37,7 @@ SOURCES += \
     gettextdialog.cpp \
     lib/widgets/library/LibraryItemMetadataDialog.cpp \
     lib/widgets/library/tagManager.cpp \
+    lib/widgets/video/xvideowidget.cpp \
     main.cpp \
     mainwindow.cpp \
     xtpsettings.cpp \
@@ -53,9 +61,6 @@ SOURCES += \
     lib/widgets/timeline.cpp \
     lib/widgets/xwidget.cpp \
     lib/widgets/library/xlibrarylist.cpp \
-    lib/widgets/video/videohandler.cpp \
-    lib/widgets/video/xvideopreviewwidget.cpp \
-    lib/widgets/video/xvideowidget.cpp \
     lib/widgets/video/playercontrols.cpp \
     lib/widgets/rangeslider.cpp \
 
@@ -63,6 +68,7 @@ HEADERS += \
     gettextdialog.h \
     lib/widgets/library/LibraryItemMetadataDialog.h \
     lib/widgets/library/tagManager.h \
+    lib/widgets/video/xvideowidget.h \
     mainwindow.h \
     xtpsettings.h \
     noMatchingScriptDialog.h \
@@ -85,12 +91,23 @@ HEADERS += \
     lib/widgets/timeline.h \
     lib/widgets/xwidget.h \
     lib/widgets/library/xlibrarylist.h \
-    lib/widgets/video/videohandler.h \
-    lib/widgets/video/xvideopreviewwidget.h \
-    lib/widgets/video/xvideowidget.h \
     lib/widgets/video/playercontrols.h \
     lib/widgets/rangeslider.h \
 
+equals(QT_MAJOR_VERSION, 5) {
+HEADERS += \
+    lib/widgets/video/videohandlerQt5.h \
+    lib/widgets/video/xvideopreviewwidget.h
+SOURCES += \
+    lib/widgets/video/videohandlerQt5.cpp \
+    lib/widgets/video/xvideopreviewwidget.cpp
+}
+equals(QT_MAJOR_VERSION, 6) {
+HEADERS += \
+    lib/widgets/video/videohandler.h
+SOURCES += \
+    lib/widgets/video/videohandler.cpp
+}
 FORMS += \
     dlnascriptlinks.ui \
     lib/widgets/library/libraryexclusions.ui \
@@ -108,11 +125,11 @@ unix:!mac {
     INCLUDEPATH += $$PWD/../../HttpServer/src
     DEPENDPATH += $$PWD/../../HttpServer/src
     CONFIG(debug, debug|release) {
-        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop-Debug/debug -lxtengine
+        LIBS += -L$$PWD/../../XTEngine/build-Debug/debug -lxtengine
         LIBS += -L$$PWD/../../HttpServer/src/build/debug -lhttpServer
     }
     else:CONFIG(release, debug|release): {
-        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop-Release/release -lxtengine
+        LIBS += -L$$PWD/../../XTEngine/build-Release/release -lxtengine
         LIBS += -L$$PWD/../../HttpServer/src/build/release -lhttpServer
     }
 }
@@ -135,11 +152,23 @@ unix:mac {
     DEPENDPATH += $$PWD/../../HttpServer/src
     INCLUDEPATH += $$PWD/../../HttpServer/src
     CONFIG(debug, debug|release) {
-        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_clang_64bit-Debug/debug -lxtengine
+        equals(QT_MAJOR_VERSION, 5) {
+            LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_clang_64bit-Debug/debug -lxtengine
+        }
+
+        greaterThan(QT_MAJOR_VERSION, 5) {
+            LIBS += -L$$PWD/../../XTEngine/src/build/Desktop_Qt_6_9_0-Release/debug -lxtengine
+        }
         LIBS += -L$$PWD/../../HttpServer/src/build/debug -lhttpServer
     }
     else:CONFIG(release, debug|release): {
-        LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_clang_64bit-Release/release -lxtengine
+        equals(QT_MAJOR_VERSION, 5) {
+            LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_clang_64bit-Debug/release -lxtengine
+        }
+
+        greaterThan(QT_MAJOR_VERSION, 5) {
+            LIBS += -L$$PWD/../../XTEngine/src/build/Desktop_Qt_6_9_0-Release/release -lxtengine
+        }
         LIBS += -L$$PWD/../../HttpServer/src/build/release -lhttpServer
     }
 

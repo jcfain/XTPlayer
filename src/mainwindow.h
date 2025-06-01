@@ -39,7 +39,9 @@
 #include "lib/handler/loghandler.h"
 #include "lib/handler/settingshandler.h"
 
+#if BUILD_QT5
 #include "xvideopreviewwidget.h"
+#endif
 #include "xtpsettings.h"
 #include "libraryManager.h"
 #include "settingsdialog.h"
@@ -51,7 +53,11 @@
 #include "welcomedialog.h"
 #include "dlnascriptlinks.h"
 #include "xlibrarylist.h"
-#include "videohandler.h"
+#if BUILD_QT6
+    #include "videohandler.h"
+#else
+    #include "videohandlerQt5.h"
+#endif
 #include "rangeslider.h"
 #include "xtengine.h"
 #include "playlistviewmodel.h"
@@ -223,7 +229,9 @@ private:
     LibraryWindow* libraryWindow;
     QSplashScreen* loadingSplash;
     QTextToSpeech* textToSpeech;
+#if BUILD_QT5
     XVideoPreviewWidget* _videoPreviewWidget;
+#endif
     QFuture<void> loadingLibraryFuture;
     bool loadingLibraryStop = false;
     QFuture<void> _waitForStopFuture;

@@ -72,8 +72,8 @@ LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(
 
     moneyShotLineEdit = new QLineEdit(this);
     connect(moneyShotLineEdit, &QLineEdit::textEdited, this, [](QString value) {
-        QRegExp re("\\d*");  // a digit (\d), zero or more times (*)
-        if (!re.exactMatch(value))
+        QRegularExpression re("\\d*");  // a digit (\d), zero or more times (*)
+        if (!re.match(value).hasMatch())
             LogHandler::Error("Invalid value, money shot should be in milliseconds");
     });
     QString maxLong = "9223372036854775807";

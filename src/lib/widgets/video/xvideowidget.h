@@ -12,7 +12,7 @@ signals:
     void singleClicked(QMouseEvent* e);
     void keyPressed(QKeyEvent* k);
     void keyReleased(QKeyEvent* k);
-    void mouseEnter(QEvent* e);
+    void mouseEnter(QEnterEvent* e);
 public:
     XVideoWidget(QWidget* parent = nullptr);
 
@@ -21,7 +21,7 @@ private:
     void mousePressEvent(QMouseEvent * e) override;
     void keyPressEvent(QKeyEvent * e) override;
     void keyReleaseEvent(QKeyEvent * e) override;
-    void enterEvent(QEvent * e) override;
+    void enterEvent(QEnterEvent * e) override;
 };
 
 #endif // XVIDEOWIDGET_H

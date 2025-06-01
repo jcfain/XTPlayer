@@ -417,7 +417,9 @@ void InputMapWidget::listenForKeyboardInput(QString action, QString actionName) 
         auto key = SettingsHandler::getKeyboardKey(event->key(), event->modifiers());
         if(key.isEmpty())
             return;
-        auto keySeq = QKeySequence(event->modifiers()+event->key());
+        auto keyValue = event->key();
+        auto modifiers = event->modifiers();
+        auto keySeq = QKeySequence(modifiers | keyValue);
         QString keyString = keySeq.toString(QKeySequence::NativeText);
         auto items = _tableWidget->findItems(actionName, Qt::MatchFlag::MatchExactly);
         auto item = items.first();

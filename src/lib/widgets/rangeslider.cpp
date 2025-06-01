@@ -68,14 +68,14 @@ void RangeSlider::paintEvent(QPaintEvent* aEvent)
 
     QPen pen(Qt::gray, 0.8);
     painter.setPen(pen);
-    painter.setRenderHint(QPainter::Qt4CompatiblePainting);
+    // painter.setRenderHint(QPainter::Qt4CompatiblePainting);
     QBrush backgroundBrush(mBackgroudColor);
     painter.setBrush(backgroundBrush);
     painter.drawRoundedRect(backgroundRect, 1, 1);
 
     // First value handle rect
     pen.setColor(Qt::darkGray);
-    pen.setWidth(0.5);
+    pen.setWidthF(0.5f);
     painter.setPen(pen);
     painter.setRenderHint(QPainter::Antialiasing);
     QBrush handleBrush(mBackgroudColor);
@@ -260,7 +260,7 @@ void RangeSlider::mouseMoveEvent(QMouseEvent* aEvent)
     emit onHover(aEvent->x(), sliderValue);
 }
 
-void RangeSlider::enterEvent(QEvent * event)
+void RangeSlider::enterEvent(QEnterEvent * event)
 {
 
 }

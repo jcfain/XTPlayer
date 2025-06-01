@@ -181,7 +181,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
 
     videoHandler = new VideoHandler(_playerControlsFrame, libraryList, this);
     _mediaGrid->addWidget(videoHandler, 0, 0, 3, 5);
-    _mediaGrid->setMargin(0);
+    // _mediaGrid->setMargin(0);
     _mediaGrid->setContentsMargins(0,0,0,0);
 
     backLibraryButton = new QPushButton(this);
@@ -315,8 +315,10 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     libraryViewGroup->addAction(ui->actionList);
     libraryViewGroup->addAction(ui->actionThumbnail);
 
+#if BUILD_QT5
     _videoPreviewWidget = new XVideoPreviewWidget(this);
     _videoPreviewWidget->hide();
+#endif
 
     QMenu* submenuSize = ui->menuView->addMenu( "Size" );
     submenuSize->setObjectName("sizeMenu");
@@ -601,6 +603,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     loadingSplash->showMessage(fullVersion + "\nInitialize engine...", Qt::AlignBottom, Qt::white);
     m_xtengine->init();
 
+#ifndef DISABLE_WEB
     // http initialized in engine.init
     if(SettingsHandler::getEnableHttpServer()) {
         connect(m_xtengine->httpHandler(), &HttpHandler::error, this, [this](QString error) {
@@ -609,6 +612,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
         connect(m_xtengine->httpHandler(), &HttpHandler::connectInputDevice, _xSettings, &SettingsDialog::on_xtpWeb_initInputDevice);
         connect(m_xtengine->httpHandler(), &HttpHandler::connectOutputDevice, _xSettings, &SettingsDialog::on_xtpWeb_initOutputDevice);
     }
+#endif
 //    QScreen *screen = this->screen();
 //    QSize screenSize = screen->size();
 //    auto minHeight = round(screenSize.height() * .06f);
@@ -858,8 +862,10 @@ void MainWindow::onText_to_speech(QString message) {
     if(!message.isEmpty()) {
         if(!SettingsHandler::getDisableSpeechToText())
             textToSpeech->say(message);
+#ifndef DISABLE_WEB
         if(SettingsHandler::getEnableHttpServer())
             m_xtengine->httpHandler()->sendWebSocketTextMessage("textToSpeech", message);
+#endif
     }
 }
 
@@ -1572,7 +1578,9 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
         if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
         {
             videoHandler->setFile(selectedFileListItem.path);
+#if BUILD_QT5
             _videoPreviewWidget->setFile(selectedFileListItem.path);
+#endif
             //videoHandler->load();
         }
         //selectedFileListItem.script = customScript.isEmpty() ? selectedFileListItem.zipFile.isEmpty() ? selectedFileListItem.script : selectedFileListItem.zipFile : customScript;
@@ -1923,19 +1931,21 @@ void MainWindow::on_seekslider_hover(int position, qint64 sliderValue)
     {
         //const int w = Config::instance().previewWidth();
         //const int h = Config::instance().previewHeight();
-        //videoPreviewWidget->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+#if BUILD_QT5
         _videoPreviewWidget->setTimestamp(sliderValue);
         _videoPreviewWidget->preview(gpos);
-        //videoPreviewWidget->raise();
-        //videoPreviewWidget->activateWindow();
+#endif
     }
+#if BUILD_QT5
     else if(_videoPreviewWidget && _videoPreviewWidget->isVisible() && _playerControlsFrame->getTimeLineMousePressed()) {
         _videoPreviewWidget->close();
     }
+#endif
 }
 
 void MainWindow::on_seekslider_leave()
 {
+#if BUILD_QT5
     if (!_videoPreviewWidget || !_videoPreviewWidget->isVisible())
     {
         return;
@@ -1943,6 +1953,7 @@ void MainWindow::on_seekslider_leave()
     _videoPreviewWidget->close();
 //    delete videoPreviewWidget;
 //    videoPreviewWidget = NULL;
+#endif
 }
 
 void MainWindow::on_timeline_currentTimeMove(qint64 position)
@@ -2084,7 +2095,10 @@ void MainWindow::on_media_stop()
     m_xtengine->syncHandler()->stopOtherMediaFunscript();
     XMediaStateHandler::stop();
     videoHandler->setSpeed(1.0);
+
+#if BUILD_QT5
     _videoPreviewWidget->stop();
+#endif
     _mediaStopped = true;
 }
 

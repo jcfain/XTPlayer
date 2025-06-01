@@ -52,7 +52,7 @@ protected:
     void mouseMoveEvent(QMouseEvent* aEvent) override;
     void mouseReleaseEvent(QMouseEvent* aEvent) override;
     void changeEvent(QEvent* aEvent) override;
-    void enterEvent(QEvent * event) override;
+    void enterEvent(QEnterEvent * event) override;
     void leaveEvent(QEvent * event) override;
 
     QRectF firstHandleRect() const;

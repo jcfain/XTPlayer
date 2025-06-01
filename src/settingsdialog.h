@@ -19,7 +19,11 @@
 #include "inputmapwidget.h"
 #include "rangeslider.h"
 #include "channeltableviewmodel.h"
-#include "videohandler.h"
+#if BUILD_QT6
+    #include "videohandler.h"
+#else
+    #include "videohandlerQt5.h"
+#endif
 #include "libraryexclusions.h"
 
 

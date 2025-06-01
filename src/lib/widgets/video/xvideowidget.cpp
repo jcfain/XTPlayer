@@ -21,7 +21,7 @@ void XVideoWidget::keyReleaseEvent(QKeyEvent * e)
 {
     emit keyReleased(e);
 }
-void XVideoWidget::enterEvent(QEvent * e)
+void XVideoWidget::enterEvent(QEnterEvent * e)
 {
     emit mouseEnter(e);
 }

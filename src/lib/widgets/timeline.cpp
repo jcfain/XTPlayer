@@ -330,7 +330,7 @@ void TimeLine::mouseMoveEvent(QMouseEvent* aEvent)
     emit onHover(aEvent->x(), getPositionToTime(aEvent->pos().x()));
 }
 
-void TimeLine::enterEvent(QEvent * event)
+void TimeLine::enterEvent(QEnterEvent * event)
 {
 
 }

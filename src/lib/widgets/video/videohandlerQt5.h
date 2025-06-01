@@ -1,9 +1,8 @@
-#ifndef VIDEOHANDLER_H
-#define VIDEOHANDLER_H
+#ifndef VIDEOHANDLERQT5_H
+#define VIDEOHANDLERQT5_H
 #include <QWidget>
 #include <QHBoxLayout>
 #include <QMediaPlayer>
-#include <QAudioOutput>
 //#include <QAudioProbe>
 #include <QVideoWidget>
 #include <QMouseEvent>
@@ -27,7 +26,7 @@ class VideoHandler : public QWidget
 private slots:
     void on_media_positionChanged(qint64 position);
     void on_media_statusChanged(QMediaPlayer::MediaStatus status);
-    void on_media_stateChanged(QMediaPlayer::PlaybackState state);
+    void on_media_stateChanged(QMediaPlayer::Play state);
     void on_media_error(QMediaPlayer::Error error);
     void on_media_start();
     void on_media_stop();
@@ -51,6 +50,7 @@ signals:
 
 public:;
     VideoHandler(PlayerControls* controls, XLibraryList* libraryList, QWidget* parent = 0);
+    virtual ~VideoHandler();
     bool isPlaying();
     void play();
     void stop();
@@ -87,7 +87,6 @@ private:
     QGridLayout* _mediaGrid = 0;
     QFrame* m_libraryListFrame;
     QMediaPlayer* _player = 0;
-    QAudioOutput* m_audioOutput = 0;
     QTimer m_overlayTimer;
     //QAudioProbe* m_audioProbe = 0;
     bool _isFullScreen = false;
@@ -110,11 +109,7 @@ private:
 
     void on_setLoading(bool loading);
     XMediaStatus convertMediaStatus(QMediaPlayer::MediaStatus status);
-#if BUILD_QT6
-    XMediaState convertMediaState(QMediaPlayer::PlaybackState status);
-#else
     XMediaState convertMediaState(QMediaPlayer::State status);
-#endif
 
     PlayerControls* m_controls;
     XLibraryList* m_libraryList;
@@ -127,4 +122,4 @@ private:
     void hideControlsTimeout();
     void hideLibraryTimeout();
 };
-#endif // VIDEOHANDLER_H
+#endif // VIDEOHANDLERQT5_H
