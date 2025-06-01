@@ -11,7 +11,6 @@ equals(QT_MAJOR_VERSION, 5) {
 equals(QT_MAJOR_VERSION, 6) {
     QT += httpserver gamepadlegacy
     DEFINES += BUILD_QT6=1
-    DEFINES += DISABLE_WEB=1
 }
 CONFIG += c++17
 

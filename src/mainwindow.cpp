@@ -603,7 +603,6 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     loadingSplash->showMessage(fullVersion + "\nInitialize engine...", Qt::AlignBottom, Qt::white);
     m_xtengine->init();
 
-#ifndef DISABLE_WEB
     // http initialized in engine.init
     if(SettingsHandler::getEnableHttpServer()) {
         connect(m_xtengine->httpHandler(), &HttpHandler::error, this, [this](QString error) {
@@ -612,7 +611,6 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
         connect(m_xtengine->httpHandler(), &HttpHandler::connectInputDevice, _xSettings, &SettingsDialog::on_xtpWeb_initInputDevice);
         connect(m_xtengine->httpHandler(), &HttpHandler::connectOutputDevice, _xSettings, &SettingsDialog::on_xtpWeb_initOutputDevice);
     }
-#endif
 //    QScreen *screen = this->screen();
 //    QSize screenSize = screen->size();
 //    auto minHeight = round(screenSize.height() * .06f);
@@ -862,10 +860,8 @@ void MainWindow::onText_to_speech(QString message) {
     if(!message.isEmpty()) {
         if(!SettingsHandler::getDisableSpeechToText())
             textToSpeech->say(message);
-#ifndef DISABLE_WEB
         if(SettingsHandler::getEnableHttpServer())
             m_xtengine->httpHandler()->sendWebSocketTextMessage("textToSpeech", message);
-#endif
     }
 }
 
