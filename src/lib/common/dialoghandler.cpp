@@ -141,7 +141,7 @@ void DialogHandler::ShowAboutDialog(QWidget* parent, QString XTPVersion, QString
                       + "</b><br><b>XTEngine v" + XTEVersion
                       + "</b><br>" + selectedTCodeVersion
                       + "<br>"
-                                                "Copyright 2022 Jason C. Fain<br>"
+                                                "Copyright 2025 Jason C. Fain<br>"
                                                 "Donate: <a href='https://www.patreon.com/Khrull'>https://www.patreon.com/Khrull</a><br>"
                                                 "THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND.");
     copyright.setAlignment(Qt::AlignHCenter);
@@ -152,9 +152,15 @@ void DialogHandler::ShowAboutDialog(QWidget* parent, QString XTPVersion, QString
     layout.addWidget(&sources);
     QLabel qtInfo;
     qtInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
+#if BUILD_QT5
     qtInfo.setText("<b>Qt v5.15.2</b><br>"
                    "Distributed under the terms of LGPLv3 or later.<br>"
-                   "Source: <a href='https://github.com/qt/qt5/releases/tag/v5.15.0'>https://github.com/qt/qt5/releases/tag/v5.15.0</a>");
+                   "Source: <a href='https://github.com/qt/qt5/releases/tag/v5.15.2'>https://github.com/qt/qt5/releases/tag/v5.15.2</a>");
+#else
+    qtInfo.setText("<b>Qt v6.9.0</b><br>"
+                   "Distributed under the terms of LGPLv3 or later.<br>"
+                   "Source: <a href='https://github.com/qt/qt5/releases/tag/v6.9.0'>https://github.com/qt/qt5/releases/tag/v6.9.0</a>");
+#endif
     qtInfo.setAlignment(Qt::AlignHCenter);
     layout.addWidget(&qtInfo);
     QLabel rangeSliderInfo;

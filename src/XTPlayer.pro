@@ -121,15 +121,21 @@ unix:!mac {
     #QMAKE_RPATHDIR += ../lib
     INCLUDEPATH += $$PWD/../../XTEngine/src
     DEPENDPATH += $$PWD/../../XTEngine/src
-    INCLUDEPATH += $$PWD/../../HttpServer/src
-    DEPENDPATH += $$PWD/../../HttpServer/src
+    equals(QT_MAJOR_VERSION, 5) {
+        INCLUDEPATH += $$PWD/../../HttpServer/src
+        DEPENDPATH += $$PWD/../../HttpServer/src
+    }
     CONFIG(debug, debug|release) {
         LIBS += -L$$PWD/../../XTEngine/build-Debug/debug -lxtengine
-        LIBS += -L$$PWD/../../HttpServer/src/build/debug -lhttpServer
+        equals(QT_MAJOR_VERSION, 5) {
+            LIBS += -L$$PWD/../../HttpServer/src/build/debug -lhttpServer
+        }
     }
     else:CONFIG(release, debug|release): {
         LIBS += -L$$PWD/../../XTEngine/build-Release/release -lxtengine
-        LIBS += -L$$PWD/../../HttpServer/src/build/release -lhttpServer
+        equals(QT_MAJOR_VERSION, 5) {
+            LIBS += -L$$PWD/../../HttpServer/src/build/release -lhttpServer
+        }
     }
 }
 unix:mac {
@@ -148,27 +154,29 @@ unix:mac {
 #    #LIBS += -framework QtCompress
     INCLUDEPATH += $$PWD/../../XTEngine/src
     DEPENDPATH += $$PWD/../../XTEngine/src
-    DEPENDPATH += $$PWD/../../HttpServer/src
-    INCLUDEPATH += $$PWD/../../HttpServer/src
+    equals(QT_MAJOR_VERSION, 5) {
+        DEPENDPATH += $$PWD/../../HttpServer/src
+        INCLUDEPATH += $$PWD/../../HttpServer/src
+    }
     CONFIG(debug, debug|release) {
         equals(QT_MAJOR_VERSION, 5) {
             LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_clang_64bit-Debug/debug -lxtengine
+            LIBS += -L$$PWD/../../HttpServer/src/build/debug -lhttpServer
         }
 
         greaterThan(QT_MAJOR_VERSION, 5) {
             LIBS += -L$$PWD/../../XTEngine/src/build/Desktop_Qt_6_9_0-Release/debug -lxtengine
         }
-        LIBS += -L$$PWD/../../HttpServer/src/build/debug -lhttpServer
     }
     else:CONFIG(release, debug|release): {
         equals(QT_MAJOR_VERSION, 5) {
             LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_clang_64bit-Debug/release -lxtengine
+            LIBS += -L$$PWD/../../HttpServer/src/build/release -lhttpServer
         }
 
         greaterThan(QT_MAJOR_VERSION, 5) {
             LIBS += -L$$PWD/../../XTEngine/src/build/Desktop_Qt_6_9_0-Release/release -lxtengine
         }
-        LIBS += -L$$PWD/../../HttpServer/src/build/release -lhttpServer
     }
 
     RPATHDIR *= @loader_path/../Frameworks @executable_path/../Frameworks
@@ -185,25 +193,33 @@ win32{
         DESTDIR = $$shell_path($$OUT_PWD/debug)
         LIBS += -L$$PWD/../../XTEngine/src/build/Desktop_Qt_5_15_2_MinGW_64_bit-Debug/debug -lXTEngine
 
-        LIBS += -L$$PWD/../../HttpServer/build/debug -lhttpServer
-        INCLUDEPATH += $$PWD/../../HttpServer/build/debug
-        LIBS += -L$$PWD/../../zlib-1.3.1/build/Desktop_Qt_5_15_2_MinGW_64_bit-Debug -lzlib
+        equals(QT_MAJOR_VERSION, 5) {
+            LIBS += -L$$PWD/../../HttpServer/build/debug -lhttpServer
+            INCLUDEPATH += $$PWD/../../HttpServer/build/debug
+            LIBS += -L$$PWD/../../zlib-1.3.1/build/Desktop_Qt_5_15_2_MinGW_64_bit-Debug -lzlib
+        }
     }
     else:build_pass:CONFIG(release, debug|release): {
         DESTDIR = $$shell_path($$OUT_PWD/release)
         LIBS += -L$$PWD/../../XTEngine/src/build/Desktop_Qt_5_15_2_MinGW_64_bit-Release/release -lXTEngine
 
-        LIBS += -L$$PWD/../../HttpServer/build/release -lhttpServer
-        INCLUDEPATH += $$PWD/../../HttpServer/build/release
-        LIBS += -L$$PWD/../../zlib-1.3.1/build/Desktop_Qt_5_15_2_MinGW_64_bit-Release -lzlib
+        equals(QT_MAJOR_VERSION, 5) {
+            LIBS += -L$$PWD/../../HttpServer/build/release -lhttpServer
+            INCLUDEPATH += $$PWD/../../HttpServer/build/release
+            LIBS += -L$$PWD/../../zlib-1.3.1/build/Desktop_Qt_5_15_2_MinGW_64_bit-Release -lzlib
+        }
     }
     INCLUDEPATH += $$PWD/../../XTEngine/src
     DEPENDPATH += $$PWD/../../XTEngine/src
-    INCLUDEPATH += $$PWD/../../HttpServer/src
+    equals(QT_MAJOR_VERSION, 5) {
+        INCLUDEPATH += $$PWD/../../HttpServer/src
+    }
     RC_FILE = XTPlayer.rc
 }
 
-include($$PWD/../../HttpServer/3rdparty/qtpromise/qtpromise.pri)
+equals(QT_MAJOR_VERSION, 5) {
+    include($$PWD/../../HttpServer/3rdparty/qtpromise/qtpromise.pri)
+}
 #mkspecs_features.files    = $$PWD/qss/default.qss
 #mkspecs_features.path     = $$OUT_PWD/qss
 #INSTALLS                  += mkspecs_features
