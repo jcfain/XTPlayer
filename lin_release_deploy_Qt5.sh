@@ -7,13 +7,13 @@ export version=v${versionInput}
 home=~/
 targetDirectory=./Deploy/Binary/XTPlayer-${version}_Linux_x86_64
 xteTargetDirectory=./Deploy/Binary/XTEngine-${version}_Linux_x86_64
-binDirectory=./build-Release/XTPlayer
-xteBinDirectory=../XTEngine/build-Release/release
-librDirectory="${home}"Qt/6.9.0/gcc_64/lib
-qmakeDirectory="${home}"Qt/6.9.0/gcc_64/bin/qmake
-#httpserverLocation="${home}"git/HttpServer/src/build/release/
-#qtCompressDir=../build-qtcompress-Desktop_Qt_5_15_2_GCC_64bit-Release/lib
-#zlibDir=../build-zlib-Desktop_Qt_5_15_2_GCC_64bit-Release
+binDirectory=./build-XTPlayer-Desktop_Qt_5_15_2_GCC_64bit-Release/XTPlayer
+xteBinDirectory=../XTEngine/build-XTEngine-Desktop-Release/release
+librDirectory="${home}"Qt/5.15.2/gcc_64/lib
+qmakeDirectory="${home}"Qt/5.15.2/gcc_64/bin/qmake
+httpserverLocation="${home}"git/HttpServer/src/build/release/
+qtCompressDir=../build-qtcompress-Desktop_Qt_5_15_2_GCC_64bit-Release/lib
+zlibDir=../build-zlib-Desktop_Qt_5_15_2_GCC_64bit-Release
 
 #export PATH="${qtDirectory}":$PATH
 #export LD_LIBRARY_PATH="${binDirectory}lib;${xteBinDirectory};${httpserverLocation}"
@@ -35,9 +35,9 @@ cp -R $xteTargetDirectory/bin/*.so* $targetDirectory/lib
 cp -R $xteTargetDirectory/lib/*.so* $targetDirectory/lib
 cp -R $xteTargetDirectory/plugins $targetDirectory/plugins
 cp -R $xteTargetDirectory/translations $targetDirectory/translations
-#cp -R $httpserverLocation/*.so* $targetDirectory/lib
-#cp -R $qtCompressDir/*.so* $targetDirectory/lib
-#cp -R $zlibDir/*.so* $targetDirectory/lib
+cp -R $httpserverLocation/*.so* $targetDirectory/lib
+cp -R $qtCompressDir/*.so* $targetDirectory/lib
+cp -R $zlibDir/*.so* $targetDirectory/lib
 #cp -R Deploy/lib/* $targetDirectory/lib
 #cp -R $xteTargetDirectory/lib/* $targetDirectory/lib
 cp ../XTEngine/src/rename_me_for_local_settings.ini $targetDirectory/bin
