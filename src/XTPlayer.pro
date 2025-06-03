@@ -114,25 +114,27 @@ FORMS += \
     settings.ui \
     welcomedialog.ui
 
-unix {
-    DESTDIR = $$shell_path($$OUT_PWD)
+
+CONFIG(debug, debug|release) {
+    DESTDIR = $$shell_path($$OUT_PWD/debug)
+    LIBS += -L$$PWD/../../XTEngine/build/debug -lxtengine
+} else:CONFIG(release, debug|release): {
+    DESTDIR = $$shell_path($$OUT_PWD/release)
+    LIBS += -L$$PWD/../../XTEngine/build/release -lxtengine
 }
+INCLUDEPATH += $$PWD/../../XTEngine/src
+DEPENDPATH += $$PWD/../../XTEngine/src
+
 unix:!mac {
     #QMAKE_RPATHDIR += ../lib
-    INCLUDEPATH += $$PWD/../../XTEngine/src
-    DEPENDPATH += $$PWD/../../XTEngine/src
-    equals(QT_MAJOR_VERSION, 5) {
-        INCLUDEPATH += $$PWD/../../HttpServer/src
-        DEPENDPATH += $$PWD/../../HttpServer/src
-    }
     CONFIG(debug, debug|release) {
-        LIBS += -L$$PWD/../../XTEngine/build-Debug/debug -lxtengine
+        #LIBS += -L$$PWD/../../XTEngine/build/debug -lxtengine
         equals(QT_MAJOR_VERSION, 5) {
             LIBS += -L$$PWD/../../HttpServer/src/build/debug -lhttpServer
         }
     }
     else:CONFIG(release, debug|release): {
-        LIBS += -L$$PWD/../../XTEngine/build-Release/release -lxtengine
+        #LIBS += -L$$PWD/../../XTEngine/build/release -lxtengine
         equals(QT_MAJOR_VERSION, 5) {
             LIBS += -L$$PWD/../../HttpServer/src/build/release -lhttpServer
         }
@@ -152,30 +154,24 @@ unix:mac {
 #    images.path = Contents/MacOS
 #    QMAKE_BUNDLE_DATA += images;
 #    #LIBS += -framework QtCompress
-    INCLUDEPATH += $$PWD/../../XTEngine/src
-    DEPENDPATH += $$PWD/../../XTEngine/src
-    equals(QT_MAJOR_VERSION, 5) {
-        DEPENDPATH += $$PWD/../../HttpServer/src
-        INCLUDEPATH += $$PWD/../../HttpServer/src
-    }
     CONFIG(debug, debug|release) {
         equals(QT_MAJOR_VERSION, 5) {
-            LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_clang_64bit-Debug/debug -lxtengine
+            #LIBS += -L$$PWD/../../XTEngine/build/debug -lxtengine
             LIBS += -L$$PWD/../../HttpServer/src/build/debug -lhttpServer
         }
 
         greaterThan(QT_MAJOR_VERSION, 5) {
-            LIBS += -L$$PWD/../../XTEngine/src/build/Desktop_Qt_6_9_0-Release/debug -lxtengine
+            #LIBS += -L$$PWD/../../XTEngine/build/debug -lxtengine
         }
     }
     else:CONFIG(release, debug|release): {
         equals(QT_MAJOR_VERSION, 5) {
-            LIBS += -L$$PWD/../../XTEngine/build-XTEngine-Desktop_Qt_5_15_2_clang_64bit-Debug/release -lxtengine
+            #LIBS += -L$$PWD/../../XTEngine/build/release -lxtengine
             LIBS += -L$$PWD/../../HttpServer/src/build/release -lhttpServer
         }
 
         greaterThan(QT_MAJOR_VERSION, 5) {
-            LIBS += -L$$PWD/../../XTEngine/src/build/Desktop_Qt_6_9_0-Release/release -lxtengine
+            #LIBS += -L$$PWD/../../XTEngine/build/release -lxtengine
         }
     }
 
@@ -190,8 +186,8 @@ unix:mac {
 win32{
     #LIBS += -L$$QT.core.libs -lQtAV1 -lQtAVWidgets1
     build_pass: CONFIG(debug, debug|release) {
-        DESTDIR = $$shell_path($$OUT_PWD/debug)
-        LIBS += -L$$PWD/../../XTEngine/src/build/Desktop_Qt_5_15_2_MinGW_64_bit-Debug/debug -lXTEngine
+        #DESTDIR = $$shell_path($$OUT_PWD/debug)
+        #LIBS += -L$$PWD/../../XTEngine/build/debug -lXTEngine
 
         equals(QT_MAJOR_VERSION, 5) {
             LIBS += -L$$PWD/../../HttpServer/build/debug -lhttpServer
@@ -200,8 +196,8 @@ win32{
         }
     }
     else:build_pass:CONFIG(release, debug|release): {
-        DESTDIR = $$shell_path($$OUT_PWD/release)
-        LIBS += -L$$PWD/../../XTEngine/src/build/Desktop_Qt_5_15_2_MinGW_64_bit-Release/release -lXTEngine
+        #DESTDIR = $$shell_path($$OUT_PWD/release)
+        #LIBS += -L$$PWD/../../XTEngine/build/release -lXTEngine
 
         equals(QT_MAJOR_VERSION, 5) {
             LIBS += -L$$PWD/../../HttpServer/build/release -lhttpServer
@@ -209,8 +205,6 @@ win32{
             LIBS += -L$$PWD/../../zlib-1.3.1/build/Desktop_Qt_5_15_2_MinGW_64_bit-Release -lzlib
         }
     }
-    INCLUDEPATH += $$PWD/../../XTEngine/src
-    DEPENDPATH += $$PWD/../../XTEngine/src
     equals(QT_MAJOR_VERSION, 5) {
         INCLUDEPATH += $$PWD/../../HttpServer/src
     }
@@ -236,7 +230,11 @@ equals(QT_MAJOR_VERSION, 5) {
 #mypackagerule.command = exec my_package_script.sh
 #QMAKE_EXTRA_TARGETS += mypackagerule
 
-copydata.commands = $(COPY_DIR) $$shell_quote($$PWD/themes) $$shell_quote($$DESTDIR) | $(COPY_DIR) $$shell_quote($$PWD/../../XTEngine/src/www) $$shell_quote($$DESTDIR)
+win32 {
+    copydata.commands = $(COPY_DIR) $$shell_path($$PWD/themes) $$shell_path($$DESTDIR/themes) | $(COPY_DIR) $$shell_path($$PWD/../../XTEngine/src/www) $$shell_path($$DESTDIR/www)
+} else {
+    copydata.commands = $(COPY_DIR) $$PWD/themes $$DESTDIR) | $(COPY_DIR) $$PWD/../../XTEngine/src/www $$DESTDIR
+}
 first.depends = $(first) copydata
 export(first.depends)
 export(copydata.commands)
