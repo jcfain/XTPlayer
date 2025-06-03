@@ -233,7 +233,7 @@ equals(QT_MAJOR_VERSION, 5) {
 win32 {
     copydata.commands = $(COPY_DIR) $$shell_path($$PWD/themes) $$shell_path($$DESTDIR/themes) | $(COPY_DIR) $$shell_path($$PWD/../../XTEngine/src/www) $$shell_path($$DESTDIR/www)
 } else {
-    copydata.commands = $(COPY_DIR) $$PWD/themes $$DESTDIR) | $(COPY_DIR) $$PWD/../../XTEngine/src/www $$DESTDIR
+    copydata.commands = $(COPY_DIR) $$PWD/themes $$DESTDIR | $(COPY_DIR) $$PWD/../../XTEngine/src/www $$DESTDIR
 }
 first.depends = $(first) copydata
 export(first.depends)
