@@ -1,12 +1,15 @@
-#ifndef XVIDEOWIDGET_H
-#define XVIDEOWIDGET_H
+#ifndef XVIDEOGRAPHICSVIEW_H
+#define XVIDEOGRAPHICSVIEW_H
 
-#include <QVideoWidget>
-#include <QObject>
+#include <QGraphicsView>
+#include <QMediaPlayer>
 
-class XVideoWidget : public QVideoWidget
+class XVideoGraphicsView : public QGraphicsView
 {
     Q_OBJECT
+public:
+    XVideoGraphicsView(QMediaPlayer* mediaplayer, QWidget* parent = nullptr);
+
 signals:
     void doubleClicked(QMouseEvent* e);
     void singleClicked(QMouseEvent* e);
@@ -14,8 +17,6 @@ signals:
     void keyReleased(QKeyEvent* k);
     void mouseEnter(QEnterEvent* e);
     void mouseMove(QMouseEvent* e);
-public:
-    XVideoWidget(QWidget* parent = nullptr);
 
 private:
     void mouseDoubleClickEvent(QMouseEvent * e) override;
@@ -24,6 +25,7 @@ private:
     void keyReleaseEvent(QKeyEvent * e) override;
     void enterEvent(QEnterEvent * e) override;
     void mouseMoveEvent( QMouseEvent* e ) override;
+    void paintEvent(QPaintEvent *e) override;
 };
 
-#endif // XVIDEOWIDGET_H
+#endif // XVIDEOGRAPHICSVIEW_H

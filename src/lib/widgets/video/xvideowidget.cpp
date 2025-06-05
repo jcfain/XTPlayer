@@ -25,3 +25,9 @@ void XVideoWidget::enterEvent(QEnterEvent * e)
 {
     emit mouseEnter(e);
 }
+
+void XVideoWidget::mouseMoveEvent( QMouseEvent* e ) {
+    // LogHandler::Debug("Enter mouseMove: "+QString::number(e->pos().x()));
+    emit mouseMove(e);
+    QWidget::mouseMoveEvent(e);
+}

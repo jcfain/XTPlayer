@@ -135,6 +135,7 @@ void VideoHandler::showFullscreen(QSize screenSize, bool libraryWindowed) {
     m_screenSize = screenSize;
     _fullscreenWidget = new XWidget(this);
     _fullscreenWidget->setAttribute(Qt::WA_StyledBackground);
+    _fullscreenWidget->setMouseTracking(true);
     //_fullscreenWidget->setStyleSheet("background-color: transparent; color: white;");
 //    _fullscreenWidget->setProperty("cssClass", "fullScreenControls");
 //    _fullscreenWidget->style()->unpolish(_fullscreenWidget);

@@ -315,10 +315,8 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     libraryViewGroup->addAction(ui->actionList);
     libraryViewGroup->addAction(ui->actionThumbnail);
 
-#if BUILD_QT5
     _videoPreviewWidget = new XVideoPreviewWidget(this);
     _videoPreviewWidget->hide();
-#endif
 
     QMenu* submenuSize = ui->menuView->addMenu( "Size" );
     submenuSize->setObjectName("sizeMenu");
@@ -1574,9 +1572,7 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
         if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
         {
             videoHandler->setFile(selectedFileListItem.path);
-#if BUILD_QT5
             _videoPreviewWidget->setFile(selectedFileListItem.path);
-#endif
             //videoHandler->load();
         }
         //selectedFileListItem.script = customScript.isEmpty() ? selectedFileListItem.zipFile.isEmpty() ? selectedFileListItem.script : selectedFileListItem.zipFile : customScript;
@@ -1674,13 +1670,15 @@ void MainWindow::toggleFullScreen()
     if(!videoHandler->isFullScreen())
     {
         videoHandler->showFullscreen(screenSize, !libraryWindow->isHidden());
-        if(libraryWindow->isHidden()) {
+        if(libraryWindow->isHidden())
+        {
             setupLibraryGrid(videoHandler->libraryListLayout());
         }
     } else {
         if(libraryWindow->isHidden())
         {
             ui->libraryGrid->addWidget(libraryList, 0, 0, 20, 12);
+            ui->libraryFrame->setWindowFlags(Qt::Widget);
             setupLibraryGrid(ui->libraryGrid);
         }
         _controlsHomePlaceHolderGrid->addWidget(_playerControlsFrame);
@@ -1927,21 +1925,16 @@ void MainWindow::on_seekslider_hover(int position, qint64 sliderValue)
     {
         //const int w = Config::instance().previewWidth();
         //const int h = Config::instance().previewHeight();
-#if BUILD_QT5
         _videoPreviewWidget->setTimestamp(sliderValue);
         _videoPreviewWidget->preview(gpos);
-#endif
     }
-#if BUILD_QT5
     else if(_videoPreviewWidget && _videoPreviewWidget->isVisible() && _playerControlsFrame->getTimeLineMousePressed()) {
         _videoPreviewWidget->close();
     }
-#endif
 }
 
 void MainWindow::on_seekslider_leave()
 {
-#if BUILD_QT5
     if (!_videoPreviewWidget || !_videoPreviewWidget->isVisible())
     {
         return;
@@ -1949,7 +1942,6 @@ void MainWindow::on_seekslider_leave()
     _videoPreviewWidget->close();
 //    delete videoPreviewWidget;
 //    videoPreviewWidget = NULL;
-#endif
 }
 
 void MainWindow::on_timeline_currentTimeMove(qint64 position)
@@ -2092,9 +2084,7 @@ void MainWindow::on_media_stop()
     XMediaStateHandler::stop();
     videoHandler->setSpeed(1.0);
 
-#if BUILD_QT5
     _videoPreviewWidget->stop();
-#endif
     _mediaStopped = true;
 }
 

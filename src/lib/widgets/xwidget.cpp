@@ -5,10 +5,29 @@
 XWidget::XWidget(QWidget *parent)
     : QWidget{parent}
 {
-   setMouseTracking(true);
    //install_filter(this, this);
 }
 
+void XWidget::mouseDoubleClickEvent(QMouseEvent * e)
+{
+    emit doubleClicked(e);
+}
+void XWidget::mousePressEvent(QMouseEvent * e)
+{
+    emit singleClicked(e);
+}
+void XWidget::keyPressEvent(QKeyEvent * e)
+{
+    emit keyPressed(e);
+}
+void XWidget::keyReleaseEvent(QKeyEvent * e)
+{
+    emit keyReleased(e);
+}
+void XWidget::enterEvent(QEnterEvent * e)
+{
+    emit mouseEnter(e);
+}
 void XWidget::mouseMoveEvent( QMouseEvent* e ) {
     LogHandler::Debug("Enter mouseMove: "+QString::number(e->pos().x()));
     emit mouseMove(e);

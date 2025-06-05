@@ -1,5 +1,5 @@
 #include "videohandler.h"
-VideoHandler::VideoHandler(PlayerControls* controls, XLibraryList* libraryList, QWidget *parent) : QWidget(parent),
+VideoHandler::VideoHandler(PlayerControls* controls, XLibraryList* libraryList, QWidget *parent) : XWidget(parent),
     m_libraryListFrame(0),
     _player(0),
     _fullscreenWidget(0),
@@ -58,11 +58,12 @@ void VideoHandler::createLayout()
     if(_videoWidget)
         delete _videoWidget;
     _videoWidget = new XVideoWidget(this);
-    connect(_videoWidget, &XVideoWidget::doubleClicked, this, [this](QMouseEvent* e) {emit doubleClicked(e);});
-    connect(_videoWidget, &XVideoWidget::singleClicked, this, [this](QMouseEvent* e) {emit singleClicked(e);});
-    connect(_videoWidget, &XVideoWidget::keyPressed, this, [this](QKeyEvent* e) {emit keyPressed(e);});
-    connect(_videoWidget, &XVideoWidget::keyReleased, this, [this](QKeyEvent* e) {emit keyReleased(e);});
-    connect(_videoWidget, &XVideoWidget::mouseEnter, this, [this](QEnterEvent* e) {emit mouseEnter(e);});
+    _videoWidget->setAttribute(Qt::WA_TransparentForMouseEvents );
+    connect(this, &XWidget::doubleClicked, this, [this](QMouseEvent* e) {emit doubleClicked(e);});
+    connect(this, &XWidget::singleClicked, this, [this](QMouseEvent* e) {emit singleClicked(e);});
+    connect(this, &XWidget::keyPressed, this, [this](QKeyEvent* e) {emit keyPressed(e);});
+    connect(this, &XWidget::keyReleased, this, [this](QKeyEvent* e) {emit keyReleased(e);});
+    connect(this, &XWidget::mouseEnter, this, [this](QEnterEvent* e) {emit mouseEnter(e);});
     connect(&m_overlayTimer, &QTimer::timeout, this, [this]() {
         hideControlsTimeout();
         hideLibraryTimeout();
@@ -128,6 +129,14 @@ void VideoHandler::showFullscreen(QSize screenSize, bool libraryWindowed) {
     m_screenSize = screenSize;
     _fullscreenWidget = new XWidget(this);
     _fullscreenWidget->setAttribute(Qt::WA_StyledBackground);
+    _fullscreenWidget->setMouseTracking(true);
+    _fullscreenWidget->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Window);
+    connect(_fullscreenWidget, &XWidget::mouseMove, this, &VideoHandler::mouseMove);
+    connect(_fullscreenWidget, &XWidget::doubleClicked, this, [this](QMouseEvent* e) {emit doubleClicked(e);});
+    connect(_fullscreenWidget, &XWidget::singleClicked, this, [this](QMouseEvent* e) {emit singleClicked(e);});
+    connect(_fullscreenWidget, &XWidget::keyPressed, this, [this](QKeyEvent* e) {emit keyPressed(e);});
+    connect(_fullscreenWidget, &XWidget::keyReleased, this, [this](QKeyEvent* e) {emit keyReleased(e);});
+    connect(_fullscreenWidget, &XWidget::mouseEnter, this, [this](QEnterEvent* e) {emit mouseEnter(e);});
     //_fullscreenWidget->setStyleSheet("background-color: transparent; color: white;");
 //    _fullscreenWidget->setProperty("cssClass", "fullScreenControls");
 //    _fullscreenWidget->style()->unpolish(_fullscreenWidget);
@@ -137,26 +146,25 @@ void VideoHandler::showFullscreen(QSize screenSize, bool libraryWindowed) {
 //    opacityFx->setOpacity(0.5);
 //    _fullscreenWidget->setGraphicsEffect(opacityFx);
 
-    connect(_fullscreenWidget, &XWidget::mouseMove, this, &VideoHandler::mouseMove);
-    _fullscreenWidget->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Window);
     QGridLayout* layout = new QGridLayout(_fullscreenWidget);
     layout->setContentsMargins(0,0,0,0);
     layout->setSpacing(0);
     _fullscreenWidget->setLayout(layout);
-    _fullscreenWidget->setProperty("cssClass", "fullScreenWidget");
-    _videoWidget->setMouseTracking(true);
+    // _fullscreenWidget->setProperty("cssClass", "fullScreenWidget");
     int rows = m_screenSize.height() / m_controls->height();
-    layout->addWidget(_videoWidget, 0, 0, rows, 5);
+    layout->addWidget(_videoWidget, 0, 0, rows -1, 4);
+    layout->setColumnStretch(0, 1);
     layout->addWidget(m_controls, rows - 1, 0, 1, 5);
-    m_controls->setProperty("cssClass", "fullScreenControls");
-    m_controls->style()->unpolish(m_controls);
-    m_controls->style()->polish(m_controls);
+    layout->columnMinimumWidth(0);
+    // m_controls->setProperty("cssClass", "fullScreenControls");
+    // m_controls->style()->unpolish(m_controls);
+    // m_controls->style()->polish(m_controls);
 //    QGraphicsOpacityEffect* opacityFxControls = new QGraphicsOpacityEffect(m_controls);
 //    opacityFxControls->setOpacity(0.5);
 //    m_controls->setGraphicsEffect(opacityFxControls);
 
     //m_controls->setAttribute(Qt::WA_TranslucentBackground);
-    m_controlsRect = QRect(0, m_screenSize.height() - m_controls->height(), m_screenSize.width(), m_controls->height());
+    m_controlsRect = QRect(0, m_screenSize.height() - m_controls->height(), m_screenSize.width() - 10, m_controls->height() - 10);
     placeLibraryList(libraryWindowed);
     hideControls();
     //_fullscreenWidget->show();
@@ -175,19 +183,20 @@ void VideoHandler::placeLibraryList(bool libraryWindowed) {
 //        m_libraryList->setGraphicsEffect(opacityFx);
         auto libraryWidth = (SettingsHandler::getThumbSize() * 3) + ((SettingsHandler::getThumbSize() * 3) * 0.5);
         m_libraryListFrame->setFixedWidth(libraryWidth);
-        m_libraryListFrame->setFixedHeight(m_screenSize.height() - m_controls->height());
+        auto libraryHeight = m_controlsRect.top();
+        m_libraryListFrame->setFixedHeight(libraryHeight);
 //        m_libraryListFrame->setProperty("cssClass", "fullScreenLibrary");
 //        m_libraryListFrame->style()->unpolish(m_libraryListFrame);
 //        m_libraryListFrame->style()->polish(m_libraryListFrame);
-        m_libraryList->setProperty("cssClass", "fullScreenLibrary");
+        // m_libraryList->setProperty("cssClass", "fullScreenLibrary");
         m_libraryList->style()->unpolish(m_libraryList);
         m_libraryList->style()->polish(m_libraryList);
         int rows = m_screenSize.height() / m_controls->height();
         auto layout = new QGridLayout(m_libraryListFrame);
         layout->addWidget(m_libraryList, 1, 0, 20, 12);
         m_libraryListFrame->setLayout(layout);
-        ((QGridLayout*)_fullscreenWidget->layout())->addWidget(m_libraryListFrame, 0, 0, rows - 1, 2);
-        m_libraryRect = QRect(0, 0, libraryWidth, m_screenSize.height() - m_controls->height());
+        ((QGridLayout*)_fullscreenWidget->layout())->addWidget(m_libraryListFrame, 0, 4, rows - 1, 1);
+        m_libraryRect = QRect(m_screenSize.width() - libraryWidth, 0, libraryWidth-10, libraryHeight);
         hideLibrary();
     }
 }
@@ -483,14 +492,16 @@ void VideoHandler::showLibrary()
 
 void VideoHandler::hideControlsTimeout() {
     if(m_controls) {
-        if (!m_controlsRect.contains(QCursor::pos())) {
+        auto cursorPos = _fullscreenWidget->mapFromGlobal(QCursor::pos());
+        if (!m_controlsRect.contains(cursorPos)) {
             hideControls();
         }
     }
 }
 void VideoHandler::hideLibraryTimeout() {
     if(m_libraryList) {
-        if (!m_libraryRect.contains(QCursor::pos())) {
+        auto cursorPos = _fullscreenWidget->mapFromGlobal(QCursor::pos());
+        if (!m_libraryRect.contains(cursorPos)) {
             hideLibrary();
             if(_isFullScreen)
                 grabKeyboard();

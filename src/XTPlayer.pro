@@ -36,7 +36,9 @@ SOURCES += \
     gettextdialog.cpp \
     lib/widgets/library/LibraryItemMetadataDialog.cpp \
     lib/widgets/library/tagManager.cpp \
+    lib/widgets/video/xvideographicsview.cpp \
     lib/widgets/video/xvideowidget.cpp \
+    lib/widgets/video/xvideopreviewwidget.cpp \
     main.cpp \
     mainwindow.cpp \
     xtpsettings.cpp \
@@ -67,7 +69,9 @@ HEADERS += \
     gettextdialog.h \
     lib/widgets/library/LibraryItemMetadataDialog.h \
     lib/widgets/library/tagManager.h \
+    lib/widgets/video/xvideographicsview.h \
     lib/widgets/video/xvideowidget.h \
+    lib/widgets/video/xvideopreviewwidget.h \
     mainwindow.h \
     xtpsettings.h \
     noMatchingScriptDialog.h \
@@ -95,11 +99,9 @@ HEADERS += \
 
 equals(QT_MAJOR_VERSION, 5) {
 HEADERS += \
-    lib/widgets/video/videohandlerQt5.h \
-    lib/widgets/video/xvideopreviewwidget.h
+    lib/widgets/video/videohandlerQt5.h
 SOURCES += \
-    lib/widgets/video/videohandlerQt5.cpp \
-    lib/widgets/video/xvideopreviewwidget.cpp
+    lib/widgets/video/videohandlerQt5.cpp
 }
 equals(QT_MAJOR_VERSION, 6) {
 HEADERS += \

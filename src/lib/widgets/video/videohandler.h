@@ -20,7 +20,7 @@
 #include "xwidget.h"
 #include "dialoghandler.h"
 
-class VideoHandler : public QWidget
+class VideoHandler : public XWidget
 {
     Q_OBJECT
 
