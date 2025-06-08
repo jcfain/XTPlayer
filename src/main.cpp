@@ -20,6 +20,9 @@ int main(int argc, char *argv[])
     }
 #endif
 
+    // setenv("QT_MEDIA_BACKEND", "ffmpeg")
+    // QProcessEnvironment::systemEnvironment().insert("QT_MEDIA_BACKEND", "gstreamer");
+
     QCoreApplication *a;
     bool consoleMode = false;
     bool verboseMode = false;
@@ -239,7 +242,8 @@ int main(int argc, char *argv[])
             QStringList exclusions = SettingsHandler::getLibraryExclusions();
             if(exclusions.contains(targetDir)) {
                 LogHandler::Info("Removing excluded folder..");
-                SettingsHandler::removeFromLibraryExclusions(QList<int> {exclusions.indexOf(targetDir)});
+                QList<int> toRemove = QList<int> {exclusions.indexOf(targetDir)};
+                SettingsHandler::removeFromLibraryExclusions(toRemove);
                 SettingsHandler::Save();
                 LogHandler::Info("Success!");
                 delete xtengine;

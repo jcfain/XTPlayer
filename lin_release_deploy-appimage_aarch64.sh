@@ -4,10 +4,10 @@ home=~/
 target='/media/NAS/main/STK/Dev/XTP/XTP-Release/'
 architecture="aarch64"
 xtplayerSource="${home}"git/XTPlayer
-xtplayerLocation="${home}"git/XTPlayer/build-XTPlayer-Desktop-Release/
-xtengineLocation="${home}"git/XTEngine/build-XTEngine-Desktop-Release/release/
+xtplayerLocation="${home}"git/XTPlayer/build-release/release/
+xtengineLocation="${home}"git/XTEngine/build-release/release/
 deployDirectory="${home}"git/XTPlayer/Deploy/
-qtDirectory=/usr/lib/qt5/
+qtDirectory=/usr/lib/qt6.9.1/
 
 export home
 export target

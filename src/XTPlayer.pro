@@ -13,6 +13,7 @@ equals(QT_MAJOR_VERSION, 6) {
     DEFINES += BUILD_QT6=1
 }
 CONFIG += c++17
+#-DFFMPEG_DIR=/usr/local/ffmpeg/
 
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
@@ -119,10 +120,10 @@ FORMS += \
 
 CONFIG(debug, debug|release) {
     DESTDIR = $$shell_path($$OUT_PWD/debug)
-    LIBS += -L$$PWD/../../XTEngine/build/debug -lxtengine
+    LIBS += -L$$PWD/../../XTEngine/build-debug/debug -lxtengine
 } else:CONFIG(release, debug|release): {
     DESTDIR = $$shell_path($$OUT_PWD/release)
-    LIBS += -L$$PWD/../../XTEngine/build/release -lxtengine
+    LIBS += -L$$PWD/../../XTEngine/build-release/release -lxtengine
 }
 INCLUDEPATH += $$PWD/../../XTEngine/src
 DEPENDPATH += $$PWD/../../XTEngine/src

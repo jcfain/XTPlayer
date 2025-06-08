@@ -29,7 +29,7 @@ void XWidget::enterEvent(QEnterEvent * e)
     emit mouseEnter(e);
 }
 void XWidget::mouseMoveEvent( QMouseEvent* e ) {
-    LogHandler::Debug("Enter mouseMove: "+QString::number(e->pos().x()));
+    // LogHandler::Debug("Enter mouseMove: "+QString::number(e->pos().x()));
     emit mouseMove(e);
     QWidget::mouseMoveEvent(e);
 }

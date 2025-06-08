@@ -1,8 +1,8 @@
 @echo off
 
 SET QtDir=C:\Qt\6.9.1\mingw_64\bin\
-SET buildDir=.\build\
-SET engineBuildDir=..\XTEngine\build\
+SET buildDir=.\build-release\
+SET engineBuildDir=..\XTEngine\build-release\
 SET deployDir=.\bin\release\
 SET deployZipDir=.\bin\
 SET stagingDirectory=.\bin\latest
