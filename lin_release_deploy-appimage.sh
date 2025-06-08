@@ -1,5 +1,8 @@
 #!/bin/bash
 
+export EXTRA_PLATFORM_PLUGINS=libqwayland-generic.so
+export EXTRA_QT_MODULES="waylandcompositor"
+
 if [ -z ${home+x} ]; then 
     echo "Do not run this script directly!"; 
     exit 1
@@ -33,7 +36,8 @@ cp "${xtplayerSource}"/XTPlayer.desktop "${xtplayerLocation}"/XTPlayer.desktop
 
 cp "${xtplayerSource}"/src/images/icons/XTP-icon.png "${xtplayerLocation}"/XTPlayer.png
 
-GSTREAMER_INCLUDE_BAD_PLUGINS="1"
+#export GSTREAMER_INCLUDE_BAD_PLUGINS="1"
+#--plugin gstreamer 
 "${linuxdeployBinary}" --appdir "${appDir}" --executable "${xtplayerLocation}"/XTPlayer --plugin qt --output appimage --icon-file "${xtplayerLocation}"/XTPlayer.png --desktop-file "${xtplayerLocation}"/XTPlayer.desktop
 
 mv "${xtplayerSource}"/XTPlayer-"${architecture}".AppImage "${deployDirectory}"XTPlayer-"${version}"-Linux-"${architecture}".AppImage
