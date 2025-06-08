@@ -88,6 +88,8 @@ void VideoHandler::mouseMove( QMouseEvent* e ) {
 //            }
 //        }
 
+        // qApp->restoreOverrideCursor();
+        qApp->setOverrideCursor(Qt::CursorShape::ArrowCursor);
         showControls();
         showLibrary();
         m_overlayTimer.start(3000);
@@ -122,6 +124,8 @@ void VideoHandler::showNormal() {
 //    delete m_libraryListFrame;
     m_libraryListFrame = 0;
     _isFullScreen = false;
+    // qApp->restoreOverrideCursor();
+    qApp->setOverrideCursor(Qt::CursorShape::ArrowCursor);
 }
 
 void VideoHandler::showFullscreen(QSize screenSize, bool libraryWindowed) {
@@ -459,6 +463,8 @@ void VideoHandler::hideControls()
     if (m_controls &&_isFullScreen)
     {
         m_controls->hide();
+        if(m_libraryListFrame->isHidden())
+            qApp->setOverrideCursor(Qt::BlankCursor);
     }
 }
 
@@ -476,6 +482,8 @@ void VideoHandler::hideLibrary()
     {
         if(m_libraryListFrame)
             m_libraryListFrame->hide();
+        if(m_controls->isHidden())
+            qApp->setOverrideCursor(Qt::BlankCursor);
     }
 }
 
