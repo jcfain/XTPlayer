@@ -111,7 +111,6 @@ int main(int argc, char *argv[])
 
 
     parser.process(*a);
-    XTEngine* xtengine = new XTEngine();//Must be called before SettingsHandler functions are called.
 
     if(parser.isSet(verboseOption)) {
         LogHandler::Info("Starting in verbose mode");
@@ -121,6 +120,8 @@ int main(int argc, char *argv[])
         LogHandler::Info("Starting in debug mode");
         LogHandler::setUserDebug(true);
     }
+
+    XTEngine* xtengine = new XTEngine();//Must be called before SettingsHandler functions are called.
     if(parser.isSet(resetOption)) {
         LogHandler::Info("Resettings settings to default!");
         SettingsHandler::Default();
