@@ -31,7 +31,8 @@ XVideoPreviewWidget::XVideoPreviewWidget(QWidget* parent) : QFrame(parent)
     _videoLoadingLabel->setAlignment(Qt::AlignCenter);
     //_videoLoadingLabel->setScaledContents(true);
     _layout->addWidget(_videoLoadingLabel);
-    setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+    setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::ToolTip);
+    setAttribute(Qt::WA_TransparentForMouseEvents );
 
     connect(&_videoPreview, &XVideoPreview::frameExtracted, this, &XVideoPreviewWidget::on_thumbExtract);
 }
