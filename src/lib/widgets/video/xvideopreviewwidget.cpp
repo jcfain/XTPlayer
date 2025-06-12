@@ -9,8 +9,7 @@ XVideoPreviewWidget::XVideoPreviewWidget(QWidget* parent) : QFrame(parent)
     _label->setAlignment(Qt::AlignHCenter);
     //_label->resize(170,94);
     //_label->setScaledContents(true);
-    setLayout(_layout);
-    _layout->addWidget(_label);
+    _layout->addWidget(_label, 0,0);
 
 //    setWindowFlags(
 //        Qt::Tool |
@@ -26,11 +25,14 @@ XVideoPreviewWidget::XVideoPreviewWidget(QWidget* parent) : QFrame(parent)
     _videoLoadingMovie->setScaledSize({50,50});
     _videoLoadingLabel->setMovie(_videoLoadingMovie);
     _videoLoadingLabel->setAttribute(Qt::WA_TransparentForMouseEvents );
-    //_videoLoadingLabel->setStyleSheet("* {background: ffffff}");
-    _videoLoadingLabel->setProperty("cssClass", "mediaLoadingSpinner");
+    // _videoLoadingLabel->setStyleSheet("* {background: ffffff}");
+    // _videoLoadingLabel->setProperty("cssClass", "mediaLoadingSpinner");
     _videoLoadingLabel->setAlignment(Qt::AlignCenter);
     //_videoLoadingLabel->setScaledContents(true);
-    _layout->addWidget(_videoLoadingLabel);
+    _layout->addWidget(_videoLoadingLabel, 0,0);
+    _timeLabel = new QLabel(this);
+    _timeLabel->setAlignment(Qt::AlignCenter);
+    _layout->addWidget(_timeLabel, 2, 0);
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::ToolTip);
     setAttribute(Qt::WA_TransparentForMouseEvents );
 
@@ -41,16 +43,15 @@ void XVideoPreviewWidget::setFile(QString path) {
     _file = path;
 }
 
-void XVideoPreviewWidget::setTimestamp(qint64 pos) {
-    _time = pos;
-}
-
-void XVideoPreviewWidget::preview(QPoint gpos) {
+void XVideoPreviewWidget::preview(QPoint gpos, qint64 time) {
     on_setLoading(true);
-    _videoPreview.extract(_file, _time);
-    _currentPosition = QPoint(gpos);
-    resize(70, 70);
-    move(gpos - QPoint(70/2, 70));
+    _timeLabel->setText(QTime(0, 0, 0).addMSecs(time).toString(QString::fromLatin1("HH:mm:ss")));
+    _videoPreview.extract(_file, time);
+    _currentPosition = gpos;
+    resize(100, 100);
+    QPoint finalPos = gpos - QPoint(width()/2, height());
+    move(finalPos);
+    LogHandler::Debug("[XVideoPreviewWidget] loadingPos x: " + QString::number(finalPos.x()) + ", y: " + QString::number(finalPos.y()));
     show();
 }
 
@@ -64,7 +65,9 @@ void XVideoPreviewWidget::on_thumbExtract(QImage frame) {
     auto scaled = QPixmap::fromImage(frame.scaled(_thumbSize,_thumbSize,Qt::KeepAspectRatio));
     frame = QImage();
     resize(scaled.width(), scaled.height());
-    move(_currentPosition - QPoint(scaled.width()/2, scaled.height()));
+    QPoint finalPos = _currentPosition - QPoint(width()/2, height() + 50);
+    move(finalPos);
+    LogHandler::Debug("[XVideoPreviewWidget] previofinalPos x: " + QString::number(finalPos.x()) + ", y: " + QString::number(finalPos.y()));
     _label->setPixmap(scaled);
     _label->update();
     on_setLoading(false);

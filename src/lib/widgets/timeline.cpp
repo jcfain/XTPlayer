@@ -327,7 +327,7 @@ void TimeLine::mouseMoveEvent(QMouseEvent* aEvent)
 
     //const int o = style()->pixelMetric(QStyle::PM_SliderLength ) - 1;
     //int sliderValue = QStyle::sliderValueFromPosition(0, m_duration, aEvent->pos().x()-o/2, width()-o, false);
-    emit onHover(aEvent->x(), getPositionToTime(aEvent->pos().x()));
+    emit onHover(aEvent->pos(), getPositionToTime(aEvent->pos().x()));
 }
 
 void TimeLine::enterEvent(QEnterEvent * event)

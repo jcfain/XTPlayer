@@ -140,7 +140,7 @@ private slots:
     void on_actionThumbnail_triggered();
 
     void on_actionList_triggered();
-    void on_seekslider_hover(int position, qint64 time);
+    void on_seekslider_hover(QPoint position, qint64 time);
     void on_seekslider_leave();
 
     void onLoopRange_valueChanged(qint64 position, qint64 startLoop, qint64 endLoop);

@@ -1,11 +1,12 @@
 #include "videohandler.h"
-VideoHandler::VideoHandler(PlayerControls* controls, XLibraryList* libraryList, QWidget *parent) : XWidget(parent),
+VideoHandler::VideoHandler(PlayerControls* controls, XLibraryList* libraryList, XVideoPreviewWidget* videoPreview, QWidget *parent) : XWidget(parent),
     m_libraryListFrame(0),
     _player(0),
     _fullscreenWidget(0),
     _videoWidget(0),
     m_controls(controls),
-    m_libraryList(libraryList)
+    m_libraryList(libraryList),
+    m_videoPreview(videoPreview)
 {
     _player = new QMediaPlayer(this);
     m_audioOutput = new QAudioOutput(this);
@@ -109,6 +110,8 @@ bool VideoHandler::isFullScreen() {
 void VideoHandler::showNormal() {
     showLibrary();
     showControls();
+    auto flags = m_videoPreview->windowFlags();
+    m_videoPreview->setParent(this->parentWidget(), flags);
     _mediaGrid->addWidget(_videoWidget);
     m_controls->setProperty("cssClass", "windowedControls");
     m_controls->style()->unpolish(m_controls);
@@ -149,20 +152,21 @@ void VideoHandler::showFullscreen(QSize screenSize, bool libraryWindowed) {
 //    QGraphicsOpacityEffect* opacityFx = new QGraphicsOpacityEffect(_fullscreenWidget);
 //    opacityFx->setOpacity(0.5);
 //    _fullscreenWidget->setGraphicsEffect(opacityFx);
-
+    auto flags = m_videoPreview->windowFlags();
+    m_videoPreview->setParent(_fullscreenWidget, flags);
     QGridLayout* layout = new QGridLayout(_fullscreenWidget);
     layout->setContentsMargins(0,0,0,0);
     layout->setSpacing(0);
-    _fullscreenWidget->setLayout(layout);
-    // _fullscreenWidget->setProperty("cssClass", "fullScreenWidget");
+    // _fullscreenWidget->setLayout(layout);
+    _fullscreenWidget->setProperty("cssClass", "fullScreenWidget");
     int rows = m_screenSize.height() / m_controls->height();
     layout->addWidget(_videoWidget, 0, 0, rows -1, 4);
     layout->setColumnStretch(0, 1);
     layout->addWidget(m_controls, rows - 1, 0, 1, 5);
     layout->columnMinimumWidth(0);
-    // m_controls->setProperty("cssClass", "fullScreenControls");
-    // m_controls->style()->unpolish(m_controls);
-    // m_controls->style()->polish(m_controls);
+    m_controls->setProperty("cssClass", "fullScreenControls");
+    m_controls->style()->unpolish(m_controls);
+    m_controls->style()->polish(m_controls);
 //    QGraphicsOpacityEffect* opacityFxControls = new QGraphicsOpacityEffect(m_controls);
 //    opacityFxControls->setOpacity(0.5);
 //    m_controls->setGraphicsEffect(opacityFxControls);

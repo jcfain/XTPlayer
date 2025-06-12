@@ -17,6 +17,7 @@
 #include "xvideowidget.h"
 #include "playercontrols.h"
 #include "xlibrarylist.h"
+#include "xvideopreviewwidget.h"
 #include "xwidget.h"
 #include "dialoghandler.h"
 
@@ -50,7 +51,7 @@ signals:
     void durationChange(qint64 value);
 
 public:;
-    VideoHandler(PlayerControls* controls, XLibraryList* libraryList, QWidget* parent = 0);
+    VideoHandler(PlayerControls* controls, XLibraryList* libraryList, XVideoPreviewWidget* videoPreview, QWidget* parent = 0);
     bool isPlaying();
     void play();
     void stop();
@@ -99,6 +100,7 @@ private:
     QRect m_libraryRect;
     QRect m_controlsRect;
     XVideoWidget* _videoWidget;
+    XVideoPreviewWidget* m_videoPreview;
     QString _currentFile;
     QMutex _mutex;
     qreal volumeBeforeMute;

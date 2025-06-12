@@ -10,7 +10,7 @@ QFrame#libraryFrame {
 	border-radius: 4px;
 }
 QFrame[cssClass="timeLinePreview"] {
-	background-color: rgba(51,54,60, 0.5);
+	background-color: rgba(51,54,60, 1);
 	border-color: #bec0c1;
 	border-style: inset;
 	border-width: 3px;
@@ -35,6 +35,7 @@ QStatusBar QLabel[cssClass="connectionStatusConnecting"] {
 	color: yellow;
 }
 QDialog[cssClass="loadingSpinner"] {
+	background-color: transparent;
 	
 }
 QLabel[cssClass="libraryLoadingSpinner"] {
@@ -257,22 +258,22 @@ QPushButton#muteBtn:checked  {
     color: black;
 }
 XWidget[cssClass="fullScreenWidget"] {
-    background-color: transparent;
+    background-color: #33363c;
 }
 QFrame[cssClass="windowedControls"] {
     background-color: transparent;
     color: black;
 }
 QFrame[cssClass="fullScreenControls"] {
-    background-color: rgba(255, 255, 255, 0.2);
-    color: green;
+    background-color: #33363c;
+    color: white;
 }
 QListView[cssClass="windowedLibrary"] {
     background-color: transparent;
     color: white;
 }
 QListView[cssClass="fullScreenLibrary"] {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: #33363c;
     color: white;
 }
 QPushButton:pressed,

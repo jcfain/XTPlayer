@@ -70,7 +70,7 @@ signals:
     void endLoopMove(qint64 endLoop);
     void loopChanged(qint64 min, qint64 max);
     void currentTimeChanged(qint64 time);
-    void onHover(int position, qint64 sliderValue);
+    void onHover(QPoint position, qint64 sliderValue);
     void onLeave();
     void mouseRelease(QString name);
     void mousePress();

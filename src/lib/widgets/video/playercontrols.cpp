@@ -397,6 +397,11 @@ QPoint PlayerControls::getTimeSliderPosition()
     return m_timeLine->pos();
 }
 
+QPoint PlayerControls::getTimeSliderGlobalPosition()
+{
+    return m_timeLine->mapToGlobal(QPoint(0,0));
+}
+
 int PlayerControls::getSeekSliderWidth()
 {
     return m_timeLine->width();
@@ -579,7 +584,7 @@ void PlayerControls::on_loopToggleButton_toggled(bool checked)
     emit loopButtonToggled(checked);
 }
 
-void PlayerControls::on_seekslider_hover(int position, qint64 sliderValue)
+void PlayerControls::on_seekslider_hover(QPoint position, qint64 sliderValue)
 {
     emit seekSliderHover(position, sliderValue);
 }

@@ -16,10 +16,9 @@ signals:
     void thumbExtractionError(QString error);
 
 public:
-    XVideoPreviewWidget(QWidget* parent);
+    XVideoPreviewWidget(QWidget* parent = nullptr);
     void setFile(QString path);
-    void setTimestamp(qint64 time);
-    void preview(QPoint gpos);
+    void preview(QPoint gpos, qint64 time);
     void stop();
 
 protected:
@@ -29,7 +28,7 @@ private:
     QGridLayout* _layout;
     QLabel* _label;
     QString _file;
-    qint64 _time;
+    QLabel* _timeLabel;
     XVideoPreview _videoPreview;
     QLabel* _videoLoadingLabel = 0;
     QMovie* _videoLoadingMovie = 0;

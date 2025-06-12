@@ -34,7 +34,7 @@ signals:
     void settingsClicked();
     void muteChanged(bool muted);
     void seekSliderMoved(qint64 value);
-    void seekSliderHover(int position, qint64 sliderValue);
+    void seekSliderHover(QPoint position, qint64 sliderValue);
     void seekSliderLeave();
     void alternateFunscriptSelected(ScriptInfo script);
     void playbackSpeedValueChanged(qreal value);
@@ -53,6 +53,7 @@ public:
     void toggleLoop(qint64 currentDuration, qint64 currentPosition);
     bool getAutoLoop();
     QPoint getTimeSliderPosition();
+    QPoint getTimeSliderGlobalPosition();
     int getSeekSliderWidth();
     void setSeekSliderToolTip(qint64 value);
     void setEndLoop(qint64 value);
@@ -114,7 +115,7 @@ private:
     void on_timeline_currentTimeMove(qint64 position);
     void on_LoopRange_valueChanged(qint64 position);
     void on_loopToggleButton_toggled(bool checked);
-    void on_seekslider_hover(int position, qint64 sliderValue);
+    void on_seekslider_hover(QPoint position, qint64 sliderValue);
     void on_seekslider_leave();
     void onAlternateFunscriptSelected(QString script);
 

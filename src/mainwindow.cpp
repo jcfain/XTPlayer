@@ -179,7 +179,10 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     ui->libraryGrid->setSpacing(5);
     ui->libraryGrid->setColumnMinimumWidth(0, 0);
 
-    videoHandler = new VideoHandler(_playerControlsFrame, libraryList, this);
+    _videoPreviewWidget = new XVideoPreviewWidget(this);
+    _videoPreviewWidget->hide();
+
+    videoHandler = new VideoHandler(_playerControlsFrame, libraryList, _videoPreviewWidget, this);
     _mediaGrid->addWidget(videoHandler, 0, 0, 3, 5);
     // _mediaGrid->setMargin(0);
     _mediaGrid->setContentsMargins(0,0,0,0);
@@ -314,9 +317,6 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     libraryViewGroup = new QActionGroup(this);
     libraryViewGroup->addAction(ui->actionList);
     libraryViewGroup->addAction(ui->actionThumbnail);
-
-    _videoPreviewWidget = new XVideoPreviewWidget(this);
-    _videoPreviewWidget->hide();
 
     QMenu* submenuSize = ui->menuView->addMenu( "Size" );
     submenuSize->setObjectName("sizeMenu");
@@ -1881,54 +1881,31 @@ void MainWindow::on_fullScreenBtn_clicked()
     toggleFullScreen();
 }
 
-void MainWindow::on_seekslider_hover(int position, qint64 sliderValue)
+void MainWindow::on_seekslider_hover(QPoint position, qint64 sliderValue)
 {
-    //qint64 sliderValueTime = XMath::mapRange(static_cast<qint64>(sliderValue), (qint64)0, (qint64)100, (qint64)0, videoHandler->duration());
-//    if (!videoPreviewWidget)
-//        videoPreviewWidget = new VideoPreviewWidget();
-//        LogHandler::Debug("sliderValue: "+QString::number(sliderValue));
-//        LogHandler::Debug("time: "+QString::number(sliderValueTime));
-    //LogHandler::Debug("position: "+QString::number(position));
-    QPoint gpos;
-    if(videoHandler->isFullScreen())
-    {
-        gpos = mapToGlobal(_playerControlsFrame->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(position, 0));
-        QToolTip::showText(gpos, QTime(0, 0, 0).addMSecs(sliderValue).toString(QString::fromLatin1("HH:mm:ss")));
-    }
-    else
-    {
-        auto tootipPos = mapToGlobal(QPoint(ui->medialAndControlsFrame->pos().x(), 0) + _controlsHomePlaceHolderFrame->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(position, 0));
-        QToolTip::showText(tootipPos, QTime(0, 0, 0).addMSecs(sliderValue).toString(QString::fromLatin1("HH:mm:ss")));
-        gpos = QPoint(ui->medialAndControlsFrame->pos().x(), 0) + _controlsHomePlaceHolderFrame->pos() + _playerControlsFrame->getTimeSliderPosition() + QPoint(position, 0);
-    }
-
-//        LogHandler::Debug("medialAndControlsFrame x: " + QString::number(ui->medialAndControlsFrame->pos().x()));
-//        LogHandler::Debug("SeekSlider x: " + QString::number(ui->SeekSlider->pos().x()));
-//        LogHandler::Debug("SeekSlider y: " + QString::number(ui->SeekSlider->pos().y()));
-//        LogHandler::Debug("controlsHomePlaceHolder x: " + QString::number(ui->controlsHomePlaceHolder->pos().x()));
-//        LogHandler::Debug("controlsHomePlaceHolder y: " + QString::number(ui->controlsHomePlaceHolder->pos().y()));
-//        LogHandler::Debug("gpos x: " + QString::number(gpos.x()));
-//        LogHandler::Debug("gpos y: " + QString::number(gpos.y()));
-//        LogHandler::Debug("gpos - QPoint(176/2, 250) x: " + QString::number((gpos - QPoint(176/2, 250)).x()));
-//        LogHandler::Debug("gpos - QPoint(176/2, 250) y: " + QString::number((gpos - QPoint(176/2, 250)).y()));
-
-    //    if (!Config::instance().previewEnabled())
-    //        return;
-
-
     auto item = XMediaStateHandler::getPlaying();
-    if(!XTPSettings::getDisableTimeLinePreview() &&
-        item && (item->type == LibraryListItemType::Video || item->type == LibraryListItemType::VR)
+    auto closeTimelinePreview = _videoPreviewWidget && _videoPreviewWidget->isVisible() && _playerControlsFrame->getTimeLineMousePressed();
+    if(item && (item->type == LibraryListItemType::Video || item->type == LibraryListItemType::VR)
             && !m_xtengine->syncHandler()->isPlayingStandAlone() &&
             !_playerControlsFrame->getTimeLineMousePressed() &&
             (videoHandler->isPlaying() || videoHandler->isPaused()))
     {
-        //const int w = Config::instance().previewWidth();
-        //const int h = Config::instance().previewHeight();
-        _videoPreviewWidget->setTimestamp(sliderValue);
-        _videoPreviewWidget->preview(gpos);
+        if(XTPSettings::getDisableTimeLinePreview())
+        {
+            QToolTip::showText(QCursor::pos(), QTime(0, 0, 0).addMSecs(sliderValue).toString(QString::fromLatin1("HH:mm:ss")));
+            if(closeTimelinePreview)
+            {
+                _videoPreviewWidget->close();
+            }
+        }
+        else
+        {
+            QPoint gpos = QPoint(0, _playerControlsFrame->getTimeSliderGlobalPosition().y()) + QPoint(QCursor::pos().x(),0);
+            _videoPreviewWidget->preview(gpos, sliderValue);
+        }
     }
-    else if(_videoPreviewWidget && _videoPreviewWidget->isVisible() && _playerControlsFrame->getTimeLineMousePressed()) {
+    else if(closeTimelinePreview)
+    {
         _videoPreviewWidget->close();
     }
 }
