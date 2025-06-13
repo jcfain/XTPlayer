@@ -7,7 +7,7 @@ xtplayerSource="${home}"git/XTPlayer
 xtplayerLocation="${home}"git/XTPlayer/build-release/release/
 xtengineLocation="${home}"git/XTEngine/build-release/release/
 deployDirectory="${home}"git/XTPlayer/Deploy/
-qtDirectory=/usr/lib/qt6.9.1/
+qtDirectory=~/Qt/6.9.1/gcc_arm64/bin
 
 export home
 export target
