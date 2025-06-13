@@ -5,8 +5,10 @@ target='/media/NAS/main/STK/Dev/XTP/XTP-Release/'
 architecture="aarch64"
 xtplayerSource="${home}"git/XTPlayer
 xtengineSource="${home}"git/XTEngine
-xtplayerLocation="${xtplayerSource}"/build-release/release/
-xtengineLocation="${xtengineSource}"/build-release/release/
+xtplayerBuildDirectory="${xtplayerSource}"/build-release
+xtengineBuildDirectory="${xtengineSource}"/build-release
+xtplayerLocation="${xtplayerBuildDirectory}"/release/
+xtengineLocation="${xtengineBuildDirectory}"/release/
 deployDirectory="${xtplayerSource}"/Deploy/
 qtDirectory="${home}"Qt/6.9.1/gcc_arm64/bin
 
@@ -15,6 +17,8 @@ export target
 export architecture
 export xtplayerSource
 export xtengineSource
+export xtplayerBuildDirectory
+export xtengineBuildDirectory
 export xtplayerLocation
 export xtengineLocation
 export deployDirectory
