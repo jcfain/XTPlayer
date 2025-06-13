@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 export EXTRA_PLATFORM_PLUGINS=libqwayland-generic.so
 export EXTRA_QT_MODULES="waylandcompositor"
 
@@ -25,20 +27,38 @@ echo Home: ${home}
 echo Target: ${target}
 echo appDir: ${appDir}
 
+cd ${xtplayerSource}
+git pull || { echo 'git pull XTPlayer failed' ; exit 1; }
+cd ${xtengineSource}
+git pull || { echo 'git pull XTEngine failed' ; exit 1; };
+
+mkdir -p "${xtengineBuildDirectory}" || { echo 'Make XTEngine build dir failed' ; exit 1; }
+cd ${xtengineBuildDirectory}
+qmake ${xtengineSource}/src/XTEngine.pro CONFIG+=release || { echo 'QMake XTEngine failed' ; exit 1; }
+make Makefile qmake_all || { echo 'Make Makefile failed' ; exit 1; }
+make --silent -j24 || { echo 'Make failed' ; exit 1; }
+mkdir -p "${xtplayerBuildDirectory}" || { echo 'Make XTPlayer build dir failed' ; exit 1; }
+cd ${xtplayerBuildDirectory}
+qmake ${xtplayerSource}/src/XTPlayer.pro CONFIG+=release || { echo 'QMake XTPlayer failed' ; exit 1; }
+make Makefile qmake_all || { echo 'Make Makefile failed' ; exit 1; }
+make --silent -j24 || { echo 'Make failed' ; exit 1; }
+
+cd ${SCRIPT_DIR}
+
 rm -rf "${appDir}"
 
 mkdir -p "${appDir}"
 mkdir -p "${appDir}"/usr/bin/www
 mkdir -p "${appDir}"/usr/bin/themes
-cp -r "${xtplayerLocation}"www/*-min.*  "${appDir}"/usr/bin/www/
-cp -r "${xtplayerLocation}"themes/*.*  "${appDir}"/usr/bin/themes/
-cp "${xtplayerSource}"/XTPlayer.desktop "${xtplayerLocation}"/XTPlayer.desktop
+cp -r "${xtplayerLocation}"www/*-min.*  "${appDir}"/usr/bin/www/ || { echo 'Copy www failed' ; exit 1; }
+cp -r "${xtplayerLocation}"themes/*.*  "${appDir}"/usr/bin/themes/ || { echo 'Copy themes failed' ; exit 1; }
+cp "${xtplayerSource}"/XTPlayer.desktop "${xtplayerLocation}"/XTPlayer.desktop || { echo 'Copy desktop file failed' ; exit 1; }
 
-cp "${xtplayerSource}"/src/images/icons/XTP-icon.png "${xtplayerLocation}"/XTPlayer.png
+cp "${xtplayerSource}"/src/images/icons/XTP-icon.png "${xtplayerLocation}"/XTPlayer.png || { echo 'Copy icon failed' ; exit 1; }
 
 #export GSTREAMER_INCLUDE_BAD_PLUGINS="1"
 #--plugin gstreamer 
-"${linuxdeployBinary}" --appdir "${appDir}" --executable "${xtplayerLocation}"/XTPlayer --plugin qt --output appimage --icon-file "${xtplayerLocation}"/XTPlayer.png --desktop-file "${xtplayerLocation}"/XTPlayer.desktop
+"${linuxdeployBinary}" --appdir "${appDir}" --executable "${xtplayerLocation}"/XTPlayer --plugin qt --output appimage --icon-file "${xtplayerLocation}"/XTPlayer.png --desktop-file "${xtplayerLocation}"/XTPlayer.desktop || { echo 'Deploy failed' ; exit 1; }
 
 mv "${xtplayerSource}"/XTPlayer-"${architecture}".AppImage "${deployDirectory}"XTPlayer-"${version}"-Linux-"${architecture}".AppImage
 cp "${deployDirectory}"XTPlayer-"${version}"-Linux-"${architecture}".AppImage "${target}"
