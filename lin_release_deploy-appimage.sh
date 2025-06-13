@@ -44,13 +44,13 @@ echo Target: ${target}
 echo appDir: ${appDir}
 
 cd ${xtplayerSource}
-if needToPull; then
+#if needToPull; then
 	git pull || { echo 'git pull XTPlayer failed' ; exit 1; }
-fi
+#fi
 cd ${xtengineSource}
-if needToPull; then
+#if needToPull; then
 	git pull || { echo 'git pull XTEngine failed' ; exit 1; };
-fi
+#fi
 
 mkdir -p "${xtengineBuildDirectory}" || { echo 'Make XTEngine build dir failed' ; exit 1; }
 cd ${xtengineBuildDirectory}
