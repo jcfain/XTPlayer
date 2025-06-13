@@ -1,6 +1,19 @@
 #!/bin/bash
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+needToPull() {
+	if [ $LOCAL = $REMOTE ]; then
+		echo "Up-to-date"
+	elif [ $LOCAL = $BASE ]; then {
+		echo "Need to pull"
+		return 0
+	} elif [ $REMOTE = $BASE ]; then
+		echo "Need to push"
+	else
+		echo "Diverged"
+	fi
+	return 1
+}
 
 export EXTRA_PLATFORM_PLUGINS=libqwayland-generic.so
 export EXTRA_QT_MODULES="waylandcompositor"
@@ -27,10 +40,20 @@ echo Home: ${home}
 echo Target: ${target}
 echo appDir: ${appDir}
 
+UPSTREAM=${1:-'@{u}'}
+LOCAL=$(git rev-parse @)
+REMOTE=$(git rev-parse "$UPSTREAM")
+BASE=$(git merge-base @ "$UPSTREAM")
+
+
 cd ${xtplayerSource}
-git pull || { echo 'git pull XTPlayer failed' ; exit 1; }
+if needToPull; then
+	git pull || { echo 'git pull XTPlayer failed' ; exit 1; }
+fi
 cd ${xtengineSource}
-git pull || { echo 'git pull XTEngine failed' ; exit 1; };
+if needToPull; then
+	git pull || { echo 'git pull XTEngine failed' ; exit 1; };
+fi
 
 mkdir -p "${xtengineBuildDirectory}" || { echo 'Make XTEngine build dir failed' ; exit 1; }
 cd ${xtengineBuildDirectory}
