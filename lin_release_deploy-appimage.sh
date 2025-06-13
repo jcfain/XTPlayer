@@ -1,6 +1,5 @@
 #!/bin/bash
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 needToPull() {
 	if [ $LOCAL = $REMOTE ]; then
 		echo "Up-to-date"

@@ -11,6 +11,7 @@ xtplayerLocation="${xtplayerBuildDirectory}"/release/
 xtengineLocation="${xtengineBuildDirectory}"/release/
 deployDirectory="${xtplayerSource}"/Deploy/
 qtDirectory="${home}"Qt/6.9.1/gcc_64/bin
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 export home
 export target
@@ -23,5 +24,6 @@ export xtplayerLocation
 export xtengineLocation
 export deployDirectory
 export qtDirectory
+export SCRIPT_DIR
 
-./lin_release_deploy-appimage.sh
+${SCRIPT_DIR}/lin_release_deploy-appimage.sh
