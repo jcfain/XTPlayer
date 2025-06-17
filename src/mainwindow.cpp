@@ -624,6 +624,10 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
         QTimer::singleShot(500, [this](){
             openWelcomeDialog();
         });
+    } else {
+        QStringList currentLibraries = SettingsHandler::getSelectedLibrary();
+        if(currentLibraries.empty())
+            on_actionSelect_library_triggered();
     }
 }
 
@@ -1223,6 +1227,15 @@ void MainWindow::changeDeoFunscript()
 void MainWindow::openWelcomeDialog()
 {
     _welcomeDialog = new WelcomeDialog(this);
+    connect(_welcomeDialog, &WelcomeDialog::onClose, this, [this]() {
+        QStringList currentLibraries = SettingsHandler::getSelectedLibrary();
+        if(currentLibraries.empty())
+            on_actionSelect_library_triggered();
+        if(_welcomeDialog) {
+            delete _welcomeDialog;
+            _welcomeDialog = 0;
+        }
+    });
     _welcomeDialog->show();
     _welcomeDialog->raise();
     _welcomeDialog->activateWindow();
@@ -1231,8 +1244,9 @@ void MainWindow::closeWelcomeDialog()
 {
     if(_welcomeDialog) {
         _welcomeDialog->close();
+        delete _welcomeDialog;
+        _welcomeDialog = 0;
     }
-
 }
 //void MainWindow::loadLibraryAsync()
 //{

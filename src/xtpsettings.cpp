@@ -48,7 +48,7 @@ void XTPSettings::load(QSettings* settingsToLoadFrom) {
     m_libraryWindowOpen = settingsToLoadFrom->value("libraryWindowOpen").toBool();
     m_disableTimeLinePreview = settingsToLoadFrom->value("disableTimeLinePreview").toBool();
     if(SettingsHandler::getFirstLoad())
-        m_disableTimeLinePreview = true;
+        m_disableTimeLinePreview = false;
     m_hideMediaWithoutFunscripts = settingsToLoadFrom->value("hideMediaWithoutFunscripts").toBool();
     m_heatmapDisabled = settingsToLoadFrom->value("heatmapDisabled").toBool();
 

@@ -12,7 +12,7 @@ class WelcomeDialog : public QDialog
 {
     Q_OBJECT
 signals:
-    void close();
+    void onClose();
 public:
     explicit WelcomeDialog(QWidget *parent = nullptr);
     ~WelcomeDialog();
@@ -24,15 +24,13 @@ private slots:
 
     void on_welcomePrevious_clicked();
 
-    void on_buttonBox_accepted();
-
 protected:
     void showEvent(QShowEvent* event);
 
 private:
     Ui::welcomedialog *ui;
     int currentIndex = 1;
-    int maxIndex = 7;
+    int maxIndex = 6;
 
     void loadImage(int index);
 };
