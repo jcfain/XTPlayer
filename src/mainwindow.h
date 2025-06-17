@@ -384,5 +384,4 @@ private:
 
     void setLoadingStatus(QString message, float percentage);
 };
-extern void startThumbProcess(MainWindow* mainWindow);
 #endif // MAINWINDOW_H

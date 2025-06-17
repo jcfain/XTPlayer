@@ -6,8 +6,7 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QMovie>
-#include "lib/handler/xvideopreview.h"
-#include "lib/handler/settingshandler.h"
+#include "lib/tool/thumbextractor.h"
 
 class XVideoPreviewWidget : public QFrame
 {
@@ -29,7 +28,7 @@ private:
     QLabel* _label;
     QString _file;
     QLabel* _timeLabel;
-    XVideoPreview _videoPreview;
+    ThumbExtractor _videoPreview;
     QLabel* _videoLoadingLabel = 0;
     QMovie* _videoLoadingMovie = 0;
     QPoint _currentPosition;

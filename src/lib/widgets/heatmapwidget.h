@@ -25,10 +25,10 @@ protected:
 private:
     void paint();
     QPainter painter;
-    HeatMap m_heatMap;
+    HeatMap m_heatMap = HeatMap();
     qint64 m_duration = 0;
     //QPixmap m_heatMapPixmap;
-    QMap<qint64, int> m_actions;
+    QMap<qint64, int> m_actions = QMap<qint64, int>();
 
     QTimer m_resizeDebounce;
    // QPen m_CurrentPositionPen = QPen(Qt::GlobalColor::cyan, 2, Qt::SolidLine, Qt::RoundCap, Qt::MiterJoin);

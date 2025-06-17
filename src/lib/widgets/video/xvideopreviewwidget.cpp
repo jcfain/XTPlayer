@@ -36,7 +36,7 @@ XVideoPreviewWidget::XVideoPreviewWidget(QWidget* parent) : QFrame(parent)
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::ToolTip);
     setAttribute(Qt::WA_TransparentForMouseEvents );
 
-    connect(&_videoPreview, &XVideoPreview::frameExtracted, this, &XVideoPreviewWidget::on_thumbExtract);
+    connect(&_videoPreview, &ThumbExtractor::frameExtracted, this, &XVideoPreviewWidget::on_thumbExtract);
 }
 
 void XVideoPreviewWidget::setFile(QString path) {
@@ -46,7 +46,7 @@ void XVideoPreviewWidget::setFile(QString path) {
 void XVideoPreviewWidget::preview(QPoint gpos, qint64 time) {
     on_setLoading(true);
     _timeLabel->setText(QTime(0, 0, 0).addMSecs(time).toString(QString::fromLatin1("HH:mm:ss")));
-    _videoPreview.extract(_file, time);
+    _videoPreview.extractDebounce(_file, time);
     _currentPosition = gpos;
     resize(100, 100);
     QPoint finalPos = gpos - QPoint(width()/2, height());
@@ -57,7 +57,7 @@ void XVideoPreviewWidget::preview(QPoint gpos, qint64 time) {
 
 void XVideoPreviewWidget::stop()
 {
-    _videoPreview.stop();
+    // _videoPreview.stop();
 }
 
 void XVideoPreviewWidget::on_thumbExtract(QImage frame) {

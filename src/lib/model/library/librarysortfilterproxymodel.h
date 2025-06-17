@@ -22,7 +22,7 @@ protected:
     bool lessThan(const QModelIndex &left, const QModelIndex &right) const override;
 
 private:
-    LibrarySortMode _sortMode;
+    LibrarySortMode _sortMode = LibrarySortMode::NAME_ASC;
     bool dateInRange(QDate date) const;
     QString m_filterText;
     QStringList m_tags;

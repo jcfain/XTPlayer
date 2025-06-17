@@ -4,6 +4,7 @@
 #include "lib/handler/serialhandler.h"
 #include "lib/handler/funscripthandler.h"
 #include "lib/tool/qsettings_json.h"
+#include "lib/tool/boolinq.h"
 
 #include "addchanneldialog.h"
 #include "channeltablecomboboxdelegate.h"

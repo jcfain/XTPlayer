@@ -123,6 +123,7 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
         return QVariant();
 
     if (index.column() == 0) {
+        // LogHandler::Debug("[LibraryListViewModel::data]");
         auto data =  getData();
         // _mediaLibraryHandler->getLibraryCache()->lockForRead();
 
