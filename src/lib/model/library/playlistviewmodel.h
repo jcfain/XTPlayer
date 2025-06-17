@@ -37,7 +37,7 @@ public:
     QMimeData *mimeData(const QModelIndexList &indexes) const override;
     bool dropMimeData(const QMimeData *mimeData, Qt::DropAction action, int row, int column, const QModelIndex &parent) override;
 protected:
-    QList<LibraryListItem27> getData() const override;
+    const QList<LibraryListItem27>* getData() const override;
 
 private:
     bool _resetThumbSize = false;

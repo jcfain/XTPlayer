@@ -11,7 +11,7 @@ VideoHandler::VideoHandler(PlayerControls* controls, XLibraryList* libraryList, 
     _player = new QMediaPlayer(this);
     m_audioOutput = new QAudioOutput(this);
     _player->setAudioOutput(m_audioOutput);
-    m_audioOutput->setVolume(SettingsHandler::getPlayerVolume());
+    setVolume(SettingsHandler::getPlayerVolume());
     connect(_player, &QMediaPlayer::positionChanged, this, &VideoHandler::on_media_positionChanged, Qt::QueuedConnection);
     connect(_player, &QMediaPlayer::mediaStatusChanged, this, &VideoHandler::on_media_statusChanged, Qt::QueuedConnection);
     connect(_player, &QMediaPlayer::playbackStateChanged, this, &VideoHandler::on_media_stateChanged, Qt::QueuedConnection);
@@ -345,7 +345,19 @@ void VideoHandler::toggleMute()
 
 void VideoHandler::setVolume(int value)
 {
-    m_audioOutput->setVolume(value);
+    float scaled = value;
+    if(value > 0)
+    {
+        scaled = value / 100.0;
+        // TODO: logrithmic scale as per Qt documentation.
+        // auto xmin = 0.01;
+        // auto xmax = 100.0;
+        // auto X0 = 20;
+        // auto X1 = 800;
+        // auto b = (X1 - X0) / log(xmax / xmin) = 780/9.21;
+        // a = 20 - 84.7 * (-4.6)= 410
+    }
+    m_audioOutput->setVolume(scaled);
 }
 void VideoHandler::setRepeat(int max)
 {

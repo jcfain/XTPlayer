@@ -51,7 +51,7 @@ void XVideoPreviewWidget::preview(QPoint gpos, qint64 time) {
     resize(100, 100);
     QPoint finalPos = gpos - QPoint(width()/2, height());
     move(finalPos);
-    LogHandler::Debug("[XVideoPreviewWidget] loadingPos x: " + QString::number(finalPos.x()) + ", y: " + QString::number(finalPos.y()));
+    // LogHandler::Debug("[XVideoPreviewWidget] loadingPos x: " + QString::number(finalPos.x()) + ", y: " + QString::number(finalPos.y()));
     show();
 }
 
@@ -67,7 +67,7 @@ void XVideoPreviewWidget::on_thumbExtract(QImage frame) {
     resize(scaled.width(), scaled.height());
     QPoint finalPos = _currentPosition - QPoint(width()/2, height() + 50);
     move(finalPos);
-    LogHandler::Debug("[XVideoPreviewWidget] previofinalPos x: " + QString::number(finalPos.x()) + ", y: " + QString::number(finalPos.y()));
+    // LogHandler::Debug("[XVideoPreviewWidget] previofinalPos x: " + QString::number(finalPos.x()) + ", y: " + QString::number(finalPos.y()));
     _label->setPixmap(scaled);
     _label->update();
     on_setLoading(false);

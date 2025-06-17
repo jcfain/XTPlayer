@@ -9,7 +9,7 @@ LibraryListViewModel::LibraryListViewModel(MediaLibraryHandler* mediaLibraryHand
     _mediaLibraryHandler = mediaLibraryHandler;
     connect(_mediaLibraryHandler, &MediaLibraryHandler::libraryLoaded, this,  [this]() {
         beginResetModel();
-        m_librarySize = getData().count();
+        m_librarySize = getData()->length();
         QModelIndex topLeft = createIndex(0,0);
         QModelIndex bottomRight = createIndex( m_librarySize, 0);
         emit dataChanged( topLeft, bottomRight );
@@ -17,7 +17,7 @@ LibraryListViewModel::LibraryListViewModel(MediaLibraryHandler* mediaLibraryHand
     } );
     connect(_mediaLibraryHandler, &MediaLibraryHandler::metadataProcessEnd, this,  [this]() {
         beginResetModel();
-        m_librarySize = getData().count();
+        m_librarySize = getData()->length();
         QModelIndex topLeft = createIndex(0,0);
         QModelIndex bottomRight = createIndex( m_librarySize, 0);
         emit dataChanged( topLeft, bottomRight );
@@ -112,8 +112,8 @@ Qt::ItemFlags LibraryListViewModel::flags(const QModelIndex &index) const {
     return defaultFlags;
 }
 
-QList<LibraryListItem27> LibraryListViewModel::getData() const {
-    return _mediaLibraryHandler->getLibraryCache();
+const QList<LibraryListItem27>* LibraryListViewModel::getData() const {
+    return _mediaLibraryHandler->getLibraryCache()->getItems();
 }
 QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
 {
@@ -124,7 +124,9 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
 
     if (index.column() == 0) {
         auto data =  getData();
-        auto item = data.value(index.row());
+        // _mediaLibraryHandler->getLibraryCache()->lockForRead();
+
+        const LibraryListItem27 item = data->value(index.row());
         auto thumbInt = overRideThumbSizeWidth > -1 ? overRideThumbSizeWidth : SettingsHandler::getThumbSize();
         if (role == Qt::DisplayRole)
         {
@@ -195,7 +197,9 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
                         int(Qt::AlignmentFlag::AlignTop | Qt::AlignmentFlag::AlignHCenter) :
                         int(Qt::AlignmentFlag::AlignLeft | Qt::AlignmentFlag::AlignVCenter);
         }
+        // _mediaLibraryHandler->getLibraryCache()->unlock();
     }
+
 
     return QVariant();
 }

@@ -6,8 +6,8 @@ PlaylistViewModel::PlaylistViewModel(MediaLibraryHandler* mediaLibraryHandler, Q
 }
 
 // override protected
-QList<LibraryListItem27> PlaylistViewModel::getData() const {
-    return _data;
+const QList<LibraryListItem27>* PlaylistViewModel::getData() const {
+    return &_data;
 }
 
 QList<LibraryListItem27> PlaylistViewModel::getPopulated() {
