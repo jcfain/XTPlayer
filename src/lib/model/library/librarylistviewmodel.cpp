@@ -124,53 +124,74 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
 
     if (index.column() == 0) {
         // LogHandler::Debug("[LibraryListViewModel::data]");
+        _mediaLibraryHandler->getLibraryCache()->lockForRead();
         auto data =  getData();
-        // _mediaLibraryHandler->getLibraryCache()->lockForRead();
 
         const LibraryListItem27 item = data->value(index.row());
         auto thumbInt = overRideThumbSizeWidth > -1 ? overRideThumbSizeWidth : SettingsHandler::getThumbSize();
         if (role == Qt::DisplayRole)
         {
+            _mediaLibraryHandler->getLibraryCache()->unlock();
             return (item.metadata.isMFS ? "(MFS) " : "") + item.nameNoExtension;
         }
         else if(Qt::DecorationRole == role)
         {
             int scaled = qRound(thumbInt * 0.75);
             QSize thumbSize = {scaled, scaled};
-            if(item.thumbState == ThumbState::Waiting)
+            if(item.thumbState == ThumbState::Waiting) {
+                _mediaLibraryHandler->getLibraryCache()->unlock();
                 return ImageFactory::resizeCache(LOADING_IMAGE, item.ID, thumbSize);
-            else if(item.thumbState == ThumbState::Loading)
+            }
+            else if(item.thumbState == ThumbState::Loading) {
+                _mediaLibraryHandler->getLibraryCache()->unlock();
                 return ImageFactory::resizeCache(LOADING_CURRENT_IMAGE, item.ID, thumbSize);
-            else if(item.thumbState == ThumbState::Error)
+            }
+            else if(item.thumbState == ThumbState::Error) {
+                _mediaLibraryHandler->getLibraryCache()->unlock();
                 return ImageFactory::resizeCache(ERROR_IMAGE, item.ID, thumbSize);
-            else if(item.thumbState == ThumbState::Unknown)
+            }
+            else if(item.thumbState == ThumbState::Unknown) {
+                _mediaLibraryHandler->getLibraryCache()->unlock();
                 return ImageFactory::resizeCache(UNKNOWN_IMAGE, item.ID, thumbSize);
+            }
+            _mediaLibraryHandler->getLibraryCache()->unlock();
             return ImageFactory::resizeCache(item.thumbFile, item.ID, thumbSize);
         }
         else if(role == Qt::UserRole)
         {
+            _mediaLibraryHandler->getLibraryCache()->unlock();
             return QVariant::fromValue(item);
         }
         else if (role == Qt::ToolTipRole)
         {
+            _mediaLibraryHandler->getLibraryCache()->unlock();
             return item.metadata.toolTip;
         }
         else if (role == Qt::ForegroundRole)
         {
             if(item.type != LibraryListItemType::PlaylistInternal)
             {
-                if(item.error)
+                if(item.error) {
+                    _mediaLibraryHandler->getLibraryCache()->unlock();
                     return QColor(Qt::GlobalColor::red);
-                if (!item.hasScript && item.metadata.isMFS)
+                }
+                if (!item.hasScript && item.metadata.isMFS) {
+                    _mediaLibraryHandler->getLibraryCache()->unlock();
                     return QColor(Qt::GlobalColor::cyan);
-                if (!item.hasScript)
+                }
+                if (!item.hasScript) {
+                    _mediaLibraryHandler->getLibraryCache()->unlock();
                     return QColor(Qt::gray);
-                if(item.metadata.isMFS)
+                }
+                if(item.metadata.isMFS) {
+                    _mediaLibraryHandler->getLibraryCache()->unlock();
                     return QColor(Qt::green);
+                }
             }
         }
         else if (role == Qt::BackgroundRole)
         {
+            _mediaLibraryHandler->getLibraryCache()->unlock();
             return QColor(Qt::transparent);
         }
         else if (role == Qt::FontRole)
@@ -182,6 +203,8 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
                 font.setPointSizeF((thumbInt * 0.25) * 0.25);
             else
                 font.setPointSizeF((thumbInt * 0.25) * 0.35);
+
+            _mediaLibraryHandler->getLibraryCache()->unlock();
             return font;
         }
         else if (role == Qt::SizeHintRole)
@@ -189,16 +212,18 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
             if(_libraryViewMode == LibraryView::Thumb) {
                 int scaled  = qRound(thumbInt * 0.25) +thumbInt;
                 QSize thumbSizeHint = {scaled, scaled};
+                _mediaLibraryHandler->getLibraryCache()->unlock();
                 return thumbSizeHint;
             }
         }
         else if (role == Qt::TextAlignmentRole)
         {
+            _mediaLibraryHandler->getLibraryCache()->unlock();
             return _libraryViewMode == LibraryView::Thumb ?
                         int(Qt::AlignmentFlag::AlignTop | Qt::AlignmentFlag::AlignHCenter) :
                         int(Qt::AlignmentFlag::AlignLeft | Qt::AlignmentFlag::AlignVCenter);
         }
-        // _mediaLibraryHandler->getLibraryCache()->unlock();
+        _mediaLibraryHandler->getLibraryCache()->unlock();
     }
 
 
