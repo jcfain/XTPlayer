@@ -98,12 +98,6 @@ HEADERS += \
     lib/widgets/video/playercontrols.h \
     lib/widgets/rangeslider.h \
 
-equals(QT_MAJOR_VERSION, 5) {
-HEADERS += \
-    lib/widgets/video/videohandlerQt5.h
-SOURCES += \
-    lib/widgets/video/videohandlerQt5.cpp
-}
 equals(QT_MAJOR_VERSION, 6) {
 HEADERS += \
     lib/widgets/video/videohandler.h
