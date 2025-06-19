@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
             QStringList exclusions = SettingsHandler::getLibraryExclusions();
             if(exclusions.contains(targetDir)) {
                 LogHandler::Info("Removing excluded folder..");
-                QList<int> toRemove = QList<int> {exclusions.indexOf(targetDir)};
+                QList<int> toRemove = QList<int> {(int)exclusions.indexOf(targetDir)};
                 SettingsHandler::removeFromLibraryExclusions(toRemove);
                 SettingsHandler::Save();
                 LogHandler::Info("Success!");
