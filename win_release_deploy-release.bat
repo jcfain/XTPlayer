@@ -1,8 +1,8 @@
 @echo off
 
 SET QtDir=C:\Qt\6.9.1\mingw_64\bin\
-SET buildDir=.\build-release\
-SET engineBuildDir=..\XTEngine\build-release\
+SET buildDir=.\build-release\release
+SET engineBuildDir=..\XTEngine\build-release\release
 SET deployDir=.\bin\release\
 SET deployZipDir=.\bin\
 SET stagingDirectory=.\bin\latest
@@ -15,11 +15,11 @@ rem SET zlibDll=..\zlib-1.3.1\build\Desktop_Qt_5_15_2_MinGW_64_bit-Release\libzl
 SET /P version=Enter a version (example: 0.5b):
 IF NOT DEFINED version SET "version=UNKNOWN"
 
-%QtDir%windeployqt %buildDir%release\XTPlayer.exe -dir %deployDir%
-%QtDir%windeployqt %engineBuildDir%release\XTEngine.dll -dir %deployDir%
-xcopy %buildDir%release\XTPlayer.exe %deployDir% /s /i  /K /D /H /Y
-xcopy %engineBuildDir%release\XTEngine.dll %deployDir%/s /i  /K /D /H /Y
-xcopy %buildDir%release\themes %deployDir%themes /s /i /K /D /H /Y
+%QtDir%windeployqt %buildDir%\XTPlayer.exe -dir %deployDir%
+%QtDir%windeployqt %engineBuildDir%\XTEngine.dll -dir %deployDir%
+xcopy %buildDir%\XTPlayer.exe %deployDir% /s /i  /K /D /H /Y
+xcopy %engineBuildDir%\XTEngine.dll %deployDir%/s /i  /K /D /H /Y
+xcopy %buildDir%\themes %deployDir%themes /s /i /K /D /H /Y
 rem xcopy %zlibDll% %deployDir% /s /i /K /D /H /Y
 rem xcopy %httpServerDll% %deployDir% /s /i /K /D /H /Y
 rem xcopy %QtDir%Qt5OpenGL.dll %deployDir% /s /i /K /D /H /Y

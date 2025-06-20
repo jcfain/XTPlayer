@@ -157,9 +157,9 @@ void DialogHandler::ShowAboutDialog(QWidget* parent, QString XTPVersion, QString
                    "Distributed under the terms of LGPLv3 or later.<br>"
                    "Source: <a href='https://github.com/qt/qt5/releases/tag/v5.15.2'>https://github.com/qt/qt5/releases/tag/v5.15.2</a>");
 #else
-    qtInfo.setText("<b>Qt v6.9.0</b><br>"
+    qtInfo.setText("<b>Qt v6.9.1</b><br>"
                    "Distributed under the terms of LGPLv3 or later.<br>"
-                   "Source: <a href='https://github.com/qt/qt5/releases/tag/v6.9.0'>https://github.com/qt/qt5/releases/tag/v6.9.0</a>");
+                   "Source: <a href='https://github.com/qt/qt5/releases/tag/v6.9.0'>https://github.com/qt/qt5/releases/tag/v6.9.1</a>");
 #endif
     qtInfo.setAlignment(Qt::AlignHCenter);
     layout.addWidget(&qtInfo);
