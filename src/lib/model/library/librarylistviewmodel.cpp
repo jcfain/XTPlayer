@@ -112,6 +112,11 @@ Qt::ItemFlags LibraryListViewModel::flags(const QModelIndex &index) const {
     return defaultFlags;
 }
 
+int LibraryListViewModel::getThumbInt() const
+{
+    return overRideThumbSizeWidth > -1 ? overRideThumbSizeWidth : SettingsHandler::getThumbSize();
+}
+
 const QList<LibraryListItem27>* LibraryListViewModel::getData() const {
     return _mediaLibraryHandler->getLibraryCache()->getItems();
 }
@@ -128,15 +133,15 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
         auto data =  getData();
 
         const LibraryListItem27 item = data->value(index.row());
-        auto thumbInt = overRideThumbSizeWidth > -1 ? overRideThumbSizeWidth : SettingsHandler::getThumbSize();
         if (role == Qt::DisplayRole)
         {
+            QString displayText = (item.metadata.isMFS ? "(MFS) " : "") + item.nameNoExtension;
             _mediaLibraryHandler->getLibraryCache()->unlock();
-            return (item.metadata.isMFS ? "(MFS) " : "") + item.nameNoExtension;
+            return displayText;
         }
         else if(Qt::DecorationRole == role)
         {
-            int scaled = qRound(thumbInt * 0.75);
+            int scaled = qRound(getThumbInt() * 0.75);
             QSize thumbSize = {scaled, scaled};
             if(item.thumbState == ThumbState::Waiting) {
                 _mediaLibraryHandler->getLibraryCache()->unlock();
@@ -159,13 +164,18 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
         }
         else if(role == Qt::UserRole)
         {
+            auto variant = QVariant::fromValue(item);
             _mediaLibraryHandler->getLibraryCache()->unlock();
-            return QVariant::fromValue(item);
+            return variant;
         }
         else if (role == Qt::ToolTipRole)
         {
+            QString tooltip = item.metadata.toolTip;
+            if(!item.metadata.thumbExtractError.isEmpty()) {
+                tooltip +=  "\n" +item.metadata.thumbExtractError;
+            }
             _mediaLibraryHandler->getLibraryCache()->unlock();
-            return item.metadata.toolTip;
+            return tooltip;
         }
         else if (role == Qt::ForegroundRole)
         {
@@ -200,9 +210,9 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
             if(item.metadata.isMFS)
                 font.setBold(true);
             if(_libraryViewMode == LibraryView::Thumb)
-                font.setPointSizeF((thumbInt * 0.25) * 0.25);
+                font.setPointSizeF((getThumbInt() * 0.25) * 0.25);
             else
-                font.setPointSizeF((thumbInt * 0.25) * 0.35);
+                font.setPointSizeF((getThumbInt() * 0.25) * 0.35);
 
             _mediaLibraryHandler->getLibraryCache()->unlock();
             return font;
@@ -210,6 +220,7 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
         else if (role == Qt::SizeHintRole)
         {
             if(_libraryViewMode == LibraryView::Thumb) {
+                auto thumbInt = getThumbInt();
                 int scaled  = qRound(thumbInt * 0.25) +thumbInt;
                 QSize thumbSizeHint = {scaled, scaled};
                 _mediaLibraryHandler->getLibraryCache()->unlock();

@@ -54,6 +54,8 @@ private:
     LibraryView _libraryViewMode;
     LibrarySortMode _sortMode;
 
+    int getThumbInt() const;
+
 
 };
 

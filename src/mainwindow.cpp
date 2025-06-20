@@ -921,13 +921,16 @@ void MainWindow::setupTagsPopup()
 void MainWindow::setLoadingStatus(QString message, float percentage)
 {
     if(percentage > -1) {
+        auto format = message +": "+QString::number(percentage) + "%";
+//        LogHandler::Debug("[MainWindow::setLoadingStatus] " + format);
         if(backgroundProcessingStatusProgress->isHidden())
             backgroundProcessingStatusProgress->show();
         // backgroundProcessingStatusLabel->setText(message +": "+percentageString + "%");
         backgroundProcessingStatusLabel->setText("");
         backgroundProcessingStatusProgress->setValue(percentage);
-        backgroundProcessingStatusProgress->setFormat(message +": "+QString::number(percentage) + "%");
+        backgroundProcessingStatusProgress->setFormat(format);
     } else {
+        LogHandler::Debug("[MainWindow::setLoadingStatus] end");
         backgroundProcessingStatusProgress->hide();
         backgroundProcessingStatusLabel->setText(message);
     }
@@ -2871,7 +2874,8 @@ void MainWindow::loadPlaylistIntoLibrary(QString playlistName, bool autoPlay)
     {
             if(isLibraryLoading())
             {
-                m_xtengine->mediaLibraryHandler()->stopLibraryLoading();
+                DialogHandler::MessageBox(this, "Please wait for the library to finish processing...", XLogLevel::Warning);
+                return;
             }
             toggleLibraryLoading(true);
             onLibraryLoadingStatusChange("Loading playlist...");

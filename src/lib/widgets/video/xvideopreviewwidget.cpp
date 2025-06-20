@@ -57,7 +57,7 @@ void XVideoPreviewWidget::preview(QPoint gpos, qint64 time) {
 
 void XVideoPreviewWidget::stop()
 {
-    // _videoPreview.stop();
+     _videoPreview.reset();
 }
 
 void XVideoPreviewWidget::on_thumbExtract(QImage frame) {
