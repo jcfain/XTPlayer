@@ -26,7 +26,7 @@ XTPlayer is a cross platform TCode media player.
           *  QT Creator Community Open source edition: https://www.qt.io/download 
              During installation, make sure to get Qt 6.9.1. with the aditional libraries: HTTP Server, Serial port, Speech, Connectivity, MultiMedia, Wayland(Linux) and WebSockets.
      2. Required libraries needed:
-          * [https://github.com/nezticle/qtcompress](https://github.com/pumphaus/qtgamepadlegacy)
+          * https://github.com/pumphaus/qtgamepadlegacy
                * I usually open the CMakeLists.txt in Qt creator and build them copy the folders ./bin, ./include etc to the Qt directory of the same names. (There is probably a better way to do this)
       You may need to check the XTEngine.pro and XTPlayer.pro build files for specific library directories. See the win32 section for windows.
       If you have trouble building these I added a couple files in the "dependencies" directory of this repo for reminders.
