@@ -478,7 +478,7 @@ void VideoHandler::hideControls()
     if (m_controls &&_isFullScreen)
     {
         m_controls->hide();
-        if(m_libraryListFrame->isHidden())
+        if(m_libraryListFrame && m_libraryListFrame->isHidden())
             qApp->setOverrideCursor(Qt::BlankCursor);
     }
 }
@@ -497,7 +497,7 @@ void VideoHandler::hideLibrary()
     {
         if(m_libraryListFrame)
             m_libraryListFrame->hide();
-        if(m_controls->isHidden())
+        if(m_controls && m_controls->isHidden())
             qApp->setOverrideCursor(Qt::BlankCursor);
     }
 }
