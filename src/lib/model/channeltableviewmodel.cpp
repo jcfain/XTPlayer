@@ -75,7 +75,7 @@ QVariant ChannelTableViewModel::data(const QModelIndex& index, int role) const
         if (index.column() == 0)
             return channel->FriendlyName;
         else if (index.column() == 1)
-            return channel->AxisName;
+            return channel->ChannelName;
         else if (index.column() == 2)
             return channel->Channel;
         else if (index.column() == 3)
@@ -89,7 +89,7 @@ QVariant ChannelTableViewModel::data(const QModelIndex& index, int role) const
         else if (index.column() == 7)
             return (int)channel->Type;
         else if (index.column() == 8)
-            return channel->TrackName;
+            return channel->trackName;
       }
       case Qt::FontRole:
           break;
@@ -127,7 +127,7 @@ bool ChannelTableViewModel::setData(const QModelIndex &index, const QVariant &va
         }
         else if (index.column() == 1)
         {
-            channel->AxisName = value.toString();
+            channel->ChannelName = value.toString();
             //SettingsHandler::setAxis(key, valueModel);
         }
         else if (index.column() == 2)
@@ -162,7 +162,7 @@ bool ChannelTableViewModel::setData(const QModelIndex &index, const QVariant &va
         }
         else if (index.column() == 8)
         {
-            channel->TrackName = value.toString();
+            channel->trackName = value.toString();
             //SettingsHandler::setAxis(key, valueModel);
         }
         //setMap(_map);

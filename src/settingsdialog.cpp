@@ -735,28 +735,28 @@ void SettingsDialog::setUpTCodeChannelUI()
         int userMid = axis->UserMid;
         int userMax = axis->UserMax;
         QLabel* rangeMinLabel = new QLabel(QString::number(userMin), ui.rangeLimitGroupbox);
-        rangeMinLabel->setObjectName(axis->AxisName+"RangeMinLabel");
+        rangeMinLabel->setObjectName(axis->ChannelName+"RangeMinLabel");
         rangeMinLabel->setFont(font);
         rangeMinLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
         rangeGrid->addWidget(rangeMinLabel, sliderGridRow, 0);
         rangeMinLabels.insert(channelName, rangeMinLabel);
 
         QLabel* rangeLabel = new QLabel(axis->FriendlyName + " mid: " + QString::number(userMid), ui.rangeLimitGroupbox);
-        rangeLabel->setObjectName(axis->AxisName+"RangeLabel");
+        rangeLabel->setObjectName(axis->ChannelName+"RangeLabel");
         rangeLabel->setFont(font);
         rangeLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         rangeGrid->addWidget(rangeLabel, sliderGridRow, 1, 1, 2, Qt::AlignHCenter | Qt::AlignVCenter);
         rangeLabels.insert(channelName, rangeLabel);
 
         QLabel* rangeMaxLabel = new QLabel(QString::number(userMax), ui.rangeLimitGroupbox);
-        rangeMaxLabel->setObjectName(axis->AxisName+"RangeMaxLabel");
+        rangeMaxLabel->setObjectName(axis->ChannelName+"RangeMaxLabel");
         rangeMaxLabel->setFont(font);
         rangeMaxLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
         rangeGrid->addWidget(rangeMaxLabel, sliderGridRow, 3);
         rangeMaxLabels.insert(channelName, rangeMaxLabel);
 
         RangeSlider* axisRangeSlider = new RangeSlider(Qt::Horizontal, RangeSlider::Option::DoubleHandles, ui.rangeLimitGroupbox);
-        axisRangeSlider->setObjectName(axis->AxisName+"RangeSlider");
+        axisRangeSlider->setObjectName(axis->ChannelName+"RangeSlider");
         axisRangeSlider->SetRange(axis->Min, axis->Max);
         axisRangeSlider->setLowerValue(userMin);
         axisRangeSlider->setUpperValue(userMax);
@@ -768,7 +768,7 @@ void SettingsDialog::setUpTCodeChannelUI()
         sliderGridRow++;
 
         QProgressBar* funscriptProgressbar = new QProgressBar(ui.rangeLimitGroupbox);
-        funscriptProgressbar->setObjectName(axis->AxisName+"FunscriptStatus");
+        funscriptProgressbar->setObjectName(axis->ChannelName+"FunscriptStatus");
         funscriptProgressbar->setMinimum(0);
         funscriptProgressbar->setMaximum(100);
         funscriptProgressbar->setMaximumHeight(5);
@@ -829,7 +829,7 @@ void SettingsDialog::setUpTCodeChannelUI()
         foreach(auto axis, tcodeChannels.keys())
         {
             auto channel =  TCodeChannelLookup::getChannel(TCodeChannelLookup::ToString(axis));
-            if(channel == nullptr || channel->AxisName == channelName || channel->Type == ChannelType::HalfOscillate)
+            if(channel == nullptr || channel->ChannelName == channelName || channel->Type == ChannelType::HalfOscillate)
                  continue;
             QVariant variant;
             variant.setValue(*channel);
@@ -841,7 +841,7 @@ void SettingsDialog::setUpTCodeChannelUI()
                    {
                         auto relatedChannel = linkToAxisCombobox->currentData().value<ChannelModel33>();
                         linkCheckbox->setToolTip("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS (Multi-funscript) " + relatedChannel.FriendlyName + " funscript value.\nIf there is no " + relatedChannel.FriendlyName + " funscript then it will default to random motion.");
-                        SettingsHandler::setLinkToRelatedAxis(channelName, relatedChannel.AxisName);
+                        SettingsHandler::setLinkToRelatedAxis(channelName, relatedChannel.ChannelName);
                    });
 
 

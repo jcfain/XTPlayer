@@ -88,7 +88,7 @@ ChannelModel33 AddChannelDialog::getNewChannel(QWidget *parent, bool *ok)
             isValid = false;
             DialogHandler::MessageBox(parent, "Modifier (+/-) required for half range types!", XLogLevel::Critical);
         }
-        channelModel.AxisName = dialog->channelName->text() + modifier;
+        channelModel.ChannelName = dialog->channelName->text() + modifier;
         channelModel.Type = ChannelTypes[dialog->type->currentText()];
         channelModel.Dimension = ChannelDimensions[dialog->dimension->currentText()];
         channelModel.Min = 0;
@@ -104,13 +104,13 @@ ChannelModel33 AddChannelDialog::getNewChannel(QWidget *parent, bool *ok)
         channelModel.MultiplierEnabled = false;
         channelModel.LinkToRelatedMFS = false;
         channelModel.RelatedChannel = TCodeChannelLookup::Stroke();
-        channelModel.TrackName = dialog->trackName->text();
-        if(TCodeChannelLookup::hasChannel(channelModel.AxisName))
+        channelModel.trackName = dialog->trackName->text();
+        if(TCodeChannelLookup::hasChannel(channelModel.ChannelName))
         {
             isValid = false;
-            DialogHandler::MessageBox(parent, channelModel.AxisName + " already exists!", XLogLevel::Critical);
+            DialogHandler::MessageBox(parent, channelModel.ChannelName + " already exists!", XLogLevel::Critical);
         }
-        if(channelModel.AxisName.isEmpty())
+        if(channelModel.ChannelName.isEmpty())
         {
             isValid = false;
             DialogHandler::MessageBox(parent, "Axis name is required!", XLogLevel::Critical);

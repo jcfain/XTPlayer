@@ -439,14 +439,12 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     });
     connect(m_xtengine->syncHandler(), &SyncHandler::funscriptLoaded, this, [this](QString funscriptPath) {
         // Generate first load moneyshot based off heatmap if not already set.
-        auto funscriptHandler = m_xtengine->syncHandler()->getFunscriptHandler();
-        if(funscriptHandler)
+        auto funscript = m_xtengine->syncHandler()->getFunscript();
+        if(funscript)
         {
-            auto funscript = funscriptHandler->currentFunscript();
-            if(funscript) {
-                _playerControlsFrame->setActions(funscript->actions);
-            }
-        } else
+            _playerControlsFrame->setActions(funscript->actions);
+        }
+        else
             _playerControlsFrame->clearActions();
     });
 

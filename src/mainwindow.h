@@ -32,7 +32,7 @@
 #include "lib/struct/LibraryListItem27.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/ConnectionChangedSignal.h"
-#include "lib/lookup/AxisNames.h"
+#include "lib/lookup/Track.h"
 #include "lib/tool/xmath.h"
 #include "lib/lookup/enum.h"
 #include "lib/lookup/MediaActions.h"
