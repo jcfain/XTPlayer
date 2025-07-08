@@ -135,7 +135,7 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
         const LibraryListItem27 item = data->value(index.row());
         if (role == Qt::DisplayRole)
         {
-            QString displayText = (item.metadata.isMFS ? "(MFS) " : "") + item.nameNoExtension;
+            QString displayText = (item.metadata.isSFMA && item.metadata.isMFS ? "(SFMA) (MFS) " : item.metadata.isSFMA ? "(SFMA) " : item.metadata.isMFS ? "(MFS) " : "") + item.nameNoExtension;
             _mediaLibraryHandler->getLibraryCache()->unlock();
             return displayText;
         }
@@ -193,6 +193,10 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
                     _mediaLibraryHandler->getLibraryCache()->unlock();
                     return QColor(Qt::gray);
                 }
+                if(item.metadata.isSFMA) {
+                    _mediaLibraryHandler->getLibraryCache()->unlock();
+                    return QColor(Qt::GlobalColor::yellow);
+                }
                 if(item.metadata.isMFS) {
                     _mediaLibraryHandler->getLibraryCache()->unlock();
                     return QColor(Qt::green);
@@ -207,7 +211,7 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
         else if (role == Qt::FontRole)
         {
             QFont font;
-            if(item.metadata.isMFS)
+            if(item.metadata.isMFS || item.metadata.isSFMA)
                 font.setBold(true);
             if(_libraryViewMode == LibraryView::Thumb)
                 font.setPointSizeF((getThumbInt() * 0.25) * 0.25);
