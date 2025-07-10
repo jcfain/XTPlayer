@@ -436,7 +436,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
         auto item = XMediaStateHandler::getPlaying();
         if(item)
             processMetaData(*item);
-    });
+    }, Qt::QueuedConnection);
     connect(m_xtengine->syncHandler(), &SyncHandler::funscriptLoaded, this, [this](QString funscriptPath) {
         // Generate first load moneyshot based off heatmap if not already set.
         auto funscript = m_xtengine->syncHandler()->getFunscript();

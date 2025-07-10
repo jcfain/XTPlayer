@@ -829,7 +829,9 @@ void SettingsDialog::setUpTCodeChannelUI()
         foreach(auto axis, tcodeChannels.keys())
         {
             auto channel =  TCodeChannelLookup::getChannel(TCodeChannelLookup::ToString(axis));
-            if(channel == nullptr || channel->ChannelName == channelName || channel->Type == ChannelType::HalfOscillate)
+            if(channel == nullptr || channel->ChannelName == channelName || channel->track == Track::None
+                //|| channel->Type == ChannelType::HalfOscillate
+                )
                  continue;
             QVariant variant;
             variant.setValue(*channel);

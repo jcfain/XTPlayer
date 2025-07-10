@@ -135,7 +135,7 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
         const LibraryListItem27 item = data->value(index.row());
         if (role == Qt::DisplayRole)
         {
-            QString displayText = (item.metadata.isSFMA && item.metadata.isMFS ? "(SFMA) (MFS) " : item.metadata.isSFMA ? "(SFMA) " : item.metadata.isMFS ? "(MFS) " : "") + item.nameNoExtension;
+            QString displayText = (item.metadata.isSFMA && item.metadata.isMFS ? "(SFMA/MFS) " : item.metadata.isSFMA ? "(SFMA) " : item.metadata.isMFS ? "(MFS) " : "") + item.nameNoExtension;
             _mediaLibraryHandler->getLibraryCache()->unlock();
             return displayText;
         }

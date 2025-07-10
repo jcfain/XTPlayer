@@ -25,7 +25,7 @@ protected:
 private:
     void paint();
     QPainter painter;
-    HeatMap m_heatMap = HeatMap();
+    HeatMap m_heatMap;
     qint64 m_duration = 0;
     //QPixmap m_heatMapPixmap;
     QMap<qint64, int> m_actions = QMap<qint64, int>();
