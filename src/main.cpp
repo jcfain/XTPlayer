@@ -379,7 +379,7 @@ int main(int argc, char *argv[])
 
     if(parser.isSet(deviceComOption)) {
         LogHandler::Info("Setting tcode device com");
-        SettingsHandler::setSelectedInputDevice(DeviceName::Serial);
+        SettingsHandler::setSelectedInputConnection(ConnectionInterface::Serial);
         SettingsHandler::Save();
         LogHandler::Info("Success!");
         delete xtengine;
@@ -389,7 +389,7 @@ int main(int argc, char *argv[])
 
     if(parser.isSet(deviceNetworkOption)) {
         LogHandler::Info("Setting tcode device network");
-        SettingsHandler::setSelectedInputDevice(DeviceName::Network);
+        SettingsHandler::setSelectedInputConnection(ConnectionInterface::Network);
         SettingsHandler::Save();
         LogHandler::Info("Success!");
         delete xtengine;

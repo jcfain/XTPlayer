@@ -1,6 +1,6 @@
 #include "inputmapwidget.h"
 
-#include "lib/struct/OutputDevicePacket.h"
+#include "lib/struct/OutputConnectionPacket.h"
 
 InputMapWidget::InputMapWidget(ConnectionHandler* connectionHandler, QWidget *parent)
     : QWidget{parent}
@@ -455,10 +455,10 @@ void InputMapWidget::listenForKeyboardInput(QString action, QString actionName) 
 
 void InputMapWidget::listenForTCodeCommandInput(QString action, QString actionName)
 {
-    auto outputDevice = _connectionHandler->getSelectedOutputDevice();
+    auto outputDevice = _connectionHandler->getSelectedOutputConnection();
     QCheckBox* onReleaseChackbox = new QCheckBox();
     if(outputDevice && outputDevice->isConnected()) {
-        connect(outputDevice, &OutputDeviceHandler::commandRecieve, this, [this, action, actionName, onReleaseChackbox](OutputDevicePacket commandInput) {
+        connect(outputDevice, &OutputConnectionHandler::commandRecieve, this, [this, action, actionName, onReleaseChackbox](OutputConnectionPacket commandInput) {
             bool onRelease = onReleaseChackbox->isChecked();
             if(commandInput.original.isEmpty() ||
                 (commandInput.type == OutputDeviceCommandType::BUTTON &&
@@ -503,7 +503,7 @@ void InputMapWidget::listenForTCodeCommandInput(QString action, QString actionNa
     QFormLayout m_tcodeCommandSelectionLayout;
     m_tcodeCommandSelectionLayout.addRow("On release", onReleaseChackbox);
     if(DialogHandler::Dialog(this, &m_tcodeCommandSelectionLayout, true, false) == QDialog::DialogCode::Rejected) {
-        disconnect(outputDevice, &OutputDeviceHandler::commandRecieve, this, nullptr);
+        disconnect(outputDevice, &OutputConnectionHandler::commandRecieve, this, nullptr);
         delete onReleaseChackbox;
     }
     // Use dropdown interface. Undecided yet

@@ -61,8 +61,8 @@ signals:
     void disableHeatmapToggled(bool disabled);
 
 public slots:
-    void on_xtpWeb_initInputDevice(DeviceName deviceName, bool checked);
-    void on_xtpWeb_initOutputDevice(DeviceName deviceName, bool checked);
+    void on_xtpWeb_initInputDevice(ConnectionInterface deviceName, bool checked);
+    void on_xtpWeb_initOutputDevice(ConnectionInterface deviceName, bool checked);
     void on_gamepad_connectionChanged(ConnectionChangedSignal event);
     void on_input_device_connectionChanged(ConnectionChangedSignal event);
     void on_output_device_connectionChanged(ConnectionChangedSignal event);
@@ -289,7 +289,7 @@ private:
     void initInputDevice();
     void setupUi();
     void setupGamepadMap();
-    void enableOrDisableDeviceConnectionUI(DeviceName deviceName);
+    void enableOrDisableDeviceConnectionUI(ConnectionInterface deviceName);
     void updateIPAddress();
     void askHowToResetChannelProfileDefaults();
 
@@ -321,7 +321,7 @@ private:
     bool _hasVideoPlayed = false;
     bool _requiresRestart = false;
 
-    void setDeviceStatusStyle(ConnectionStatus status, DeviceName deviceName, QString message = "");
+    void setDeviceStatusStyle(ConnectionStatus status, ConnectionInterface deviceName, QString message = "");
 
 signals:
     void loadingDialogClose();

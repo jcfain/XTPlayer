@@ -198,20 +198,20 @@ void SettingsDialog::setupUi()
 {
 
     loadSerialPorts();
-    setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceName::Serial);
-    setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceName::Network);
-    setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceName::HereSphere);
-    setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceName::Whirligig);
-    setDeviceStatusStyle(ConnectionStatus::Disconnected, DeviceName::Gamepad);
-    if(SettingsHandler::getSelectedOutputDevice() == DeviceName::Serial)
+    setDeviceStatusStyle(ConnectionStatus::Disconnected, ConnectionInterface::Serial);
+    setDeviceStatusStyle(ConnectionStatus::Disconnected, ConnectionInterface::Network);
+    setDeviceStatusStyle(ConnectionStatus::Disconnected, ConnectionInterface::HereSphere);
+    setDeviceStatusStyle(ConnectionStatus::Disconnected, ConnectionInterface::Whirligig);
+    setDeviceStatusStyle(ConnectionStatus::Disconnected, ConnectionInterface::Gamepad);
+    if(SettingsHandler::getSelectedOutputDevice() == ConnectionInterface::Serial)
     {
         ui.serialOutputRdo->setChecked(true);
     }
-    else if (SettingsHandler::getSelectedOutputDevice() == DeviceName::Network)
+    else if (SettingsHandler::getSelectedOutputDevice() == ConnectionInterface::Network)
     {
         ui.networkOutputRdo->setChecked(true);
     }
-    else if (SettingsHandler::getSelectedOutputDevice() == DeviceName::BLE)
+    else if (SettingsHandler::getSelectedOutputDevice() == ConnectionInterface::BLE)
     {
         ui.bleOutputRdo->setChecked(true);
     }
@@ -283,12 +283,12 @@ void SettingsDialog::setupUi()
         setUpTCodeChannelProfiles();
         setUpTCodeChannelUI();
 
-        ui.useWebSocketsCheckbox->setChecked(SettingsHandler::getSelectedNetworkDevice() == NetworkProtocol::WEBSOCKET);
+        ui.useWebSocketsCheckbox->setChecked(SettingsHandler::getSelectedNetworkProtocol() == NetworkProtocol::WEBSOCKET);
 
         enableOrDisableDeviceConnectionUI(SettingsHandler::getSelectedOutputDevice());
-        bool deoEnabled = SettingsHandler::getSelectedInputDevice() == DeviceName::HereSphere;
-        bool whiriligigEnabled = SettingsHandler::getSelectedInputDevice() == DeviceName::Whirligig;
-        bool xtpWebEnabled = SettingsHandler::getSelectedInputDevice() == DeviceName::XTPWeb;
+        bool deoEnabled = SettingsHandler::getSelectedInputDevice() == ConnectionInterface::HereSphere;
+        bool whiriligigEnabled = SettingsHandler::getSelectedInputDevice() == ConnectionInterface::Whirligig;
+        bool xtpWebEnabled = SettingsHandler::getSelectedInputDevice() == ConnectionInterface::XTPWeb;
         if(deoEnabled)
         {
             ui.deoCheckbox->setChecked(deoEnabled);
@@ -1072,25 +1072,25 @@ void SettingsDialog::lubeAmount_valueChanged(int value)
     SettingsHandler::setLubePulseAmount(value);
 }
 
-void SettingsDialog::on_xtpWeb_initInputDevice(DeviceName deviceName, bool checked)
+void SettingsDialog::on_xtpWeb_initInputDevice(ConnectionInterface deviceName, bool checked)
 {
-    if(deviceName == DeviceName::HereSphere) {
+    if(deviceName == ConnectionInterface::HereSphere) {
         ui.deoAddressTxt->setText(SettingsHandler::getDeoAddress());
         ui.deoPortTxt->setText(SettingsHandler::getDeoPort());
         ui.deoCheckbox->setChecked(checked);
         on_deoCheckbox_clicked(checked);
         on_deoConnectButton_clicked();
-    } else if(deviceName == DeviceName::Whirligig) {
+    } else if(deviceName == ConnectionInterface::Whirligig) {
         ui.whirligigCheckBox->setChecked(checked);
         on_whirligigCheckBox_clicked(checked);
         on_whirligigConnectButton_clicked();
-    } else if(deviceName == DeviceName::XTPWeb) {
+    } else if(deviceName == ConnectionInterface::XTPWeb) {
         ui.xtpWebHandlerCheckbox->setChecked(checked);
         on_xtpWebHandlerCheckbox_clicked(checked);
-    } else if(deviceName == DeviceName::Gamepad) {
+    } else if(deviceName == ConnectionInterface::Gamepad) {
         ui.gamePadCheckbox->setChecked(checked);
         on_gamePadCheckbox_clicked(checked);
-    } else if(deviceName == DeviceName::None) {
+    } else if(deviceName == ConnectionInterface::None) {
         ui.xtpWebHandlerCheckbox->setChecked(false);
         on_xtpWebHandlerCheckbox_clicked(false);
         ui.whirligigCheckBox->setChecked(false);
@@ -1100,24 +1100,24 @@ void SettingsDialog::on_xtpWeb_initInputDevice(DeviceName deviceName, bool check
     }
 }
 
-void SettingsDialog::on_xtpWeb_initOutputDevice(DeviceName deviceName, bool checked)
+void SettingsDialog::on_xtpWeb_initOutputDevice(ConnectionInterface deviceName, bool checked)
 {
-    if(deviceName == DeviceName::Serial) {
+    if(deviceName == ConnectionInterface::Serial) {
         ui.SerialOutputCmb->setCurrentText(SettingsHandler::getSerialPort());
         ui.serialOutputRdo->setChecked(checked);
         on_serialOutputRdo_clicked();
         on_serialConnectButton_clicked();
-    } else if(deviceName == DeviceName::Network) {
+    } else if(deviceName == ConnectionInterface::Network) {
         ui.networkAddressTxt->setText(SettingsHandler::getServerAddress());
         ui.networkPortTxt->setText(SettingsHandler::getServerPort());
         ui.networkOutputRdo->setChecked(checked);
         on_networkOutputRdo_clicked();
         ui.networkConnectButton->setEnabled(false);
-    } else if(deviceName == DeviceName::BLE) {
+    } else if(deviceName == ConnectionInterface::BLE) {
         ui.bleOutputRdo->setChecked(checked);
         on_bleConnectButton_clicked();
         ui.bleConnectButton->setEnabled(false);
-    } else if(deviceName == DeviceName::None) {
+    } else if(deviceName == ConnectionInterface::None) {
         ui.serialOutputRdo->setChecked(false);
         ui.networkOutputRdo->setChecked(false);
         ui.bleOutputRdo->setChecked(false);
@@ -1128,7 +1128,7 @@ void SettingsDialog::loadSerialPorts()
 {
     ui.SerialOutputCmb->clear();
     serialPorts.clear();
-    SerialHandler serialHandler;
+    OutputSerialConnectionHandler serialHandler;
     serialPorts = serialHandler.getPorts();
     foreach(SerialComboboxItem item , serialPorts)
     {
@@ -1138,26 +1138,26 @@ void SettingsDialog::loadSerialPorts()
     }
 }
 
-void SettingsDialog::setDeviceStatusStyle(ConnectionStatus status, DeviceName deviceName, QString message)
+void SettingsDialog::setDeviceStatusStyle(ConnectionStatus status, ConnectionInterface deviceName, QString message)
 {
     QString statusUnicode = "\u2717";
     QString statusColor = "red";
     QFont font( "Sans Serif", 12);
-    if(deviceName == DeviceName::Serial || deviceName == DeviceName::Network || deviceName == DeviceName::BLE )
+    if(deviceName == ConnectionInterface::Serial || deviceName == ConnectionInterface::Network || deviceName == ConnectionInterface::BLE )
     {
         ui.serialStatuslbl->clear();
         ui.networkStatuslbl->clear();
         ui.bleStatuslbl->clear();
     }
-    else if(deviceName == DeviceName::HereSphere ||
-            deviceName == DeviceName::Whirligig ||
-            deviceName == DeviceName::XTPWeb)
+    else if(deviceName == ConnectionInterface::HereSphere ||
+            deviceName == ConnectionInterface::Whirligig ||
+            deviceName == ConnectionInterface::XTPWeb)
     {
         ui.deoStatuslbl->clear();
         ui.whirligigStatuslbl->clear();
         ui.xtpWebStatuslbl->clear();
     }
-    else if(deviceName == DeviceName::Gamepad)
+    else if(deviceName == ConnectionInterface::Gamepad)
         ui.gamepadStatusLbl->clear();
     if (status == ConnectionStatus::Connected)
     {
@@ -1169,43 +1169,43 @@ void SettingsDialog::setDeviceStatusStyle(ConnectionStatus status, DeviceName de
         statusUnicode = "\u231B";
         statusColor = "yellow";
     }
-    if (deviceName == DeviceName::Serial)
+    if (deviceName == ConnectionInterface::Serial)
     {
         ui.serialStatuslbl->setText(statusUnicode + " " + message);
         ui.serialStatuslbl->setFont(font);
         ui.serialStatuslbl->setStyleSheet("color: " + statusColor);
     }
-    else if (deviceName == DeviceName::Network)
+    else if (deviceName == ConnectionInterface::Network)
     {
         ui.networkStatuslbl->setText(statusUnicode + " " + message);
         ui.networkStatuslbl->setFont(font);
         ui.networkStatuslbl->setStyleSheet("color: " + statusColor);
     }
-    else if (deviceName == DeviceName::BLE)
+    else if (deviceName == ConnectionInterface::BLE)
     {
         ui.bleStatuslbl->setText(statusUnicode + " " + message);
         ui.bleStatuslbl->setFont(font);
         ui.bleStatuslbl->setStyleSheet("color: " + statusColor);
     }
-    else if (deviceName == DeviceName::HereSphere)
+    else if (deviceName == ConnectionInterface::HereSphere)
     {
         ui.deoStatuslbl->setText(statusUnicode + " " + message);
         ui.deoStatuslbl->setFont(font);
         ui.deoStatuslbl->setStyleSheet("color: " + statusColor);
     }
-    else if (deviceName == DeviceName::Whirligig)
+    else if (deviceName == ConnectionInterface::Whirligig)
     {
         ui.whirligigStatuslbl->setText(statusUnicode + " " + message);
         ui.whirligigStatuslbl->setFont(font);
         ui.whirligigStatuslbl->setStyleSheet("color: " + statusColor);
     }
-    else if (deviceName == DeviceName::XTPWeb)
+    else if (deviceName == ConnectionInterface::XTPWeb)
     {
         ui.xtpWebStatuslbl->setText(statusUnicode + " " + message);
         ui.xtpWebStatuslbl->setFont(font);
         ui.xtpWebStatuslbl->setStyleSheet("color: " + statusColor);
     }
-    else if (deviceName == DeviceName::Gamepad)
+    else if (deviceName == ConnectionInterface::Gamepad)
     {
         ui.gamepadStatusLbl->setText(statusUnicode + " " + message);
         ui.gamepadStatusLbl->setFont(font);
@@ -1215,26 +1215,26 @@ void SettingsDialog::setDeviceStatusStyle(ConnectionStatus status, DeviceName de
 
 void SettingsDialog::on_serialOutputRdo_clicked()
 {
-    enableOrDisableDeviceConnectionUI(DeviceName::Serial);
-    SettingsHandler::setSelectedOutputDevice(DeviceName::Serial);
+    enableOrDisableDeviceConnectionUI(ConnectionInterface::Serial);
+    SettingsHandler::setSelectedOutputConnection(ConnectionInterface::Serial);
 }
 
 void SettingsDialog::on_networkOutputRdo_clicked()
 {
-    enableOrDisableDeviceConnectionUI(DeviceName::Network);
-    SettingsHandler::setSelectedOutputDevice(DeviceName::Network);
+    enableOrDisableDeviceConnectionUI(ConnectionInterface::Network);
+    SettingsHandler::setSelectedOutputConnection(ConnectionInterface::Network);
 }
 
 void SettingsDialog::on_bleOutputRdo_clicked()
 {
     DialogHandler::Dialog(this, "BLE is experimental and I could not get it to work.\nIf you do let me know. Maybe it will help me trouble shoot.\nIn otherwords, dont expect much.");
-    enableOrDisableDeviceConnectionUI(DeviceName::BLE);
-    SettingsHandler::setSelectedOutputDevice(DeviceName::BLE);
+    enableOrDisableDeviceConnectionUI(ConnectionInterface::BLE);
+    SettingsHandler::setSelectedOutputConnection(ConnectionInterface::BLE);
 }
 
-void SettingsDialog::enableOrDisableDeviceConnectionUI(DeviceName deviceName)
+void SettingsDialog::enableOrDisableDeviceConnectionUI(ConnectionInterface deviceName)
 {
-    if(deviceName == DeviceName::Network)
+    if(deviceName == ConnectionInterface::Network)
     {
         ui.SerialOutputCmb->setEnabled(false);
         ui.networkAddressTxt->setEnabled(true);
@@ -1245,7 +1245,7 @@ void SettingsDialog::enableOrDisableDeviceConnectionUI(DeviceName deviceName)
         ui.useWebSocketsCheckbox->setEnabled(true);
         ui.bleConnectButton->setEnabled(false);
     }
-    else if(deviceName == DeviceName::Serial)
+    else if(deviceName == ConnectionInterface::Serial)
     {
         ui.SerialOutputCmb->setEnabled(true);
         ui.networkAddressTxt->setEnabled(false);
@@ -1256,7 +1256,7 @@ void SettingsDialog::enableOrDisableDeviceConnectionUI(DeviceName deviceName)
         ui.useWebSocketsCheckbox->setEnabled(false);
         ui.bleConnectButton->setEnabled(false);
     }
-    else if(deviceName == DeviceName::BLE)
+    else if(deviceName == ConnectionInterface::BLE)
     {
         ui.bleConnectButton->setEnabled(true);
         ui.SerialOutputCmb->setEnabled(false);
@@ -1283,8 +1283,8 @@ void SettingsDialog::onRange_valueChanged(QString name, int value)
     rangeMinLabels.value(name)->setText(QString::number(min));
     rangeMaxLabels.value(name)->setText(QString::number(max));
     mainLabel->setText(channel->FriendlyName + " mid: " + QString::number(XMath::middle(min, max)));
-    OutputDeviceHandler* outputDevice = _connectionHandler->getSelectedOutputDevice();
-    InputDeviceHandler* inputDevice = _connectionHandler->getSelectedInputDevice();
+    OutputConnectionHandler* outputDevice = _connectionHandler->getSelectedOutputConnection();
+    InputConnectionHandler* inputDevice = _connectionHandler->getSelectedInputConnection();
     if ((!_videoHandler->isPlaying() || _videoHandler->isPaused())
         && (!inputDevice || !inputDevice->isPlaying()) && (outputDevice && outputDevice->isConnected()))
     {
@@ -1321,40 +1321,40 @@ void SettingsDialog::on_input_device_connectionChanged(ConnectionChangedSignal e
 {
     bool connectingOrConnected = event.status != ConnectionStatus::Connected && event.status != ConnectionStatus::Connecting;
 
-    if(event.deviceName == DeviceName::Whirligig || event.deviceName == DeviceName::HereSphere)
+    if(event.connectionName == ConnectionInterface::Whirligig || event.connectionName == ConnectionInterface::HereSphere)
     {
-        ui.whirligigConnectButton->setEnabled(event.deviceName == DeviceName::Whirligig && connectingOrConnected);
-        ui.deoConnectButton->setEnabled(event.deviceName == DeviceName::HereSphere && connectingOrConnected);
+        ui.whirligigConnectButton->setEnabled(event.connectionName == ConnectionInterface::Whirligig && connectingOrConnected);
+        ui.deoConnectButton->setEnabled(event.connectionName == ConnectionInterface::HereSphere && connectingOrConnected);
     }
-    setDeviceStatusStyle(event.status, event.deviceName, event.message);
+    setDeviceStatusStyle(event.status, event.connectionName, event.message);
 }
 
 void SettingsDialog::on_output_device_connectionChanged(ConnectionChangedSignal event)
 {
-    if (event.deviceName == DeviceName::Serial)
+    if (event.connectionName == ConnectionInterface::Serial)
     {
         ui.serialConnectButton->setEnabled(event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected);
     }
-    else if (event.deviceName == DeviceName::Network)
+    else if (event.connectionName == ConnectionInterface::Network)
     {
         ui.networkConnectButton->setEnabled(event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected);
     }
-    else if (event.deviceName == DeviceName::BLE)
+    else if (event.connectionName == ConnectionInterface::BLE)
     {
         ui.bleConnectButton->setEnabled(event.status == ConnectionStatus::Error || event.status == ConnectionStatus::Disconnected);
     }
-    setDeviceStatusStyle(event.status, event.deviceName);
+    setDeviceStatusStyle(event.status, event.connectionName);
 }
 
 void SettingsDialog::on_gamepad_connectionChanged(ConnectionChangedSignal event)
 {
-    setDeviceStatusStyle(event.status, event.deviceName);
+    setDeviceStatusStyle(event.status, event.connectionName);
     SettingsHandler::setLiveGamepadConnected(event.status == ConnectionStatus::Connected);
 }
 
 void SettingsDialog::on_SerialOutputCmb_currentIndexChanged(int index)
 {
-    if(SettingsHandler::getSelectedOutputDevice() == DeviceName::Serial)
+    if(SettingsHandler::getSelectedOutputDevice() == ConnectionInterface::Serial)
         ui.serialConnectButton->setEnabled(true);
     SerialComboboxItem serialInfo = ui.SerialOutputCmb->currentData(Qt::UserRole).value<SerialComboboxItem>();
     selectedSerialPort = serialInfo;
@@ -1362,36 +1362,36 @@ void SettingsDialog::on_SerialOutputCmb_currentIndexChanged(int index)
 
 void SettingsDialog::on_networkAddressTxt_editingFinished()
 {
-    if(SettingsHandler::getSelectedOutputDevice() == DeviceName::Network)
+    if(SettingsHandler::getSelectedOutputDevice() == ConnectionInterface::Network)
         ui.networkConnectButton->setEnabled(true);
     SettingsHandler::setServerAddress(ui.networkAddressTxt->text());
 }
 
 void SettingsDialog::on_networkPortTxt_editingFinished()
 {
-    if(SettingsHandler::getSelectedOutputDevice() == DeviceName::Network)
+    if(SettingsHandler::getSelectedOutputDevice() == ConnectionInterface::Network)
         ui.networkConnectButton->setEnabled(true);
     SettingsHandler::setServerPort(ui.networkPortTxt->text());
 }
 
 void SettingsDialog::on_deoAddressTxt_editingFinished()
 {
-    if(SettingsHandler::getSelectedInputDevice() == DeviceName::HereSphere)
+    if(SettingsHandler::getSelectedInputDevice() == ConnectionInterface::HereSphere)
         ui.deoConnectButton->setEnabled(true);
     SettingsHandler::setDeoAddress(ui.deoAddressTxt->text());
 }
 
 void SettingsDialog::on_useWebSocketsCheckbox_clicked(bool checked)
 {
-    if(SettingsHandler::getSelectedOutputDevice() == DeviceName::Network)
+    if(SettingsHandler::getSelectedOutputDevice() == ConnectionInterface::Network)
         ui.networkConnectButton->setEnabled(true);
-    _connectionHandler->disposeOutputDevice(DeviceName::Network);
-    SettingsHandler::setSelectedNetworkDevice(checked ? NetworkProtocol::WEBSOCKET : NetworkProtocol::UDP);
+    _connectionHandler->disposeOutputConnection(ConnectionInterface::Network);
+    SettingsHandler::setSelectedNetworkProtocol(checked ? NetworkProtocol::WEBSOCKET : NetworkProtocol::UDP);
 }
 
 void SettingsDialog::on_deoPortTxt_editingFinished()
 {
-    if(SettingsHandler::getSelectedInputDevice() == DeviceName::HereSphere)
+    if(SettingsHandler::getSelectedInputDevice() == ConnectionInterface::HereSphere)
         ui.deoConnectButton->setEnabled(true);
     SettingsHandler::setDeoPort(ui.deoPortTxt->text());
 }
@@ -1422,7 +1422,7 @@ void SettingsDialog::on_serialConnectButton_clicked()
     }
     SettingsHandler::setSerialPort(portName);
     ui.serialConnectButton->setEnabled(false);
-    _connectionHandler->initOutputDevice(DeviceName::Serial);
+    _connectionHandler->initOutputConnection(ConnectionInterface::Serial);
 }
 
 void SettingsDialog::on_networkConnectButton_clicked()
@@ -1431,7 +1431,7 @@ void SettingsDialog::on_networkConnectButton_clicked()
      SettingsHandler::getServerAddress() != "0" && SettingsHandler::getServerPort() != "0")
     {
         ui.networkConnectButton->setEnabled(false);
-        _connectionHandler->initOutputDevice(DeviceName::Network);
+        _connectionHandler->initOutputConnection(ConnectionInterface::Network);
     }
     else
     {
@@ -1442,7 +1442,7 @@ void SettingsDialog::on_networkConnectButton_clicked()
 void SettingsDialog::on_bleConnectButton_clicked()
 {
     ui.networkConnectButton->setEnabled(false);
-    _connectionHandler->initOutputDevice(DeviceName::BLE);
+    _connectionHandler->initOutputConnection(ConnectionInterface::BLE);
 }
 
 void SettingsDialog::on_deoConnectButton_clicked()
@@ -1451,7 +1451,7 @@ void SettingsDialog::on_deoConnectButton_clicked()
      SettingsHandler::getDeoAddress() != "0" && SettingsHandler::getDeoPort() != "0")
     {
         ui.deoConnectButton->setEnabled(false);
-        _connectionHandler->initInputDevice(DeviceName::HereSphere);
+        _connectionHandler->initInputConnection(ConnectionInterface::HereSphere);
     }
     else
     {
@@ -1465,7 +1465,7 @@ void SettingsDialog::on_whirligigConnectButton_clicked()
      SettingsHandler::getWhirligigAddress() != "0" && SettingsHandler::getWhirligigPort() != "0")
     {
         ui.whirligigConnectButton->setEnabled(false);
-        _connectionHandler->initInputDevice(DeviceName::Whirligig);
+        _connectionHandler->initInputConnection(ConnectionInterface::Whirligig);
     }
     else
     {
@@ -1512,7 +1512,7 @@ void SettingsDialog::on_xtpWebHandlerCheckbox_clicked(bool checked)
         on_whirligigCheckBox_clicked(!checked);
         ui.deoCheckbox->setChecked(!checked);
         on_deoCheckbox_clicked(!checked);
-        _connectionHandler->initInputDevice(DeviceName::XTPWeb);
+        _connectionHandler->initInputConnection(ConnectionInterface::XTPWeb);
     }
 }
 
@@ -1559,9 +1559,9 @@ void SettingsDialog::on_gamePadCheckbox_clicked(bool checked)
 {
     SettingsHandler::setGamepadEnabled(checked);
     if (checked)
-        _connectionHandler->initInputDevice(DeviceName::Gamepad);
+        _connectionHandler->initInputConnection(ConnectionInterface::Gamepad);
     else
-        _connectionHandler->disposeInputDevice(DeviceName::Gamepad);
+        _connectionHandler->disposeInputConnection(ConnectionInterface::Gamepad);
 }
 
 void SettingsDialog::on_videoIncrement_valueChanged(int value)
@@ -1798,8 +1798,8 @@ void SettingsDialog::on_enableHttpServerCheckbox_clicked(bool checked)
     ui.webAddressInstructionsLabel->setVisible(checked);
     ui.webAddressLinkLabel->setVisible(checked);
     set_requires_restart(true);
-    if(!checked && SettingsHandler::getSelectedInputDevice() == DeviceName::XTPWeb)
-        on_xtpWeb_initInputDevice(DeviceName::None, false);
+    if(!checked && SettingsHandler::getSelectedInputDevice() == ConnectionInterface::XTPWeb)
+        on_xtpWeb_initInputDevice(ConnectionInterface::None, false);
 }
 
 void SettingsDialog::on_browseHttpRootButton_clicked()

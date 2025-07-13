@@ -414,10 +414,10 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(m_xtengine->connectionHandler(), &ConnectionHandler::gamepadConnectionChange, _xSettings, &SettingsDialog::on_gamepad_connectionChanged);
 
     connect(retryConnectionButton, &QPushButton::clicked, this, [this](bool checked){
-        m_xtengine->connectionHandler()->initOutputDevice(SettingsHandler::getSelectedOutputDevice());
+        m_xtengine->connectionHandler()->initOutputConnection(SettingsHandler::getSelectedOutputDevice());
     });
     connect(deoRetryConnectionButton, &QPushButton::clicked, this, [this](bool checked) {
-        m_xtengine->connectionHandler()->initInputDevice(SettingsHandler::getSelectedInputDevice());
+        m_xtengine->connectionHandler()->initInputConnection(SettingsHandler::getSelectedInputDevice());
     });
     connect(m_xtengine->settingsActionHandler(), &SettingsActionHandler::actionExecuted, this, &MainWindow::mediaAction);
 
@@ -511,10 +511,10 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(videoHandler, &VideoHandler::keyReleased, this, &MainWindow::on_key_press);
     connect(videoHandler, &VideoHandler::togglePaused, this, [this](bool paused) {
         if(paused)
-            m_xtengine->connectionHandler()->stopOutputDevice();
+            m_xtengine->connectionHandler()->stopOutputConnection();
     });
     connect(videoHandler, &VideoHandler::stopped, this, [this]() {
-        m_xtengine->connectionHandler()->stopOutputDevice();
+        m_xtengine->connectionHandler()->stopOutputConnection();
     });
     connect(videoHandler, &VideoHandler::durationChange, this, [this](qint64 value) {
         //m_heatmap->drawPixmapAsync(_playerControlsFrame->width(), 25, m_xtengine->syncHandler()->getFunscriptHandler(), value);
@@ -1205,7 +1205,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
 
 void MainWindow::changeDeoFunscript()
 {
-    InputDevicePacket playingPacket = m_xtengine->connectionHandler()->getSelectedInputDevice()->getCurrentPacket();
+    InputConnectionPacket playingPacket = m_xtengine->connectionHandler()->getSelectedInputConnection()->getCurrentPacket();
     if (playingPacket.path != nullptr)
     {
         QFileInfo videoFile(playingPacket.path);
@@ -2051,8 +2051,8 @@ void MainWindow::on_standaloneFunscript_stop()
 void MainWindow::on_media_start()
 {
     LogHandler::Debug("Enter on_media_start");
-    if(m_xtengine->connectionHandler()->getSelectedInputDevice())
-        m_xtengine->connectionHandler()->getSelectedInputDevice()->dispose();
+    if(m_xtengine->connectionHandler()->getSelectedInputConnection())
+        m_xtengine->connectionHandler()->getSelectedInputConnection()->dispose();
     m_xtengine->syncHandler()->on_other_media_state_change(XMediaState::Playing);
     if (m_xtengine->syncHandler()->isLoaded())
     {
@@ -2099,7 +2099,7 @@ void MainWindow::onFunscriptSearchResult(QString mediaPath, QString funscriptPat
 //    if(m_xtengine->syncHandler()->isPlaying())
 //        return;
 
-    if (!funscriptFileSelectorOpen && m_xtengine->connectionHandler()->isOutputDeviceConnected())
+    if (!funscriptFileSelectorOpen && m_xtengine->connectionHandler()->isOutputConnected())
     {
         bool saveLinkedScript = false;
 
@@ -2148,12 +2148,12 @@ void MainWindow::onFunscriptSearchResult(QString mediaPath, QString funscriptPat
 
 void MainWindow::on_sendTCode(QString value)
 {
-    if(m_xtengine->connectionHandler()->isOutputDeviceConnected())
+    if(m_xtengine->connectionHandler()->isOutputConnected())
     {
         if(SettingsHandler::getFunscriptLoaded( TCodeChannelLookup::Stroke()) &&
                 m_xtengine->syncHandler()->isPlaying() &&
                 ((videoHandler->isPlaying() && !videoHandler->isPaused())
-                    || (m_xtengine->connectionHandler()->getSelectedInputDevice() && m_xtengine->connectionHandler()->getSelectedInputDevice()->isPlaying())))
+                    || (m_xtengine->connectionHandler()->getSelectedInputConnection() && m_xtengine->connectionHandler()->getSelectedInputConnection()->isPlaying())))
         {
             QRegularExpression rx("L0[^\\s]*\\s?");
             value = value.remove(rx);
@@ -2311,8 +2311,8 @@ void MainWindow::media_single_click_event(QMouseEvent * event)
 
 void MainWindow::on_output_device_connectionChanged(ConnectionChangedSignal event)
 {
-    auto selectedOutputDevice = m_xtengine->connectionHandler()->getSelectedOutputDevice();
-    if(event.type == DeviceType::Output && (!selectedOutputDevice || selectedOutputDevice->name() == event.deviceName))
+    auto selectedOutputDevice = m_xtengine->connectionHandler()->getSelectedOutputConnection();
+    if(event.type == ConnectionDirection::Output && (!selectedOutputDevice || selectedOutputDevice->name() == event.connectionName))
     {
         deviceConnected = event.status == ConnectionStatus::Connected;
         if(deviceConnected)
@@ -2322,11 +2322,11 @@ void MainWindow::on_output_device_connectionChanged(ConnectionChangedSignal even
         else if(event.status == ConnectionStatus::Connecting)
             connectionStatusLabel->setProperty("cssClass", "connectionStatusConnecting");
         QString message = "";
-        if (event.deviceName == DeviceName::Serial)
+        if (event.connectionName == ConnectionInterface::Serial)
         {
             message += "Serial: ";
         }
-        else if(event.deviceName == DeviceName::Network)
+        else if(event.connectionName == ConnectionInterface::Network)
         {
             message += "Network: ";
         }
@@ -2373,19 +2373,19 @@ void MainWindow::on_gamepad_connectionChanged(ConnectionChangedSignal event)
 
 void MainWindow::on_input_device_connectionChanged(ConnectionChangedSignal event)
 {
-    auto selectedInputDevice = m_xtengine->connectionHandler()->getSelectedInputDevice();
-    if(event.type == DeviceType::Input && (!selectedInputDevice || selectedInputDevice->name() == event.deviceName))
+    auto selectedInputDevice = m_xtengine->connectionHandler()->getSelectedInputConnection();
+    if(event.type == ConnectionDirection::Input && (!selectedInputDevice || selectedInputDevice->name() == event.connectionName))
     {
         QString message = "";
-        if(event.deviceName == DeviceName::None) {
+        if(event.connectionName == ConnectionInterface::None) {
             ui->actionChange_current_deo_script->setEnabled(false);
             vrConnectionStatusLabel->hide();
             vrRetryConnectionButton->hide();
         }
-        else if(event.deviceName == DeviceName::XTPWeb)
+        else if(event.connectionName == ConnectionInterface::XTPWeb)
             message += "XTP Web: ";
         else
-            message += event.deviceName == DeviceName::Whirligig ? "Whirligig: " : "HereSphere: ";
+            message += event.connectionName == ConnectionInterface::Whirligig ? "Whirligig: " : "HereSphere: ";
         message += " " + event.message;
         vrConnectionStatusLabel->setText(message);
 
@@ -2394,7 +2394,7 @@ void MainWindow::on_input_device_connectionChanged(ConnectionChangedSignal event
         }
         else if(event.status == ConnectionStatus::Connected)
         {
-            ui->actionChange_current_deo_script->setEnabled(event.deviceName != DeviceName::XTPWeb);
+            ui->actionChange_current_deo_script->setEnabled(event.connectionName != ConnectionInterface::XTPWeb);
             vrRetryConnectionButton->hide();
             stopMedia();
 
@@ -3093,7 +3093,7 @@ void MainWindow::skipToMoneyShot()
 
     if(SettingsHandler::getSkipToMoneyShotPlaysFunscript() && !SettingsHandler::getSkipToMoneyShotSkipsVideo())
         return;
-    if(videoHandler->isPlaying() ||  (m_xtengine->connectionHandler()->getSelectedInputDevice() && m_xtengine->connectionHandler()->getSelectedInputDevice()->isPlaying()))
+    if(videoHandler->isPlaying() ||  (m_xtengine->connectionHandler()->getSelectedInputConnection() && m_xtengine->connectionHandler()->getSelectedInputConnection()->isPlaying()))
     {
         if(videoHandler->isPlaying()) {
             if(_playerControlsFrame->getAutoLoop())
@@ -3108,7 +3108,7 @@ void MainWindow::skipToMoneyShot()
             {
                 videoHandler->setPosition(videoHandler->duration() - (videoHandler->duration() * .1));
             }
-        } else if(m_xtengine->connectionHandler()->getSelectedInputDevice() && m_xtengine->connectionHandler()->getSelectedInputDevice()->isPlaying()) {
+        } else if(m_xtengine->connectionHandler()->getSelectedInputConnection() && m_xtengine->connectionHandler()->getSelectedInputConnection()->isPlaying()) {
 //            InputDevicePacket currentPacket = m_xtengine->connectionHandler()->getSelectedInputDevice()->getCurrentPacket();
 //            auto libraryListItemMetaData = SettingsHandler::getLibraryListItemMetaData(currentPacket.path);
 //            InputDevicePacket packet =

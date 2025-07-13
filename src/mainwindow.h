@@ -27,8 +27,8 @@
 #include <QModelIndex>
 
 #include "lib/handler/xmediastatehandler.h"
-#include "lib/handler/outputdevicehandler.h"
-#include "lib/handler/inputdevicehandler.h"
+#include "lib/handler/outputconnectionhandler.h"
+#include "lib/handler/inputconnectionhandler.h"
 #include "lib/struct/LibraryListItem27.h"
 #include "lib/struct/SerialComboboxItem.h"
 #include "lib/struct/ConnectionChangedSignal.h"
