@@ -33,7 +33,10 @@ XTPlayer is a cross platform TCode media player.
       3. Clone/download XTPlayer https://github.com/jcfain/XTPlayer/ and XTEngine https://github.com/jcfain/XTEngine/ source into the same directory.
       4. Open the XTEngine and XTPlayer projects in Qt Creator
       5. Select XTPlayer click Projects on the rightside then Dependencies and select XTEngine and check sync.
-      6. Build Release or debug
+      6. Select the "Build" item under "Desktop Qt 6.9.1" and change the Build directory to "path to"/git/XTPlayer/build-release 
+      7. Do the same for XTEngine but set it to "path to"git/XTEngine/build-release.
+      8. Do the same for the debug build if you want to build debug.
+      9. You should be able to build now.
           
  ## Deploying
       1. In the root directory of this repository there is a file named "win_release_deploy-release.bat"
