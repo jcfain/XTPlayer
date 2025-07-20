@@ -151,6 +151,7 @@ unix:mac {
 #    images.path = Contents/MacOS
 #    QMAKE_BUNDLE_DATA += images;
 #    #LIBS += -framework QtCompress
+    QMAKE_APPLE_DEVICE_ARCHS = x86_64 x86_64h arm64
     CONFIG(debug, debug|release) {
         equals(QT_MAJOR_VERSION, 5) {
             #LIBS += -L$$PWD/../../XTEngine/build/debug -lxtengine
