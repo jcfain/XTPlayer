@@ -1,4 +1,5 @@
 #include "videohandler.h"
+#include <QMediaMetaData>
 VideoHandler::VideoHandler(PlayerControls* controls, XLibraryList* libraryList, XVideoPreviewWidget* videoPreview, QWidget *parent) : XWidget(parent),
     m_libraryListFrame(0),
     _player(0),
@@ -316,6 +317,26 @@ void VideoHandler::setFile(QString file)
     QUrl mediaUrl = QUrl::fromLocalFile(file);
     // QMediaContent mc(mediaUrl);
     _player->setSource(mediaUrl);
+}
+
+void VideoHandler::setSubtitleTrack(int index)
+{
+    _player->setActiveSubtitleTrack(index);
+}
+
+QList<QString> VideoHandler::getSubtitleTracks()
+{
+    QList<QString> languages;
+    const auto tracks = _player->subtitleTracks();
+    for(const auto &track : tracks)
+    {
+        QString language = track.value(QMediaMetaData::Language).toString();
+        if(!language.isEmpty())
+        {
+            languages.append(language);
+        }
+    }
+    return languages;
 }
 
 bool VideoHandler::isPaused()

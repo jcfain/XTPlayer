@@ -58,6 +58,8 @@ public:;
     void togglePause();
     void pause();
     void setFile(QString file);
+    void setSubtitleTrack(int index);
+    QList<QString> getSubtitleTracks();
     QString file();
     void load();
     bool isMute();

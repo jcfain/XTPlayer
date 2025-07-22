@@ -26,6 +26,7 @@ signals:
     void playClicked();
     void stopClicked();
     void volumeChanged(int value);
+    void subtitleChanged(int value);
     void skipForward();
     void skipToMoneyShot();
     void skipToNextAction();
@@ -65,6 +66,7 @@ public:
     bool getTimeLineMousePressed();
     void updateTimeDurationLabels(qint64 time, qint64 duration);
     void setTime(qint64 time);
+    void setSubtitles(const QList<QString>& value);
     void setDuration(qint64 duration);
     void resetMediaControlStatus(bool playing);
     void setSkipToMoneyShotEnabled(bool enabled);
@@ -80,6 +82,7 @@ private:
     QPushButton *skipForwardButton;
     QPushButton *skipToMoneyShotButton;
     QComboBox* alternateStriptCmb;
+    QComboBox* subtitleCmb;
     QPushButton *skipToActionButton;
     QPushButton *MuteBtn;
     QPushButton *loopToggleButton;
@@ -118,6 +121,7 @@ private:
     void on_seekslider_hover(QPoint position, qint64 sliderValue);
     void on_seekslider_leave();
     void onAlternateFunscriptSelected(QString script);
+    void onSubtitleSelected(QString script);
 
 };
 

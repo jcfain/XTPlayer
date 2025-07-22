@@ -551,6 +551,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
         XMediaStateHandler::setPlaybackSpeed(value);
         videoHandler->setSpeed(value);
     });
+    connect(_playerControlsFrame, &PlayerControls::subtitleChanged, videoHandler, &VideoHandler::setSubtitleTrack);
 
     connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
     connect(this, &MainWindow::keyReleased, this, &MainWindow::on_key_press);
@@ -2202,6 +2203,7 @@ void MainWindow::on_media_statusChanged(XMediaStatus status)
         break;
     case XMediaStatus::LoadedMedia:
         videoHandler->setLoading(false);
+        _playerControlsFrame->setSubtitles(videoHandler->getSubtitleTracks());
         break;
     case XMediaStatus::StalledMedia:
 
