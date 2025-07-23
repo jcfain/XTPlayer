@@ -50,7 +50,7 @@ signals:
     void togglePaused(bool paused);
     void durationChange(qint64 value);
 
-public:;
+public:
     VideoHandler(PlayerControls* controls, XLibraryList* libraryList, XVideoPreviewWidget* videoPreview, QWidget* parent = 0);
     bool isPlaying();
     void play();
