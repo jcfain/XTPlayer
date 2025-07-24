@@ -28,6 +28,7 @@ XTPlayer is a cross platform TCode media player.
      2. Required libraries needed:
           * https://github.com/pumphaus/qtgamepadlegacy
                * I usually open the CMakeLists.txt in Qt creator and build them copy the folders ./bin, ./include etc to the Qt directory of the same names. (There is probably a better way to do this)
+               * MACOS Only: If you want to build a universal (arm/x86) binary, open the Projects tab on the left side of Qt Creator and select Build. Scroll down to CMake and find the configuration "CMAKE_OSX_ARCHITECTURES" Enter "x86_64;x86_64h;arm64" as the value.
       You may need to check the XTEngine.pro and XTPlayer.pro build files for specific library directories. See the win32 section for windows.
       If you have trouble building these I added a couple files in the "dependencies" directory of this repo for reminders.
       3. Clone/download XTPlayer https://github.com/jcfain/XTPlayer/ and XTEngine https://github.com/jcfain/XTEngine/ source into the same directory.
