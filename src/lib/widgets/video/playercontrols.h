@@ -39,6 +39,7 @@ signals:
     void seekSliderLeave();
     void alternateFunscriptSelected(ScriptInfo script);
     void playbackSpeedValueChanged(qreal value);
+    void editMetadataClicked(LibraryListItem27* item);
 public slots:
     void on_heatmapToggled(bool disabled);
 public:

@@ -375,6 +375,7 @@ private:
     void showInGraphicalShell(QString path);
     void processMetaData(const LibraryListItem27& LibraryListItem27);
     void updateMetaData(LibraryListItem27* LibraryListItem27);
+    void openEditMetadataDialog(LibraryListItem27* value);
 
     qint64 mediaPosition();
     qint64 mediaDuration();

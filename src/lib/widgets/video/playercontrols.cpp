@@ -198,7 +198,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     connect(mediaSettingsBtn, &QPushButton::clicked, this, [this]() {
         auto item = XMediaStateHandler::getPlaying();
         if(item)
-            LibraryItemMetadataDialog::getSettings(this, item);
+            emit editMetadataClicked(item);
     });
 
 //    settingsButton = new QPushButton(this);

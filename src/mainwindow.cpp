@@ -552,6 +552,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
         videoHandler->setSpeed(value);
     });
     connect(_playerControlsFrame, &PlayerControls::subtitleChanged, videoHandler, &VideoHandler::setSubtitleTrack);
+    connect(_playerControlsFrame, &PlayerControls::editMetadataClicked, this, &MainWindow::openEditMetadataDialog);
 
     connect(this, &MainWindow::keyPressed, this, &MainWindow::on_key_press);
     connect(this, &MainWindow::keyReleased, this, &MainWindow::on_key_press);
@@ -1178,7 +1179,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                     DialogHandler::MessageBox(libraryList, "Could not find media item in current library", XLogLevel::Critical);
                     return;
                 }
-                LibraryItemMetadataDialog::getSettings(libraryList, item);
+                openEditMetadataDialog(item);
             });
             connect(metadataAction, &QAction::hovered, this, &MainWindow::on_action_hover);
             metadataAction->setToolTip("Edit the media items metadata");
@@ -1643,6 +1644,11 @@ void MainWindow::updateMetaData(LibraryListItem27* libraryListItem)
         }
         SettingsHandler::updateLibraryListItemMetaData(*libraryListItem);
     }
+}
+
+void MainWindow::openEditMetadataDialog(LibraryListItem27 *item)
+{
+    LibraryItemMetadataDialog::getSettings(libraryList, item, m_xtengine->syncHandler());
 }
 
 void MainWindow::on_mainwindow_change(QEvent* event)

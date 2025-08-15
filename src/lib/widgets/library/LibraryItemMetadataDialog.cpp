@@ -39,8 +39,7 @@ LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(
     offsetSpinBox->setSuffix("ms");
     offsetSpinBox->setSingleStep(SettingsHandler::getFunscriptOffsetStep());
     connect(offsetSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value) {
-        SettingsHandler::setLiveOffset(value);
-        _libraryListItem->metadata.offset = value;
+        FunscriptHandler::setOffset(value);
         updateOffsetLabel();
     });
     //offsetSpinBox->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
@@ -60,7 +59,6 @@ LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(
     funscriptModifierSpinBox->setSingleStep(SettingsHandler::getFunscriptModifierStep());
     funscriptModifierSpinBox->setValue(_libraryListItem->metadata.funscriptModifier);
     connect(funscriptModifierSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [](int value) {
-        //_libraryListItem->metadata.funscriptModifier = value;
         FunscriptHandler::setModifier(value);
     });
     layout->addWidget(funscriptModifierLabel, currentRow, 0, 1, 1);
@@ -76,9 +74,9 @@ LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(
         if (!re.match(value).hasMatch())
             LogHandler::Error("Invalid value, money shot should be in milliseconds");
     });
-    QString maxLong = "9223372036854775807";
+    QString maxLong = QString::number(INT64_MAX);
     moneyShotLineEdit->setMaxLength(maxLong.length());
-    moneyShotLineEdit->setReadOnly(true);
+    // moneyShotLineEdit->setReadOnly(true);
     moneyShotLineEdit->setText(QString::number(_libraryListItem->metadata.moneyShotMillis));
 
     resetMoneyShotButton = new QPushButton(this);
@@ -140,12 +138,13 @@ LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(
     //setLayout(layout);
 }
 
-void LibraryItemMetadataDialog::getSettings(QWidget *parent, LibraryListItem27* item, bool *ok)
+void LibraryItemMetadataDialog::getSettings(QWidget *parent, LibraryListItem27* item, SyncHandler* syncHandler, bool *ok)
 {
     if(item)
     {
         _libraryListItem = item;
         LibraryItemMetadataDialog *dialog = new LibraryItemMetadataDialog(parent);
+        connect(dialog, &LibraryItemMetadataDialog::save, syncHandler, &SyncHandler::updateMetadata);
         showDialog(dialog, ok);
     }
 }
@@ -172,8 +171,8 @@ void LibraryItemMetadataDialog::showDialog(LibraryItemMetadataDialog *dialog, bo
 //            _libraryListItemMetaData.moneyShotMillis = ms.isEmpty() ? -1 : ms.toLongLong();
         _libraryListItem->metadata.offset = dialog->offsetSpinBox->value();
         _libraryListItem->metadata.funscriptModifier = dialog->funscriptModifierSpinBox->value();
-        SettingsHandler::setLiveOffset(_libraryListItem->metadata.offset);
-        FunscriptHandler::setModifier(_libraryListItem->metadata.funscriptModifier);
+        qint64 moneyShot = dialog->moneyShotLineEdit->text().toLongLong();
+        _libraryListItem->metadata.moneyShotMillis = moneyShot > 0 ? moneyShot : -1;
         foreach (QString tag, dialog->m_itemTagsToRemove) {
             _libraryListItem->metadata.tags.removeAll(tag);
         }
@@ -182,7 +181,11 @@ void LibraryItemMetadataDialog::showDialog(LibraryItemMetadataDialog *dialog, bo
             _libraryListItem->metadata.tags.append(tag);
         }
         SettingsHandler::updateLibraryListItemMetaData(*_libraryListItem, true);
-        emit dialog->save();
+        emit dialog->save(_libraryListItem->metadata);
+    }
+    else
+    {
+        FunscriptHandler::updateMetadata(_libraryListItem->metadata);
     }
     dialog->deleteLater();
 }

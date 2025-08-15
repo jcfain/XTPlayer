@@ -9,15 +9,16 @@
 #include <QDialogButtonBox>
 #include <QGridLayout>
 #include "lib/struct/LibraryListItem27.h"
+#include "lib/handler/synchandler.h"
 
 class LibraryItemMetadataDialog : public QDialog
 {
     Q_OBJECT
 signals:
-    void save();
+    void save(LibraryListItemMetaData258 value);
 public:
     explicit LibraryItemMetadataDialog(QWidget *parent = nullptr);
-    static void getSettings(QWidget *parent, LibraryListItem27* item,  bool *ok = nullptr);
+    static void getSettings(QWidget *parent, LibraryListItem27* item, SyncHandler* syncHandler, bool *ok = nullptr);
 
 private:
     QLabel* offsetLabel;
