@@ -7,6 +7,7 @@
 #include "lib/handler/loghandler.h"
 #include "lib/handler/settingshandler.h"
 #include "lib/handler/funscripthandler.h"
+#include "lib/handler/xmediastatehandler.h"
 #include "lib/struct/LibraryListItemMetaData258.h"
 
 LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(parent)
@@ -39,7 +40,9 @@ LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(
     offsetSpinBox->setSuffix("ms");
     offsetSpinBox->setSingleStep(SettingsHandler::getFunscriptOffsetStep());
     connect(offsetSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value) {
-        FunscriptHandler::setOffset(value);
+        auto playingMediaID = XMediaStateHandler::getPlayingID();
+        if(!playingMediaID.isEmpty() && playingMediaID == _libraryListItem->ID)
+            FunscriptHandler::setOffset(value);
         updateOffsetLabel();
     });
     //offsetSpinBox->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
@@ -59,7 +62,9 @@ LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(
     funscriptModifierSpinBox->setSingleStep(SettingsHandler::getFunscriptModifierStep());
     funscriptModifierSpinBox->setValue(_libraryListItem->metadata.funscriptModifier);
     connect(funscriptModifierSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [](int value) {
-        FunscriptHandler::setModifier(value);
+        auto playingMediaID = XMediaStateHandler::getPlayingID();
+        if(!playingMediaID.isEmpty() && playingMediaID == _libraryListItem->ID)
+            FunscriptHandler::setModifier(value);
     });
     layout->addWidget(funscriptModifierLabel, currentRow, 0, 1, 1);
     layout->addWidget(funscriptModifierSpinBox, currentRow, 1, 1, 2);
