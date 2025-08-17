@@ -47,12 +47,12 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
         emit playbackSpeedValueChanged(value);
     });
     // connect(playbackRateInput, &QSlider::valueChanged, this, PlayerControls::playbackSpeedValueChanged);
-    playerControlsGrid->addWidget(playbackRateInput, row, 5, 1, 1);
+    playerControlsGrid->addWidget(playbackRateInput, row, 5, 1, 2);
 
-    subtitleCmb = new QComboBox(this);
-    subtitleCmb->setEditable(false);
-    connect(subtitleCmb, &QComboBox::currentTextChanged, this, &PlayerControls::onSubtitleSelected);
-    playerControlsGrid->addWidget(subtitleCmb, row, 6, 1, 1);
+    // subtitleCmb = new QComboBox(this);
+    // subtitleCmb->setEditable(false);
+    // connect(subtitleCmb, &QComboBox::currentTextChanged, this, &PlayerControls::onSubtitleSelected);
+    // playerControlsGrid->addWidget(subtitleCmb, row, 6, 1, 1);
 
     skipToMoneyShotButton = new QPushButton(this);
     skipToMoneyShotButton->setObjectName(QString::fromUtf8("skipToMoneyShotButton"));
@@ -67,7 +67,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToMoneyShotButton->setEnabled(false);
 
 
-    playerControlsGrid->addWidget(skipToMoneyShotButton, row, 7, 1, 4);
+    playerControlsGrid->addWidget(skipToMoneyShotButton, row, 6, 1, 4);
 
     lblDuration = new QLabel(this);
     lblDuration->setObjectName(QString::fromUtf8("lblDuration"));
@@ -368,7 +368,7 @@ void PlayerControls::resetMediaControlStatus(bool playing)
     _stopBtn->setEnabled(playing);
     playbackRateInput->setEnabled(playing);
     setPlayIcon(playing);
-    subtitleCmb->setEnabled(playing);
+    // subtitleCmb->setEnabled(playing);
     playbackRateInput->setValue(1.0);
     if(!playing)
     {
@@ -378,7 +378,7 @@ void PlayerControls::resetMediaControlStatus(bool playing)
 //        m_timeLine->clear();
         m_timeLine->stop();
         setAltScripts(QList<ScriptInfo>());
-        subtitleCmb->clear();
+        // subtitleCmb->clear();
     }
 }
 
@@ -487,13 +487,13 @@ void PlayerControls::setTime(qint64 time)
 
 void PlayerControls::setSubtitles(const QList<QString> &value)
 {
-    subtitleCmb->clear();
-    subtitleCmb->addItem("None");
-    for(const auto &sub : value)
-    {
-        LogHandler::Debug("Subtitles found: "+ sub);
-        subtitleCmb->addItem(sub);
-    }
+    // subtitleCmb->clear();
+    // subtitleCmb->addItem("None");
+    // for(const auto &sub : value)
+    // {
+    //     LogHandler::Debug("Subtitles found: "+ sub);
+    //     subtitleCmb->addItem(sub);
+    // }
 }
 void PlayerControls::setDuration(qint64 duration)
 {
@@ -647,7 +647,7 @@ void PlayerControls::onAlternateFunscriptSelected(QString script)
 
 void PlayerControls::onSubtitleSelected(QString script)
 {
-    emit subtitleChanged(subtitleCmb->currentIndex() - 1);
+    // emit subtitleChanged(subtitleCmb->currentIndex() - 1);
 }
 
 void PlayerControls::setAltScripts(QList<ScriptInfo> scriptInfos)
