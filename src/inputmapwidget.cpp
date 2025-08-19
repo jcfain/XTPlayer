@@ -376,7 +376,7 @@ void InputMapWidget::tableItemClicked(int row, int column)
 void InputMapWidget::listenForGamepadInput(QString action, QString actionName)
 {
     if(_connectionHandler->getGamepadHandler()->isConnected()) {
-        connect(_connectionHandler->getGamepadHandler(), &GamepadHandler::onListenForInputRecieve, this, [this, action, actionName](QString button) {
+        connect(_connectionHandler->getGamepadHandler(), &GamepadHandler::onListenForInputReceive, this, [this, action, actionName](QString button) {
             QMap<QString, QStringList> gamepadMap = SettingsHandler::getGamePadMap();
             auto items = _tableWidget->findItems(actionName, Qt::MatchFlag::MatchExactly);
             auto item = items.first();
@@ -404,7 +404,7 @@ void InputMapWidget::listenForGamepadInput(QString action, QString actionName)
         });
         _connectionHandler->getGamepadHandler()->listenForInput();
         if(DialogHandler::Dialog(this, "Press a button for action "+actionName, true, false) == QDialog::DialogCode::Rejected) {
-            disconnect(_connectionHandler->getGamepadHandler(), &GamepadHandler::onListenForInputRecieve, this, nullptr);
+            disconnect(_connectionHandler->getGamepadHandler(), &GamepadHandler::onListenForInputReceive, this, nullptr);
         }
     }
     else
@@ -458,7 +458,7 @@ void InputMapWidget::listenForTCodeCommandInput(QString action, QString actionNa
     auto outputDevice = _connectionHandler->getSelectedOutputConnection();
     QCheckBox* onReleaseChackbox = new QCheckBox();
     if(outputDevice && outputDevice->isConnected()) {
-        connect(outputDevice, &OutputConnectionHandler::commandRecieve, this, [this, action, actionName, onReleaseChackbox](OutputConnectionPacket commandInput) {
+        connect(outputDevice, &OutputConnectionHandler::commandReceive, this, [this, action, actionName, onReleaseChackbox](OutputConnectionPacket commandInput) {
             bool onRelease = onReleaseChackbox->isChecked();
             if(commandInput.original.isEmpty() ||
                 (commandInput.type == OutputDeviceCommandType::BUTTON &&
@@ -503,7 +503,7 @@ void InputMapWidget::listenForTCodeCommandInput(QString action, QString actionNa
     QFormLayout m_tcodeCommandSelectionLayout;
     m_tcodeCommandSelectionLayout.addRow("On release", onReleaseChackbox);
     if(DialogHandler::Dialog(this, &m_tcodeCommandSelectionLayout, true, false) == QDialog::DialogCode::Rejected) {
-        disconnect(outputDevice, &OutputConnectionHandler::commandRecieve, this, nullptr);
+        disconnect(outputDevice, &OutputConnectionHandler::commandReceive, this, nullptr);
         delete onReleaseChackbox;
     }
     // Use dropdown interface. Undecided yet
@@ -552,7 +552,7 @@ void InputMapWidget::tableWidget_Changed(QTableWidgetItem *item)
 {
     DialogHandler::DialogClose();
     releaseKeyboard();
-    disconnect(_connectionHandler->getGamepadHandler(), &GamepadHandler::onListenForInputRecieve, nullptr, nullptr);
+    disconnect(_connectionHandler->getGamepadHandler(), &GamepadHandler::onListenForInputReceive, nullptr, nullptr);
     disconnect(this, &InputMapWidget::keyRelease, nullptr, nullptr);
     if(item->column() == 1)
     {

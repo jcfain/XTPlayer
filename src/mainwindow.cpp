@@ -393,7 +393,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
 
     auto sizes = ui->mainFrameSplitter->sizes();
 
-    connect(SettingsHandler::instance(), &SettingsHandler::messageSend, this, &MainWindow::on_settingsMessageRecieve);
+    connect(SettingsHandler::instance(), &SettingsHandler::messageSend, this, &MainWindow::on_settingsMessageReceive);
     connect(SettingsHandler::instance(), &SettingsHandler::tagsChanged, this, &MainWindow::setupTagsPopup);
 
     connect(ui->mainFrameSplitter, &QSplitter::splitterMoved, this, &MainWindow::on_mainwindow_splitterMove);
@@ -426,7 +426,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(_xSettings, &SettingsDialog::updateLibrary, m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::libraryChange);
     connect(_xSettings, &SettingsDialog::disableHeatmapToggled, _playerControlsFrame, &PlayerControls::on_heatmapToggled);
     connect(_xSettings, &SettingsDialog::cleanUpThumbsDirectory, m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::cleanGlobalThumbDirectory);
-    connect(_xSettings, &SettingsDialog::messageSend, this, &MainWindow::on_settingsMessageRecieve);
+    connect(_xSettings, &SettingsDialog::messageSend, this, &MainWindow::on_settingsMessageReceive);
 
     connect(m_xtengine->syncHandler(), &SyncHandler::channelPositionChange, _xSettings, &SettingsDialog::setAxisProgressBar, Qt::QueuedConnection);
     connect(m_xtengine->syncHandler(), &SyncHandler::funscriptEnded, _xSettings, &SettingsDialog::resetAxisProgressBars, Qt::QueuedConnection);
@@ -653,7 +653,7 @@ void MainWindow::showEvent(QShowEvent* event) {
     _windowInitialized = true;
 }
 
-void MainWindow::on_settingsMessageRecieve(QString message, XLogLevel logLevel) {
+void MainWindow::on_settingsMessageReceive(QString message, XLogLevel logLevel) {
     DialogHandler::MessageBox(this, message, logLevel);
 }
 void MainWindow::onPasswordIncorrect()
@@ -1851,11 +1851,11 @@ void MainWindow::on_PlayBtn_clicked()
         {
             m_xtengine->syncHandler()->togglePause();
         }
-        else if(selectedFileListItem.type == LibraryListItemType::PlaylistInternal)
+        else if(!selectedFileListItem.nameNoExtension.isEmpty() && selectedFileListItem.type == LibraryListItemType::PlaylistInternal)
         {
             loadPlaylistIntoLibrary(selectedFileListItem.nameNoExtension, true);
         }
-        else
+        else if(!selectedFileListItem.ID.isEmpty())
         {
             stopAndPlayMedia(selectedFileListItem);
         }

@@ -140,7 +140,7 @@ bool LibrarySortFilterProxyModel::filterAcceptsRow(int sourceRow,
 
 
     //For some reason sorting random without any playlists crashes. Add dummy and hide it.
-    if(item.nameNoExtension == "DummyPlaylistThatNoOneShouldEverSeeOrNameTheSame")
+    if(item.nameNoExtension == DUMMY_PLAYLISTITEM)
         return false;
     bool hasAllTags = m_tags.empty();
     foreach (QString tag, m_tags) {

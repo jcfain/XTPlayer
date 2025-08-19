@@ -299,7 +299,7 @@ private:
     bool _libraryDockMode = false;
     QString _lastKeyboardTCode;
 
-    void on_settingsMessageRecieve(QString message, XLogLevel logLevel);
+    void on_settingsMessageReceive(QString message, XLogLevel logLevel);
 
     bool isLibraryLoading();
     QString selectedPlaylistName;
