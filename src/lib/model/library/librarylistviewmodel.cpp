@@ -33,7 +33,7 @@ LibraryListViewModel::LibraryListViewModel(MediaLibraryHandler* mediaLibraryHand
         }
         //endResetModel();
     } );
-    connect(_mediaLibraryHandler, &MediaLibraryHandler::itemRemoved, this,   [this](int indexOfItem, int newSize) {
+    connect(_mediaLibraryHandler, QOverload<int, int>::of(&MediaLibraryHandler::itemRemoved), this,   [this](int indexOfItem, int newSize) {
         if(indexOfItem > -1 && indexOfItem < m_librarySize) {
             beginResetModel();
             // removeRow(indexOfItem);

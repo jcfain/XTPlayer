@@ -18,7 +18,7 @@ LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(MediaLibraryHandler* me
 //    connect(mediaLibraryHandler, &MediaLibraryHandler::itemUpdated, this,   [this](LibraryListItem27 item) {
 //        invalidate();
 //    } );
-    connect(mediaLibraryHandler, &MediaLibraryHandler::itemRemoved, this,   [this](int indexOfItem, int newSize) {
+    connect(mediaLibraryHandler, QOverload<int, int>::of(&MediaLibraryHandler::itemRemoved), this,   [this](int indexOfItem, int newSize) {
 /*        auto index = this->index(indexOfItem, 0);
         emit dataChanged(index, index)*/;
         invalidate();
