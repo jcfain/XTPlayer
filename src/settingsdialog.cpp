@@ -2266,13 +2266,11 @@ void SettingsDialog::on_defaultWebDirBtn_clicked()
     ui.httpRootLineEdit->setText(SettingsHandler::getHttpServerRoot());
 }
 
-
 void SettingsDialog::on_defaultVRLibraryBtn_clicked()
 {
     SettingsHandler::removeAllVRLibraries();
     ui.vrLibraryLineEdit->setText(SettingsHandler::getLastSelectedVRLibrary());
 }
-
 
 void SettingsDialog::on_playbackRateSpinBoxValueChanged(double arg1)
 {
@@ -2283,5 +2281,10 @@ void SettingsDialog::on_playbackRateSpinBoxValueChanged(double arg1)
 void SettingsDialog::onDisableAutoThumbGenChkChanged(bool checked)
 {
     SettingsHandler::setDisableAutoThumbGeneration(checked);
+}
+
+void SettingsDialog::on_mediaManagementChk_clicked(bool checked)
+{
+    SettingsHandler::setEnableMediaManagement(checked);
 }
 

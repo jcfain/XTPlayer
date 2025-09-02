@@ -1055,7 +1055,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             {
                 QAction* action = myMenu.addAction(tr("Remove from playlist"), this, &MainWindow::removeFromPlaylist);
                 connect(action, &QAction::hovered, this, &MainWindow::on_action_hover);
-                action->setToolTip("Delete this item from the playlist.");
+                action->setToolTip("Remove this item from the playlist.");
             }
             if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
             {
@@ -1198,6 +1198,31 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             });
             connect(processMetadataAction, &QAction::hovered, this, &MainWindow::on_action_hover);
             processMetadataAction->setToolTip("Update the current media items metadata");
+
+            if(SettingsHandler::getEnableMediaManagement())
+            {
+                QAction* deleteMediaItemAction = myMenu.addAction(tr("Delete..."), this, [this, selectedFileListItem]() {
+                    QMessageBox::StandardButton reply;
+                    reply = QMessageBox::question(libraryList, tr("WARNING!"), tr("Are you sure you want to delete the media item: ") + selectedFileListItem.nameNoExtension + tr("\nThis will delete the following items:\n\nAll funscripts\nThumbnails\nMetadata\n\nThis action cannot be undone!!"),
+                                                  QMessageBox::Yes|QMessageBox::No);
+                    if (reply == QMessageBox::Yes)
+                    {
+                        QStringList errors;
+                        m_xtengine->mediaLibraryHandler()->deleteItem(selectedFileListItem.ID, errors);
+                        if(!errors.empty())
+                        {
+                            DialogHandler::MessageBox(this, tr("There was an error deleting media item.\nError: ") + errors.join('\n'), XLogLevel::Critical);
+                        }
+                        if(isPlaylistMode())
+                        {
+                            MainWindow::removeFromPlaylist();
+                        }
+                    }
+                });
+                connect(deleteMediaItemAction, &QAction::hovered, this, &MainWindow::on_action_hover);
+                QString tooltip = (isPlaylistMode() ? "Removes from playlist AND " : "");
+                deleteMediaItemAction->setToolTip(tooltip + "Delete the media item and associated thumbs/scripts.");
+            }
         }
 
         // Show context menu at handling position
@@ -1584,6 +1609,11 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
         //playingLibraryListIndex = libraryList->selectedRow();
 
         auto item = m_xtengine->mediaLibraryHandler()->findItemByMediaPath(selectedFileListItem.path);
+        if(!item)
+        {
+            DialogHandler::MessageBox(this, "Unable to find item in currently selected library", XLogLevel::Critical);
+            return;
+        }
         XMediaStateHandler::setPlaying(item);
 
         if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
@@ -3086,7 +3116,16 @@ void MainWindow::showInGraphicalShell(QString path)
 #elif defined(Q_OS_LINUX)
     // we cannot select a file here, because no file browser really supports it...
     //const QString folder = fileInfo.isDir() ? fileInfo.absoluteFilePath() : fileInfo.filePath();
-     QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.path()));
+    bool success = QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.filePath()));
+    if (!success)
+        DialogHandler::Dialog(this, "Error opening file");
+
+   // QProcess proc;
+   // bool success = proc.startDetached("xdg-open", QStringList() << fileInfo.path() );
+   // const QString error = QString::fromLocal8Bit(proc.readAllStandardError());
+   // success = success && error.isEmpty();
+   // if (!success)
+   //     DialogHandler::Dialog(this, error);
 //    QProcess browserProc;
 //    bool success = browserProc.startDetached("gtk-launch \"$(xdg-mime query default inode/directory)\"", QStringList() << folder );
 //    const QString error = QString::fromLocal8Bit(browserProc.readAllStandardError());

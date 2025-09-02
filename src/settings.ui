@@ -70,20 +70,20 @@
       <string>Restart required</string>
      </property>
      <property name="textFormat">
-      <enum>Qt::RichText</enum>
+      <enum>Qt::TextFormat::RichText</enum>
      </property>
      <property name="alignment">
-      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
      </property>
     </widget>
    </item>
    <item row="2" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Apply|QDialogButtonBox::Close|QDialogButtonBox::RestoreDefaults|QDialogButtonBox::SaveAll</set>
+      <set>QDialogButtonBox::StandardButton::Apply|QDialogButtonBox::StandardButton::Close|QDialogButtonBox::StandardButton::RestoreDefaults|QDialogButtonBox::StandardButton::SaveAll</set>
      </property>
      <property name="centerButtons">
       <bool>false</bool>
@@ -108,7 +108,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>4</number>
      </property>
      <widget class="QWidget" name="connectionTab">
       <attribute name="title">
@@ -116,7 +116,7 @@
       </attribute>
       <layout class="QFormLayout" name="formLayout">
        <property name="fieldGrowthPolicy">
-        <enum>QFormLayout::ExpandingFieldsGrow</enum>
+        <enum>QFormLayout::FieldGrowthPolicy::ExpandingFieldsGrow</enum>
        </property>
        <item row="0" column="0" colspan="2">
         <layout class="QGridLayout" name="ConnectionSettings" rowstretch="0,0,0,0,0,0,0" columnstretch="0,0,0,0,0,0,0,0,0,0,0,0,0">
@@ -605,7 +605,7 @@
           </property>
           <layout class="QGridLayout" name="gridLayout_7" rowstretch="0,0,0,0,0,0,0">
            <property name="sizeConstraint">
-            <enum>QLayout::SetNoConstraint</enum>
+            <enum>QLayout::SizeConstraint::SetNoConstraint</enum>
            </property>
            <item row="5" column="0" rowspan="2" colspan="8">
             <widget class="QGroupBox" name="advancedGroupBox">
@@ -730,7 +730,7 @@
               </size>
              </property>
              <property name="focusPolicy">
-              <enum>Qt::NoFocus</enum>
+              <enum>Qt::FocusPolicy::NoFocus</enum>
              </property>
              <property name="title">
               <string>Random motion on channels without scripts</string>
@@ -963,7 +963,7 @@
           <string>Channel Profile</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -984,7 +984,7 @@
        </property>
        <layout class="QFormLayout" name="formLayout_2">
         <property name="labelAlignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
         </property>
         <item row="0" column="0">
          <widget class="QLabel" name="label_2">
@@ -1084,7 +1084,7 @@
            <string>VR library</string>
           </property>
           <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
           </property>
          </widget>
         </item>
@@ -1104,7 +1104,7 @@
            <string>Chunk size</string>
           </property>
           <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
           </property>
          </widget>
         </item>
@@ -1124,7 +1124,7 @@
            <string>Thumb quality</string>
           </property>
           <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
           </property>
          </widget>
         </item>
@@ -1144,7 +1144,7 @@
            <string>Web server port</string>
           </property>
           <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
           </property>
          </widget>
         </item>
@@ -1154,7 +1154,7 @@
            <string>Web socket port</string>
           </property>
           <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
           </property>
          </widget>
         </item>
@@ -1189,7 +1189,7 @@ will be hit for the next chunk.</string>
            <string>Http root directory</string>
           </property>
           <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
           </property>
          </widget>
         </item>
@@ -1251,7 +1251,7 @@ will be hit for the next chunk.</string>
            <bool>true</bool>
           </property>
           <property name="textInteractionFlags">
-           <set>Qt::TextBrowserInteraction</set>
+           <set>Qt::TextInteractionFlag::TextBrowserInteraction</set>
           </property>
          </widget>
         </item>
@@ -1273,7 +1273,7 @@ will be hit for the next chunk.</string>
            <string>Enter this address into your devices browser</string>
           </property>
           <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
           </property>
           <property name="margin">
            <number>2</number>
@@ -1282,7 +1282,7 @@ will be hit for the next chunk.</string>
            <bool>true</bool>
           </property>
           <property name="textInteractionFlags">
-           <set>Qt::TextBrowserInteraction</set>
+           <set>Qt::TextInteractionFlag::TextBrowserInteraction</set>
           </property>
          </widget>
         </item>
@@ -1328,83 +1328,7 @@ will be hit for the next chunk.</string>
          <layout class="QGridLayout" name="gridLayout_11">
           <item row="0" column="0">
            <layout class="QGridLayout" name="gridLayout_4">
-            <item row="0" column="0">
-             <widget class="QCheckBox" name="showVRInLibraryViewCheckbox">
-              <property name="text">
-               <string>Show VR items in library view</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QCheckBox" name="processMetadataOnStartChk">
-              <property name="text">
-               <string>Process all metadata on start</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QCheckBox" name="skipStandAloneFunscriptsInMainLibraryPlaylist">
-              <property name="toolTip">
-               <string>If checked, the library will skip playing standalone funscripts when the previous item finishes playing.</string>
-              </property>
-              <property name="text">
-               <string>Skip stand alone funscripts in playlist</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QCheckBox" name="showLoneFunscriptsInLibraryCheckbox">
-              <property name="toolTip">
-               <string>If checked, funscripts in your library folder will be shown if they do not have an associated video.</string>
-              </property>
-              <property name="text">
-               <string>Hide stand alone funscripts in library</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QCheckBox" name="hideMediaWithoutFunscriptsCheckbox">
-              <property name="text">
-               <string>Hide media without funscript</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
-             <widget class="QPushButton" name="thumbDirButton">
-              <property name="text">
-               <string>Change thumb directory</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QPushButton" name="thumbsDirDefaultButton">
-              <property name="text">
-               <string>Thumb Directory Default</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="0">
-             <widget class="QPushButton" name="cleanupThumbsPushButton">
-              <property name="text">
-               <string>Clean up generated thumbs</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="1">
-             <widget class="QLabel" name="cleanUpThumbsStatus">
-              <property name="text">
-               <string>Thumb cleanup: Not running</string>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="0">
-             <widget class="QPushButton" name="tagSetupButton">
-              <property name="text">
-               <string>Tag setup</string>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="1">
+            <item row="6" column="1">
              <widget class="QPushButton" name="smartTagButton">
               <property name="toolTip">
                <string>Smart tags will search the path for the tag and apply it to the metadata on media load.
@@ -1415,31 +1339,114 @@ will be hit for the next chunk.</string>
               </property>
              </widget>
             </item>
-            <item row="6" column="0">
-             <widget class="QPushButton" name="defaultUserTagsButton">
-              <property name="text">
-               <string>Default tags</string>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="1">
+            <item row="7" column="1">
              <widget class="QPushButton" name="defaultSmartTagsButton">
               <property name="text">
                <string>Default smart tags</string>
               </property>
              </widget>
             </item>
-            <item row="7" column="0" colspan="2">
+            <item row="1" column="1">
+             <widget class="QCheckBox" name="processMetadataOnStartChk">
+              <property name="text">
+               <string>Process all metadata on start</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QPushButton" name="tagSetupButton">
+              <property name="text">
+               <string>Tag setup</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="0">
+             <widget class="QPushButton" name="defaultUserTagsButton">
+              <property name="text">
+               <string>Default tags</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QCheckBox" name="showLoneFunscriptsInLibraryCheckbox">
+              <property name="toolTip">
+               <string>If checked, funscripts in your library folder will be shown if they do not have an associated video.</string>
+              </property>
+              <property name="text">
+               <string>Hide stand alone funscripts in library</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QCheckBox" name="showVRInLibraryViewCheckbox">
+              <property name="text">
+               <string>Show VR items in library view</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QLabel" name="cleanUpThumbsStatus">
+              <property name="text">
+               <string>Thumb cleanup: Not running</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QPushButton" name="thumbDirButton">
+              <property name="text">
+               <string>Change thumb directory</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QCheckBox" name="skipStandAloneFunscriptsInMainLibraryPlaylist">
+              <property name="toolTip">
+               <string>If checked, the library will skip playing standalone funscripts when the previous item finishes playing.</string>
+              </property>
+              <property name="text">
+               <string>Skip stand alone funscripts in playlist</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QCheckBox" name="hideMediaWithoutFunscriptsCheckbox">
+              <property name="text">
+               <string>Hide media without funscript</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QCheckBox" name="disableAutoThumbGenChk">
+              <property name="text">
+               <string>Disable auto thumb generation</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QPushButton" name="thumbsDirDefaultButton">
+              <property name="text">
+               <string>Thumb Directory Default</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QPushButton" name="cleanupThumbsPushButton">
+              <property name="text">
+               <string>Clean up generated thumbs</string>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="0" colspan="2">
              <widget class="QPushButton" name="libraryExclusionsBtn">
               <property name="text">
                <string>Library exclusions</string>
               </property>
              </widget>
             </item>
-            <item row="2" column="1">
-             <widget class="QCheckBox" name="disableAutoThumbGenChk">
+            <item row="0" column="0">
+             <widget class="QCheckBox" name="mediaManagementChk">
               <property name="text">
-               <string>Disable auto thumb generation</string>
+               <string>Enable media management</string>
               </property>
              </widget>
             </item>
@@ -1495,7 +1502,7 @@ will be hit for the next chunk.</string>
           <item row="0" column="0">
            <layout class="QFormLayout" name="formLayout_4">
             <property name="labelAlignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
             </property>
             <property name="horizontalSpacing">
              <number>6</number>
@@ -1583,7 +1590,7 @@ will be hit for the next chunk.</string>
              <string>Auto mark viewed percentage</string>
             </property>
             <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
             </property>
            </widget>
           </item>
@@ -1732,7 +1739,7 @@ that has no script of the same name.</string>
                <number>100</number>
               </property>
               <property name="orientation">
-               <enum>Qt::Horizontal</enum>
+               <enum>Qt::Orientation::Horizontal</enum>
               </property>
              </widget>
             </item>
@@ -1748,7 +1755,7 @@ that has no script of the same name.</string>
                <number>100</number>
               </property>
               <property name="orientation">
-               <enum>Qt::Horizontal</enum>
+               <enum>Qt::Orientation::Horizontal</enum>
               </property>
              </widget>
             </item>
@@ -1758,7 +1765,7 @@ that has no script of the same name.</string>
                <string>Volume 0.5</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -1768,7 +1775,7 @@ that has no script of the same name.</string>
                <string>Rate 0.5</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -1778,7 +1785,7 @@ that has no script of the same name.</string>
                <string>Pitch 0.5</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -1791,7 +1798,7 @@ that has no script of the same name.</string>
                <number>100</number>
               </property>
               <property name="orientation">
-               <enum>Qt::Horizontal</enum>
+               <enum>Qt::Orientation::Horizontal</enum>
               </property>
              </widget>
             </item>
@@ -1804,7 +1811,7 @@ that has no script of the same name.</string>
                <string>Voice</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>

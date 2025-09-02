@@ -281,6 +281,8 @@ private slots:
 
     void onDisableAutoThumbGenChkChanged(bool checked);
 
+    void on_mediaManagementChk_clicked(bool checked);
+
 private:
 
     Ui::SettingsDialog ui;

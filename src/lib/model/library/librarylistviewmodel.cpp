@@ -10,45 +10,53 @@ LibraryListViewModel::LibraryListViewModel(MediaLibraryHandler* mediaLibraryHand
     connect(_mediaLibraryHandler, &MediaLibraryHandler::libraryLoaded, this,  [this]() {
         beginResetModel();
         m_librarySize = getData()->length();
-        QModelIndex topLeft = createIndex(0,0);
-        QModelIndex bottomRight = createIndex( m_librarySize, 0);
-        emit dataChanged( topLeft, bottomRight );
+        // QModelIndex topLeft = createIndex(0,0);
+        // QModelIndex bottomRight = createIndex( m_librarySize, 0);
+        // emit dataChanged( topLeft, bottomRight );
         endResetModel();
     } );
     connect(_mediaLibraryHandler, &MediaLibraryHandler::metadataProcessEnd, this,  [this]() {
         beginResetModel();
         m_librarySize = getData()->length();
-        QModelIndex topLeft = createIndex(0,0);
-        QModelIndex bottomRight = createIndex( m_librarySize, 0);
-        emit dataChanged( topLeft, bottomRight );
+        // QModelIndex topLeft = createIndex(0,0);
+        // QModelIndex bottomRight = createIndex( m_librarySize, 0);
+        // emit dataChanged( topLeft, bottomRight );
         endResetModel();
     } );
     connect(_mediaLibraryHandler, &MediaLibraryHandler::itemUpdated, this,   [this](int indexOfItem, QVector<int> roles) {
         if(indexOfItem > -1 && indexOfItem < m_librarySize) {
             auto index = this->index(indexOfItem, 0);
             emit dataChanged(index, index, roles);
+            QModelIndex topLeft = createIndex(0,0);
+            QModelIndex bottomRight = createIndex( m_librarySize, 0);
+            emit dataChanged( topLeft, bottomRight );// Must be emitted when an existing item changes
         }
         //endResetModel();
     } );
     connect(_mediaLibraryHandler, &MediaLibraryHandler::itemRemoved, this,   [this](int indexOfItem, int newSize) {
         if(indexOfItem > -1 && indexOfItem < m_librarySize) {
-            if(removeRow(indexOfItem))
-                m_librarySize = newSize;
+            beginResetModel();
+            // removeRow(indexOfItem);
+            m_librarySize = newSize;
+            endResetModel();
         }
     } );
     connect(_mediaLibraryHandler, &MediaLibraryHandler::itemAdded, this,   [this](int indexOfItem, int newSize) {
         if(indexOfItem > -1 && indexOfItem <= m_librarySize)
         {
-            m_librarySize = newSize;
-            auto index = this->index(indexOfItem, 0);
-            //emit dataChanged(index, index);
-            beginInsertRows(index, indexOfItem, indexOfItem);
-            insertRow(indexOfItem);
+            // auto index = createIndex(indexOfItem, 0);
+            // beginInsertRows(index, indexOfItem, indexOfItem);
             // m_librarySize = newSize;
-            // auto index = this->index(indexOfItem, 0);
-            // beginInsertRows(QModelIndex(), indexOfItem, indexOfItem);
-            // insertRow(indexOfItem);
-            endInsertRows();
+            // //emit dataChanged(index, index);
+            // // insertRow(indexOfItem);
+            // // m_librarySize = newSize;
+            // // auto index = this->index(indexOfItem, 0);
+            // // beginInsertRows(QModelIndex(), indexOfItem, indexOfItem);
+            // // insertRow(indexOfItem);
+            // endInsertRows();
+            beginResetModel();
+            m_librarySize = newSize;
+            endResetModel();
         }
     } );
 
