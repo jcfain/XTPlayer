@@ -19,6 +19,9 @@ deployDirectory="${xtplayerSource}"/Deploy/
 qtDirectory="${home}"Qt/6.9.1/macos/bin
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
+#Export directory with qmake to path.
+export PATH="${qtDirectory}":$PATH
+export LD_LIBRARY_PATH="${deployDirectory}lib;${xtengineLocation}"
 
 cd ${xtplayerSource}
 #if needToPull; then
