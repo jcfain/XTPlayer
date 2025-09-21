@@ -16,7 +16,7 @@ class LibraryManager : public QDialog
 {
     Q_OBJECT
 public:
-    LibraryManager(QWidget* parent = nullptr);
+    LibraryManager(LibraryType libraryType, QWidget* parent = nullptr);
     ~LibraryManager();
 private slots:
     void on_addButton_clicked();
@@ -28,6 +28,7 @@ private slots:
 private:
     Ui::LibraryExclusionsDialog ui;
     QList<int> itemsToRemove;
+    LibraryType m_libraryType;
 };
 
 #endif // LIBRARYMANAGER_H

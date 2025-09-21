@@ -7,7 +7,7 @@ LibraryExclusions::LibraryExclusions(QWidget* parent) : QDialog(parent)
 {
     ui.setupUi(this);
     ui.listWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    ui.listWidget->addItems(SettingsHandler::getLibraryExclusions());
+    ui.listWidget->addItems(SettingsHandler::mediaLibrarySettings.get(LibraryType::EXCLUSION));
 }
 
 LibraryExclusions::~LibraryExclusions()
@@ -28,7 +28,7 @@ void LibraryExclusions::on_addButton_clicked()
 //        }
 //    }
     QFileDialog file_dialog;
-    QString library = SettingsHandler::getLastSelectedLibrary();
+    QString library = SettingsHandler::mediaLibrarySettings.getLast(LibraryType::MAIN);
     file_dialog.setDirectory(library);
     //file_dialog.setOption(QFileDialog::DontUseNativeDialog, true);
     //file_dialog.setFileMode(QFileDialog::DirectoryOnly);
@@ -41,7 +41,7 @@ void LibraryExclusions::on_addButton_clicked()
         QStringList duplicates;
         foreach(auto path, paths)
         {
-            if(SettingsHandler::addToLibraryExclusions(path, duplicates))
+            if(SettingsHandler::mediaLibrarySettings.add(LibraryType::EXCLUSION, path, duplicates))
                 ui.listWidget->addItem(path);
         }
         if(!duplicates.isEmpty())
@@ -58,7 +58,7 @@ void LibraryExclusions::on_removeButton_clicked()
         {
             itemsToRemove.append(ui.listWidget->row(item));
         }
-        SettingsHandler::removeFromLibraryExclusions(itemsToRemove);
+        SettingsHandler::mediaLibrarySettings.remove(LibraryType::EXCLUSION, itemsToRemove);
         qDeleteAll(ui.listWidget->selectedItems());
     }
 }

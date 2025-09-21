@@ -11,6 +11,7 @@
 #include "xtpsettings.h"
 #include "gettextdialog.h"
 #include "tagManager.h"
+#include "libraryManager.h"
 
 SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent), _inputMapWidget(0)
 {
@@ -336,7 +337,7 @@ void SettingsDialog::setupUi()
         ui.webAddressInstructionsLabel->setVisible(SettingsHandler::getEnableHttpServer());
         ui.webAddressLinkLabel->setVisible(SettingsHandler::getEnableHttpServer());
         ui.httpRootLineEdit->setText(SettingsHandler::getHttpServerRoot());
-        ui.vrLibraryLineEdit->setText(SettingsHandler::getLastSelectedVRLibrary());
+        ui.vrLibraryLineEdit->setText(SettingsHandler::mediaLibrarySettings.getLast(LibraryType::VR));
         ui.chunkSizeDoubleSpinBox->setValue(SettingsHandler::getHTTPChunkSizeMB());
         ui.httpPortSpinBox->setValue(SettingsHandler::getHTTPPort());
         ui.webSocketPortSpinBox->setValue(SettingsHandler::getWebSocketPort());
@@ -1630,8 +1631,8 @@ void SettingsDialog::on_tCodeHome_clicked()
 
 void SettingsDialog::on_libraryExclusionsBtn_clicked()
 {
-    _libraryExclusions = new LibraryExclusions(this);
-    _libraryExclusions->show();
+    LibraryManager libraryManager(LibraryType::EXCLUSION);
+    libraryManager.exec();
 }
 
 void SettingsDialog::on_passwordButton_clicked()
@@ -1772,7 +1773,7 @@ void SettingsDialog::on_skipToMoneyShotPlaysFunscriptCheckbox_clicked(bool check
 
 void SettingsDialog::on_browseSkipToMoneyShotFunscriptButton_clicked(bool checked)
 {
-    QString selectedScript = QFileDialog::getOpenFileName(this, tr("Choose script"), SettingsHandler::getLastSelectedLibrary(), tr("Scripts (*.funscript *.zip)"));
+    QString selectedScript = QFileDialog::getOpenFileName(this, tr("Choose script"), SettingsHandler::mediaLibrarySettings.getLast(LibraryType::MAIN), tr("Scripts (*.funscript *.zip)"));
     if (selectedScript != Q_NULLPTR)
     {
         SettingsHandler::setSkipToMoneyShotFunscript(selectedScript);
@@ -1816,7 +1817,7 @@ void SettingsDialog::on_browseHttpRootButton_clicked()
 
 void SettingsDialog::on_browseVRLibraryButton_clicked()
 {
-    QString selectedDirectory = QFileDialog::getExistingDirectory(this, tr("Choose VR library"), SettingsHandler::getLastSelectedLibrary());
+    QString selectedDirectory = QFileDialog::getExistingDirectory(this, tr("Choose VR library"), SettingsHandler::mediaLibrarySettings.getLast(LibraryType::MAIN));
     on_vrLibraryLineEdit_textEdited(selectedDirectory);
 }
 
@@ -1825,7 +1826,7 @@ void SettingsDialog::on_vrLibraryLineEdit_textEdited(const QString &selectedDire
     if (!selectedDirectory.isEmpty() && QFile::exists(selectedDirectory))
     {
         QStringList messages;
-        if(SettingsHandler::addSelectedVRLibrary(selectedDirectory, messages))
+        if(SettingsHandler::mediaLibrarySettings.add(LibraryType::VR, selectedDirectory, messages))
             ui.vrLibraryLineEdit->setText(selectedDirectory);
         else
             DialogHandler::MessageBox(this, messages.join("\n"), XLogLevel::Warning);
@@ -2268,8 +2269,8 @@ void SettingsDialog::on_defaultWebDirBtn_clicked()
 
 void SettingsDialog::on_defaultVRLibraryBtn_clicked()
 {
-    SettingsHandler::removeAllVRLibraries();
-    ui.vrLibraryLineEdit->setText(SettingsHandler::getLastSelectedVRLibrary());
+    SettingsHandler::mediaLibrarySettings.clear(LibraryType::VR);
+    ui.vrLibraryLineEdit->setText("");
 }
 
 void SettingsDialog::on_playbackRateSpinBoxValueChanged(double arg1)

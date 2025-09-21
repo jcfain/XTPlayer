@@ -24,7 +24,6 @@
 #else
     #include "videohandlerQt5.h"
 #endif
-#include "libraryexclusions.h"
 
 
 class SettingsDialog : public QDialog
@@ -297,7 +296,7 @@ private:
 
     QList<QWidget*> _multiplierWidgets;
 
-    LibraryExclusions* _libraryExclusions;
+    // LibraryExclusions* _libraryExclusions;
     QTextToSpeech* m_tts = 0;
     bool _interfaceInitialized = false;
     QList<SerialComboboxItem> serialPorts;

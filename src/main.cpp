@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
         QString targetDir = parser.value(addLibraryFolderOption);
         if(!targetDir.isEmpty() && QFileInfo::exists(targetDir)) {
             QStringList errors;
-            if(SettingsHandler::addSelectedLibrary(targetDir, errors)) {
+            if(SettingsHandler::mediaLibrarySettings.add(LibraryType::MAIN, targetDir, errors)) {
                 SettingsHandler::Save();
                 LogHandler::Info("Success!");
             } else
@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
         QString targetDir = parser.value(excludeLibraryFolderOption);
         if(!targetDir.isEmpty() && QFileInfo::exists(targetDir)) {
             QStringList errors;
-            if(SettingsHandler::addToLibraryExclusions(targetDir, errors)) {
+            if(SettingsHandler::mediaLibrarySettings.add(LibraryType::EXCLUSION, targetDir, errors)) {
                 SettingsHandler::Save();
                 LogHandler::Info("Success!");
             } else
@@ -230,21 +230,21 @@ int main(int argc, char *argv[])
     if(parser.isSet(removeLibraryFolderOption)) {
         QString targetDir = parser.value(removeLibraryFolderOption);
         if(!targetDir.isEmpty() && QFileInfo::exists(targetDir)) {
-            QStringList folders = SettingsHandler::getSelectedLibrary();
+            QStringList folders = SettingsHandler::mediaLibrarySettings.get(LibraryType::MAIN);
             if(folders.contains(targetDir)) {
                 LogHandler::Info("Removing library folder..");
-                SettingsHandler::removeSelectedLibrary(targetDir);
+                SettingsHandler::mediaLibrarySettings.remove(LibraryType::MAIN, targetDir);
                 SettingsHandler::Save();
                 LogHandler::Info("Success!");
                 delete xtengine;
                 delete a;
                 return 0;
             }
-            QStringList exclusions = SettingsHandler::getLibraryExclusions();
+            QStringList exclusions = SettingsHandler::mediaLibrarySettings.get(LibraryType::EXCLUSION);
             if(exclusions.contains(targetDir)) {
                 LogHandler::Info("Removing excluded folder..");
                 QList<int> toRemove = QList<int> {(int)exclusions.indexOf(targetDir)};
-                SettingsHandler::removeFromLibraryExclusions(toRemove);
+                SettingsHandler::mediaLibrarySettings.remove(LibraryType::EXCLUSION, toRemove);
                 SettingsHandler::Save();
                 LogHandler::Info("Success!");
                 delete xtengine;
@@ -453,7 +453,7 @@ int main(int argc, char *argv[])
         return 0;
     }
     if(parser.isSet(listLibraryFolderOption)) {
-        QStringList folders = SettingsHandler::getSelectedLibrary();
+        QStringList folders = SettingsHandler::mediaLibrarySettings.get(LibraryType::MAIN);
         LogHandler::Info("Media folders:");
         if(folders.isEmpty()) {
             LogHandler::Info("None");
@@ -461,7 +461,7 @@ int main(int argc, char *argv[])
         foreach (QString folder, folders) {
             LogHandler::Info(folder);
         }
-        QStringList exclusions = SettingsHandler::getLibraryExclusions();
+        QStringList exclusions = SettingsHandler::mediaLibrarySettings.get(LibraryType::EXCLUSION);
         LogHandler::Info("Excluded Media folders:");
         if(exclusions.isEmpty()) {
             LogHandler::Info("None");

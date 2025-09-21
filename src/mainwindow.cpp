@@ -625,7 +625,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
             openWelcomeDialog();
         });
     } else {
-        QStringList currentLibraries = SettingsHandler::getSelectedLibrary();
+        QStringList currentLibraries = SettingsHandler::mediaLibrarySettings.get(LibraryType::MAIN);
         if(currentLibraries.empty())
             on_actionSelect_library_triggered();
     }
@@ -1237,7 +1237,7 @@ void MainWindow::changeDeoFunscript()
     {
         QFileInfo videoFile(playingPacket.path);
         funscriptFileSelectorOpen = true;
-        QString funscriptPath = QFileDialog::getOpenFileName(this, tr("Choose script for video: ") + videoFile.fileName(), SettingsHandler::getLastSelectedLibrary(), "Script Files (*.funscript)");
+        QString funscriptPath = QFileDialog::getOpenFileName(this, tr("Choose script for video: ") + videoFile.fileName(), SettingsHandler::mediaLibrarySettings.getLast(LibraryType::MAIN), "Script Files (*.funscript)");
         funscriptFileSelectorOpen = false;
         if (!funscriptPath.isEmpty())
         {
@@ -1256,7 +1256,7 @@ void MainWindow::openWelcomeDialog()
 {
     _welcomeDialog = new WelcomeDialog(this);
     connect(_welcomeDialog, &WelcomeDialog::onClose, this, [this]() {
-        QStringList currentLibraries = SettingsHandler::getSelectedLibrary();
+        QStringList currentLibraries = SettingsHandler::mediaLibrarySettings.get(LibraryType::MAIN);
         if(currentLibraries.empty())
             on_actionSelect_library_triggered();
         if(_welcomeDialog) {
@@ -1384,7 +1384,7 @@ void MainWindow::onSetLibraryLoaded()
 
 void MainWindow::on_actionSelect_library_triggered()
 {
-    QStringList oldPaths = SettingsHandler::getSelectedLibrary();
+    QStringList oldPaths = SettingsHandler::mediaLibrarySettings.get(LibraryType::MAIN);
     QString firstPathExists;
     foreach(auto path, oldPaths) {
         if(QFileInfo::exists(path)) {
@@ -1394,9 +1394,9 @@ void MainWindow::on_actionSelect_library_triggered()
     }
     QDir currentDir(firstPathExists);
     QString defaultPath = !firstPathExists.isEmpty() ? firstPathExists : ".";
-    LibraryManager libraryManager;
+    LibraryManager libraryManager(LibraryType::MAIN, this);
     libraryManager.exec();
-    QStringList currentPaths = SettingsHandler::getSelectedLibrary();
+    QStringList currentPaths = SettingsHandler::mediaLibrarySettings.get(LibraryType::MAIN);
 
     if(!currentPaths.isEmpty()) {
         if(oldPaths.isEmpty()) {
@@ -2148,7 +2148,7 @@ void MainWindow::onFunscriptSearchResult(QString mediaPath, QString funscriptPat
                 LogHandler::Debug("onFunscriptSearchResult Enter no scripts found. Ask user");
                 onText_to_speech("Script for video playing in VR not found. Please check your computer to select a script.");
                 funscriptFileSelectorOpen = true;
-                funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + mediaPath, SettingsHandler::getLastSelectedLibrary(), "Script Files (*.funscript);;Zip (*.zip)");
+                funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + mediaPath, SettingsHandler::mediaLibrarySettings.getLast(LibraryType::MAIN), "Script Files (*.funscript);;Zip (*.zip)");
                 funscriptFileSelectorOpen = false;
                 saveLinkedScript = true;
                 //LogHandler::Debug("funscriptPath: "+funscriptPath);
