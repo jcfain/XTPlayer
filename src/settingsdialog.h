@@ -24,6 +24,8 @@
 #else
     #include "videohandlerQt5.h"
 #endif
+#include "libraryManager.h"
+#include "tagManager.h"
 
 
 class SettingsDialog : public QDialog
@@ -281,6 +283,12 @@ private slots:
     void onDisableAutoThumbGenChkChanged(bool checked);
 
     void on_mediaManagementChk_clicked(bool checked);
+
+    void on_libraryFunscriptsBtn_clicked();
+
+    void on_libraryMediaBtn_clicked();
+
+    void on_libraryVRBtn_clicked();
 
 private:
 

@@ -1,5 +1,5 @@
-#ifndef LIBRARYMANAGER_H
-#define LIBRARYMANAGER_H
+#ifndef TAGMANAGER_H
+#define TAGMANAGER_H
 
 #include <QObject>
 #include <QWidget>
@@ -32,4 +32,4 @@ private:
     bool m_smartTagMode;
 };
 
-#endif // LIBRARYMANAGER_H
+#endif // TAGMANAGER_H

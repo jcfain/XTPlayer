@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1304</width>
-    <height>685</height>
+    <height>713</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -1328,14 +1328,17 @@ will be hit for the next chunk.</string>
          <layout class="QGridLayout" name="gridLayout_11">
           <item row="0" column="0">
            <layout class="QGridLayout" name="gridLayout_4">
-            <item row="6" column="1">
-             <widget class="QPushButton" name="smartTagButton">
-              <property name="toolTip">
-               <string>Smart tags will search the path for the tag and apply it to the metadata on media load.
- Important: New tags will not take effect until metadata has been processed again.</string>
-              </property>
+            <item row="8" column="1">
+             <widget class="QPushButton" name="libraryVRBtn">
               <property name="text">
-               <string>Smart tag setup</string>
+               <string>Library VR</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QCheckBox" name="showVRInLibraryViewCheckbox">
+              <property name="text">
+               <string>Show VR items in library view</string>
               </property>
              </widget>
             </item>
@@ -1343,27 +1346,6 @@ will be hit for the next chunk.</string>
              <widget class="QPushButton" name="defaultSmartTagsButton">
               <property name="text">
                <string>Default smart tags</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QCheckBox" name="processMetadataOnStartChk">
-              <property name="text">
-               <string>Process all metadata on start</string>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="0">
-             <widget class="QPushButton" name="tagSetupButton">
-              <property name="text">
-               <string>Tag setup</string>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="0">
-             <widget class="QPushButton" name="defaultUserTagsButton">
-              <property name="text">
-               <string>Default tags</string>
               </property>
              </widget>
             </item>
@@ -1377,10 +1359,49 @@ will be hit for the next chunk.</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="0">
-             <widget class="QCheckBox" name="showVRInLibraryViewCheckbox">
+            <item row="4" column="0">
+             <widget class="QPushButton" name="thumbDirButton">
               <property name="text">
-               <string>Show VR items in library view</string>
+               <string>Change thumb directory</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QPushButton" name="thumbsDirDefaultButton">
+              <property name="text">
+               <string>Thumb Directory Default</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="QPushButton" name="smartTagButton">
+              <property name="toolTip">
+               <string>Smart tags will search the path for the tag and apply it to the metadata on media load.
+ Important: New tags will not take effect until metadata has been processed again.</string>
+              </property>
+              <property name="text">
+               <string>Smart tag setup</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="0">
+             <widget class="QPushButton" name="defaultUserTagsButton">
+              <property name="text">
+               <string>Default tags</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QCheckBox" name="hideMediaWithoutFunscriptsCheckbox">
+              <property name="text">
+               <string>Hide media without funscript</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QPushButton" name="tagSetupButton">
+              <property name="text">
+               <string>Tag setup</string>
               </property>
              </widget>
             </item>
@@ -1391,10 +1412,31 @@ will be hit for the next chunk.</string>
               </property>
              </widget>
             </item>
-            <item row="4" column="0">
-             <widget class="QPushButton" name="thumbDirButton">
+            <item row="0" column="0">
+             <widget class="QCheckBox" name="mediaManagementChk">
               <property name="text">
-               <string>Change thumb directory</string>
+               <string>Enable media management</string>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="0">
+             <widget class="QPushButton" name="libraryMediaBtn">
+              <property name="text">
+               <string>Library media</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QCheckBox" name="processMetadataOnStartChk">
+              <property name="text">
+               <string>Process all metadata on start</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QCheckBox" name="disableAutoThumbGenChk">
+              <property name="text">
+               <string>Disable auto thumb generation</string>
               </property>
              </widget>
             </item>
@@ -1408,27 +1450,6 @@ will be hit for the next chunk.</string>
               </property>
              </widget>
             </item>
-            <item row="3" column="0">
-             <widget class="QCheckBox" name="hideMediaWithoutFunscriptsCheckbox">
-              <property name="text">
-               <string>Hide media without funscript</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QCheckBox" name="disableAutoThumbGenChk">
-              <property name="text">
-               <string>Disable auto thumb generation</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="1">
-             <widget class="QPushButton" name="thumbsDirDefaultButton">
-              <property name="text">
-               <string>Thumb Directory Default</string>
-              </property>
-             </widget>
-            </item>
             <item row="5" column="0">
              <widget class="QPushButton" name="cleanupThumbsPushButton">
               <property name="text">
@@ -1436,17 +1457,17 @@ will be hit for the next chunk.</string>
               </property>
              </widget>
             </item>
-            <item row="8" column="0" colspan="2">
+            <item row="9" column="1">
              <widget class="QPushButton" name="libraryExclusionsBtn">
               <property name="text">
                <string>Library exclusions</string>
               </property>
              </widget>
             </item>
-            <item row="0" column="0">
-             <widget class="QCheckBox" name="mediaManagementChk">
+            <item row="9" column="0">
+             <widget class="QPushButton" name="libraryFunscriptsBtn">
               <property name="text">
-               <string>Enable media management</string>
+               <string>Library funscripts</string>
               </property>
              </widget>
             </item>
@@ -1596,6 +1617,12 @@ will be hit for the next chunk.</string>
           </item>
           <item row="3" column="1">
            <widget class="QSpinBox" name="viewedPercentageSpinBox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="suffix">
              <string>%</string>
             </property>

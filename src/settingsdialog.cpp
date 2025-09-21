@@ -5,6 +5,7 @@
 #include "lib/handler/funscripthandler.h"
 #include "lib/tool/qsettings_json.h"
 #include "lib/tool/boolinq.h"
+#include "lib/lookup/enum.h"
 
 #include "addchanneldialog.h"
 #include "channeltablecomboboxdelegate.h"
@@ -1631,7 +1632,7 @@ void SettingsDialog::on_tCodeHome_clicked()
 
 void SettingsDialog::on_libraryExclusionsBtn_clicked()
 {
-    LibraryManager libraryManager(LibraryType::EXCLUSION);
+    LibraryManager libraryManager(LibraryType::EXCLUSION, m_medialLibraryHandler, this);
     libraryManager.exec();
 }
 
@@ -2287,5 +2288,23 @@ void SettingsDialog::onDisableAutoThumbGenChkChanged(bool checked)
 void SettingsDialog::on_mediaManagementChk_clicked(bool checked)
 {
     SettingsHandler::setEnableMediaManagement(checked);
+}
+
+void SettingsDialog::on_libraryFunscriptsBtn_clicked()
+{
+    LibraryManager lm(LibraryType::FUNSCRIPT, m_medialLibraryHandler, this);
+    lm.exec();
+}
+
+void SettingsDialog::on_libraryMediaBtn_clicked()
+{
+    LibraryManager lm(LibraryType::MAIN, m_medialLibraryHandler, this);
+    lm.exec();
+}
+
+void SettingsDialog::on_libraryVRBtn_clicked()
+{
+    LibraryManager lm(LibraryType::VR, m_medialLibraryHandler, this);
+    lm.exec();
 }
 

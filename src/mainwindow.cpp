@@ -1384,40 +1384,8 @@ void MainWindow::onSetLibraryLoaded()
 
 void MainWindow::on_actionSelect_library_triggered()
 {
-    QStringList oldPaths = SettingsHandler::mediaLibrarySettings.get(LibraryType::MAIN);
-    QString firstPathExists;
-    foreach(auto path, oldPaths) {
-        if(QFileInfo::exists(path)) {
-            firstPathExists = path;
-            break;
-        }
-    }
-    QDir currentDir(firstPathExists);
-    QString defaultPath = !firstPathExists.isEmpty() ? firstPathExists : ".";
-    LibraryManager libraryManager(LibraryType::MAIN, this);
+    LibraryManager libraryManager(LibraryType::MAIN, m_xtengine->mediaLibraryHandler(), this);
     libraryManager.exec();
-    QStringList currentPaths = SettingsHandler::mediaLibrarySettings.get(LibraryType::MAIN);
-
-    if(!currentPaths.isEmpty()) {
-        if(oldPaths.isEmpty()) {
-            m_xtengine->mediaLibraryHandler()->loadLibraryAsync();
-            return;
-        }
-        QSet<QString> additions = QSet<QString>(currentPaths.begin(),currentPaths.end()).subtract(QSet<QString>(oldPaths.begin(), oldPaths.end()));
-        QSet<QString> subtraction = QSet<QString>(oldPaths.begin(), oldPaths.end()).subtract(QSet<QString>(currentPaths.begin(),currentPaths.end()));
-        if(!subtraction.isEmpty() || !additions.empty()) {
-            auto message = m_xtengine->mediaLibraryHandler()->isLibraryProcessing() ? "Stop current loading process and restart with new list now?" : "Load all libraries now?";
-            if(DialogHandler::Dialog(this, message) == QDialog::DialogCode::Accepted) {
-                m_xtengine->mediaLibraryHandler()->loadLibraryAsync();
-            }
-        }
-    }
-//    QString selectedLibrary = QFileDialog::getExistingDirectory(this, tr("Choose media library"), defaultPath, QFileDialog::ReadOnly);
-//    if (selectedLibrary != Q_NULLPTR)
-//    {
-//        SettingsHandler::addSelectedLibrary(selectedLibrary);
-//        m_xtengine->mediaLibraryHandler()->loadLibraryAsync();
-//    }
 }
 
 void MainWindow::on_LibraryList_itemClicked(QModelIndex index)
