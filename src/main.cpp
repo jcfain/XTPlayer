@@ -20,9 +20,6 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    // setenv("QT_MEDIA_BACKEND", "ffmpeg")
-    // QProcessEnvironment::systemEnvironment().insert("QT_MEDIA_BACKEND", "gstreamer");
-
     QCoreApplication *a;
     bool consoleMode = false;
     bool verboseMode = false;

@@ -290,6 +290,8 @@ private slots:
 
     void on_libraryVRBtn_clicked();
 
+    void on_useMediaBackendChk_clicked(bool checked);
+
 private:
 
     Ui::SettingsDialog ui;

@@ -405,6 +405,8 @@ void SettingsDialog::setupUi()
 
         connect(SettingsHandler::instance(), &SettingsHandler::restartRequired, this, &SettingsDialog::set_requires_restart);
         connect(SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
+
+        ui.useMediaBackendChk->setChecked(SettingsHandler::getSetting(SettingKeys::useSystemMediaBackend).toBool());
     }
 }
 
@@ -2306,5 +2308,11 @@ void SettingsDialog::on_libraryVRBtn_clicked()
 {
     LibraryManager lm(LibraryType::VR, m_medialLibraryHandler, this);
     lm.exec();
+}
+
+
+void SettingsDialog::on_useMediaBackendChk_clicked(bool checked)
+{
+    SettingsHandler::changeSetting(SettingKeys::useSystemMediaBackend, checked, true);
 }
 

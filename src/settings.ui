@@ -1471,6 +1471,13 @@ will be hit for the next chunk.</string>
               </property>
              </widget>
             </item>
+            <item row="0" column="1">
+             <widget class="QCheckBox" name="useMediaBackendChk">
+              <property name="text">
+               <string>Use the media backend of the OS</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
          </layout>
