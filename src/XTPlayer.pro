@@ -1,4 +1,4 @@
-QT += core gui serialport network texttospeech  websockets multimedia multimediawidgets bluetooth
+QT += core gui serialport network texttospeech websockets multimedia multimediawidgets bluetooth
 
 
 greaterThan(QT_MAJOR_VERSION, 4) {
