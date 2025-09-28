@@ -2,53 +2,54 @@
 
 SET currentPath=%cd%
 SET QTDIR=C:\Qt\6.9.1\mingw_64
+SET mingwDir=C:\Qt\Tools\mingw1310_64\bin
 SET QtDirBin=%QTDIR%\bin\
 SET xtplayerSource="%UserProfile%\git\XTPlayer"
 SET xtengineSource="%UserProfile%\git\XTEngine"
-SET xtplayerBuildDirectory="%xtplayerSource%/build-release"
-SET xtengineBuildDirectory="%xtengineSource%/build-release"
-SET buildDir=.\build-release\release
-SET engineBuildDir=..\XTEngine\build-release\release
-SET deployDir=.\bin\release\
-SET deployZipDir=.\bin\
-SET stagingDirectory=.\bin\latest
-SET sevenZipLocation="C:\Program Files\7-Zip\7z.exe"
+SET xtplayerBuildDirectory="%xtplayerSource%\build-release"
+SET xtengineBuildDirectory="%xtengineSource%\build-release"
+SET buildDir=%xtplayerBuildDirectory%\release
+SET engineBuildDir=%xtengineBuildDirectory%\release
+SET deployDir=%xtplayerSource%\bin\release\
+SET deployZipDir=%xtplayerSource%\bin\
+SET stagingDirectory=%xtplayerSource%\bin\latest
+SET sevenZipLocation="C:/Program Files/7-Zip/7z.exe"
+SET mingw=%mingwDir%\mingw32-make.exe
 rem this is where the zip file will be copied for backup
 SET releaseDirectory="\\192.168.0.218\main\STK\Dev\XTP\XTP-Release\"
 rem SET httpServerDll=..\HttpServer\build\release\httpServer.dll
 rem SET zlibDll=..\zlib-1.3.1\build\Desktop_Qt_5_15_2_MinGW_64_bit-Release\libzlib.dll
 
-SET PATH=%PATH%;%QtDirBin%;C:\Qt\Tools\mingw1310_64\bin
+SET PATH=%PATH%;%QtDirBin%;%mingwDir%
 
 SET /P version=Enter a version (example: 0.5b):
 IF NOT DEFINED version SET "version=UNKNOWN"
 
-REM cd %xtplayerSource%
-REM git pull || echo "Error: Pull XTP sourc" && cd %currentPath% && exit /b %errorlevel%
-REM cd %xtengineSource%
-REM git pull || echo "Error: Pull XTE source" && cd %currentPath% && exit /b %errorlevel%
+cd %xtplayerSource%
+git pull || echo "Error: Pull XTP source" && cd %currentPath% && exit /b %errorlevel%
+cd %xtengineSource%
+git pull || echo "Error: Pull XTE source" && cd %currentPath% && exit /b %errorlevel%
 
-REM if exist %xtplayerBuildDirectory% (
-	REM rd /s /q %xtplayerBuildDirectory% || echo "Error: Clean XTP build" && cd %currentPath% && exit /b %errorlevel%
-REM )
-REM if exist %xtengineBuildDirectory%  (
-	REM rd /s /q %xtengineBuildDirectory% || echo "Error: Clean XTE build" && cd %currentPath% && exit /b %errorlevel%
-REM )
+if exist %xtplayerBuildDirectory% (
+	rd /s /q %xtplayerBuildDirectory% || echo "Error: Clean XTP build" && cd %currentPath% && exit /b %errorlevel%
+)
+if exist %xtengineBuildDirectory%  (
+	rd /s /q %xtengineBuildDirectory% || echo "Error: Clean XTE build" && cd %currentPath% && exit /b %errorlevel%
+)
 
-REM rem C:/Qt/Tools/mingw1310_64/bin/mingw32-make -f Makefile.Release
+rem C:/Qt/Tools/mingw1310_64/bin/mingw32-make -f Makefile.Release
 
-REM mkdir %xtengineBuildDirectory% || echo "Error: Make XTE build directory" && cd %currentPath% && exit /b %errorlevel%
-REM cd %xtengineBuildDirectory%
-REM qmake %xtengineSource%/src/XTEngine.pro CONFIG+=release || echo "Error: Qmake XTE" && cd %currentPath% && exit /b %errorlevel%
-REM mingw32-make.exe Makefile qmake_all || echo "Error: Make XTE Makefile" && cd %currentPath% && exit /b %errorlevel%
-REM mingw32-make.exe -j8 --silent || echo "Error: Make XTE" && cd %currentPath% && exit /b %errorlevel%
+mkdir %xtengineBuildDirectory% || echo "Error: Make XTE build directory" && cd %currentPath% && exit /b %errorlevel%
+cd %xtengineBuildDirectory%
+qmake %xtengineSource%\src\XTEngine.pro CONFIG+=release || echo "Error: Qmake XTE" && cd %currentPath% && exit /b %errorlevel%
+%mingw% -f Makefile qmake_all || echo "Error: Make XTE Makefile" && cd %currentPath% && exit /b %errorlevel%
+%mingw% -j8 --silent || echo "Error: Make XTE" && cd %currentPath% && exit /b %errorlevel%
 
-REM mkdir %xtplayerBuildDirectory% || echo "Error: Make XTP build directory" && cd %currentPath% && exit /b %errorlevel%
-REM cd %xtplayerBuildDirectory%
-REM qmake %xtplayerSource%/src/XTPlayer.pro CONFIG+=release || echo "Error: Qmake XTP" && cd %currentPath% && exit /b %errorlevel%
-REM mingw32-make.exe Makefile qmake_all || echo Error: "Make XTP Makefile" && cd %currentPath% && exit /b %errorlevel%
-REM rem mingw32-make.exe -j8 --silent || echo "Error: Make XTP" && cd %currentPath% && exit /b %errorlevel%
-REM mingw32-make -f Makefile.Release || echo "Error: Make XTP" && cd %currentPath% && exit /b %errorlevel%
+mkdir %xtplayerBuildDirectory% || echo "Error: Make XTP build directory" && cd %currentPath% && exit /b %errorlevel%
+cd %xtplayerBuildDirectory%
+qmake %xtplayerSource%\src\XTPlayer.pro CONFIG+=release || echo "Error: Qmake XTP" && cd %currentPath% && exit /b %errorlevel%
+%mingw% -f Makefile qmake_all || echo Error: "Make XTP Makefile" && cd %currentPath% && exit /b %errorlevel%
+%mingw% -j8 --silent || echo "Error: Make XTP" && cd %currentPath% && exit /b %errorlevel%
 
 cd %xtplayerSource%
 
