@@ -52,7 +52,7 @@ void SettingsDialog::init(MediaLibraryHandler* medialLibraryHandler, VideoHandle
     _videoHandler = videoHandler;
     _connectionHandler = connectionHandler;
 
-    ui.useWebSocketsCheckbox->setHidden(true);//Fast sends buffer in QWebSocket and sends late
+    // ui.useWebSocketsCheckbox->setHidden(true);//Fast sends buffer in QWebSocket and sends late
     ui.dubugButton->hide();// Doesnt restart in debug mode.
     ui.useMediaDirectoryCheckbox->hide();//Not fully developed.
 
@@ -96,6 +96,7 @@ void SettingsDialog::initLive()
     if(!SettingsHandler::hashedWebPass().isEmpty())
         ui.webPasswordButton->setText("Change password");
     ui.hideWelcomeDialog->setChecked(SettingsHandler::getHideWelcomeScreen());
+    ui.useWebSocketsCheckbox->setChecked(SettingsHandler::getSelectedNetworkProtocol() == NetworkProtocol::WEBSOCKET);
 //    auto availableAxis = SettingsHandler::getAvailableAxis();
 //    foreach(auto channel, availableAxis->keys())
 //    {
@@ -284,8 +285,6 @@ void SettingsDialog::setupUi()
 
         setUpTCodeChannelProfiles();
         setUpTCodeChannelUI();
-
-        ui.useWebSocketsCheckbox->setChecked(SettingsHandler::getSelectedNetworkProtocol() == NetworkProtocol::WEBSOCKET);
 
         enableOrDisableDeviceConnectionUI(SettingsHandler::getSelectedOutputDevice());
         bool deoEnabled = SettingsHandler::getSelectedInputDevice() == ConnectionInterface::HereSphere;
