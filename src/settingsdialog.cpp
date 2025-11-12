@@ -349,7 +349,7 @@ void SettingsDialog::setupUi()
 
         ui.offsetSpinbox->setMinimum(std::numeric_limits<int>::lowest());
         ui.offsetSpinbox->setMaximum(std::numeric_limits<int>::max());
-        ui.offsetSpinbox->setValue(SettingsHandler::getoffSet());
+        ui.offsetSpinbox->setValue(SettingsHandler::getGlobalOffSet());
         connect(ui.offsetSpinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onOffSet_valueChanged);
 
         ui.offsetSpinboxStep->setMinimum(std::numeric_limits<int>::lowest());
@@ -1307,7 +1307,7 @@ void SettingsDialog::onRange_mouseRelease(QString name)
 
 void SettingsDialog::onOffSet_valueChanged(int value)
 {
-    SettingsHandler::setoffSet(value);
+    SettingsHandler::setGlobalOffSet(value);
 }
 
 void SettingsDialog::onOffSetStep_valueChanged(int value)
