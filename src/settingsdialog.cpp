@@ -406,6 +406,7 @@ void SettingsDialog::setupUi()
         connect(SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
 
         ui.useMediaBackendChk->setChecked(SettingsHandler::getSetting(SettingKeys::useSystemMediaBackend).toBool());
+        ui.fullscreenUIOnlyOnMouseover->setChecked(XTPSettings::getFullScreenUIOnlyOnMouseOver());
     }
 }
 
@@ -2309,9 +2310,13 @@ void SettingsDialog::on_libraryVRBtn_clicked()
     lm.exec();
 }
 
-
 void SettingsDialog::on_useMediaBackendChk_clicked(bool checked)
 {
     SettingsHandler::changeSetting(SettingKeys::useSystemMediaBackend, checked, true);
+}
+
+void SettingsDialog::on_fullscreenUIOnlyOnMouseover_clicked(bool checked)
+{
+    XTPSettings::setFullScreenUIOnlyOnMouseOver(checked);
 }
 

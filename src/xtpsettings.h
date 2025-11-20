@@ -49,6 +49,9 @@ public:
     static void setHeatmapDisabled(bool checked);
     static bool getHeatmapDisabled();
 
+    static void setFullScreenUIOnlyOnMouseOver(bool checked);
+    static bool getFullScreenUIOnlyOnMouseOver();
+
     static double voiceVolume();
     static void setVoiceVolume(double value);
     static double voicePitch();
@@ -72,6 +75,7 @@ private:
     static bool m_hideMediaWithoutFunscripts;
     static QList<int> m_mainWindowSplitterPos;
     static bool m_heatmapDisabled;
+    static inline bool m_fullscreenUIOnlyMouseover = false;
     static QMutex m_mutex;
 };
 
