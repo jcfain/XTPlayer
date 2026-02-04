@@ -377,6 +377,7 @@ void SettingsDialog::setupUi()
         int percentage = SettingsHandler::getViewedThreshold()*100;
         ui.viewedPercentageSpinBox->setValue(percentage);
         ui.viewedPercentageSpinBox->setSuffix("%");
+        connect(ui.viewedPercentageSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onViewedPercentageSpinBoxValueChanged);
 
         updateIPAddress();
 
