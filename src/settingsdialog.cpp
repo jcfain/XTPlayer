@@ -853,14 +853,14 @@ void SettingsDialog::setUpTCodeChannelUI()
 
         QLabel* delayLabel = new QLabel(ui.randomMotionGroupbox);
         delayLabel->setText("Delay");
-        QSpinBox* delayInput = new QSpinBox(ui.randomMotionGroupbox);
-        delayInput->setToolTip("Delay in milli seconds");
-        delayInput->setSingleStep(100);
+        QDoubleSpinBox* delayInput = new QDoubleSpinBox(ui.randomMotionGroupbox);
+        delayInput->setToolTip("Delay in percentage decimal");
+        delayInput->setSingleStep(0.01);
         delayInput->setMinimum(0);
-        delayInput->setMaximum(std::numeric_limits<int>::max());
+        delayInput->setMaximum(1);
         delayInput->setValue(SettingsHandler::getDelayValue(channelName));
-        connect(delayInput, QOverload<int>::of(&QSpinBox::valueChanged), this,
-                [channelName](int value)
+        connect(delayInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+                [channelName](double value)
                 {
                     SettingsHandler::setDelayValue(channelName, value);
                 });
