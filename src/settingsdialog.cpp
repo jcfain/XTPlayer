@@ -374,7 +374,7 @@ void SettingsDialog::setupUi()
         ui.disableHeartbeatChk->setChecked(SettingsHandler::getDisableHeartBeat());
         connect(ui.disableHeartbeatChk, &QCheckBox::clicked, this, &SettingsDialog::onDisableHeartbeatChkClicked);
 
-        int percentage = SettingsHandler::getViewedThreshold()*100;
+        int percentage = SettingsHandler::getViewedThreshold();
         ui.viewedPercentageSpinBox->setValue(percentage);
         ui.viewedPercentageSpinBox->setSuffix("%");
         connect(ui.viewedPercentageSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onViewedPercentageSpinBoxValueChanged);
@@ -798,25 +798,25 @@ void SettingsDialog::setUpTCodeChannelUI()
                      if(!checked)
                          emit TCodeHomeClicked();
                    });
-        QCheckBox* damperCheckbox = new QCheckBox(ui.randomMotionGroupbox);
-        damperCheckbox->setText("Speed");
-        damperCheckbox->setChecked(SettingsHandler::getDamperChecked(channelName));
-        QDoubleSpinBox* damperInput = new QDoubleSpinBox(ui.randomMotionGroupbox);
-        damperInput->setToolTip("Multiply the speed by the value.\n4000 * 0.5 = 2000");
-        damperInput->setDecimals(1);
-        damperInput->setSingleStep(0.1f);
-        damperInput->setMinimum(0.1f);
-        damperInput->setMaximum(std::numeric_limits<int>::max());
-        damperInput->setValue(SettingsHandler::getDamperValue(channelName));
-        connect(damperInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+        QCheckBox* speedCheckbox = new QCheckBox(ui.randomMotionGroupbox);
+        speedCheckbox->setText("Speed");
+        speedCheckbox->setChecked(SettingsHandler::getSpeedChecked(channelName));
+        QDoubleSpinBox* speedInput = new QDoubleSpinBox(ui.randomMotionGroupbox);
+        speedInput->setToolTip("Multiply the speed by the value.\n4000 * 0.5 = 2000");
+        speedInput->setDecimals(1);
+        speedInput->setSingleStep(0.1f);
+        speedInput->setMinimum(0.1f);
+        speedInput->setMaximum(std::numeric_limits<int>::max());
+        speedInput->setValue(SettingsHandler::getSpeedValue(channelName));
+        connect(speedInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
                  [channelName](float value)
                    {
-                     SettingsHandler::setDamperValue(channelName, value);
+                     SettingsHandler::setSpeedValue(channelName, value);
                    });
-        connect(damperCheckbox, &QCheckBox::clicked, this,
+        connect(speedCheckbox, &QCheckBox::clicked, this,
                  [channelName](bool checked)
                    {
-                     SettingsHandler::setDamperChecked(channelName, checked);
+                     SettingsHandler::setSpeedChecked(channelName, checked);
                    });
 
         QCheckBox* linkCheckbox = new QCheckBox(ui.randomMotionGroupbox);
@@ -851,18 +851,36 @@ void SettingsDialog::setUpTCodeChannelUI()
                         SettingsHandler::setLinkToRelatedAxis(channelName, relatedChannel.ChannelName);
                    });
 
+        QLabel* delayLabel = new QLabel(ui.randomMotionGroupbox);
+        delayLabel->setText("Delay");
+        QSpinBox* delayInput = new QSpinBox(ui.randomMotionGroupbox);
+        delayInput->setToolTip("Delay in milli seconds");
+        delayInput->setSingleStep(100);
+        delayInput->setMinimum(0);
+        delayInput->setMaximum(std::numeric_limits<int>::max());
+        delayInput->setValue(SettingsHandler::getDelayValue(channelName));
+        connect(delayInput, QOverload<int>::of(&QSpinBox::valueChanged), this,
+                [channelName](int value)
+                {
+                    SettingsHandler::setDelayValue(channelName, value);
+                });
+
 
          randomGrid->addWidget(multiplierCheckbox, randomMotionGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
          randomGrid->addWidget(linkCheckbox, randomMotionGridRow, 1, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
          randomGrid->addWidget(linkToAxisCombobox, randomMotionGridRow, 2, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-         randomGrid->addWidget(damperCheckbox, randomMotionGridRow, 3, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
-         randomGrid->addWidget(damperInput, randomMotionGridRow, 4, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+         randomGrid->addWidget(speedCheckbox, randomMotionGridRow, 3, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
+         randomGrid->addWidget(speedInput, randomMotionGridRow, 4, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+         randomGrid->addWidget(delayLabel, randomMotionGridRow, 5, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
+         randomGrid->addWidget(delayInput, randomMotionGridRow, 6, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
 
         _multiplierWidgets.append(multiplierCheckbox);
         _multiplierWidgets.append(linkCheckbox);
         _multiplierWidgets.append(linkToAxisCombobox);
-        _multiplierWidgets.append(damperCheckbox);
-        _multiplierWidgets.append(damperInput);
+        _multiplierWidgets.append(speedCheckbox);
+        _multiplierWidgets.append(speedInput);
+        _multiplierWidgets.append(delayLabel);
+        _multiplierWidgets.append(delayInput);
 
          randomMotionGridRow++;
 
@@ -2157,8 +2175,8 @@ void SettingsDialog::on_defaultSmartTagsButton_clicked()
 
 void SettingsDialog::onViewedPercentageSpinBoxValueChanged(int arg1)
 {
-    float percentage = arg1/(float)100;
-    SettingsHandler::setViewedThreshold(percentage);
+    // float percentage = arg1/(float)100;
+    SettingsHandler::setViewedThreshold(arg1);
 }
 
 
