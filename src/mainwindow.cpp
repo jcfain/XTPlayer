@@ -2116,15 +2116,16 @@ void MainWindow::onFunscriptSearchResult(QString mediaPath, QString funscriptPat
                 LogHandler::Debug("onFunscriptSearchResult Enter no scripts found. Ask user");
                 onText_to_speech("Script for video playing in VR not found. Please check your computer to select a script.");
                 funscriptFileSelectorOpen = true;
+                // TODO: Caused crash on debian 13 wayland 2/12/26.
                 funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + mediaPath, SettingsHandler::mediaLibrarySettings.getLast(LibraryType::MAIN), "Script Files (*.funscript);;Zip (*.zip)");
                 funscriptFileSelectorOpen = false;
                 saveLinkedScript = true;
                 //LogHandler::Debug("funscriptPath: "+funscriptPath);
-            }
-            if(funscriptPath.isEmpty())
-            {
-                LogHandler::Debug("Funscript selector canceled");
-                vrScriptSelectorCanceled = true;
+                if(funscriptPath.isEmpty())
+                {
+                    LogHandler::Debug("Funscript selector canceled");
+                    vrScriptSelectorCanceled = true;
+                }
             }
         }
 
