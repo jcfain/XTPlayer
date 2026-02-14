@@ -629,6 +629,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
         if(currentLibraries.empty())
             on_actionSelect_library_triggered();
     }
+    SettingsHandler::systemReady();
 }
 
 MainWindow::~MainWindow()

@@ -4,7 +4,6 @@
 #include <QDialog>
 #include <QLabel>
 #include <QLineEdit>
-#include "lib/struct/LibraryListItem.h"
 
 class PlaylistDialog : public QDialog
 {
