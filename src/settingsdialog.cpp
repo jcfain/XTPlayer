@@ -851,18 +851,18 @@ void SettingsDialog::setUpTCodeChannelUI()
                         SettingsHandler::setLinkToRelatedAxis(channelName, relatedChannel.ChannelName);
                    });
 
-        QLabel* delayLabel = new QLabel(ui.randomMotionGroupbox);
-        delayLabel->setText("Delay");
-        QDoubleSpinBox* delayInput = new QDoubleSpinBox(ui.randomMotionGroupbox);
-        delayInput->setToolTip("Delay in percentage decimal");
-        delayInput->setSingleStep(0.01);
-        delayInput->setMinimum(0);
-        delayInput->setMaximum(1);
-        delayInput->setValue(SettingsHandler::getDelayValue(channelName));
-        connect(delayInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+        QLabel* offsetLabel = new QLabel(ui.randomMotionGroupbox);
+        offsetLabel->setText("Offset");
+        QDoubleSpinBox* offsetInput = new QDoubleSpinBox(ui.randomMotionGroupbox);
+        offsetInput->setToolTip("Offset in percentage decimal");
+        offsetInput->setSingleStep(0.01);
+        offsetInput->setMinimum(-1);
+        offsetInput->setMaximum(1);
+        offsetInput->setValue(SettingsHandler::getMotionModifierOffsetValue(channelName));
+        connect(offsetInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
                 [channelName](double value)
                 {
-                    SettingsHandler::setDelayValue(channelName, value);
+                    SettingsHandler::setMotionModifierOffsetValue(channelName, value);
                 });
 
 
@@ -871,16 +871,16 @@ void SettingsDialog::setUpTCodeChannelUI()
          randomGrid->addWidget(linkToAxisCombobox, randomMotionGridRow, 2, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
          randomGrid->addWidget(speedCheckbox, randomMotionGridRow, 3, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
          randomGrid->addWidget(speedInput, randomMotionGridRow, 4, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-         randomGrid->addWidget(delayLabel, randomMotionGridRow, 5, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
-         randomGrid->addWidget(delayInput, randomMotionGridRow, 6, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+         randomGrid->addWidget(offsetLabel, randomMotionGridRow, 5, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
+         randomGrid->addWidget(offsetInput, randomMotionGridRow, 6, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
 
         _multiplierWidgets.append(multiplierCheckbox);
         _multiplierWidgets.append(linkCheckbox);
         _multiplierWidgets.append(linkToAxisCombobox);
         _multiplierWidgets.append(speedCheckbox);
         _multiplierWidgets.append(speedInput);
-        _multiplierWidgets.append(delayLabel);
-        _multiplierWidgets.append(delayInput);
+        _multiplierWidgets.append(offsetLabel);
+        _multiplierWidgets.append(offsetInput);
 
          randomMotionGridRow++;
 
