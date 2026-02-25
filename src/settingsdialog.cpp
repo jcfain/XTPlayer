@@ -803,9 +803,9 @@ void SettingsDialog::setUpTCodeChannelUI()
         speedCheckbox->setChecked(SettingsHandler::getSpeedChecked(channelName));
         QDoubleSpinBox* speedInput = new QDoubleSpinBox(ui.randomMotionGroupbox);
         speedInput->setToolTip("Multiply the speed by the value.\n4000 * 0.5 = 2000");
-        speedInput->setDecimals(1);
+        speedInput->setDecimals(2);
         speedInput->setSingleStep(0.1f);
-        speedInput->setMinimum(0.1f);
+        speedInput->setMinimum(0.01f);
         speedInput->setMaximum(std::numeric_limits<int>::max());
         speedInput->setValue(SettingsHandler::getSpeedValue(channelName));
         connect(speedInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
@@ -1542,36 +1542,31 @@ void SettingsDialog::on_xtpWebHandlerCheckbox_clicked(bool checked)
 void SettingsDialog::on_resetAllButton_clicked()
 {
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset ALL settings?",
+    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset ALL settings except\nplaylists, metadata and DLNA map?",
                                   QMessageBox::Yes|QMessageBox::No);
     if (reply == QMessageBox::Yes)
     {
         SettingsHandler::Default();
-        int reply;
-        auto playlists = SettingsHandler::getPlaylists();
-        if(playlists.count() > 0)
-        {
-            reply = QMessageBox::question(this, "WARNING!", "You have one or more playlists.\nDo you wish to keep these?",
+        reply = QMessageBox::question(this, "WARNING!", "Would you like to keep playlists, metadata and dlna lookup data?",
                                           QMessageBox::Yes|QMessageBox::No);
-            if (reply == QMessageBox::Yes)
-            {
-                SettingsHandler::PersistSelectSettings();
-            }
+        if (reply == QMessageBox::Yes)
+        {
+            SettingsHandler::PersistSelectSettings();
         }
-        reply = QMessageBox::question(this, "Restart Application?", "Changes will take effect on application restart.\n\n"
+        int finalReply = QMessageBox::question(this, "Restart Application?", "Changes will take effect on application restart.\n\n"
                                                                     "Restart this application now?\n\n"
                                                                     "Uninstall will remove ALL settings\nINCLUDING PLAYLISTS\nfrom this PC and close the application\n",
                                       "Restart", "Uninstall", "Quit", 0, 2);
-        if (reply == 0)
+        if (finalReply == 0)
         {
             SettingsHandler::Restart();
         }
-        else if (reply == 1)
+        else if (finalReply == 1)
         {
             SettingsHandler::Clear();
             QApplication::quit();
         }
-        else if (reply == 2)
+        else if (finalReply == 2)
         {
             QApplication::quit();
         }
