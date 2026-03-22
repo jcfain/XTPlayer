@@ -408,6 +408,9 @@ void SettingsDialog::setupUi()
 
         ui.useMediaBackendChk->setChecked(SettingsHandler::getSetting(SettingKeys::useSystemMediaBackend).toBool());
         ui.fullscreenUIOnlyOnMouseover->setChecked(XTPSettings::getFullScreenUIOnlyOnMouseOver());
+
+        ui.useDTRAndRTSChk->setChecked(SettingsHandler::getUseDTRAndRTS());
+        connect(ui.useDTRAndRTSChk, &QCheckBox::clicked, this, &SettingsDialog::onUseDTRAndRTSChkClicked);
     }
 }
 
