@@ -965,22 +965,44 @@ void SettingsDialog::setUpTCodeChannelUI()
         customTCodeListWidget->setObjectName(tr("customTCodeCommandList"));
         customTCodeListWidget->setMinimumSize(100, 150);
         customTCodeListWidget->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
-        customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
-        connect(customTCodeListWidget, & QListWidget::doubleClicked, this, [this, customTCodeListWidget](const QModelIndex index) {
-            if(customTCodeListWidget->selectedItems().length()) {
+        QList<TCodeCommand> commands = SettingsHandler::getCustomTCodeCommands();
+        foreach (TCodeCommand command, commands)
+        {
+            customTCodeListWidget->addItem(command.name);
+        }
+        connect(customTCodeListWidget, & QListWidget::doubleClicked, this, [this, customTCodeListWidget](const QModelIndex index)
+        {
+            if(customTCodeListWidget->selectedItems().length())
+            {
                 bool ok;
-                QString selected = customTCodeListWidget->selectedItems().first()->text();
-                auto newValue = GetTextDialog::show(this, "Custom TCode", selected, &ok);
-                if(ok) {
+                QString selectedName = customTCodeListWidget->selectedItems().first()->text();
+                TCodeCommand* command = SettingsHandler::getCustomTCodeCommand(selectedName);
+                if(!command)
+                    return;
+                auto newValues = GetTextDialog::show(this, {"Name", "TCode"}, {command->name, command->command}, &ok);
+                if(ok && newValues.length() > 0)
+                {
+                    QString newName = newValues[0];
+                    QString newValue = newValues.length() > 1 ? newValues[1] : "";
                     MediaActions actions;
-                    if(actions.Values.contains(newValue)) {
+                    if(actions.Values.contains(newValue))
+                    {
                         DialogHandler::MessageBox(this, "Reserved value: "+newValue, XLogLevel::Critical);
-                    } else if(customTCodeListWidget->findItems(newValue, Qt::MatchExactly).isEmpty()) {
-                        SettingsHandler::editCustomTCodeCommand(selected, newValue);
+                    }
+                    else if(customTCodeListWidget->findItems(newName, Qt::MatchExactly).isEmpty())
+                    {
+                        TCodeCommand newTCodeCommandValue{newName, newValue, false};
+                        SettingsHandler::editCustomTCodeCommand(selectedName, newTCodeCommandValue);
                         customTCodeListWidget->clear();
-                        customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
+                        QList<TCodeCommand> commands = SettingsHandler::getCustomTCodeCommands();
+                        foreach (TCodeCommand command, commands)
+                        {
+                            customTCodeListWidget->addItem(command.name);
+                        }
                         set_requires_restart(true);
-                    } else {
+                    }
+                    else
+                    {
                         DialogHandler::MessageBox(this, "Duplicate value: "+newValue, XLogLevel::Critical);
                     }
                 }
@@ -989,21 +1011,35 @@ void SettingsDialog::setUpTCodeChannelUI()
 
         QPushButton* customTCodeAddbutton = new QPushButton(this);
         customTCodeAddbutton->setText("Add");
-        connect(customTCodeAddbutton, &QPushButton::clicked, this, [this, customTCodeListWidget]() {
+        connect(customTCodeAddbutton, &QPushButton::clicked, this, [this, customTCodeListWidget]()
+        {
             bool ok;
-            auto value = GetTextDialog::show(this, "Custom TCode", nullptr, &ok);
-            if(ok) {
+            auto newValues = GetTextDialog::show(this, {"Name", "TCode"}, {}, &ok);
+            if(ok && newValues.length() > 0)
+            {
+                QString newName = newValues[0];
+                QString newValue = newValues.length() > 1 ? newValues[1] : "";
                 MediaActions actions;
-                if(actions.Values.contains(value)) {
-                    DialogHandler::MessageBox(this, "Reserved value: "+value, XLogLevel::Critical);
-                } else if(customTCodeListWidget->findItems(value, Qt::MatchExactly).isEmpty()) {
-                    SettingsHandler::addCustomTCodeCommand(value);
+                if(actions.Values.contains(newValue))
+                {
+                    DialogHandler::MessageBox(this, "Reserved value: "+newValue, XLogLevel::Critical);
+                }
+                else if(customTCodeListWidget->findItems(newName, Qt::MatchExactly).isEmpty())
+                {
+                    TCodeCommand newTCodeCommandValue{newName, newValue, false};
+                    SettingsHandler::addCustomTCodeCommand(newTCodeCommandValue);
                     customTCodeListWidget->clear();
-                    customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
-                    MediaActions::AddOtherAction(value, "TCode command: " + value, ActionType::TCODE);
+                    QList<TCodeCommand> commands = SettingsHandler::getCustomTCodeCommands();
+                    foreach (TCodeCommand command, commands)
+                    {
+                        customTCodeListWidget->addItem(command.name);
+                    }
+                    MediaActions::AddOtherAction(newValue, "TCode command: " + newName, ActionType::TCODE);
                     set_requires_restart(true);
-                } else {
-                    DialogHandler::MessageBox(this, "Duplicate value: "+value, XLogLevel::Critical);
+                }
+                else
+                {
+                    DialogHandler::MessageBox(this, "Duplicate value: "+newName, XLogLevel::Critical);
                 }
             }
         });
@@ -1011,16 +1047,24 @@ void SettingsDialog::setUpTCodeChannelUI()
         QPushButton* customTCodeRemovebutton = new QPushButton(this);
         customTCodeRemovebutton->setEnabled(false);
         customTCodeRemovebutton->setText("Remove");
-        connect(customTCodeRemovebutton, &QPushButton::clicked, this, [this, customTCodeListWidget, customTCodeRemovebutton]() {
+        connect(customTCodeRemovebutton, &QPushButton::clicked, this, [this, customTCodeListWidget, customTCodeRemovebutton]()
+        {
             auto amount = customTCodeListWidget->selectedItems().length();
-            if(amount) {
+            if(amount)
+            {
                 auto ok = DialogHandler::Dialog(this, "Remove selected " + QString::number(amount) + " item(s)?");
-                if(ok) {
-                    for(auto selected: customTCodeListWidget->selectedItems()) {
+                if(ok)
+                {
+                    for(auto selected: customTCodeListWidget->selectedItems())
+                    {
                         SettingsHandler::removeCustomTCodeCommand(selected->text());
                     }
                     customTCodeListWidget->clear();
-                    customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
+                    QList<TCodeCommand> commands = SettingsHandler::getCustomTCodeCommands();
+                    foreach (TCodeCommand command, commands)
+                    {
+                        customTCodeListWidget->addItem(command.name);
+                    }
                     customTCodeRemovebutton->setEnabled(false);
                     set_requires_restart(true);
                 }

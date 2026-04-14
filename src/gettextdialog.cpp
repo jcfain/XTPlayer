@@ -7,23 +7,32 @@
 
 #include "dialoghandler.h"
 
-GetTextDialog::GetTextDialog(QString variableName, QString currentValue, QWidget *parent) : QDialog(parent)
+GetTextDialog::GetTextDialog(QStringList variableNames, QStringList currentValues, QWidget *parent) : QDialog(parent)
 {
-    m_variableName = variableName;
-    m_currentValue = currentValue;
-    nameLabel = new QLabel(this);
-    nameLabel->setText(m_variableName);
-    nameEdit = new QLineEdit(this);
-    nameEdit->setText(m_currentValue.isEmpty() ? "" : m_currentValue);
-    nameEdit->setFocus();
     QGridLayout* layout = new QGridLayout(this);
-    layout->addWidget(nameLabel, 0, 0, 1, 1);
-    layout->addWidget(nameEdit, 0, 1, 1, 1);
-
+    m_variableNames = variableNames;
+    m_currentValues = currentValues;
+    int rows = 0;
+    for (int i=0; i<variableNames.length(); i++)
+    {
+        QString name = variableNames[i];
+        QLabel* nameLabel = new QLabel(this);
+        nameLabel->setText(name);
+        QLineEdit* nameEdit = new QLineEdit(this);
+        nameEdit->setText(m_currentValues.isEmpty() || m_currentValues.length() < i ? "" : m_currentValues[i]);
+        if(i == 0)
+            nameEdit->setFocus();
+        layout->addWidget(nameLabel, rows, 0, 1, 1);
+        layout->addWidget(nameEdit, rows, 1, 1, 1);
+        nameLabels.append(nameLabel);
+        nameEdits.append(nameEdit);
+        rows++;
+    }
+    setMinimumSize(300, 100);
     QDialogButtonBox *buttonBox = new QDialogButtonBox
             ( QDialogButtonBox::Ok | QDialogButtonBox::Cancel,
               Qt::Horizontal, this );
-    layout->addWidget(buttonBox, 1, 0, 1, 2);
+    layout->addWidget(buttonBox, rows, 0, 1, 2);
 
     bool conn = connect(buttonBox, &QDialogButtonBox::accepted,
                    this, &GetTextDialog::accept);
@@ -36,35 +45,60 @@ GetTextDialog::GetTextDialog(QString variableName, QString currentValue, QWidget
 
 QString GetTextDialog::show(QWidget *parent, QString variableName, QString currentValue, bool *ok)
 {
-    GetTextDialog *dialog = new GetTextDialog(variableName, currentValue, parent);
+    QStringList currentValues;
+    if(!currentValue.isNull())
+        currentValues << currentValue;
+    GetTextDialog *dialog = new GetTextDialog({variableName}, currentValues, parent);
+    QStringList values =  getText(dialog, ok);
+    return values.empty() ? nullptr : values.first();
+}
+
+///
+/// \brief GetTextDialog::show Takes in a set of labels and values
+/// currentValues length must be less than or equal variableNames length
+/// All values are required to be not empty.
+/// \param parent
+/// \param variableNames
+/// \param currentValues
+/// \param ok
+/// \return list of values equal to the length of variableNames
+///
+QStringList GetTextDialog::show(QWidget *parent, QStringList variableNames, QStringList currentValues, bool *ok)
+{
+    GetTextDialog *dialog = new GetTextDialog(variableNames, currentValues, parent);
     return getText(dialog, ok);
 }
 
-QString GetTextDialog::getText(GetTextDialog *dialog, bool *ok)
+QStringList GetTextDialog::getText(GetTextDialog *dialog, bool *ok)
 {
     const int ret = dialog->exec();
-    QString returnValue;
+    QStringList returnValues;
     if (ok)
         *ok = !!ret;
     if (ret == QDialog::Accepted)
     {
         bool isValid = true;
-        returnValue = dialog->nameEdit->text();
-        if(returnValue.isEmpty())
+        for (int i=0; i<dialog->nameEdits.length(); i++)
         {
-            isValid = false;
-            DialogHandler::MessageBox(dialog, m_variableName+" required!", XLogLevel::Critical);
+            QString value = dialog->nameEdits[i]->text();
+            if(value.isEmpty())
+            {
+                isValid = false;
+                DialogHandler::MessageBox(dialog, dialog->nameLabels[i]->text() + " required!", XLogLevel::Critical);
+                break;
+            }
+            returnValues.append(value);
         }
         if (!isValid && ok)
             *ok = false;
     }
-    m_variableName = nullptr;
-    m_currentValue = nullptr;
+    m_variableNames.clear();
+    m_currentValues.clear();
 
     dialog->deleteLater();
 
-    return ret == QDialog::Accepted ? returnValue : nullptr;
+    return ret == QDialog::Accepted ? returnValues : QStringList();
 }
 
-QString GetTextDialog::m_variableName;
-QString GetTextDialog::m_currentValue;
+QStringList GetTextDialog::m_variableNames;
+QStringList GetTextDialog::m_currentValues;
