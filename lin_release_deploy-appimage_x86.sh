@@ -10,7 +10,7 @@ xtengineBuildDirectory="${xtengineSource}"/build-release
 xtplayerLocation="${xtplayerBuildDirectory}"/release/
 xtengineLocation="${xtengineBuildDirectory}"/release/
 deployDirectory="${xtplayerSource}"/Deploy/
-qtDirectory="${home}"Qt/6.9.1/gcc_64/bin
+qtDirectory="${home}"Qt/6.11.0/gcc_64/bin
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 export home
