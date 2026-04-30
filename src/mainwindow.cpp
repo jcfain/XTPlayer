@@ -905,6 +905,13 @@ void MainWindow::setupTagsPopup()
         delete item->widget();
         delete item;
     }
+    QCheckBox* checkboxOR = new QCheckBox(libraryFilterTagsPopup);
+    checkboxOR->setText("OR");
+    checkboxOR->setStyleSheet("border-bottom:2px solid black");
+    connect(checkboxOR, &QCheckBox::clicked, this, [this](bool checked){
+        _librarySortFilterProxyModel->onTagFilterOptionChanged(checked);
+    });
+    libraryFilterTagsPopup->layout()->addWidget(checkboxOR);
     QStringList tags = SettingsHandler::getTags();
     foreach (QString tag, tags) {
         QCheckBox* checkbox = new QCheckBox(libraryFilterTagsPopup);
