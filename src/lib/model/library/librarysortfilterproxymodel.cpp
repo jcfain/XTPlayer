@@ -140,15 +140,16 @@ bool LibrarySortFilterProxyModel::filterAcceptsRow(int sourceRow,
 
 
     //For some reason sorting random without any playlists crashes. Add dummy and hide it.
+    // TODO: is this an issue anymore?
     if(item.nameNoExtension == DUMMY_PLAYLISTITEM)
         return false;
     bool hasTag = m_tags.empty();
     foreach (QString tag, m_tags)
     {
         hasTag = item.metadata.tags.contains(tag);
-        if(!hasTag && !m_tagsOR)
+        if(!hasTag && !m_tagsOR)// All tags must be found AND
             break;
-        if(hasTag && m_tagsOR)
+        if(hasTag && m_tagsOR)// Only 1 tag needs to exist OR
             break;
     }
     return index.data().toString().contains(filterRegularExpression()) && hasTag;
