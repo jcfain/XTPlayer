@@ -3,14 +3,17 @@
 //#include <QSvgGenerator>
 HeatmapWidget::HeatmapWidget(QWidget *parent)
     : QLabel{parent},
-    painter(this) {
+    painter(this),
+    m_duration(0),
+    m_heatMap(),
+    m_actions() {
     setMinimumSize(QSize(parent->minimumWidth(), 35));
     setFixedHeight(35);
 //    connect(&m_resizeDebounce, &QTimer::timeout, this, [this](){
 //        paint();
 //    });
     m_resizeDebounce.setSingleShot(true);
-    paint();
+    // paint();
     //setSizePolicy(QSizePolicy::QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding);
 }
 
@@ -45,7 +48,7 @@ HeatmapWidget::~HeatmapWidget() {
 //}
 void HeatmapWidget::paint() {
     QPixmap pixmap(width(), height());
-    if(m_actions.count() > 0 && m_duration > 0) {
+    if(!m_actions.empty() && m_duration > 0) {
 //        painter.begin(this);
 //        painter.setBrush(QBrush(Qt::black));
 //        painter.fillRect(rect(), painter.brush());

@@ -625,10 +625,11 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
             openWelcomeDialog();
         });
     } else {
-        QStringList currentLibraries = SettingsHandler::mediaLibrarySettings.get(LibraryType::MAIN);
+        QStringList currentLibraries = SettingsHandler::mediaLibrarySettings->get(LibraryType::MAIN);
         if(currentLibraries.empty())
             on_actionSelect_library_triggered();
     }
+    SettingsHandler::systemReady();
 }
 
 MainWindow::~MainWindow()
@@ -904,6 +905,13 @@ void MainWindow::setupTagsPopup()
         delete item->widget();
         delete item;
     }
+    QCheckBox* checkboxOR = new QCheckBox(libraryFilterTagsPopup);
+    checkboxOR->setText("OR");
+    checkboxOR->setStyleSheet("border-bottom:2px solid black");
+    connect(checkboxOR, &QCheckBox::clicked, this, [this](bool checked){
+        _librarySortFilterProxyModel->onTagFilterOptionChanged(checked);
+    });
+    libraryFilterTagsPopup->layout()->addWidget(checkboxOR);
     QStringList tags = SettingsHandler::getTags();
     foreach (QString tag, tags) {
         QCheckBox* checkbox = new QCheckBox(libraryFilterTagsPopup);
@@ -1237,7 +1245,7 @@ void MainWindow::changeDeoFunscript()
     {
         QFileInfo videoFile(playingPacket.path);
         funscriptFileSelectorOpen = true;
-        QString funscriptPath = QFileDialog::getOpenFileName(this, tr("Choose script for video: ") + videoFile.fileName(), SettingsHandler::mediaLibrarySettings.getLast(LibraryType::MAIN), "Script Files (*.funscript)");
+        QString funscriptPath = QFileDialog::getOpenFileName(this, tr("Choose script for video: ") + videoFile.fileName(), SettingsHandler::mediaLibrarySettings->getLast(LibraryType::MAIN), "Script Files (*.funscript)");
         funscriptFileSelectorOpen = false;
         if (!funscriptPath.isEmpty())
         {
@@ -1256,7 +1264,7 @@ void MainWindow::openWelcomeDialog()
 {
     _welcomeDialog = new WelcomeDialog(this);
     connect(_welcomeDialog, &WelcomeDialog::onClose, this, [this]() {
-        QStringList currentLibraries = SettingsHandler::mediaLibrarySettings.get(LibraryType::MAIN);
+        QStringList currentLibraries = SettingsHandler::mediaLibrarySettings->get(LibraryType::MAIN);
         if(currentLibraries.empty())
             on_actionSelect_library_triggered();
         if(_welcomeDialog) {
@@ -2116,15 +2124,16 @@ void MainWindow::onFunscriptSearchResult(QString mediaPath, QString funscriptPat
                 LogHandler::Debug("onFunscriptSearchResult Enter no scripts found. Ask user");
                 onText_to_speech("Script for video playing in VR not found. Please check your computer to select a script.");
                 funscriptFileSelectorOpen = true;
-                funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + mediaPath, SettingsHandler::mediaLibrarySettings.getLast(LibraryType::MAIN), "Script Files (*.funscript);;Zip (*.zip)");
+                // TODO: Caused crash on debian 13 wayland 2/12/26.
+                funscriptPath = QFileDialog::getOpenFileName(this, "Choose script for video: " + mediaPath, SettingsHandler::mediaLibrarySettings->getLast(LibraryType::MAIN), "Script Files (*.funscript);;Zip (*.zip)");
                 funscriptFileSelectorOpen = false;
                 saveLinkedScript = true;
                 //LogHandler::Debug("funscriptPath: "+funscriptPath);
-            }
-            if(funscriptPath.isEmpty())
-            {
-                LogHandler::Debug("Funscript selector canceled");
-                vrScriptSelectorCanceled = true;
+                if(funscriptPath.isEmpty())
+                {
+                    LogHandler::Debug("Funscript selector canceled");
+                    vrScriptSelectorCanceled = true;
+                }
             }
         }
 

@@ -28,7 +28,7 @@ private:
     HeatMap m_heatMap;
     qint64 m_duration = 0;
     //QPixmap m_heatMapPixmap;
-    QMap<qint64, int> m_actions = QMap<qint64, int>();
+    QMap<qint64, int> m_actions;
 
     QTimer m_resizeDebounce;
    // QPen m_CurrentPositionPen = QPen(Qt::GlobalColor::cyan, 2, Qt::SolidLine, Qt::RoundCap, Qt::MiterJoin);

@@ -18,7 +18,7 @@ needToPull() {
 	return 1
 }
 
-export EXTRA_PLATFORM_PLUGINS=libqwayland-generic.so
+export EXTRA_PLATFORM_PLUGINS=libqwayland.so
 export EXTRA_QT_MODULES="waylandcompositor"
 
 if [ -z ${home+x} ]; then 

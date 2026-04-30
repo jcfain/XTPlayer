@@ -7,7 +7,7 @@ LibraryManager::LibraryManager(LibraryType libraryType, MediaLibraryHandler* med
 {
     ui.setupUi(this);
     ui.listWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    m_oldPaths = SettingsHandler::mediaLibrarySettings.get(m_libraryType);
+    m_oldPaths = SettingsHandler::mediaLibrarySettings->get(m_libraryType);
     ui.listWidget->addItems(m_oldPaths);
     setWindowTitle("Manage folders");
 
@@ -29,7 +29,7 @@ LibraryManager::~LibraryManager() { }
 void LibraryManager::on_addButton_clicked()
 {
     QFileDialog file_dialog;
-    QString path  = QFileInfo(SettingsHandler::mediaLibrarySettings.getLast(m_libraryType)).dir().path();
+    QString path  = QFileInfo(SettingsHandler::mediaLibrarySettings->getLast(m_libraryType)).dir().path();
     file_dialog.setDirectory(path);
     file_dialog.setFileMode(QFileDialog::FileMode::Directory);
     file_dialog.setOption(QFileDialog::ShowDirsOnly, true);
@@ -43,7 +43,7 @@ void LibraryManager::on_addButton_clicked()
         QStringList duplicates;
         foreach(auto path, paths)
         {
-            if(SettingsHandler::mediaLibrarySettings.add(m_libraryType, path, duplicates))
+            if(SettingsHandler::mediaLibrarySettings->add(m_libraryType, path, duplicates))
             {
                 ui.listWidget->addItem(path);
                 m_dirty = true;
@@ -60,7 +60,7 @@ void LibraryManager::on_removeButton_clicked()
     {
         foreach(auto item, ui.listWidget->selectedItems())
         {
-            SettingsHandler::mediaLibrarySettings.remove(m_libraryType, item->text());
+            SettingsHandler::mediaLibrarySettings->remove(m_libraryType, item->text());
         }
         qDeleteAll(ui.listWidget->selectedItems());
         m_dirty = true;
@@ -76,7 +76,7 @@ void LibraryManager::onClose()
 {
     if(!m_dirty)
         return;
-    QStringList currentPaths = SettingsHandler::mediaLibrarySettings.get(m_libraryType);
+    QStringList currentPaths = SettingsHandler::mediaLibrarySettings->get(m_libraryType);
 
     if(!currentPaths.isEmpty())
     {

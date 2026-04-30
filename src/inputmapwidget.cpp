@@ -19,7 +19,7 @@ InputMapWidget::InputMapWidget(ConnectionHandler* connectionHandler, QWidget *pa
     _tableWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
     _tableWidget->setColumnCount(6);
     QStringList tableHeader;
-    tableHeader <<"Action"<<"Gamepad"<<"Key"<<"TCode"<<"Invert"<<"Clear";
+    tableHeader <<"Action"<<"Gamepad"<<"Key"<<"TCode Button"<<"Invert"<<"Clear";
     _tableWidget->setHorizontalHeaderLabels(tableHeader);
     _tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
     // Widget width 1271

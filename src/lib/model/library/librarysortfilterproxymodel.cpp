@@ -140,18 +140,19 @@ bool LibrarySortFilterProxyModel::filterAcceptsRow(int sourceRow,
 
 
     //For some reason sorting random without any playlists crashes. Add dummy and hide it.
+    // TODO: is this an issue anymore?
     if(item.nameNoExtension == DUMMY_PLAYLISTITEM)
         return false;
-    bool hasAllTags = m_tags.empty();
-    foreach (QString tag, m_tags) {
-        if(!item.metadata.tags.contains(tag)) {
-            hasAllTags = false;
+    bool hasTag = m_tags.empty();
+    foreach (QString tag, m_tags)
+    {
+        hasTag = item.metadata.tags.contains(tag);
+        if(!hasTag && !m_tagsOR)// All tags must be found AND
             break;
-        }
-        if(m_tags.indexOf(tag) == m_tags.length() -1)
-            hasAllTags = true;
+        if(hasTag && m_tagsOR)// Only 1 tag needs to exist OR
+            break;
     }
-    return index.data().toString().contains(filterRegularExpression()) && hasAllTags;
+    return index.data().toString().contains(filterRegularExpression()) && hasTag;
 }
 
 bool LibrarySortFilterProxyModel::dateInRange(QDate date) const
@@ -168,6 +169,14 @@ void LibrarySortFilterProxyModel::onFilterChanged(QString filter)
     setFilterRegularExpression(regularExpression);
     invalidateFilter();
     if(filter.isEmpty())
+        invalidate();
+}
+
+void LibrarySortFilterProxyModel::onTagFilterOptionChanged(bool filterOR)
+{
+    m_tagsOR = filterOR;
+    invalidateFilter();
+    if(m_tags.isEmpty())
         invalidate();
 }
 

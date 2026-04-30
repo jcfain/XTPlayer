@@ -17,6 +17,8 @@ void XTPSettings::save(QSettings* settingsToSaveTo) {
     settingsToSaveTo->setValue("disableTimeLinePreview", m_disableTimeLinePreview);
     settingsToSaveTo->setValue("hideMediaWithoutFunscripts", m_hideMediaWithoutFunscripts);
     settingsToSaveTo->setValue("heatmapDisabled", m_heatmapDisabled);
+    settingsToSaveTo->setValue("fullscreenUIOnlyMouseover", m_fullscreenUIOnlyMouseover);
+
 
     QList<QVariant> splitterPos;
     int i = 0;
@@ -51,6 +53,7 @@ void XTPSettings::load(QSettings* settingsToLoadFrom) {
         m_disableTimeLinePreview = false;
     m_hideMediaWithoutFunscripts = settingsToLoadFrom->value("hideMediaWithoutFunscripts").toBool();
     m_heatmapDisabled = settingsToLoadFrom->value("heatmapDisabled").toBool();
+    m_fullscreenUIOnlyMouseover = settingsToLoadFrom->value("fullscreenUIOnlyMouseover").toBool();
 
     auto splitterSizes = settingsToLoadFrom->value("mainWindowPos").toList();
     if(splitterSizes.isEmpty()) {
@@ -180,6 +183,7 @@ bool XTPSettings::getLibraryWindowOpen() {
 
 void XTPSettings::setDisableTimeLinePreview(bool enabled) {
     m_disableTimeLinePreview = enabled;
+    emit SettingsHandler::instance()->settingsChanged(true);
 }
 bool XTPSettings::getDisableTimeLinePreview() {
    return m_disableTimeLinePreview;
@@ -187,10 +191,22 @@ bool XTPSettings::getDisableTimeLinePreview() {
 
 void XTPSettings::setHeatmapDisabled(bool checked) {
     m_heatmapDisabled = checked;
+    emit SettingsHandler::instance()->settingsChanged(true);
 }
 
 bool XTPSettings::getHeatmapDisabled() {
     return m_heatmapDisabled;
+}
+
+void XTPSettings::setFullScreenUIOnlyOnMouseOver(bool checked)
+{
+    m_fullscreenUIOnlyMouseover = checked;
+    emit SettingsHandler::instance()->settingsChanged(true);
+}
+
+bool XTPSettings::getFullScreenUIOnlyOnMouseOver()
+{
+    return m_fullscreenUIOnlyMouseover;
 }
 
 double XTPSettings::voiceVolume()

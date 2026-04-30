@@ -1,4 +1,6 @@
 #include "xvideopreviewwidget.h"
+#include "lib/tool/imagefactory.h"
+#include "lib/struct/LibraryListItem27.h"
 
 XVideoPreviewWidget::XVideoPreviewWidget(QWidget* parent) : QFrame(parent)
 {
@@ -37,6 +39,7 @@ XVideoPreviewWidget::XVideoPreviewWidget(QWidget* parent) : QFrame(parent)
     setAttribute(Qt::WA_TransparentForMouseEvents );
 
     connect(&_videoPreview, &ThumbExtractor::frameExtracted, this, &XVideoPreviewWidget::on_thumbExtract);
+    connect(&_videoPreview, &ThumbExtractor::frameExtractionError, this, &XVideoPreviewWidget::on_thumbExtractionError);
 }
 
 void XVideoPreviewWidget::setFile(QString path) {
@@ -64,18 +67,15 @@ void XVideoPreviewWidget::on_thumbExtract(QImage frame) {
     _label->setToolTip("");
     auto scaled = QPixmap::fromImage(frame.scaled(_thumbSize,_thumbSize,Qt::KeepAspectRatio));
     frame = QImage();
-    resize(scaled.width(), scaled.height());
-    QPoint finalPos = _currentPosition - QPoint(width()/2, height() + 50);
-    move(finalPos);
-    // LogHandler::Debug("[XVideoPreviewWidget] previofinalPos x: " + QString::number(finalPos.x()) + ", y: " + QString::number(finalPos.y()));
-    _label->setPixmap(scaled);
-    _label->update();
-    on_setLoading(false);
+    setImage(scaled);
 }
 
 void XVideoPreviewWidget::on_thumbExtractionError(QString error) {
     _label->setToolTip(error);
     emit thumbExtractionError(error);
+    auto image = ImageFactory::resizeCache(ERROR_IMAGE, "videoPreview", QSize(_thumbSize, _thumbSize));
+
+    setImage(image);
 }
 
 void XVideoPreviewWidget::closeEvent(QCloseEvent *event) {
@@ -96,4 +96,15 @@ void XVideoPreviewWidget::on_setLoading(bool loading)
         _videoLoadingMovie->stop();
         _label->show();
     }
+}
+
+void XVideoPreviewWidget::setImage(QPixmap frame)
+{
+    resize(frame.width(), frame.height());
+    QPoint finalPos = _currentPosition - QPoint(width()/2, height() + 50);
+    move(finalPos);
+    // LogHandler::Debug("[XVideoPreviewWidget] previofinalPos x: " + QString::number(finalPos.x()) + ", y: " + QString::number(finalPos.y()));
+    _label->setPixmap(frame);
+    _label->update();
+    on_setLoading(false);
 }

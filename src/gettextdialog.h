@@ -9,16 +9,17 @@ class GetTextDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit GetTextDialog(QString variableName, QString currentValue = nullptr, QWidget *parent = nullptr);
+    explicit GetTextDialog(QStringList variableNames, QStringList currentValue = QStringList(), QWidget *parent = nullptr);
     static QString show(QWidget *parent, QString variableName, QString currentValue = nullptr, bool *ok = nullptr);
+    static QStringList show(QWidget *parent, QStringList variableNames, QStringList currentValues = QStringList(), bool *ok = nullptr);
 
 private:
-    QLabel* nameLabel;
-    QLineEdit* nameEdit;
+    QList<QLabel*> nameLabels;
+    QList<QLineEdit*> nameEdits;
 
-    static QString m_variableName;
-    static QString m_currentValue;
-    static QString getText(GetTextDialog *dialog, bool *ok = nullptr);
+    static QStringList m_variableNames;
+    static QStringList m_currentValues;
+    static QStringList getText(GetTextDialog *dialog, bool *ok = nullptr);
 };
 
 #endif // GETTEXTDIALOG_H

@@ -4,8 +4,8 @@ echo "Enter version: (ex: 0.55b)"
 read versionInput
 export version=v${versionInput}
 
+qtVersion='6.11.0'
 home=~/
-target='/media/NAS/main/STK/Dev/XTP/XTP-Release/'
 architecture="x86_64"
 xtplayerSource="${home}"git/XTPlayer
 xtengineSource="${home}"git/XTEngine
@@ -14,7 +14,7 @@ xtengineBuildDirectory="${xtengineSource}"/build-release
 xtplayerLocation="${xtplayerBuildDirectory}"/release/
 xtengineLocation="${xtengineBuildDirectory}"/release/
 deployDirectory="${xtplayerSource}"/Deploy/
-qtDirectory="${home}"Qt/6.9.1/macos/bin
+qtDirectory="${home}"Qt/${qtVersion}/macos/bin
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 xtools="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"
 

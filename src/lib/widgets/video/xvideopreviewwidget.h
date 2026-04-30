@@ -37,6 +37,8 @@ private:
     void on_thumbExtract(QImage frame);
     void on_thumbExtractionError(QString error);
     void on_setLoading(bool loading);
+
+    void setImage(QPixmap frame);
 };
 
 #endif // XVIDEOPREVIEWWIDGET_H

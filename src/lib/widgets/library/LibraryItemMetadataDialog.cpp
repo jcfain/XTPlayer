@@ -42,7 +42,7 @@ LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(
     connect(offsetSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value) {
         auto playingMediaID = XMediaStateHandler::getPlayingID();
         if(!playingMediaID.isEmpty() && playingMediaID == _libraryListItem->ID)
-            FunscriptHandler::setOffset(value);
+            FunscriptHandler::setScriptOffset(value);
         updateOffsetLabel();
     });
     //offsetSpinBox->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
@@ -197,7 +197,7 @@ void LibraryItemMetadataDialog::showDialog(LibraryItemMetadataDialog *dialog, bo
 
 void LibraryItemMetadataDialog::updateOffsetLabel()
 {
-    auto offsetText = QString::number(SettingsHandler::getoffSet()) + "ms";
+    auto offsetText = QString::number(SettingsHandler::getGlobalOffSet()) + "ms";
     if(_libraryListItem->metadata.offset) {
         globalOffsetValueLabel->setStyleSheet("*{color:red}");
         globalOffsetValueLabel->setText(offsetText + " (overridden)");

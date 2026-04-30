@@ -24,7 +24,7 @@ XTPlayer is a cross platform TCode media player.
 ## Building from source
      1. Download and install the following apps
           *  QT Creator Community Open source edition: https://www.qt.io/download 
-             During installation, make sure to get Qt 6.9.1. with the aditional libraries: HTTP Server, Serial port, Speech, Connectivity, MultiMedia, Wayland(Linux) and WebSockets.
+             During installation, make sure to get Qt 6.11. with the aditional libraries: HTTP Server, Serial port, Speech, Connectivity, MultiMedia, Wayland(Linux) and WebSockets.
      2. Required libraries needed:
           * https://github.com/pumphaus/qtgamepadlegacy
                * I usually open the CMakeLists.txt in Qt creator and build them copy the folders ./bin, ./include etc to the Qt directory of the same names. (There is probably a better way to do this)
@@ -33,7 +33,7 @@ XTPlayer is a cross platform TCode media player.
       3. Clone/download XTPlayer https://github.com/jcfain/XTPlayer/ and XTEngine https://github.com/jcfain/XTEngine/ source into the same directory.
       4. Open the XTEngine and XTPlayer projects in Qt Creator
       5. Select XTPlayer click Projects on the rightside then Dependencies and select XTEngine and check sync.
-      6. Select the "Build" item under "Desktop Qt 6.9.1" and change the Build directory to "path to"/git/XTPlayer/build-release 
+      6. Select the "Build" item under "Desktop Qt 6.11" and change the Build directory to "path to"/git/XTPlayer/build-release 
       7. Do the same for XTEngine but set it to "path to"git/XTEngine/build-release.
       8. Do the same for the debug build if you want to build debug.
       9. You should be able to build now.

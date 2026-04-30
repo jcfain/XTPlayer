@@ -12,6 +12,7 @@ class LibrarySortFilterProxyModel : public QSortFilterProxyModel
 public slots:
     void onFilterChanged(QString filter);
     void onTagFilterChanged(bool selected, QString filter);
+    void onTagFilterOptionChanged(bool filterOR);
 public:
     explicit LibrarySortFilterProxyModel(MediaLibraryHandler* mediaLibraryHandler, QObject *parent = nullptr);
     void setSortMode(LibrarySortMode sortMode);
@@ -26,6 +27,7 @@ private:
     bool dateInRange(QDate date) const;
     QString m_filterText;
     QStringList m_tags;
+    bool m_tagsOR = false;
 
     QDate minDate;
     QDate maxDate;

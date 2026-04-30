@@ -109,8 +109,6 @@ bool VideoHandler::isFullScreen() {
     return _isFullScreen;
 }
 void VideoHandler::showNormal() {
-    showLibrary();
-    showControls();
     auto flags = m_videoPreview->windowFlags();
     m_videoPreview->setParent(this->parentWidget(), flags);
     _mediaGrid->addWidget(_videoWidget);
@@ -128,6 +126,7 @@ void VideoHandler::showNormal() {
 //    delete m_libraryListFrame;
     m_libraryListFrame = 0;
     _isFullScreen = false;
+    showControls();
     // qApp->restoreOverrideCursor();
     qApp->setOverrideCursor(Qt::CursorShape::ArrowCursor);
 }
@@ -173,9 +172,9 @@ void VideoHandler::showFullscreen(QSize screenSize, bool libraryWindowed) {
 //    m_controls->setGraphicsEffect(opacityFxControls);
 
     //m_controls->setAttribute(Qt::WA_TranslucentBackground);
+    hideControls();
     m_controlsRect = QRect(0, m_screenSize.height() - m_controls->height(), m_screenSize.width() - 10, m_controls->height() - 10);
     placeLibraryList(libraryWindowed);
-    hideControls();
     //_fullscreenWidget->show();
     //_fullscreenWidget->init();
     _fullscreenWidget->showFullScreen();
@@ -496,8 +495,10 @@ XMediaState VideoHandler::convertMediaState(QMediaPlayer::State status) {
 
 void VideoHandler::hideControls()
 {
-    if (m_controls &&_isFullScreen)
+    // LogHandler::Debug("[hideControls] Enter: _isFullScreen: "+ QString::number(_isFullScreen));
+    if (m_controls && _isFullScreen)
     {
+        // LogHandler::Debug("[hideControls] Hide controls");
         m_controls->hide();
         if(m_libraryListFrame && m_libraryListFrame->isHidden())
             qApp->setOverrideCursor(Qt::BlankCursor);
@@ -506,9 +507,20 @@ void VideoHandler::hideControls()
 
 void VideoHandler::showControls()
 {
-    if (m_controls && _isFullScreen)
+    if (m_controls)
     {
-        m_controls->show();
+        bool isAvailable = true;
+        if(XTPSettings::getFullScreenUIOnlyOnMouseOver() && _fullscreenWidget)
+        {
+            auto cursorPos = _fullscreenWidget->mapFromGlobal(QCursor::pos());
+            isAvailable = m_controlsRect.contains(cursorPos);
+        }
+        // LogHandler::Debug("[showControls] Enter: _isFullScreen: "+ QString::number(_isFullScreen));
+        if (isAvailable)
+        {
+            // LogHandler::Debug("[showControls] Show controls");
+            m_controls->show();
+        }
     }
 }
 
@@ -525,7 +537,13 @@ void VideoHandler::hideLibrary()
 
 void VideoHandler::showLibrary()
 {
-    if (_isFullScreen || m_libraryWindowed)
+    bool isAvailable = true;
+    if(XTPSettings::getFullScreenUIOnlyOnMouseOver() && _fullscreenWidget)
+    {
+        auto cursorPos = _fullscreenWidget->mapFromGlobal(QCursor::pos());
+        isAvailable = m_libraryRect.contains(cursorPos);
+    }
+    if (_isFullScreen && isAvailable || m_libraryWindowed)
     {
         if(m_libraryListFrame) {
             m_libraryListFrame->show();
@@ -534,16 +552,19 @@ void VideoHandler::showLibrary()
     }
 }
 
-void VideoHandler::hideControlsTimeout() {
-    if(m_controls) {
+void VideoHandler::hideControlsTimeout()
+{
+    if(_fullscreenWidget) {
         auto cursorPos = _fullscreenWidget->mapFromGlobal(QCursor::pos());
         if (!m_controlsRect.contains(cursorPos)) {
             hideControls();
         }
     }
 }
-void VideoHandler::hideLibraryTimeout() {
-    if(m_libraryList) {
+void VideoHandler::hideLibraryTimeout()
+{
+    if(_fullscreenWidget)
+    {
         auto cursorPos = _fullscreenWidget->mapFromGlobal(QCursor::pos());
         if (!m_libraryRect.contains(cursorPos)) {
             hideLibrary();

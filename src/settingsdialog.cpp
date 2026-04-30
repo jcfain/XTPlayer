@@ -52,7 +52,7 @@ void SettingsDialog::init(MediaLibraryHandler* medialLibraryHandler, VideoHandle
     _videoHandler = videoHandler;
     _connectionHandler = connectionHandler;
 
-    ui.useWebSocketsCheckbox->setHidden(true);//Fast sends buffer in QWebSocket and sends late
+    // ui.useWebSocketsCheckbox->setHidden(true);//Fast sends buffer in QWebSocket and sends late
     ui.dubugButton->hide();// Doesnt restart in debug mode.
     ui.useMediaDirectoryCheckbox->hide();//Not fully developed.
 
@@ -96,6 +96,7 @@ void SettingsDialog::initLive()
     if(!SettingsHandler::hashedWebPass().isEmpty())
         ui.webPasswordButton->setText("Change password");
     ui.hideWelcomeDialog->setChecked(SettingsHandler::getHideWelcomeScreen());
+    ui.useWebSocketsCheckbox->setChecked(SettingsHandler::getSelectedNetworkProtocol() == NetworkProtocol::WEBSOCKET);
 //    auto availableAxis = SettingsHandler::getAvailableAxis();
 //    foreach(auto channel, availableAxis->keys())
 //    {
@@ -285,8 +286,6 @@ void SettingsDialog::setupUi()
         setUpTCodeChannelProfiles();
         setUpTCodeChannelUI();
 
-        ui.useWebSocketsCheckbox->setChecked(SettingsHandler::getSelectedNetworkProtocol() == NetworkProtocol::WEBSOCKET);
-
         enableOrDisableDeviceConnectionUI(SettingsHandler::getSelectedOutputDevice());
         bool deoEnabled = SettingsHandler::getSelectedInputDevice() == ConnectionInterface::HereSphere;
         bool whiriligigEnabled = SettingsHandler::getSelectedInputDevice() == ConnectionInterface::Whirligig;
@@ -338,7 +337,7 @@ void SettingsDialog::setupUi()
         ui.webAddressInstructionsLabel->setVisible(SettingsHandler::getEnableHttpServer());
         ui.webAddressLinkLabel->setVisible(SettingsHandler::getEnableHttpServer());
         ui.httpRootLineEdit->setText(SettingsHandler::getHttpServerRoot());
-        ui.vrLibraryLineEdit->setText(SettingsHandler::mediaLibrarySettings.getLast(LibraryType::VR));
+        ui.vrLibraryLineEdit->setText(SettingsHandler::mediaLibrarySettings->getLast(LibraryType::VR));
         ui.chunkSizeDoubleSpinBox->setValue(SettingsHandler::getHTTPChunkSizeMB());
         ui.httpPortSpinBox->setValue(SettingsHandler::getHTTPPort());
         ui.webSocketPortSpinBox->setValue(SettingsHandler::getWebSocketPort());
@@ -350,7 +349,7 @@ void SettingsDialog::setupUi()
 
         ui.offsetSpinbox->setMinimum(std::numeric_limits<int>::lowest());
         ui.offsetSpinbox->setMaximum(std::numeric_limits<int>::max());
-        ui.offsetSpinbox->setValue(SettingsHandler::getoffSet());
+        ui.offsetSpinbox->setValue(SettingsHandler::getGlobalOffSet());
         connect(ui.offsetSpinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onOffSet_valueChanged);
 
         ui.offsetSpinboxStep->setMinimum(std::numeric_limits<int>::lowest());
@@ -375,9 +374,10 @@ void SettingsDialog::setupUi()
         ui.disableHeartbeatChk->setChecked(SettingsHandler::getDisableHeartBeat());
         connect(ui.disableHeartbeatChk, &QCheckBox::clicked, this, &SettingsDialog::onDisableHeartbeatChkClicked);
 
-        int percentage = SettingsHandler::getViewedThreshold()*100;
+        int percentage = SettingsHandler::getViewedThreshold();
         ui.viewedPercentageSpinBox->setValue(percentage);
         ui.viewedPercentageSpinBox->setSuffix("%");
+        connect(ui.viewedPercentageSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onViewedPercentageSpinBoxValueChanged);
 
         updateIPAddress();
 
@@ -407,6 +407,10 @@ void SettingsDialog::setupUi()
         connect(SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
 
         ui.useMediaBackendChk->setChecked(SettingsHandler::getSetting(SettingKeys::useSystemMediaBackend).toBool());
+        ui.fullscreenUIOnlyOnMouseover->setChecked(XTPSettings::getFullScreenUIOnlyOnMouseOver());
+
+        ui.useDTRAndRTSChk->setChecked(SettingsHandler::getUseDTRAndRTS());
+        connect(ui.useDTRAndRTSChk, &QCheckBox::clicked, this, &SettingsDialog::onUseDTRAndRTSChkClicked);
     }
 }
 
@@ -797,25 +801,25 @@ void SettingsDialog::setUpTCodeChannelUI()
                      if(!checked)
                          emit TCodeHomeClicked();
                    });
-        QCheckBox* damperCheckbox = new QCheckBox(ui.randomMotionGroupbox);
-        damperCheckbox->setText("Speed");
-        damperCheckbox->setChecked(SettingsHandler::getDamperChecked(channelName));
-        QDoubleSpinBox* damperInput = new QDoubleSpinBox(ui.randomMotionGroupbox);
-        damperInput->setToolTip("Multiply the speed by the value.\n4000 * 0.5 = 2000");
-        damperInput->setDecimals(1);
-        damperInput->setSingleStep(0.1f);
-        damperInput->setMinimum(0.1f);
-        damperInput->setMaximum(std::numeric_limits<int>::max());
-        damperInput->setValue(SettingsHandler::getDamperValue(channelName));
-        connect(damperInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+        QCheckBox* speedCheckbox = new QCheckBox(ui.randomMotionGroupbox);
+        speedCheckbox->setText("Speed");
+        speedCheckbox->setChecked(SettingsHandler::getSpeedChecked(channelName));
+        QDoubleSpinBox* speedInput = new QDoubleSpinBox(ui.randomMotionGroupbox);
+        speedInput->setToolTip("Multiply the speed by the value.\n4000 * 0.5 = 2000");
+        speedInput->setDecimals(2);
+        speedInput->setSingleStep(0.1f);
+        speedInput->setMinimum(0.01f);
+        speedInput->setMaximum(std::numeric_limits<int>::max());
+        speedInput->setValue(SettingsHandler::getSpeedValue(channelName));
+        connect(speedInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
                  [channelName](float value)
                    {
-                     SettingsHandler::setDamperValue(channelName, value);
+                     SettingsHandler::setSpeedValue(channelName, value);
                    });
-        connect(damperCheckbox, &QCheckBox::clicked, this,
+        connect(speedCheckbox, &QCheckBox::clicked, this,
                  [channelName](bool checked)
                    {
-                     SettingsHandler::setDamperChecked(channelName, checked);
+                     SettingsHandler::setSpeedChecked(channelName, checked);
                    });
 
         QCheckBox* linkCheckbox = new QCheckBox(ui.randomMotionGroupbox);
@@ -850,18 +854,36 @@ void SettingsDialog::setUpTCodeChannelUI()
                         SettingsHandler::setLinkToRelatedAxis(channelName, relatedChannel.ChannelName);
                    });
 
+        QLabel* offsetLabel = new QLabel(ui.randomMotionGroupbox);
+        offsetLabel->setText("Offset");
+        QDoubleSpinBox* offsetInput = new QDoubleSpinBox(ui.randomMotionGroupbox);
+        offsetInput->setToolTip("Offset in percentage decimal");
+        offsetInput->setSingleStep(0.01);
+        offsetInput->setMinimum(-1);
+        offsetInput->setMaximum(1);
+        offsetInput->setValue(SettingsHandler::getMotionModifierOffsetValue(channelName));
+        connect(offsetInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+                [channelName](double value)
+                {
+                    SettingsHandler::setMotionModifierOffsetValue(channelName, value);
+                });
+
 
          randomGrid->addWidget(multiplierCheckbox, randomMotionGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
          randomGrid->addWidget(linkCheckbox, randomMotionGridRow, 1, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
          randomGrid->addWidget(linkToAxisCombobox, randomMotionGridRow, 2, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-         randomGrid->addWidget(damperCheckbox, randomMotionGridRow, 3, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
-         randomGrid->addWidget(damperInput, randomMotionGridRow, 4, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+         randomGrid->addWidget(speedCheckbox, randomMotionGridRow, 3, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
+         randomGrid->addWidget(speedInput, randomMotionGridRow, 4, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+         randomGrid->addWidget(offsetLabel, randomMotionGridRow, 5, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
+         randomGrid->addWidget(offsetInput, randomMotionGridRow, 6, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
 
         _multiplierWidgets.append(multiplierCheckbox);
         _multiplierWidgets.append(linkCheckbox);
         _multiplierWidgets.append(linkToAxisCombobox);
-        _multiplierWidgets.append(damperCheckbox);
-        _multiplierWidgets.append(damperInput);
+        _multiplierWidgets.append(speedCheckbox);
+        _multiplierWidgets.append(speedInput);
+        _multiplierWidgets.append(offsetLabel);
+        _multiplierWidgets.append(offsetInput);
 
          randomMotionGridRow++;
 
@@ -943,22 +965,44 @@ void SettingsDialog::setUpTCodeChannelUI()
         customTCodeListWidget->setObjectName(tr("customTCodeCommandList"));
         customTCodeListWidget->setMinimumSize(100, 150);
         customTCodeListWidget->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
-        customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
-        connect(customTCodeListWidget, & QListWidget::doubleClicked, this, [this, customTCodeListWidget](const QModelIndex index) {
-            if(customTCodeListWidget->selectedItems().length()) {
+        QList<TCodeCommand> commands = SettingsHandler::getCustomTCodeCommands();
+        foreach (TCodeCommand command, commands)
+        {
+            customTCodeListWidget->addItem(command.name);
+        }
+        connect(customTCodeListWidget, & QListWidget::doubleClicked, this, [this, customTCodeListWidget](const QModelIndex index)
+        {
+            if(customTCodeListWidget->selectedItems().length())
+            {
                 bool ok;
-                QString selected = customTCodeListWidget->selectedItems().first()->text();
-                auto newValue = GetTextDialog::show(this, "Custom TCode", selected, &ok);
-                if(ok) {
+                QString selectedName = customTCodeListWidget->selectedItems().first()->text();
+                TCodeCommand* command = SettingsHandler::getCustomTCodeCommand(selectedName);
+                if(!command)
+                    return;
+                auto newValues = GetTextDialog::show(this, {"Name", "TCode"}, {command->name, command->command}, &ok);
+                if(ok && newValues.length() > 0)
+                {
+                    QString newName = newValues[0];
+                    QString newValue = newValues.length() > 1 ? newValues[1] : "";
                     MediaActions actions;
-                    if(actions.Values.contains(newValue)) {
+                    if(actions.Values.contains(newValue))
+                    {
                         DialogHandler::MessageBox(this, "Reserved value: "+newValue, XLogLevel::Critical);
-                    } else if(customTCodeListWidget->findItems(newValue, Qt::MatchExactly).isEmpty()) {
-                        SettingsHandler::editCustomTCodeCommand(selected, newValue);
+                    }
+                    else if(customTCodeListWidget->findItems(newName, Qt::MatchExactly).isEmpty())
+                    {
+                        TCodeCommand newTCodeCommandValue{newName, newValue, false};
+                        SettingsHandler::editCustomTCodeCommand(selectedName, newTCodeCommandValue);
                         customTCodeListWidget->clear();
-                        customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
+                        QList<TCodeCommand> commands = SettingsHandler::getCustomTCodeCommands();
+                        foreach (TCodeCommand command, commands)
+                        {
+                            customTCodeListWidget->addItem(command.name);
+                        }
                         set_requires_restart(true);
-                    } else {
+                    }
+                    else
+                    {
                         DialogHandler::MessageBox(this, "Duplicate value: "+newValue, XLogLevel::Critical);
                     }
                 }
@@ -967,21 +1011,35 @@ void SettingsDialog::setUpTCodeChannelUI()
 
         QPushButton* customTCodeAddbutton = new QPushButton(this);
         customTCodeAddbutton->setText("Add");
-        connect(customTCodeAddbutton, &QPushButton::clicked, this, [this, customTCodeListWidget]() {
+        connect(customTCodeAddbutton, &QPushButton::clicked, this, [this, customTCodeListWidget]()
+        {
             bool ok;
-            auto value = GetTextDialog::show(this, "Custom TCode", nullptr, &ok);
-            if(ok) {
+            auto newValues = GetTextDialog::show(this, {"Name", "TCode"}, {}, &ok);
+            if(ok && newValues.length() > 0)
+            {
+                QString newName = newValues[0];
+                QString newValue = newValues.length() > 1 ? newValues[1] : "";
                 MediaActions actions;
-                if(actions.Values.contains(value)) {
-                    DialogHandler::MessageBox(this, "Reserved value: "+value, XLogLevel::Critical);
-                } else if(customTCodeListWidget->findItems(value, Qt::MatchExactly).isEmpty()) {
-                    SettingsHandler::addCustomTCodeCommand(value);
+                if(actions.Values.contains(newValue))
+                {
+                    DialogHandler::MessageBox(this, "Reserved value: "+newValue, XLogLevel::Critical);
+                }
+                else if(customTCodeListWidget->findItems(newName, Qt::MatchExactly).isEmpty())
+                {
+                    TCodeCommand newTCodeCommandValue{newName, newValue, false};
+                    SettingsHandler::addCustomTCodeCommand(newTCodeCommandValue);
                     customTCodeListWidget->clear();
-                    customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
-                    MediaActions::AddOtherAction(value, "TCode command: " + value, ActionType::TCODE);
+                    QList<TCodeCommand> commands = SettingsHandler::getCustomTCodeCommands();
+                    foreach (TCodeCommand command, commands)
+                    {
+                        customTCodeListWidget->addItem(command.name);
+                    }
+                    MediaActions::AddOtherAction(newValue, "TCode command: " + newName, ActionType::TCODE);
                     set_requires_restart(true);
-                } else {
-                    DialogHandler::MessageBox(this, "Duplicate value: "+value, XLogLevel::Critical);
+                }
+                else
+                {
+                    DialogHandler::MessageBox(this, "Duplicate value: "+newName, XLogLevel::Critical);
                 }
             }
         });
@@ -989,16 +1047,24 @@ void SettingsDialog::setUpTCodeChannelUI()
         QPushButton* customTCodeRemovebutton = new QPushButton(this);
         customTCodeRemovebutton->setEnabled(false);
         customTCodeRemovebutton->setText("Remove");
-        connect(customTCodeRemovebutton, &QPushButton::clicked, this, [this, customTCodeListWidget, customTCodeRemovebutton]() {
+        connect(customTCodeRemovebutton, &QPushButton::clicked, this, [this, customTCodeListWidget, customTCodeRemovebutton]()
+        {
             auto amount = customTCodeListWidget->selectedItems().length();
-            if(amount) {
+            if(amount)
+            {
                 auto ok = DialogHandler::Dialog(this, "Remove selected " + QString::number(amount) + " item(s)?");
-                if(ok) {
-                    for(auto selected: customTCodeListWidget->selectedItems()) {
+                if(ok)
+                {
+                    for(auto selected: customTCodeListWidget->selectedItems())
+                    {
                         SettingsHandler::removeCustomTCodeCommand(selected->text());
                     }
                     customTCodeListWidget->clear();
-                    customTCodeListWidget->addItems(SettingsHandler::getCustomTCodeCommands());
+                    QList<TCodeCommand> commands = SettingsHandler::getCustomTCodeCommands();
+                    foreach (TCodeCommand command, commands)
+                    {
+                        customTCodeListWidget->addItem(command.name);
+                    }
                     customTCodeRemovebutton->setEnabled(false);
                     set_requires_restart(true);
                 }
@@ -1308,7 +1374,7 @@ void SettingsDialog::onRange_mouseRelease(QString name)
 
 void SettingsDialog::onOffSet_valueChanged(int value)
 {
-    SettingsHandler::setoffSet(value);
+    SettingsHandler::setGlobalOffSet(value);
 }
 
 void SettingsDialog::onOffSetStep_valueChanged(int value)
@@ -1523,36 +1589,31 @@ void SettingsDialog::on_xtpWebHandlerCheckbox_clicked(bool checked)
 void SettingsDialog::on_resetAllButton_clicked()
 {
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset ALL settings?",
+    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset ALL settings except\nplaylists, metadata and DLNA map?",
                                   QMessageBox::Yes|QMessageBox::No);
     if (reply == QMessageBox::Yes)
     {
         SettingsHandler::Default();
-        int reply;
-        auto playlists = SettingsHandler::getPlaylists();
-        if(playlists.count() > 0)
-        {
-            reply = QMessageBox::question(this, "WARNING!", "You have one or more playlists.\nDo you wish to keep these?",
+        reply = QMessageBox::question(this, "WARNING!", "Would you like to keep playlists, metadata and dlna lookup data?",
                                           QMessageBox::Yes|QMessageBox::No);
-            if (reply == QMessageBox::Yes)
-            {
-                SettingsHandler::PersistSelectSettings();
-            }
+        if (reply == QMessageBox::Yes)
+        {
+            SettingsHandler::PersistSelectSettings();
         }
-        reply = QMessageBox::question(this, "Restart Application?", "Changes will take effect on application restart.\n\n"
+        int finalReply = QMessageBox::question(this, "Restart Application?", "Changes will take effect on application restart.\n\n"
                                                                     "Restart this application now?\n\n"
                                                                     "Uninstall will remove ALL settings\nINCLUDING PLAYLISTS\nfrom this PC and close the application\n",
                                       "Restart", "Uninstall", "Quit", 0, 2);
-        if (reply == 0)
+        if (finalReply == 0)
         {
             SettingsHandler::Restart();
         }
-        else if (reply == 1)
+        else if (finalReply == 1)
         {
             SettingsHandler::Clear();
             QApplication::quit();
         }
-        else if (reply == 2)
+        else if (finalReply == 2)
         {
             QApplication::quit();
         }
@@ -1776,7 +1837,7 @@ void SettingsDialog::on_skipToMoneyShotPlaysFunscriptCheckbox_clicked(bool check
 
 void SettingsDialog::on_browseSkipToMoneyShotFunscriptButton_clicked(bool checked)
 {
-    QString selectedScript = QFileDialog::getOpenFileName(this, tr("Choose script"), SettingsHandler::mediaLibrarySettings.getLast(LibraryType::MAIN), tr("Scripts (*.funscript *.zip)"));
+    QString selectedScript = QFileDialog::getOpenFileName(this, tr("Choose script"), SettingsHandler::mediaLibrarySettings->getLast(LibraryType::MAIN), tr("Scripts (*.funscript *.zip)"));
     if (selectedScript != Q_NULLPTR)
     {
         SettingsHandler::setSkipToMoneyShotFunscript(selectedScript);
@@ -1820,7 +1881,7 @@ void SettingsDialog::on_browseHttpRootButton_clicked()
 
 void SettingsDialog::on_browseVRLibraryButton_clicked()
 {
-    QString selectedDirectory = QFileDialog::getExistingDirectory(this, tr("Choose VR library"), SettingsHandler::mediaLibrarySettings.getLast(LibraryType::MAIN));
+    QString selectedDirectory = QFileDialog::getExistingDirectory(this, tr("Choose VR library"), SettingsHandler::mediaLibrarySettings->getLast(LibraryType::MAIN));
     on_vrLibraryLineEdit_textEdited(selectedDirectory);
 }
 
@@ -1829,7 +1890,7 @@ void SettingsDialog::on_vrLibraryLineEdit_textEdited(const QString &selectedDire
     if (!selectedDirectory.isEmpty() && QFile::exists(selectedDirectory))
     {
         QStringList messages;
-        if(SettingsHandler::mediaLibrarySettings.add(LibraryType::VR, selectedDirectory, messages))
+        if(SettingsHandler::mediaLibrarySettings->add(LibraryType::VR, selectedDirectory, messages))
             ui.vrLibraryLineEdit->setText(selectedDirectory);
         else
             DialogHandler::MessageBox(this, messages.join("\n"), XLogLevel::Warning);
@@ -2156,8 +2217,8 @@ void SettingsDialog::on_defaultSmartTagsButton_clicked()
 
 void SettingsDialog::onViewedPercentageSpinBoxValueChanged(int arg1)
 {
-    float percentage = arg1/(float)100;
-    SettingsHandler::setViewedThreshold(percentage);
+    // float percentage = arg1/(float)100;
+    SettingsHandler::setViewedThreshold(arg1);
 }
 
 
@@ -2272,7 +2333,7 @@ void SettingsDialog::on_defaultWebDirBtn_clicked()
 
 void SettingsDialog::on_defaultVRLibraryBtn_clicked()
 {
-    SettingsHandler::mediaLibrarySettings.clear(LibraryType::VR);
+    SettingsHandler::mediaLibrarySettings->clear(LibraryType::VR);
     ui.vrLibraryLineEdit->setText("");
 }
 
@@ -2310,9 +2371,13 @@ void SettingsDialog::on_libraryVRBtn_clicked()
     lm.exec();
 }
 
-
 void SettingsDialog::on_useMediaBackendChk_clicked(bool checked)
 {
     SettingsHandler::changeSetting(SettingKeys::useSystemMediaBackend, checked, true);
+}
+
+void SettingsDialog::on_fullscreenUIOnlyOnMouseover_clicked(bool checked)
+{
+    XTPSettings::setFullScreenUIOnlyOnMouseOver(checked);
 }
 

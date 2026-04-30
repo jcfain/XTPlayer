@@ -292,6 +292,8 @@ private slots:
 
     void on_useMediaBackendChk_clicked(bool checked);
 
+    void on_fullscreenUIOnlyOnMouseover_clicked(bool checked);
+
 private:
 
     Ui::SettingsDialog ui;
