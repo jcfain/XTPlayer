@@ -1693,11 +1693,12 @@ void MainWindow::on_mainwindow_change(QEvent* event)
 //QPoint _mainStackedWidgetPos;
 void MainWindow::toggleFullScreen()
 {
-    QScreen *screen = this->window()->windowHandle()->screen();
-    QSize screenSize = screen->size();
     if(!videoHandler->isFullScreen())
     {
-        videoHandler->showFullscreen(screenSize, !libraryWindow->isHidden());
+        QScreen *screen = this->window()->windowHandle()->screen();
+        QSize screenSize = screen->size();
+        QRect screenLoc = screen->geometry();
+        videoHandler->showFullscreen(screenLoc, !libraryWindow->isHidden());
         if(libraryWindow->isHidden())
         {
             setupLibraryGrid(videoHandler->libraryListLayout());

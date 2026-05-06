@@ -2,7 +2,9 @@
 #include "lib/handler/settingshandler.h"
 
 const QString XTPSettings::XTPVersion = SettingsHandler::XTEVersion;
-const float XTPSettings::XTPVersionNum = SettingsHandler::XTEVersionNum;
+const int XTPSettings::XTPVersionMajor = SettingsHandler::XTEVersionMajor;
+const int XTPSettings::XTPVersionMinor = SettingsHandler::XTEVersionMinor;
+const int XTPSettings::XTPVersionRevision = SettingsHandler::XTEVersionRevision;
 const QString XTPSettings::XTPVersionTimeStamp = QString(XTPVersion +" %1T%2").arg(__DATE__).arg(__TIME__);
 
 XTPSettings::XTPSettings() {}

@@ -141,7 +141,7 @@ void DialogHandler::ShowAboutDialog(QWidget* parent, QString XTPVersion, QString
                       + "</b><br><b>XTEngine v" + XTEVersion
                       + "</b><br>" + selectedTCodeVersion
                       + "<br>"
-                                                "Copyright 2025 Jason C. Fain<br>"
+                                                "Copyright 2026 Jason C. Fain<br>"
                                                 "Donate: <a href='https://www.patreon.com/Khrull'>https://www.patreon.com/Khrull</a><br>"
                                                 "THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND.");
     copyright.setAlignment(Qt::AlignHCenter);
@@ -157,7 +157,7 @@ void DialogHandler::ShowAboutDialog(QWidget* parent, QString XTPVersion, QString
                    "Distributed under the terms of LGPLv3 or later.<br>"
                    "Source: <a href='https://github.com/qt/qt5/releases/tag/v5.15.2'>https://github.com/qt/qt5/releases/tag/v5.15.2</a>");
 #else
-    qtInfo.setText("<b>Qt v6.9.1</b><br>"
+    qtInfo.setText("<b>Qt v6.11.0</b><br>"
                    "Distributed under the terms of LGPLv3 or later.<br>"
                    "Source: <a href='https://github.com/qt/qt5/releases/tag/v6.9.0'>https://github.com/qt/qt5/releases/tag/v6.9.1</a>");
 #endif
@@ -178,20 +178,13 @@ void DialogHandler::ShowAboutDialog(QWidget* parent, QString XTPVersion, QString
                       "<a href='https://github.com/k06a/boolinq'>https://github.com/k06a/boolinq</a>");
     boolinqInfo.setAlignment(Qt::AlignHCenter);
     layout.addWidget(&boolinqInfo);
-    QLabel qtcompressInfo;
-    qtcompressInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    qtcompressInfo.setText("<b>qtcompress</b><br>"
-                      "Copyright (C) 2013 Digia Plc (LGPL)<br>"
-                      "<a href='https://github.com/nezticle/qtcompress'>https://github.com/nezticle/qtcompress</a>");
-    qtcompressInfo.setAlignment(Qt::AlignHCenter);
-    layout.addWidget(&qtcompressInfo);
-    QLabel qthttpServerInfo;
-    qthttpServerInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    qthttpServerInfo.setText("<b>HttpServer</b><br>"
-                      "Copyright (C) 2019 Addison Elliott (MIT)<br>"
-                      "<a href='https://github.com/addisonElliott/HttpServer'>https://github.com/addisonElliott/HttpServer</a>");
-    qthttpServerInfo.setAlignment(Qt::AlignHCenter);
-    layout.addWidget(&qthttpServerInfo);
+    // QLabel qtcompressInfo;
+    // qtcompressInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    // qtcompressInfo.setText("<b>qtcompress</b><br>"
+    //                   "Copyright (C) 2013 Digia Plc (LGPL)<br>"
+    //                   "<a href='https://github.com/nezticle/qtcompress'>https://github.com/nezticle/qtcompress</a>");
+    // qtcompressInfo.setAlignment(Qt::AlignHCenter);
+    // layout.addWidget(&qtcompressInfo);
     Dialog(parent, &layout);
 }
 

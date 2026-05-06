@@ -81,7 +81,7 @@ public:
     QStringList getVideoExtensions();
     QStringList getAudioExtensions();
     bool isFullScreen();
-    void showFullscreen(QSize screenSize, bool libraryWindowed);
+    void showFullscreen(QRect screenSize, bool libraryWindowed);
     void showNormal();
     void placeLibraryList(bool libraryWindowed = false);
     QGridLayout* libraryListLayout();
@@ -95,7 +95,7 @@ private:
     //QAudioProbe* m_audioProbe = 0;
     bool _isFullScreen = false;
     bool m_libraryWindowed;
-    QSize m_screenSize;
+    QRect m_screenSize;
     XWidget* _fullscreenWidget;
 //    VideoRenderer* _videoRenderer = 0;
 //    VideoPreviewWidget* _videoPreviewWidget;

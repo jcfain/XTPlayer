@@ -131,13 +131,14 @@ void VideoHandler::showNormal() {
     qApp->setOverrideCursor(Qt::CursorShape::ArrowCursor);
 }
 
-void VideoHandler::showFullscreen(QSize screenSize, bool libraryWindowed) {
+void VideoHandler::showFullscreen(QRect screenSize, bool libraryWindowed) {
     _isFullScreen = true;
     m_screenSize = screenSize;
     _fullscreenWidget = new XWidget(this);
     _fullscreenWidget->setAttribute(Qt::WA_StyledBackground);
     _fullscreenWidget->setMouseTracking(true);
     _fullscreenWidget->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Window);
+    //_fullscreenWidget->setWindowState((windowState() & ~(Qt::WindowMinimized | Qt::WindowMaximized))| Qt::WindowFullScreen);
     connect(_fullscreenWidget, &XWidget::mouseMove, this, &VideoHandler::mouseMove);
     connect(_fullscreenWidget, &XWidget::doubleClicked, this, [this](QMouseEvent* e) {emit doubleClicked(e);});
     connect(_fullscreenWidget, &XWidget::singleClicked, this, [this](QMouseEvent* e) {emit singleClicked(e);});
@@ -177,8 +178,9 @@ void VideoHandler::showFullscreen(QSize screenSize, bool libraryWindowed) {
     placeLibraryList(libraryWindowed);
     //_fullscreenWidget->show();
     //_fullscreenWidget->init();
+    _fullscreenWidget->setGeometry(screenSize);
     _fullscreenWidget->showFullScreen();
-    grabKeyboard();
+    //grabKeyboard();
 }
 
 void VideoHandler::placeLibraryList(bool libraryWindowed) {

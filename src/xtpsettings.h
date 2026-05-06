@@ -13,7 +13,9 @@ public:
 
     static const QString XTPVersion;
     static const QString XTPVersionTimeStamp;
-    static const float XTPVersionNum;
+    static const int XTPVersionMajor;
+    static const int XTPVersionMinor;
+    static const int XTPVersionRevision;
 
     static void save(QSettings* settingsToSaveTo = 0);
     static void load(QSettings* settingsToLoadFrom = 0);
