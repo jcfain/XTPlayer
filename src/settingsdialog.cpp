@@ -1790,19 +1790,21 @@ void SettingsDialog::on_disableNoScriptFoundInLibrary_stateChanged(int checkStat
 
 void SettingsDialog::on_tCodeVSComboBox_currentIndexChanged(int index)
 {
-    QMessageBox::StandardButton reply = QMessageBox::question(this, "Warning!", "This will reset ALL CHANNEL PROFILES to default.\nContinue?",
-                                  QMessageBox::Yes|QMessageBox::No);
-    if(reply == QMessageBox::Yes)
-    {
+    // TCodeVersion currentVersion = TCodeChannelLookup::getSelectedTCodeVersion();
+    // TCodeVersion newVersion = ui.tCodeVersionComboBox->currentData().value<TCodeVersion>();
+    // QMessageBox::StandardButton reply = QMessageBox::question(this, "Warning!", "This will reset ALL CHANNEL PROFILES to default.\nContinue?",
+    //                               QMessageBox::Yes|QMessageBox::No);
+    // if(reply == QMessageBox::Yes)
+    // {
         SettingsHandler::changeSelectedTCodeVersion(ui.tCodeVersionComboBox->currentData().value<TCodeVersion>());
-        askHowToResetChannelProfileDefaults();
-    }
-    else
-    {
-        disconnect(ui.tCodeVersionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
-        ui.tCodeVersionComboBox->setCurrentText(TCodeChannelLookup::getSelectedTCodeVersionName());
-        connect(ui.tCodeVersionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
-    }
+        // askHowToResetChannelProfileDefaults();
+    // }
+    // else
+    // {
+    //     disconnect(ui.tCodeVersionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
+    //     ui.tCodeVersionComboBox->setCurrentText(TCodeChannelLookup::getSelectedTCodeVersionName());
+    //     connect(ui.tCodeVersionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
+    // }
 }
 
 void SettingsDialog::on_hideWelcomeDialog_clicked(bool checked)
