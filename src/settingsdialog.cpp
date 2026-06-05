@@ -715,10 +715,14 @@ void SettingsDialog::setUpTCodeChannelUI()
     ui.rangeLimitGroupbox->setLayout(rangeGrid);
     ui.randomMotionGroupbox->setLayout(randomGrid);
     ui.inversionGroupBox->setLayout(inversionGrid);
+    int inversionGridRow = 0;
+    inversionGrid->addWidget(new QLabel("Inversion", ui.inversionGroupBox), inversionGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+    inversionGrid->addWidget(new QLabel("Gradient", ui.inversionGroupBox), inversionGridRow, 1, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+    inversionGridRow++;
+
     QFont font( "Sans Serif", 8);
     int sliderGridRow = 0;
     int randomMotionGridRow = 0;
-    int inversionGridRow = 0;
     auto tcodeChannels = TCodeChannelLookup::GetSelectedVersionMap();
     ui.randomMotionGroupbox->setChecked(SettingsHandler::getMultiplierEnabled());
     //QCheckBox* enableCheckbox = new QCheckBox("Enable", this);
@@ -896,6 +900,16 @@ void SettingsDialog::setUpTCodeChannelUI()
                  SettingsHandler::setChannelFunscriptInverseChecked(channelName, checked);
                });
         inversionGrid->addWidget(invertedCheckbox, inversionGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+
+        QCheckBox* gradientCheckbox = new QCheckBox(ui.inversionGroupBox);
+        gradientCheckbox->setText(axis->FriendlyName);
+        gradientCheckbox->setChecked(SettingsHandler::getChannelFunscriptGradientChecked(channelName));
+        connect(gradientCheckbox, &QCheckBox::clicked, this,
+                [channelName](bool checked)
+                {
+                    SettingsHandler::setChannelFunscriptGradientChecked(channelName, checked);
+                });
+        inversionGrid->addWidget(gradientCheckbox, inversionGridRow, 1, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
 
         inversionGridRow++;
     }

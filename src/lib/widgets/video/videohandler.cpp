@@ -120,7 +120,7 @@ void VideoHandler::showNormal() {
     m_libraryList->style()->polish(m_libraryList);
     m_libraryList->setMinimumSize(QSize(0, 0));
     m_libraryList->setMaximumSize(QSize(16777215, 16777215));
-    releaseKeyboard();
+    // releaseKeyboard();
     delete _fullscreenWidget;
     _fullscreenWidget = 0;
 //    delete m_libraryListFrame;
