@@ -1,41 +1,36 @@
+SFMA (max) Funscript:
+This is a format that puts all of the channels in a single funscript.
+There a couple versions of this but XTP ONLY SUPPORTS > v2.0
+
 MFS 
 Multi funscript tracks works as follows:
 
-You have your regular funscript for the X axis (up/down) no change here
+You have your regular funscript for the stroke axis, no change here
 
-After this you can pick another axis from the devices available axis’
-Create a funscript for it to match what the model does in that axis or make it random.
-Each funscript lives in the same directory. (I hope to have a package system soon)
+After this you can pick another tracks from the devices available tracks
+Create a funscript for it to match what the model does in that tracks or make it random.
+Each funscript lives in the same directory.
 
-The available axis’ are:
+The available tracks are:
 sway
 surge
 pitch
 roll
 twist
+vib
+and more...
 
-Note: the OSR2+ only has pitch, roll and maybe twist. OSR2 only has roll.
-sway and surge are reserved for future devices.
+See the track column in channel setup in XTP settings for supported script names. You can even add your own if you wish.
 
-Each script has a naming format if outside a zip file
+Each script in the MFS set has a naming format:
 <videoname>.<axisname>.funscript
-if in a zip file the name scheme is as follows:
-<videoname>.zip / <videoname>.<axisname>.funscript
 
-The stroke axis is always <videoname>.funscript for backwards compatibility
+The stroke tracks is always <videoname>.funscript for backwards compatibility.
 
-These axis all are similar to the x axis where 50 = home position
-with rotate axis 49-0 rotate counter clockwise and 51-100 rotate clockwise.
-(it seems pitch maybe the inverse of this but I need to confirm)
+Alternate scripts:
+During metadata process funscript search, XTE will search for funscripts with the naming scheme:
+<videoname><anythingYouWant>.funscript
+These scripts will show up during playback for swapping out at runtime.
 
-Notes for playback:
-If there is an existing <videoname>.funscript (or you select play with funscript) or <videoname>.<axisname>.funscript outside of the zip file
-This will override the contents of the zip file.
 
-Notes for distribution:
-Due to the modularization nature of the current multi-axis devices out there it is suggested to share your 
-scripts outside of a zip file so users can grab the ones their OSR can utilize.
-You could offer either if you wish of course. 
 
-IMPORTANT: As always others copyright content cannot be distributed. Either inside the zip file or any where the copyright owner has not approved.
-If you create a script to supplement another scripts axis then link to thats scripts location from your scripts metadata and shared location.

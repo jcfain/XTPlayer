@@ -2161,6 +2161,11 @@ void MainWindow::onFunscriptSearchResult(QString mediaPath, QString funscriptPat
     }
 }
 
+///
+/// \brief MainWindow::on_sendTCode This sends tcode when a method
+/// other than funscript is executed.
+/// \param value
+///
 void MainWindow::on_sendTCode(QString value)
 {
     if(m_xtengine->connectionHandler()->isOutputConnected())
@@ -2170,13 +2175,14 @@ void MainWindow::on_sendTCode(QString value)
                 ((videoHandler->isPlaying() && !videoHandler->isPaused())
                     || (m_xtengine->connectionHandler()->getSelectedInputConnection() && m_xtengine->connectionHandler()->getSelectedInputConnection()->isPlaying())))
         {
-            QRegularExpression rx("L0[^\\s]*\\s?");
+            // Remove stroke channel when theres a stroke funscript playing
+            static const QRegularExpression rx("L0[^\\s]*\\s?");
             value = value.remove(rx);
         }
 
         if((value.contains(TCodeChannelLookup::Suck()) && value.contains(TCodeChannelLookup::SuckPosition())))
         {
-            QRegularExpression rx("A1[^\\s]*\\s?");
+            static const QRegularExpression rx("A1[^\\s]*\\s?");
             value = value.remove(rx);
         }
         m_xtengine->connectionHandler()->sendTCode(value);
