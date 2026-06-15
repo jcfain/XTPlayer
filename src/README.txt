@@ -23,7 +23,7 @@ and more...
 See the track column in channel setup in XTP settings for supported script names. You can even add your own if you wish.
 
 Each script in the MFS set has a naming format:
-<videoname>.<axisname>.funscript
+<videoname>.<trackname>.funscript
 
 The stroke tracks is always <videoname>.funscript for backwards compatibility.
 
