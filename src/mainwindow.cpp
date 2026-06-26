@@ -1602,7 +1602,7 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
         if(!customScript.isEmpty())
             m_xtengine->syncHandler()->buildScriptItem(selectedFileListItem, customScript);
         SyncLoadState loadState = m_xtengine->syncHandler()->load(selectedFileListItem);
-        _playerControlsFrame->setAltScripts(m_xtengine->mediaLibraryHandler()->filterAlternateFunscriptsForMediaItem(item->metadata.scripts));
+        _playerControlsFrame->setAltScripts(m_xtengine->mediaLibraryHandler()->filterAlternateFunscriptsForMediaItem(item));
         QString filesWithLoadingIssues = "";
         if(selectedFileListItem.type == LibraryListItemType::FunscriptType && m_xtengine->syncHandler()->isLoaded())
             m_xtengine->syncHandler()->playStandAlone();

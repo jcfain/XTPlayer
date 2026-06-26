@@ -205,6 +205,10 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
                     _mediaLibraryHandler->getLibraryCache()->unlock();
                     return QColor(Qt::GlobalColor::cyan);
                 }
+                if (!item.hasScript && item.metadata.hasAlternate) {
+                    _mediaLibraryHandler->getLibraryCache()->unlock();
+                    return QColor(Qt::GlobalColor::darkCyan);
+                }
                 if (!item.hasScript) {
                     _mediaLibraryHandler->getLibraryCache()->unlock();
                     return QColor(Qt::gray);
