@@ -193,14 +193,6 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
                     _mediaLibraryHandler->getLibraryCache()->unlock();
                     return QColor(Qt::GlobalColor::red);
                 }
-                if(item.metadata.isSFMA) {
-                    _mediaLibraryHandler->getLibraryCache()->unlock();
-                    return QColor(Qt::GlobalColor::yellow);
-                }
-                if(item.metadata.isMFS && item.hasScript) {
-                    _mediaLibraryHandler->getLibraryCache()->unlock();
-                    return QColor(Qt::green);
-                }
                 if (!item.hasScript && item.metadata.isMFS) {
                     _mediaLibraryHandler->getLibraryCache()->unlock();
                     return QColor(Qt::GlobalColor::cyan);
@@ -208,6 +200,14 @@ QVariant LibraryListViewModel::data(const QModelIndex &index, int role) const
                 if (!item.hasScript) {
                     _mediaLibraryHandler->getLibraryCache()->unlock();
                     return QColor(Qt::gray);
+                }
+                if(item.metadata.isSFMA) {
+                    _mediaLibraryHandler->getLibraryCache()->unlock();
+                    return QColor(Qt::GlobalColor::yellow);
+                }
+                if(item.metadata.isMFS) {
+                    _mediaLibraryHandler->getLibraryCache()->unlock();
+                    return QColor(Qt::green);
                 }
             }
         }

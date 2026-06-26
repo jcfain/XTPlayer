@@ -337,8 +337,7 @@ void SettingsDialog::setupUi()
         ui.webAddressInstructionsLabel->setVisible(SettingsHandler::getEnableHttpServer());
         ui.webAddressLinkLabel->setVisible(SettingsHandler::getEnableHttpServer());
         ui.httpRootLineEdit->setText(SettingsHandler::getHttpServerRoot());
-        if(SettingsHandler::mediaLibrarySettings)
-            ui.vrLibraryLineEdit->setText(SettingsHandler::mediaLibrarySettings->getLast(LibraryType::VR));
+        ui.vrLibraryLineEdit->setText(SettingsHandler::mediaLibrarySettings->getLast(LibraryType::VR));
         ui.chunkSizeDoubleSpinBox->setValue(SettingsHandler::getHTTPChunkSizeMB());
         ui.httpPortSpinBox->setValue(SettingsHandler::getHTTPPort());
         ui.webSocketPortSpinBox->setValue(SettingsHandler::getWebSocketPort());
