@@ -499,7 +499,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
 
     connect(videoHandler, &VideoHandler::positionChanged, this, &MainWindow::on_media_positionChanged, Qt::QueuedConnection);
     connect(videoHandler, &VideoHandler::positionChanged, this, [this](qint64 position) {
-        XMediaStateHandler::updateDuration(position, videoHandler->duration());
+        XMediaStateHandler::updateDuration(videoHandler->file(), position, videoHandler->duration());
     });
     connect(videoHandler, &VideoHandler::mediaStatusChanged, this, &MainWindow::on_media_statusChanged, Qt::QueuedConnection);
     connect(videoHandler, &VideoHandler::started, this, &MainWindow::on_media_start, Qt::QueuedConnection);
