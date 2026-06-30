@@ -1852,7 +1852,7 @@ void MainWindow::on_PlayBtn_clicked()
         if(videoHandler->isPaused() || videoHandler->isPlaying())
         {
             videoHandler->togglePause();
-            //m_xtengine->syncHandler()->setPause(videoHandler->isPaused());
+            m_xtengine->syncHandler()->setPause(videoHandler->isPaused());
         }
         else if(m_xtengine->syncHandler()->isPlayingStandAlone())
         {
