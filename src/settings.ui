@@ -366,7 +366,7 @@
           </widget>
          </item>
          <item row="0" column="3" colspan="7">
-          <widget class="QComboBox" name="SerialOutputCmb">
+          <widget class="XComboBox" name="SerialOutputCmb">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -733,7 +733,7 @@
               <enum>Qt::FocusPolicy::NoFocus</enum>
              </property>
              <property name="title">
-              <string>Random motion on channels without scripts</string>
+              <string>Enable Random motion on channels without scripts</string>
              </property>
              <property name="flat">
               <bool>false</bool>
@@ -868,7 +868,7 @@
                </widget>
               </item>
               <item row="2" column="1">
-               <widget class="QSpinBox" name="offsetSpinboxStep">
+               <widget class="XSpinBox" name="offsetSpinboxStep">
                 <property name="toolTip">
                  <string>This sets the step for when changing the range modifier value in from a gamepad or keyboard.</string>
                 </property>
@@ -878,7 +878,7 @@
                </widget>
               </item>
               <item row="1" column="1">
-               <widget class="QSpinBox" name="offsetSpinbox">
+               <widget class="XSpinBox" name="offsetSpinbox">
                 <property name="toolTip">
                  <string>This sets the offset for all scripts unless the script has its own offset value.</string>
                 </property>
@@ -891,7 +891,7 @@
                </widget>
               </item>
               <item row="0" column="1">
-               <widget class="QSpinBox" name="rangeModifierStepSpinBox">
+               <widget class="XSpinBox" name="rangeModifierStepSpinBox">
                 <property name="toolTip">
                  <string>This sets the step for when changing the range modifier value in from a gamepad or keyboard.</string>
                 </property>
@@ -946,7 +946,7 @@
         </widget>
        </item>
        <item row="0" column="3">
-        <widget class="QComboBox" name="channelProfilesComboBox"/>
+        <widget class="XComboBox" name="channelProfilesComboBox"/>
        </item>
        <item row="0" column="2">
         <widget class="QLabel" name="label_3">
@@ -997,7 +997,7 @@
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="QSpinBox" name="videoIncrementSpinBox">
+         <widget class="XSpinBox" name="videoIncrementSpinBox">
           <property name="toolTip">
            <string>This sets the value the video will either skip forward or back via shortcuts.</string>
           </property>
@@ -1020,7 +1020,7 @@
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QDoubleSpinBox" name="playbackRateSpinBox"/>
+         <widget class="XDoubleSpinBox" name="playbackRateSpinBox"/>
         </item>
         <item row="3" column="0">
          <spacer name="verticalSpacer">
@@ -1073,7 +1073,7 @@
          </widget>
         </item>
         <item row="3" column="3">
-         <widget class="QSpinBox" name="httpThumbQualitySpinBox">
+         <widget class="XSpinBox" name="httpThumbQualitySpinBox">
           <property name="toolTip">
            <string>Sets the quality of the thumb nail compression sent to the browser.\nEnter 0 for lowest and 100 for highest. -1 disables compression and sends the image file directly.\nCan be used to improve performance on lower end devices.</string>
           </property>
@@ -1109,7 +1109,7 @@
          </widget>
         </item>
         <item row="3" column="7">
-         <widget class="QSpinBox" name="webSocketPortSpinBox">
+         <widget class="XSpinBox" name="webSocketPortSpinBox">
           <property name="toolTip">
            <string>0 = auto</string>
           </property>
@@ -1149,7 +1149,7 @@
          </widget>
         </item>
         <item row="3" column="5">
-         <widget class="QSpinBox" name="httpPortSpinBox">
+         <widget class="XSpinBox" name="httpPortSpinBox">
           <property name="minimum">
            <number>1</number>
           </property>
@@ -1179,7 +1179,7 @@
          </widget>
         </item>
         <item row="3" column="1">
-         <widget class="QDoubleSpinBox" name="chunkSizeDoubleSpinBox">
+         <widget class="XDoubleSpinBox" name="chunkSizeDoubleSpinBox">
           <property name="toolTip">
            <string>In MegaBytes: This is the amount of media data sent to the client in byte chunks.
 The higher this is set the longer it will take to buffer but the less times the server 
@@ -1646,7 +1646,7 @@ will be hit for the next chunk.</string>
            </widget>
           </item>
           <item row="3" column="1">
-           <widget class="QSpinBox" name="viewedPercentageSpinBox">
+           <widget class="XSpinBox" name="viewedPercentageSpinBox">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
               <horstretch>0</horstretch>
@@ -1941,6 +1941,23 @@ Be sure to cut power to servos before connecting.</string>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>XComboBox</class>
+   <extends>QComboBox</extends>
+   <header>xcombobox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>XSpinBox</class>
+   <extends>QSpinBox</extends>
+   <header>xspinbox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>XDoubleSpinBox</class>
+   <extends>QDoubleSpinBox</extends>
+   <header>xdoublespinbox.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="icons.qrc"/>
  </resources>

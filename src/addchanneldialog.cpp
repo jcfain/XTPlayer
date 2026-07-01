@@ -98,7 +98,7 @@ ChannelModel33 AddChannelDialog::getNewChannel(QWidget *parent, bool *ok)
         channelModel.UserMid = channelModel.Type == ChannelType::Ramp ? 0 : TCodeChannelLookup::getSelectedTCodeVersion() == TCodeVersion::v2 ? 500 : 5000;
         channelModel.UserMax = TCodeChannelLookup::getSelectedTCodeVersion() == TCodeVersion::v2 ? 999 : 9999;
         channelModel.SpeedEnabled = false;
-        channelModel.SpeedValue = 0.2f;
+        channelModel.SpeedValue = 1.0f;
         channelModel.FunscriptInverted = false;
         channelModel.GamepadInverted = false;
         channelModel.MultiplierEnabled = false;

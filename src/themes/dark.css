@@ -200,6 +200,13 @@ QComboBox::down-arrow {
 	width: 8px;
 	height: 8px;
 }
+
+QGroupBox::indicator {
+    border: 1px solid white;
+    width: 15px;
+    height: 15px;
+}
+
 QRadioButton, QGroupBox, QLabel {
     background-color: transparent;
     color: white;
@@ -207,6 +214,25 @@ QRadioButton, QGroupBox, QLabel {
 QCheckBox {
     background-color: #33363c;
     color: white;
+}
+
+QGroupBox::indicator::checked,
+QCheckBox::indicator::checked {
+    image: url(:/images/icons/check-mark-green.png);
+}
+QGroupBox::indicator,
+QCheckBox::indicator {
+    background-color: white;
+    color: white;
+    border: 1px solid white;
+    width: 10px;
+    height: 10px;
+}
+QGroupBox::indicator::disabled
+QCheckBox::indicator::disabled {
+    background-color: grey;
+    color: lightgrey;
+    border: 1px solid grey;
 }
 QPushButton,QComboBox,QLineEdit,QSpinBox,QDoubleSpinBox {
     background-color: #3e4249;

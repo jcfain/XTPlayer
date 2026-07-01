@@ -40,6 +40,9 @@ SOURCES += \
     lib/widgets/video/xvideographicsview.cpp \
     lib/widgets/video/xvideowidget.cpp \
     lib/widgets/video/xvideopreviewwidget.cpp \
+    lib/widgets/xcombobox.cpp \
+    lib/widgets/xdoublespinbox.cpp \
+    lib/widgets/xspinbox.cpp \
     main.cpp \
     mainwindow.cpp \
     xtpsettings.cpp \
@@ -73,6 +76,9 @@ HEADERS += \
     lib/widgets/video/xvideographicsview.h \
     lib/widgets/video/xvideowidget.h \
     lib/widgets/video/xvideopreviewwidget.h \
+    lib/widgets/xcombobox.h \
+    lib/widgets/xdoublespinbox.h \
+    lib/widgets/xspinbox.h \
     mainwindow.h \
     xtpsettings.h \
     noMatchingScriptDialog.h \

@@ -126,7 +126,7 @@ void SettingsDialog::initializeVoice(QTextToSpeech *tts)
         tts->setVoice(*voice);
         ui.voiceCombobox->setCurrentIndex(availableVoices.indexOf(*voice));
     }
-    connect(ui.voiceCombobox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
+    connect(ui.voiceCombobox, QOverload<int>::of(&XComboBox::currentIndexChanged), this, [this](int index) {
         if(m_tts) {
             auto availableVoices = m_tts->availableVoices();
             m_tts->setVoice(availableVoices[index]);
@@ -247,7 +247,7 @@ void SettingsDialog::setupUi()
             ui.tCodeVersionComboBox->addItem(TCodeChannelLookup::SupportedTCodeVersions.value(version), variant);
         }
         ui.tCodeVersionComboBox->setCurrentText(TCodeChannelLookup::getSelectedTCodeVersionName());
-        connect(ui.tCodeVersionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
+        connect(ui.tCodeVersionComboBox, QOverload<int>::of(&XComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
 
         connect(TCodeChannelLookup::instance(), &TCodeChannelLookup::channelProfileChanged, this, &SettingsDialog::setUpTCodeChannelUI);
         connect(TCodeChannelLookup::instance(), &TCodeChannelLookup::allProfilesDeleted, this, &SettingsDialog::setUpTCodeChannelProfiles);
@@ -311,11 +311,11 @@ void SettingsDialog::setupUi()
         ui.voiceGroupBox->setChecked(!SettingsHandler::getDisableSpeechToText());
         ui.disableVRScriptNotFoundCheckbox->setChecked(SettingsHandler::getDisableVRScriptSelect());
 
-        connect(ui.SerialOutputCmb, &QComboBox::currentTextChanged, this, [](const QString value)
+        connect(ui.SerialOutputCmb, &XComboBox::currentTextChanged, this, [](const QString value)
         {
             SettingsHandler::setSerialPort(value);
         });
-        connect(ui.videoIncrementSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_videoIncrement_valueChanged);
+        connect(ui.videoIncrementSpinBox, QOverload<int>::of(&XSpinBox::valueChanged), this, &SettingsDialog::on_videoIncrement_valueChanged);
 
 
         ui.showLoneFunscriptsInLibraryCheckbox->setChecked(SettingsHandler::getHideStandAloneFunscriptsInLibrary());
@@ -343,25 +343,25 @@ void SettingsDialog::setupUi()
         ui.httpPortSpinBox->setValue(SettingsHandler::getHTTPPort());
         ui.webSocketPortSpinBox->setValue(SettingsHandler::getWebSocketPort());
         ui.httpThumbQualitySpinBox->setValue(SettingsHandler::getHttpThumbQuality());
-        connect(ui.chunkSizeDoubleSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &SettingsDialog::on_chunkSizeDouble_valueChanged);
-        connect(ui.httpPortSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_httpPort_valueChanged);
-        connect(ui.webSocketPortSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_webSocketPort_valueChanged);
-        connect(ui.httpThumbQualitySpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_httpThumbQualitySpinBox_editingFinished);
+        connect(ui.chunkSizeDoubleSpinBox, QOverload<double>::of(&XDoubleSpinBox::valueChanged), this, &SettingsDialog::on_chunkSizeDouble_valueChanged);
+        connect(ui.httpPortSpinBox, QOverload<int>::of(&XSpinBox::valueChanged), this, &SettingsDialog::on_httpPort_valueChanged);
+        connect(ui.webSocketPortSpinBox, QOverload<int>::of(&XSpinBox::valueChanged), this, &SettingsDialog::on_webSocketPort_valueChanged);
+        connect(ui.httpThumbQualitySpinBox, QOverload<int>::of(&XSpinBox::valueChanged), this, &SettingsDialog::on_httpThumbQualitySpinBox_editingFinished);
 
         ui.offsetSpinbox->setMinimum(std::numeric_limits<int>::lowest());
         ui.offsetSpinbox->setMaximum(std::numeric_limits<int>::max());
         ui.offsetSpinbox->setValue(SettingsHandler::getGlobalOffSet());
-        connect(ui.offsetSpinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onOffSet_valueChanged);
+        connect(ui.offsetSpinbox, QOverload<int>::of(&XSpinBox::valueChanged), this, &SettingsDialog::onOffSet_valueChanged);
 
         ui.offsetSpinboxStep->setMinimum(std::numeric_limits<int>::lowest());
         ui.offsetSpinboxStep->setMaximum(std::numeric_limits<int>::max());
         ui.offsetSpinboxStep->setValue(SettingsHandler::getFunscriptOffsetStep());
-        connect(ui.offsetSpinboxStep, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onOffSetStep_valueChanged);
+        connect(ui.offsetSpinboxStep, QOverload<int>::of(&XSpinBox::valueChanged), this, &SettingsDialog::onOffSetStep_valueChanged);
 
         ui.rangeModifierStepSpinBox->setMinimum(std::numeric_limits<int>::lowest());
         ui.rangeModifierStepSpinBox->setMaximum(std::numeric_limits<int>::max());
         ui.rangeModifierStepSpinBox->setValue(SettingsHandler::getFunscriptModifierStep());
-        connect(ui.rangeModifierStepSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onRangeModifierStep_valueChanged);
+        connect(ui.rangeModifierStepSpinBox, QOverload<int>::of(&XSpinBox::valueChanged), this, &SettingsDialog::onRangeModifierStep_valueChanged);
 
         ui.showVRInLibraryViewCheckbox->setChecked(SettingsHandler::getShowVRInLibraryView());
 
@@ -378,7 +378,7 @@ void SettingsDialog::setupUi()
         int percentage = SettingsHandler::getViewedThreshold();
         ui.viewedPercentageSpinBox->setValue(percentage);
         ui.viewedPercentageSpinBox->setSuffix("%");
-        connect(ui.viewedPercentageSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::onViewedPercentageSpinBoxValueChanged);
+        connect(ui.viewedPercentageSpinBox, QOverload<int>::of(&XSpinBox::valueChanged), this, &SettingsDialog::onViewedPercentageSpinBoxValueChanged);
 
         updateIPAddress();
 
@@ -390,7 +390,7 @@ void SettingsDialog::setupUi()
         ui.syncSettingsChk->setChecked(SettingsHandler::scheduleSettingsSync());
 
         ui.playbackRateSpinBox->setValue(SettingsHandler::getPlaybackRateStep());
-        connect(ui.playbackRateSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &SettingsDialog::on_playbackRateSpinBoxValueChanged);
+        connect(ui.playbackRateSpinBox, QOverload<double>::of(&XDoubleSpinBox::valueChanged), this, &SettingsDialog::on_playbackRateSpinBoxValueChanged);
 
         ui.disableAutoThumbGenChk->setChecked(SettingsHandler::getDisableAutoThumbGeneration());
         connect(ui.disableAutoThumbGenChk, &QCheckBox::clicked, this, &SettingsDialog::onDisableAutoThumbGenChkChanged);
@@ -478,7 +478,7 @@ void SettingsDialog::setupGamepadMap()
     QLabel* speedLabel = new QLabel(_inputMapWidget);
     speedLabel->setText("Default speed");
     speedLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-    QSpinBox* speedInput = new QSpinBox(_inputMapWidget);
+    XSpinBox* speedInput = new XSpinBox(_inputMapWidget);
     speedInput->setMinimum(1);
     speedInput->setMaximum(std::numeric_limits<int>::max());
     speedInput->setMinimumWidth(75);
@@ -486,20 +486,20 @@ void SettingsDialog::setupGamepadMap()
     speedInput->setSingleStep(100);
     speedInput->setValue(SettingsHandler::getGamepadSpeed());
     speedInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-    connect(speedInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_speedInput_valueChanged);
+    connect(speedInput, QOverload<int>::of(&XSpinBox::valueChanged), this, &SettingsDialog::on_speedInput_valueChanged);
     ui.gamePadMapGridLayout->addWidget(speedLabel, 1, 7, Qt::AlignRight);
     ui.gamePadMapGridLayout->addWidget(speedInput, 1, 8, Qt::AlignLeft);
     QLabel* speedIncrementLabel = new QLabel(_inputMapWidget);
     speedIncrementLabel->setText("Speed change step");
     speedIncrementLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-    QSpinBox* speedIncrmentInput = new QSpinBox(_inputMapWidget);
+    XSpinBox* speedIncrmentInput = new XSpinBox(_inputMapWidget);
     speedIncrmentInput->setMinimum(1);
     speedIncrmentInput->setMaximum(std::numeric_limits<int>::max());
     speedIncrmentInput->setMinimumWidth(75);
     speedIncrmentInput->setSingleStep(100);
     speedIncrmentInput->setValue(SettingsHandler::getGamepadSpeedIncrement());
     speedIncrmentInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-    connect(speedIncrmentInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_speedIncrementInput_valueChanged);
+    connect(speedIncrmentInput, QOverload<int>::of(&XSpinBox::valueChanged), this, &SettingsDialog::on_speedIncrementInput_valueChanged);
     ui.gamePadMapGridLayout->addWidget(speedIncrementLabel, 1, 9, Qt::AlignRight);
     ui.gamePadMapGridLayout->addWidget(speedIncrmentInput, 1, 10, Qt::AlignLeft);
 //    auto gamepadMap = SettingsHandler::getGamePadMap();
@@ -515,7 +515,7 @@ void SettingsDialog::setupGamepadMap()
 //            continue;
 //        QLabel* mapLabel = new QLabel(this);
 //        mapLabel->setText(button);
-//        QComboBox* mapComboBox = new QComboBox(this);
+//        XComboBox* mapComboBox = new XComboBox(this);
 //        mapComboBox->setObjectName(button);
 //        foreach(auto axis, tcodeChannels.keys())
 //        {
@@ -544,7 +544,7 @@ void SettingsDialog::setupGamepadMap()
 //        ui.gamePadMapGridLayout->addWidget(mapLabel, rowIterator, columnIterator, Qt::AlignRight);
 //        ui.gamePadMapGridLayout->addWidget(mapComboBox, rowIterator, columnIterator + 1, Qt::AlignLeft);
 
-//        connect(mapComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+//        connect(mapComboBox, QOverload<int>::of(&XComboBox::currentIndexChanged), this,
 //                [this, mapComboBox, gamepadMap, button](int index)
 //                  {
 //                        ChannelModel selectedChannel = mapComboBox->currentData().value<ChannelModel>();
@@ -566,7 +566,7 @@ void SettingsDialog::setupGamepadMap()
 //    QLabel* speedLabel = new QLabel(this);
 //    speedLabel->setText("Speed");
 //    speedLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-//    QSpinBox* speedInput = new QSpinBox(this);
+//    XSpinBox* speedInput = new XSpinBox(this);
 //    speedInput->setMinimum(1);
 //    speedInput->setMaximum(std::numeric_limits<int>::max());
 //    speedInput->setMinimumWidth(75);
@@ -574,7 +574,7 @@ void SettingsDialog::setupGamepadMap()
 //    speedInput->setSingleStep(100);
 //    speedInput->setValue(SettingsHandler::getGamepadSpeed());
 //    speedInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-//    connect(speedInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_speedInput_valueChanged);
+//    connect(speedInput, QOverload<int>::of(&XSpinBox::valueChanged), this, &SettingsDialog::on_speedInput_valueChanged);
 //    inverseGrid->addWidget(speedLabel, 0, 0, Qt::AlignCenter);
 //    inverseGrid->addWidget(speedInput, 1, 0, Qt::AlignCenter);
 
@@ -593,7 +593,7 @@ void SettingsDialog::setupGamepadMap()
 //                        {
 //                            if (button == "None")
 //                                continue;
-//                            auto mapComboBox = ui.gamePadMapGroupbox->findChild<QComboBox*>(button);
+//                            auto mapComboBox = ui.gamePadMapGroupbox->findChild<XComboBox*>(button);
 
 //                            auto gameMapList = gamepadMap->value(button);
 //                            auto gameMap = gameMapList.empty() ? TCodeChannelLookup::None() : gameMapList.first();
@@ -610,14 +610,14 @@ void SettingsDialog::setupGamepadMap()
 //    QLabel* speedIncrementLabel = new QLabel(this);
 //    speedIncrementLabel->setText("Speed change step");
 //    speedIncrementLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-//    QSpinBox* speedIncrmentInput = new QSpinBox(this);
+//    XSpinBox* speedIncrmentInput = new XSpinBox(this);
 //    speedIncrmentInput->setMinimum(1);
 //    speedIncrmentInput->setMaximum(std::numeric_limits<int>::max());
 //    speedIncrmentInput->setMinimumWidth(75);
 //    speedIncrmentInput->setSingleStep(100);
 //    speedIncrmentInput->setValue(SettingsHandler::getGamepadSpeedIncrement());
 //    speedIncrmentInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-//    connect(speedIncrmentInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::on_speedIncrementInput_valueChanged);
+//    connect(speedIncrmentInput, QOverload<int>::of(&XSpinBox::valueChanged), this, &SettingsDialog::on_speedIncrementInput_valueChanged);
 //    inverseGrid->addWidget(speedIncrementLabel, 0, 2, Qt::AlignCenter);
 //    inverseGrid->addWidget(speedIncrmentInput, 1, 2, Qt::AlignCenter);
 
@@ -639,7 +639,7 @@ void SettingsDialog::setupGamepadMap()
 }
 
 void SettingsDialog::setUpTCodeChannelProfiles() {
-    disconnect(ui.channelProfilesComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::on_channelProfilesComboBox_textChange);
+    disconnect(ui.channelProfilesComboBox, &XComboBox::currentTextChanged, this, &SettingsDialog::on_channelProfilesComboBox_textChange);
     ui.channelProfilesComboBox->clear();
     auto profiles = TCodeChannelLookup::getChannelProfiles();
     foreach(auto profileName, profiles)
@@ -649,7 +649,7 @@ void SettingsDialog::setUpTCodeChannelProfiles() {
         ui.channelProfilesComboBox->addItem(profileName, variant);
     }
     ui.channelProfilesComboBox->setCurrentText(TCodeChannelLookup::getSelectedChannelProfile());
-    connect(ui.channelProfilesComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::on_channelProfilesComboBox_textChange);
+    connect(ui.channelProfilesComboBox, &XComboBox::currentTextChanged, this, &SettingsDialog::on_channelProfilesComboBox_textChange);
 }
 
 void SettingsDialog::setUpTCodeChannelUI()
@@ -809,14 +809,14 @@ void SettingsDialog::setUpTCodeChannelUI()
         QCheckBox* speedCheckbox = new QCheckBox(ui.randomMotionGroupbox);
         speedCheckbox->setText("Speed");
         speedCheckbox->setChecked(SettingsHandler::getSpeedChecked(channelName));
-        QDoubleSpinBox* speedInput = new QDoubleSpinBox(ui.randomMotionGroupbox);
+        XDoubleSpinBox* speedInput = new XDoubleSpinBox(ui.randomMotionGroupbox);
         speedInput->setToolTip("Multiply the speed by the value.\n4000 * 0.5 = 2000");
         speedInput->setDecimals(2);
         speedInput->setSingleStep(0.1f);
         speedInput->setMinimum(0.01f);
         speedInput->setMaximum(std::numeric_limits<int>::max());
         speedInput->setValue(SettingsHandler::getSpeedValue(channelName));
-        connect(speedInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+        connect(speedInput, QOverload<double>::of(&XDoubleSpinBox::valueChanged), this,
                  [channelName](float value)
                    {
                      SettingsHandler::setSpeedValue(channelName, value);
@@ -838,7 +838,7 @@ void SettingsDialog::setUpTCodeChannelUI()
                      SettingsHandler::setLinkToRelatedAxisChecked(channelName, checked);
                    });
 
-        QComboBox* linkToAxisCombobox = new QComboBox(ui.randomMotionGroupbox);
+        XComboBox* linkToAxisCombobox = new XComboBox(ui.randomMotionGroupbox);
         foreach(auto axis, tcodeChannels.keys())
         {
             auto channel =  TCodeChannelLookup::getChannel(TCodeChannelLookup::ToString(axis));
@@ -851,7 +851,7 @@ void SettingsDialog::setUpTCodeChannelUI()
             linkToAxisCombobox->addItem(channel->FriendlyName, variant);
         }
         linkToAxisCombobox->setCurrentText(relatedChannel->FriendlyName);
-        connect(linkToAxisCombobox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+        connect(linkToAxisCombobox, QOverload<int>::of(&XComboBox::currentIndexChanged), this,
                  [channelName, linkToAxisCombobox, linkCheckbox](int value)
                    {
                         auto relatedChannel = linkToAxisCombobox->currentData().value<ChannelModel33>();
@@ -861,13 +861,13 @@ void SettingsDialog::setUpTCodeChannelUI()
 
         QLabel* offsetLabel = new QLabel(ui.randomMotionGroupbox);
         offsetLabel->setText("Offset");
-        QDoubleSpinBox* offsetInput = new QDoubleSpinBox(ui.randomMotionGroupbox);
+        XDoubleSpinBox* offsetInput = new XDoubleSpinBox(ui.randomMotionGroupbox);
         offsetInput->setToolTip("Offset in percentage decimal");
         offsetInput->setSingleStep(0.01);
         offsetInput->setMinimum(-1);
         offsetInput->setMaximum(1);
         offsetInput->setValue(SettingsHandler::getMotionModifierOffsetValue(channelName));
-        connect(offsetInput, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+        connect(offsetInput, QOverload<double>::of(&XDoubleSpinBox::valueChanged), this,
                 [channelName](double value)
                 {
                     SettingsHandler::setMotionModifierOffsetValue(channelName, value);
@@ -925,7 +925,7 @@ void SettingsDialog::setUpTCodeChannelUI()
     QLabel* xRangeStepLabel = new QLabel(ui.rangeLimitGroupbox);
     xRangeStepLabel->setText("Stroke range change step");
     xRangeStepLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    QSpinBox* xRangeStepInput = new QSpinBox(ui.rangeLimitGroupbox);
+    XSpinBox* xRangeStepInput = new XSpinBox(ui.rangeLimitGroupbox);
     xRangeStepInput->setToolTip("The amount to modify the stroke range when using keyboard/gamepad.");
     xRangeStepInput->setMinimum(1);
     xRangeStepInput->setMaximum(INT_MAX);
@@ -933,7 +933,7 @@ void SettingsDialog::setUpTCodeChannelUI()
     xRangeStepInput->setSingleStep(50);
     xRangeStepInput->setValue(SettingsHandler::getGamepadSpeedIncrement());
     xRangeStepInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-    connect(xRangeStepInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::xRangeStepInput_valueChanged);
+    connect(xRangeStepInput, QOverload<int>::of(&XSpinBox::valueChanged), this, &SettingsDialog::xRangeStepInput_valueChanged);
     rangeGrid->addWidget(xRangeStepLabel, sliderGridRow + 1, 2);
     rangeGrid->addWidget(xRangeStepInput, sliderGridRow + 1, 3);
 
@@ -949,7 +949,7 @@ void SettingsDialog::setUpTCodeChannelUI()
         lubePulseCheckbox->setToolTip("Enable a tcode signal to be sent to the selected channel every n ms");
         connect(lubePulseCheckbox, &QCheckBox::clicked, this, &SettingsDialog::lubePulseEnabled_valueChanged);
         lubePulseCheckbox->setChecked(SettingsHandler::getLubePulseEnabled());
-        QSpinBox* libePulseAmountInput = new QSpinBox(this);
+        XSpinBox* libePulseAmountInput = new XSpinBox(this);
         auto max = TCodeChannelLookup::getTCodeMaxValue();
         libePulseAmountInput->setToolTip("TCode value to be sent to the selected channel between 0-"+QString::number(max));
         libePulseAmountInput->setMinimum(0);
@@ -958,8 +958,8 @@ void SettingsDialog::setUpTCodeChannelUI()
         libePulseAmountInput->setSingleStep(100);
         libePulseAmountInput->setValue(SettingsHandler::getLubePulseAmount());
         libePulseAmountInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-        connect(libePulseAmountInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::lubeAmount_valueChanged);
-        QSpinBox* libePulseFrequencyInput = new QSpinBox(this);
+        connect(libePulseAmountInput, QOverload<int>::of(&XSpinBox::valueChanged), this, &SettingsDialog::lubeAmount_valueChanged);
+        XSpinBox* libePulseFrequencyInput = new XSpinBox(this);
         libePulseFrequencyInput->setToolTip("Time between pulse sent values in milliseconds");
         libePulseFrequencyInput->setMinimum(0);
         libePulseFrequencyInput->setMaximum(INT_MAX);
@@ -968,7 +968,7 @@ void SettingsDialog::setUpTCodeChannelUI()
         libePulseFrequencyInput->setSuffix("ms");
         libePulseFrequencyInput->setValue(SettingsHandler::getLubePulseFrequency());
         libePulseFrequencyInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
-        connect(libePulseFrequencyInput, QOverload<int>::of(&QSpinBox::valueChanged), this, &SettingsDialog::lubeFrequency_valueChanged);
+        connect(libePulseFrequencyInput, QOverload<int>::of(&XSpinBox::valueChanged), this, &SettingsDialog::lubeFrequency_valueChanged);
         ui.otherMotionGridLayout->addWidget(lubePulseCheckbox, 0, 0);
         ui.otherMotionGridLayout->addWidget(lubePulseAmountLabel, 1, 0);
         lubePulseCheckbox->raise();
@@ -1802,9 +1802,9 @@ void SettingsDialog::on_tCodeVSComboBox_currentIndexChanged(int index)
     // }
     // else
     // {
-    //     disconnect(ui.tCodeVersionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
+    //     disconnect(ui.tCodeVersionComboBox, QOverload<int>::of(&XComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
     //     ui.tCodeVersionComboBox->setCurrentText(TCodeChannelLookup::getSelectedTCodeVersionName());
-    //     connect(ui.tCodeVersionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
+    //     connect(ui.tCodeVersionComboBox, QOverload<int>::of(&XComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
     // }
 }
 

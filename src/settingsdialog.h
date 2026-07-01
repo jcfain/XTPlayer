@@ -5,7 +5,6 @@
 #include <QDialog>
 #include <QtConcurrent/QtConcurrent>
 #include <QFuture>
-#include <QSpinBox>
 #include <QProgressBar>
 #include <QInputDialog>
 #include <QDesktopServices>
@@ -16,6 +15,9 @@
 #include "lib/handler/crypthandler.h"
 #include "lib/handler/connectionhandler.h"
 
+#include "xspinbox.h"
+#include "xdoublespinbox.h"
+#include "xcombobox.h"
 #include "inputmapwidget.h"
 #include "rangeslider.h"
 #include "channeltableviewmodel.h"
@@ -327,7 +329,7 @@ private:
     QMap<QString, QProgressBar*> axisProgressbars;
 
     QLabel* offSetLabel;
-    QSpinBox* offSetSpinBox;
+    XSpinBox* offSetSpinBox;
     QPushButton* saveAllBtn;
     QPushButton* closeBtn;
     QPushButton* saveBtn;
