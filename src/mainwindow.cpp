@@ -1852,7 +1852,7 @@ void MainWindow::on_PlayBtn_clicked()
         if(videoHandler->isPaused() || videoHandler->isPlaying())
         {
             videoHandler->togglePause();
-            m_xtengine->syncHandler()->setPause(videoHandler->isPaused());
+            // m_xtengine->syncHandler()->setPause(videoHandler->isPaused());
         }
         else if(m_xtengine->syncHandler()->isPlayingStandAlone())
         {
@@ -2070,7 +2070,16 @@ void MainWindow::on_media_start()
     m_xtengine->syncHandler()->on_other_media_state_change(XMediaState::Playing);
     if (m_xtengine->syncHandler()->isLoaded())
     {
-        m_xtengine->syncHandler()->syncOtherMediaFunscript([this] () -> qint64 { return videoHandler->position(); });
+        m_xtengine->syncHandler()->syncOtherMediaFunscript([this] () -> InputConnectionPacket {
+            return {
+                videoHandler->file(), // QString path;
+                videoHandler->duration(), // qint64 duration;
+                videoHandler->position(), // qint64 currentTime;
+                videoHandler->getSpeed(),// double playbackSpeed;
+                !videoHandler->isPaused(),// bool playing;
+                !videoHandler->isPlaying()// bool stopped;
+            };
+        });
     }
     videoHandler->setLoading(false);
     _playerControlsFrame->resetMediaControlStatus(true);

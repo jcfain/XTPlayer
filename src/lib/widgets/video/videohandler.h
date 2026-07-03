@@ -71,6 +71,7 @@ public:
     void setPosition(qint64 position);
     void setRepeat(int max = 0);
     void setSpeed(qreal speed);
+    qreal getSpeed();
     qint64 position();
     qint64 duration();
     QGridLayout* layout();

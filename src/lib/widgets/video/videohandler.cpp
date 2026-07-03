@@ -407,6 +407,11 @@ void VideoHandler::setSpeed(qreal speed)
     _player->setPlaybackRate(speed);
 }
 
+qreal VideoHandler::getSpeed()
+{
+    return _player->playbackRate();
+}
+
 qint64 VideoHandler::position()
 {
     return _player->position();
