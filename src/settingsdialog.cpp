@@ -859,6 +859,16 @@ void SettingsDialog::setUpTCodeChannelUI()
                         SettingsHandler::setLinkToRelatedAxis(channelName, relatedChannel.ChannelName);
                    });
 
+        QCheckBox* linkInvertedCheckbox = new QCheckBox(ui.randomMotionGroupbox);
+        linkInvertedCheckbox->setToolTip("This will invert the linked channel if link is checked and this is checked.");
+        linkInvertedCheckbox->setText("Link inverted");
+        linkInvertedCheckbox->setChecked(SettingsHandler::getLinkToRelatedInvertedChecked(channelName));
+        connect(linkInvertedCheckbox, &QCheckBox::clicked, this,
+                [channelName](bool checked)
+                {
+                    SettingsHandler::setLinkToRelatedInvertedChecked(channelName, checked);
+                });
+
         QLabel* offsetLabel = new QLabel(ui.randomMotionGroupbox);
         offsetLabel->setText("Offset");
         XDoubleSpinBox* offsetInput = new XDoubleSpinBox(ui.randomMotionGroupbox);
@@ -877,14 +887,16 @@ void SettingsDialog::setUpTCodeChannelUI()
          randomGrid->addWidget(multiplierCheckbox, randomMotionGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
          randomGrid->addWidget(linkCheckbox, randomMotionGridRow, 1, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
          randomGrid->addWidget(linkToAxisCombobox, randomMotionGridRow, 2, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-         randomGrid->addWidget(speedCheckbox, randomMotionGridRow, 3, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
-         randomGrid->addWidget(speedInput, randomMotionGridRow, 4, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-         randomGrid->addWidget(offsetLabel, randomMotionGridRow, 5, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
-         randomGrid->addWidget(offsetInput, randomMotionGridRow, 6, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+         randomGrid->addWidget(linkInvertedCheckbox, randomMotionGridRow, 3, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+         randomGrid->addWidget(speedCheckbox, randomMotionGridRow, 4, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
+         randomGrid->addWidget(speedInput, randomMotionGridRow, 5, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+         randomGrid->addWidget(offsetLabel, randomMotionGridRow, 6, 1, 1, Qt::AlignRight | Qt::AlignVCenter);
+         randomGrid->addWidget(offsetInput, randomMotionGridRow, 7, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
 
         _multiplierWidgets.append(multiplierCheckbox);
         _multiplierWidgets.append(linkCheckbox);
         _multiplierWidgets.append(linkToAxisCombobox);
+        _multiplierWidgets.append(linkInvertedCheckbox);
         _multiplierWidgets.append(speedCheckbox);
         _multiplierWidgets.append(speedInput);
         _multiplierWidgets.append(offsetLabel);
@@ -892,15 +904,15 @@ void SettingsDialog::setUpTCodeChannelUI()
 
          randomMotionGridRow++;
 
-        QCheckBox* invertedCheckbox = new QCheckBox(ui.inversionGroupBox);
-        invertedCheckbox->setText(axis->FriendlyName);
-        invertedCheckbox->setChecked(SettingsHandler::getChannelFunscriptInverseChecked(channelName));
-        connect(invertedCheckbox, &QCheckBox::clicked, this,
+        QCheckBox* funscriptInvertedCheckbox = new QCheckBox(ui.inversionGroupBox);
+        funscriptInvertedCheckbox->setText(axis->FriendlyName);
+        funscriptInvertedCheckbox->setChecked(SettingsHandler::getChannelFunscriptInverseChecked(channelName));
+        connect(funscriptInvertedCheckbox, &QCheckBox::clicked, this,
              [channelName](bool checked)
                {
                  SettingsHandler::setChannelFunscriptInverseChecked(channelName, checked);
                });
-        inversionGrid->addWidget(invertedCheckbox, inversionGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+        inversionGrid->addWidget(funscriptInvertedCheckbox, inversionGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
 
         QCheckBox* gradientCheckbox = new QCheckBox(ui.inversionGroupBox);
         gradientCheckbox->setText(axis->FriendlyName);
