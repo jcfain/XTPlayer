@@ -2071,7 +2071,24 @@ void SettingsDialog::on_dubugButton_clicked()
 
 void SettingsDialog::on_disableTimeLinePreviewChk_clicked(bool checked)
 {
-    XTPSettings::setDisableTimeLinePreview(checked);
+#if defined(Q_OS_LINUX)
+    QMessageBox::StandardButton reply = QMessageBox::Yes;
+    if(!checked)
+    {
+        reply = QMessageBox::question(this, "WARNING!", "This feature has been known to cause crashing on some systems.\nContinue?",
+                                      QMessageBox::Yes|QMessageBox::No);
+    }
+    if (reply == QMessageBox::Yes)
+    {
+#endif
+        XTPSettings::setDisableTimeLinePreview(checked);
+#if defined(Q_OS_LINUX)
+    }
+    else
+    {
+        ui.disableTimeLinePreviewChk->setChecked(true);
+    }
+#endif
 }
 
 void SettingsDialog::on_channelProfilesComboBox_textChange(const QString &profile) {

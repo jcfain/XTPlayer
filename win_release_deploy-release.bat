@@ -16,7 +16,7 @@ SET stagingDirectory=%xtplayerSource%\bin\latest
 SET sevenZipLocation="C:/Program Files/7-Zip/7z.exe"
 SET mingw=%mingwDir%\mingw32-make.exe
 rem this is where the zip file will be copied for backup
-SET releaseDirectory="\\192.168.0.201\main\STK\Dev\XTP\XTP-Release\"
+SET releaseDirectory="\\192.168.0.201\STK\Dev\XTP\XTP-Release\"
 rem SET httpServerDll=..\HttpServer\build\release\httpServer.dll
 rem SET zlibDll=..\zlib-1.3.1\build\Desktop_Qt_5_15_2_MinGW_64_bit-Release\libzlib.dll
 
