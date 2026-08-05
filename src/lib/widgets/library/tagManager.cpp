@@ -10,7 +10,7 @@ TagManager::TagManager(QWidget* parent, bool smartTagMode) : QDialog(parent),
     QStringList tags = m_smartTagMode ? SettingsHandler::getUserSmartTags() : SettingsHandler::getUserTags();
     if(!tags.isEmpty())
         ui.listWidget->addItems(tags);
-    setWindowTitle(m_smartTagMode ? "Smart tags": "Tags");
+    setWindowTitle(m_smartTagMode ? tr("Smart tags"): "Tags");
 }
 
 TagManager::~TagManager() {
@@ -29,12 +29,12 @@ void TagManager::on_addButton_clicked()
     }
     QStringList tags = m_smartTagMode ? SettingsHandler::getUserSmartTags() : SettingsHandler::getUserTags();
     if(tags.contains(tag)) {
-        DialogHandler::MessageBox(this, "Tag '"+tag+"' is already in the list!", XLogLevel::Warning);
+        DialogHandler::MessageBox(this, tr("Tag '")+tag+tr("' is already in the list!"), XLogLevel::Warning);
         return;
     }
     QStringList otherTags = !m_smartTagMode ? SettingsHandler::getUserSmartTags() : SettingsHandler::getUserTags();
     if(otherTags.contains(tag)) {
-        DialogHandler::MessageBox(this, "Tag '"+tag+"' is already in the list "+(!m_smartTagMode ? "smart tags" : "user tags") + "!", XLogLevel::Warning);
+        DialogHandler::MessageBox(this, tr("Tag '")+tag+tr("' is already in the list ")+(!m_smartTagMode ? tr("smart tags") : tr("user tags")) + "!", XLogLevel::Warning);
         return;
     }
     m_modified = true;

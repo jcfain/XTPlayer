@@ -63,6 +63,10 @@ public:
     static QString voiceName();
     static void setVoiceName(QString value);
 
+    // i18n: UI language code, e.g. "en" (default), "zh_CN"
+    static QString getLanguage();
+    static void setLanguage(QString value);
+
 
 private:
     static QSettings* getSettings();
@@ -78,6 +82,7 @@ private:
     static QList<int> m_mainWindowSplitterPos;
     static bool m_heatmapDisabled;
     static inline bool m_fullscreenUIOnlyMouseover = false;
+    static QString m_language;
     static QMutex m_mutex;
 };
 

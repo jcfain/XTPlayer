@@ -9,7 +9,7 @@ LibraryManager::LibraryManager(LibraryType libraryType, MediaLibraryHandler* med
     ui.listWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
     m_oldPaths = SettingsHandler::mediaLibrarySettings->get(m_libraryType);
     ui.listWidget->addItems(m_oldPaths);
-    setWindowTitle("Manage folders");
+    setWindowTitle(tr("Manage folders"));
 
     // QString firstPathExists;
     // foreach(auto path, m_oldPaths) {
@@ -91,7 +91,7 @@ void LibraryManager::onClose()
         if(!subtraction.isEmpty() || !additions.empty())
         {
             emit pathsChanged();
-            auto message = m_medialLibraryHandler->isLibraryProcessing() ? "Stop current loading process and restart with new list now?" : "Load all libraries now?";
+            auto message = m_medialLibraryHandler->isLibraryProcessing() ? tr("Stop current loading process and restart with new list now?") : tr("Load all libraries now?");
             if(DialogHandler::Dialog(this, message) == QDialog::DialogCode::Accepted)
             {
                 m_medialLibraryHandler->loadLibraryAsync();

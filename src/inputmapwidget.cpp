@@ -50,7 +50,7 @@ void InputMapWidget::setUpData()
     for(auto __begin = tcodeVersionMap.begin(), __end = tcodeVersionMap.end();  __begin != __end; ++__begin) {
         auto channel = TCodeChannelLookup::getChannel(TCodeChannelLookup::ToString(__begin.key()));
         if(channel)
-            actions.append({channel->ChannelName, "Channel: " + channel->FriendlyName});
+            actions.append({channel->ChannelName, tr("Channel: ") + channel->FriendlyName});
     }
 
     MediaActions actionsMap;
@@ -124,12 +124,12 @@ void InputMapWidget::setUpData()
         QHBoxLayout *editLayoutayout = new QHBoxLayout(editWidget);
         if(action != TCodeChannelLookup::None()) {
             QPushButton* clearRowButton = new QPushButton(this);
-            clearRowButton->setText("Clear Row");
+            clearRowButton->setText(tr("Clear Row"));
             clearRowButton->setObjectName(action + "ClearRowButton");
             clearRowButton->setMaximumWidth(150);
             //editLayoutayout->addWidget(editButton);
             connect(clearRowButton, &QPushButton::clicked, this, [this, action, actionName]() {
-                QMessageBox::StandardButton reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to clear ALL bindings for: "+actionName +"?",
+                QMessageBox::StandardButton reply = QMessageBox::question(this, tr("WARNING!"), tr("Are you sure you want to clear ALL bindings for: ")+actionName +"?",
                                               QMessageBox::Yes|QMessageBox::No);
                 if (reply == QMessageBox::Yes) {
                     auto items = _tableWidget->findItems(actionName, Qt::MatchFlag::MatchExactly);
@@ -138,11 +138,11 @@ void InputMapWidget::setUpData()
                 }
             });
             QPushButton* clearGamePadButton = new QPushButton(this);
-            clearGamePadButton->setText("Clear Gamepad");
+            clearGamePadButton->setText(tr("Clear Gamepad"));
             clearGamePadButton->setObjectName(action + "ClearGamepadButton");
             clearGamePadButton->setMaximumWidth(150);
             connect(clearGamePadButton, &QPushButton::clicked, this, [this, action, actionName]() {
-                QMessageBox::StandardButton reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to clear GAMEPAD bindings for: "+actionName +"?",
+                QMessageBox::StandardButton reply = QMessageBox::question(this, tr("WARNING!"), tr("Are you sure you want to clear GAMEPAD bindings for: ")+actionName +"?",
                                               QMessageBox::Yes|QMessageBox::No);
                 if (reply == QMessageBox::Yes) {
                     auto items = _tableWidget->findItems(actionName, Qt::MatchFlag::MatchExactly);
@@ -151,11 +151,11 @@ void InputMapWidget::setUpData()
                 }
             });
             QPushButton* clearKeyboardButton = new QPushButton(this);
-            clearKeyboardButton->setText("Clear Keys");
+            clearKeyboardButton->setText(tr("Clear Keys"));
             clearKeyboardButton->setObjectName(action + "ClearKeysButton");
             clearKeyboardButton->setMaximumWidth(150);
             connect(clearKeyboardButton, &QPushButton::clicked, this, [this, action, actionName]() {
-                QMessageBox::StandardButton reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to clear KEYBOARD bindings for: "+actionName +"?",
+                QMessageBox::StandardButton reply = QMessageBox::question(this, tr("WARNING!"), tr("Are you sure you want to clear KEYBOARD bindings for: ")+actionName +"?",
                                               QMessageBox::Yes|QMessageBox::No);
                 if (reply == QMessageBox::Yes) {
                     auto items = _tableWidget->findItems(actionName, Qt::MatchFlag::MatchExactly);
@@ -165,11 +165,11 @@ void InputMapWidget::setUpData()
             });
 
             QPushButton* clearTCodeCommandButton = new QPushButton(this);
-            clearTCodeCommandButton->setText("Clear TCode");
+            clearTCodeCommandButton->setText(tr("Clear TCode"));
             clearTCodeCommandButton->setObjectName(action + "ClearTCodeButton");
             clearTCodeCommandButton->setMaximumWidth(150);
             connect(clearTCodeCommandButton, &QPushButton::clicked, this, [this, action, actionName]() {
-                QMessageBox::StandardButton reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to clear TCode command bindings for: "+actionName +"?",
+                QMessageBox::StandardButton reply = QMessageBox::question(this, tr("WARNING!"), tr("Are you sure you want to clear TCode command bindings for: ")+actionName +"?",
                                                                           QMessageBox::Yes|QMessageBox::No);
                 if (reply == QMessageBox::Yes) {
                     auto items = _tableWidget->findItems(actionName, Qt::MatchFlag::MatchExactly);
@@ -196,12 +196,12 @@ void InputMapWidget::setUpData()
     QWidget *defaultGamePadWidget = new QWidget(this);
     QHBoxLayout *defaultGamePadLayout = new QHBoxLayout(defaultGamePadWidget);
     QPushButton* defaultGamePadButton = new QPushButton(defaultGamePadWidget);
-    defaultGamePadButton->setText("Default All gamepad");
+    defaultGamePadButton->setText(tr("Default All gamepad"));
     defaultGamePadButton->setObjectName("DefaultAllGamepadButton");
     defaultGamePadButton->setMaximumWidth(150);
     //editLayoutayout->addWidget(editButton);
     connect(defaultGamePadButton, &QPushButton::clicked, this, [this]() {
-        QMessageBox::StandardButton reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to default ALL GAMEPAD bindings?",
+        QMessageBox::StandardButton reply = QMessageBox::question(this, tr("WARNING!"), tr("Are you sure you want to default ALL GAMEPAD bindings?"),
                                       QMessageBox::Yes|QMessageBox::No);
         if (reply == QMessageBox::Yes) {
             SettingsHandler::SetGamepadMapDefaults();
@@ -216,12 +216,12 @@ void InputMapWidget::setUpData()
     QWidget *defaultKeyboardWidget = new QWidget(this);
     QHBoxLayout *defaultKeyboardLayout = new QHBoxLayout(defaultKeyboardWidget);
     QPushButton* defaultKeyboardButton = new QPushButton(defaultKeyboardWidget);
-    defaultKeyboardButton->setText("Default All keys");
+    defaultKeyboardButton->setText(tr("Default All keys"));
     defaultKeyboardButton->setObjectName("DefaultAllKeyboardButton");
     defaultKeyboardButton->setMaximumWidth(150);
     //editLayoutayout->addWidget(editButton);
     connect(defaultKeyboardButton, &QPushButton::clicked, this, [this]() {
-        QMessageBox::StandardButton reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to default ALL KEYBOARD bindings?",
+        QMessageBox::StandardButton reply = QMessageBox::question(this, tr("WARNING!"), tr("Are you sure you want to default ALL KEYBOARD bindings?"),
                                       QMessageBox::Yes|QMessageBox::No);
         if (reply == QMessageBox::Yes) {
             SettingsHandler::SetKeyboardKeyDefaults();
@@ -236,11 +236,11 @@ void InputMapWidget::setUpData()
     QWidget *defaultTCodeCommandWidget = new QWidget(this);
     QHBoxLayout *defaultTCodeCommandLayout = new QHBoxLayout(defaultTCodeCommandWidget);
     QPushButton* defaultTCodeCommandButton = new QPushButton(defaultTCodeCommandWidget);
-    defaultTCodeCommandButton->setText("Default All TCode");
+    defaultTCodeCommandButton->setText(tr("Default All TCode"));
     defaultTCodeCommandButton->setObjectName("DefaultAllTCodeButton");
     defaultTCodeCommandButton->setMaximumWidth(150);
     connect(defaultTCodeCommandButton, &QPushButton::clicked, this, [this]() {
-        QMessageBox::StandardButton reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to default ALL TCode command bindings?",
+        QMessageBox::StandardButton reply = QMessageBox::question(this, tr("WARNING!"), tr("Are you sure you want to default ALL TCode command bindings?"),
                                                                   QMessageBox::Yes|QMessageBox::No);
         if (reply == QMessageBox::Yes) {
             SettingsHandler::SetTCodeCommandMapDefaults();
@@ -258,12 +258,12 @@ void InputMapWidget::setUpData()
     QWidget *defaultAllWidget = new QWidget(this);
     QHBoxLayout *defaultAllLayout = new QHBoxLayout(defaultAllWidget);
     QPushButton* defaultAllButton = new QPushButton(defaultAllWidget);
-    defaultAllButton->setText("Default All");
+    defaultAllButton->setText(tr("Default All"));
     defaultAllButton->setObjectName("DefaultAllButton");
     defaultAllButton->setMaximumWidth(150);
     //editLayoutayout->addWidget(editButton);
     connect(defaultAllButton, &QPushButton::clicked, this, [this]() {
-        QMessageBox::StandardButton reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to default ALL bindings?",
+        QMessageBox::StandardButton reply = QMessageBox::question(this, tr("WARNING!"), tr("Are you sure you want to default ALL bindings?"),
                                       QMessageBox::Yes|QMessageBox::No);
         if (reply == QMessageBox::Yes) {
             SettingsHandler::SetGamepadMapDefaults();

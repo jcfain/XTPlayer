@@ -28,7 +28,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToActionButton->setObjectName(QString::fromUtf8("skipToActionButton"));
     skipToActionButton->setProperty("cssClass", "playerControlButton");
     skipToActionButton->setMinimumSize(QSize(20, 15));
-    skipToActionButton->setToolTip("Skips to 1 second before the next funscript action.");
+    skipToActionButton->setToolTip(tr("Skips to 1 second before the next funscript action."));
     QIcon iconActionBegin;
     iconActionBegin.addFile(QString::fromUtf8(":/images/icons/skipToAction.png"), QSize(), QIcon::Normal, QIcon::Off);
     skipToActionButton->setIcon(iconActionBegin);
@@ -58,7 +58,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToMoneyShotButton->setObjectName(QString::fromUtf8("skipToMoneyShotButton"));
     skipToMoneyShotButton->setProperty("cssClass", "playerControlButton");
     skipToMoneyShotButton->setMinimumSize(QSize(20, 15));
-    skipToMoneyShotButton->setToolTip("Skips to the last most intense section of the associated funscript or the last 10%.\nYou can chenge this by right clicking the library item.\nYou can also assign a script to this action on the funscript tab in settings.");
+    skipToMoneyShotButton->setToolTip(tr("Skips to the last most intense section of the associated funscript or the last 10%.\nYou can chenge this by right clicking the library item.\nYou can also assign a script to this action on the funscript tab in settings."));
     QIcon iconMoneyShot;
     iconMoneyShot.addFile(QString::fromUtf8(":/images/icons/skipToMoneyShot.svg"), QSize(), QIcon::Normal, QIcon::Off);
     skipToMoneyShotButton->setIcon(iconMoneyShot);
@@ -144,10 +144,10 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     altScriptBtn->setObjectName(QString::fromUtf8("altScriptBtn"));
     altScriptBtn->setProperty("cssClass", "playerControlButton");
     altScriptBtn->setEnabled(false);
-    altScriptBtn->setToolTip("Select an alternative script if any were found with names that start with the video name.\n"
-                             "If you want alternate scripts to show up here. the script name needs to be in the following format\n"
-                             "<videoname><modName>.funscript\n"
-                             "modname can be anything you want\n");
+    altScriptBtn->setToolTip(tr("Select an alternative script if any were found with names that start with the video name.\n"
+                                "If you want alternate scripts to show up here. the script name needs to be in the following format\n"
+                                "<videoname><modName>.funscript\n"
+                                "modname can be anything you want\n"));
     altScriptBtn->setMinimumSize(QSize(0, 20));
     QIcon iconAltScript;
     iconAltScript.addFile(QString::fromUtf8("://images/icons/funscript.svg"), QSize(), QIcon::Normal, QIcon::Off);
@@ -186,7 +186,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     mediaSettingsBtn->setEnabled(false);
     mediaSettingsBtn->setObjectName(QString::fromUtf8("mediaSettingsBtn"));
     mediaSettingsBtn->setProperty("cssClass", "playerControlButton");
-    mediaSettingsBtn->setToolTip("Open the current media settings dialog");
+    mediaSettingsBtn->setToolTip(tr("Open the current media settings dialog"));
     mediaSettingsBtn->setMinimumSize(QSize(0, 20));
     QIcon iconMediaSettings;
     iconMediaSettings.addFile(QString::fromUtf8("://images/icons/settings.svg"), QSize(), QIcon::Normal, QIcon::Off);
@@ -488,7 +488,7 @@ void PlayerControls::setTime(qint64 time)
 void PlayerControls::setSubtitles(const QList<QString> &value)
 {
     // subtitleCmb->clear();
-    // subtitleCmb->addItem("None");
+    // subtitleCmb->addItem(tr("None"));
     // for(const auto &sub : value)
     // {
     //     LogHandler::Debug("Subtitles found: "+ sub);
@@ -551,7 +551,7 @@ void PlayerControls::on_StopBtn_clicked()
 
 void PlayerControls::on_timeline_currentTimeMove(qint64 position)
 {
-    m_timeLine->setToolTip(QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")));
+    m_timeLine->setToolTip(QTime(0, 0, 0).addMSecs(position).toString(tr("HH:mm:ss")));
     emit seekSliderMoved(position);
 }
 

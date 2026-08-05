@@ -86,11 +86,11 @@ int DialogHandler::Dialog(QWidget* parent, QString message, bool modal, bool sho
         layout->addWidget(messageLabel, 0, 0, 1, 4);
         if(showAccept) {
             QPushButton* okButton = new QPushButton(_dialog);
-            okButton->setText("Ok");
+            okButton->setText(tr("Ok"));
             layout->addWidget(okButton, 2, 2, 1, 1);
             connect(okButton, &QPushButton::released, _dialog, &QDialog::accept);
             QPushButton* cancelButton = new QPushButton(_dialog);
-            cancelButton->setText("Cancel");
+            cancelButton->setText(tr("Cancel"));
             layout->addWidget(cancelButton, 2, 3, 1, 1);
             connect(cancelButton, &QPushButton::released, _dialog, &QDialog::reject);
 
@@ -147,7 +147,7 @@ void DialogHandler::ShowAboutDialog(QWidget* parent, QString XTPVersion, QString
     copyright.setAlignment(Qt::AlignHCenter);
     layout.addWidget(&copyright);
     QLabel sources;
-    sources.setText("This software uses libraries from:");
+    sources.setText(tr("This software uses libraries from:"));
     sources.setAlignment(Qt::AlignHCenter);
     layout.addWidget(&sources);
     QLabel qtInfo;
@@ -243,20 +243,20 @@ PasswordResponse DialogHandler::checkPass(QWidget* parent, QString currentPasswo
 QString DialogHandler::passwordSetWizard(QWidget* parent, QString currenthashedPass, bool* ok) {
     if(currenthashedPass.isEmpty())
     {
-         QString text = QInputDialog::getText(parent, parent->tr("Set password"),
-                                              parent->tr("Enter password:"), QLineEdit::PasswordEchoOnEdit,
+         QString text = QInputDialog::getText(parent, DialogHandler::tr("Set password"),
+                                              DialogHandler::tr("Enter password:"), QLineEdit::PasswordEchoOnEdit,
                                               "", ok);
          if(*ok && !text.isEmpty()) {
-             QString text2 = QInputDialog::getText(parent, parent->tr("Set password"),
-                                                  parent->tr("Confirm password:"), QLineEdit::PasswordEchoOnEdit,
+             QString text2 = QInputDialog::getText(parent, DialogHandler::tr("Set password"),
+                                                  DialogHandler::tr("Confirm password:"), QLineEdit::PasswordEchoOnEdit,
                                                   "", ok);
              if (*ok && !text.isEmpty() && text == text2)
              {
-                 DialogHandler::MessageBox(parent, "Password set.", XLogLevel::Information);
+                 DialogHandler::MessageBox(parent, tr("Password set."), XLogLevel::Information);
                  return CryptHandler::encryptPass(text);
              } else if(text != text2) {
                  *ok = false;
-                 DialogHandler::MessageBox(parent, "Passwords did not match!", XLogLevel::Critical);
+                 DialogHandler::MessageBox(parent, tr("Passwords did not match!"), XLogLevel::Critical);
              }
          } else {
              *ok = false;
@@ -264,41 +264,41 @@ QString DialogHandler::passwordSetWizard(QWidget* parent, QString currenthashedP
     }
     else
     {
-         QString text = QInputDialog::getText(parent, parent->tr("Current password"),
-                                              parent->tr("Current password:"), QLineEdit::Password,
+         QString text = QInputDialog::getText(parent, DialogHandler::tr("Current password"),
+                                              DialogHandler::tr("Current password:"), QLineEdit::Password,
                                               "", ok);
          if (*ok && !text.isEmpty())
          {
              if(CryptHandler::checkPass(text, currenthashedPass) == PasswordResponse::CORRECT)
              {
-                 QString text = QInputDialog::getText(parent, parent->tr("Change password"),
-                                                      parent->tr("New password (Leave blank to remove protection):"), QLineEdit::PasswordEchoOnEdit,
+                 QString text = QInputDialog::getText(parent, DialogHandler::tr("Change password"),
+                                                      DialogHandler::tr("New password (Leave blank to remove protection):"), QLineEdit::PasswordEchoOnEdit,
                                                       "", ok);
                  if (*ok)
                  {
                      if(text.isEmpty())
                      {
-                        DialogHandler::MessageBox(parent, "Password cleared!", XLogLevel::Information);
+                        DialogHandler::MessageBox(parent, tr("Password cleared!"), XLogLevel::Information);
                      }
                      else
                      {
-                         QString text2 = QInputDialog::getText(parent, parent->tr("Confirm password"),
-                                                              parent->tr("Confirm password:"), QLineEdit::PasswordEchoOnEdit,
+                         QString text2 = QInputDialog::getText(parent, DialogHandler::tr("Confirm password"),
+                                                              DialogHandler::tr("Confirm password:"), QLineEdit::PasswordEchoOnEdit,
                                                               "", ok);
                          if (text == text2)
                          {
-                             DialogHandler::MessageBox(parent, "Password changed!", XLogLevel::Information);
+                             DialogHandler::MessageBox(parent, tr("Password changed!"), XLogLevel::Information);
                              return CryptHandler::encryptPass(text);
                          } else if(text != text2) {
                              *ok = false;
-                             DialogHandler::MessageBox(parent, "Passwords did not match!", XLogLevel::Critical);
+                             DialogHandler::MessageBox(parent, tr("Passwords did not match!"), XLogLevel::Critical);
                          }
                      }
                  }
              }
              else
              {
-                 DialogHandler::MessageBox(parent, "Password incorrect!", XLogLevel::Critical);
+                 DialogHandler::MessageBox(parent, tr("Password incorrect!"), XLogLevel::Critical);
                  *ok = false;
              }
          }

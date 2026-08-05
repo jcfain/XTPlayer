@@ -48,7 +48,7 @@ void XVideoPreviewWidget::setFile(QString path) {
 
 void XVideoPreviewWidget::preview(QPoint gpos, qint64 time) {
     on_setLoading(true);
-    _timeLabel->setText(QTime(0, 0, 0).addMSecs(time).toString(QString::fromLatin1("HH:mm:ss")));
+    _timeLabel->setText(QTime(0, 0, 0).addMSecs(time).toString(tr("HH:mm:ss")));
     _videoPreview.extractDebounce(_file, time);
     _currentPosition = gpos;
     resize(100, 100);

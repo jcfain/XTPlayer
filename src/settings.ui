@@ -1725,6 +1725,32 @@ that has no script of the same name.</string>
          </layout>
         </widget>
        </item>
+       <item row="8" column="0">
+        <widget class="QGroupBox" name="languageGroupBox">
+         <property name="title">
+          <string>Language</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_language">
+          <item row="0" column="0">
+           <widget class="QLabel" name="languageLabel">
+            <property name="text">
+             <string>Interface language</string>
+            </property>
+            <property name="toolTip">
+             <string>Changing the language requires an application restart to take effect.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="languageComboBox">
+            <property name="toolTip">
+             <string>Changing the language requires an application restart to take effect.</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
        <item row="0" column="2">
         <widget class="QPushButton" name="exportButton">
          <property name="text">
