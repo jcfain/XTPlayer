@@ -234,6 +234,29 @@ equals(QT_MAJOR_VERSION, 5) {
 #mypackagerule.command = exec my_package_script.sh
 #QMAKE_EXTRA_TARGETS += mypackagerule
 
+# --- i18n / translations ---
+# Translators: add new languages by appending another .ts file here, e.g.
+#   TRANSLATIONS += translations/xtplayer_de.ts
+# then run `lupdate src/XTPlayer.pro` to regenerate the .ts and translate it
+# with Qt Linguist. The lrelease rule below compiles every .ts to .qm into
+# $$DESTDIR/translations/ at build time.
+TRANSLATIONS += translations/xtplayer_zh_CN.ts
+
+qtPrepareTool(LRELEASE, lrelease)
+!isEmpty(LRELEASE) {
+    # Compile each .ts -> .qm directly into $$DESTDIR/translations/.
+    # lrelease (Qt 5.10+ / Qt 6) creates the output directory if missing.
+    lrelease.name       = LRELEASE
+    lrelease.input      = TRANSLATIONS
+    lrelease.output     = $$shell_path($$DESTDIR/translations)/${QMAKE_FILE_BASE}.qm
+    lrelease.commands   = $$LRELEASE ${QMAKE_FILE_IN} -qm ${QMAKE_FILE_OUT}
+    lrelease.CONFIG    += no_link target_predeps
+    lrelease.variable_out = QM_FILES
+    QMAKE_EXTRA_COMPILERS += lrelease
+} else {
+    message("lrelease not found - .qm translation files will NOT be generated. Install Qt Linguist tools or run lrelease manually on translations/xtplayer_zh_CN.ts")
+}
+
 win32 {
     copydata.commands = $(COPY_DIR) $$shell_path($$PWD/themes) $$shell_path($$DESTDIR/themes) | $(COPY_DIR) $$shell_path($$PWD/../../XTEngine/src/www) $$shell_path($$DESTDIR/www)
 } else {

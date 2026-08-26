@@ -92,9 +92,9 @@ void SettingsDialog::initLive()
 //    ui.videoRendererComboBox->setEnabled(!_hasVideoPlayed);
     ui.disableNoScriptFoundInLibrary->setChecked(SettingsHandler::getDisableNoScriptFound());
     if(!SettingsHandler::GetHashedPass().isEmpty())
-        ui.passwordButton->setText("Change password");
+        ui.passwordButton->setText(tr("Change password"));
     if(!SettingsHandler::hashedWebPass().isEmpty())
-        ui.webPasswordButton->setText("Change password");
+        ui.webPasswordButton->setText(tr("Change password"));
     ui.hideWelcomeDialog->setChecked(SettingsHandler::getHideWelcomeScreen());
     ui.useWebSocketsCheckbox->setChecked(SettingsHandler::getSelectedNetworkProtocol() == NetworkProtocol::WEBSOCKET);
 //    auto availableAxis = SettingsHandler::getAvailableAxis();
@@ -167,7 +167,7 @@ void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
     }
     else if (ui.buttonBox->buttonRole(button) == QDialogButtonBox::AcceptRole)
     {
-        DialogHandler::Loading(this, "Saving settings...");
+        DialogHandler::Loading(this, tr("Saving settings..."));
         QtConcurrent::run([this] ()
         {
             save();
@@ -178,7 +178,7 @@ void SettingsDialog::on_dialogButtonboxClicked(QAbstractButton* button)
     {
         if(SettingsHandler::getSettingsChanged())
         {
-            DialogHandler::Loading(this, "Saving settings...");
+            DialogHandler::Loading(this, tr("Saving settings..."));
             QtConcurrent::run([this] ()
             {
                 save();
@@ -233,9 +233,9 @@ void SettingsDialog::setupUi()
         saveBtn->setAutoDefault(false);
         saveBtn->setDefault(false);
         saveBtn->setEnabled(false);
-        saveBtn->setText("Save all and close");
+        saveBtn->setText(tr("Save all and close"));
         closeBtn = ui.buttonBox->button(QDialogButtonBox::Close);
-        closeBtn->setText("Save later");
+        closeBtn->setText(tr("Save later"));
         closeBtn->setAutoDefault(false);
         closeBtn->setDefault(false);
         closeBtn->setEnabled(false);
@@ -248,6 +248,20 @@ void SettingsDialog::setupUi()
         }
         ui.tCodeVersionComboBox->setCurrentText(TCodeChannelLookup::getSelectedTCodeVersionName());
         connect(ui.tCodeVersionComboBox, QOverload<int>::of(&XComboBox::currentIndexChanged), this, &SettingsDialog::on_tCodeVSComboBox_currentIndexChanged);
+
+        // Language selector (i18n). Display names are intentionally NOT wrapped
+        // in tr(): language names are always shown in their own language so the
+        // user can find theirs regardless of the current UI language.
+        ui.languageComboBox->blockSignals(true);
+        ui.languageComboBox->addItem(QStringLiteral("English"), QStringLiteral("en"));
+        ui.languageComboBox->addItem(QStringLiteral("简体中文"), QStringLiteral("zh_CN"));
+        {
+            int langIdx = ui.languageComboBox->findData(XTPSettings::getLanguage());
+            if (langIdx < 0)
+                langIdx = 0; // default to English
+            ui.languageComboBox->setCurrentIndex(langIdx);
+        }
+        ui.languageComboBox->blockSignals(false);
 
         connect(TCodeChannelLookup::instance(), &TCodeChannelLookup::channelProfileChanged, this, &SettingsDialog::setUpTCodeChannelUI);
         connect(TCodeChannelLookup::instance(), &TCodeChannelLookup::allProfilesDeleted, this, &SettingsDialog::setUpTCodeChannelProfiles);
@@ -430,7 +444,7 @@ void SettingsDialog::updateIPAddress() {
         ui.webAddressLinkLabel->clear();
         int port = SettingsHandler::getHTTPPort();
         auto portText = port == 80 ? "" : ":" + QString::number(port);
-        ui.webAddressInstructionsLabel->setText("Choose from the list (click to test or right click and copy link)<br>to enter into your devices browser. You can also test:<br><a href='http://localhost" + portText + "/'><span>http://localhost" + portText + "/</span></a> ONLY on the local machine.");
+        ui.webAddressInstructionsLabel->setText(tr("Choose from the list (click to test or right click and copy link)<br>to enter into your devices browser. You can also test:<br><a href='http://localhost%1/'><span>http://localhost%1/</span></a> ONLY on the local machine.").arg(portText));
         int found = 0;
         auto allAddresses = QNetworkInterface::allAddresses();
         for (const QHostAddress &address: allAddresses) {
@@ -440,7 +454,7 @@ void SettingsDialog::updateIPAddress() {
             }
         }
         if(found == 0) {
-            ui.webAddressLinkLabel->setText("No addresses found.");
+            ui.webAddressLinkLabel->setText(tr("No addresses found."));
         }
         ui.webAddressLinkLabel->show();
         ui.webAddressLinkLabel->show();
@@ -472,11 +486,11 @@ void SettingsDialog::setupGamepadMap()
     _inputMapWidget = new InputMapWidget(_connectionHandler, this);
     ui.gamePadMapGridLayout->addWidget(_inputMapWidget, 0, 0, 1, 11);
     QLabel* instructionsLabel = new QLabel(_inputMapWidget);
-    instructionsLabel->setText("Click a cell in either Gamepad or Key column for an action to assign an input.");
+    instructionsLabel->setText(tr("Click a cell in either Gamepad or Key column for an action to assign an input."));
     ui.gamePadMapGridLayout->addWidget(instructionsLabel, 1, 0, 1, 6, Qt::AlignLeft);
     instructionsLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
     QLabel* speedLabel = new QLabel(_inputMapWidget);
-    speedLabel->setText("Default speed");
+    speedLabel->setText(tr("Default speed"));
     speedLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
     XSpinBox* speedInput = new XSpinBox(_inputMapWidget);
     speedInput->setMinimum(1);
@@ -490,7 +504,7 @@ void SettingsDialog::setupGamepadMap()
     ui.gamePadMapGridLayout->addWidget(speedLabel, 1, 7, Qt::AlignRight);
     ui.gamePadMapGridLayout->addWidget(speedInput, 1, 8, Qt::AlignLeft);
     QLabel* speedIncrementLabel = new QLabel(_inputMapWidget);
-    speedIncrementLabel->setText("Speed change step");
+    speedIncrementLabel->setText(tr("Speed change step"));
     speedIncrementLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
     XSpinBox* speedIncrmentInput = new XSpinBox(_inputMapWidget);
     speedIncrmentInput->setMinimum(1);
@@ -564,7 +578,7 @@ void SettingsDialog::setupGamepadMap()
 //    ui.gamePadMapGridLayout->addWidget(inverseFrame, maxRows + 2, 0, 1, columnIterator + 2);
 
 //    QLabel* speedLabel = new QLabel(this);
-//    speedLabel->setText("Speed");
+//    speedLabel->setText(tr("Speed"));
 //    speedLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
 //    XSpinBox* speedInput = new XSpinBox(this);
 //    speedInput->setMinimum(1);
@@ -583,7 +597,7 @@ void SettingsDialog::setupGamepadMap()
 //            [this, gamepadMap, availableAxis]()
 //              {
 //                    QMessageBox::StandardButton reply;
-//                    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset the gamepad map?",
+//                    reply = QMessageBox::question(this, tr("WARNING!"), tr("Are you sure you want to reset the gamepad map?"),
 //                                                  QMessageBox::Yes|QMessageBox::No);
 //                    if (reply == QMessageBox::Yes)
 //                    {
@@ -608,7 +622,7 @@ void SettingsDialog::setupGamepadMap()
 //    inverseGrid->addWidget(resetGamepadMap, 1, 1, Qt::AlignCenter);
 
 //    QLabel* speedIncrementLabel = new QLabel(this);
-//    speedIncrementLabel->setText("Speed change step");
+//    speedIncrementLabel->setText(tr("Speed change step"));
 //    speedIncrementLabel->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
 //    XSpinBox* speedIncrmentInput = new XSpinBox(this);
 //    speedIncrmentInput->setMinimum(1);
@@ -622,17 +636,17 @@ void SettingsDialog::setupGamepadMap()
 //    inverseGrid->addWidget(speedIncrmentInput, 1, 2, Qt::AlignCenter);
 
 //    QCheckBox* inverseX = new QCheckBox(this);
-//    inverseX->setText("Inverse Stroke");
+//    inverseX->setText(tr("Inverse Stroke"));
 //    inverseX->setChecked(SettingsHandler::getInverseTcXL0());
 //    connect(inverseX, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcXL0_valueChanged);
 //    inverseGrid->addWidget(inverseX, 3, 0, Qt::AlignCenter);
 //    QCheckBox* inverseYRoll = new QCheckBox(this);
-//    inverseYRoll->setText("Inverse Roll");
+//    inverseYRoll->setText(tr("Inverse Roll"));
 //    inverseYRoll->setChecked(SettingsHandler::getInverseTcYRollR1());
 //    connect(inverseYRoll, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcYRollR1_valueChanged);
 //    inverseGrid->addWidget(inverseYRoll, 3, 1, Qt::AlignCenter);
 //    QCheckBox* inverseXRoll = new QCheckBox(this);
-//    inverseXRoll->setText("Inverse Pitch");
+//    inverseXRoll->setText(tr("Inverse Pitch"));
 //    inverseXRoll->setChecked(SettingsHandler::getInverseTcXRollR2());
 //    connect(inverseXRoll, &QCheckBox::toggled, this, &SettingsDialog::on_inverseTcXRollR2_valueChanged);
 //    inverseGrid->addWidget(inverseXRoll, 3, 2, Qt::AlignCenter);
@@ -807,10 +821,10 @@ void SettingsDialog::setUpTCodeChannelUI()
                          emit TCodeHomeClicked();
                    });
         QCheckBox* speedCheckbox = new QCheckBox(ui.randomMotionGroupbox);
-        speedCheckbox->setText("Speed");
+        speedCheckbox->setText(tr("Speed"));
         speedCheckbox->setChecked(SettingsHandler::getSpeedChecked(channelName));
         XDoubleSpinBox* speedInput = new XDoubleSpinBox(ui.randomMotionGroupbox);
-        speedInput->setToolTip("Multiply the speed by the value.\n4000 * 0.5 = 2000");
+        speedInput->setToolTip(tr("Multiply the speed by the value.\n4000 * 0.5 = 2000"));
         speedInput->setDecimals(2);
         speedInput->setSingleStep(0.1f);
         speedInput->setMinimum(0.01f);
@@ -829,8 +843,8 @@ void SettingsDialog::setUpTCodeChannelUI()
 
         QCheckBox* linkCheckbox = new QCheckBox(ui.randomMotionGroupbox);
         auto relatedChannel = TCodeChannelLookup::getChannel(axis->RelatedChannel);
-        linkCheckbox->setToolTip("This will link the channel to the related script.\nThis will remove the random calculation and just link\nthe current MFS " + relatedChannel->FriendlyName + " funscript value.\nIf there is no " + relatedChannel->FriendlyName + " funscript then it will default to random motion.");
-        linkCheckbox->setText("Link to script: ");
+        linkCheckbox->setToolTip(tr("This will link the channel to the related script.\nThis will remove the random calculation and just link\nthe current MFS ") + relatedChannel->FriendlyName + " funscript value.\nIf there is no " + relatedChannel->FriendlyName + " funscript then it will default to random motion.");
+        linkCheckbox->setText(tr("Link to script: "));
         linkCheckbox->setChecked(SettingsHandler::getLinkToRelatedAxisChecked(channelName));
         connect(linkCheckbox, &QCheckBox::clicked, this,
                  [channelName](bool checked)
@@ -855,13 +869,13 @@ void SettingsDialog::setUpTCodeChannelUI()
                  [channelName, linkToAxisCombobox, linkCheckbox](int value)
                    {
                         auto relatedChannel = linkToAxisCombobox->currentData().value<ChannelModel33>();
-                        linkCheckbox->setToolTip("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS (Multi-funscript) " + relatedChannel.FriendlyName + " funscript value.\nIf there is no " + relatedChannel.FriendlyName + " funscript then it will default to random motion.");
+                        linkCheckbox->setToolTip(tr("This will link the channel to the related axis.\nThis will remove the random calculation and just link\nthe current MFS (Multi-funscript) ") + relatedChannel.FriendlyName + " funscript value.\nIf there is no " + relatedChannel.FriendlyName + " funscript then it will default to random motion.");
                         SettingsHandler::setLinkToRelatedAxis(channelName, relatedChannel.ChannelName);
                    });
 
         QCheckBox* linkInvertedCheckbox = new QCheckBox(ui.randomMotionGroupbox);
-        linkInvertedCheckbox->setToolTip("This will invert the linked channel if link is checked and this is checked.");
-        linkInvertedCheckbox->setText("Link inverted");
+        linkInvertedCheckbox->setToolTip(tr("This will invert the linked channel if link is checked and this is checked."));
+        linkInvertedCheckbox->setText(tr("Link inverted"));
         linkInvertedCheckbox->setChecked(SettingsHandler::getLinkToRelatedInvertedChecked(channelName));
         connect(linkInvertedCheckbox, &QCheckBox::clicked, this,
                 [channelName](bool checked)
@@ -870,9 +884,9 @@ void SettingsDialog::setUpTCodeChannelUI()
                 });
 
         QLabel* offsetLabel = new QLabel(ui.randomMotionGroupbox);
-        offsetLabel->setText("Offset");
+        offsetLabel->setText(tr("Offset"));
         XDoubleSpinBox* offsetInput = new XDoubleSpinBox(ui.randomMotionGroupbox);
-        offsetInput->setToolTip("Offset in percentage decimal");
+        offsetInput->setToolTip(tr("Offset in percentage decimal"));
         offsetInput->setSingleStep(0.01);
         offsetInput->setMinimum(-1);
         offsetInput->setMaximum(1);
@@ -930,15 +944,15 @@ void SettingsDialog::setUpTCodeChannelUI()
     //setUpMultiplierUi(SettingsHandler::getMultiplierEnabled());
 
     QPushButton* zeroOutButton = new QPushButton(ui.rangeLimitGroupbox);
-    zeroOutButton->setText("Send device home");
+    zeroOutButton->setText(tr("Send device home"));
     connect(zeroOutButton, & QPushButton::clicked, this, &SettingsDialog::on_tCodeHome_clicked);
     rangeGrid->addWidget(zeroOutButton, sliderGridRow + 1, 0);
 
     QLabel* xRangeStepLabel = new QLabel(ui.rangeLimitGroupbox);
-    xRangeStepLabel->setText("Stroke range change step");
+    xRangeStepLabel->setText(tr("Stroke range change step"));
     xRangeStepLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     XSpinBox* xRangeStepInput = new XSpinBox(ui.rangeLimitGroupbox);
-    xRangeStepInput->setToolTip("The amount to modify the stroke range when using keyboard/gamepad.");
+    xRangeStepInput->setToolTip(tr("The amount to modify the stroke range when using keyboard/gamepad."));
     xRangeStepInput->setMinimum(1);
     xRangeStepInput->setMaximum(INT_MAX);
     xRangeStepInput->setMinimumWidth(75);
@@ -952,18 +966,18 @@ void SettingsDialog::setUpTCodeChannelUI()
     if(ui.otherMotionGridLayout->isEmpty())
     {
         QLabel* lubePulseAmountLabel = new QLabel(this);
-        lubePulseAmountLabel->setText("Pulse lube amount");
+        lubePulseAmountLabel->setText(tr("Pulse lube amount"));
         lubePulseAmountLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
         QLabel* lubePulseFrequencyLabel = new QLabel(this);
-        lubePulseFrequencyLabel->setText("Pulse lube frequency");
+        lubePulseFrequencyLabel->setText(tr("Pulse lube frequency"));
         lubePulseFrequencyLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
         QCheckBox* lubePulseCheckbox = new QCheckBox("Pulse lube enabled", this);
-        lubePulseCheckbox->setToolTip("Enable a tcode signal to be sent to the selected channel every n ms");
+        lubePulseCheckbox->setToolTip(tr("Enable a tcode signal to be sent to the selected channel every n ms"));
         connect(lubePulseCheckbox, &QCheckBox::clicked, this, &SettingsDialog::lubePulseEnabled_valueChanged);
         lubePulseCheckbox->setChecked(SettingsHandler::getLubePulseEnabled());
         XSpinBox* libePulseAmountInput = new XSpinBox(this);
         auto max = TCodeChannelLookup::getTCodeMaxValue();
-        libePulseAmountInput->setToolTip("TCode value to be sent to the selected channel between 0-"+QString::number(max));
+        libePulseAmountInput->setToolTip(tr("TCode value to be sent to the selected channel between 0-")+QString::number(max));
         libePulseAmountInput->setMinimum(0);
         libePulseAmountInput->setMaximum(max);
         libePulseAmountInput->setMinimumWidth(75);
@@ -972,7 +986,7 @@ void SettingsDialog::setUpTCodeChannelUI()
         libePulseAmountInput->setAlignment(Qt::AlignCenter | Qt::AlignVCenter);
         connect(libePulseAmountInput, QOverload<int>::of(&XSpinBox::valueChanged), this, &SettingsDialog::lubeAmount_valueChanged);
         XSpinBox* libePulseFrequencyInput = new XSpinBox(this);
-        libePulseFrequencyInput->setToolTip("Time between pulse sent values in milliseconds");
+        libePulseFrequencyInput->setToolTip(tr("Time between pulse sent values in milliseconds"));
         libePulseFrequencyInput->setMinimum(0);
         libePulseFrequencyInput->setMaximum(INT_MAX);
         libePulseFrequencyInput->setMinimumWidth(75);
@@ -987,7 +1001,7 @@ void SettingsDialog::setUpTCodeChannelUI()
         lubePulseCheckbox->setStyleSheet("* {background: transparent}");
 
         QLabel* customTCodeLabel = new QLabel(this);
-        customTCodeLabel->setText("Custom TCode");
+        customTCodeLabel->setText(tr("Custom TCode"));
         QListWidget* customTCodeListWidget = new QListWidget(this);
         customTCodeListWidget->setObjectName(tr("customTCodeCommandList"));
         customTCodeListWidget->setMinimumSize(100, 150);
@@ -1014,7 +1028,7 @@ void SettingsDialog::setUpTCodeChannelUI()
                     MediaActions actions;
                     if(actions.Values.contains(newValue))
                     {
-                        DialogHandler::MessageBox(this, "Reserved value: "+newValue, XLogLevel::Critical);
+                        DialogHandler::MessageBox(this, tr("Reserved value: ")+newValue, XLogLevel::Critical);
                     }
                     else if(customTCodeListWidget->findItems(newName, Qt::MatchExactly).isEmpty())
                     {
@@ -1030,14 +1044,14 @@ void SettingsDialog::setUpTCodeChannelUI()
                     }
                     else
                     {
-                        DialogHandler::MessageBox(this, "Duplicate value: "+newValue, XLogLevel::Critical);
+                        DialogHandler::MessageBox(this, tr("Duplicate value: ")+newValue, XLogLevel::Critical);
                     }
                 }
             }
         });
 
         QPushButton* customTCodeAddbutton = new QPushButton(this);
-        customTCodeAddbutton->setText("Add");
+        customTCodeAddbutton->setText(tr("Add"));
         connect(customTCodeAddbutton, &QPushButton::clicked, this, [this, customTCodeListWidget]()
         {
             bool ok;
@@ -1049,7 +1063,7 @@ void SettingsDialog::setUpTCodeChannelUI()
                 MediaActions actions;
                 if(actions.Values.contains(newValue))
                 {
-                    DialogHandler::MessageBox(this, "Reserved value: "+newValue, XLogLevel::Critical);
+                    DialogHandler::MessageBox(this, tr("Reserved value: ")+newValue, XLogLevel::Critical);
                 }
                 else if(customTCodeListWidget->findItems(newName, Qt::MatchExactly).isEmpty())
                 {
@@ -1066,14 +1080,14 @@ void SettingsDialog::setUpTCodeChannelUI()
                 }
                 else
                 {
-                    DialogHandler::MessageBox(this, "Duplicate value: "+newName, XLogLevel::Critical);
+                    DialogHandler::MessageBox(this, tr("Duplicate value: ")+newName, XLogLevel::Critical);
                 }
             }
         });
 
         QPushButton* customTCodeRemovebutton = new QPushButton(this);
         customTCodeRemovebutton->setEnabled(false);
-        customTCodeRemovebutton->setText("Remove");
+        customTCodeRemovebutton->setText(tr("Remove"));
         connect(customTCodeRemovebutton, &QPushButton::clicked, this, [this, customTCodeListWidget, customTCodeRemovebutton]()
         {
             auto amount = customTCodeListWidget->selectedItems().length();
@@ -1379,7 +1393,7 @@ void SettingsDialog::onRange_valueChanged(QString name, int value)
     int min = slider->GetLowerValue();
     rangeMinLabels.value(name)->setText(QString::number(min));
     rangeMaxLabels.value(name)->setText(QString::number(max));
-    mainLabel->setText(channel->FriendlyName + " mid: " + QString::number(XMath::middle(min, max)));
+    mainLabel->setText(channel->FriendlyName + tr(" mid: ") + QString::number(XMath::middle(min, max)));
     OutputConnectionHandler* outputDevice = _connectionHandler->getSelectedOutputConnection();
     InputConnectionHandler* inputDevice = _connectionHandler->getSelectedInputConnection();
     if ((!_videoHandler->isPlaying() || _videoHandler->isPaused())
@@ -1504,17 +1518,17 @@ void SettingsDialog::on_serialConnectButton_clicked()
     auto portName = selectedSerialPort.portName;
     if(portName.isEmpty())
     {
-        DialogHandler::MessageBox(this, "No portname specified", XLogLevel::Critical);
+        DialogHandler::MessageBox(this, tr("No portname specified"), XLogLevel::Critical);
         return;
     }
     else if(ui.SerialOutputCmb->count() == 0)
     {
-        DialogHandler::MessageBox(this, "No ports on machine", XLogLevel::Critical);
+        DialogHandler::MessageBox(this, tr("No ports on machine"), XLogLevel::Critical);
         return;
     }
     else if(!boolinq::from(serialPorts).any([portName](const SerialComboboxItem &x) { return x.portName == portName; }))
     {
-        DialogHandler::MessageBox(this, "Port: "+ portName + " not found", XLogLevel::Critical);
+        DialogHandler::MessageBox(this, tr("Port: ")+ portName + tr(" not found"), XLogLevel::Critical);
         return;
     }
     SettingsHandler::setSerialPort(portName);
@@ -1532,7 +1546,7 @@ void SettingsDialog::on_networkConnectButton_clicked()
     }
     else
     {
-        DialogHandler::MessageBox(this, "Invalid network address!", XLogLevel::Critical);
+        DialogHandler::MessageBox(this, tr("Invalid network address!"), XLogLevel::Critical);
     }
 }
 
@@ -1552,7 +1566,7 @@ void SettingsDialog::on_deoConnectButton_clicked()
     }
     else
     {
-        DialogHandler::MessageBox(this, "Invalid heresphere address!", XLogLevel::Warning);
+        DialogHandler::MessageBox(this, tr("Invalid heresphere address!"), XLogLevel::Warning);
     }
 }
 
@@ -1566,7 +1580,7 @@ void SettingsDialog::on_whirligigConnectButton_clicked()
     }
     else
     {
-        DialogHandler::MessageBox(this, "Invalid whirligig address!", XLogLevel::Warning);
+        DialogHandler::MessageBox(this, tr("Invalid whirligig address!"), XLogLevel::Warning);
     }
 }
 
@@ -1599,7 +1613,7 @@ void SettingsDialog::on_whirligigCheckBox_clicked(bool checked)
 void SettingsDialog::on_xtpWebHandlerCheckbox_clicked(bool checked)
 {
     if(checked && !SettingsHandler::getEnableHttpServer()) {
-        DialogHandler::MessageBox(this, "XTP web is not enabled on the 'Web' tab. Set it up and return here afterwards.", XLogLevel::Information);
+        DialogHandler::MessageBox(this, tr("XTP web is not enabled on the 'Web' tab. Set it up and return here afterwards."), XLogLevel::Information);
         ui.xtpWebHandlerCheckbox->setChecked(false);
         return;
     }
@@ -1616,20 +1630,20 @@ void SettingsDialog::on_xtpWebHandlerCheckbox_clicked(bool checked)
 void SettingsDialog::on_resetAllButton_clicked()
 {
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset ALL settings except\nplaylists, metadata and DLNA map?",
+    reply = QMessageBox::question(this, tr("WARNING!"), tr("Are you sure you want to reset ALL settings except\nplaylists, metadata and DLNA map?"),
                                   QMessageBox::Yes|QMessageBox::No);
     if (reply == QMessageBox::Yes)
     {
         SettingsHandler::Default();
-        reply = QMessageBox::question(this, "WARNING!", "Would you like to keep playlists, metadata and dlna lookup data?",
+        reply = QMessageBox::question(this, tr("WARNING!"), tr("Would you like to keep playlists, metadata and dlna lookup data?"),
                                           QMessageBox::Yes|QMessageBox::No);
         if (reply == QMessageBox::Yes)
         {
             SettingsHandler::PersistSelectSettings();
         }
-        int finalReply = QMessageBox::question(this, "Restart Application?", "Changes will take effect on application restart.\n\n"
-                                                                    "Restart this application now?\n\n"
-                                                                    "Uninstall will remove ALL settings\nINCLUDING PLAYLISTS\nfrom this PC and close the application\n",
+        int finalReply = QMessageBox::question(this, tr("Restart Application?"), tr("Changes will take effect on application restart.\n\n"
+                                                                                    "Restart this application now?\n\n"
+                                                                                    "Uninstall will remove ALL settings\nINCLUDING PLAYLISTS\nfrom this PC and close the application\n"),
                                       "Restart", "Uninstall", "Quit", 0, 2);
         if (finalReply == 0)
         {
@@ -1684,7 +1698,7 @@ void SettingsDialog::on_channelDeleteButton_clicked()
     if (select->hasSelection())
     {
         QMessageBox::StandardButton reply;
-        reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to delete the selected items?",
+        reply = QMessageBox::question(this, tr("WARNING!"), tr("Are you sure you want to delete the selected items?"),
                                       QMessageBox::Yes|QMessageBox::No);
         if (reply == QMessageBox::Yes)
         {
@@ -1708,7 +1722,7 @@ void SettingsDialog::on_channelDeleteButton_clicked()
                 SettingsHandler::deleteAxis(channel);
 
             if(!cannotBedeleted.empty())
-                DialogHandler::MessageBox(this, "The following channels are default and cannot be deleted: "+cannotBedeleted.join(", "), XLogLevel::Critical);
+                DialogHandler::MessageBox(this, tr("The following channels are default and cannot be deleted: ")+cannotBedeleted.join(", "), XLogLevel::Critical);
             //channelTableViewModel->setMap();
             //setUpTCodeAxis();
         }
@@ -1733,9 +1747,9 @@ void SettingsDialog::on_passwordButton_clicked()
     if(ok) {
         SettingsHandler::SetHashedPass(hashedPass);
         if(!hashedPass.isEmpty()) {
-            ui.passwordButton->setText("Change password");
+            ui.passwordButton->setText(tr("Change password"));
         } else {
-            ui.passwordButton->setText("Set password");
+            ui.passwordButton->setText(tr("Set password"));
         }
     }
 }
@@ -1749,9 +1763,9 @@ void SettingsDialog::on_webPasswordButton_clicked()
     if(ok) {
         SettingsHandler::setHashedWebPass(hashedPass);
         if(!hashedPass.isEmpty()) {
-            ui.webPasswordButton->setText("Change password");
+            ui.webPasswordButton->setText(tr("Change password"));
         } else {
-            ui.webPasswordButton->setText("Set password");
+            ui.webPasswordButton->setText(tr("Set password"));
         }
     }
 }
@@ -1776,7 +1790,7 @@ void SettingsDialog::on_thumbDirButton_clicked()
 {
     auto selectedThumbsDir = SettingsHandler::getSelectedThumbsDir();
    auto customThumbDirExists  = !selectedThumbsDir.isEmpty() && QFileInfo::exists(selectedThumbsDir);
-   QString selectedDir = QFileDialog::getExistingDirectory(this, QFileDialog::tr("Choose thumbnail storage directory"), customThumbDirExists ? selectedThumbsDir : QApplication::applicationDirPath() + "/thumbs/", QFileDialog::ReadOnly);
+   QString selectedDir = QFileDialog::getExistingDirectory(this, SettingsDialog::tr("Choose thumbnail storage directory"), customThumbDirExists ? selectedThumbsDir : QApplication::applicationDirPath() + "/thumbs/", QFileDialog::ReadOnly);
    if (selectedDir != Q_NULLPTR)
    {
        SettingsHandler::setSelectedThumbsDir(selectedDir);
@@ -1805,7 +1819,7 @@ void SettingsDialog::on_tCodeVSComboBox_currentIndexChanged(int index)
 {
     // TCodeVersion currentVersion = TCodeChannelLookup::getSelectedTCodeVersion();
     // TCodeVersion newVersion = ui.tCodeVersionComboBox->currentData().value<TCodeVersion>();
-    // QMessageBox::StandardButton reply = QMessageBox::question(this, "Warning!", "This will reset ALL CHANNEL PROFILES to default.\nContinue?",
+    // QMessageBox::StandardButton reply = QMessageBox::question(this, tr("Warning!"), tr("This will reset ALL CHANNEL PROFILES to default.\nContinue?"),
     //                               QMessageBox::Yes|QMessageBox::No);
     // if(reply == QMessageBox::Yes)
     // {
@@ -1834,7 +1848,7 @@ void SettingsDialog::on_disableTCodeValidationCheckbox_clicked(bool checked)
 {
     if(checked)
     {
-        DialogHandler::MessageBox(this, "Make sure to verify the version of TCode firmware installed on your device.", XLogLevel::Warning);
+        DialogHandler::MessageBox(this, tr("Make sure to verify the version of TCode firmware installed on your device."), XLogLevel::Warning);
     }
     SettingsHandler::setDisableTCodeValidation(checked);
     askRestart(this);
@@ -1924,7 +1938,7 @@ void SettingsDialog::on_vrLibraryLineEdit_textEdited(const QString &selectedDire
         else
             DialogHandler::MessageBox(this, messages.join("\n"), XLogLevel::Warning);
     } else if(!selectedDirectory.isEmpty()) {
-        DialogHandler::MessageBox(this, "Invalid directory!", XLogLevel::Warning);
+        DialogHandler::MessageBox(this, tr("Invalid directory!"), XLogLevel::Warning);
     }
 }
 
@@ -1960,7 +1974,7 @@ void SettingsDialog::on_httpPortSpinBox_editingFinished()
 {
     int value = ui.httpPortSpinBox->value();
     if(SettingsHandler::getWebSocketPort() == value) {
-        DialogHandler::MessageBox(this, "Http port cannot be the same as the Wwb socket port.", XLogLevel::Critical);
+        DialogHandler::MessageBox(this, tr("Http port cannot be the same as the Wwb socket port."), XLogLevel::Critical);
         ui.httpPortSpinBox->setValue(SettingsHandler::getHTTPPort());
         return;
     }
@@ -1974,7 +1988,7 @@ void SettingsDialog::on_webSocketPortSpinBox_editingFinished()
 {
     int value = ui.webSocketPortSpinBox->value();
     if(SettingsHandler::getHTTPPort() == value) {
-        DialogHandler::MessageBox(this, "Web socket port cannot be the same as the http port.", XLogLevel::Critical);
+        DialogHandler::MessageBox(this, tr("Web socket port cannot be the same as the http port."), XLogLevel::Critical);
         ui.webSocketPortSpinBox->setValue(SettingsHandler::getWebSocketPort());
         return;
     }
@@ -2017,14 +2031,25 @@ void SettingsDialog::Import(QWidget* parent)
 
 void SettingsDialog::requestRestart(QWidget* parent)
 {
-    int value = QMessageBox::question(parent, "Restart Application", "Changes will take effect on application restart.",
-                                  "Exit XTP", "Restart now", 0, 1);
+    int value = QMessageBox::question(parent, tr("Restart Application"), tr("Changes will take effect on application restart."),
+                                  tr("Exit XTP"), tr("Restart now"), 0, 1);
     quit(value);
 }
 void SettingsDialog::askRestart(QWidget* parent, QString message)
 {
+    if (message.isEmpty())
+        message = tr("Some changes made requires a restart.\nWould you like to restart now?");
+    // Clear the pending-restart flag before showing the modal prompt so that
+    // any later dialog close path (reject() / on_dialogButtonboxClicked) does
+    // not re-trigger askRestart. This matters because QCoreApplication::quit()
+    // invoked via quit(true)->Restart() is asynchronous: the event loop keeps
+    // running and would otherwise emit a second prompt (and start a second
+    // detached process) when the user already accepted the first one.
+    // restartRequiredLabel stays visible (set_requires_restart only shows it)
+    // so the user is still reminded that a restart is pending.
+    _requiresRestart = false;
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(parent, "Restart?", message,
+    reply = QMessageBox::question(parent, tr("Restart?"), message,
                                   QMessageBox::Yes|QMessageBox::No);
     if (reply == QMessageBox::Yes)
         quit(true);
@@ -2045,7 +2070,7 @@ void SettingsDialog::on_openDeoPDFButton_clicked()
     if(QFile::exists(filePath)) {
         QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
     } else {
-        DialogHandler::MessageBox(this, "Error opening: "+ filePath, XLogLevel::Critical);
+        DialogHandler::MessageBox(this, tr("Error opening: ")+ filePath, XLogLevel::Critical);
     }
 }
 
@@ -2072,7 +2097,7 @@ void SettingsDialog::on_rememberWindowSettingsChk_clicked(bool checked)
 void SettingsDialog::on_dubugButton_clicked()
 {
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "WARNING!", "Restart the app in debug mode?",
+    reply = QMessageBox::question(this, tr("WARNING!"), tr("Restart the app in debug mode?"),
                                   QMessageBox::Yes|QMessageBox::No);
     if (reply == QMessageBox::Yes)
     {
@@ -2087,7 +2112,7 @@ void SettingsDialog::on_disableTimeLinePreviewChk_clicked(bool checked)
     QMessageBox::StandardButton reply = QMessageBox::Yes;
     if(!checked)
     {
-        reply = QMessageBox::question(this, "WARNING!", "This feature has been known to cause crashing on some systems.\nContinue?",
+        reply = QMessageBox::question(this, tr("WARNING!"), tr("This feature has been known to cause crashing on some systems.\nContinue?"),
                                       QMessageBox::Yes|QMessageBox::No);
     }
     if (reply == QMessageBox::Yes)
@@ -2116,7 +2141,7 @@ void SettingsDialog::set_channelProfilesComboBox_value(const QString &profile) {
 void SettingsDialog::on_addChannelProfileButton_clicked()
 {
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "Copy!", "Copy from current profile?",
+    reply = QMessageBox::question(this, tr("Copy!"), tr("Copy from current profile?"),
                                   QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
     if(reply != QMessageBox::Cancel) {
         bool ok;
@@ -2127,7 +2152,7 @@ void SettingsDialog::on_addChannelProfileButton_clicked()
         {
             auto duplicate = TCodeChannelLookup::hasProfile(text);
             if(duplicate) {
-                DialogHandler::MessageBox(this, "There is already a profile named: "+ text, XLogLevel::Critical);
+                DialogHandler::MessageBox(this, tr("There is already a profile named: ")+ text, XLogLevel::Critical);
             } else {
                 if (reply == QMessageBox::Yes) {
                     TCodeChannelLookup::copyChannelsProfile(text);
@@ -2150,12 +2175,12 @@ void SettingsDialog::on_deleteProfileButton_clicked()
 {
     auto lastProfile = TCodeChannelLookup::getChannelProfiles().count() == 1;
     if(lastProfile) {
-        DialogHandler::MessageBox(this, "Must have at least 1 profile!", XLogLevel::Critical);
+        DialogHandler::MessageBox(this, tr("Must have at least 1 profile!"), XLogLevel::Critical);
         return;
     }
     QMessageBox::StandardButton reply;
     auto selectedProfile = ui.channelProfilesComboBox->currentData().value<QMap<QString, ChannelModel33>>();
-    reply = QMessageBox::question(this, "Delete!", "Delete current profile?",
+    reply = QMessageBox::question(this, tr("Delete!"), tr("Delete current profile?"),
                                   QMessageBox::Yes|QMessageBox::No);
     if (reply == QMessageBox::Yes) {
         auto selectedProfileName = ui.channelProfilesComboBox->currentText();
@@ -2169,7 +2194,7 @@ void SettingsDialog::on_deleteProfileButton_clicked()
 void SettingsDialog::on_defultSelectedProfile_clicked()
 {
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to reset the channel map for the selected profile?\nThis will reset ALL range and multiplier settings!",
+    reply = QMessageBox::question(this, tr("WARNING!"), tr("Are you sure you want to reset the channel map for the selected profile?\nThis will reset ALL range and multiplier settings!"),
                                   QMessageBox::Yes|QMessageBox::No);
     if (reply == QMessageBox::Yes) {
         TCodeChannelLookup::setProfileDefaults();
@@ -2180,7 +2205,7 @@ void SettingsDialog::on_defultSelectedProfile_clicked()
 void SettingsDialog::on_allProfilesDefaultButton_clicked()
 {
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to DEFAULT ALL PROFILES?",
+    reply = QMessageBox::question(this, tr("WARNING!"), tr("Are you sure you want to DEFAULT ALL PROFILES?"),
                                   QMessageBox::Yes|QMessageBox::No);
     if (reply == QMessageBox::Yes) {
         askHowToResetChannelProfileDefaults();
@@ -2198,25 +2223,25 @@ void SettingsDialog::on_hideMediaWithoutFunscriptsCheckbox_clicked(bool checked)
 void SettingsDialog::on_cleanupThumbsPushButton_clicked()
 {
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "WARNING!", "Are you sure you want to clean up generated thumbs?\nThis will search the chosen thumbs directory for files that end with jpg\nthat are either duplicated or not existant in the current library.\nWARNING: if your current libraries doesnt not have some of these thumbs they will be deleted.\nThis will not delete files that are in your media directory.\n\nThis process could take a long time.\nContinue?",
+    reply = QMessageBox::question(this, tr("WARNING!"), tr("Are you sure you want to clean up generated thumbs?\nThis will search the chosen thumbs directory for files that end with jpg\nthat are either duplicated or not existant in the current library.\nWARNING: if your current libraries doesnt not have some of these thumbs they will be deleted.\nThis will not delete files that are in your media directory.\n\nThis process could take a long time.\nContinue?"),
                                   QMessageBox::Yes|QMessageBox::No);
     if (reply == QMessageBox::Yes) {
-        ui.cleanUpThumbsStatus->setText("Thumb cleanup: Running");
+        ui.cleanUpThumbsStatus->setText(tr("Thumb cleanup: Running"));
         emit cleanUpThumbsDirectory();
     }
 }
 
 
 void SettingsDialog::onCleanUpThumbsDirectoryComplete() {
-    ui.cleanUpThumbsStatus->setText("Thumb cleanup: Complete!");
+    ui.cleanUpThumbsStatus->setText(tr("Thumb cleanup: Complete!"));
 }
 
 void SettingsDialog::onCleanUpThumbsDirectoryStopped() {
-    ui.cleanUpThumbsStatus->setText("Thumb cleanup: Stopped!");
+    ui.cleanUpThumbsStatus->setText(tr("Thumb cleanup: Stopped!"));
 }
 
 void SettingsDialog::askHowToResetChannelProfileDefaults() {
-    QMessageBox::StandardButton reply = QMessageBox::question(this, "Keep current profiles?", "Do you want to keep the current profile names?",
+    QMessageBox::StandardButton reply = QMessageBox::question(this, tr("Keep current profiles?"), tr("Do you want to keep the current profile names?"),
                                   QMessageBox::Yes|QMessageBox::No);
     TCodeChannelLookup::setAllProfileDefaults(reply == QMessageBox::Yes);
 }
@@ -2243,7 +2268,7 @@ void SettingsDialog::on_smartTagButton_clicked()
 void SettingsDialog::on_defaultUserTagsButton_clicked()
 {
     QMessageBox::StandardButton reply =
-        QMessageBox::question(this, "Reset all user tags?", "This will delete all added user tags. Note: this will not effect smart tags.",
+        QMessageBox::question(this, tr("Reset all user tags?"), tr("This will delete all added user tags. Note: this will not effect smart tags."),
             QMessageBox::Yes|QMessageBox::No);
 
     if(reply == QMessageBox::Yes)
@@ -2254,7 +2279,7 @@ void SettingsDialog::on_defaultUserTagsButton_clicked()
 void SettingsDialog::on_defaultSmartTagsButton_clicked()
 {
     QMessageBox::StandardButton reply =
-        QMessageBox::question(this, "Reset all smart tags?", "This will delete all added smart tags. Note: this will not effect user tags.",
+        QMessageBox::question(this, tr("Reset all smart tags?"), tr("This will delete all added smart tags. Note: this will not effect user tags."),
                               QMessageBox::Yes|QMessageBox::No);
 
     if(reply == QMessageBox::Yes)
@@ -2340,19 +2365,19 @@ void SettingsDialog::on_voiceRateSlider_sliderReleased()
 void SettingsDialog::on_voiceVolumeSlider_sliderMoved(int position)
 {
     double volume = position ? position / 100.0f : 0.0f;
-    ui.voiceVolumeLbl->setText("Volume "+ QString::number(volume));
+    ui.voiceVolumeLbl->setText(tr("Volume ")+ QString::number(volume));
 }
 
 void SettingsDialog::on_voicePitchSlider_sliderMoved(int position)
 {
     double pitch = position ? position / 100.0f : 0.0f;
-    ui.voicePitchLbl->setText("Pitch "+ QString::number(pitch));
+    ui.voicePitchLbl->setText(tr("Pitch ")+ QString::number(pitch));
 }
 
 void SettingsDialog::on_voiceRateSlider_sliderMoved(int position)
 {
     double rate = position ? position / 100.0f : 0.0f;
-    ui.voiceRateLbl->setText("Rate "+ QString::number(rate));
+    ui.voiceRateLbl->setText(tr("Rate ")+ QString::number(rate));
 }
 
 void SettingsDialog::onUseDTRAndRTSChkClicked(bool checked)
@@ -2363,7 +2388,7 @@ void SettingsDialog::onUseDTRAndRTSChkClicked(bool checked)
         return;
     }
     QMessageBox::StandardButton reply =
-        QMessageBox::question(this, "Warning!", "DTR and RTS can speed up the serial connection but causes a board reboot.\nBe sure to cut power to servos before connecting.",
+        QMessageBox::question(this, tr("Warning!"), tr("DTR and RTS can speed up the serial connection but causes a board reboot.\nBe sure to cut power to servos before connecting."),
                               QMessageBox::Yes|QMessageBox::No);
 
     if(reply == QMessageBox::Yes)
@@ -2425,5 +2450,21 @@ void SettingsDialog::on_useMediaBackendChk_clicked(bool checked)
 void SettingsDialog::on_fullscreenUIOnlyOnMouseover_clicked(bool checked)
 {
     XTPSettings::setFullScreenUIOnlyOnMouseOver(checked);
+}
+
+void SettingsDialog::on_languageComboBox_currentIndexChanged(int index)
+{
+    const QString lang = ui.languageComboBox->itemData(index).toString();
+    const QString effective = lang.isEmpty() ? QStringLiteral("en") : lang;
+
+    // Ignore no-op changes (e.g. if signals weren't fully blocked during init)
+    if (XTPSettings::getLanguage() == effective)
+        return;
+
+    XTPSettings::setLanguage(effective);
+    // Persist immediately: askRestart may quit/restart the process.
+    XTPSettings::save();
+    set_requires_restart(true);
+    askRestart(this, tr("Language change requires a restart.\nWould you like to restart now?"));
 }
 

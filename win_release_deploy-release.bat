@@ -58,6 +58,7 @@ cd %xtplayerSource%
 xcopy %buildDir%\XTPlayer.exe %deployDir% /s /i  /K /D /H /Y
 xcopy %engineBuildDir%\XTEngine.dll %deployDir%/s /i  /K /D /H /Y
 xcopy %buildDir%\themes %deployDir%themes /s /i /K /D /H /Y
+xcopy %buildDir%\translations %deployDir%translations /s /i /K /D /H /Y
 rem xcopy %zlibDll% %deployDir% /s /i /K /D /H /Y
 rem xcopy %httpServerDll% %deployDir% /s /i /K /D /H /Y
 rem xcopy %QtDirBin%Qt5OpenGL.dll %deployDir% /s /i /K /D /H /Y

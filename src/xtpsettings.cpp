@@ -20,6 +20,7 @@ void XTPSettings::save(QSettings* settingsToSaveTo) {
     settingsToSaveTo->setValue("hideMediaWithoutFunscripts", m_hideMediaWithoutFunscripts);
     settingsToSaveTo->setValue("heatmapDisabled", m_heatmapDisabled);
     settingsToSaveTo->setValue("fullscreenUIOnlyMouseover", m_fullscreenUIOnlyMouseover);
+    settingsToSaveTo->setValue("language", m_language);
 
 
     QList<QVariant> splitterPos;
@@ -58,6 +59,9 @@ void XTPSettings::load(QSettings* settingsToLoadFrom) {
     m_hideMediaWithoutFunscripts = settingsToLoadFrom->value("hideMediaWithoutFunscripts").toBool();
     m_heatmapDisabled = settingsToLoadFrom->value("heatmapDisabled").toBool();
     m_fullscreenUIOnlyMouseover = settingsToLoadFrom->value("fullscreenUIOnlyMouseover").toBool();
+    m_language = settingsToLoadFrom->value("language", QStringLiteral("en")).toString();
+    if(m_language.isEmpty())
+        m_language = QStringLiteral("en");
 
     auto splitterSizes = settingsToLoadFrom->value("mainWindowPos").toList();
     if(splitterSizes.isEmpty()) {
@@ -253,6 +257,18 @@ void XTPSettings::setVoiceName(QString value)
     getSettings()->setValue("voiceName", value);
 }
 
+QString XTPSettings::getLanguage()
+{
+    QMutexLocker locker(&m_mutex);
+    return m_language;
+}
+
+void XTPSettings::setLanguage(QString value)
+{
+    QMutexLocker locker(&m_mutex);
+    m_language = value;
+}
+
 //Private
 QSettings* XTPSettings::getSettings() {
     return SettingsHandler::getSettings();
@@ -269,4 +285,5 @@ bool XTPSettings::m_libraryWindowOpen;
 bool XTPSettings::m_disableTimeLinePreview;
 bool XTPSettings::m_hideMediaWithoutFunscripts;
 bool XTPSettings::m_heatmapDisabled;
+QString XTPSettings::m_language = QStringLiteral("en");
 QMutex XTPSettings::m_mutex;

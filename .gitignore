@@ -82,3 +82,7 @@ settings_export*
 *.user
 /Deploy
 /src/.qtc_clangd
+
+# AI assistant working directory (logs, scratch scripts, test builds)
+.trae/
+*.log

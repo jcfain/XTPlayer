@@ -22,7 +22,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     QString fullVersion("XTP: v"+ XTPSettings::XTPVersionTimeStamp + "\nXTE: v" + SettingsHandler::XTEVersionTimeStamp);
 
     ui->setupUi(this);
-    loadingSplash->showMessage(fullVersion + "\nLoading Settings...", Qt::AlignBottom, Qt::white);
+    loadingSplash->showMessage(fullVersion + tr("\nLoading Settings..."), Qt::AlignBottom, Qt::white);
 
     _xSettings = new SettingsDialog(this);
     if(!SettingsHandler::GetHashedPass().isEmpty()) {
@@ -39,13 +39,13 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
             {
                 switch(tries) {
                     case 1:
-                        DialogHandler::MessageBox(this, "Wrong!", XLogLevel::Critical);
+                        DialogHandler::MessageBox(this, tr("Wrong!"), XLogLevel::Critical);
                     break;
                     case 2:
-                        DialogHandler::MessageBox(this, "Nope!", XLogLevel::Critical);
+                        DialogHandler::MessageBox(this, tr("Nope!"), XLogLevel::Critical);
                     break;
                     case 3:
-                        DialogHandler::MessageBox(this, "K thx byyye!", XLogLevel::Critical);
+                        DialogHandler::MessageBox(this, tr("K thx byyye!"), XLogLevel::Critical);
                     break;
                 }
 
@@ -83,7 +83,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
 
     _dlnaScriptLinksDialog = new DLNAScriptLinks(this);
 
-    loadingSplash->showMessage(fullVersion + "\nLoading UI...", Qt::AlignBottom, Qt::white);
+    loadingSplash->showMessage(fullVersion + tr("\nLoading UI..."), Qt::AlignBottom, Qt::white);
 
     textToSpeech = new QTextToSpeech(this);
     _xSettings->initializeVoice(textToSpeech);
@@ -102,7 +102,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     deoRetryConnectionButton = new QPushButton(this);
     deoRetryConnectionButton->hide();
     deoRetryConnectionButton->setProperty("cssClass", "retryButton");
-    deoRetryConnectionButton->setText("HereSphere Retry");
+    deoRetryConnectionButton->setText(tr("HereSphere Retry"));
     ui->statusbar->addPermanentWidget(deoConnectionStatusLabel);
     ui->statusbar->addPermanentWidget(deoRetryConnectionButton);
 
@@ -110,7 +110,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     vrRetryConnectionButton = new QPushButton(this);
     vrRetryConnectionButton->hide();
     vrRetryConnectionButton->setProperty("cssClass", "retryButton");
-    vrRetryConnectionButton->setText("Whirligig Retry");
+    vrRetryConnectionButton->setText(tr("Whirligig Retry"));
     ui->statusbar->addPermanentWidget(vrConnectionStatusLabel);
     ui->statusbar->addPermanentWidget(vrRetryConnectionButton);
 
@@ -122,7 +122,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     retryConnectionButton = new QPushButton(this);
     retryConnectionButton->hide();
     retryConnectionButton->setProperty("cssClass", "retryButton");
-    retryConnectionButton->setText("TCode Retry");
+    retryConnectionButton->setText(tr("TCode Retry"));
     ui->statusbar->addPermanentWidget(connectionStatusLabel);
     ui->statusbar->addPermanentWidget(retryConnectionButton);
 
@@ -233,8 +233,8 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     cancelEditPlaylistButton->hide();
 
     libraryFilterLineEdit = new QLineEdit(this);
-    libraryFilterLineEdit->setPlaceholderText("Filter");
-    libraryFilterLineEdit->setToolTip("Filter media by text");
+    libraryFilterLineEdit->setPlaceholderText(tr("Filter"));
+    libraryFilterLineEdit->setToolTip(tr("Filter media by text"));
     // ui->libraryGrid->addWidget(libraryFilterLineEdit, 0, 1, 1, ui->libraryGrid->columnCount() - 5);
     connect(libraryFilterLineEdit, &QLineEdit::textChanged, this, [this](QString value) {
         _librarySortFilterProxyModel->onFilterChanged(value);
@@ -245,7 +245,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     libraryFilterTagsButton->setProperty("id", "tagFilterButton");
     QIcon tagIcon("://images/icons/tag.svg");
     libraryFilterTagsButton->setIcon(tagIcon);
-    libraryFilterTagsButton->setToolTip("Select tags to filter");
+    libraryFilterTagsButton->setToolTip(tr("Select tags to filter"));
     libraryFilterTagsButton->setCheckable(true);
     // ui->libraryGrid->addWidget(libraryFilterTagsButton, 0, 7);
 
@@ -274,7 +274,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     libraryFilterLineEditClear = new QPushButton(this);
     libraryFilterLineEditClear->setProperty("id", "tagFilterButton");
     QIcon clearFilterIcon("://images/icons/x.svg");
-    libraryFilterLineEditClear->setToolTip("Clear the current filter criteria");
+    libraryFilterLineEditClear->setToolTip(tr("Clear the current filter criteria"));
     libraryFilterLineEditClear->setIcon(clearFilterIcon);
     libraryFilterLineEditClear->setEnabled(false);
     // // ui->libraryGrid->addWidget(libraryFilterLineEditClear, 0, 7);
@@ -333,7 +333,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     action175_Size->setCheckable(true);
     action200_Size = submenuSize->addAction( "200" );
     action200_Size->setCheckable(true);
-    actionCustom_Size = submenuSize->addAction( "Custom" );
+    actionCustom_Size = submenuSize->addAction( tr("Custom") );
     actionCustom_Size->setCheckable(true);
     libraryThumbSizeGroup->addAction(action75_Size);
     libraryThumbSizeGroup->addAction(action100_Size);
@@ -348,23 +348,23 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     QMenu* submenuSort = ui->menuView->addMenu( "Sort" );
     submenuSort->setObjectName("sortMenu");
     librarySortGroup = new QActionGroup(submenuSort);
-    actionNameAsc_Sort = submenuSort->addAction( "Name (Asc)" );
+    actionNameAsc_Sort = submenuSort->addAction( tr("Name (Asc)") );
     actionNameAsc_Sort->setCheckable(true);
-    actionNameDesc_Sort = submenuSort->addAction( "Name (Desc)" );
+    actionNameDesc_Sort = submenuSort->addAction( tr("Name (Desc)") );
     actionNameDesc_Sort->setCheckable(true);
-    actionRandom_Sort = submenuSort->addAction( "Random" );
+    actionRandom_Sort = submenuSort->addAction( tr("Random") );
     actionRandom_Sort->setCheckable(true);
-    actionCreatedAsc_Sort = submenuSort->addAction( "Created (Asc)" );
+    actionCreatedAsc_Sort = submenuSort->addAction( tr("Created (Asc)") );
     actionCreatedAsc_Sort->setCheckable(true);
-    actionCreatedDesc_Sort = submenuSort->addAction( "Created (Desc)" );
+    actionCreatedDesc_Sort = submenuSort->addAction( tr("Created (Desc)") );
     actionCreatedDesc_Sort->setCheckable(true);
-    actionAddedAsc_Sort = submenuSort->addAction( "Added (Asc)" );
+    actionAddedAsc_Sort = submenuSort->addAction( tr("Added (Asc)") );
     actionAddedAsc_Sort->setCheckable(true);
-    actionAddedDesc_Sort = submenuSort->addAction( "Added (Desc)" );
+    actionAddedDesc_Sort = submenuSort->addAction( tr("Added (Desc)") );
     actionAddedDesc_Sort->setCheckable(true);
-    actionTypeAsc_Sort = submenuSort->addAction( "Type (Asc)" );
+    actionTypeAsc_Sort = submenuSort->addAction( tr("Type (Asc)") );
     actionTypeAsc_Sort->setCheckable(true);
-    actionTypeDesc_Sort = submenuSort->addAction( "Type (Desc)" );
+    actionTypeDesc_Sort = submenuSort->addAction( tr("Type (Desc)") );
     actionTypeDesc_Sort->setCheckable(true);
     librarySortGroup->addAction(actionNameAsc_Sort);
     librarySortGroup->addAction(actionNameDesc_Sort);
@@ -455,11 +455,11 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(ui->actionReload_library, &QAction::triggered, m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::loadLibraryAsync);
     connect(ui->actionFix_offset_1024, &QAction::triggered, this, [this]() {
         if(m_xtengine->mediaLibraryHandler()->isMetadataProcessing()) {
-            DialogHandler::MessageBox(libraryList, "Please wait for metadata process to complete!", XLogLevel::Warning);
+            DialogHandler::MessageBox(libraryList, tr("Please wait for metadata process to complete!"), XLogLevel::Warning);
             return;
         }
         QMessageBox::StandardButton reply;
-        reply = QMessageBox::question(this, "Warning!", "This will go through all media items and\nset offsets that are equal to 1024 to 0.\n\nContinue?",
+        reply = QMessageBox::question(this, tr("Warning!"), tr("This will go through all media items and\nset offsets that are equal to 1024 to 0.\n\nContinue?"),
                                       QMessageBox::Yes|QMessageBox::No);
         if (reply == QMessageBox::Yes)
             m_xtengine->mediaLibraryHandler()->startMetadata1024Cleanup();
@@ -564,14 +564,14 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::cleanUpThumbsFinished, this, [this]() {
         ui->statusbar->clearMessage();
         _xSettings->onCleanUpThumbsDirectoryComplete();
-        //DialogHandler::MessageBox(this, "Thumb cleanup finished", XLogLevel::Information);
+        //DialogHandler::MessageBox(this, tr("Thumb cleanup finished"), XLogLevel::Information);
 
     });
     connect(m_xtengine->mediaLibraryHandler(), &MediaLibraryHandler::cleanUpThumbsFailed, this, [this]() {
 
-        ui->statusbar->showMessage("Cleaning thumbs failed...", 60);
+        ui->statusbar->showMessage(tr("Cleaning thumbs failed..."), 60);
         _xSettings->onCleanUpThumbsDirectoryStopped();
-        DialogHandler::MessageBox(this, "Thumb cleanup cannot be run while the media is loading or thumb process is running", XLogLevel::Warning);
+        DialogHandler::MessageBox(this, tr("Thumb cleanup cannot be run while the media is loading or thumb process is running"), XLogLevel::Warning);
 
     });
     connect(this, &MainWindow::backgroundProcessStateChange, this,  &MainWindow::setLoadingStatus);
@@ -589,7 +589,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
 
     connect(QApplication::instance(), &QCoreApplication::aboutToQuit, this, &MainWindow::onAboutToQuit);
 
-    loadingSplash->showMessage(fullVersion + "\nSetting user styles...", Qt::AlignBottom, Qt::white);
+    loadingSplash->showMessage(fullVersion + tr("\nSetting user styles..."), Qt::AlignBottom, Qt::white);
     loadTheme(XTPSettings::getSelectedTheme());
 
     setFocus();
@@ -598,7 +598,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     _appPos = this->pos();
 
     changeLibraryDisplayMode(SettingsHandler::getLibraryView());
-    loadingSplash->showMessage(fullVersion + "\nInitialize engine...", Qt::AlignBottom, Qt::white);
+    loadingSplash->showMessage(fullVersion + tr("\nInitialize engine..."), Qt::AlignBottom, Qt::white);
     m_xtengine->init();
 
     // http initialized in engine.init
@@ -617,7 +617,7 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
 //    _playerControlsFrame->setMaximumHeight(minHeight);
 //    _controlsHomePlaceHolderFrame->setMaximumHeight(minHeight);
 
-    loadingSplash->showMessage(fullVersion + "\nStarting Application...", Qt::AlignBottom, Qt::white);
+    loadingSplash->showMessage(fullVersion + tr("\nStarting Application..."), Qt::AlignBottom, Qt::white);
     loadingSplash->finish(this);
     if(!SettingsHandler::getHideWelcomeScreen())
     {
@@ -906,7 +906,7 @@ void MainWindow::setupTagsPopup()
         delete item;
     }
     QCheckBox* checkboxOR = new QCheckBox(libraryFilterTagsPopup);
-    checkboxOR->setText("OR");
+    checkboxOR->setText(tr("OR"));
     checkboxOR->setStyleSheet("border-bottom:2px solid black");
     connect(checkboxOR, &QCheckBox::clicked, this, [this](bool checked){
         _librarySortFilterProxyModel->onTagFilterOptionChanged(checked);
@@ -1063,22 +1063,22 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             {
                 QAction* action = myMenu.addAction(tr("Remove from playlist"), this, &MainWindow::removeFromPlaylist);
                 connect(action, &QAction::hovered, this, &MainWindow::on_action_hover);
-                action->setToolTip("Remove this item from the playlist.");
+                action->setToolTip(tr("Remove this item from the playlist."));
             }
             if(selectedFileListItem.type != LibraryListItemType::FunscriptType)
             {
                 QAction* action = myMenu.addAction(tr("Play with chosen funscript..."), this, &MainWindow::playFileWithCustomScript);
                 connect(action, &QAction::hovered, this, &MainWindow::on_action_hover);
-                action->setToolTip("Choose a script to play with this media item");
+                action->setToolTip(tr("Choose a script to play with this media item"));
             }
             if(selectedFileListItem.type == LibraryListItemType::FunscriptType)
             {
                 QAction* action = myMenu.addAction(tr("Play with chosen video..."), this, &MainWindow::playFileWithCustomMedia);
                 connect(action, &QAction::hovered, this, &MainWindow::on_action_hover);
-                action->setToolTip("Choose a media item to play with this script");
+                action->setToolTip(tr("Choose a media item to play with this script"));
             }
             // Experimental
-            //myMenu.addAction("Play with audio sync (Experimental)", this, &MainWindow::playFileWithAudioSync);
+            //myMenu.addAction(tr("Play with audio sync (Experimental)"), this, &MainWindow::playFileWithAudioSync);
             if(!isPlaylistMode())
             {
                 QMenu* subMenu = myMenu.addMenu(tr("Add to playlist"));
@@ -1104,7 +1104,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                 if(!selectedFileListItem.thumbFile.contains(".lock."))
                 {
                     QAction* regenerateThumbAction = myMenu.addAction(tr("Regenerate thumbnail"), this, &MainWindow::regenerateThumbNail);
-                    regenerateThumbAction->setToolTip("Overwrites the current image file with a randomly chosen time.");
+                    regenerateThumbAction->setToolTip(tr("Overwrites the current image file with a randomly chosen time."));
                     connect(regenerateThumbAction, &QAction::hovered, this, &MainWindow::on_action_hover);
 
                     auto playingID = XMediaStateHandler::getPlayingID();
@@ -1112,7 +1112,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                     bool isItemPlaying = !playingID.isEmpty() && playingID == selectedFileListItem.ID;
                     connect(thumbnailFromCurrent, &QAction::hovered, this, &MainWindow::on_action_hover);
                     thumbnailFromCurrent->setEnabled(isItemPlaying);
-                    thumbnailFromCurrent->setToolTip("Set the thumb from the current playing position.\nThis item must be playing or paused.");
+                    thumbnailFromCurrent->setToolTip(tr("Set the thumb from the current playing position.\nThis item must be playing or paused."));
                     // if(!playingID.isEmpty() && (videoHandler->isPlaying() || videoHandler->isPaused()))
                     // {
                     //     if(playingID == selectedFileListItem.ID)
@@ -1122,7 +1122,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                         QAction* action = myMenu.addAction(tr("Lock thumb"), this, &MainWindow::lockThumb);
 
                         connect(action, &QAction::hovered, this, &MainWindow::on_action_hover);
-                        action->setToolTip("Lock the current thumb to prevent accidental over writes.");
+                        action->setToolTip(tr("Lock the current thumb to prevent accidental over writes."));
                     }
                 }
                 else
@@ -1130,7 +1130,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                     if(selectedFileListItem.thumbFileExists && selectedFileListItem.managedThumb) {
                         QAction* action = myMenu.addAction(tr("Unlock thumb"), this, &MainWindow::unlockThumb);
                         connect(action, &QAction::hovered, this, &MainWindow::on_action_hover);
-                        action->setToolTip("Unlock thumb for regeneration");
+                        action->setToolTip(tr("Unlock thumb for regeneration"));
                     }
                 }
             }
@@ -1141,71 +1141,71 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             });
             moneyShotAction->setEnabled(itemID == selectedFileListItem.ID);
             connect(moneyShotAction, &QAction::hovered, this, &MainWindow::on_action_hover);
-            moneyShotAction->setToolTip("Sets the skip to moneyshot time to the current playing position.\nThis item must be playing or paused.");
+            moneyShotAction->setToolTip(tr("Sets the skip to moneyshot time to the current playing position.\nThis item must be playing or paused."));
 
-    //        myMenu.addAction("Add bookmark from current", this, [this, selectedFileListItem] () {
+    //        myMenu.addAction(tr("Add bookmark from current"), this, [this, selectedFileListItem] () {
     //            onAddBookmark(selectedFileListItem, "Book mark 1", videoHandler->position());
     //        });
             QAction* revealAction = myMenu.addAction(tr("Open media directory"), this, [this, selectedFileListItem] () {
                 if(selectedFileListItem.path.isEmpty()) {
-                    DialogHandler::MessageBox(libraryList, "Invalid media path.", XLogLevel::Critical);
+                    DialogHandler::MessageBox(libraryList, tr("Invalid media path."), XLogLevel::Critical);
                     return;
                 }
                 if(!QFile::exists(selectedFileListItem.path)) {
-                    DialogHandler::MessageBox(libraryList, "Media does not exist.", XLogLevel::Critical);
+                    DialogHandler::MessageBox(libraryList, tr("Media does not exist."), XLogLevel::Critical);
                     return;
                 }
                 showInGraphicalShell(selectedFileListItem.path);
             });
             connect(revealAction, &QAction::hovered, this, &MainWindow::on_action_hover);
-            revealAction->setToolTip("Open the media item in the systems file explorer");
+            revealAction->setToolTip(tr("Open the media item in the systems file explorer"));
 
             if(selectedFileListItem.thumbState == ThumbState::Ready &&
                (selectedFileListItem.type == LibraryListItemType::VR ||selectedFileListItem.type == LibraryListItemType::Video)) {
                 QAction* revealThumbAction = myMenu.addAction(tr("Open thumb directory"), this, [this, selectedFileListItem] () {
                     if(selectedFileListItem.thumbFile.isEmpty()) {
-                        DialogHandler::MessageBox(libraryList, "Invalid thumb path.", XLogLevel::Critical);
+                        DialogHandler::MessageBox(libraryList, tr("Invalid thumb path."), XLogLevel::Critical);
                         return;
                     }
                     if(!QFile::exists(selectedFileListItem.thumbFile)) {
-                        DialogHandler::MessageBox(libraryList, "Thumb does not exist.", XLogLevel::Critical);
+                        DialogHandler::MessageBox(libraryList, tr("Thumb does not exist."), XLogLevel::Critical);
                         return;
                     }
                     showInGraphicalShell(selectedFileListItem.thumbFile);
                 });
 
                 connect(revealThumbAction, &QAction::hovered, this, &MainWindow::on_action_hover);
-                revealThumbAction->setToolTip("Open the thumb file in the systems file explorer");
+                revealThumbAction->setToolTip(tr("Open the thumb file in the systems file explorer"));
             }
             QAction* metadataAction = myMenu.addAction(tr("Edit metadata..."), this, [this, selectedFileListItem] () {
                 if(m_xtengine->mediaLibraryHandler()->isMetadataProcessing()) {
-                    DialogHandler::MessageBox(libraryList, "Please wait for metadata process to complete!", XLogLevel::Warning);
+                    DialogHandler::MessageBox(libraryList, tr("Please wait for metadata process to complete!"), XLogLevel::Warning);
                     return;
                 }
                 auto item = m_xtengine->mediaLibraryHandler()->findItemByReference(&selectedFileListItem);
                 if(!item) {
-                    DialogHandler::MessageBox(libraryList, "Could not find media item in current library", XLogLevel::Critical);
+                    DialogHandler::MessageBox(libraryList, tr("Could not find media item in current library"), XLogLevel::Critical);
                     return;
                 }
                 openEditMetadataDialog(item);
             });
             connect(metadataAction, &QAction::hovered, this, &MainWindow::on_action_hover);
-            metadataAction->setToolTip("Edit the media items metadata");
+            metadataAction->setToolTip(tr("Edit the media items metadata"));
 
             QAction* processMetadataAction = myMenu.addAction(tr("Update metadata"), this, [this, selectedFileListItem] () {
                 if(!m_xtengine->mediaLibraryHandler()->metadataProcessing()) {
                     auto item = m_xtengine->mediaLibraryHandler()->findItemByReference(&selectedFileListItem);
                     if(!item) {
-                        DialogHandler::MessageBox(libraryList, "Could not find media item in current library", XLogLevel::Critical);
+                        DialogHandler::MessageBox(libraryList, tr("Could not find media item in current library"), XLogLevel::Critical);
                         return;
                     }
                     m_xtengine->mediaLibraryHandler()->processMetadata(*item);
                 } else {
-                    DialogHandler::MessageBox(libraryList, "Please wait for metadata process to complete!", XLogLevel::Warning);
+                    DialogHandler::MessageBox(libraryList, tr("Please wait for metadata process to complete!"), XLogLevel::Warning);
                 }
             });
             connect(processMetadataAction, &QAction::hovered, this, &MainWindow::on_action_hover);
-            processMetadataAction->setToolTip("Update the current media items metadata");
+            processMetadataAction->setToolTip(tr("Update the current media items metadata"));
 
             if(SettingsHandler::getEnableMediaManagement())
             {
@@ -1229,7 +1229,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                 });
                 connect(deleteMediaItemAction, &QAction::hovered, this, &MainWindow::on_action_hover);
                 QString tooltip = (isPlaylistMode() ? "Removes from playlist AND " : "");
-                deleteMediaItemAction->setToolTip(tooltip + "Delete the media item and associated thumbs/scripts.");
+                deleteMediaItemAction->setToolTip(tooltip + tr("Delete the media item and associated thumbs/scripts."));
             }
         }
 
@@ -1321,7 +1321,7 @@ void MainWindow::onNoLibraryFound()
 void MainWindow::onLibraryNotFound(QStringList paths)
 {
     LogHandler::Error("The following media libraries do not exist currently: "+ paths.join("\n"));
-//    QMessageBox::StandardButton reply = QMessageBox::question(this, "ERROR!", "The media library stored in settings does not exist anymore.\nChoose a new one now?",
+//    QMessageBox::StandardButton reply = QMessageBox::question(this, tr("ERROR!"), tr("The media library stored in settings does not exist anymore.\nChoose a new one now?"),
 //                                  QMessageBox::Yes|QMessageBox::No);
 //    if (reply == QMessageBox::Yes)
 //    {
@@ -1418,7 +1418,7 @@ void MainWindow::on_LibraryList_itemClicked(QModelIndex index)
 void MainWindow::regenerateThumbNail()
 {
     if(m_xtengine->mediaLibraryHandler()->thumbProcessRunning()) {
-        DialogHandler::MessageBox(this, "Thumb process is currently running. Please wait for this process to complete before regenerating.", XLogLevel::Warning);
+        DialogHandler::MessageBox(this, tr("Thumb process is currently running. Please wait for this process to complete before regenerating."), XLogLevel::Warning);
         return;
     }
     m_xtengine->mediaLibraryHandler()->saveSingleThumb(libraryList->selectedItem().ID);
@@ -1427,7 +1427,7 @@ void MainWindow::regenerateThumbNail()
 void MainWindow::setThumbNailFromCurrent()
 {
     if(m_xtengine->mediaLibraryHandler()->thumbProcessRunning()) {
-        DialogHandler::MessageBox(this, "Thumb process is currently running. Please wait for this process to complete before regenerating.", XLogLevel::Warning);
+        DialogHandler::MessageBox(this, tr("Thumb process is currently running. Please wait for this process to complete before regenerating."), XLogLevel::Warning);
         return;
     }
     m_xtengine->mediaLibraryHandler()->saveSingleThumb(libraryList->selectedItem().ID, videoHandler->position());
@@ -1587,7 +1587,7 @@ void MainWindow::on_playVideo(LibraryListItem27 selectedFileListItem, QString cu
         auto item = m_xtengine->mediaLibraryHandler()->findItemByMediaPath(selectedFileListItem.path);
         if(!item)
         {
-            DialogHandler::MessageBox(this, "Unable to find item in currently selected library", XLogLevel::Critical);
+            DialogHandler::MessageBox(this, tr("Unable to find item in currently selected library"), XLogLevel::Critical);
             return;
         }
         XMediaStateHandler::setPlaying(item);
@@ -2421,7 +2421,7 @@ void MainWindow::on_input_device_connectionChanged(ConnectionChangedSignal event
         vrConnectionStatusLabel->setText(message);
 
         if(event.status == ConnectionStatus::Error) {
-            DialogHandler::MessageBox(this, "Input connection error: "+event.message, XLogLevel::Critical);
+            DialogHandler::MessageBox(this, tr("Input connection error: ")+event.message, XLogLevel::Critical);
         }
         else if(event.status == ConnectionStatus::Connected)
         {
@@ -2903,7 +2903,7 @@ void MainWindow::loadPlaylistIntoLibrary(QString playlistName, bool autoPlay)
     {
             if(isLibraryLoading())
             {
-                DialogHandler::MessageBox(this, "Please wait for the library to finish processing...", XLogLevel::Warning);
+                DialogHandler::MessageBox(this, tr("Please wait for the library to finish processing..."), XLogLevel::Warning);
                 return;
             }
             toggleLibraryLoading(true);
@@ -3213,7 +3213,7 @@ void MainWindow::on_actionCleanMetadata_triggered()
         {
             m_xtengine->mediaLibraryHandler()->startMetadataCleanProcess();
         } else {
-            DialogHandler::MessageBox(this, "Please wait for the current media process has\nfinished before running a metadata process.", XLogLevel::Warning);
+            DialogHandler::MessageBox(this, tr("Please wait for the current media process has\nfinished before running a metadata process."), XLogLevel::Warning);
         }
     }
 }
@@ -3228,7 +3228,7 @@ void MainWindow::on_actionUpdateMetadata_triggered()
         {
             m_xtengine->mediaLibraryHandler()->startMetadataProcess(true);
         } else {
-            DialogHandler::MessageBox(this, "Please wait for the current media process has\nfinished before running a metadata process.", XLogLevel::Warning);
+            DialogHandler::MessageBox(this, tr("Please wait for the current media process has\nfinished before running a metadata process."), XLogLevel::Warning);
         }
     }
 }

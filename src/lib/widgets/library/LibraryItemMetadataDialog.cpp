@@ -16,7 +16,7 @@ LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(
     QGridLayout* layout = new QGridLayout(this);
 
     globalOffsetLabel = new QLabel(this);
-    globalOffsetLabel->setText("Global offset");
+    globalOffsetLabel->setText(tr("Global offset"));
     globalOffsetValueLabel = new QLabel(this);
     // smartOffsetValueLabel = new QLabel(this);
     updateOffsetLabel();
@@ -35,7 +35,7 @@ LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(
     // currentRow++;
 
     offsetLabel = new QLabel(this);
-    offsetLabel->setText("Offset");
+    offsetLabel->setText(tr("Offset"));
     offsetSpinBox = new QSpinBox(this);
     offsetSpinBox->setSuffix("ms");
     offsetSpinBox->setSingleStep(SettingsHandler::getFunscriptOffsetStep());
@@ -54,7 +54,7 @@ LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(
     currentRow++;
 
     QLabel* funscriptModifierLabel = new QLabel(this);
-    funscriptModifierLabel->setText("Funscript range");
+    funscriptModifierLabel->setText(tr("Funscript range"));
     funscriptModifierSpinBox = new QDoubleSpinBox(this);
     funscriptModifierSpinBox->setMinimum(std::numeric_limits<double>::lowest());
     funscriptModifierSpinBox->setMaximum(std::numeric_limits<double>::max());
@@ -71,7 +71,7 @@ LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(
     currentRow++;
 
     moneyShotLabel = new QLabel(this);
-    moneyShotLabel->setText("Money shot");
+    moneyShotLabel->setText(tr("Money shot"));
 
     moneyShotLineEdit = new QLineEdit(this);
     connect(moneyShotLineEdit, &QLineEdit::textEdited, this, [](QString value) {
@@ -85,14 +85,14 @@ LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(
     moneyShotLineEdit->setText(QString::number(_libraryListItem->metadata.moneyShotMillis));
 
     resetMoneyShotButton = new QPushButton(this);
-    resetMoneyShotButton->setText("Reset");
+    resetMoneyShotButton->setText(tr("Reset"));
     connect(resetMoneyShotButton, &QPushButton::clicked, this, [this](bool checked) {
         moneyShotLineEdit->setText(QString::number(-1));
         _libraryListItem->metadata.moneyShotMillis = -1;
     });
 
     QGroupBox* tagsWidget = new QGroupBox(this);
-    tagsWidget->setTitle("Tags");
+    tagsWidget->setTitle(tr("Tags"));
     QGridLayout* tagsLayout = new QGridLayout(tagsWidget);
     tagsWidget->setLayout(tagsLayout);
 
@@ -200,17 +200,17 @@ void LibraryItemMetadataDialog::updateOffsetLabel()
     auto offsetText = QString::number(SettingsHandler::getGlobalOffSet()) + "ms";
     if(_libraryListItem->metadata.offset) {
         globalOffsetValueLabel->setStyleSheet("*{color:red}");
-        globalOffsetValueLabel->setText(offsetText + " (overridden)");
+        globalOffsetValueLabel->setText(offsetText + tr(" (overridden)"));
     } else {
         globalOffsetValueLabel->setStyleSheet("*{color:green}");
-        globalOffsetValueLabel->setText(offsetText + " (in effect)");
+        globalOffsetValueLabel->setText(offsetText + tr(" (in effect)"));
     }
 
     // if(SettingsHandler::isSmartOffSet()) {
-    //     smartOffsetValueLabel->setText(QString::number(SettingsHandler::getSmartOffSet()) + "ms (Smart)");
+    //     smartOffsetValueLabel->setText(QString::number(SettingsHandler::getSmartOffSet()) + tr("ms (Smart)"));
     //     smartOffsetValueLabel->setStyleSheet("*{color:green}");
     // } else {
-    //     smartOffsetValueLabel->setText("Smart offset disabled");
+    //     smartOffsetValueLabel->setText(tr("Smart offset disabled"));
     //     smartOffsetValueLabel->setStyleSheet("*{color:red}");
     // }
 

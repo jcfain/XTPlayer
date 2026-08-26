@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 
 #include <QApplication>
+#include <QTranslator>
+#include <QLibraryInfo>
 #include "lib/tool/qsettings_json.h"
 
 #ifdef _WIN32
@@ -473,6 +475,37 @@ int main(int argc, char *argv[])
 
     if (!consoleMode) {
         XTPSettings::load();
+
+        // --- i18n: install translators BEFORE constructing MainWindow ---
+        // MainWindow's ui.setupUi() calls retranslateUi() at construction
+        // time, so the translator must be installed first.
+        const QString appLang = XTPSettings::getLanguage();
+        if (!appLang.isEmpty() && appLang.compare(QLatin1String("en"), Qt::CaseInsensitive) != 0) {
+            const QString appTransDir = QCoreApplication::applicationDirPath() + QLatin1String("/translations");
+
+            // App translations (translations/xtplayer_<lang>.qm)
+            QTranslator *appTranslator = new QTranslator(a);
+            if (appTranslator->load(QLatin1String("xtplayer_") + appLang, appTransDir)) {
+                a->installTranslator(appTranslator);
+            } else {
+                qWarning("i18n: failed to load app translation '%s' from '%s'",
+                         qPrintable(appLang), qPrintable(appTransDir));
+            }
+
+            // Qt's own translations (QFileDialog, QMessageBox standard buttons, etc.)
+            // These ship with Qt in QTDIR/translations (e.g. qtbase_zh_CN.qm).
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+            const QString qtTransPath = QLibraryInfo::path(QLibraryInfo::TranslationsPath);
+#else
+            const QString qtTransPath = QLibraryInfo::location(QLibraryInfo::TranslationsPath);
+#endif
+            QTranslator *qtTranslator = new QTranslator(a);
+            if (qtTranslator->load(QLatin1String("qtbase_") + appLang, qtTransPath)) {
+                a->installTranslator(qtTranslator);
+            }
+        }
+        // --- end i18n ---
+
         if(parser.isSet("reset-window")) {
             LogHandler::Debug("Resettings window size to default!");
             XTPSettings::resetWindowSize();
