@@ -731,8 +731,8 @@ void SettingsDialog::setUpTCodeChannelUI()
     ui.randomMotionGroupbox->setLayout(randomGrid);
     ui.inversionGroupBox->setLayout(inversionGrid);
     int inversionGridRow = 0;
-    inversionGrid->addWidget(new QLabel("Inversion", ui.inversionGroupBox), inversionGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
-    inversionGrid->addWidget(new QLabel("Gradient", ui.inversionGroupBox), inversionGridRow, 1, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+    inversionGrid->addWidget(new QLabel(tr("Inversion"), ui.inversionGroupBox), inversionGridRow, 0, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+    inversionGrid->addWidget(new QLabel(tr("Gradient"), ui.inversionGroupBox), inversionGridRow, 1, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
     inversionGridRow++;
 
     QFont font( "Sans Serif", 8);
@@ -768,7 +768,7 @@ void SettingsDialog::setUpTCodeChannelUI()
         rangeGrid->addWidget(rangeMinLabel, sliderGridRow, 0);
         rangeMinLabels.insert(channelName, rangeMinLabel);
 
-        QLabel* rangeLabel = new QLabel(axis->FriendlyName + " mid: " + QString::number(userMid), ui.rangeLimitGroupbox);
+        QLabel* rangeLabel = new QLabel(axis->FriendlyName + tr(" mid: ") + QString::number(userMid), ui.rangeLimitGroupbox);
         rangeLabel->setObjectName(axis->ChannelName+"RangeLabel");
         rangeLabel->setFont(font);
         rangeLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
@@ -1055,7 +1055,7 @@ void SettingsDialog::setUpTCodeChannelUI()
         connect(customTCodeAddbutton, &QPushButton::clicked, this, [this, customTCodeListWidget]()
         {
             bool ok;
-            auto newValues = GetTextDialog::show(this, {"Name", "TCode"}, {}, &ok);
+            auto newValues = GetTextDialog::show(this, {tr("Name"), "TCode"}, {}, &ok);
             if(ok && newValues.length() > 0)
             {
                 QString newName = newValues[0];
@@ -1075,7 +1075,7 @@ void SettingsDialog::setUpTCodeChannelUI()
                     {
                         customTCodeListWidget->addItem(command.name);
                     }
-                    MediaActions::AddOtherAction(newValue, "TCode command: " + newName, ActionType::TCODE);
+                    MediaActions::AddOtherAction(newValue, tr("TCode command: ") + newName, ActionType::TCODE);
                     set_requires_restart(true);
                 }
                 else
@@ -1093,7 +1093,7 @@ void SettingsDialog::setUpTCodeChannelUI()
             auto amount = customTCodeListWidget->selectedItems().length();
             if(amount)
             {
-                auto ok = DialogHandler::Dialog(this, "Remove selected " + QString::number(amount) + " item(s)?");
+                auto ok = DialogHandler::Dialog(this, tr("Remove selected ") + QString::number(amount) + " item(s)?");
                 if(ok)
                 {
                     for(auto selected: customTCodeListWidget->selectedItems())

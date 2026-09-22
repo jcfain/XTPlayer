@@ -58,6 +58,8 @@ ${qtDirectory}/macdeployqt ${appLocation}
 # -sign-for-notarization=khrull
 cp -R ../src/themes ${appLocation}/Contents/MacOS/
 cp -R ../src/images ${appLocation}/Contents/MacOS/
+cp -R ../src/translations ${appLocation}/Contents/MacOS/
+
 mkDir ${appLocation}/Contents/MacOS/www
 cp ../../XTEngine/src/www/*-min.html ${appLocation}/Contents/MacOS/www/
 cp ../../XTEngine/src/www/*-min.js ${appLocation}/Contents/MacOS/www/

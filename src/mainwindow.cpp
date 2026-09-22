@@ -2414,9 +2414,9 @@ void MainWindow::on_input_device_connectionChanged(ConnectionChangedSignal event
             vrRetryConnectionButton->hide();
         }
         else if(event.connectionName == ConnectionInterface::XTPWeb)
-            message += "XTP Web: ";
+            message += tr("XTP Web: ");
         else
-            message += event.connectionName == ConnectionInterface::Whirligig ? "Whirligig: " : "HereSphere: ";
+            message += event.connectionName == ConnectionInterface::Whirligig ? tr("Whirligig: ") : tr("HereSphere: ");
         message += " " + event.message;
         vrConnectionStatusLabel->setText(message);
 
