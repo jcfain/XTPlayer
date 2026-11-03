@@ -2223,7 +2223,7 @@ void SettingsDialog::on_hideMediaWithoutFunscriptsCheckbox_clicked(bool checked)
 void SettingsDialog::on_cleanupThumbsPushButton_clicked()
 {
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, tr("WARNING!"), tr("Are you sure you want to clean up generated thumbs?\nThis will search the chosen thumbs directory for files that end with jpg\nthat are either duplicated or not existant in the current library.\nWARNING: if your current libraries doesnt not have some of these thumbs they will be deleted.\nThis will not delete files that are in your media directory.\n\nThis process could take a long time.\nContinue?"),
+    reply = QMessageBox::question(this, tr("WARNING!"), tr("Are you sure you want to clean up generated thumbs?\nThis will search the chosen thumbs directory for files that end with ")+SettingsHandler::getThumbFormatExtension()+tr("\nthat are either duplicated or not existent in the current library.\n It will also convert any jpgs to webp format.\nWARNING: if your current libraries doesnt not have some of these thumbs they will be deleted.\nThis will not delete files that are in your media directory.\n\nThis process could take a long time.\nContinue?"),
                                   QMessageBox::Yes|QMessageBox::No);
     if (reply == QMessageBox::Yes) {
         ui.cleanUpThumbsStatus->setText(tr("Thumb cleanup: Running"));

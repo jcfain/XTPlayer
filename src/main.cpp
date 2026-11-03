@@ -4,6 +4,7 @@
 #include <QTranslator>
 #include <QLibraryInfo>
 #include "lib/tool/qsettings_json.h"
+#include <csignal>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -11,8 +12,14 @@
 
 int main(int argc, char *argv[])
 {
+#ifndef Q_OS_WIN
+    // Ignore SIGPIPE so a client that cancels an in-flight media request (e.g.
+    // clicking to a new item) doesn't kill the process when we write to the
+    // now-closed socket. Writes then fail with EPIPE, which Qt handles cleanly.
+    signal(SIGPIPE, SIG_IGN);
+#endif
 
-#ifdef _WIN32
+#ifdef Q_OS_WIN
     if (AttachConsole(ATTACH_PARENT_PROCESS)) {
         freopen("CONOUT$", "w", stdout);
         freopen("CONOUT$", "w", stderr);
@@ -526,3 +533,5 @@ int main(int argc, char *argv[])
     delete a;
     return r;
 }
+
+

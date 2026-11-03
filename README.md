@@ -24,7 +24,7 @@ XTPlayer is a cross platform TCode media player.
 ## Building from source
      1. Download and install the following apps
           *  QT Creator Community Open source edition: https://www.qt.io/download 
-             During installation, make sure to get Qt 6.11. with the aditional libraries: HTTP Server, Serial port, Speech, Connectivity, MultiMedia, Wayland(Linux) and WebSockets.
+             During installation, make sure to get Qt 6.11. with the aditional libraries: HTTP Server, Serial port, Speech, Connectivity, MultiMedia, Image formats, Wayland(Linux) and WebSockets.
      2. Required libraries needed:
           * https://github.com/pumphaus/qtgamepadlegacy
                * You can make/makeinstall or open CMakeLists.txt in Qt creator and build. Then open the build dir and execute "make install". Make sure to build release if you dont plan to debug it. 

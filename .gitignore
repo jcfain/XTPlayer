@@ -86,3 +86,4 @@ settings_export*
 # AI assistant working directory (logs, scratch scripts, test builds)
 .trae/
 *.log
+/.vscode
