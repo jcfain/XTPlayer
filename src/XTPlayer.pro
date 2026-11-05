@@ -257,10 +257,17 @@ qtPrepareTool(LRELEASE, lrelease)
     message("lrelease not found - .qm translation files will NOT be generated. Install Qt Linguist tools or run lrelease manually on translations/xtplayer_zh_CN.ts")
 }
 
+# Copy themes + www into DESTDIR on every build. The www dir is wiped first so
+# that regenerated (content-hashed) Angular bundles don't accumulate stale files
+# in the build dir: `cp -R` alone only adds/overwrites and never deletes, so old
+# bundles (e.g. main-XXXX.js / styles-XXXX.css) would linger and the served page
+# could go stale. Wiping makes $$DESTDIR/www an exact mirror of the source.
 win32 {
-    copydata.commands = $(COPY_DIR) $$shell_path($$PWD/themes) $$shell_path($$DESTDIR/themes) | $(COPY_DIR) $$shell_path($$PWD/../../XTEngine/src/www) $$shell_path($$DESTDIR/www)
+    rmDir = rmdir /s /q
+    copydata.commands = $(COPY_DIR) $$shell_path($$PWD/themes) $$shell_path($$DESTDIR/themes) && $$rmDir $$shell_path($$DESTDIR/www) && $(COPY_DIR) $$shell_path($$PWD/../../XTEngine/src/www) $$shell_path($$DESTDIR)
 } else {
-    copydata.commands = $(COPY_DIR) $$PWD/themes $$DESTDIR | $(COPY_DIR) $$PWD/../../XTEngine/src/www $$DESTDIR
+    rmDir = rm -rf
+    copydata.commands = $(COPY_DIR) $$PWD/themes $$DESTDIR && $$rmDir $$DESTDIR/www && $(COPY_DIR) $$PWD/../../XTEngine/src/www $$DESTDIR
 }
 first.depends = $(first) copydata
 export(first.depends)
