@@ -1,7 +1,7 @@
 @echo off
 
 SET currentPath=%cd%
-SET QTDIR=C:\Qt\6.11.0\mingw_64
+SET QTDIR=C:\Qt\6.12.0\mingw_64
 SET mingwDir=C:\Qt\Tools\mingw1310_64\bin
 SET QtDirBin=%QTDIR%\bin\
 SET xtplayerSource="%UserProfile%\git\XTPlayer"

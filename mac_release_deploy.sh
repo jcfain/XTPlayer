@@ -4,7 +4,7 @@ echo "Enter version: (ex: 0.55b)"
 read versionInput
 export version=v${versionInput}
 
-qtVersion='6.11.0'
+qtVersion='6.12.0'
 home=~/
 architecture="x86_64"
 xtplayerSource="${home}"git/XTPlayer
