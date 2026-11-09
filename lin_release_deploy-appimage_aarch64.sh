@@ -10,7 +10,11 @@ xtengineBuildDirectory="${xtengineSource}"/build-release
 xtplayerLocation="${xtplayerBuildDirectory}"/release/
 xtengineLocation="${xtengineBuildDirectory}"/release/
 deployDirectory="${xtplayerSource}"/Deploy/
-qtDirectory="${home}"Qt/6.12.0/gcc_arm64/bin
+qtRootDirectory="${home}"Qt
+qtVersion="6.12.0"
+qtDirectory="${qtRootDirectory}/${qtVersion}"
+qtGccDirectory="${qtDirectory}"/gcc_arm64
+qtGccBinDirectory="${qtGccDirectory}"/bin
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 export home
@@ -23,7 +27,11 @@ export xtengineBuildDirectory
 export xtplayerLocation
 export xtengineLocation
 export deployDirectory
+export qtRootDirectory
+export qtVersion
 export qtDirectory
+export qtGccDirectory
+export qtGccBinDirectory
 export SCRIPT_DIR
 
 ${SCRIPT_DIR}/lin_release_deploy-appimage.sh

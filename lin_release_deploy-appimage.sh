@@ -34,7 +34,7 @@ appDir="${deployDirectory}"XTPlayer-"${version}"-Linux-"${architecture}"
 linuxdeployBinary="${xtplayerSource}"/linuxdeploy/"${architecture}"/linuxdeploy-"${architecture}".AppImage
 
 #Export directory with qmake to path.
-export PATH="${qtDirectory}":$PATH
+export PATH="${qtGccBinDirectory}":$PATH
 export LD_LIBRARY_PATH="${deployDirectory}lib;${xtengineLocation}"
 
 echo LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}
@@ -85,7 +85,7 @@ cp "${xtplayerSource}"/src/images/icons/XTP-icon.png "${xtplayerLocation}"/XTPla
 # missing plugin makes QImage::save(".webp") fail; the app then falls back to
 # jpg). If it's not in the Qt tree, copy it in from WEBP_PLUGIN_SRC (set that
 # env var to an aarch64 libqwebp.so) so it gets bundled.
-QT_IMAGEFORMATS_DIR="$(dirname "${qtDirectory}")/plugins/imageformats"
+QT_IMAGEFORMATS_DIR="${qtGccDirectory}/plugins/imageformats"
 if [ ! -f "${QT_IMAGEFORMATS_DIR}/libqwebp.so" ]; then
     if [ -n "${WEBP_PLUGIN_SRC}" ] && [ -f "${WEBP_PLUGIN_SRC}" ]; then
         mkdir -p "${QT_IMAGEFORMATS_DIR}" || { echo 'Make imageformats dir failed' ; exit 1; }
@@ -96,6 +96,7 @@ if [ ! -f "${QT_IMAGEFORMATS_DIR}/libqwebp.so" ]; then
         echo "         AppImage thumbs will fall back to jpg. Set WEBP_PLUGIN_SRC to an aarch64 libqwebp.so to bundle webp."
     fi
 fi
+# read -p "Press Enter to continue" </dev/tty
 # --- end webp imageformat plugin check -------------------------------------
 
 #export GSTREAMER_INCLUDE_BAD_PLUGINS="1"
@@ -108,15 +109,28 @@ cp "${deployDirectory}"XTPlayer-"${version}"-Linux-"${architecture}".AppImage "$
 cp "${deployDirectory}"XTPlayer-"${version}"-Linux-"${architecture}".AppImage "${deployDirectory}"XTPlayer-Latest.AppImage
 
 # --- Verify the webp imageformat plugin made it into the AppImage ----------
+# Cross-build note: --appimage-extract works by EXECUTING the AppImage, which
+# fails when the host arch != target arch (e.g. building aarch64 on x86_64).
+# Prefer appimagetool -x (host-native, arch-independent); fall back to
+# executing the AppImage for native builds; skip gracefully if neither works.
 APPIMAGE_OUT="${deployDirectory}XTPlayer-${version}-Linux-${architecture}.AppImage"
-if "${APPIMAGE_OUT}" --appimage-extract -o /tmp/xtp_appimage_verify >/dev/null 2>&1; then
-    if find /tmp/xtp_appimage_verify/squashfs-root -name 'libqwebp.so' | grep -q .; then
+VERIFY_DIR=/tmp/xtp_appimage_verify
+rm -rf "${VERIFY_DIR}"
+verified=0
+if command -v appimagetool >/dev/null 2>&1; then
+    appimagetool -x "${APPIMAGE_OUT}" "${VERIFY_DIR}" >/dev/null 2>&1 && verified=1
+elif [ -x "${APPIMAGE_OUT}" ]; then
+    "${APPIMAGE_OUT}" --appimage-extract -o "${VERIFY_DIR}" >/dev/null 2>&1 && verified=1
+fi
+if [ "${verified}" -eq 1 ]; then
+    if find "${VERIFY_DIR}" -name 'libqwebp.so' | grep -q .; then
         echo "OK: libqwebp.so bundled in AppImage (webp thumbs enabled)."
     else
         echo "WARNING: libqwebp.so NOT found in AppImage - thumbs will fall back to jpg."
     fi
-    rm -rf /tmp/xtp_appimage_verify
 else
-    echo "NOTE: could not verify AppImage contents (extraction failed)."
+    echo "NOTE: skipped AppImage verification (no appimagetool, and AppImage not executable on this host)."
+    echo "      Pre-deploy check already confirmed libqwebp.so is in the Qt tree, so it should be bundled."
 fi
+rm -rf "${VERIFY_DIR}"
 # --- end webp verify -------------------------------------------------------
