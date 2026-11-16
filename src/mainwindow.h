@@ -25,6 +25,7 @@
 #include <QInputDialog>
 #include <QSplashScreen>
 #include <QModelIndex>
+#include <QTimer>
 
 #include "lib/handler/xmediastatehandler.h"
 #include "lib/handler/outputconnectionhandler.h"
@@ -235,6 +236,7 @@ private:
     QProgressBar* bar;
     VideoHandler* videoHandler;
     bool _isMaximized = false;
+    QTimer m_fullscreenToggleDebounce;
     QSize _videoSize;
     QSize _appSize;
     QSize _defaultAppSize;

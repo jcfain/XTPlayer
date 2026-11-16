@@ -1,10 +1,14 @@
 #include "videohandler.h"
 #include <QMediaMetaData>
+#include <QFileInfo>
+#include <QVideoSink>
+#include <QScreen>
+#include <QGuiApplication>
+#include <QWindow>
 VideoHandler::VideoHandler(PlayerControls* controls, XLibraryList* libraryList, XVideoPreviewWidget* videoPreview, QWidget *parent) : XWidget(parent),
     m_libraryListFrame(0),
     _player(0),
-    _fullscreenWidget(0),
-    _videoWidget(0),
+    _videoView(0),
     m_controls(controls),
     m_libraryList(libraryList),
     m_videoPreview(videoPreview)
@@ -55,12 +59,34 @@ void VideoHandler::createLayout()
     //_videoLoadingLabel->setStyleSheet("* {background: ffffff}");
     _videoLoadingLabel->setProperty("cssClass", "mediaLoadingSpinner");
     _videoLoadingLabel->setAlignment(Qt::AlignCenter);
-    //_mediaGrid->addWidget(_videoLoadingLabel, 0, 0);
     setLoading(false);
-    if(_videoWidget)
-        delete _videoWidget;
-    _videoWidget = new XVideoWidget(this);
-    _videoWidget->setAttribute(Qt::WA_TransparentForMouseEvents );
+    if(_videoView)
+        delete _videoView;
+    _videoView = new XVideoGraphicsView(this);
+    _videoView->setPlayer(_player);
+    _videoView->setAttribute(Qt::WA_TransparentForMouseEvents );
+
+    // Top bar (media name) - shown only in full screen, overlaid on the video
+    if(!m_topBar) {
+        m_topBar = new QFrame(this);
+        m_topBar->setProperty("cssClass", "fullScreenTopBar");
+        QHBoxLayout* topLayout = new QHBoxLayout(m_topBar);
+        topLayout->setContentsMargins(15, 5, 15, 5);
+        m_topBarLabel = new QLabel(m_topBar);
+        m_topBarLabel->setProperty("cssClass", "fullScreenTopBarLabel");
+        topLayout->addWidget(m_topBarLabel);
+        m_topBar->hide();
+    }
+
+    // Subtitle label - overlaid at the bottom of the video
+    if(!m_subtitleLabel) {
+        m_subtitleLabel = new QLabel(this);
+        m_subtitleLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
+        m_subtitleLabel->setAlignment(Qt::AlignHCenter);
+        m_subtitleLabel->setProperty("cssClass", "videoSubtitle");
+        m_subtitleLabel->hide();
+    }
+
     connect(this, &XWidget::doubleClicked, this, [this](QMouseEvent* e) {emit doubleClicked(e);});
     connect(this, &XWidget::singleClicked, this, [this](QMouseEvent* e) {emit singleClicked(e);});
     connect(this, &XWidget::keyPressed, this, [this](QKeyEvent* e) {emit keyPressed(e);});
@@ -70,38 +96,99 @@ void VideoHandler::createLayout()
         hideControlsTimeout();
         hideLibraryTimeout();
     });
-    _mediaGrid->addWidget(_videoWidget);
-    _player->setVideoOutput(_videoWidget);
+
+    // Subtitle tracking
+#if BUILD_QT5
+    connect(_player, &QMediaPlayer::positionChanged, this, &VideoHandler::updateSubtitle, Qt::QueuedConnection);
+    connect(_player, &QMediaPlayer::subtitleFromActiveTrackChanged, this, [this]() {
+        m_currentSubtitle = _player->subtitleFromActiveTrack();
+        updateSubtitle();
+    });
+#else
+    // Qt 6 pushes the active subtitle text to the video sink - render it
+    // in the overlay label (same mechanism QVideoWidget uses internally).
+    if(_videoView && _videoView->videoSink())
+        connect(_videoView->videoSink(), &QVideoSink::subtitleTextChanged, this, [this](const QString &text) {
+            if(!text.isEmpty()) {
+                m_subtitleLabel->setText(text);
+                m_subtitleLabel->show();
+            } else {
+                m_subtitleLabel->hide();
+            }
+        });
+#endif
+
+    setupViewLayout();
+    _mediaGrid->addWidget(_videoView);
+}
+
+// Builds the layout on the video view. The video (scene) always fills the
+// view; the widgets below are overlaid on top of it (like the web player's
+// absolutely positioned controls).
+void VideoHandler::setupViewLayout() {
+    if(!_videoView)
+        return;
+    if(_videoView->layout())
+        delete _videoView->layout();
+    QGridLayout* layout = new QGridLayout(_videoView);
+    layout->setContentsMargins(0,0,0,0);
+    layout->setSpacing(0);
+    _videoLoadingLabel->setParent(_videoView);
+    m_subtitleLabel->setParent(_videoView);
+    if(_isFullScreen) {
+        m_topBar->setParent(_videoView);
+        m_topBar->show();
+        m_topBarLabel->setText(QFileInfo(_currentFile).fileName());
+        m_controls->setParent(_videoView);
+        layout->addWidget(m_topBar, 0, 0, 1, 2);
+        layout->addWidget(_videoLoadingLabel, 1, 0, Qt::AlignCenter);
+        layout->addWidget(m_subtitleLabel, 1, 0, Qt::AlignBottom);
+        if(m_libraryListFrame)
+            layout->addWidget(m_libraryListFrame, 1, 1);
+        layout->addWidget(m_controls, 2, 0, 1, 2);
+        layout->setRowStretch(1, 1);
+        layout->setColumnStretch(0, 1);
+    } else {
+        m_topBar->hide();
+        layout->addWidget(_videoLoadingLabel, 0, 0, Qt::AlignCenter);
+        layout->addWidget(m_subtitleLabel, 0, 0, Qt::AlignBottom);
+    }
+}
+
+void VideoHandler::updateSubtitle() {
+    if(!m_subtitleLabel || !_player)
+        return;
+#if BUILD_QT5
+    auto text = m_currentSubtitle.text();
+    if(text.isEmpty()) {
+        m_subtitleLabel->hide();
+        return;
+    }
+    auto pos = _player->position();
+    if(pos >= m_currentSubtitle.startTime() && pos < m_currentSubtitle.endTime()) {
+        if(m_subtitleLabel->text() != text)
+            m_subtitleLabel->setText(text);
+        m_subtitleLabel->show();
+    } else {
+        m_subtitleLabel->hide();
+    }
+#else
+    // Qt 6: the video sink's subtitleTextChanged signal drives the label
+    // (see createLayout), so nothing to do here.
+#endif
 }
 
 void VideoHandler::mouseMove( QMouseEvent* e ) {
-    if (_fullscreenWidget && _isFullScreen) {
-//        LogHandler::Debug("x: "+QString::number(e->pos().x()));
-//        LogHandler::Debug("y: "+QString::number(e->pos().y()));
-//        LogHandler::Debug("m_libraryRect x: "+QString::number(m_libraryRect.x()));
-//        LogHandler::Debug("m_libraryRect y: "+QString::number(m_libraryRect.y()));
-//        LogHandler::Debug("m_controlsRect x: "+QString::number(m_controlsRect.x()));
-//        LogHandler::Debug("m_controlsRect y: "+QString::number(m_controlsRect.y()));
-//        if(m_controls) {
-//            if (m_controlsRect.contains( e->pos())) {
-//                showControls();
-//            } else {
-//                hideControls();
-//            }
-//        }
-
-        // qApp->restoreOverrideCursor();
+    if (_isFullScreen) {
+        // Keep the overlay hit rects in sync with the live geometry
+        if(m_controls)
+            m_controlsRect = m_controls->geometry();
+        if(m_libraryListFrame)
+            m_libraryRect = m_libraryListFrame->geometry();
         qApp->setOverrideCursor(Qt::CursorShape::ArrowCursor);
         showControls();
         showLibrary();
         m_overlayTimer.start(3000);
-//        if(m_libraryList) {
-//            if (m_libraryRect.contains( e->pos())) {
-//                showLibrary();
-//            } else {
-//                hideLibrary();
-//            }
-//        }
     }
 }
 
@@ -109,9 +196,12 @@ bool VideoHandler::isFullScreen() {
     return _isFullScreen;
 }
 void VideoHandler::showNormal() {
-    auto flags = m_videoPreview->windowFlags();
-    m_videoPreview->setParent(this->parentWidget(), flags);
-    _mediaGrid->addWidget(_videoWidget);
+    // The main window has already re-parented m_controls and m_libraryList back
+    disconnect(_videoView, &XVideoGraphicsView::mouseMove, this, &VideoHandler::mouseMove);
+    if(m_libraryListFrame) {
+        delete m_libraryListFrame;
+        m_libraryListFrame = 0;
+    }
     m_controls->setProperty("cssClass", "windowedControls");
     m_controls->style()->unpolish(m_controls);
     m_controls->style()->polish(m_controls);
@@ -120,93 +210,131 @@ void VideoHandler::showNormal() {
     m_libraryList->style()->polish(m_libraryList);
     m_libraryList->setMinimumSize(QSize(0, 0));
     m_libraryList->setMaximumSize(QSize(16777215, 16777215));
-    // releaseKeyboard();
-    delete _fullscreenWidget;
-    _fullscreenWidget = 0;
-//    delete m_libraryListFrame;
-    m_libraryListFrame = 0;
+
+    _videoView->releaseKeyboard();
+    _videoView->showNormal();                    // leave the full screen state first
+    _videoView->setWindowFlags(Qt::Widget);      // then demote back to a child widget
+    _videoView->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+    // MUST be set before setupViewLayout() - otherwise it builds the full
+    // screen layout and re-parents the controls back into the video view.
     _isFullScreen = false;
+    setupViewLayout();
+    _mediaGrid->addWidget(_videoView);
+
+    auto flags = m_videoPreview->windowFlags();
+    m_videoPreview->setParent(this->parentWidget(), flags);
+
     showControls();
-    // qApp->restoreOverrideCursor();
     qApp->setOverrideCursor(Qt::CursorShape::ArrowCursor);
+    LogHandler::Debug("[showNormal] controls parent='" + (m_controls->parentWidget() ? QString(m_controls->parentWidget()->metaObject()->className()) : "null") + "' visible=" + QString::number(m_controls->isVisible()) + " enabled=" + QString::number(m_controls->isEnabled()) + " geom=" + QString::number(m_controls->x()) + "," + QString::number(m_controls->y()) + " " + QString::number(m_controls->width()) + "x" + QString::number(m_controls->height()));
 }
 
 void VideoHandler::showFullscreen(QRect screenSize, bool libraryWindowed) {
     _isFullScreen = true;
     m_screenSize = screenSize;
-    _fullscreenWidget = new XWidget(this);
-    _fullscreenWidget->setAttribute(Qt::WA_StyledBackground);
-    _fullscreenWidget->setMouseTracking(true);
-    _fullscreenWidget->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Window);
-    //_fullscreenWidget->setWindowState((windowState() & ~(Qt::WindowMinimized | Qt::WindowMaximized))| Qt::WindowFullScreen);
-    connect(_fullscreenWidget, &XWidget::mouseMove, this, &VideoHandler::mouseMove);
-    connect(_fullscreenWidget, &XWidget::doubleClicked, this, [this](QMouseEvent* e) {emit doubleClicked(e);});
-    connect(_fullscreenWidget, &XWidget::singleClicked, this, [this](QMouseEvent* e) {emit singleClicked(e);});
-    connect(_fullscreenWidget, &XWidget::keyPressed, this, [this](QKeyEvent* e) {emit keyPressed(e);});
-    connect(_fullscreenWidget, &XWidget::keyReleased, this, [this](QKeyEvent* e) {emit keyReleased(e);});
-    connect(_fullscreenWidget, &XWidget::mouseEnter, this, [this](QEnterEvent* e) {emit mouseEnter(e);});
-    //_fullscreenWidget->setStyleSheet("background-color: transparent; color: white;");
-//    _fullscreenWidget->setProperty("cssClass", "fullScreenControls");
-//    _fullscreenWidget->style()->unpolish(_fullscreenWidget);
-//    _fullscreenWidget->style()->polish(_fullscreenWidget);
 
-//    QGraphicsOpacityEffect* opacityFx = new QGraphicsOpacityEffect(_fullscreenWidget);
-//    opacityFx->setOpacity(0.5);
-//    _fullscreenWidget->setGraphicsEffect(opacityFx);
-    auto flags = m_videoPreview->windowFlags();
-    m_videoPreview->setParent(_fullscreenWidget, flags);
-    QGridLayout* layout = new QGridLayout(_fullscreenWidget);
-    layout->setContentsMargins(0,0,0,0);
-    layout->setSpacing(0);
-    // _fullscreenWidget->setLayout(layout);
-    _fullscreenWidget->setProperty("cssClass", "fullScreenWidget");
-    int rows = m_screenSize.height() / m_controls->height();
-    layout->addWidget(_videoWidget, 0, 0, rows -1, 4);
-    layout->setColumnStretch(0, 1);
-    layout->addWidget(m_controls, rows - 1, 0, 1, 5);
-    layout->columnMinimumWidth(0);
+    // The video view itself becomes the full screen window - no wrapper
+    // widget, no re-parenting of the video output.
+    // Determine the target screen by largest overlap with the main window's
+    // frame geometry. A single-point screenAt() is unreliable here because
+    // under HiDPI (dpr>1) mapToGlobal()/windowHandle()->screen() return
+    // physical pixels and resolve to the wrong monitor.
+    QWidget *topWindow = this->window();
+    QRect winGeom = topWindow->frameGeometry();
+    QScreen *target = nullptr;
+    int bestArea = -1;
+    for(QScreen *s : QGuiApplication::screens()) {
+        QRect inter = winGeom.intersected(s->geometry());
+        int area = inter.width() * inter.height();
+        if(area > bestArea) {
+            bestArea = area;
+            target = s;
+        }
+    }
+    if(!target)
+        target = QGuiApplication::primaryScreen();
+    LogHandler::Debug("[showFullscreen] passed screenSize=" + QString::number(screenSize.x()) + "," + QString::number(screenSize.y()) + " " + QString::number(screenSize.width()) + "x" + QString::number(screenSize.height()));
+    for(QScreen *s : QGuiApplication::screens())
+        LogHandler::Debug("[showFullscreen] screen='" + s->name() + "' geom=" + QString::number(s->geometry().x()) + "," + QString::number(s->geometry().y()) + " " + QString::number(s->geometry().width()) + "x" + QString::number(s->geometry().height()) + " dpr=" + QString::number(s->devicePixelRatio()));
+    LogHandler::Debug("[showFullscreen] main window frameGeom=" + QString::number(winGeom.x()) + "," + QString::number(winGeom.y()) + " " + QString::number(winGeom.width()) + "x" + QString::number(winGeom.height())
+        + " target screen='" + target->name() + "' geom=" + QString::number(target->geometry().x()) + "," + QString::number(target->geometry().y()) + " " + QString::number(target->geometry().width()) + "x" + QString::number(target->geometry().height()));
+
+    // Clear the mouse-transparent attribute BEFORE promoting to a window:
+    // setWindowFlags() recreates the QWindow, and a window created while the
+    // attribute is set is click-through (events fall through to the window
+    // behind).
+    _videoView->setAttribute(Qt::WA_TransparentForMouseEvents, false);
+    _videoView->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Window);
+
+    // Pin the window to the target screen.
+    _videoView->setGeometry(target->geometry());
+
     m_controls->setProperty("cssClass", "fullScreenControls");
     m_controls->style()->unpolish(m_controls);
     m_controls->style()->polish(m_controls);
-//    QGraphicsOpacityEffect* opacityFxControls = new QGraphicsOpacityEffect(m_controls);
-//    opacityFxControls->setOpacity(0.5);
-//    m_controls->setGraphicsEffect(opacityFxControls);
 
-    //m_controls->setAttribute(Qt::WA_TranslucentBackground);
-    hideControls();
-    m_controlsRect = QRect(0, m_screenSize.height() - m_controls->height(), m_screenSize.width() - 10, m_controls->height() - 10);
     placeLibraryList(libraryWindowed);
-    //_fullscreenWidget->show();
-    //_fullscreenWidget->init();
-    _fullscreenWidget->setGeometry(screenSize);
-    _fullscreenWidget->showFullScreen();
-    //grabKeyboard();
+
+    // Overlay layout: top bar, video area (loading spinner, subtitles,
+    // library list) and controls at the bottom - all on top of the video.
+    setupViewLayout();
+
+    // Hover preview over the video
+    auto flags = m_videoPreview->windowFlags();
+    m_videoPreview->setParent(_videoView, flags);
+
+    connect(_videoView, &XVideoGraphicsView::mouseMove, this, &VideoHandler::mouseMove);
+    connect(_videoView, &XVideoGraphicsView::doubleClicked, this, [this](QMouseEvent* e) {emit doubleClicked(e);});
+    connect(_videoView, &XVideoGraphicsView::singleClicked, this, [this](QMouseEvent* e) {emit singleClicked(e);});
+    connect(_videoView, &XVideoGraphicsView::keyPressed, this, [this](QKeyEvent* e) {emit keyPressed(e);});
+    connect(_videoView, &XVideoGraphicsView::keyReleased, this, [this](QKeyEvent* e) {emit keyReleased(e);});
+    connect(_videoView, &XVideoGraphicsView::mouseEnter, this, [this](QEnterEvent* e) {emit mouseEnter(e);});
+
+    // Place the window on the target screen, explicitly set its screen
+    // association, then go true fullscreen (which covers the taskbar). Setting
+    // the screen before showFullScreen() keeps the WM from dropping the window
+    // onto the neighbouring monitor (the HiDPI fullscreen bug).
+    _videoView->setGeometry(target->geometry());
+    _videoView->show();
+    if(_videoView->windowHandle())
+        _videoView->windowHandle()->setScreen(target);
+    _videoView->showFullScreen();
+    if(_videoView->windowHandle())
+        LogHandler::Debug("[showFullscreen] fullscreen screen='" + _videoView->windowHandle()->screen()->name() + "' at " + QString::number(_videoView->x()) + "," + QString::number(_videoView->y()) + " " + QString::number(_videoView->width()) + "x" + QString::number(_videoView->height()));
+    _videoView->setFocus();
+    _videoView->grabKeyboard();
+
+    hideControls();
+    hideLibrary();
+
+    // Overlay hit rects from the actual geometry
+    m_controlsRect = m_controls->geometry();
+    if(m_libraryListFrame)
+        m_libraryRect = m_libraryListFrame->geometry();
 }
 
 void VideoHandler::placeLibraryList(bool libraryWindowed) {
     m_libraryWindowed = libraryWindowed;
-    if(_fullscreenWidget && !libraryWindowed) {
-        m_libraryListFrame = new QFrame(_fullscreenWidget);
-//        QGraphicsOpacityEffect* opacityFx = new QGraphicsOpacityEffect(_fullscreenWidget);
-//        opacityFx->setOpacity(0.5);
-//        m_libraryListFrame->setGraphicsEffect(opacityFx);
-//        m_libraryList->setGraphicsEffect(opacityFx);
+    if(_isFullScreen && !libraryWindowed && _videoView) {
+        bool created = false;
+        if(!m_libraryListFrame) {
+            m_libraryListFrame = new QFrame(_videoView);
+            m_libraryListFrame->setProperty("cssClass", "fullScreenLibrary");
+            m_libraryListFrame->style()->unpolish(m_libraryListFrame);
+            m_libraryListFrame->style()->polish(m_libraryListFrame);
+            QGridLayout* frameLayout = new QGridLayout(m_libraryListFrame);
+            frameLayout->setContentsMargins(0,0,0,0);
+            frameLayout->setSpacing(0);
+            m_libraryListFrame->setLayout(frameLayout);
+            created = true;
+        }
         auto libraryWidth = (SettingsHandler::getThumbSize() * 3) + ((SettingsHandler::getThumbSize() * 3) * 0.5);
         m_libraryListFrame->setFixedWidth(libraryWidth);
-        auto libraryHeight = m_controlsRect.top();
-        m_libraryListFrame->setFixedHeight(libraryHeight);
-//        m_libraryListFrame->setProperty("cssClass", "fullScreenLibrary");
-//        m_libraryListFrame->style()->unpolish(m_libraryListFrame);
-//        m_libraryListFrame->style()->polish(m_libraryListFrame);
-        // m_libraryList->setProperty("cssClass", "fullScreenLibrary");
+        m_libraryList->setProperty("cssClass", "fullScreenLibrary");
         m_libraryList->style()->unpolish(m_libraryList);
         m_libraryList->style()->polish(m_libraryList);
-        int rows = m_screenSize.height() / m_controls->height();
-        auto layout = new QGridLayout(m_libraryListFrame);
-        layout->addWidget(m_libraryList, 1, 0, 20, 12);
-        m_libraryListFrame->setLayout(layout);
-        ((QGridLayout*)_fullscreenWidget->layout())->addWidget(m_libraryListFrame, 0, 4, rows - 1, 1);
-        m_libraryRect = QRect(m_screenSize.width() - libraryWidth, 0, libraryWidth-10, libraryHeight);
+        if(created && _videoView->layout())
+            ((QGridLayout*)_videoView->layout())->addWidget(m_libraryListFrame, 1, 1);
         hideLibrary();
     }
 }
@@ -315,6 +443,8 @@ void VideoHandler::pause()
 void VideoHandler::setFile(QString file)
 {
     _currentFile = file;
+    if(m_topBarLabel)
+        m_topBarLabel->setText(QFileInfo(file).fileName());
     QUrl mediaUrl = QUrl::fromLocalFile(file);
     // QMediaContent mc(mediaUrl);
     _player->setSource(mediaUrl);
@@ -517,9 +647,9 @@ void VideoHandler::showControls()
     if (m_controls)
     {
         bool isAvailable = true;
-        if(XTPSettings::getFullScreenUIOnlyOnMouseOver() && _fullscreenWidget)
+        if(XTPSettings::getFullScreenUIOnlyOnMouseOver() && _isFullScreen)
         {
-            auto cursorPos = _fullscreenWidget->mapFromGlobal(QCursor::pos());
+            auto cursorPos = _videoView->mapFromGlobal(QCursor::pos());
             isAvailable = m_controlsRect.contains(cursorPos);
         }
         // LogHandler::Debug("[showControls] Enter: _isFullScreen: "+ QString::number(_isFullScreen));
@@ -545,24 +675,25 @@ void VideoHandler::hideLibrary()
 void VideoHandler::showLibrary()
 {
     bool isAvailable = true;
-    if(XTPSettings::getFullScreenUIOnlyOnMouseOver() && _fullscreenWidget)
+    if(XTPSettings::getFullScreenUIOnlyOnMouseOver() && _isFullScreen)
     {
-        auto cursorPos = _fullscreenWidget->mapFromGlobal(QCursor::pos());
+        auto cursorPos = _videoView->mapFromGlobal(QCursor::pos());
         isAvailable = m_libraryRect.contains(cursorPos);
     }
     if (_isFullScreen && isAvailable || m_libraryWindowed)
     {
         if(m_libraryListFrame) {
             m_libraryListFrame->show();
-            releaseKeyboard();
+            if(_videoView)
+                _videoView->releaseKeyboard();
         }
     }
 }
 
 void VideoHandler::hideControlsTimeout()
 {
-    if(_fullscreenWidget) {
-        auto cursorPos = _fullscreenWidget->mapFromGlobal(QCursor::pos());
+    if(_isFullScreen && _videoView) {
+        auto cursorPos = _videoView->mapFromGlobal(QCursor::pos());
         if (!m_controlsRect.contains(cursorPos)) {
             hideControls();
         }
@@ -570,13 +701,13 @@ void VideoHandler::hideControlsTimeout()
 }
 void VideoHandler::hideLibraryTimeout()
 {
-    if(_fullscreenWidget)
+    if(_isFullScreen && _videoView)
     {
-        auto cursorPos = _fullscreenWidget->mapFromGlobal(QCursor::pos());
+        auto cursorPos = _videoView->mapFromGlobal(QCursor::pos());
         if (!m_libraryRect.contains(cursorPos)) {
             hideLibrary();
-            if(_isFullScreen)
-                grabKeyboard();
+            if(_isFullScreen && _videoView)
+                _videoView->grabKeyboard();
         }
     }
 }

@@ -9,6 +9,13 @@ MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     xtengine->setParent(this);
     connect(m_xtengine, &XTEngine::stopAllMedia, this, &MainWindow::stopMedia);
 
+    // Debounce fullscreen toggles: a double-click that exits fullscreen can
+    // have its remaining events re-delivered to the re-parented (windowed)
+    // view, which would immediately re-enter fullscreen. Ignore toggles that
+    // arrive within a short window of the previous one.
+    m_fullscreenToggleDebounce.setSingleShot(true);
+    m_fullscreenToggleDebounce.setInterval(600);
+
     connect(this, &XTEngine::destroyed, this, []() {
         LogHandler::Debug("XTPlayer destroyed");
     });
@@ -1693,6 +1700,12 @@ void MainWindow::on_mainwindow_change(QEvent* event)
 //QPoint _mainStackedWidgetPos;
 void MainWindow::toggleFullScreen()
 {
+    // Ignore rapid re-toggles (a double-click's remaining events can be
+    // re-delivered to the re-parented view and immediately re-enter fullscreen).
+    if(m_fullscreenToggleDebounce.isActive())
+        return;
+    m_fullscreenToggleDebounce.start();
+
     if(!videoHandler->isFullScreen())
     {
         QScreen *screen = this->window()->windowHandle()->screen();
@@ -1711,6 +1724,7 @@ void MainWindow::toggleFullScreen()
             setupLibraryGrid(ui->libraryGrid);
         }
         _controlsHomePlaceHolderGrid->addWidget(_playerControlsFrame);
+        LogHandler::Debug("[toggleFullScreen EXIT] after re-parent, controls parent='" + QString(_playerControlsFrame->parentWidget() ? _playerControlsFrame->parentWidget()->metaObject()->className() : "null") + "'");
         videoHandler->showNormal();
     }
 //    if(!_isFullScreen)

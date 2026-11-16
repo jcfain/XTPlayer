@@ -4,8 +4,10 @@
 #include <QHBoxLayout>
 #include <QMediaPlayer>
 #include <QAudioOutput>
+#if BUILD_QT5
+#include <QMediaSubtitle>
+#endif
 //#include <QAudioProbe>
-#include <QVideoWidget>
 #include <QMouseEvent>
 #include <QMovie>
 #include <QLabel>
@@ -14,7 +16,7 @@
 #include "lib/handler/loghandler.h"
 #include "lib/lookup/XMedia.h"
 
-#include "xvideowidget.h"
+#include "xvideographicsview.h"
 #include "playercontrols.h"
 #include "xlibrarylist.h"
 #include "xvideopreviewwidget.h"
@@ -97,12 +99,11 @@ private:
     bool _isFullScreen = false;
     bool m_libraryWindowed;
     QRect m_screenSize;
-    XWidget* _fullscreenWidget;
 //    VideoRenderer* _videoRenderer = 0;
 //    VideoPreviewWidget* _videoPreviewWidget;
     QRect m_libraryRect;
     QRect m_controlsRect;
-    XVideoWidget* _videoWidget;
+    XVideoGraphicsView* _videoView;
     XVideoPreviewWidget* m_videoPreview;
     QString _currentFile;
     QMutex _mutex;
@@ -110,8 +111,16 @@ private:
     QLabel* _videoLoadingLabel = 0;
     QMovie* _videoLoadingMovie = 0;
     XMediaState _currentState = XMediaState::Stopped;
+    QFrame* m_topBar = 0;
+    QLabel* m_topBarLabel = 0;
+    QLabel* m_subtitleLabel = 0;
+#if BUILD_QT5
+    QMediaSubtitle m_currentSubtitle;
+#endif
 
     void createLayout();
+    void setupViewLayout();
+    void updateSubtitle();
 
     void on_setLoading(bool loading);
     XMediaStatus convertMediaStatus(QMediaPlayer::MediaStatus status);
