@@ -4,9 +4,6 @@
 #include <QHBoxLayout>
 #include <QMediaPlayer>
 #include <QAudioOutput>
-#if BUILD_QT5
-#include <QMediaSubtitle>
-#endif
 //#include <QAudioProbe>
 #include <QMouseEvent>
 #include <QMovie>
@@ -21,6 +18,7 @@
 #include "xlibrarylist.h"
 #include "xvideopreviewwidget.h"
 #include "xwidget.h"
+#include "xsubtitlesource.h"
 #include "dialoghandler.h"
 
 class VideoHandler : public XWidget
@@ -114,9 +112,8 @@ private:
     QFrame* m_topBar = 0;
     QLabel* m_topBarLabel = 0;
     QLabel* m_subtitleLabel = 0;
-#if BUILD_QT5
-    QMediaSubtitle m_currentSubtitle;
-#endif
+    XSubtitleSource* m_subtitleSource = 0;
+    QStringList m_subtitleTracks;
 
     void createLayout();
     void setupViewLayout();

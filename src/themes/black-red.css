@@ -202,10 +202,12 @@ QListView[cssClass="fullScreenLibrary"] {
     color: white;
 }
 QLabel[cssClass="videoSubtitle"] {
-    background: transparent;
+    background: rgba(0, 0, 0, 160);
     color: white;
     font-size: 20px;
     font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 6px;
 }
 QPushButton:pressed,
 QPushButton[cssClass="playerControlButton"]:pressed,

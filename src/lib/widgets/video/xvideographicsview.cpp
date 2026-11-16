@@ -24,15 +24,9 @@ XVideoGraphicsView::XVideoGraphicsView(QWidget* parent)
     // Triggered by the item's size-change signal and by the sink's size
     // change (set when the player starts rendering) - whichever reports the
     // size first wins, and resizeEvent re-fits after any view resize.
-#if BUILD_QT6
     connect(m_videoItem, &QGraphicsVideoItem::nativeSizeChanged, this, &XVideoGraphicsView::updateVideoFit);
     if(m_videoItem->videoSink())
         connect(m_videoItem->videoSink(), &QVideoSink::videoSizeChanged, this, &XVideoGraphicsView::updateVideoFit);
-#else
-    connect(m_videoItem, &QGraphicsVideoItem::videoSizeChanged, this, &XVideoGraphicsView::updateVideoFit);
-    if(m_videoItem->videoSink())
-        connect(m_videoItem->videoSink(), &QVideoSink::videoSurfaceFormatChanged, this, &XVideoGraphicsView::updateVideoFit);
-#endif
 }
 
 void XVideoGraphicsView::setPlayer(QMediaPlayer* player) {
@@ -41,26 +35,15 @@ void XVideoGraphicsView::setPlayer(QMediaPlayer* player) {
 }
 
 void XVideoGraphicsView::updateVideoFit() {
-    QSizeF size;
-#if BUILD_QT6
-    size = m_videoItem->nativeSize();
+    QSizeF size = m_videoItem->nativeSize();
     if((size.width() <= 0 || size.height() <= 0) && m_videoItem->videoSink())
         size = m_videoItem->videoSink()->videoSize();
-#else
-    size = m_videoItem->videoSize();
-    if((size.width() <= 0 || size.height() <= 0) && m_videoItem->videoSink())
-        size = m_videoItem->videoSink()->videoSurfaceFormat().pixelSize();
-#endif
     if(size.width() <= 0 || size.height() <= 0)
         return;
     QRectF target(0, 0, size.width(), size.height());
     if(m_scene->sceneRect() != target) {
         m_scene->setSceneRect(target);
-#if BUILD_QT6
         m_videoItem->setSize(target.size());
-#else
-        m_videoItem->setRect(target);
-#endif
     }
     fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
 }

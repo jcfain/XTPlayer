@@ -1,5 +1,4 @@
 #include "videohandler.h"
-#include <QMediaMetaData>
 #include <QFileInfo>
 #include <QVideoSink>
 #include <QScreen>
@@ -16,6 +15,7 @@ VideoHandler::VideoHandler(PlayerControls* controls, XLibraryList* libraryList, 
     _player = new QMediaPlayer(this);
     m_audioOutput = new QAudioOutput(this);
     _player->setAudioOutput(m_audioOutput);
+    m_subtitleSource = new XSubtitleSource(this);
     setVolume(SettingsHandler::getPlayerVolume());
     connect(_player, &QMediaPlayer::positionChanged, this, &VideoHandler::on_media_positionChanged, Qt::QueuedConnection);
     connect(_player, &QMediaPlayer::mediaStatusChanged, this, &VideoHandler::on_media_statusChanged, Qt::QueuedConnection);
@@ -83,6 +83,7 @@ void VideoHandler::createLayout()
         m_subtitleLabel = new QLabel(this);
         m_subtitleLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
         m_subtitleLabel->setAlignment(Qt::AlignHCenter);
+        m_subtitleLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         m_subtitleLabel->setProperty("cssClass", "videoSubtitle");
         m_subtitleLabel->hide();
     }
@@ -97,26 +98,9 @@ void VideoHandler::createLayout()
         hideLibraryTimeout();
     });
 
-    // Subtitle tracking
-#if BUILD_QT5
+    // Subtitle tracking - sidecar .srt/.vtt/.ass cues drive the overlay label
+// from the playback position (Qt 6 removed QMediaSubtitle).
     connect(_player, &QMediaPlayer::positionChanged, this, &VideoHandler::updateSubtitle, Qt::QueuedConnection);
-    connect(_player, &QMediaPlayer::subtitleFromActiveTrackChanged, this, [this]() {
-        m_currentSubtitle = _player->subtitleFromActiveTrack();
-        updateSubtitle();
-    });
-#else
-    // Qt 6 pushes the active subtitle text to the video sink - render it
-    // in the overlay label (same mechanism QVideoWidget uses internally).
-    if(_videoView && _videoView->videoSink())
-        connect(_videoView->videoSink(), &QVideoSink::subtitleTextChanged, this, [this](const QString &text) {
-            if(!text.isEmpty()) {
-                m_subtitleLabel->setText(text);
-                m_subtitleLabel->show();
-            } else {
-                m_subtitleLabel->hide();
-            }
-        });
-#endif
 
     setupViewLayout();
     _mediaGrid->addWidget(_videoView);
@@ -142,7 +126,7 @@ void VideoHandler::setupViewLayout() {
         m_controls->setParent(_videoView);
         layout->addWidget(m_topBar, 0, 0, 1, 2);
         layout->addWidget(_videoLoadingLabel, 1, 0, Qt::AlignCenter);
-        layout->addWidget(m_subtitleLabel, 1, 0, Qt::AlignBottom);
+        layout->addWidget(m_subtitleLabel, 1, 0, Qt::AlignBottom | Qt::AlignHCenter);
         if(m_libraryListFrame)
             layout->addWidget(m_libraryListFrame, 1, 1);
         layout->addWidget(m_controls, 2, 0, 1, 2);
@@ -151,31 +135,21 @@ void VideoHandler::setupViewLayout() {
     } else {
         m_topBar->hide();
         layout->addWidget(_videoLoadingLabel, 0, 0, Qt::AlignCenter);
-        layout->addWidget(m_subtitleLabel, 0, 0, Qt::AlignBottom);
+        layout->addWidget(m_subtitleLabel, 0, 0, Qt::AlignBottom | Qt::AlignHCenter);
     }
 }
 
 void VideoHandler::updateSubtitle() {
     if(!m_subtitleLabel || !_player)
         return;
-#if BUILD_QT5
-    auto text = m_currentSubtitle.text();
+    QString text = m_subtitleSource->cueAt(_player->position());
     if(text.isEmpty()) {
         m_subtitleLabel->hide();
-        return;
-    }
-    auto pos = _player->position();
-    if(pos >= m_currentSubtitle.startTime() && pos < m_currentSubtitle.endTime()) {
+    } else {
         if(m_subtitleLabel->text() != text)
             m_subtitleLabel->setText(text);
         m_subtitleLabel->show();
-    } else {
-        m_subtitleLabel->hide();
     }
-#else
-    // Qt 6: the video sink's subtitleTextChanged signal drives the label
-    // (see createLayout), so nothing to do here.
-#endif
 }
 
 void VideoHandler::mouseMove( QMouseEvent* e ) {
@@ -450,6 +424,19 @@ void VideoHandler::setFile(QString file)
     _currentFile = file;
     if(m_topBarLabel)
         m_topBarLabel->setText(QFileInfo(file).fileName());
+    // Detect sidecar subtitle files next to the media and clear previous cues.
+    m_subtitleTracks = m_subtitleSource->findSidecars(file);
+    m_subtitleSource->clear();
+    if(m_subtitleLabel)
+        m_subtitleLabel->hide();
+    // Auto-load the first sidecar (e.g. movie.srt) so subtitles show without
+    // needing the (currently disabled) track-selector UI. setSubtitleTrack()
+    // remains available for when that UI is re-enabled.
+    if(!m_subtitleTracks.isEmpty()) {
+        QString path = m_subtitleSource->sidecarPath(file, m_subtitleTracks.first());
+        if(!path.isEmpty())
+            m_subtitleSource->load(path);
+    }
     QUrl mediaUrl = QUrl::fromLocalFile(file);
     // QMediaContent mc(mediaUrl);
     _player->setSource(mediaUrl);
@@ -457,22 +444,22 @@ void VideoHandler::setFile(QString file)
 
 void VideoHandler::setSubtitleTrack(int index)
 {
-    _player->setActiveSubtitleTrack(index);
+    // index < 0 means "no subtitles".
+    if(index < 0 || index >= m_subtitleTracks.size()) {
+        m_subtitleSource->clear();
+        if(m_subtitleLabel)
+            m_subtitleLabel->hide();
+        return;
+    }
+    QString path = m_subtitleSource->sidecarPath(_currentFile, m_subtitleTracks[index]);
+    if(!path.isEmpty())
+        m_subtitleSource->load(path);
+    updateSubtitle();
 }
 
 QList<QString> VideoHandler::getSubtitleTracks()
 {
-    QList<QString> languages;
-    const auto tracks = _player->subtitleTracks();
-    for(const auto &track : tracks)
-    {
-        QString language = track.value(QMediaMetaData::Language).toString();
-        if(!language.isEmpty())
-        {
-            languages.append(language);
-        }
-    }
-    return languages;
+    return m_subtitleTracks;
 }
 
 bool VideoHandler::isPaused()

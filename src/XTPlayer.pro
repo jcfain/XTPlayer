@@ -38,6 +38,7 @@ SOURCES += \
     lib/widgets/library/LibraryItemMetadataDialog.cpp \
     lib/widgets/library/tagManager.cpp \
     lib/widgets/video/xvideographicsview.cpp \
+    lib/widgets/video/xsubtitlesource.cpp \
     lib/widgets/video/xvideowidget.cpp \
     lib/widgets/video/xvideopreviewwidget.cpp \
     lib/widgets/xcombobox.cpp \
@@ -74,6 +75,7 @@ HEADERS += \
     lib/widgets/library/LibraryItemMetadataDialog.h \
     lib/widgets/library/tagManager.h \
     lib/widgets/video/xvideographicsview.h \
+    lib/widgets/video/xsubtitlesource.h \
     lib/widgets/video/xvideowidget.h \
     lib/widgets/video/xvideopreviewwidget.h \
     lib/widgets/xcombobox.h \
