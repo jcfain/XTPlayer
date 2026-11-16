@@ -171,7 +171,7 @@ QPushButton:disabled {
 }
 
 QFrame[cssClass="fullScreenTopBar"] {
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(0,0,0,0.7), stop:1 rgba(0,0,0,0));
+	background-color: darkred;
 }
 QLabel[cssClass="fullScreenTopBarLabel"] {
     background: transparent;
@@ -179,21 +179,26 @@ QLabel[cssClass="fullScreenTopBarLabel"] {
 }
 QFrame[cssClass="windowedControls"] {
     background-color: transparent;
+    color: white;
+}
+
+XWidget[cssClass="fullScreenWidget"] {
+    background-color: transparent;
+}
+QFrame[cssClass="windowedControls"] {
+    background-color: transparent;
     color: black;
 }
 QFrame[cssClass="fullScreenControls"] {
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(0,0,0,0), stop:1 rgba(0,0,0,0.7));
+	background-color: darkred;
     color: white;
 }
 QListView[cssClass="windowedLibrary"] {
     background-color: transparent;
     color: white;
 }
-QFrame[cssClass="fullScreenLibrary"] {
-    background-color: rgba(0,0,0,0.5);
-}
 QListView[cssClass="fullScreenLibrary"] {
-    background-color: rgba(0,0,0,0.5);
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1.5, stop: 0 black, stop: 1 darkred);
     color: white;
 }
 QLabel[cssClass="videoSubtitle"] {

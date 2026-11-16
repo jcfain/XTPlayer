@@ -226,7 +226,6 @@ void VideoHandler::showNormal() {
 
     showControls();
     qApp->setOverrideCursor(Qt::CursorShape::ArrowCursor);
-    LogHandler::Debug("[showNormal] controls parent='" + (m_controls->parentWidget() ? QString(m_controls->parentWidget()->metaObject()->className()) : "null") + "' visible=" + QString::number(m_controls->isVisible()) + " enabled=" + QString::number(m_controls->isEnabled()) + " geom=" + QString::number(m_controls->x()) + "," + QString::number(m_controls->y()) + " " + QString::number(m_controls->width()) + "x" + QString::number(m_controls->height()));
 }
 
 void VideoHandler::showFullscreen(QRect screenSize, bool libraryWindowed) {
@@ -253,11 +252,6 @@ void VideoHandler::showFullscreen(QRect screenSize, bool libraryWindowed) {
     }
     if(!target)
         target = QGuiApplication::primaryScreen();
-    LogHandler::Debug("[showFullscreen] passed screenSize=" + QString::number(screenSize.x()) + "," + QString::number(screenSize.y()) + " " + QString::number(screenSize.width()) + "x" + QString::number(screenSize.height()));
-    for(QScreen *s : QGuiApplication::screens())
-        LogHandler::Debug("[showFullscreen] screen='" + s->name() + "' geom=" + QString::number(s->geometry().x()) + "," + QString::number(s->geometry().y()) + " " + QString::number(s->geometry().width()) + "x" + QString::number(s->geometry().height()) + " dpr=" + QString::number(s->devicePixelRatio()));
-    LogHandler::Debug("[showFullscreen] main window frameGeom=" + QString::number(winGeom.x()) + "," + QString::number(winGeom.y()) + " " + QString::number(winGeom.width()) + "x" + QString::number(winGeom.height())
-        + " target screen='" + target->name() + "' geom=" + QString::number(target->geometry().x()) + "," + QString::number(target->geometry().y()) + " " + QString::number(target->geometry().width()) + "x" + QString::number(target->geometry().height()));
 
     // Clear the mouse-transparent attribute BEFORE promoting to a window:
     // setWindowFlags() recreates the QWindow, and a window created while the
@@ -265,6 +259,10 @@ void VideoHandler::showFullscreen(QRect screenSize, bool libraryWindowed) {
     // behind).
     _videoView->setAttribute(Qt::WA_TransparentForMouseEvents, false);
     _videoView->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Window);
+    // As a top-level window the view no longer inherits the main window's
+    // stylesheet, so apply it directly - otherwise the overlaid controls and
+    // library list render with no styling (fully transparent).
+    _videoView->setStyleSheet(this->window()->styleSheet());
 
     // Pin the window to the target screen.
     _videoView->setGeometry(target->geometry());
@@ -278,6 +276,15 @@ void VideoHandler::showFullscreen(QRect screenSize, bool libraryWindowed) {
     // Overlay layout: top bar, video area (loading spinner, subtitles,
     // library list) and controls at the bottom - all on top of the video.
     setupViewLayout();
+
+    // Apply the theme stylesheet directly to the overlaid widgets. The view is
+    // a top-level window in fullscreen, so the main window's stylesheet does
+    // not reliably cascade to re-parented children - set it on each widget.
+    const QString themeSheet = this->window()->styleSheet();
+    m_controls->setStyleSheet(themeSheet);
+    if(m_libraryListFrame)
+        m_libraryListFrame->setStyleSheet(themeSheet);
+    m_libraryList->setStyleSheet(themeSheet);
 
     // Hover preview over the video
     auto flags = m_videoPreview->windowFlags();
@@ -299,8 +306,6 @@ void VideoHandler::showFullscreen(QRect screenSize, bool libraryWindowed) {
     if(_videoView->windowHandle())
         _videoView->windowHandle()->setScreen(target);
     _videoView->showFullScreen();
-    if(_videoView->windowHandle())
-        LogHandler::Debug("[showFullscreen] fullscreen screen='" + _videoView->windowHandle()->screen()->name() + "' at " + QString::number(_videoView->x()) + "," + QString::number(_videoView->y()) + " " + QString::number(_videoView->width()) + "x" + QString::number(_videoView->height()));
     _videoView->setFocus();
     _videoView->grabKeyboard();
 

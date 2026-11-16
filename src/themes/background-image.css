@@ -167,7 +167,7 @@ QPushButton[id="cancelEditPlaylistButton"]:pressed {
 }
 
 QFrame[cssClass="fullScreenTopBar"] {
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(0,0,0,0.7), stop:1 rgba(0,0,0,0));
+	background-color: transparent;
 }
 QLabel[cssClass="fullScreenTopBarLabel"] {
     background: transparent;
@@ -175,21 +175,26 @@ QLabel[cssClass="fullScreenTopBarLabel"] {
 }
 QFrame[cssClass="windowedControls"] {
     background-color: transparent;
+    color: white;
+}
+
+XWidget[cssClass="fullScreenWidget"] {
+    background-color: transparent;
+}
+QFrame[cssClass="windowedControls"] {
+    background-color: transparent;
     color: black;
 }
 QFrame[cssClass="fullScreenControls"] {
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(0,0,0,0), stop:1 rgba(0,0,0,0.7));
+    background-image: url(./themes/sky.jpg) no-repeat center fixed;
     color: white;
 }
 QListView[cssClass="windowedLibrary"] {
     background-color: transparent;
     color: white;
 }
-QFrame[cssClass="fullScreenLibrary"] {
-    background-color: rgba(0,0,0,0.5);
-}
 QListView[cssClass="fullScreenLibrary"] {
-    background-color: rgba(0,0,0,0.5);
+    background-image: url(./themes/sky.jpg) no-repeat center fixed;
     color: white;
 }
 QLabel[cssClass="videoSubtitle"] {

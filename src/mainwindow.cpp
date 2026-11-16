@@ -1724,7 +1724,6 @@ void MainWindow::toggleFullScreen()
             setupLibraryGrid(ui->libraryGrid);
         }
         _controlsHomePlaceHolderGrid->addWidget(_playerControlsFrame);
-        LogHandler::Debug("[toggleFullScreen EXIT] after re-parent, controls parent='" + QString(_playerControlsFrame->parentWidget() ? _playerControlsFrame->parentWidget()->metaObject()->className() : "null") + "'");
         videoHandler->showNormal();
     }
 //    if(!_isFullScreen)

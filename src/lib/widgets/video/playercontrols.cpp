@@ -7,6 +7,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 {
     setProperty("cssClass", "windowedControls");
     setObjectName(QString::fromUtf8("playerControlsFrame"));
+    setAttribute(Qt::WA_StyledBackground);
     setMinimumSize(QSize(240, 110));
     setMaximumSize(QSize(16777215, 16777215));
     setFrameShape(QFrame::StyledPanel);
