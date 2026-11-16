@@ -294,6 +294,8 @@ private slots:
 
     void on_useMediaBackendChk_clicked(bool checked);
 
+    void on_useHardwareDecodingCombo_currentIndexChanged(int index);
+
     void on_fullscreenUIOnlyOnMouseover_clicked(bool checked);
 
     void on_languageComboBox_currentIndexChanged(int index);

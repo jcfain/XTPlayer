@@ -43,14 +43,78 @@ echo Home: ${home}
 echo Target: ${target}
 echo appDir: ${appDir}
 
+echo Pulling the latest XTP src from git
 cd ${xtplayerSource}
 #if needToPull; then
 	git pull || { echo 'git pull XTPlayer failed' ; exit 1; }
 #fi
+echo Pulling the latest XTE src from git
 cd ${xtengineSource}
 #if needToPull; then
 	git pull || { echo 'git pull XTEngine failed' ; exit 1; };
 #fi
+
+# --- Optional AV1 codec build (FFmpeg n9.0.1 + dav1d/aom) -------------------
+# The FFmpeg media backend bundled with Qt has no AV1 decoders, so AV1 videos
+# play audio only. If a codec build exists it is bundled into the AppImage;
+# otherwise (interactive runs only) we offer to build it. CI runs
+# (no TTY / CODEC_BUILD_AUTOMATED=1) never prompt - they continue without
+# AV1 support unless CODEC_LIB_DIR points at a prebuilt codec dir.
+CODEC_LIB_DIR="${CODEC_LIB_DIR:-${HOME}/git/ffmpeg-n9.0.1-av1/lib}"
+CODEC_BUILD_SCRIPT="$(dirname -- "${BASH_SOURCE[0]}")/helper_scripts/build-ffmpeg-av1.sh"
+codecEnabled=0
+if [ -f "${CODEC_LIB_DIR}/libavcodec.so.63" ]; then
+    echo "Found AV1 codec build in ${CODEC_LIB_DIR} - will bundle it."
+    codecEnabled=1
+elif [ "${CODEC_BUILD_AUTOMATED:-0}" = "1" ] || [ ! -t 0 ]; then
+    echo "WARNING: AV1 codec build not found at ${CODEC_LIB_DIR}."
+    echo "         AV1 videos will play audio only (no video) in the FFmpeg backend."
+    echo "         Build it first: helper_scripts/build-ffmpeg-av1.sh (or set CODEC_LIB_DIR)."
+    echo "         Continuing without AV1 codec support."
+else
+    echo "AV1 codec build not found. Without it, AV1 videos play audio only (no video)."
+    read -r -p "Build it now? (FFmpeg n9.0.1 + dav1d/aom, ~10 min) [Y/n] " answer
+    case "${answer:-Y}" in
+        [Yy]*)
+            "${CODEC_BUILD_SCRIPT}" || { echo 'Codec build failed'; exit 1; }
+            codecEnabled=1
+            ;;
+        *)
+            echo "Continuing without AV1 codec support."
+            ;;
+    esac
+fi
+
+# --- glibc compatibility guard ----------------------------------------------
+# The codec pack must not require a NEWER glibc than the machine that will RUN
+# the AppImage. If it does, libavcodec.so.63 fatals at load time
+# ("version `GLIBC_x.y' not found"), the FFmpeg backend silently fails to load
+# (loading spinner, no video), and the app falls back to a system libavcodec.
+# This happens when the codec was built in a newer-glibc environment (e.g. a
+# Flatpak / SDK-26 container) than the target desktop. Build the codec pack on
+# the same machine (or one with an equal/older glibc) that runs the AppImage.
+if [ "${codecEnabled}" = "1" ]; then
+    _codec_lib="${CODEC_LIB_DIR}/libavcodec.so.63"
+    _need_glibc="$(objdump -T "${_codec_lib}" 2>/dev/null | grep -oE 'GLIBC_[0-9]+\.[0-9]+' | sed 's/GLIBC_//' | sort -Vu | tail -1)"
+    _sys_glibc="$(ldd --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+' | head -1)"
+    if [ -n "${_need_glibc}" ] && [ -n "${_sys_glibc}" ]; then
+        _need_maj="${_need_glibc%%.*}"; _need_min="${_need_glibc#*.}"
+        _sys_maj="${_sys_glibc%%.*}";   _sys_min="${_sys_glibc#*.}"
+        if [ "${_need_maj}" -gt "${_sys_maj}" ] || { [ "${_need_maj}" -eq "${_sys_maj}" ] && [ "${_need_min}" -gt "${_sys_min}" ]; }; then
+            echo "ERROR: AV1 codec pack requires glibc ${_need_glibc} but this system has glibc ${_sys_glibc}."
+            echo "       libavcodec.so.63 will FAIL to load at runtime (GLIBC_${_need_glibc} not found),"
+            echo "       breaking the FFmpeg backend (loading spinner, no video)."
+            echo "       Rebuild the codec pack ON THIS MACHINE (or one with an older glibc):"
+            echo "           helper_scripts/build-ffmpeg-av1.sh"
+            echo "       It was built in a newer-glibc environment (e.g. a Flatpak/SDK container)."
+            exit 1
+        else
+            echo "OK: AV1 codec pack glibc requirement (${_need_glibc}) <= system glibc (${_sys_glibc})."
+        fi
+    fi
+fi
+# --- end glibc compatibility guard ------------------------------------------
+# --- end AV1 codec build ----------------------------------------------------
 
 mkdir -p "${xtengineBuildDirectory}" || { echo 'Make XTEngine build dir failed' ; exit 1; }
 cd ${xtengineBuildDirectory}
@@ -74,6 +138,26 @@ mkdir -p "${appDir}"/usr/bin/translations
 cp -r "${xtplayerLocation}"www/*.*  "${appDir}"/usr/bin/www/ || { echo 'Copy www failed' ; exit 1; }
 cp -r "${xtplayerLocation}"themes/*.*  "${appDir}"/usr/bin/themes/ || { echo 'Copy themes failed' ; exit 1; }
 cp -r "${xtplayerLocation}"translations/*.*  "${appDir}"/usr/bin/translations/ || { echo 'Copy translations failed' ; exit 1; }
+
+# --- Bundle the AV1 codec libs into the AppImage ----------------------------
+# Overwrite the AV1-less FFmpeg libs that linuxdeployqt would bundle from the
+# Qt tree, and add the AV1 decoders (dav1d/aom) which live on the system and
+# would NOT be bundled by linuxdeployqt on their own.
+if [ "${codecEnabled}" = "1" ]; then
+    mkdir -p "${appDir}"/usr/lib
+    cp -f "${CODEC_LIB_DIR}"/libavcodec.so.63*    "${appDir}"/usr/lib/ || { echo 'Copy codec libavcodec failed' ; exit 1; }
+    cp -f "${CODEC_LIB_DIR}"/libavformat.so.63*   "${appDir}"/usr/lib/ || { echo 'Copy codec libavformat failed' ; exit 1; }
+    cp -f "${CODEC_LIB_DIR}"/libavutil.so.61*     "${appDir}"/usr/lib/ || { echo 'Copy codec libavutil failed' ; exit 1; }
+    cp -f "${CODEC_LIB_DIR}"/libswscale.so.10*    "${appDir}"/usr/lib/ || { echo 'Copy codec libswscale failed' ; exit 1; }
+    cp -f "${CODEC_LIB_DIR}"/libswresample.so.7*  "${appDir}"/usr/lib/ || { echo 'Copy codec libswresample failed' ; exit 1; }
+    for extra in libdav1d.so.7* libaom.so.3*; do
+        cp -f "${CODEC_LIB_DIR}"/${extra} "${appDir}"/usr/lib/ 2>/dev/null
+    done
+    # Make dependency resolution prefer the appDir copies over the Qt tree
+    export LD_LIBRARY_PATH="${appDir}/usr/lib:${LD_LIBRARY_PATH}"
+    echo "Bundled AV1 codec libs from ${CODEC_LIB_DIR}"
+fi
+# --- end AV1 codec bundling --------------------------------------------------
 
 cp "${xtplayerSource}"/XTPlayer.desktop "${xtplayerLocation}"/XTPlayer.desktop || { echo 'Copy desktop file failed' ; exit 1; }
 
@@ -127,6 +211,15 @@ if [ "${verified}" -eq 1 ]; then
         echo "OK: libqwebp.so bundled in AppImage (webp thumbs enabled)."
     else
         echo "WARNING: libqwebp.so NOT found in AppImage - thumbs will fall back to jpg."
+    fi
+    if [ "${codecEnabled}" = "1" ]; then
+        BUNDLED_AVCODEC="$(find "${VERIFY_DIR}" -name 'libavcodec.so.63*' | head -1)"
+        if [ -n "${BUNDLED_AVCODEC}" ] && nm -D "${BUNDLED_AVCODEC}" 2>/dev/null | grep -q dav1d && \
+           find "${VERIFY_DIR}" -name 'libdav1d.so.7*' | grep -q .; then
+            echo "OK: AV1 codec (dav1d) bundled in AppImage."
+        else
+            echo "WARNING: AV1 codec NOT properly bundled in AppImage (libavcodec lacks dav1d or libdav1d missing)."
+        fi
     fi
 else
     echo "NOTE: skipped AppImage verification (no appimagetool, and AppImage not executable on this host)."

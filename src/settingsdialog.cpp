@@ -422,6 +422,25 @@ void SettingsDialog::setupUi()
         connect(SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
 
         ui.useMediaBackendChk->setChecked(SettingsHandler::getSetting(SettingKeys::useSystemMediaBackend).toBool());
+        // Populate the hardware-decode combo with the options that are actually
+        // available (disabled, auto, + backends compiled into FFmpeg), then select
+        // the current preference.
+        // Block signals while populating/selecting: init() runs on every open, so a
+        // previous open has already connected the change handler. Without this guard,
+        // clear()/addItems()/setCurrentIndex() emit currentIndexChanged, which fires
+        // the slot -> changeSetting(..., dirty=true) -> form dirty + restart required.
+        ui.useHardwareDecodingCombo->blockSignals(true);
+        ui.useHardwareDecodingCombo->clear();
+        ui.useHardwareDecodingCombo->addItems(SettingsHandler::hardwareDecodeOptions());
+        const QString hwPref = SettingsHandler::hardwareDecodePreference();
+        int hwIdx = ui.useHardwareDecodingCombo->findText(hwPref);
+        if (hwIdx < 0)
+            hwIdx = ui.useHardwareDecodingCombo->findText("disabled");
+        ui.useHardwareDecodingCombo->setCurrentIndex(hwIdx);
+        ui.useHardwareDecodingCombo->blockSignals(false);
+        connect(ui.useHardwareDecodingCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::on_useHardwareDecodingCombo_currentIndexChanged);
+        ui.hardwareDecodeStatusLabel->setWordWrap(true);
+        ui.hardwareDecodeStatusLabel->setText(SettingsHandler::hardwareDecodeStatus());
         ui.fullscreenUIOnlyOnMouseover->setChecked(XTPSettings::getFullScreenUIOnlyOnMouseOver());
 
         ui.useDTRAndRTSChk->setChecked(SettingsHandler::getUseDTRAndRTS());
@@ -2445,6 +2464,15 @@ void SettingsDialog::on_libraryVRBtn_clicked()
 void SettingsDialog::on_useMediaBackendChk_clicked(bool checked)
 {
     SettingsHandler::changeSetting(SettingKeys::useSystemMediaBackend, checked, true);
+}
+
+void SettingsDialog::on_useHardwareDecodingCombo_currentIndexChanged(int index)
+{
+    if (index < 0)
+        return;
+    const QString value = ui.useHardwareDecodingCombo->itemText(index);
+    SettingsHandler::changeSetting(SettingKeys::useHardwareDecoding, value, true);
+    ui.hardwareDecodeStatusLabel->setText(SettingsHandler::hardwareDecodeStatus());
 }
 
 void SettingsDialog::on_fullscreenUIOnlyOnMouseover_clicked(bool checked)

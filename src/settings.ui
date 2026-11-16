@@ -1022,7 +1022,7 @@
         <item row="1" column="1">
          <widget class="XDoubleSpinBox" name="playbackRateSpinBox"/>
         </item>
-        <item row="3" column="0">
+        <item row="5" column="0">
          <spacer name="verticalSpacer">
           <property name="orientation">
            <enum>Qt::Orientation::Vertical</enum>
@@ -1039,6 +1039,27 @@
          <widget class="QCheckBox" name="useMediaBackendChk">
           <property name="text">
            <string>Use the media backend of the OS</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="hardwareDecodeLabel">
+          <property name="text">
+           <string>Hardware video decoding</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QComboBox" name="useHardwareDecodingCombo">
+          <property name="toolTip">
+           <string>Specify the hardware video decoding API to use. 'disabled' = software decoding (dav1d for AV1) - always works. 'auto' = use a GPU decoder if one is compiled in and available; if the GPU cannot decode the codec (common for AV1), decoding fails with NO software fallback. Other options force a specific backend (only those compiled into FFmpeg are listed). Requires restart.</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0" colspan="2">
+         <widget class="QLabel" name="hardwareDecodeStatusLabel">
+          <property name="text">
+           <string></string>
           </property>
          </widget>
         </item>
