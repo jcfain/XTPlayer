@@ -177,7 +177,7 @@ if [ -x "${CODEC_PREFIX}/bin/ffmpeg" ]; then
         echo "OK: ${HWACCELS}"
     else
         echo "WARNING: no hwaccel backends detected."
-        echo "         Install the dev packages (libva/libvdpau/vulkan) and rebuild for GPU acceleration."
+        echo "         Install the dev packages (libva/libvdpau/libvulkan) and rebuild for GPU acceleration."
     fi
 else
     echo "WARNING: ${CODEC_PREFIX}/bin/ffmpeg not found; skipping hwaccel check."
