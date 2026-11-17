@@ -8,7 +8,9 @@
 # Qt installation has no AV1 decoders, so AV1 videos play audio-only.
 # This script produces a drop-in replacement build with AV1 decoders enabled.
 #
-# Usage:   helper_scripts/build-ffmpeg-av1.sh
+# Usage:   helper_scripts/build-ffmpeg-av1.sh [--install-deps]
+#          --install-deps  Install all build dependencies via the system
+#                          package manager (apt/dnf/yum/pacman) first.
 # Env:     CODEC_PREFIX  install prefix (default: $HOME/git/ffmpeg-n9.0.1-av1)
 #          FFMPEG_SRC    FFmpeg source dir (default: $HOME/git/ffmpeg)
 #          JOBS          parallel make jobs (default: nproc)
@@ -22,22 +24,83 @@ FFMPEG_SRC="${FFMPEG_SRC:-${HOME}/git/ffmpeg}"
 CODEC_PREFIX="${CODEC_PREFIX:-${HOME}/git/ffmpeg-n9.0.1-av1}"
 JOBS="${JOBS:-$(nproc)}"
 
-echo "==> Preflight checks"
-for tool in git make gcc nasm pkg-config; do
-    command -v "$tool" >/dev/null 2>&1 || {
-        echo "ERROR: '$tool' not found. Install build tools first (e.g. sudo apt install build-essential nasm pkg-config)."
-        exit 1; }
+# ---------------------------------------------------------------------------
+# Optional one-shot dependency install (--install-deps)
+# ---------------------------------------------------------------------------
+INSTALL_DEPS=0
+for arg in "$@"; do
+    case "$arg" in
+        --install-deps) INSTALL_DEPS=1 ;;
+    esac
 done
-if ! pkg-config --exists dav1d 2>/dev/null; then
-    echo "ERROR: dav1d development library not found (fast AV1 decoder)."
-    echo "       Debian/Ubuntu: sudo apt install libdav1d-dev"
-    echo "       Fedora:        sudo dnf install dav1d-devel"
-    exit 1
+
+# Package lists per distribution
+APT_DEPS="build-essential nasm pkg-config git \
+          libdav1d-dev libaom-dev \
+          libva-dev libva-drm-dev libva-x11-dev \
+          libvdpau-dev libvulkan-dev"
+
+DNF_DEPS="gcc-c++ make nasm pkgconf-pkg-config git \
+          dav1d-devel aom-devel \
+          libva-devel \
+          libvdpau-devel \
+          vulkan-devel"
+
+PACMAN_DEPS="base-devel nasm pkgconf git \
+             dav1d aom \
+             libva \
+             libvdpau \
+             vulkan-headers vulkan-loader"
+
+if [ "$INSTALL_DEPS" -eq 1 ]; then
+    if command -v apt-get >/dev/null 2>&1; then
+        echo "==> Installing dependencies via apt-get"
+        sudo apt-get update
+        sudo apt-get install -y $APT_DEPS
+    elif command -v dnf >/dev/null 2>&1; then
+        echo "==> Installing dependencies via dnf"
+        sudo dnf install -y $DNF_DEPS
+    elif command -v yum >/dev/null 2>&1; then
+        echo "==> Installing dependencies via yum"
+        sudo yum install -y $DNF_DEPS
+    elif command -v pacman >/dev/null 2>&1; then
+        echo "==> Installing dependencies via pacman"
+        sudo pacman -S --noconfirm $PACMAN_DEPS
+    else
+        echo "ERROR: no supported package manager found (apt/dnf/yum/pacman)."
+        echo "       Install dependencies manually:"
+        echo "         Debian/Ubuntu: sudo apt-get install $APT_DEPS"
+        echo "         Fedora:        sudo dnf install $DNF_DEPS"
+        echo "         Arch:          sudo pacman -S $PACMAN_DEPS"
+        exit 1
+    fi
 fi
-if ! pkg-config --exists aom 2>/dev/null; then
-    echo "ERROR: aom development library not found (AV1 fallback decoder)."
-    echo "       Debian/Ubuntu: sudo apt install libaom-dev"
-    echo "       Fedora:        sudo dnf install aom-devel"
+
+echo "==> Preflight checks"
+
+# Collect ALL missing deps up front and report them in one shot, so you
+# install everything in a single command (no more "fix one, re-run, find
+# the next one missing" loop).
+MISSING_TOOLS=()
+for tool in git make gcc nasm pkg-config; do
+    command -v "$tool" >/dev/null 2>&1 || MISSING_TOOLS+=("$tool")
+done
+
+MISSING_LIBS=()
+pkg-config --exists dav1d 2>/dev/null || MISSING_LIBS+=("dav1d")
+pkg-config --exists aom   2>/dev/null || MISSING_LIBS+=("aom")
+
+if [ ${#MISSING_TOOLS[@]} -gt 0 ] || [ ${#MISSING_LIBS[@]} -gt 0 ]; then
+    echo "ERROR: missing dependencies — install ALL of these at once:"
+    if [ ${#MISSING_TOOLS[@]} -gt 0 ]; then echo "  build tools:   ${MISSING_TOOLS[*]}"; fi
+    if [ ${#MISSING_LIBS[@]}  -gt 0 ]; then echo "  dev libraries: ${MISSING_LIBS[*]}"; fi
+    echo
+    echo "One command to install everything:"
+    echo "  Debian/Ubuntu: sudo apt-get install $APT_DEPS"
+    echo "  Fedora:        sudo dnf install $DNF_DEPS"
+    echo "  Arch:          sudo pacman -S $PACMAN_DEPS"
+    echo
+    echo "Tip: re-run with --install-deps to install these automatically."
     exit 1
 fi
 
@@ -57,9 +120,6 @@ cd "${BUILD_DIR}"
     --enable-shared \
     --enable-libdav1d \
     --enable-libaom \
-    --enable-vaapi \
-    --enable-vdpau \
-    --enable-vulkan \
     --enable-network \
     --disable-doc
 
