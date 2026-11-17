@@ -8,9 +8,13 @@
 # Qt installation has no AV1 decoders, so AV1 videos play audio-only.
 # This script produces a drop-in replacement build with AV1 decoders enabled.
 #
-# Usage:   helper_scripts/build-ffmpeg-av1.sh [--install-deps]
+# Usage:   helper_scripts/build-ffmpeg-av1.sh [--install-deps] [--clean|--reuse]
 #          --install-deps  Install all build dependencies via the system
 #                          package manager (apt/dnf/yum/pacman) first.
+#          --clean         Delete the existing deploy dir before building.
+#          --reuse         Reuse the existing deploy dir (default if present).
+#                          (If the deploy dir exists and you're at a terminal,
+#                           the script asks R/D; these flags skip the prompt.)
 # Env:     CODEC_PREFIX  install prefix (default: $HOME/git/ffmpeg-n9.0.1-av1)
 #          FFMPEG_SRC    FFmpeg source dir (default: $HOME/git/ffmpeg)
 #          JOBS          parallel make jobs (default: nproc)
@@ -28,9 +32,13 @@ JOBS="${JOBS:-$(nproc)}"
 # Optional one-shot dependency install (--install-deps)
 # ---------------------------------------------------------------------------
 INSTALL_DEPS=0
+CLEAN=0
+REUSE=0
 for arg in "$@"; do
     case "$arg" in
         --install-deps) INSTALL_DEPS=1 ;;
+        --clean)        CLEAN=1 ;;
+        --reuse)        REUSE=1 ;;
     esac
 done
 
@@ -104,6 +112,25 @@ if [ ${#MISSING_TOOLS[@]} -gt 0 ] || [ ${#MISSING_LIBS[@]} -gt 0 ]; then
     exit 1
 fi
 
+# Handle an existing deploy dir (CODEC_PREFIX). `make install` overwrites
+# files, so reuse is usually fine — but a clean start is safer if the build
+# config changed (e.g. a backend was added/removed). Ask interactively when
+# possible; --clean / --reuse skip the prompt (CI-safe).
+if [ -d "${CODEC_PREFIX}" ]; then
+    if [ -t 0 ] && [ "${CLEAN}" -eq 0 ] && [ "${REUSE}" -eq 0 ]; then
+        read -r -p "Deploy dir ${CODEC_PREFIX} exists. Reuse [R] or Delete & rebuild [D]? [R]: " _ans
+        case "${_ans}" in
+            [Dd]*) echo "==> Deleting deploy dir"; rm -rf "${CODEC_PREFIX}" ;;
+            *)     echo "==> Reusing existing deploy dir" ;;
+        esac
+    elif [ "${CLEAN}" -eq 1 ]; then
+        echo "==> Deleting deploy dir (--clean)"
+        rm -rf "${CODEC_PREFIX}"
+    else
+        echo "==> Reusing existing deploy dir"
+    fi
+fi
+
 echo "==> FFmpeg source: ${FFMPEG_SRC} (tag ${FFMPEG_TAG})"
 if [ ! -d "${FFMPEG_SRC}/.git" ]; then
     git clone https://git.ffmpeg.org/ffmpeg.git "${FFMPEG_SRC}"
@@ -139,4 +166,21 @@ else
     echo "ERROR: dav1d symbols missing from ${AVCODEC_LIB}"
     exit 1
 fi
+
+# Report which hwaccel backends made it into the build (auto-detected by
+# FFmpeg). This is the confirmation you were missing: if libva/libvdpau/
+# vulkan weren't installed, the corresponding backend is silently skipped.
+echo "==> Hwaccel backends in this build"
+if [ -x "${CODEC_PREFIX}/bin/ffmpeg" ]; then
+    HWACCELS=$("${CODEC_PREFIX}/bin/ffmpeg" -hwaccels 2>/dev/null | tail -n +2 | tr '\n' ' ' | sed 's/ *$//')
+    if [ -n "${HWACCELS}" ]; then
+        echo "OK: ${HWACCELS}"
+    else
+        echo "WARNING: no hwaccel backends detected."
+        echo "         Install the dev packages (libva/libvdpau/vulkan) and rebuild for GPU acceleration."
+    fi
+else
+    echo "WARNING: ${CODEC_PREFIX}/bin/ffmpeg not found; skipping hwaccel check."
+fi
+
 echo "==> Done. Codec libs: ${CODEC_PREFIX}/lib"
