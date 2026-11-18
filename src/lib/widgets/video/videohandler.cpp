@@ -4,6 +4,7 @@
 #include <QScreen>
 #include <QGuiApplication>
 #include <QWindow>
+#include "lib/common/fullscreenmodaldialog.h"
 VideoHandler::VideoHandler(PlayerControls* controls, XLibraryList* libraryList, XVideoPreviewWidget* videoPreview, QWidget *parent) : XWidget(parent),
     m_libraryListFrame(0),
     _player(0),
@@ -96,6 +97,7 @@ void VideoHandler::createLayout()
     connect(&m_overlayTimer, &QTimer::timeout, this, [this]() {
         hideControlsTimeout();
         hideLibraryTimeout();
+        m_topBar->hide();
     });
 
     // Subtitle tracking - sidecar .srt/.vtt/.ass cues drive the overlay label
@@ -121,7 +123,6 @@ void VideoHandler::setupViewLayout() {
     m_subtitleLabel->setParent(_videoView);
     if(_isFullScreen) {
         m_topBar->setParent(_videoView);
-        m_topBar->show();
         m_topBarLabel->setText(QFileInfo(_currentFile).fileName());
         m_controls->setParent(_videoView);
         layout->addWidget(m_topBar, 0, 0, 1, 2);
@@ -162,6 +163,7 @@ void VideoHandler::mouseMove( QMouseEvent* e ) {
         qApp->setOverrideCursor(Qt::CursorShape::ArrowCursor);
         showControls();
         showLibrary();
+        m_topBar->show();
         m_overlayTimer.start(3000);
     }
 }
@@ -198,6 +200,8 @@ void VideoHandler::showNormal() {
     auto flags = m_videoPreview->windowFlags();
     m_videoPreview->setParent(this->parentWidget(), flags);
 
+    FullScreenModalDialog::setFullScreenWindow(nullptr);
+    FullScreenModalDialog::setDialogParent(nullptr);
     showControls();
     qApp->setOverrideCursor(Qt::CursorShape::ArrowCursor);
 }
@@ -282,6 +286,20 @@ void VideoHandler::showFullscreen(QRect screenSize, bool libraryWindowed) {
     _videoView->showFullScreen();
     _videoView->setFocus();
     _videoView->grabKeyboard();
+
+    // Register the full screen window so modal dialogs opened while in full
+    // screen are re-parented on top of it and the cursor stays visible.
+    FullScreenModalDialog::setFullScreenWindow(_videoView);
+    // The library list lives inside the video window; use it as the parent for
+    // dialogs so they become child windows of the video window and stay on top.
+    FullScreenModalDialog::setDialogParent(m_libraryList);
+    connect(FullScreenModalDialog::instance(), &FullScreenModalDialog::modalStateChanged,
+            this, [this](int count) {
+        if (count == 0)
+            updateCursorForIdle();
+        else if (_videoView)
+            _videoView->releaseKeyboard();
+    });
 
     hideControls();
     hideLibrary();
@@ -629,7 +647,7 @@ void VideoHandler::hideControls()
     {
         // LogHandler::Debug("[hideControls] Hide controls");
         m_controls->hide();
-        if(m_libraryListFrame && m_libraryListFrame->isHidden())
+        if(m_libraryListFrame && m_libraryListFrame->isHidden() && !FullScreenModalDialog::isModalOpen())
             qApp->setOverrideCursor(Qt::BlankCursor);
     }
 }
@@ -659,7 +677,7 @@ void VideoHandler::hideLibrary()
     {
         if(m_libraryListFrame)
             m_libraryListFrame->hide();
-        if(m_controls && m_controls->isHidden())
+        if(m_controls && m_controls->isHidden() && !FullScreenModalDialog::isModalOpen())
             qApp->setOverrideCursor(Qt::BlankCursor);
     }
 }
@@ -701,6 +719,19 @@ void VideoHandler::hideLibraryTimeout()
             if(_isFullScreen && _videoView)
                 _videoView->grabKeyboard();
         }
+    }
+}
+
+// Re-hides the full screen cursor once no modal dialog is open and both the
+// controls and the library list are hidden (the idle "cinema" state).
+void VideoHandler::updateCursorForIdle()
+{
+    if(_isFullScreen && !FullScreenModalDialog::isModalOpen()
+       && m_controls && m_controls->isHidden()
+       && m_libraryListFrame && m_libraryListFrame->isHidden()) {
+        qApp->setOverrideCursor(Qt::BlankCursor);
+        if(_videoView)
+            _videoView->grabKeyboard();
     }
 }
 //void VideoHandler::audioBufferProbed(const QAudioBuffer &buffer) {

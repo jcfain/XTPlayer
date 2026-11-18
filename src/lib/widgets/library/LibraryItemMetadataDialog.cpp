@@ -13,6 +13,7 @@
 #include "lib/handler/funscripthandler.h"
 #include "lib/handler/xmediastatehandler.h"
 #include "lib/struct/LibraryListItemMetaData258.h"
+#include "lib/common/fullscreenmodaldialog.h"
 
 LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(parent)
 {
@@ -310,9 +311,9 @@ void LibraryItemMetadataDialog::getSettings(QWidget *parent, LibraryListItem27* 
 void LibraryItemMetadataDialog::showDialog(LibraryItemMetadataDialog *dialog, bool *ok)
 {
     dialog->offsetSpinBox->setValue(_libraryListItem->metadata.offset);
-    //dialog->setModal(false);
-    //dialog->setWindowFlags(Qt::WindowStaysOnTopHint);
+    FullScreenModalDialog::beginModal(dialog);
     const int ret = dialog->exec();
+    FullScreenModalDialog::endModal(dialog);
     if (ret)
     {
         if(dialog->offsetSpinBox->text().isEmpty())

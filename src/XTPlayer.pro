@@ -55,6 +55,7 @@ SOURCES += \
     dlnascriptlinks.cpp \
     inputmapwidget.cpp \
     lib/common/dialoghandler.cpp \
+    lib/common/fullscreenmodaldialog.cpp \
     lib/model/channeltablecomboboxdelegate.cpp \
     lib/model/channeltableviewmodel.cpp \
     lib/model/library/librarylistviewmodel.cpp \
@@ -91,6 +92,7 @@ HEADERS += \
     dlnascriptlinks.h \
     inputmapwidget.h \
     lib/common/dialoghandler.h \
+    lib/common/fullscreenmodaldialog.h \
     lib/model/channeltablecomboboxdelegate.h \
     lib/model/channeltableviewmodel.h \
     lib/model/library/librarylistviewmodel.h \

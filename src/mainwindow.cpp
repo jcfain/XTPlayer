@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "lib/common/fullscreenmodaldialog.h"
 
 MainWindow::MainWindow(XTEngine* xtengine, QWidget *parent)
     : QMainWindow(parent)
@@ -1217,9 +1218,13 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             if(SettingsHandler::getEnableMediaManagement())
             {
                 QAction* deleteMediaItemAction = myMenu.addAction(tr("Delete"), this, [this, selectedFileListItem]() {
-                    QMessageBox::StandardButton reply;
-                    reply = QMessageBox::question(libraryList, tr("WARNING!"), tr("Are you sure you want to delete the media item: ") + selectedFileListItem.nameNoExtension + tr("\nThis will delete the following items:\n\nAll funscripts\nThumbnails\nMetadata\n\nThis action cannot be undone!!"),
-                                                  QMessageBox::Yes|QMessageBox::No);
+                    QMessageBox box(FullScreenModalDialog::dialogParent(libraryList));
+                    box.setWindowTitle(tr("WARNING!"));
+                    box.setText(tr("Are you sure you want to delete the media item: ") + selectedFileListItem.nameNoExtension + tr("\nThis will delete the following items:\n\nAll funscripts\nThumbnails\nMetadata\n\nThis action cannot be undone!!"));
+                    box.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+                    FullScreenModalDialog::beginModal(&box);
+                    auto reply = box.exec();
+                    FullScreenModalDialog::endModal(&box);
                     if (reply == QMessageBox::Yes)
                     {
                         QStringList errors;
@@ -1490,7 +1495,18 @@ void MainWindow::playFileWithAudioSync()
 void MainWindow::playFileWithCustomScript()
 {
     LibraryListItem27 selectedFileListItem = libraryList->selectedItem();
-    QString selectedScript = QFileDialog::getOpenFileName(this, tr("Choose script"), QFileInfo(selectedFileListItem.path).absolutePath(), tr("Scripts (*.funscript *.zip)"));
+    QFileDialog dialog(FullScreenModalDialog::dialogParent(this));
+    dialog.setWindowTitle(tr("Choose script"));
+    dialog.setDirectory(QFileInfo(selectedFileListItem.path).absolutePath());
+    dialog.setNameFilter(tr("Scripts (*.funscript *.zip)"));
+    // Use the Qt (non-native) file dialog so it can be parented on top of the
+    // full screen video window; the native OS picker is a separate window we
+    // cannot control.
+    dialog.setOption(QFileDialog::DontUseNativeDialog, true);
+    FullScreenModalDialog::beginModal(&dialog);
+    dialog.exec();
+    FullScreenModalDialog::endModal(&dialog);
+    QString selectedScript = dialog.selectedFiles().value(0);
     if (selectedScript != Q_NULLPTR)
     {
         stopAndPlayMedia(selectedFileListItem, selectedScript);
@@ -1510,7 +1526,18 @@ void MainWindow::playFileWithCustomMedia()
     mediaTypes.append(audioTypes);
     const QString mediaMemeType = "Media (" + mediaTypes.join(QString(" ")) + ")";
     LibraryListItem27 selectedFileListItem = libraryList->selectedItem();
-    QString selectedMedia = QFileDialog::getOpenFileName(this, tr("Choose media"), QFileInfo(selectedFileListItem.path).absolutePath(), mediaMemeType);
+    QFileDialog dialog(FullScreenModalDialog::dialogParent(this));
+    dialog.setWindowTitle(tr("Choose media"));
+    dialog.setDirectory(QFileInfo(selectedFileListItem.path).absolutePath());
+    dialog.setNameFilter(mediaMemeType);
+    // Use the Qt (non-native) file dialog so it can be parented on top of the
+    // full screen video window; the native OS picker is a separate window we
+    // cannot control.
+    dialog.setOption(QFileDialog::DontUseNativeDialog, true);
+    FullScreenModalDialog::beginModal(&dialog);
+    dialog.exec();
+    FullScreenModalDialog::endModal(&dialog);
+    QString selectedMedia = dialog.selectedFiles().value(0);
     if (!selectedMedia.isEmpty())
     {
         LibraryListItem27 selectedMediaItem;
@@ -2879,12 +2906,15 @@ QString MainWindow::getPlaylistName(bool newPlaylist)
 {
     bool ok;
     QString playlistName = nullptr;
+    // In full screen, parent the dialog to a widget inside the video window so it
+    // stays on top of the video instead of behind it.
+    QWidget* dialogParent = FullScreenModalDialog::dialogParent(this);
     if(newPlaylist)
-        playlistName = PlaylistDialog::getNewPlaylist(this, &ok);
+        playlistName = PlaylistDialog::getNewPlaylist(dialogParent, &ok);
     else
     {
         LibraryListItem27 selectedFileListItem = libraryList->selectedItem();
-        playlistName = PlaylistDialog::renamePlaylist(this, selectedFileListItem.nameNoExtension, &ok);
+        playlistName = PlaylistDialog::renamePlaylist(dialogParent, selectedFileListItem.nameNoExtension, &ok);
     }
 
     if(newPlaylist && ok)

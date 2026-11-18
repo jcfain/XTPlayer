@@ -68,7 +68,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToMoneyShotButton->setEnabled(false);
 
 
-    playerControlsGrid->addWidget(skipToMoneyShotButton, row, 6, 1, 4);
+    playerControlsGrid->addWidget(skipToMoneyShotButton, row, 7, 1, 4);
 
     lblDuration = new QLabel(this);
     lblDuration->setObjectName(QString::fromUtf8("lblDuration"));

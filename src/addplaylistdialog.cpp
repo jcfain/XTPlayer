@@ -6,6 +6,7 @@
 #include "lib/handler/loghandler.h"
 
 #include "dialoghandler.h"
+#include "lib/common/fullscreenmodaldialog.h"
 
 PlaylistDialog::PlaylistDialog(QWidget *parent) : QDialog(parent)
 {
@@ -47,7 +48,9 @@ QString PlaylistDialog::renamePlaylist(QWidget *parent, QString playlistName, bo
 
 QString PlaylistDialog::getPlaylistNAme(PlaylistDialog *dialog, bool *ok)
 {
+    FullScreenModalDialog::beginModal(dialog);
     const int ret = dialog->exec();
+    FullScreenModalDialog::endModal(dialog);
     if (ok)
         *ok = !!ret;
     if (ok)

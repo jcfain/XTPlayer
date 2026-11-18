@@ -1,6 +1,7 @@
 #include "dialoghandler.h"
 #include <QInputDialog>
 #include <QDialogButtonBox>
+#include "lib/common/fullscreenmodaldialog.h"
 
 DialogHandler::DialogHandler(QObject *parent)
     : QObject{parent}
@@ -11,8 +12,9 @@ DialogHandler::DialogHandler(QObject *parent)
 void DialogHandler::MessageBox(QWidget* parent, QString message, XLogLevel level)
 {
     LogHandler::Debug(message);
-    QMessageBox messageBox(parent);
+    QMessageBox messageBox(FullScreenModalDialog::dialogParent(parent));
     messageBox.setTextFormat(Qt::RichText);
+    FullScreenModalDialog::beginModal(&messageBox);
     switch(level)
     {
         case XLogLevel::Debuging:
@@ -27,13 +29,14 @@ void DialogHandler::MessageBox(QWidget* parent, QString message, XLogLevel level
             messageBox.critical(0, LogHandler::getLevel(level), message);
         break;
     }
+    FullScreenModalDialog::endModal(&messageBox);
     messageBox.setFixedSize(500,200);
 }
 
 int DialogHandler::Dialog(QWidget* parent, QLayout* layout, bool modal, bool showAccept)
 {
     if(!_dialog) {
-        _dialog = new QDialog(parent);
+        _dialog = new QDialog(FullScreenModalDialog::dialogParent(parent));
         _dialog->setMinimumSize({175, 100});
         connect(_dialog, &QDialog::destroyed, [](){
             qDebug("Dialog is gone.");
@@ -56,8 +59,12 @@ int DialogHandler::Dialog(QWidget* parent, QLayout* layout, bool modal, bool sho
         else
             _dialog->deleteLater();
         _dialog->setLayout(layout);
-        if(modal)
-            return _dialog->exec();
+        if(modal) {
+            FullScreenModalDialog::beginModal(_dialog);
+            int ret = _dialog->exec();
+            FullScreenModalDialog::endModal(_dialog);
+            return ret;
+        }
         else
             _dialog->show();
     }
@@ -67,7 +74,7 @@ int DialogHandler::Dialog(QWidget* parent, QLayout* layout, bool modal, bool sho
 int DialogHandler::Dialog(QWidget* parent, QString message, bool modal, bool showAccept)
 {
     if(!_dialog) {
-        _dialog = new QDialog(parent);
+        _dialog = new QDialog(FullScreenModalDialog::dialogParent(parent));
         _dialog->setMinimumSize({175, 100});
         connect(_dialog, &QDialog::destroyed, [](){
             qDebug("Dialog accept is gone.");
@@ -99,8 +106,12 @@ int DialogHandler::Dialog(QWidget* parent, QString message, bool modal, bool sho
         _dialog->setModal(modal);
         _dialog->setLayout(layout);
         connect(_dialog, &QDialog::rejected, DialogRejected);
-        if(modal)
-            return _dialog->exec();
+        if(modal) {
+            FullScreenModalDialog::beginModal(_dialog);
+            int ret = _dialog->exec();
+            FullScreenModalDialog::endModal(_dialog);
+            return ret;
+        }
         else
             _dialog->show();
     }

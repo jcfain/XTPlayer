@@ -20,6 +20,7 @@
 #include "xwidget.h"
 #include "xsubtitlesource.h"
 #include "dialoghandler.h"
+#include "lib/common/fullscreenmodaldialog.h"
 
 class VideoHandler : public XWidget
 {
@@ -137,5 +138,6 @@ private:
     void showLibrary();
     void hideControlsTimeout();
     void hideLibraryTimeout();
+    void updateCursorForIdle();
 };
 #endif // VIDEOHANDLER_H
