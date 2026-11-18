@@ -1184,7 +1184,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
                 connect(revealThumbAction, &QAction::hovered, this, &MainWindow::on_action_hover);
                 revealThumbAction->setToolTip(tr("Open the thumb file in the systems file explorer"));
             }
-            QAction* metadataAction = myMenu.addAction(tr("Edit metadata..."), this, [this, selectedFileListItem] () {
+            QAction* metadataAction = myMenu.addAction(tr("Properties"), this, [this, selectedFileListItem] () {
                 if(m_xtengine->mediaLibraryHandler()->isMetadataProcessing()) {
                     DialogHandler::MessageBox(libraryList, tr("Please wait for metadata process to complete!"), XLogLevel::Warning);
                     return;
@@ -1199,7 +1199,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
             connect(metadataAction, &QAction::hovered, this, &MainWindow::on_action_hover);
             metadataAction->setToolTip(tr("Edit the media items metadata"));
 
-            QAction* processMetadataAction = myMenu.addAction(tr("Update metadata"), this, [this, selectedFileListItem] () {
+            QAction* processMetadataAction = myMenu.addAction(tr("Process metadata"), this, [this, selectedFileListItem] () {
                 if(!m_xtengine->mediaLibraryHandler()->metadataProcessing()) {
                     auto item = m_xtengine->mediaLibraryHandler()->findItemByReference(&selectedFileListItem);
                     if(!item) {
@@ -1216,7 +1216,7 @@ void MainWindow::onLibraryList_ContextMenuRequested(const QPoint &pos)
 
             if(SettingsHandler::getEnableMediaManagement())
             {
-                QAction* deleteMediaItemAction = myMenu.addAction(tr("Delete..."), this, [this, selectedFileListItem]() {
+                QAction* deleteMediaItemAction = myMenu.addAction(tr("Delete"), this, [this, selectedFileListItem]() {
                     QMessageBox::StandardButton reply;
                     reply = QMessageBox::question(libraryList, tr("WARNING!"), tr("Are you sure you want to delete the media item: ") + selectedFileListItem.nameNoExtension + tr("\nThis will delete the following items:\n\nAll funscripts\nThumbnails\nMetadata\n\nThis action cannot be undone!!"),
                                                   QMessageBox::Yes|QMessageBox::No);

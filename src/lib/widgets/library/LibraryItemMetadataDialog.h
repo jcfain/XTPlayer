@@ -8,6 +8,7 @@
 #include <QPushButton>
 #include <QDialogButtonBox>
 #include <QGridLayout>
+#include <QTabWidget>
 #include "lib/struct/LibraryListItem27.h"
 #include "lib/handler/synchandler.h"
 
@@ -21,6 +22,7 @@ public:
     static void getSettings(QWidget *parent, LibraryListItem27* item, SyncHandler* syncHandler, bool *ok = nullptr);
 
 private:
+    QTabWidget* m_tabWidget;
     QLabel* offsetLabel;
     QSpinBox* offsetSpinBox;
     QLabel* globalOffsetLabel;
@@ -39,6 +41,12 @@ private:
     static LibraryListItem27* _libraryListItem;
     static void showDialog(LibraryItemMetadataDialog *dialog, bool *ok);
     void updateOffsetLabel();
+    // Builds the read-only Info tab (mirrors the WebUI media item info tab).
+    QWidget* buildInfoTab();
+    // H:MM:SS (or M:SS under an hour), like the WebUI formatTime().
+    static QString formatTime(qint64 ms);
+    // "123456 (2:03)" or Unknown for missing/negative values.
+    static QString formatOriginalDuration(qint64 ms);
 };
 
 #endif // LIBRARYITEMMETADATADIALOG_H
