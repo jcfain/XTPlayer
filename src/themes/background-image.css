@@ -71,6 +71,21 @@ QMenu {
     background-color: transparent;
     color: white;
 }
+QMenu::indicator {
+    width: 13px;
+    height: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 2px;
+    background-color: rgba(0, 0, 0, 0.25);
+}
+QMenu::indicator:checked {
+    background-color: rgba(255, 255, 255, 0.25);
+    image: url(:/images/icons/check-mark-green.png);
+}
+QMenu::indicator:disabled {
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background-color: rgba(0, 0, 0, 0.15);
+}
 QMenu::item{
  background-color: transparent;
  color: white;

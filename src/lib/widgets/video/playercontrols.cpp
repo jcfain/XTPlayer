@@ -139,7 +139,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     loopToggleButton->setFlat(true);
     loopToggleButton->setEnabled(false);
 
-    playerControlsGrid->addWidget(loopToggleButton, row, 1, 1, 1);
+    playerControlsGrid->addWidget(loopToggleButton, row, 3, 1, 1);
 
     altScriptBtn = new QPushButton(this);
     altScriptBtn->setObjectName(QString::fromUtf8("altScriptBtn"));
@@ -183,23 +183,38 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     altScriptLayout->addWidget(alternateStriptCmb);
     connect(alternateStriptCmb, &QComboBox::currentTextChanged, this, &PlayerControls::onAlternateFunscriptSelected);
 
-    mediaSettingsBtn = new QPushButton(this);
-    mediaSettingsBtn->setEnabled(false);
-    mediaSettingsBtn->setObjectName(QString::fromUtf8("mediaSettingsBtn"));
-    mediaSettingsBtn->setProperty("cssClass", "playerControlButton");
-    mediaSettingsBtn->setToolTip(tr("Open the current media settings dialog"));
-    mediaSettingsBtn->setMinimumSize(QSize(0, 20));
+    mediaPopoverBtn = new QPushButton(this);
+    mediaPopoverBtn->setEnabled(false);
+    mediaPopoverBtn->setObjectName(QString::fromUtf8("mediaPopoverBtn"));
+    mediaPopoverBtn->setProperty("cssClass", "playerControlButton");
+    mediaPopoverBtn->setToolTip(tr("Media options: properties, subtitles"));
+    mediaPopoverBtn->setMinimumSize(QSize(0, 20));
     QIcon iconMediaSettings;
-    iconMediaSettings.addFile(QString::fromUtf8("://images/icons/settings.svg"), QSize(), QIcon::Normal, QIcon::Off);
-    mediaSettingsBtn->setIcon(iconMediaSettings);
-    mediaSettingsBtn->setIconSize(QSize(20, 20));
-    mediaSettingsBtn->setFlat(true);
-    playerControlsGrid->addWidget(mediaSettingsBtn, row, 3, 1, 1);
+    iconMediaSettings.addFile(QString::fromUtf8(":/images/icons/chevron-up.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    mediaPopoverBtn->setIcon(iconMediaSettings);
+    mediaPopoverBtn->setIconSize(QSize(20, 20));
+    mediaPopoverBtn->setFlat(true);
+    playerControlsGrid->addWidget(mediaPopoverBtn, row, 1, 1, 1);
 
-    connect(mediaSettingsBtn, &QPushButton::clicked, this, [this]() {
+    m_mediaMenu = new QMenu(this);
+    m_mediaPropertiesAction = m_mediaMenu->addAction(QIcon(QString::fromUtf8(":/images/icons/settings.svg")), tr("Properties"));
+    connect(m_mediaPropertiesAction, &QAction::triggered, this, [this]() {
         auto item = XMediaStateHandler::getPlaying();
         if(item)
             emit editMetadataClicked(item);
+    });
+    m_mediaMenu->addSeparator();
+    m_subtitleAction = m_mediaMenu->addAction(QIcon(QString::fromUtf8(":/images/icons/cc.svg")), tr("Subtitles"));
+    m_subtitleAction->setCheckable(true);
+    m_subtitleAction->setEnabled(false);
+    connect(m_subtitleAction, &QAction::triggered, this, [this]() {
+        // 0 = first sidecar track, -1 = subtitles off.
+        emit subtitleChanged(m_subtitleAction->isChecked() ? 0 : -1);
+    });
+    connect(mediaPopoverBtn, &QPushButton::clicked, this, [this]() {
+        // Show above the button, right aligned with its right edge.
+        QPoint pos = mediaPopoverBtn->mapToGlobal(QPoint(mediaPopoverBtn->width(), -m_mediaMenu->sizeHint().height()));
+        m_mediaMenu->exec(pos);
     });
 
 //    settingsButton = new QPushButton(this);
@@ -365,11 +380,14 @@ void PlayerControls::resetMediaControlStatus(bool playing)
     setTimeLineDisabled(!playing);
     setSkipToMoneyShotEnabled(playing);
     loopToggleButton->setEnabled(playing);
-    mediaSettingsBtn->setEnabled(playing);
+    mediaPopoverBtn->setEnabled(playing);
     _stopBtn->setEnabled(playing);
     playbackRateInput->setEnabled(playing);
     setPlayIcon(playing);
-    // subtitleCmb->setEnabled(playing);
+    // Only enable while playing AND the current media actually has subtitle
+    // sidecars - on_media_start() fires after LoadedMedia, so a plain
+    // setEnabled(playing) would re-enable the toggle for subtitle-less media.
+    m_subtitleAction->setEnabled(playing && m_subtitleAvailable);
     playbackRateInput->setValue(1.0);
     if(!playing)
     {
@@ -488,13 +506,13 @@ void PlayerControls::setTime(qint64 time)
 
 void PlayerControls::setSubtitles(const QList<QString> &value)
 {
-    // subtitleCmb->clear();
-    // subtitleCmb->addItem(tr("None"));
-    // for(const auto &sub : value)
-    // {
-    //     LogHandler::Debug("Subtitles found: "+ sub);
-    //     subtitleCmb->addItem(sub);
-    // }
+    // VideoHandler auto-loads the first sidecar when media is set, so the
+    // toggle starts checked (subtitles on) whenever tracks are available.
+    m_subtitleAvailable = !value.isEmpty();
+    m_subtitleAction->blockSignals(true);
+    m_subtitleAction->setEnabled(m_subtitleAvailable);
+    m_subtitleAction->setChecked(m_subtitleAvailable);
+    m_subtitleAction->blockSignals(false);
 }
 void PlayerControls::setDuration(qint64 duration)
 {
