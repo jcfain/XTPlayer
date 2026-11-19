@@ -8,8 +8,13 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     setProperty("cssClass", "windowedControls");
     setObjectName(QString::fromUtf8("playerControlsFrame"));
     setAttribute(Qt::WA_StyledBackground);
-    setMinimumSize(QSize(240, 110));
-    setMaximumSize(QSize(16777215, 16777215));
+    // Only force the width. The layout's true minimum height (rows + the
+    // fixed 35px heatmap + spacing) exceeds 110 with most style metrics, so
+    // forcing a smaller minimum lets the outer grid squash this frame below
+    // its content minimum when the window shrinks (e.g. the delayed resize
+    // to the saved size after exiting full screen) and the rows spill over
+    // each other (heatmap overlapping the button row).
+    setMinimumWidth(240);
     setFrameShape(QFrame::StyledPanel);
     setFrameShadow(QFrame::Raised);
     playerControlsGrid = new QGridLayout(this);
