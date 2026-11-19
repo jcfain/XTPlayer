@@ -26,6 +26,12 @@ set -e
 FFMPEG_TAG=n9.0.1
 FFMPEG_SRC="${FFMPEG_SRC:-${HOME}/git/ffmpeg}"
 CODEC_PREFIX="${CODEC_PREFIX:-${HOME}/git/ffmpeg-n9.0.1-av1}"
+# A relative CODEC_PREFIX (e.g. from CI) is resolved against the current
+# directory: FFmpeg's configure --prefix must be absolute.
+case "$CODEC_PREFIX" in
+    /*) ;;
+    *) CODEC_PREFIX="$(pwd)/${CODEC_PREFIX}" ;;
+esac
 JOBS="${JOBS:-$(nproc)}"
 
 # ---------------------------------------------------------------------------
