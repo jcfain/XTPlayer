@@ -21,6 +21,13 @@ XTPlayer is a cross platform TCode media player.
       4. Choose at least one path to the media/funscripts to add.
       5. The application will scan the directory and all subdirectories for media and their funscripts then start generating thumbnails. This can take sometime on first startup depending on how many files you have.
 
+## CI builds (GitHub Actions)
+* **Nightly** — built daily at 02:00 UTC (and on demand via the Actions "Run workflow" button) from `Development` (XTEngine `Development`). Published to the rolling [`nightly` release](https://github.com/jcfain/XTPlayer/releases/tag/nightly).
+* **Release** — built from `main` (XTEngine `main`) whenever a `v*` tag is pushed (`git tag v0.6.10 && git push origin v0.6.10`).
+* Artifacts: Linux x86_64 + aarch64 AppImages, Windows x86_64 zip, macOS universal (arm64 + x86_64) DMG. All bundle an AV1-capable FFmpeg build (dav1d/aom + hwaccel), so no separate codec pack is needed.
+* The Angular web bundle is built in CI from `XTEngine/src/wwwsrc` — no manual www deploy/commit needed.
+* The macOS DMG is **ad-hoc signed** (no Apple Developer account): on first launch, right-click the app → **Open** (or `xattr -d com.apple.quarantine /Applications/XTPlayer.app`).
+
 ## Building from source
      1. Download and install the following apps
           *  QT Creator Community Open source edition: https://www.qt.io/download 

@@ -75,7 +75,7 @@ src/.qmake.stash
 /bin
 /build*
 */build*
-!helper_scripts/build-ffmpeg-av1.sh
+!helper_scripts/build-ffmpeg-av1*.sh
 /libav*
 /XTPlayer-release
 src/www/.vscode

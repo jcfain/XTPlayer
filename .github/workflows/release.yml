@@ -1,0 +1,59 @@
+# =============================================================================
+# XTPlayer — release builds
+#
+# Triggered by pushing a version tag (v*) from main. Builds XTPlayer (main)
+# against XTEngine (main) for all four platforms and publishes the artifacts
+# as a GitHub Release with auto-generated notes.
+#
+# To cut a release:
+#   git checkout main && git pull
+#   git tag v0.6.10
+#   git push origin v0.6.10
+# =============================================================================
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build all platforms
+    uses: ./.github/workflows/build.yml
+    with:
+      player-branch: main
+      engine-branch: main
+      version: ${{ github.ref_name }}
+
+  publish:
+    name: Create release
+    needs: build
+    if: needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Flatten artifacts
+        run: |
+          find dist -type f -exec mv {} dist/ \;
+          rm -rf dist/xtp-web   # internal web-bundle artifact, not a release asset
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: XTPlayer ${{ github.ref_name }}
+          generate_release_notes: true
+          body: |
+            Artifacts:
+            * Linux x86_64 + aarch64 AppImages
+            * Windows x86_64 zip
+            * macOS universal (arm64 + x86_64) DMG
+
+            > **macOS:** the DMG is ad-hoc signed (no Apple Developer account).
+            > First launch: right-click the app → **Open** (or
+            > `xattr -d com.apple.quarantine /Applications/XTPlayer.app`).
+          files: |
+            dist/*
