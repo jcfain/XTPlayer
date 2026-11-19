@@ -105,14 +105,6 @@ LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(
     layout->addWidget(moneyShotLabel, currentRow, 0, 1, 1);
     layout->addWidget(moneyShotLineEdit, currentRow, 1, 1, 1);
     layout->addWidget(resetMoneyShotButton, currentRow, 2, 1, 1);
-    currentRow++;
-
-    creatorLabel = new QLabel(settingsTab);
-    creatorLabel->setText(tr("Creator"));
-    creatorLineEdit = new QLineEdit(settingsTab);
-    creatorLineEdit->setText(_libraryListItem->metadata.creator);
-    layout->addWidget(creatorLabel, currentRow, 0, 1, 1);
-    layout->addWidget(creatorLineEdit, currentRow, 1, 1, 2);
     m_tabWidget->addTab(settingsTab, tr("Settings"));
 
     // ----- Tags tab -----
@@ -179,6 +171,10 @@ QWidget* LibraryItemMetadataDialog::buildInfoTab()
     QVBoxLayout* contentLayout = new QVBoxLayout(content);
 
     QFormLayout* form = new QFormLayout();
+    creatorLabel = new QLabel(tr("Creator:"));
+    creatorLineEdit = new QLineEdit();
+    creatorLineEdit->setText(item->metadata.creator);
+    form->addRow(creatorLabel, creatorLineEdit);
     form->addRow(tr("Name:"), new QLabel(item->name));
     form->addRow(tr("Path:"), new QLabel(item->path));
     form->addRow(tr("Date Added:"), new QLabel(item->metadata.dateAdded.isValid() ? item->metadata.dateAdded.toString() : tr("Unknown")));
