@@ -18,6 +18,14 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent), _inputMapWidg
 {
     ui.setupUi(this);
     setModal(false);
+    // The .ui file hard-codes a dialog size that fits the Windows style's
+    // metrics. On Linux the default style (Fusion/Breeze) renders group box
+    // titles and buttons taller, so re-fit the dialog to the layout's
+    // preferred size for the current platform's style to avoid clipped
+    // controls. resize() is used instead of adjustSize() because
+    // adjustSize() clamps to 2/3 of the screen size, which can be smaller
+    // than the layout's preferred size.
+    resize(sizeHint());
     connect(ui.buttonBox, &QDialogButtonBox::clicked, this, &SettingsDialog::on_dialogButtonboxClicked);
     connect(this, &SettingsDialog::loadingDialogClose, this, &SettingsDialog::on_close_loading_dialog);
 }
