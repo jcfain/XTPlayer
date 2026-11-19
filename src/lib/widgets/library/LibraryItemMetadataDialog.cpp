@@ -105,6 +105,14 @@ LibraryItemMetadataDialog::LibraryItemMetadataDialog(QWidget *parent) : QDialog(
     layout->addWidget(moneyShotLabel, currentRow, 0, 1, 1);
     layout->addWidget(moneyShotLineEdit, currentRow, 1, 1, 1);
     layout->addWidget(resetMoneyShotButton, currentRow, 2, 1, 1);
+    currentRow++;
+
+    creatorLabel = new QLabel(settingsTab);
+    creatorLabel->setText(tr("Creator"));
+    creatorLineEdit = new QLineEdit(settingsTab);
+    creatorLineEdit->setText(_libraryListItem->metadata.creator);
+    layout->addWidget(creatorLabel, currentRow, 0, 1, 1);
+    layout->addWidget(creatorLineEdit, currentRow, 1, 1, 2);
     m_tabWidget->addTab(settingsTab, tr("Settings"));
 
     // ----- Tags tab -----
@@ -330,6 +338,7 @@ void LibraryItemMetadataDialog::showDialog(LibraryItemMetadataDialog *dialog, bo
 //            _libraryListItemMetaData.moneyShotMillis = ms.isEmpty() ? -1 : ms.toLongLong();
         _libraryListItem->metadata.offset = dialog->offsetSpinBox->value();
         _libraryListItem->metadata.funscriptModifier = dialog->funscriptModifierSpinBox->value();
+        _libraryListItem->metadata.creator = dialog->creatorLineEdit->text();
         qint64 moneyShot = dialog->moneyShotLineEdit->text().toLongLong();
         _libraryListItem->metadata.moneyShotMillis = moneyShot > 0 ? moneyShot : -1;
         foreach (QString tag, dialog->m_itemTagsToRemove) {

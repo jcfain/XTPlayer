@@ -38,6 +38,9 @@ private:
     QLineEdit* moneyShotLineEdit;
     QPushButton* resetMoneyShotButton;
 
+    QLabel* creatorLabel;
+    QLineEdit* creatorLineEdit;
+
     static LibraryListItem27* _libraryListItem;
     static void showDialog(LibraryItemMetadataDialog *dialog, bool *ok);
     void updateOffsetLabel();
