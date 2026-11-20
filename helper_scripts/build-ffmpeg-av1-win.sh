@@ -111,7 +111,7 @@ EOF
     meson setup "${WORKDIR}/dav1d-build" "${DAV1D_SRC}" \
         --prefix="${CODEC_PREFIX}" --libdir=lib \
         --cross-file="${WORKDIR}/dav1d-mingw.txt" \
-        -Dasm=true -Denable_docs=false
+        -Denable_asm=true -Denable_docs=false
     ninja -C "${WORKDIR}/dav1d-build" -j"${JOBS}"
     ninja -C "${WORKDIR}/dav1d-build" install
 else

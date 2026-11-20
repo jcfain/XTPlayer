@@ -142,7 +142,7 @@ jobs:
           test -f "${QT_DIR}/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
             && echo "QtGamepadLegacy installed into ${QT_DIR}"
       - name: Build FFmpeg n9.0.1 (AV1 + hwaccel)
-        run: bash helper_scripts/build-ffmpeg-av1.sh --clean
+        run: bash helper_scripts/build-ffmpeg-av1.sh --clean --install-deps
 
       - name: Build XTEngine
         run: |
@@ -246,7 +246,8 @@ jobs:
             qemu-user-binfmt binfmt-support
           # qemu lets the aarch64 moc/rcc/uic (shipped with the aarch64 Qt)
           # run during the cross build.
-          sudo update-binfmts --enable --display
+          sudo update-binfmts --enable
+          sudo update-binfmts --display || true
       - name: Cache Qt
         uses: actions/cache@v4
         with:
