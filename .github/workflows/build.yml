@@ -41,9 +41,10 @@ env:
   # Pinned to the exact commit the local Qt trees were built from
   # (pumphaus/qtgamepadlegacy, dev branch).
   GAMEPADLEGACY_REF: '434fe59d70f42fa0f745af05921ba64169fce90b'
-  # aqt module names (jurplel/install-qt-action). In Qt 6.12 Bluetooth is
-  # part of qtconnectivity and the wayland platform plugin is in qtbase.
-  QT_MODULES: 'qthttpserver qtimageformats qtmultimedia qtserialport qtspeech qtwebsockets qtconnectivity qtwaylandcompositor'
+  # Addon packages installed on top of base Qt by helper_scripts/install-qt.sh.
+  # Everything else the project uses (serialport, websockets, speech,
+  # connectivity/bluetooth, imageformats, wayland) ships in the base package.
+  QT_MODULES: 'qtmultimedia'
 
 jobs:
   web:
@@ -106,22 +107,24 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             build-essential cmake ninja-build pkg-config nasm meson \
             libgl1-mesa-dev libxkbcommon-dev libwayland-dev \
-            libfontconfig1-dev libfreetype6-dev libdbus-1-dev libglib2.0-dev \
+            libfontconfig1-dev libfreetype-dev libdbus-1-dev libglib2.0-dev \
             libbluetooth-dev libusb-1.0-0-dev libasound2-dev \
             libx11-dev libxcb1-dev libxext-dev libxrender-dev libxi-dev \
-            libxfixes3-dev libxrandr-dev libxcomposite-dev libxdamage-dev \
+            libxfixes-dev libxrandr-dev libxcomposite-dev libxdamage-dev \
             libxtst-dev libnss3-dev libxcb-xinerama0-dev libxcb-cursor0 \
             libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
             libxcb-render-util0 libxcb-shape0 libxcb-xkb1 libxkbcommon-x11-0 \
-            libsm6 libice6 libfuse2 libgssapi-krb5-2
-      - name: Install Qt ${{ env.QT_VERSION }}
-        uses: jurplel/install-qt-action@v4
+            libsm6 libice6 libfuse2t64 libgssapi-krb5-2
+      - name: Cache Qt
+        uses: actions/cache@v4
         with:
-          version: ${{ env.QT_VERSION }}
-          arch: linux_gcc_64
-          dir: ${{ env.QT_DIR }}
-          modules: ${{ env.QT_MODULES }}
-          install-deps: true
+          path: ${{ env.QT_DIR }}
+          key: qt-${{ env.QT_VERSION }}-Linux-x64-${{ hashFiles('helper_scripts/install-qt.sh') }}
+      - name: Install Qt ${{ env.QT_VERSION }}
+        env:
+          QT_OS_DIR: linux_x64
+          QT_ARCH: linux_gcc_64
+        run: bash helper_scripts/install-qt.sh
       - name: Checkout QtGamepadLegacy
         uses: actions/checkout@v4
         with:
@@ -244,13 +247,16 @@ jobs:
           # qemu lets the aarch64 moc/rcc/uic (shipped with the aarch64 Qt)
           # run during the cross build.
           sudo update-binfmts --enable --display
-      - name: Install Qt ${{ env.QT_VERSION }} (aarch64)
-        uses: jurplel/install-qt-action@v4
+      - name: Cache Qt
+        uses: actions/cache@v4
         with:
-          version: ${{ env.QT_VERSION }}
-          arch: linux_gcc_arm64
-          dir: ${{ env.QT_DIR }}
-          modules: ${{ env.QT_MODULES }}
+          path: ${{ env.QT_DIR }}
+          key: qt-${{ env.QT_VERSION }}-Linux-arm64-${{ hashFiles('helper_scripts/install-qt.sh') }}
+      - name: Install Qt ${{ env.QT_VERSION }} (aarch64)
+        env:
+          QT_OS_DIR: linux_arm64
+          QT_ARCH: linux_gcc_arm64
+        run: bash helper_scripts/install-qt.sh
       - name: Checkout QtGamepadLegacy
         uses: actions/checkout@v4
         with:
@@ -347,7 +353,7 @@ jobs:
         shell: bash
     env:
       QT_DIR: qt6
-      MINGW_PREFIX: qt6/Tools/mingw1310_64
+      MINGW_PREFIX: qt6/Tools/mingw1510_64
       CODEC_PREFIX: ffmpeg-av1-win
     steps:
       - name: Checkout XTPlayer
@@ -366,14 +372,17 @@ jobs:
           rm -rf ../XTEngine/src/www
           mkdir -p ../XTEngine/src/www
           cp -r web-bundle/* ../XTEngine/src/www/
-      - name: Install Qt ${{ env.QT_VERSION }} (MinGW)
-        uses: jurplel/install-qt-action@v4
+      - name: Cache Qt
+        uses: actions/cache@v4
         with:
-          version: ${{ env.QT_VERSION }}
-          arch: win64_mingw
-          dir: ${{ env.QT_DIR }}
-          modules: ${{ env.QT_MODULES }}
-          tools: mingw1310_64
+          path: ${{ env.QT_DIR }}
+          key: qt-${{ env.QT_VERSION }}-Windows-${{ hashFiles('helper_scripts/install-qt.sh') }}
+      - name: Install Qt ${{ env.QT_VERSION }} (MinGW)
+        env:
+          QT_OS_DIR: windows_x86
+          QT_ARCH: win64_mingw
+          QT_TOOLS: mingw1510
+        run: bash helper_scripts/install-qt.sh
       - name: Install FFmpeg build tools
         run: |
           choco install nasm -y
@@ -473,13 +482,16 @@ jobs:
           cp -r web-bundle/* ../XTEngine/src/www/
       - name: Install build tools
         run: brew install --quiet nasm meson ninja
-      - name: Install Qt ${{ env.QT_VERSION }}
-        uses: jurplel/install-qt-action@v4
+      - name: Cache Qt
+        uses: actions/cache@v4
         with:
-          version: ${{ env.QT_VERSION }}
-          arch: clang_64
-          dir: ${{ env.QT_DIR }}
-          modules: ${{ env.QT_MODULES }}
+          path: ${{ env.QT_DIR }}
+          key: qt-${{ env.QT_VERSION }}-macOS-${{ hashFiles('helper_scripts/install-qt.sh') }}
+      - name: Install Qt ${{ env.QT_VERSION }}
+        env:
+          QT_OS_DIR: mac_x64
+          QT_ARCH: clang_64
+        run: bash helper_scripts/install-qt.sh
       - name: Checkout QtGamepadLegacy
         uses: actions/checkout@v4
         with:
