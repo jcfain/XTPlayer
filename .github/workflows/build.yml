@@ -44,7 +44,9 @@ env:
   # Addon packages installed on top of base Qt by helper_scripts/install-qt.sh.
   # Everything else the project uses (serialport, websockets, speech,
   # connectivity/bluetooth, imageformats, wayland) ships in the base package.
-  QT_MODULES: 'qtmultimedia'
+  # Addon packages: qtspeech provides texttospeech, qtconnectivity provides
+  # bluetooth (both verified against the download.qt.io 6.12.0 layout).
+  QT_MODULES: 'qtmultimedia qtserialport qtspeech qtwebsockets qtconnectivity qthttpserver'
 
 jobs:
   web:
@@ -252,10 +254,12 @@ jobs:
             qemu-user-binfmt binfmt-support
           # aarch64 OpenGL dev libs (multiarch): Qt6Gui's CMake config
           # requires WrapOpenGL, which must resolve for the aarch64 target.
+          # libglib2.0-0t64: the aarch64 Qt tools (qtpaths, moc, ...) run
+          # under qemu and need the aarch64 runtime libs.
           sudo dpkg --add-architecture arm64
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            libgl1-mesa-dev:arm64 libegl-dev:arm64
+            libgl1-mesa-dev:arm64 libegl-dev:arm64 libglib2.0-0t64:arm64
           # qemu lets the aarch64 moc/rcc/uic (shipped with the aarch64 Qt)
           # run during the cross build.
           sudo update-binfmts --enable

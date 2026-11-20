@@ -40,6 +40,14 @@ JOBS="${JOBS:-4}"
 XP=x86_64-w64-mingw32
 export PATH="${MINGW_PREFIX}/bin:$PATH"
 
+# Qt's MinGW only ships gcc-* wrappers; FFmpeg's configure/make expect
+# plain cross-prefixed binutils. Symlink whatever is missing.
+for tool in ar nm ranlib; do
+    if [ ! -e "${MINGW_PREFIX}/bin/${XP}-${tool}.exe" ] && [ -e "${MINGW_PREFIX}/bin/${XP}-gcc-${tool}.exe" ]; then
+        ln -sf "gcc-${tool}.exe" "${MINGW_PREFIX}/bin/${XP}-${tool}.exe"
+    fi
+done
+
 CLEAN=0
 REUSE=0
 for arg in "$@"; do
@@ -128,7 +136,7 @@ fi
 # ---------------------------------------------------------------------------
 # aom (cross, CMake MinGW Makefiles)
 # ---------------------------------------------------------------------------
-if [ ! -f "${CODEC_PREFIX}/lib/aom.dll" ]; then
+if [ ! -f "${CODEC_PREFIX}/bin/aom.dll" ]; then
     echo "==> Building aom ${AOM_TAG} (${XP})"
     if [ ! -d "${AOM_SRC}/.git" ]; then
         git clone --depth 1 --branch "${AOM_TAG}" \
@@ -144,6 +152,20 @@ if [ ! -f "${CODEC_PREFIX}/lib/aom.dll" ]; then
         -DCMAKE_INSTALL_PREFIX="${CODEC_PREFIX}"
     cmake --build "${WORKDIR}/aom-build" -j"${JOBS}"
     cmake --install "${WORKDIR}/aom-build"
+    # aom's CMake install doesn't ship a usable aom.pc for our prefix;
+    # write one (FFmpeg's configure finds aom via pkg-config).
+    mkdir -p "${CODEC_PREFIX}/lib/pkgconfig"
+    cat > "${CODEC_PREFIX}/lib/pkgconfig/aom.pc" <<EOF
+prefix=${CODEC_PREFIX}
+libdir=\${prefix}/lib
+includedir=\${prefix}/include
+
+Name: aom
+Description: AV1 encoding and decoding library
+Version: ${AOM_TAG}
+Libs: -L\${libdir} -laom
+Cflags: -I\${includedir}
+EOF
 else
     echo "==> aom already in ${CODEC_PREFIX} (skipping)"
 fi
