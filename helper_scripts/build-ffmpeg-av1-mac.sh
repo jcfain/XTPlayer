@@ -45,8 +45,8 @@ done
 
 # CI cache: if the final artifact is already in place (restored from
 # actions/cache), skip the whole build. --clean forces a rebuild.
-if [ "${CLEAN}" -eq 0 ] && [ -f "${CODEC_PREFIX}/lib/avcodec.63.dylib" ]; then
-    echo "==> ${CODEC_PREFIX}/lib/avcodec.63.dylib present — skipping build"
+if [ "${CLEAN}" -eq 0 ] && [ -f "${CODEC_PREFIX}/lib/libavcodec.63.dylib" ]; then
+    echo "==> ${CODEC_PREFIX}/lib/libavcodec.63.dylib present — skipping build"
     exit 0
 fi
 
@@ -231,7 +231,8 @@ cd "${WORKDIR}"
 
 echo "==> Lipo'ing FFmpeg dylibs into ${CODEC_PREFIX}"
 mkdir -p "${CODEC_PREFIX}/lib" "${CODEC_PREFIX}/include"
-for lib in avcodec.63 avformat.63 avutil.61 swscale.10 swresample.7; do
+# FFmpeg's darwin SLIBNAME_WITH_MAJOR is lib<name>.<major>.dylib (SLIBPREF=lib).
+for lib in libavcodec.63 libavformat.63 libavutil.61 libswscale.10 libswresample.7; do
     lipo -create -output "${CODEC_PREFIX}/lib/${lib}.dylib" \
         "${WORKDIR}/ffmpeg-prefix-arm64/lib/${lib}.dylib" \
         "${WORKDIR}/ffmpeg-prefix-x86_64/lib/${lib}.dylib"
@@ -241,23 +242,23 @@ cp -R "${WORKDIR}/ffmpeg-prefix-arm64/include/." "${CODEC_PREFIX}/include/"
 # ---------------------------------------------------------------------------
 # Verify
 # ---------------------------------------------------------------------------
-AVCODEC_LIB="${CODEC_PREFIX}/lib/avcodec.63.dylib"
+AVCODEC_LIB="${CODEC_PREFIX}/lib/libavcodec.63.dylib"
 if [ ! -f "${AVCODEC_LIB}" ]; then
-    echo "ERROR: avcodec.63.dylib not found in ${CODEC_PREFIX}/lib"
+    echo "ERROR: libavcodec.63.dylib not found in ${CODEC_PREFIX}/lib"
     exit 1
 fi
 if lipo -info "${AVCODEC_LIB}" | grep -q "arm64 x86_64"; then
-    echo "OK: avcodec.63.dylib is universal (arm64 x86_64)"
+    echo "OK: libavcodec.63.dylib is universal (arm64 x86_64)"
 else
-    echo "ERROR: avcodec.63.dylib is NOT universal:"
+    echo "ERROR: libavcodec.63.dylib is NOT universal:"
     lipo -info "${AVCODEC_LIB}"
     exit 1
 fi
 if nm -gU "${AVCODEC_LIB}" 2>/dev/null | grep -q dav1d || \
    otool -L "${AVCODEC_LIB}" | grep -q libdav1d; then
-    echo "OK: AV1 (dav1d) decoder present in avcodec.63.dylib"
+    echo "OK: AV1 (dav1d) decoder present in libavcodec.63.dylib"
 else
-    echo "ERROR: dav1d missing from avcodec.63.dylib"
+    echo "ERROR: dav1d missing from libavcodec.63.dylib"
     exit 1
 fi
 echo "==> Done. Codec libs: ${CODEC_PREFIX}/lib"

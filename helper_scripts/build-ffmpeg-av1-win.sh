@@ -36,6 +36,15 @@ case "$CODEC_PREFIX" in
     *) CODEC_PREFIX="$(pwd)/${CODEC_PREFIX}" ;;
 esac
 MINGW_PREFIX="${MINGW_PREFIX:-${HOME}/Qt/Tools/mingw1310_64}"
+# GitHub Actions injects env vars in Windows form (D:\a\...); Git Bash needs
+# POSIX form (/d/a/...) for [ -e ] / PATH lookups. Normalize if necessary.
+case "$MINGW_PREFIX" in
+    [A-Za-z]:\\*|[A-Za-z]:/*)
+        if command -v cygpath >/dev/null 2>&1; then
+            MINGW_PREFIX="$(cygpath -u "$MINGW_PREFIX")"
+        fi
+        ;;
+esac
 JOBS="${JOBS:-4}"
 XP=x86_64-w64-mingw32
 export PATH="${MINGW_PREFIX}/bin:$PATH"
@@ -190,6 +199,10 @@ git -C "${FFMPEG_SRC}" fetch --tags origin 2>/dev/null || true
 git -C "${FFMPEG_SRC}" checkout "${FFMPEG_TAG}"
 
 BUILD_DIR="${FFMPEG_SRC}/build-av1-win"
+echo "==> Tool diagnostics"
+echo "MINGW_PREFIX=${MINGW_PREFIX}"
+ls "${MINGW_PREFIX}/bin/" 2>/dev/null | grep -E "^${XP}-(gcc|g\+\+|ar|nm|ranlib|pkg-config)\.exe$" || echo "  (no cross tools listed!)"
+command -v "${XP}-nm" "${XP}-ar" "${XP}-ranlib" "${XP}-pkg-config" || true
 echo "==> Configuring (prefix: ${CODEC_PREFIX})"
 rm -rf "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}"

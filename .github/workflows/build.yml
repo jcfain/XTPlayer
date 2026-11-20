@@ -204,6 +204,21 @@ jobs:
           else
             echo "WARNING: libqwebp.so NOT in the Qt tree - thumbs will fall back to jpg."
           fi
+          # Diagnostics: the qt plugin resolves its Qt root from `qmake -query`;
+          # print what it will see so a regression is self-explanatory.
+          echo "==> qmake diagnostics"
+          echo "QMAKE=${QMAKE:-<unset>}"
+          "${QT_DIR}/bin/qmake" -query QT_INSTALL_PREFIX QT_INSTALL_LIBS QT_INSTALL_PLUGINS
+          test -f "${QT_DIR}/plugins/platforms/libqxcb.so" \
+            && echo "OK: libqxcb.so present in the Qt tree" \
+            || { echo "ERROR: libqxcb.so missing from ${QT_DIR}/plugins/platforms"; exit 1; }
+          # Pre-stage the Qt plugins tree into the appdir. The qt plugin
+          # deploys each plugin from <qtroot>/plugins to appdir/plugins; if its
+          # qmake query ever resolves the Qt root to the appdir itself, the
+          # sources are found here and the (self) copies are skipped, so the
+          # deployment succeeds either way.
+          mkdir -p "${APPDIR}/usr/plugins"
+          cp -r "${QT_DIR}/plugins/." "${APPDIR}/usr/plugins/"
           chmod +x linuxdeploy/x86_64/linuxdeploy-x86_64.AppImage linuxdeploy/x86_64/linuxdeploy-plugin-qt-x86_64.AppImage
           QMAKE="${QT_DIR}/bin/qmake" \
           LD_LIBRARY_PATH="${APPDIR}/usr/lib:${GITHUB_WORKSPACE}/build-release/release:${GITHUB_WORKSPACE}/../XTEngine/build-release/release" \
@@ -261,7 +276,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libgl1-mesa-dev:arm64 libegl-dev:arm64 libglib2.0-0t64:arm64 \
-            pkg-config:arm64
+            pkg-config:arm64 \
+            libpulse-dev:arm64 libxkbcommon-dev:arm64 libfreetype-dev:arm64 \
+            libfontconfig1-dev:arm64 libbrotli-dev:arm64 libdbus-1-dev:arm64
           # qemu lets the aarch64 moc/rcc/uic (shipped with the aarch64 Qt)
           # run during the cross build.
           sudo update-binfmts --enable
@@ -346,6 +363,15 @@ jobs:
           cp -f "${CODEC_PREFIX}/lib"/libswresample.so.7*  "${APPDIR}/usr/lib/"
           cp -f "${CODEC_PREFIX}/lib"/libdav1d.so.7*       "${APPDIR}/usr/lib/" 2>/dev/null || true
           cp -f "${CODEC_PREFIX}/lib"/libaom.so.3*         "${APPDIR}/usr/lib/" 2>/dev/null || true
+          # Same qmake-root diagnostics + plugin pre-staging as the x86_64 job.
+          echo "==> qmake diagnostics"
+          echo "QMAKE=${QMAKE:-<unset>}"
+          "${QT_DIR}/bin/qmake" -query QT_INSTALL_PREFIX QT_INSTALL_LIBS QT_INSTALL_PLUGINS
+          test -f "${QT_DIR}/plugins/platforms/libqxcb.so" \
+            && echo "OK: libqxcb.so present in the Qt tree" \
+            || { echo "ERROR: libqxcb.so missing from ${QT_DIR}/plugins/platforms"; exit 1; }
+          mkdir -p "${APPDIR}/usr/plugins"
+          cp -r "${QT_DIR}/plugins/." "${APPDIR}/usr/plugins/"
           # Cross-package with the HOST (x86_64) linuxdeploy: --cross-compile
           # makes it read the target Qt install from QMAKE and bundle the
           # aarch64 plugins, so the aarch64 AppImage binaries never need to
@@ -566,13 +592,14 @@ jobs:
       - name: Package DMG
         run: |
           APP="build-release/release/XTPlayer.app"
-          # AV1 dylibs go in BEFORE macdeployqt so it fixes up their install names
+          # AV1 dylibs go in BEFORE macdeployqt so it fixes up their install names.
+          # FFmpeg on macOS installs them with the "lib" prefix (libavcodec.63.dylib).
           mkdir -p "$APP/Contents/Frameworks"
-          cp "$CODEC_PREFIX/lib/avcodec.63.dylib"    "$APP/Contents/Frameworks/"
-          cp "$CODEC_PREFIX/lib/avformat.63.dylib"   "$APP/Contents/Frameworks/"
-          cp "$CODEC_PREFIX/lib/avutil.61.dylib"     "$APP/Contents/Frameworks/"
-          cp "$CODEC_PREFIX/lib/swscale.10.dylib"    "$APP/Contents/Frameworks/"
-          cp "$CODEC_PREFIX/lib/swresample.7.dylib"  "$APP/Contents/Frameworks/"
+          cp "$CODEC_PREFIX/lib/libavcodec.63.dylib"   "$APP/Contents/Frameworks/"
+          cp "$CODEC_PREFIX/lib/libavformat.63.dylib"  "$APP/Contents/Frameworks/"
+          cp "$CODEC_PREFIX/lib/libavutil.61.dylib"    "$APP/Contents/Frameworks/"
+          cp "$CODEC_PREFIX/lib/libswscale.10.dylib"   "$APP/Contents/Frameworks/"
+          cp "$CODEC_PREFIX/lib/libswresample.7.dylib" "$APP/Contents/Frameworks/"
           cp "$CODEC_PREFIX/lib/libdav1d.dylib"      "$APP/Contents/Frameworks/"
           cp "$CODEC_PREFIX/lib/libaom.dylib"        "$APP/Contents/Frameworks/"
           "${QT_DIR}/bin/macdeployqt" "$APP"
