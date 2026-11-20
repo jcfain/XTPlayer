@@ -1,0 +1,74 @@
+# =============================================================================
+# XTPlayer — nightly builds
+#
+# Builds XTPlayer (Development) against XTEngine (Development) daily at
+# 02:00 UTC and on demand ("Run workflow" button), then publishes the
+# artifacts to the rolling 'nightly' GitHub Release (assets replaced each
+# run).
+#
+# NOTE: GitHub only fires `schedule` events for workflows on the DEFAULT
+# branch, so this file must exist on main as well as Development. The
+# branch being BUILT is always Development (see engine-branch + the
+# checkout in build.yml, which checks out the calling ref).
+# =============================================================================
+name: Nightly
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  meta:
+    name: Release name
+    runs-on: ubuntu-latest
+    outputs:
+      release-name: ${{ steps.v.outputs.release_name }}
+    steps:
+      - id: v
+        run: echo "release_name=Nightly $(date -u +%Y-%m-%d) — ${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build all platforms
+    needs: meta
+    uses: ./.github/workflows/build.yml
+    with:
+      player-branch: Development
+      engine-branch: Development
+      # Fixed 'nightly' in the file names so overwrite_files replaces the
+      # previous run's assets; the date/commit live in the release name.
+      version: nightly
+
+  publish:
+    name: Publish nightly release
+    needs: [build, meta]
+    if: needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Flatten artifacts
+        run: |
+          find dist -type f -exec mv {} dist/ \;
+          rm -rf dist/xtp-web   # internal web-bundle artifact, not a release asset
+      - name: Publish to rolling 'nightly' release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly
+          name: ${{ needs.meta.outputs.release-name }}
+          body: |
+            Nightly build of **Development** (XTEngine **Development**) — commit ${{ github.sha }}
+
+            Artifacts:
+            * Linux x86_64 + aarch64 AppImages
+            * Windows x86_64 zip
+            * macOS universal (arm64 + x86_64) DMG
+
+            > **macOS:** the DMG is ad-hoc signed (no Apple Developer account).
+            > First launch: right-click the app → **Open** (or
+            > `xattr -d com.apple.quarantine /Applications/XTPlayer.app`).
+          files: |
+            dist/*
+          overwrite_files: true

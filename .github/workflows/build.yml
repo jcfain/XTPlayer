@@ -1,0 +1,575 @@
+# =============================================================================
+# XTPlayer — reusable build pipeline
+#
+# Called by nightly.yml (Development) and release.yml (main / v* tags).
+# Builds XTEngine + XTPlayer and packages four artifacts:
+#
+#   - Linux x86_64   AppImage  (native)
+#   - Linux aarch64  AppImage  (cross-compiled from the x86_64 runner)
+#   - Windows x86_64 zip       (MinGW)
+#   - macOS universal DMG      (arm64 + x86_64, ad-hoc signed)
+#
+# Every artifact bundles a custom FFmpeg n9.0.1 with AV1 (dav1d/aom) +
+# hwaccel, replacing the AV1-less FFmpeg that ships with Qt.
+#
+# The Angular web bundle is built once (web job) and injected into the
+# XTEngine checkout, so no manually committed www bundle is ever used.
+#
+# Layout note: the .pro files hardcode a sibling layout
+# (../../XTEngine/...), so XTEngine is checked out to ../XTEngine.
+# =============================================================================
+name: Build (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      player-branch:
+        description: 'XTPlayer branch to build (Development for nightly, main for release)'
+        required: true
+        type: string
+      engine-branch:
+        description: 'XTEngine branch to build against (Development or main)'
+        required: true
+        type: string
+      version:
+        description: 'Version string for artifact names (e.g. v0.6.10, nightly-20261119-abc1234)'
+        required: true
+        type: string
+
+env:
+  QT_VERSION: '6.12.0'
+  # Pinned to the exact commit the local Qt trees were built from
+  # (pumphaus/qtgamepadlegacy, dev branch).
+  GAMEPADLEGACY_REF: '434fe59d70f42fa0f745af05921ba64169fce90b'
+  QT_COMPONENTS: 'qt6 qt6-tools qt6-httpserver qt6-serialport qt6-texttospeech qt6-websockets qt6-multimedia qt6-bluetooth qt6-imageformats'
+
+jobs:
+  web:
+    name: Angular web bundle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout XTEngine
+        uses: actions/checkout@v4
+        with:
+          repository: jcfain/XTEngine
+          ref: ${{ inputs.engine-branch }}
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: src/wwwsrc/package-lock.json
+      - name: Install npm deps
+        working-directory: src/wwwsrc
+        run: npm ci
+      - name: Build (production)
+        working-directory: src/wwwsrc
+        run: |
+          npm run set-version
+          npx ng build --configuration production
+      - name: Upload bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: xtp-web
+          path: src/wwwsrc/dist/xtp-web/browser
+          retention-days: 1
+
+  linux-x86_64:
+    name: Linux x86_64 (AppImage)
+    runs-on: ubuntu-latest
+    needs: web
+    env:
+      QT_DIR: qt6
+      CODEC_PREFIX: ffmpeg-av1
+    steps:
+      - name: Checkout XTPlayer
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.player-branch }}
+      - name: Checkout XTEngine
+        uses: actions/checkout@v4
+        with:
+          repository: jcfain/XTEngine
+          ref: ${{ inputs.engine-branch }}
+          path: ../XTEngine
+      - name: Restore CI-built web bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: xtp-web
+          path: web-bundle
+      - name: Install web bundle into XTEngine
+        run: |
+          rm -rf ../XTEngine/src/www
+          mkdir -p ../XTEngine/src/www
+          cp -r web-bundle/* ../XTEngine/src/www/
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build pkg-config nasm meson \
+            libgl1-mesa-dev libxkbcommon-dev libwayland-dev \
+            libfontconfig1-dev libfreetype6-dev libdbus-1-dev libglib2.0-dev \
+            libbluetooth-dev libusb-1.0-0-dev libasound2-dev \
+            libx11-dev libxcb1-dev libxext-dev libxrender-dev libxi-dev \
+            libxfixes3-dev libxrandr-dev libxcomposite-dev libxdamage-dev \
+            libxtst-dev libnss3-dev libxcb-xinerama0-dev libxcb-cursor0 \
+            libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
+            libxcb-render-util0 libxcb-shape0 libxcb-xkb1 libxkbcommon-x11-0 \
+            libsm6 libice6 libfuse2 libgssapi-krb5-2
+      - name: Install Qt ${{ env.QT_VERSION }}
+        uses: qt/qtdownload@v1
+        with:
+          version: ${{ env.QT_VERSION }}
+          variant: gcc_64
+          target: desktop
+          arch: x86_64
+          install_dir: ${{ env.QT_DIR }}
+          components: ${{ env.QT_COMPONENTS }} qt6-wayland
+      - name: Checkout QtGamepadLegacy
+        uses: actions/checkout@v4
+        with:
+          repository: pumphaus/qtgamepadlegacy
+          ref: ${{ env.GAMEPADLEGACY_REF }}
+          path: qtgamepadlegacy
+      - name: Build + install QtGamepadLegacy into the Qt tree
+        run: |
+          cmake -S qtgamepadlegacy -B qtgamepadlegacy/build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="${QT_DIR}" \
+            -DCMAKE_INSTALL_PREFIX="${QT_DIR}"
+          cmake --build qtgamepadlegacy/build -j"$(nproc)"
+          cmake --install qtgamepadlegacy/build
+          test -f "${QT_DIR}/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
+            && echo "QtGamepadLegacy installed into ${QT_DIR}"
+      - name: Build FFmpeg n9.0.1 (AV1 + hwaccel)
+        run: bash helper_scripts/build-ffmpeg-av1.sh --clean
+
+      - name: Build XTEngine
+        run: |
+          mkdir -p ../XTEngine/build-release
+          cd ../XTEngine/build-release
+          "${QT_DIR}/bin/qmake" ../src/XTEngine.pro CONFIG+=release
+          make -j"$(nproc)"
+      - name: Build XTPlayer
+        run: |
+          mkdir -p build-release
+          cd build-release
+          "${QT_DIR}/bin/qmake" ../src/XTPlayer.pro CONFIG+=release
+          make -j"$(nproc)"
+      - name: Package AppImage
+        env:
+          EXTRA_PLATFORM_PLUGINS: libqwayland.so
+          EXTRA_QT_MODULES: waylandcompositor
+        run: |
+          APPDIR="${GITHUB_WORKSPACE}/dist/XTPlayer-${{ inputs.version }}-Linux-x86_64"
+          rm -rf dist
+          mkdir -p dist "${APPDIR}/usr/bin" "${APPDIR}/usr/lib"
+          # Stage the app (same layout as lin_release_deploy-appimage.sh)
+          cp build-release/release/XTPlayer "${APPDIR}/usr/bin/"
+          cp -r build-release/release/www "${APPDIR}/usr/bin/"
+          cp -r build-release/release/themes "${APPDIR}/usr/bin/"
+          cp -r build-release/release/translations "${APPDIR}/usr/bin/"
+          cp -P ../XTEngine/build-release/release/libxtengine.so* "${APPDIR}/usr/lib/"
+          # Bundle the AV1 codec libs (overwrites the AV1-less Qt copies)
+          cp -f "${CODEC_PREFIX}/lib"/libavcodec.so.63*    "${APPDIR}/usr/lib/"
+          cp -f "${CODEC_PREFIX}/lib"/libavformat.so.63*   "${APPDIR}/usr/lib/"
+          cp -f "${CODEC_PREFIX}/lib"/libavutil.so.61*     "${APPDIR}/usr/lib/"
+          cp -f "${CODEC_PREFIX}/lib"/libswscale.so.10*    "${APPDIR}/usr/lib/"
+          cp -f "${CODEC_PREFIX}/lib"/libswresample.so.7*  "${APPDIR}/usr/lib/"
+          cp -f "${CODEC_PREFIX}/lib"/libdav1d.so.7*       "${APPDIR}/usr/lib/" 2>/dev/null || true
+          cp -f "${CODEC_PREFIX}/lib"/libaom.so.3*         "${APPDIR}/usr/lib/" 2>/dev/null || true
+          # glibc compatibility guard (same as lin_release_deploy-appimage.sh)
+          _codec_lib="${APPDIR}/usr/lib/$(ls "${APPDIR}/usr/lib" | grep '^libavcodec.so.63' | head -1)"
+          _need_glibc="$(objdump -T "${_codec_lib}" 2>/dev/null | grep -oE 'GLIBC_[0-9]+\.[0-9]+' | sed 's/GLIBC_//' | sort -Vu | tail -1)"
+          _sys_glibc="$(ldd --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+' | head -1)"
+          if [ -n "${_need_glibc}" ] && [ -n "${_sys_glibc}" ]; then
+            if [ "${_need_glibc%%.*}" -gt "${_sys_glibc%%.*}" ] || \
+               { [ "${_need_glibc%%.*}" -eq "${_sys_glibc%%.*}" ] && [ "${_need_glibc#*.}" -gt "${_sys_glibc#*.}" ]; }; then
+              echo "ERROR: AV1 codec libs require glibc ${_need_glibc} but the runner has glibc ${_sys_glibc}."
+              exit 1
+            fi
+            echo "OK: codec glibc requirement (${_need_glibc}) <= runner glibc (${_sys_glibc})."
+          fi
+          # webp imageformat plugin check (qt6-imageformats ships it)
+          if [ -f "${QT_DIR}/plugins/imageformats/libqwebp.so" ]; then
+            echo "OK: libqwebp.so present in the Qt tree (webp thumbs enabled)."
+          else
+            echo "WARNING: libqwebp.so NOT in the Qt tree - thumbs will fall back to jpg."
+          fi
+          chmod +x linuxdeploy/x86_64/linuxdeploy-x86_64.AppImage linuxdeploy/x86_64/linuxdeploy-plugin-qt-x86_64.AppImage
+          LD_LIBRARY_PATH="${APPDIR}/usr/lib:${GITHUB_WORKSPACE}/build-release/release:${GITHUB_WORKSPACE}/../XTEngine/build-release/release" \
+          ./linuxdeploy/x86_64/linuxdeploy-x86_64.AppImage \
+            --appdir "${APPDIR}" \
+            --executable "${APPDIR}/usr/bin/XTPlayer" \
+            --plugin qt \
+            --output appimage \
+            --icon-file src/images/icons/XTP-icon.png \
+            --desktop-file XTPlayer.desktop
+          mv XTPlayer-x86_64.AppImage "dist/XTPlayer-${{ inputs.version }}-Linux-x86_64.AppImage"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xtp-linux-x86_64
+          path: dist/XTPlayer-${{ inputs.version }}-Linux-x86_64.AppImage
+
+
+  linux-aarch64:
+    name: Linux aarch64 (AppImage, cross)
+    runs-on: ubuntu-latest
+    needs: web
+    env:
+      QT_DIR: qt6-arm64
+      CODEC_PREFIX: ffmpeg-av1-arm64
+    steps:
+      - name: Checkout XTPlayer
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.player-branch }}
+      - name: Checkout XTEngine
+        uses: actions/checkout@v4
+        with:
+          repository: jcfain/XTEngine
+          ref: ${{ inputs.engine-branch }}
+          path: ../XTEngine
+      - name: Restore CI-built web bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: xtp-web
+          path: web-bundle
+      - name: Install web bundle into XTEngine
+        run: |
+          rm -rf ../XTEngine/src/www
+          mkdir -p ../XTEngine/src/www
+          cp -r web-bundle/* ../XTEngine/src/www/
+      - name: Install cross toolchain + qemu
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build pkg-config nasm meson \
+            gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu \
+            qemu-user-static binfmt-support
+          # qemu lets the aarch64 moc/rcc/uic (shipped with the aarch64 Qt)
+          # run during the cross build.
+          sudo update-binfmts --enable --display
+      - name: Install Qt ${{ env.QT_VERSION }} (aarch64)
+        uses: qt/qtdownload@v1
+        with:
+          version: ${{ env.QT_VERSION }}
+          variant: gcc_arm64
+          target: desktop
+          arch: aarch64
+          install_dir: ${{ env.QT_DIR }}
+          components: ${{ env.QT_COMPONENTS }} qt6-wayland
+      - name: Checkout QtGamepadLegacy
+        uses: actions/checkout@v4
+        with:
+          repository: pumphaus/qtgamepadlegacy
+          ref: ${{ env.GAMEPADLEGACY_REF }}
+          path: qtgamepadlegacy
+      - name: Cross-build + install QtGamepadLegacy
+        run: |
+          cmake -S qtgamepadlegacy -B qtgamepadlegacy/build \
+            -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+            -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
+            -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="${QT_DIR}" \
+            -DCMAKE_INSTALL_PREFIX="${QT_DIR}"
+          cmake --build qtgamepadlegacy/build -j"$(nproc)"
+          cmake --install qtgamepadlegacy/build
+          test -f "${QT_DIR}/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
+            && echo "QtGamepadLegacy (aarch64) installed into ${QT_DIR}"
+      - name: Build FFmpeg n9.0.1 (aarch64 cross, AV1)
+        run: bash helper_scripts/build-ffmpeg-av1-aarch64.sh --clean
+
+      - name: Cross-build XTEngine
+        run: |
+          mkdir -p ../XTEngine/build-release
+          cd ../XTEngine/build-release
+          "${QT_DIR}/bin/qmake" \
+            QMAKE_CC=aarch64-linux-gnu-gcc \
+            QMAKE_CXX=aarch64-linux-gnu-g++ \
+            QMAKE_LINK=aarch64-linux-gnu-g++ \
+            QMAKE_LINK_SHLIB=aarch64-linux-gnu-g++ \
+            ../src/XTEngine.pro CONFIG+=release
+          make -j"$(nproc)"
+      - name: Cross-build XTPlayer
+        run: |
+          mkdir -p build-release
+          cd build-release
+          "${QT_DIR}/bin/qmake" \
+            QMAKE_CC=aarch64-linux-gnu-gcc \
+            QMAKE_CXX=aarch64-linux-gnu-g++ \
+            QMAKE_LINK=aarch64-linux-gnu-g++ \
+            QMAKE_LINK_SHLIB=aarch64-linux-gnu-g++ \
+            ../src/XTPlayer.pro CONFIG+=release
+          make -j"$(nproc)"
+      - name: Package AppImage (cross)
+        env:
+          EXTRA_PLATFORM_PLUGINS: libqwayland.so
+          EXTRA_QT_MODULES: waylandcompositor
+        run: |
+          APPDIR="${GITHUB_WORKSPACE}/dist/XTPlayer-${{ inputs.version }}-Linux-aarch64"
+          rm -rf dist
+          mkdir -p dist "${APPDIR}/usr/bin" "${APPDIR}/usr/lib"
+          cp build-release/release/XTPlayer "${APPDIR}/usr/bin/"
+          cp -r build-release/release/www "${APPDIR}/usr/bin/"
+          cp -r build-release/release/themes "${APPDIR}/usr/bin/"
+          cp -r build-release/release/translations "${APPDIR}/usr/bin/"
+          cp -P ../XTEngine/build-release/release/libxtengine.so* "${APPDIR}/usr/lib/"
+          cp -f "${CODEC_PREFIX}/lib"/libavcodec.so.63*    "${APPDIR}/usr/lib/"
+          cp -f "${CODEC_PREFIX}/lib"/libavformat.so.63*   "${APPDIR}/usr/lib/"
+          cp -f "${CODEC_PREFIX}/lib"/libavutil.so.61*     "${APPDIR}/usr/lib/"
+          cp -f "${CODEC_PREFIX}/lib"/libswscale.so.10*    "${APPDIR}/usr/lib/"
+          cp -f "${CODEC_PREFIX}/lib"/libswresample.so.7*  "${APPDIR}/usr/lib/"
+          cp -f "${CODEC_PREFIX}/lib"/libdav1d.so.7*       "${APPDIR}/usr/lib/" 2>/dev/null || true
+          cp -f "${CODEC_PREFIX}/lib"/libaom.so.3*         "${APPDIR}/usr/lib/" 2>/dev/null || true
+          # Cross-package with the HOST (x86_64) linuxdeploy: --cross-compile
+          # makes it read the target Qt install from QMAKE and bundle the
+          # aarch64 plugins, so the aarch64 AppImage binaries never need to
+          # execute on this x86_64 runner.
+          chmod +x linuxdeploy/x86_64/linuxdeploy-x86_64.AppImage linuxdeploy/x86_64/linuxdeploy-plugin-qt-x86_64.AppImage
+          QMAKE="${QT_DIR}/bin/qmake" \
+          LD_LIBRARY_PATH="${APPDIR}/usr/lib" \
+          ./linuxdeploy/x86_64/linuxdeploy-x86_64.AppImage \
+            --appdir "${APPDIR}" \
+            --executable "${APPDIR}/usr/bin/XTPlayer" \
+            --plugin qt \
+            --cross-compile \
+            --output appimage \
+            --icon-file src/images/icons/XTP-icon.png \
+            --desktop-file XTPlayer.desktop
+          mv XTPlayer-arm*.AppImage "dist/XTPlayer-${{ inputs.version }}-Linux-aarch64.AppImage"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xtp-linux-aarch64
+          path: dist/XTPlayer-${{ inputs.version }}-Linux-aarch64.AppImage
+
+
+  windows:
+    name: Windows x86_64 (zip)
+    runs-on: windows-latest
+    needs: web
+    defaults:
+      run:
+        shell: bash
+    env:
+      QT_DIR: qt6
+      MINGW_PREFIX: qt6/Tools/mingw1310_64
+      CODEC_PREFIX: ffmpeg-av1-win
+    steps:
+      - name: Checkout XTPlayer
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.player-branch }}
+      - name: Checkout XTEngine
+        uses: actions/checkout@v4
+        with:
+          repository: jcfain/XTEngine
+          ref: ${{ inputs.engine-branch }}
+          path: ../XTEngine
+      - name: Restore CI-built web bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: xtp-web
+          path: web-bundle
+      - name: Install web bundle into XTEngine
+        run: |
+          rm -rf ../XTEngine/src/www
+          mkdir -p ../XTEngine/src/www
+          cp -r web-bundle/* ../XTEngine/src/www/
+      - name: Install Qt ${{ env.QT_VERSION }} (MinGW)
+        uses: qt/qtdownload@v1
+        with:
+          version: ${{ env.QT_VERSION }}
+          variant: mingw_64
+          target: desktop
+          arch: x86_64
+          install_dir: ${{ env.QT_DIR }}
+          components: ${{ env.QT_COMPONENTS }} mingw1310_64
+      - name: Install FFmpeg build tools
+        run: |
+          choco install nasm -y
+          pip install meson ninja
+      - name: Checkout QtGamepadLegacy
+        uses: actions/checkout@v4
+        with:
+          repository: pumphaus/qtgamepadlegacy
+          ref: ${{ env.GAMEPADLEGACY_REF }}
+          path: qtgamepadlegacy
+      - name: Build + install QtGamepadLegacy into the Qt tree
+        run: |
+          export PATH="$MINGW_PREFIX/bin:$QT_DIR/bin:$PATH"
+          cmake -S qtgamepadlegacy -B qtgamepadlegacy/build -G "MinGW Makefiles" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER="$MINGW_PREFIX/bin/x86_64-w64-mingw32-gcc.exe" \
+            -DCMAKE_CXX_COMPILER="$MINGW_PREFIX/bin/x86_64-w64-mingw32-g++.exe" \
+            -DCMAKE_PREFIX_PATH="$QT_DIR" \
+            -DCMAKE_INSTALL_PREFIX="$QT_DIR"
+          cmake --build qtgamepadlegacy/build -j
+          cmake --install qtgamepadlegacy/build
+          test -f "$QT_DIR/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
+            && echo "QtGamepadLegacy installed into $QT_DIR"
+      - name: Build FFmpeg n9.0.1 (Win, AV1)
+        run: bash helper_scripts/build-ffmpeg-av1-win.sh --clean
+
+      - name: Build XTEngine
+        run: |
+          export PATH="$QT_DIR/bin:$MINGW_PREFIX/bin:$PATH"
+          mkdir -p ../XTEngine/build-release
+          cd ../XTEngine/build-release
+          qmake ../src/XTEngine.pro CONFIG+=release
+          mingw32-make -j
+      - name: Build XTPlayer
+        run: |
+          export PATH="$QT_DIR/bin:$MINGW_PREFIX/bin:$PATH"
+          mkdir -p build-release
+          cd build-release
+          qmake ../src/XTPlayer.pro CONFIG+=release
+          mingw32-make -j
+      - name: Package zip
+        run: |
+          export PATH="$QT_DIR/bin:$MINGW_PREFIX/bin:$PATH"
+          STAGING="${GITHUB_WORKSPACE}/dist/staging"
+          rm -rf dist
+          mkdir -p dist
+          # App + engine lib + www/themes/translations (qmake copydata staged them)
+          cp -r build-release/release/. "$STAGING/"
+          cp ../XTEngine/build-release/release/XTEngine.dll "$STAGING/"
+          # Qt DLLs + plugins (same as win_release_deploy-release.bat)
+          "$QT_DIR/bin/windeployqt.exe" --dir "$STAGING" "$STAGING/XTPlayer.exe"
+          "$QT_DIR/bin/windeployqt.exe" --dir "$STAGING" "$STAGING/XTEngine.dll"
+          # Extras (same set as win_release_deploy-release.bat)
+          cp ../XTEngine/src/rename_me_for_local_settings.ini "$STAGING/"
+          cp XTP_and_VR_guide.pdf "$STAGING/"
+          cp src/README.txt "$STAGING/"
+          cp src/XTPlayerDebug.bat src/XTPlayerVerbose.bat "$STAGING/"
+          # AV1 codec DLLs (drop-in next to the exe)
+          cp "$CODEC_PREFIX/bin/avcodec-63.dll" "$CODEC_PREFIX/bin/avformat-63.dll" \
+             "$CODEC_PREFIX/bin/avutil-61.dll" "$CODEC_PREFIX/bin/swscale-10.dll" \
+             "$CODEC_PREFIX/bin/swresample-7.dll" "$STAGING/"
+          cp "$CODEC_PREFIX/lib/dav1d.dll" "$STAGING/"
+          [ -f "$CODEC_PREFIX/lib/aom.dll" ] && cp "$CODEC_PREFIX/lib/aom.dll" "$STAGING/" || true
+          # Zip with contents at the zip root (like the 7z releases)
+          cd "$STAGING"
+          tar.exe -a -cf "../XTPlayer-${{ inputs.version }}_Win_x86_64.zip" *
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xtp-windows
+          path: dist/XTPlayer-${{ inputs.version }}_Win_x86_64.zip
+
+
+  macos:
+    name: macOS universal (DMG)
+    runs-on: macos-latest
+    needs: web
+    env:
+      QT_DIR: qt6
+      CODEC_PREFIX: ffmpeg-av1-mac
+    steps:
+      - name: Checkout XTPlayer
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.player-branch }}
+      - name: Checkout XTEngine
+        uses: actions/checkout@v4
+        with:
+          repository: jcfain/XTEngine
+          ref: ${{ inputs.engine-branch }}
+          path: ../XTEngine
+      - name: Restore CI-built web bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: xtp-web
+          path: web-bundle
+      - name: Install web bundle into XTEngine
+        run: |
+          rm -rf ../XTEngine/src/www
+          mkdir -p ../XTEngine/src/www
+          cp -r web-bundle/* ../XTEngine/src/www/
+      - name: Install build tools
+        run: brew install --quiet nasm meson ninja
+      - name: Install Qt ${{ env.QT_VERSION }}
+        uses: qt/qtdownload@v1
+        with:
+          version: ${{ env.QT_VERSION }}
+          variant: macos
+          target: desktop
+          arch: x86_64
+          install_dir: ${{ env.QT_DIR }}
+          components: ${{ env.QT_COMPONENTS }}
+      - name: Checkout QtGamepadLegacy
+        uses: actions/checkout@v4
+        with:
+          repository: pumphaus/qtgamepadlegacy
+          ref: ${{ env.GAMEPADLEGACY_REF }}
+          path: qtgamepadlegacy
+      - name: Build + install QtGamepadLegacy (universal)
+        run: |
+          cmake -S qtgamepadlegacy -B qtgamepadlegacy/build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" \
+            -DCMAKE_PREFIX_PATH="$QT_DIR" \
+            -DCMAKE_INSTALL_PREFIX="$QT_DIR"
+          cmake --build qtgamepadlegacy/build -j"$(sysctl -n hw.ncpu)"
+          cmake --install qtgamepadlegacy/build
+          test -f "$QT_DIR/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
+            && echo "QtGamepadLegacy installed into $QT_DIR"
+      - name: Build FFmpeg n9.0.1 (universal, AV1)
+        run: bash helper_scripts/build-ffmpeg-av1-mac.sh --clean
+
+      - name: Build XTEngine (universal)
+        run: |
+          mkdir -p ../XTEngine/build-release
+          cd ../XTEngine/build-release
+          "${QT_DIR}/bin/qmake" ../src/XTEngine.pro CONFIG+=release
+          make -j"$(sysctl -n hw.ncpu)"
+      - name: Build XTPlayer (universal)
+        run: |
+          mkdir -p build-release
+          cd build-release
+          "${QT_DIR}/bin/qmake" ../src/XTPlayer.pro CONFIG+=release
+          make -j"$(sysctl -n hw.ncpu)"
+      - name: Package DMG
+        run: |
+          APP="build-release/release/XTPlayer.app"
+          # AV1 dylibs go in BEFORE macdeployqt so it fixes up their install names
+          mkdir -p "$APP/Contents/Frameworks"
+          cp "$CODEC_PREFIX/lib/avcodec.63.dylib"    "$APP/Contents/Frameworks/"
+          cp "$CODEC_PREFIX/lib/avformat.63.dylib"   "$APP/Contents/Frameworks/"
+          cp "$CODEC_PREFIX/lib/avutil.61.dylib"     "$APP/Contents/Frameworks/"
+          cp "$CODEC_PREFIX/lib/swscale.10.dylib"    "$APP/Contents/Frameworks/"
+          cp "$CODEC_PREFIX/lib/swresample.7.dylib"  "$APP/Contents/Frameworks/"
+          cp "$CODEC_PREFIX/lib/libdav1d.dylib"      "$APP/Contents/Frameworks/"
+          cp "$CODEC_PREFIX/lib/libaom.dylib"        "$APP/Contents/Frameworks/"
+          "${QT_DIR}/bin/macdeployqt" "$APP"
+          # App data (same set as mac_release_deploy.sh)
+          cp -R src/themes "$APP/Contents/MacOS/"
+          cp -R src/images "$APP/Contents/MacOS/"
+          cp -R src/translations "$APP/Contents/MacOS/"
+          cp -R build-release/release/www "$APP/Contents/MacOS/"
+          # Engine dylib (same as mac_release_deploy.sh)
+          cp ../XTEngine/build-release/release/libxtengine*.dylib "$APP/Contents/Frameworks/"
+          install_name_tool -change libxtengine.1.0.0.dylib \
+            @executable_path/../Frameworks/libxtengine.1.0.0.dylib \
+            "$APP/Contents/MacOS/XTPlayer"
+          # Ad-hoc signing (no Apple Developer ID needed). Innermost first.
+          find "$APP" -depth -type f -name "*.dylib" -exec codesign --force --sign - {} \;
+          find "$APP" -depth -type d -name "*.framework" -exec codesign --force --sign - {} \;
+          codesign --force --sign - "$APP"
+          codesign --verify --deep "$APP" && echo "Signature OK (ad-hoc)"
+          # DMG
+          rm -rf dist
+          mkdir -p dist/app
+          cp -R "$APP" dist/app/
+          hdiutil create -volname "XTPlayer-${{ inputs.version }}" \
+            -srcfolder dist/app -ov -format UDZO \
+            "dist/XTPlayer-${{ inputs.version }}_MacOS_universal.dmg"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xtp-macos
+          path: dist/XTPlayer-${{ inputs.version }}_MacOS_universal.dmg
+
