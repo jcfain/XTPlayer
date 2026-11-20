@@ -41,7 +41,9 @@ env:
   # Pinned to the exact commit the local Qt trees were built from
   # (pumphaus/qtgamepadlegacy, dev branch).
   GAMEPADLEGACY_REF: '434fe59d70f42fa0f745af05921ba64169fce90b'
-  QT_COMPONENTS: 'qt6 qt6-tools qt6-httpserver qt6-serialport qt6-texttospeech qt6-websockets qt6-multimedia qt6-bluetooth qt6-imageformats'
+  # aqt module names (jurplel/install-qt-action). In Qt 6.12 Bluetooth is
+  # part of qtconnectivity and the wayland platform plugin is in qtbase.
+  QT_MODULES: 'qthttpserver qtimageformats qtmultimedia qtserialport qtspeech qtwebsockets qtconnectivity qtwaylandcompositor'
 
 jobs:
   web:
@@ -117,14 +119,13 @@ jobs:
             libxcb-render-util0 libxcb-shape0 libxcb-xkb1 libxkbcommon-x11-0 \
             libsm6 libice6 libfuse2 libgssapi-krb5-2
       - name: Install Qt ${{ env.QT_VERSION }}
-        uses: qt/qtdownload@v1
+        uses: jurplel/install-qt-action@v4
         with:
           version: ${{ env.QT_VERSION }}
-          variant: gcc_64
-          target: desktop
-          arch: x86_64
-          install_dir: ${{ env.QT_DIR }}
-          components: ${{ env.QT_COMPONENTS }} qt6-wayland
+          arch: linux_gcc_64
+          dir: ${{ env.QT_DIR }}
+          modules: ${{ env.QT_MODULES }}
+          install-deps: true
       - name: Checkout QtGamepadLegacy
         uses: actions/checkout@v4
         with:
@@ -252,14 +253,12 @@ jobs:
           # run during the cross build.
           sudo update-binfmts --enable --display
       - name: Install Qt ${{ env.QT_VERSION }} (aarch64)
-        uses: qt/qtdownload@v1
+        uses: jurplel/install-qt-action@v4
         with:
           version: ${{ env.QT_VERSION }}
-          variant: gcc_arm64
-          target: desktop
-          arch: aarch64
-          install_dir: ${{ env.QT_DIR }}
-          components: ${{ env.QT_COMPONENTS }} qt6-wayland
+          arch: linux_gcc_arm64
+          dir: ${{ env.QT_DIR }}
+          modules: ${{ env.QT_MODULES }}
       - name: Checkout QtGamepadLegacy
         uses: actions/checkout@v4
         with:
@@ -380,14 +379,13 @@ jobs:
           mkdir -p ../XTEngine/src/www
           cp -r web-bundle/* ../XTEngine/src/www/
       - name: Install Qt ${{ env.QT_VERSION }} (MinGW)
-        uses: qt/qtdownload@v1
+        uses: jurplel/install-qt-action@v4
         with:
           version: ${{ env.QT_VERSION }}
-          variant: mingw_64
-          target: desktop
-          arch: x86_64
-          install_dir: ${{ env.QT_DIR }}
-          components: ${{ env.QT_COMPONENTS }} mingw1310_64
+          arch: win64_mingw
+          dir: ${{ env.QT_DIR }}
+          modules: ${{ env.QT_MODULES }}
+          tools: mingw1310_64
       - name: Install FFmpeg build tools
         run: |
           choco install nasm -y
@@ -492,14 +490,12 @@ jobs:
       - name: Install build tools
         run: brew install --quiet nasm meson ninja
       - name: Install Qt ${{ env.QT_VERSION }}
-        uses: qt/qtdownload@v1
+        uses: jurplel/install-qt-action@v4
         with:
           version: ${{ env.QT_VERSION }}
-          variant: macos
-          target: desktop
-          arch: x86_64
-          install_dir: ${{ env.QT_DIR }}
-          components: ${{ env.QT_COMPONENTS }}
+          arch: clang_64
+          dir: ${{ env.QT_DIR }}
+          modules: ${{ env.QT_MODULES }}
       - name: Checkout QtGamepadLegacy
         uses: actions/checkout@v4
         with:
