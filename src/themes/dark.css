@@ -104,6 +104,21 @@ QMenu {
     background-color: #33363c;
     color: #bec0c1;
 }
+QMenu::indicator {
+    width: 13px;
+    height: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 2px;
+    background-color: rgba(0, 0, 0, 0.25);
+}
+QMenu::indicator:checked {
+    background-color: rgba(255, 255, 255, 0.25);
+    image: url(:/images/icons/check-mark-green.png);
+}
+QMenu::indicator:disabled {
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background-color: rgba(0, 0, 0, 0.15);
+}
 QMenu::item{
 	background-color: transparent;
 	color: #bec0c1;
@@ -283,24 +298,37 @@ QPushButton#muteBtn:checked  {
     background-color: rgba(100, 100, 100, 0.5);
     color: black;
 }
-XWidget[cssClass="fullScreenWidget"] {
-    background-color: #33363c;
+QFrame[cssClass="fullScreenTopBar"] {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+QLabel[cssClass="fullScreenTopBarLabel"] {
+    background: transparent;
+    color: white;
 }
 QFrame[cssClass="windowedControls"] {
     background-color: transparent;
-    color: black;
-}
-QFrame[cssClass="fullScreenControls"] {
-    background-color: #33363c;
     color: white;
 }
-QListView[cssClass="windowedLibrary"] {
+
+QFrame[cssClass="fullScreenControls"] {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: black;
+}
+QFrame[cssClass="windowedLibrary"] {
     background-color: transparent;
     color: white;
 }
-QListView[cssClass="fullScreenLibrary"] {
-    background-color: #33363c;
+QFrame[cssClass="fullScreenLibrary"] {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: black;
+}
+QLabel[cssClass="videoSubtitle"] {
+    background: rgba(0, 0, 0, 160);
     color: white;
+    font-size: 20px;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 6px;
 }
 QPushButton:pressed,
 QPushButton[cssClass="playerControlButton"]:pressed,

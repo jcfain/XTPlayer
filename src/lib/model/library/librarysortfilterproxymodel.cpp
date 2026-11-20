@@ -152,7 +152,8 @@ bool LibrarySortFilterProxyModel::filterAcceptsRow(int sourceRow,
         if(hasTag && m_tagsOR)// Only 1 tag needs to exist OR
             break;
     }
-    return index.data().toString().contains(filterRegularExpression()) && hasTag;
+    return (index.data().toString().contains(filterRegularExpression())
+            || item.metadata.creator.contains(filterRegularExpression())) && hasTag;
 }
 
 bool LibrarySortFilterProxyModel::dateInRange(QDate date) const

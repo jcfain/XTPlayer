@@ -38,6 +38,7 @@ SOURCES += \
     lib/widgets/library/LibraryItemMetadataDialog.cpp \
     lib/widgets/library/tagManager.cpp \
     lib/widgets/video/xvideographicsview.cpp \
+    lib/widgets/video/xsubtitlesource.cpp \
     lib/widgets/video/xvideowidget.cpp \
     lib/widgets/video/xvideopreviewwidget.cpp \
     lib/widgets/xcombobox.cpp \
@@ -54,6 +55,7 @@ SOURCES += \
     dlnascriptlinks.cpp \
     inputmapwidget.cpp \
     lib/common/dialoghandler.cpp \
+    lib/common/fullscreenmodaldialog.cpp \
     lib/model/channeltablecomboboxdelegate.cpp \
     lib/model/channeltableviewmodel.cpp \
     lib/model/library/librarylistviewmodel.cpp \
@@ -74,6 +76,7 @@ HEADERS += \
     lib/widgets/library/LibraryItemMetadataDialog.h \
     lib/widgets/library/tagManager.h \
     lib/widgets/video/xvideographicsview.h \
+    lib/widgets/video/xsubtitlesource.h \
     lib/widgets/video/xvideowidget.h \
     lib/widgets/video/xvideopreviewwidget.h \
     lib/widgets/xcombobox.h \
@@ -89,6 +92,7 @@ HEADERS += \
     dlnascriptlinks.h \
     inputmapwidget.h \
     lib/common/dialoghandler.h \
+    lib/common/fullscreenmodaldialog.h \
     lib/model/channeltablecomboboxdelegate.h \
     lib/model/channeltableviewmodel.h \
     lib/model/library/librarylistviewmodel.h \
@@ -157,7 +161,7 @@ unix:mac {
 #    images.path = Contents/MacOS
 #    QMAKE_BUNDLE_DATA += images;
 #    #LIBS += -framework QtCompress
-    QMAKE_APPLE_DEVICE_ARCHS = x86_64 x86_64h# arm64
+    QMAKE_APPLE_DEVICE_ARCHS = arm64 x86_64
     CONFIG(debug, debug|release) {
         equals(QT_MAJOR_VERSION, 5) {
             #LIBS += -L$$PWD/../../XTEngine/build/debug -lxtengine
@@ -234,10 +238,40 @@ equals(QT_MAJOR_VERSION, 5) {
 #mypackagerule.command = exec my_package_script.sh
 #QMAKE_EXTRA_TARGETS += mypackagerule
 
-win32 {
-    copydata.commands = $(COPY_DIR) $$shell_path($$PWD/themes) $$shell_path($$DESTDIR/themes) | $(COPY_DIR) $$shell_path($$PWD/../../XTEngine/src/www) $$shell_path($$DESTDIR/www)
+# --- i18n / translations ---
+# Translators: add new languages by appending another .ts file here, e.g.
+#   TRANSLATIONS += translations/xtplayer_de.ts
+# then run `lupdate src/XTPlayer.pro` to regenerate the .ts and translate it
+# with Qt Linguist. The lrelease rule below compiles every .ts to .qm into
+# $$DESTDIR/translations/ at build time.
+TRANSLATIONS += translations/xtplayer_zh_CN.ts
+
+qtPrepareTool(LRELEASE, lrelease)
+!isEmpty(LRELEASE) {
+    # Compile each .ts -> .qm directly into $$DESTDIR/translations/.
+    # lrelease (Qt 5.10+ / Qt 6) creates the output directory if missing.
+    lrelease.name       = LRELEASE
+    lrelease.input      = TRANSLATIONS
+    lrelease.output     = $$shell_path($$DESTDIR/translations)/${QMAKE_FILE_BASE}.qm
+    lrelease.commands   = $$LRELEASE ${QMAKE_FILE_IN} -qm ${QMAKE_FILE_OUT}
+    lrelease.CONFIG    += no_link target_predeps
+    lrelease.variable_out = QM_FILES
+    QMAKE_EXTRA_COMPILERS += lrelease
 } else {
-    copydata.commands = $(COPY_DIR) $$PWD/themes $$DESTDIR | $(COPY_DIR) $$PWD/../../XTEngine/src/www $$DESTDIR
+    message("lrelease not found - .qm translation files will NOT be generated. Install Qt Linguist tools or run lrelease manually on translations/xtplayer_zh_CN.ts")
+}
+
+# Copy themes + www into DESTDIR on every build. The www dir is wiped first so
+# that regenerated (content-hashed) Angular bundles don't accumulate stale files
+# in the build dir: `cp -R` alone only adds/overwrites and never deletes, so old
+# bundles (e.g. main-XXXX.js / styles-XXXX.css) would linger and the served page
+# could go stale. Wiping makes $$DESTDIR/www an exact mirror of the source.
+win32 {
+    rmDir = rmdir /s /q
+    copydata.commands = $(COPY_DIR) $$shell_path($$PWD/themes) $$shell_path($$DESTDIR/themes) && $$rmDir $$shell_path($$DESTDIR/www) && $(COPY_DIR) $$shell_path($$PWD/../../XTEngine/src/www) $$shell_path($$DESTDIR)
+} else {
+    rmDir = rm -rf
+    copydata.commands = $(COPY_DIR) $$PWD/themes $$DESTDIR && $$rmDir $$DESTDIR/www && $(COPY_DIR) $$PWD/../../XTEngine/src/www $$DESTDIR
 }
 first.depends = $(first) copydata
 export(first.depends)

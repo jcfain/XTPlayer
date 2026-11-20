@@ -7,8 +7,14 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
 {
     setProperty("cssClass", "windowedControls");
     setObjectName(QString::fromUtf8("playerControlsFrame"));
-    setMinimumSize(QSize(240, 110));
-    setMaximumSize(QSize(16777215, 16777215));
+    setAttribute(Qt::WA_StyledBackground);
+    // Only force the width. The layout's true minimum height (rows + the
+    // fixed 35px heatmap + spacing) exceeds 110 with most style metrics, so
+    // forcing a smaller minimum lets the outer grid squash this frame below
+    // its content minimum when the window shrinks (e.g. the delayed resize
+    // to the saved size after exiting full screen) and the rows spill over
+    // each other (heatmap overlapping the button row).
+    setMinimumWidth(240);
     setFrameShape(QFrame::StyledPanel);
     setFrameShadow(QFrame::Raised);
     playerControlsGrid = new QGridLayout(this);
@@ -28,7 +34,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToActionButton->setObjectName(QString::fromUtf8("skipToActionButton"));
     skipToActionButton->setProperty("cssClass", "playerControlButton");
     skipToActionButton->setMinimumSize(QSize(20, 15));
-    skipToActionButton->setToolTip("Skips to 1 second before the next funscript action.");
+    skipToActionButton->setToolTip(tr("Skips to 1 second before the next funscript action."));
     QIcon iconActionBegin;
     iconActionBegin.addFile(QString::fromUtf8(":/images/icons/skipToAction.png"), QSize(), QIcon::Normal, QIcon::Off);
     skipToActionButton->setIcon(iconActionBegin);
@@ -58,7 +64,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToMoneyShotButton->setObjectName(QString::fromUtf8("skipToMoneyShotButton"));
     skipToMoneyShotButton->setProperty("cssClass", "playerControlButton");
     skipToMoneyShotButton->setMinimumSize(QSize(20, 15));
-    skipToMoneyShotButton->setToolTip("Skips to the last most intense section of the associated funscript or the last 10%.\nYou can chenge this by right clicking the library item.\nYou can also assign a script to this action on the funscript tab in settings.");
+    skipToMoneyShotButton->setToolTip(tr("Skips to the last most intense section of the associated funscript or the last 10%.\nYou can chenge this by right clicking the library item.\nYou can also assign a script to this action on the funscript tab in settings."));
     QIcon iconMoneyShot;
     iconMoneyShot.addFile(QString::fromUtf8(":/images/icons/skipToMoneyShot.svg"), QSize(), QIcon::Normal, QIcon::Off);
     skipToMoneyShotButton->setIcon(iconMoneyShot);
@@ -67,7 +73,7 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     skipToMoneyShotButton->setEnabled(false);
 
 
-    playerControlsGrid->addWidget(skipToMoneyShotButton, row, 6, 1, 4);
+    playerControlsGrid->addWidget(skipToMoneyShotButton, row, 7, 1, 4);
 
     lblDuration = new QLabel(this);
     lblDuration->setObjectName(QString::fromUtf8("lblDuration"));
@@ -138,16 +144,16 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     loopToggleButton->setFlat(true);
     loopToggleButton->setEnabled(false);
 
-    playerControlsGrid->addWidget(loopToggleButton, row, 1, 1, 1);
+    playerControlsGrid->addWidget(loopToggleButton, row, 3, 1, 1);
 
     altScriptBtn = new QPushButton(this);
     altScriptBtn->setObjectName(QString::fromUtf8("altScriptBtn"));
     altScriptBtn->setProperty("cssClass", "playerControlButton");
     altScriptBtn->setEnabled(false);
-    altScriptBtn->setToolTip("Select an alternative script if any were found with names that start with the video name.\n"
-                             "If you want alternate scripts to show up here. the script name needs to be in the following format\n"
-                             "<videoname><modName>.funscript\n"
-                             "modname can be anything you want\n");
+    altScriptBtn->setToolTip(tr("Select an alternative script if any were found with names that start with the video name.\n"
+                                "If you want alternate scripts to show up here. the script name needs to be in the following format\n"
+                                "<videoname><modName>.funscript\n"
+                                "modname can be anything you want\n"));
     altScriptBtn->setMinimumSize(QSize(0, 20));
     QIcon iconAltScript;
     iconAltScript.addFile(QString::fromUtf8("://images/icons/funscript.svg"), QSize(), QIcon::Normal, QIcon::Off);
@@ -182,23 +188,38 @@ PlayerControls::PlayerControls(QWidget *parent, Qt::WindowFlags f) : QFrame(pare
     altScriptLayout->addWidget(alternateStriptCmb);
     connect(alternateStriptCmb, &QComboBox::currentTextChanged, this, &PlayerControls::onAlternateFunscriptSelected);
 
-    mediaSettingsBtn = new QPushButton(this);
-    mediaSettingsBtn->setEnabled(false);
-    mediaSettingsBtn->setObjectName(QString::fromUtf8("mediaSettingsBtn"));
-    mediaSettingsBtn->setProperty("cssClass", "playerControlButton");
-    mediaSettingsBtn->setToolTip("Open the current media settings dialog");
-    mediaSettingsBtn->setMinimumSize(QSize(0, 20));
+    mediaPopoverBtn = new QPushButton(this);
+    mediaPopoverBtn->setEnabled(false);
+    mediaPopoverBtn->setObjectName(QString::fromUtf8("mediaPopoverBtn"));
+    mediaPopoverBtn->setProperty("cssClass", "playerControlButton");
+    mediaPopoverBtn->setToolTip(tr("Media options: properties, subtitles"));
+    mediaPopoverBtn->setMinimumSize(QSize(0, 20));
     QIcon iconMediaSettings;
-    iconMediaSettings.addFile(QString::fromUtf8("://images/icons/settings.svg"), QSize(), QIcon::Normal, QIcon::Off);
-    mediaSettingsBtn->setIcon(iconMediaSettings);
-    mediaSettingsBtn->setIconSize(QSize(20, 20));
-    mediaSettingsBtn->setFlat(true);
-    playerControlsGrid->addWidget(mediaSettingsBtn, row, 3, 1, 1);
+    iconMediaSettings.addFile(QString::fromUtf8(":/images/icons/chevron-up.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    mediaPopoverBtn->setIcon(iconMediaSettings);
+    mediaPopoverBtn->setIconSize(QSize(20, 20));
+    mediaPopoverBtn->setFlat(true);
+    playerControlsGrid->addWidget(mediaPopoverBtn, row, 1, 1, 1);
 
-    connect(mediaSettingsBtn, &QPushButton::clicked, this, [this]() {
+    m_mediaMenu = new QMenu(this);
+    m_mediaPropertiesAction = m_mediaMenu->addAction(QIcon(QString::fromUtf8(":/images/icons/settings.svg")), tr("Properties"));
+    connect(m_mediaPropertiesAction, &QAction::triggered, this, [this]() {
         auto item = XMediaStateHandler::getPlaying();
         if(item)
             emit editMetadataClicked(item);
+    });
+    m_mediaMenu->addSeparator();
+    m_subtitleAction = m_mediaMenu->addAction(QIcon(QString::fromUtf8(":/images/icons/cc.svg")), tr("Subtitles"));
+    m_subtitleAction->setCheckable(true);
+    m_subtitleAction->setEnabled(false);
+    connect(m_subtitleAction, &QAction::triggered, this, [this]() {
+        // 0 = first sidecar track, -1 = subtitles off.
+        emit subtitleChanged(m_subtitleAction->isChecked() ? 0 : -1);
+    });
+    connect(mediaPopoverBtn, &QPushButton::clicked, this, [this]() {
+        // Show above the button, right aligned with its right edge.
+        QPoint pos = mediaPopoverBtn->mapToGlobal(QPoint(mediaPopoverBtn->width(), -m_mediaMenu->sizeHint().height()));
+        m_mediaMenu->exec(pos);
     });
 
 //    settingsButton = new QPushButton(this);
@@ -364,11 +385,14 @@ void PlayerControls::resetMediaControlStatus(bool playing)
     setTimeLineDisabled(!playing);
     setSkipToMoneyShotEnabled(playing);
     loopToggleButton->setEnabled(playing);
-    mediaSettingsBtn->setEnabled(playing);
+    mediaPopoverBtn->setEnabled(playing);
     _stopBtn->setEnabled(playing);
     playbackRateInput->setEnabled(playing);
     setPlayIcon(playing);
-    // subtitleCmb->setEnabled(playing);
+    // Only enable while playing AND the current media actually has subtitle
+    // sidecars - on_media_start() fires after LoadedMedia, so a plain
+    // setEnabled(playing) would re-enable the toggle for subtitle-less media.
+    m_subtitleAction->setEnabled(playing && m_subtitleAvailable);
     playbackRateInput->setValue(1.0);
     if(!playing)
     {
@@ -487,13 +511,13 @@ void PlayerControls::setTime(qint64 time)
 
 void PlayerControls::setSubtitles(const QList<QString> &value)
 {
-    // subtitleCmb->clear();
-    // subtitleCmb->addItem("None");
-    // for(const auto &sub : value)
-    // {
-    //     LogHandler::Debug("Subtitles found: "+ sub);
-    //     subtitleCmb->addItem(sub);
-    // }
+    // VideoHandler auto-loads the first sidecar when media is set, so the
+    // toggle starts checked (subtitles on) whenever tracks are available.
+    m_subtitleAvailable = !value.isEmpty();
+    m_subtitleAction->blockSignals(true);
+    m_subtitleAction->setEnabled(m_subtitleAvailable);
+    m_subtitleAction->setChecked(m_subtitleAvailable);
+    m_subtitleAction->blockSignals(false);
 }
 void PlayerControls::setDuration(qint64 duration)
 {
@@ -551,7 +575,7 @@ void PlayerControls::on_StopBtn_clicked()
 
 void PlayerControls::on_timeline_currentTimeMove(qint64 position)
 {
-    m_timeLine->setToolTip(QTime(0, 0, 0).addMSecs(position).toString(QString::fromLatin1("HH:mm:ss")));
+    m_timeLine->setToolTip(QTime(0, 0, 0).addMSecs(position).toString(tr("HH:mm:ss")));
     emit seekSliderMoved(position);
 }
 

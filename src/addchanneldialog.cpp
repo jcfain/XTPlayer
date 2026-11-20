@@ -3,15 +3,15 @@
 AddChannelDialog::AddChannelDialog(QWidget* parent) : QDialog(parent)
 {
     friendlyNameLabel = new QLabel(this);
-    friendlyNameLabel->setText("Friendly name");
+    friendlyNameLabel->setText(tr("Friendly name"));
     friendlyName = new QLineEdit(this);
-    friendlyName->setText("New Channel");
+    friendlyName->setText(tr("New Channel"));
     channelLabel = new QLabel(this);
-    channelLabel->setText("Channel name");
+    channelLabel->setText(tr("Channel name"));
     channelName = new QLineEdit(this);
-    channelName->setText("L0");
+    channelName->setText(tr("L0"));
     trackNameLabel = new QLabel(this);
-    trackNameLabel->setText("Track name");
+    trackNameLabel->setText(tr("Track name"));
     trackName = new QLineEdit(this);
     trackName->setText("");
     positiveModifier = new QRadioButton(this);
@@ -19,12 +19,12 @@ AddChannelDialog::AddChannelDialog(QWidget* parent) : QDialog(parent)
     negativeModifier = new QRadioButton(this);
     negativeModifier->setText("-");
     QLabel* typeLabel = new QLabel(this);
-    typeLabel->setText("Type");
+    typeLabel->setText(tr("Type"));
     type = new QComboBox(this);
     type->addItems(QStringList(ChannelTypes.keys()));
     type->setCurrentText("None");
     QLabel* dimensionLabel = new QLabel(this);
-    dimensionLabel->setText("Dimension");
+    dimensionLabel->setText(tr("Dimension"));
     dimension = new QComboBox(this);
     dimension->addItems(QStringList(ChannelDimensions.keys()));
     dimension->setCurrentText("None");
@@ -86,7 +86,7 @@ ChannelModel33 AddChannelDialog::getNewChannel(QWidget *parent, bool *ok)
         else if (ChannelTypes[dialog->type->currentText()] == ChannelType::HalfOscillate)
         {
             isValid = false;
-            DialogHandler::MessageBox(parent, "Modifier (+/-) required for half range types!", XLogLevel::Critical);
+            DialogHandler::MessageBox(parent, tr("Modifier (+/-) required for half range types!"), XLogLevel::Critical);
         }
         channelModel.ChannelName = dialog->channelName->text() + modifier;
         channelModel.Type = ChannelTypes[dialog->type->currentText()];
@@ -108,12 +108,12 @@ ChannelModel33 AddChannelDialog::getNewChannel(QWidget *parent, bool *ok)
         if(TCodeChannelLookup::hasChannel(channelModel.ChannelName))
         {
             isValid = false;
-            DialogHandler::MessageBox(parent, channelModel.ChannelName + " already exists!", XLogLevel::Critical);
+            DialogHandler::MessageBox(parent, channelModel.ChannelName + tr(" already exists!"), XLogLevel::Critical);
         }
         if(channelModel.ChannelName.isEmpty())
         {
             isValid = false;
-            DialogHandler::MessageBox(parent, "Axis name is required!", XLogLevel::Critical);
+            DialogHandler::MessageBox(parent, tr("Axis name is required!"), XLogLevel::Critical);
         }
         if (!isValid)
             *ok = false;

@@ -6,13 +6,14 @@
 #include "lib/handler/loghandler.h"
 
 #include "dialoghandler.h"
+#include "lib/common/fullscreenmodaldialog.h"
 
 PlaylistDialog::PlaylistDialog(QWidget *parent) : QDialog(parent)
 {
     nameLabel = new QLabel(this);
-    nameLabel->setText("Name");
+    nameLabel->setText(tr("Name"));
     nameEdit = new QLineEdit(this);
-    nameEdit->setText("New playlist");
+    nameEdit->setText(tr("New playlist"));
     QGridLayout* layout = new QGridLayout(this);
     layout->addWidget(nameLabel, 0, 0, 1, 1);
     layout->addWidget(nameEdit, 0, 1, 1, 1);
@@ -47,7 +48,9 @@ QString PlaylistDialog::renamePlaylist(QWidget *parent, QString playlistName, bo
 
 QString PlaylistDialog::getPlaylistNAme(PlaylistDialog *dialog, bool *ok)
 {
+    FullScreenModalDialog::beginModal(dialog);
     const int ret = dialog->exec();
+    FullScreenModalDialog::endModal(dialog);
     if (ok)
         *ok = !!ret;
     if (ok)
@@ -56,7 +59,7 @@ QString PlaylistDialog::getPlaylistNAme(PlaylistDialog *dialog, bool *ok)
         if(dialog->nameEdit->text().isEmpty())
         {
             isValid = false;
-            DialogHandler::MessageBox(dialog, "Playlist name is required!", XLogLevel::Critical);
+            DialogHandler::MessageBox(dialog, tr("Playlist name is required!"), XLogLevel::Critical);
         }
         if (!isValid)
             *ok = false;

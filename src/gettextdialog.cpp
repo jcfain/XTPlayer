@@ -84,7 +84,7 @@ QStringList GetTextDialog::getText(GetTextDialog *dialog, bool *ok)
             if(value.isEmpty())
             {
                 isValid = false;
-                DialogHandler::MessageBox(dialog, dialog->nameLabels[i]->text() + " required!", XLogLevel::Critical);
+                DialogHandler::MessageBox(dialog, dialog->nameLabels[i]->text() + tr(" required!"), XLogLevel::Critical);
                 break;
             }
             returnValues.append(value);

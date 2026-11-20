@@ -1,7 +1,7 @@
 @echo off
 
 SET currentPath=%cd%
-SET QTDIR=C:\Qt\6.11.0\mingw_64
+SET QTDIR=C:\Qt\6.12.0\mingw_64
 SET mingwDir=C:\Qt\Tools\mingw1310_64\bin
 SET QtDirBin=%QTDIR%\bin\
 SET xtplayerSource="%UserProfile%\git\XTPlayer"
@@ -58,6 +58,7 @@ cd %xtplayerSource%
 xcopy %buildDir%\XTPlayer.exe %deployDir% /s /i  /K /D /H /Y
 xcopy %engineBuildDir%\XTEngine.dll %deployDir%/s /i  /K /D /H /Y
 xcopy %buildDir%\themes %deployDir%themes /s /i /K /D /H /Y
+xcopy %buildDir%\translations %deployDir%translations /s /i /K /D /H /Y
 rem xcopy %zlibDll% %deployDir% /s /i /K /D /H /Y
 rem xcopy %httpServerDll% %deployDir% /s /i /K /D /H /Y
 rem xcopy %QtDirBin%Qt5OpenGL.dll %deployDir% /s /i /K /D /H /Y

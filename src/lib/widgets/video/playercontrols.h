@@ -8,6 +8,8 @@
 #include <QLabel>
 #include <QDialog>
 #include <QDoubleSpinBox>
+#include <QMenu>
+#include <QAction>
 
 #include "lib/tool/xmath.h"
 #include "lib/struct/ScriptInfo.h"
@@ -89,7 +91,11 @@ private:
     QPushButton *loopToggleButton;
     QPushButton *fullScreenBtn;
     QPushButton *altScriptBtn;
-    QPushButton *mediaSettingsBtn;
+    QPushButton *mediaPopoverBtn;
+    QMenu* m_mediaMenu;
+    QAction* m_mediaPropertiesAction;
+    QAction* m_subtitleAction;
+    bool m_subtitleAvailable = false;
     QDoubleSpinBox* playbackRateInput;
     //QPushButton *settingsButton;
     RangeSlider *VolumeSlider;

@@ -47,7 +47,7 @@ public:
     void Export(QWidget* parent);
     void Import(QWidget* parent);
     void requestRestart(QWidget* parent);
-    void askRestart(QWidget* parent, QString message = "Some changes made requires a restart.\nWould you like to restart now?");
+    void askRestart(QWidget* parent, QString message = QString());
     void quit(bool restart);
     void restart();
 
@@ -294,7 +294,11 @@ private slots:
 
     void on_useMediaBackendChk_clicked(bool checked);
 
+    void on_useHardwareDecodingCombo_currentIndexChanged(int index);
+
     void on_fullscreenUIOnlyOnMouseover_clicked(bool checked);
+
+    void on_languageComboBox_currentIndexChanged(int index);
 
 private:
 

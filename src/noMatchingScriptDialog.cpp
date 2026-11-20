@@ -5,7 +5,7 @@ NoMatchingScriptDialog::NoMatchingScriptDialog(QWidget* parent, QString customSc
     label = new QLabel(this);
     label->setText(tr("Error loading script ") + customScript + tr("!\nTry right clicking on the video in the list and loading with another script.\n\n\nNote: media items that have gray titles have no matching script.\n\n"));
     checkbox = new QCheckBox(this);
-    checkbox->setText("Dont show again!");
+    checkbox->setText(tr("Dont show again!"));
     QGridLayout* layout = new QGridLayout(this);
     layout->addWidget(label, 0, 0, 1, 2);
     layout->addWidget(checkbox, 1, 0, 1, 1);

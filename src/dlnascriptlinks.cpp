@@ -64,7 +64,7 @@ void DLNAScriptLinks::setUpData()
         QWidget *browseWidget = new QWidget(); //create QWidget
         QHBoxLayout *layoutBrowse = new QHBoxLayout(browseWidget);
         QPushButton* browseButton = new QPushButton();
-        browseButton->setText("Browse");
+        browseButton->setText(tr("Browse"));
         browseButton->setObjectName(key);
         browseButton->setMaximumWidth(150);
         layoutBrowse->addWidget(browseButton);

@@ -21,13 +21,21 @@ XTPlayer is a cross platform TCode media player.
       4. Choose at least one path to the media/funscripts to add.
       5. The application will scan the directory and all subdirectories for media and their funscripts then start generating thumbnails. This can take sometime on first startup depending on how many files you have.
 
+## CI builds (GitHub Actions)
+* **Nightly** — built daily at 02:00 UTC (and on demand via the Actions "Run workflow" button) from `Development` (XTEngine `Development`). Published to the rolling [`nightly` release](https://github.com/jcfain/XTPlayer/releases/tag/nightly).
+* **Release** — built from `main` (XTEngine `main`) whenever a `v*` tag is pushed (`git tag v0.6.10 && git push origin v0.6.10`).
+* Artifacts: Linux x86_64 + aarch64 AppImages, Windows x86_64 zip, macOS universal (arm64 + x86_64) DMG. All bundle an AV1-capable FFmpeg build (dav1d/aom + hwaccel), so no separate codec pack is needed.
+* The Angular web bundle is built in CI from `XTEngine/src/wwwsrc` — no manual www deploy/commit needed.
+* The macOS DMG is **ad-hoc signed** (no Apple Developer account): on first launch, right-click the app → **Open** (or `xattr -d com.apple.quarantine /Applications/XTPlayer.app`).
+
 ## Building from source
      1. Download and install the following apps
           *  QT Creator Community Open source edition: https://www.qt.io/download 
-             During installation, make sure to get Qt 6.11. with the aditional libraries: HTTP Server, Serial port, Speech, Connectivity, MultiMedia, Wayland(Linux) and WebSockets.
+             During installation, make sure to get Qt 6.11. with the aditional libraries: HTTP Server, Serial port, Speech, Connectivity, MultiMedia, Image formats, Wayland(Linux) and WebSockets.
      2. Required libraries needed:
           * https://github.com/pumphaus/qtgamepadlegacy
-               * I usually open the CMakeLists.txt in Qt creator and build them copy the folders ./bin, ./include etc to the Qt directory of the same names. (There is probably a better way to do this)
+               * You can make/makeinstall or open CMakeLists.txt in Qt creator and build. Then open the build dir and execute "make install". Make sure to build release if you dont plan to debug it. 
+                 You can also manually copy the folders ./bin, ./include etc to the Qt directory of the same names.
       You may need to check the XTEngine.pro and XTPlayer.pro build files for specific library directories. See the win32 section for windows.
       If you have trouble building these I added a couple files in the "dependencies" directory of this repo for reminders.
       3. Clone/download XTPlayer https://github.com/jcfain/XTPlayer/ and XTEngine https://github.com/jcfain/XTEngine/ source into the same directory.

@@ -5,7 +5,6 @@
 #include <QMediaPlayer>
 #include <QAudioOutput>
 //#include <QAudioProbe>
-#include <QVideoWidget>
 #include <QMouseEvent>
 #include <QMovie>
 #include <QLabel>
@@ -14,12 +13,14 @@
 #include "lib/handler/loghandler.h"
 #include "lib/lookup/XMedia.h"
 
-#include "xvideowidget.h"
+#include "xvideographicsview.h"
 #include "playercontrols.h"
 #include "xlibrarylist.h"
 #include "xvideopreviewwidget.h"
 #include "xwidget.h"
+#include "xsubtitlesource.h"
 #include "dialoghandler.h"
+#include "lib/common/fullscreenmodaldialog.h"
 
 class VideoHandler : public XWidget
 {
@@ -97,12 +98,11 @@ private:
     bool _isFullScreen = false;
     bool m_libraryWindowed;
     QRect m_screenSize;
-    XWidget* _fullscreenWidget;
 //    VideoRenderer* _videoRenderer = 0;
 //    VideoPreviewWidget* _videoPreviewWidget;
     QRect m_libraryRect;
     QRect m_controlsRect;
-    XVideoWidget* _videoWidget;
+    XVideoGraphicsView* _videoView;
     XVideoPreviewWidget* m_videoPreview;
     QString _currentFile;
     QMutex _mutex;
@@ -110,8 +110,15 @@ private:
     QLabel* _videoLoadingLabel = 0;
     QMovie* _videoLoadingMovie = 0;
     XMediaState _currentState = XMediaState::Stopped;
+    QFrame* m_topBar = 0;
+    QLabel* m_topBarLabel = 0;
+    QLabel* m_subtitleLabel = 0;
+    XSubtitleSource* m_subtitleSource = 0;
+    QStringList m_subtitleTracks;
 
     void createLayout();
+    void setupViewLayout();
+    void updateSubtitle();
 
     void on_setLoading(bool loading);
     XMediaStatus convertMediaStatus(QMediaPlayer::MediaStatus status);
@@ -131,5 +138,6 @@ private:
     void showLibrary();
     void hideControlsTimeout();
     void hideLibraryTimeout();
+    void updateCursorForIdle();
 };
 #endif // VIDEOHANDLER_H

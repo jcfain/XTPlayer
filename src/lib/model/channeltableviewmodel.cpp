@@ -5,16 +5,16 @@ ChannelTableViewModel::ChannelTableViewModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
     setMap();
-    //setHeaderData(0, Qt::Horizontal, QObject::tr("ID"));
-    setHeaderData(0, Qt::Horizontal, QObject::tr("Friendly Name"));
-    setHeaderData(1, Qt::Horizontal, QObject::tr("Axis Name"));
-    setHeaderData(2, Qt::Horizontal, QObject::tr("Channel"));
-    setHeaderData(3, Qt::Horizontal, QObject::tr("Min"));
-    setHeaderData(4, Qt::Horizontal, QObject::tr("Mid"));
-    setHeaderData(5, Qt::Horizontal, QObject::tr("Max"));
-    setHeaderData(6, Qt::Horizontal, QObject::tr("Dimension"));
-    setHeaderData(7, Qt::Horizontal, QObject::tr("Type"));
-    setHeaderData(8, Qt::Horizontal, QObject::tr("Track"));
+    //setHeaderData(0, Qt::Horizontal, ChannelTableViewModel::tr("ID"));
+    setHeaderData(0, Qt::Horizontal, ChannelTableViewModel::tr("Friendly Name"));
+    setHeaderData(1, Qt::Horizontal, ChannelTableViewModel::tr("Axis Name"));
+    setHeaderData(2, Qt::Horizontal, ChannelTableViewModel::tr("Channel"));
+    setHeaderData(3, Qt::Horizontal, ChannelTableViewModel::tr("Min"));
+    setHeaderData(4, Qt::Horizontal, ChannelTableViewModel::tr("Mid"));
+    setHeaderData(5, Qt::Horizontal, ChannelTableViewModel::tr("Max"));
+    setHeaderData(6, Qt::Horizontal, ChannelTableViewModel::tr("Dimension"));
+    setHeaderData(7, Qt::Horizontal, ChannelTableViewModel::tr("Type"));
+    setHeaderData(8, Qt::Horizontal, ChannelTableViewModel::tr("Track"));
 
 }
 
