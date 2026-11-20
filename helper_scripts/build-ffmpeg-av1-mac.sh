@@ -90,7 +90,7 @@ if [ ! -f "${CODEC_PREFIX}/lib/libdav1d.dylib" ]; then
         CFLAGS="-arch ${arch}" CXXFLAGS="-arch ${arch}" \
         meson setup "${WORKDIR}/dav1d-build-${arch}" "${DAV1D_SRC}" \
             --prefix="${WORKDIR}/dav1d-prefix-${arch}" --libdir=lib \
-            -Dasm=true -Denable_docs=false
+            -Denable_asm=true -Denable_docs=false
         ninja -C "${WORKDIR}/dav1d-build-${arch}" -j"${JOBS}"
         ninja -C "${WORKDIR}/dav1d-build-${arch}" install
     done
