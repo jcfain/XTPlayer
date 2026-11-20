@@ -111,7 +111,7 @@ jobs:
             build-essential cmake ninja-build pkg-config nasm meson \
             libgl1-mesa-dev libxkbcommon-dev libwayland-dev \
             libfontconfig1-dev libfreetype-dev libdbus-1-dev libglib2.0-dev \
-            libbluetooth-dev libusb-1.0-0-dev libasound2-dev \
+            libbluetooth-dev libusb-1.0-0-dev libasound2-dev libpulse-dev \
             libx11-dev libxcb1-dev libxext-dev libxrender-dev libxi-dev \
             libxfixes-dev libxrandr-dev libxcomposite-dev libxdamage-dev \
             libxtst-dev libnss3-dev libxcb-xinerama0-dev libxcb-cursor0 \
@@ -259,7 +259,8 @@ jobs:
           sudo dpkg --add-architecture arm64
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            libgl1-mesa-dev:arm64 libegl-dev:arm64 libglib2.0-0t64:arm64
+            libgl1-mesa-dev:arm64 libegl-dev:arm64 libglib2.0-0t64:arm64 \
+            pkg-config:arm64
           # qemu lets the aarch64 moc/rcc/uic (shipped with the aarch64 Qt)
           # run during the cross build.
           sudo update-binfmts --enable
@@ -411,6 +412,9 @@ jobs:
         run: |
           choco install nasm -y
           pip install meson ninja
+          # pkg-config for FFmpeg's configure (it looks for a
+          # cross-prefixed copy; the build script places one).
+          C:/msys64/usr/bin/pacman.exe -S --noconfirm mingw-w64-x86_64-pkg-config
       - name: Checkout QtGamepadLegacy
         uses: actions/checkout@v4
         with:

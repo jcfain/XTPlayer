@@ -40,13 +40,19 @@ JOBS="${JOBS:-4}"
 XP=x86_64-w64-mingw32
 export PATH="${MINGW_PREFIX}/bin:$PATH"
 
-# Qt's MinGW only ships gcc-* wrappers; FFmpeg's configure/make expect
-# plain cross-prefixed binutils. Symlink whatever is missing.
+# FFmpeg's configure derives ${XP}-nm, ${XP}-ar, ${XP}-ranlib and
+# ${XP}-pkg-config from --cross-prefix. Qt's MinGW ships the binutils as
+# ${XP}-gcc-* wrappers (no plain ${XP}-nm), and the runner has no
+# cross-prefixed pkg-config, so copy the tools under the expected names.
+# (Copies, not symlinks: immune to Git Bash symlink quirks.)
 for tool in ar nm ranlib; do
     if [ ! -e "${MINGW_PREFIX}/bin/${XP}-${tool}.exe" ] && [ -e "${MINGW_PREFIX}/bin/${XP}-gcc-${tool}.exe" ]; then
-        ln -sf "gcc-${tool}.exe" "${MINGW_PREFIX}/bin/${XP}-${tool}.exe"
+        cp "${MINGW_PREFIX}/bin/${XP}-gcc-${tool}.exe" "${MINGW_PREFIX}/bin/${XP}-${tool}.exe"
     fi
 done
+if [ ! -e "${MINGW_PREFIX}/bin/${XP}-pkg-config.exe" ] && command -v pkg-config >/dev/null 2>&1; then
+    cp "$(command -v pkg-config)" "${MINGW_PREFIX}/bin/${XP}-pkg-config.exe"
+fi
 
 CLEAN=0
 REUSE=0
@@ -71,6 +77,8 @@ for tool in git make nasm meson ninja cmake; do
     command -v "$tool" >/dev/null 2>&1 || MISSING_TOOLS+=("$tool")
 done
 [ -x "${MINGW_PREFIX}/bin/${XP}-gcc.exe" ] || MISSING_TOOLS+=("${MINGW_PREFIX} (MinGW toolchain)")
+command -v "${XP}-nm" >/dev/null 2>&1 || MISSING_TOOLS+=("${XP}-nm (cross binutils)")
+command -v "${XP}-pkg-config" >/dev/null 2>&1 || MISSING_TOOLS+=("${XP}-pkg-config (install mingw-w64-x86_64-pkg-config)")
 
 if [ ${#MISSING_TOOLS[@]} -gt 0 ]; then
     echo "ERROR: missing dependencies: ${MISSING_TOOLS[*]}"

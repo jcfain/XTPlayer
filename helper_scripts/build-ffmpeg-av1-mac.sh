@@ -10,7 +10,7 @@
 # Build strategy:
 #   dav1d:  built twice (arm64, x86_64) and lipo'd — meson has no fat mode.
 #   aom:    CMake universal build (CMAKE_OSX_ARCHITECTURES).
-#   ffmpeg: --enable-universal-binaries.
+#   ffmpeg: built per-arch (arm64, x86_64) and lipo'd — no fat mode.
 #
 # Usage:   helper_scripts/build-ffmpeg-av1-mac.sh [--clean|--reuse]
 # Env:     CODEC_PREFIX  install prefix (default: $HOME/git/ffmpeg-n9.0.1-av1-mac)
@@ -204,24 +204,39 @@ fi
 git -C "${FFMPEG_SRC}" fetch --tags origin 2>/dev/null || true
 git -C "${FFMPEG_SRC}" checkout "${FFMPEG_TAG}"
 
-BUILD_DIR="${FFMPEG_SRC}/build-av1-mac"
-echo "==> Configuring (prefix: ${CODEC_PREFIX})"
-rm -rf "${BUILD_DIR}"
-mkdir -p "${BUILD_DIR}"
-cd "${BUILD_DIR}"
-PKG_CONFIG_PATH="${CODEC_PREFIX}/lib/pkgconfig" \
-PKG_CONFIG_LIBDIR="${CODEC_PREFIX}/lib/pkgconfig" \
-../configure --prefix="${CODEC_PREFIX}" \
-    --enable-universal-binaries \
-    --enable-shared \
-    --enable-libdav1d \
-    --enable-libaom \
-    --enable-network \
-    --disable-doc
+# FFmpeg's configure has no universal mode: build each arch against the
+# universal dav1d/aom, then lipo the dylibs together.
+for arch in arm64 x86_64; do
+    BUILD_DIR="${FFMPEG_SRC}/build-av1-mac-${arch}"
+    echo "==> Configuring ${arch} (prefix: ${WORKDIR}/ffmpeg-prefix-${arch})"
+    rm -rf "${BUILD_DIR}"
+    mkdir -p "${BUILD_DIR}"
+    cd "${BUILD_DIR}"
+    PKG_CONFIG_PATH="${CODEC_PREFIX}/lib/pkgconfig" \
+    PKG_CONFIG_LIBDIR="${CODEC_PREFIX}/lib/pkgconfig" \
+    CFLAGS="-arch ${arch}" CXXFLAGS="-arch ${arch}" LDFLAGS="-arch ${arch}" \
+    ../configure --prefix="${WORKDIR}/ffmpeg-prefix-${arch}" \
+        --arch="${arch}" \
+        --enable-shared \
+        --enable-libdav1d \
+        --enable-libaom \
+        --enable-network \
+        --disable-doc
 
-echo "==> Building with ${JOBS} jobs"
-make -j"${JOBS}"
-make install
+    echo "==> Building ${arch} with ${JOBS} jobs"
+    make -j"${JOBS}"
+    make install
+done
+cd "${WORKDIR}"
+
+echo "==> Lipo'ing FFmpeg dylibs into ${CODEC_PREFIX}"
+mkdir -p "${CODEC_PREFIX}/lib" "${CODEC_PREFIX}/include"
+for lib in avcodec.63 avformat.63 avutil.61 swscale.10 swresample.7; do
+    lipo -create -output "${CODEC_PREFIX}/lib/${lib}.dylib" \
+        "${WORKDIR}/ffmpeg-prefix-arm64/lib/${lib}.dylib" \
+        "${WORKDIR}/ffmpeg-prefix-x86_64/lib/${lib}.dylib"
+done
+cp -R "${WORKDIR}/ffmpeg-prefix-arm64/include/." "${CODEC_PREFIX}/include/"
 
 # ---------------------------------------------------------------------------
 # Verify
