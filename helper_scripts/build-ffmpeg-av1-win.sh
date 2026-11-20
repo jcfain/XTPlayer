@@ -221,7 +221,6 @@ PKG_CONFIG_LIBDIR="${CODEC_PREFIX}/lib/pkgconfig" \
     --cross-prefix="${XP}-" \
     --arch=x86_64 \
     --target-os=win32 \
-    --pkg-config-flags="--define-prefix=${CODEC_PREFIX}" \
     --enable-shared \
     --enable-libdav1d \
     --enable-libaom \

@@ -218,12 +218,12 @@ jobs:
           # qmake inherits our LD_LIBRARY_PATH and loads libQt6Core from the
           # appdir, so the prefix comes out as the appdir), the sources are
           # found here and the (self) copies are skipped, so the deployment
-          # succeeds either way. The Qt libs are pre-staged too: with the
-          # appdir as Qt root, plugin dependencies like libQt6XcbQpa.so.6 must
-          # be resolvable from the appdir as well.
+          # succeeds either way. The ENTIRE Qt lib dir is pre-staged too
+          # (Qt libs AND their deps like libicu*.so.73): with the appdir as
+          # Qt root, every transitive dependency must resolve from the appdir.
           mkdir -p "${APPDIR}/usr/plugins"
           cp -r "${QT_DIR}/plugins/." "${APPDIR}/usr/plugins/"
-          cp -P "${QT_DIR}"/lib/libQt6*.so* "${APPDIR}/usr/lib/"
+          cp -P "${QT_DIR}/lib/." "${APPDIR}/usr/lib/"
           chmod +x linuxdeploy/x86_64/linuxdeploy-x86_64.AppImage linuxdeploy/x86_64/linuxdeploy-plugin-qt-x86_64.AppImage
           QMAKE="${QT_DIR}/bin/qmake" \
           LD_LIBRARY_PATH="${APPDIR}/usr/lib:${GITHUB_WORKSPACE}/build-release/release:${GITHUB_WORKSPACE}/../XTEngine/build-release/release" \
@@ -379,16 +379,21 @@ jobs:
             || { echo "ERROR: libqxcb.so missing from ${QT_DIR}/plugins/platforms"; exit 1; }
           mkdir -p "${APPDIR}/usr/plugins"
           cp -r "${QT_DIR}/plugins/." "${APPDIR}/usr/plugins/"
-          cp -P "${QT_DIR}"/lib/libQt6*.so* "${APPDIR}/usr/lib/"
+          cp -P "${QT_DIR}/lib/." "${APPDIR}/usr/lib/"
           # Cross-package with the TARGET-ARCH (aarch64) linuxdeploy binary:
-          # it runs under qemu (binfmt enabled above) and produces an AppImage
-          # with the aarch64 runtime, so the result actually runs on aarch64.
-          # (linuxdeploy has no --cross-compile mode; this is how the release
-          # scripts do it: linuxdeploy/aarch64/linuxdeploy-aarch64.AppImage.)
+          # it produces an AppImage with the aarch64 runtime, so the result
+          # actually runs on aarch64. (linuxdeploy has no --cross-compile
+          # mode; this is how the release scripts do it.)
+          #
+          # It MUST be invoked via qemu-aarch64 explicitly: the AppImageKit
+          # v2 stub stamps an "AI" marker into the ELF header (offset 8),
+          # which breaks the binfmt_misc magic pattern, so the kernel does
+          # NOT route it to qemu (plain exec fails with "Exec format
+          # error"). qemu-aarch64 reads the ELF itself and works fine.
           chmod +x linuxdeploy/aarch64/linuxdeploy-aarch64.AppImage linuxdeploy/aarch64/linuxdeploy-plugin-qt-aarch64.AppImage
           QMAKE="${QT_DIR}/bin/qmake" \
           LD_LIBRARY_PATH="${APPDIR}/usr/lib" \
-          ./linuxdeploy/aarch64/linuxdeploy-aarch64.AppImage \
+          qemu-aarch64 ./linuxdeploy/aarch64/linuxdeploy-aarch64.AppImage \
             --appdir "${APPDIR}" \
             --executable "${APPDIR}/usr/bin/XTPlayer" \
             --plugin qt \
@@ -610,7 +615,15 @@ jobs:
           cp "$CODEC_PREFIX/lib/libswresample.7.dylib" "$APP/Contents/Frameworks/"
           cp "$CODEC_PREFIX/lib/libdav1d.dylib"      "$APP/Contents/Frameworks/"
           cp "$CODEC_PREFIX/lib/libaom.dylib"        "$APP/Contents/Frameworks/"
-          "${QT_DIR}/bin/macdeployqt" "$APP"
+          # aom's CMake install only creates libaom.dylib, but FFmpeg
+          # references @rpath/libaom.3.dylib - provide the versioned name
+          # so macdeployqt can resolve it.
+          ln -sf libaom.dylib "$APP/Contents/Frameworks/libaom.3.dylib"
+          # macdeployqt reports (non-fatal) errors for deps it cannot
+          # resolve: the bare libxtengine.1.0.0.dylib install name is fixed
+          # by install_name_tool below. Don't let it fail the step.
+          "${QT_DIR}/bin/macdeployqt" "$APP" \
+            || echo "WARNING: macdeployqt reported unresolvable deps (expected, fixed below)"
           # App data (same set as mac_release_deploy.sh)
           cp -R src/themes "$APP/Contents/MacOS/"
           cp -R src/images "$APP/Contents/MacOS/"
@@ -622,6 +635,11 @@ jobs:
             @executable_path/../Frameworks/libxtengine.1.0.0.dylib \
             "$APP/Contents/MacOS/XTPlayer"
           # Ad-hoc signing (no Apple Developer ID needed). Innermost first.
+          # codesign treats EVERY file under Contents/MacOS/ as a code
+          # object, so the resources copied there (images, themes, www,
+          # translations) must be signed too, or `codesign --verify --deep`
+          # fails with "code object is not signed at all".
+          find "$APP/Contents/MacOS" -type f -exec codesign --force --sign - {} \;
           find "$APP" -depth -type f -name "*.dylib" -exec codesign --force --sign - {} \;
           find "$APP" -depth -type d -name "*.framework" -exec codesign --force --sign - {} \;
           codesign --force --sign - "$APP"
