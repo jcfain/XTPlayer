@@ -43,6 +43,13 @@ for arg in "$@"; do
     esac
 done
 
+# CI cache: if the final artifact is already in place (restored from
+# actions/cache), skip the whole build. --clean forces a rebuild.
+if [ "${CLEAN}" -eq 0 ] && [ -f "${CODEC_PREFIX}/lib/avcodec.63.dylib" ]; then
+    echo "==> ${CODEC_PREFIX}/lib/avcodec.63.dylib present — skipping build"
+    exit 0
+fi
+
 echo "==> Preflight checks"
 
 MISSING_TOOLS=()

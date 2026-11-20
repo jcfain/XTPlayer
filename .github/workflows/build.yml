@@ -142,8 +142,13 @@ jobs:
           cmake --install qtgamepadlegacy/build
           test -f "${QT_DIR}/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
             && echo "QtGamepadLegacy installed into ${QT_DIR}"
+      - name: Cache FFmpeg
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CODEC_PREFIX }}
+          key: ffmpeg-av1-linux-x64-${{ hashFiles('helper_scripts/build-ffmpeg-av1.sh') }}
       - name: Build FFmpeg n9.0.1 (AV1 + hwaccel)
-        run: bash helper_scripts/build-ffmpeg-av1.sh --clean --install-deps
+        run: bash helper_scripts/build-ffmpeg-av1.sh --reuse --install-deps
 
       - name: Build XTEngine
         run: |
@@ -285,8 +290,13 @@ jobs:
           cmake --install qtgamepadlegacy/build
           test -f "${QT_DIR}/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
             && echo "QtGamepadLegacy (aarch64) installed into ${QT_DIR}"
+      - name: Cache FFmpeg
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CODEC_PREFIX }}
+          key: ffmpeg-av1-linux-arm64-${{ hashFiles('helper_scripts/build-ffmpeg-av1-aarch64.sh') }}
       - name: Build FFmpeg n9.0.1 (aarch64 cross, AV1)
-        run: bash helper_scripts/build-ffmpeg-av1-aarch64.sh --clean
+        run: bash helper_scripts/build-ffmpeg-av1-aarch64.sh --reuse
 
       - name: Cross-build XTEngine
         run: |
@@ -416,8 +426,13 @@ jobs:
           cmake --install qtgamepadlegacy/build
           test -f "$QT_DIR/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
             && echo "QtGamepadLegacy installed into $QT_DIR"
+      - name: Cache FFmpeg
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CODEC_PREFIX }}
+          key: ffmpeg-av1-win64-${{ hashFiles('helper_scripts/build-ffmpeg-av1-win.sh') }}
       - name: Build FFmpeg n9.0.1 (Win, AV1)
-        run: bash helper_scripts/build-ffmpeg-av1-win.sh --clean
+        run: bash helper_scripts/build-ffmpeg-av1-win.sh --reuse
 
       - name: Build XTEngine
         run: |
@@ -519,8 +534,13 @@ jobs:
           cmake --install qtgamepadlegacy/build
           test -f "$QT_DIR/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
             && echo "QtGamepadLegacy installed into $QT_DIR"
+      - name: Cache FFmpeg
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CODEC_PREFIX }}
+          key: ffmpeg-av1-mac-${{ hashFiles('helper_scripts/build-ffmpeg-av1-mac.sh') }}
       - name: Build FFmpeg n9.0.1 (universal, AV1)
-        run: bash helper_scripts/build-ffmpeg-av1-mac.sh --clean
+        run: bash helper_scripts/build-ffmpeg-av1-mac.sh --reuse
 
       - name: Build XTEngine (universal)
         run: |

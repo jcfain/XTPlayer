@@ -49,6 +49,13 @@ for arg in "$@"; do
     esac
 done
 
+# CI cache: if the final artifact is already in place (restored from
+# actions/cache), skip the whole build. --clean forces a rebuild.
+if [ "${CLEAN}" -eq 0 ] && [ -f "${CODEC_PREFIX}/lib/libavcodec.so.63" ]; then
+    echo "==> ${CODEC_PREFIX}/lib/libavcodec.so.63 present — skipping build"
+    exit 0
+fi
+
 APT_DEPS="build-essential nasm pkg-config git meson ninja-build \
           gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu"
 
