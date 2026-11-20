@@ -51,17 +51,25 @@ export PATH="${MINGW_PREFIX}/bin:$PATH"
 
 # FFmpeg's configure derives ${XP}-nm, ${XP}-ar, ${XP}-ranlib and
 # ${XP}-pkg-config from --cross-prefix. Qt's MinGW ships the binutils as
-# ${XP}-gcc-* wrappers (no plain ${XP}-nm), and the runner has no
-# cross-prefixed pkg-config, so copy the tools under the expected names.
-# (Copies, not symlinks: immune to Git Bash symlink quirks.)
+# ${XP}-gcc-* wrappers (no plain ${XP}-nm), so copy them under the expected
+# names. (Copies, not symlinks: immune to Git Bash symlink quirks.)
 for tool in ar nm ranlib; do
     if [ ! -e "${MINGW_PREFIX}/bin/${XP}-${tool}.exe" ] && [ -e "${MINGW_PREFIX}/bin/${XP}-gcc-${tool}.exe" ]; then
         cp "${MINGW_PREFIX}/bin/${XP}-gcc-${tool}.exe" "${MINGW_PREFIX}/bin/${XP}-${tool}.exe"
     fi
 done
-if [ ! -e "${MINGW_PREFIX}/bin/${XP}-pkg-config.exe" ] && command -v pkg-config >/dev/null 2>&1; then
-    cp "$(command -v pkg-config)" "${MINGW_PREFIX}/bin/${XP}-pkg-config.exe"
-fi
+# pkg-config: a COPIED pkg-config.exe does not work from Qt's MinGW bin dir
+# (it cannot find its msys-2.0.dll there), so install a wrapper that delegates
+# to the MSYS2 cross pkg-config in its native location. MSYS2 does not convert
+# POSIX paths in environment variables, so convert PKG_CONFIG_PATH/LIBDIR.
+rm -f "${MINGW_PREFIX}/bin/${XP}-pkg-config.exe"
+cat > "${MINGW_PREFIX}/bin/${XP}-pkg-config" <<'EOF'
+#!/usr/bin/env bash
+[ -n "${PKG_CONFIG_PATH:-}" ]   && export PKG_CONFIG_PATH="$(cygpath -m "${PKG_CONFIG_PATH}")"
+[ -n "${PKG_CONFIG_LIBDIR:-}" ] && export PKG_CONFIG_LIBDIR="$(cygpath -m "${PKG_CONFIG_LIBDIR}")"
+exec /c/msys64/mingw64/bin/x86_64-w64-mingw32-pkg-config.exe "$@"
+EOF
+chmod +x "${MINGW_PREFIX}/bin/${XP}-pkg-config"
 
 CLEAN=0
 REUSE=0

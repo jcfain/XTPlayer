@@ -214,11 +214,16 @@ jobs:
             || { echo "ERROR: libqxcb.so missing from ${QT_DIR}/plugins/platforms"; exit 1; }
           # Pre-stage the Qt plugins tree into the appdir. The qt plugin
           # deploys each plugin from <qtroot>/plugins to appdir/plugins; if its
-          # qmake query ever resolves the Qt root to the appdir itself, the
-          # sources are found here and the (self) copies are skipped, so the
-          # deployment succeeds either way.
+          # qmake query ever resolves the Qt root to the appdir itself (its
+          # qmake inherits our LD_LIBRARY_PATH and loads libQt6Core from the
+          # appdir, so the prefix comes out as the appdir), the sources are
+          # found here and the (self) copies are skipped, so the deployment
+          # succeeds either way. The Qt libs are pre-staged too: with the
+          # appdir as Qt root, plugin dependencies like libQt6XcbQpa.so.6 must
+          # be resolvable from the appdir as well.
           mkdir -p "${APPDIR}/usr/plugins"
           cp -r "${QT_DIR}/plugins/." "${APPDIR}/usr/plugins/"
+          cp -P "${QT_DIR}"/lib/libQt6*.so* "${APPDIR}/usr/lib/"
           chmod +x linuxdeploy/x86_64/linuxdeploy-x86_64.AppImage linuxdeploy/x86_64/linuxdeploy-plugin-qt-x86_64.AppImage
           QMAKE="${QT_DIR}/bin/qmake" \
           LD_LIBRARY_PATH="${APPDIR}/usr/lib:${GITHUB_WORKSPACE}/build-release/release:${GITHUB_WORKSPACE}/../XTEngine/build-release/release" \
@@ -363,7 +368,9 @@ jobs:
           cp -f "${CODEC_PREFIX}/lib"/libswresample.so.7*  "${APPDIR}/usr/lib/"
           cp -f "${CODEC_PREFIX}/lib"/libdav1d.so.7*       "${APPDIR}/usr/lib/" 2>/dev/null || true
           cp -f "${CODEC_PREFIX}/lib"/libaom.so.3*         "${APPDIR}/usr/lib/" 2>/dev/null || true
-          # Same qmake-root diagnostics + plugin pre-staging as the x86_64 job.
+          # Same qmake-root diagnostics + plugin pre-staging as the x86_64 job
+          # (the plugin's qmake inherits LD_LIBRARY_PATH and resolves the Qt
+          # root to the appdir, so plugins AND Qt libs must be pre-staged).
           echo "==> qmake diagnostics"
           echo "QMAKE=${QMAKE:-<unset>}"
           "${QT_DIR}/bin/qmake" -query QT_INSTALL_PREFIX QT_INSTALL_LIBS QT_INSTALL_PLUGINS
@@ -372,22 +379,23 @@ jobs:
             || { echo "ERROR: libqxcb.so missing from ${QT_DIR}/plugins/platforms"; exit 1; }
           mkdir -p "${APPDIR}/usr/plugins"
           cp -r "${QT_DIR}/plugins/." "${APPDIR}/usr/plugins/"
-          # Cross-package with the HOST (x86_64) linuxdeploy: --cross-compile
-          # makes it read the target Qt install from QMAKE and bundle the
-          # aarch64 plugins, so the aarch64 AppImage binaries never need to
-          # execute on this x86_64 runner.
-          chmod +x linuxdeploy/x86_64/linuxdeploy-x86_64.AppImage linuxdeploy/x86_64/linuxdeploy-plugin-qt-x86_64.AppImage
+          cp -P "${QT_DIR}"/lib/libQt6*.so* "${APPDIR}/usr/lib/"
+          # Cross-package with the TARGET-ARCH (aarch64) linuxdeploy binary:
+          # it runs under qemu (binfmt enabled above) and produces an AppImage
+          # with the aarch64 runtime, so the result actually runs on aarch64.
+          # (linuxdeploy has no --cross-compile mode; this is how the release
+          # scripts do it: linuxdeploy/aarch64/linuxdeploy-aarch64.AppImage.)
+          chmod +x linuxdeploy/aarch64/linuxdeploy-aarch64.AppImage linuxdeploy/aarch64/linuxdeploy-plugin-qt-aarch64.AppImage
           QMAKE="${QT_DIR}/bin/qmake" \
           LD_LIBRARY_PATH="${APPDIR}/usr/lib" \
-          ./linuxdeploy/x86_64/linuxdeploy-x86_64.AppImage \
+          ./linuxdeploy/aarch64/linuxdeploy-aarch64.AppImage \
             --appdir "${APPDIR}" \
             --executable "${APPDIR}/usr/bin/XTPlayer" \
             --plugin qt \
-            --cross-compile \
             --output appimage \
             --icon-file src/images/icons/XTP-icon.png \
             --desktop-file XTPlayer.desktop
-          mv XTPlayer-arm*.AppImage "dist/XTPlayer-${{ inputs.version }}-Linux-aarch64.AppImage"
+          mv XTPlayer-aarch64*.AppImage "dist/XTPlayer-${{ inputs.version }}-Linux-aarch64.AppImage"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

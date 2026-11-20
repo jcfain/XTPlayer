@@ -247,11 +247,11 @@ if [ ! -f "${AVCODEC_LIB}" ]; then
     echo "ERROR: libavcodec.63.dylib not found in ${CODEC_PREFIX}/lib"
     exit 1
 fi
-if lipo -info "${AVCODEC_LIB}" | grep -q "arm64 x86_64"; then
-    echo "OK: libavcodec.63.dylib is universal (arm64 x86_64)"
+archs="$(lipo -archs "${AVCODEC_LIB}")"
+if [[ "${archs}" == *arm64* && "${archs}" == *x86_64* ]]; then
+    echo "OK: libavcodec.63.dylib is universal (${archs})"
 else
-    echo "ERROR: libavcodec.63.dylib is NOT universal:"
-    lipo -info "${AVCODEC_LIB}"
+    echo "ERROR: libavcodec.63.dylib is NOT universal: ${archs}"
     exit 1
 fi
 if nm -gU "${AVCODEC_LIB}" 2>/dev/null | grep -q dav1d || \
