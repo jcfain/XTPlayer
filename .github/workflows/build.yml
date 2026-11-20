@@ -82,7 +82,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: web
     env:
-      QT_DIR: qt6
+      # Absolute: build steps cd into sibling/sub dirs before invoking qmake.
+      QT_DIR: ${{ github.workspace }}/qt6
       CODEC_PREFIX: ffmpeg-av1
     steps:
       - name: Checkout XTPlayer
@@ -218,7 +219,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: web
     env:
-      QT_DIR: qt6-arm64
+      QT_DIR: ${{ github.workspace }}/qt6-arm64
       CODEC_PREFIX: ffmpeg-av1-arm64
     steps:
       - name: Checkout XTPlayer
@@ -360,7 +361,7 @@ jobs:
       run:
         shell: bash
     env:
-      QT_DIR: qt6
+      QT_DIR: ${{ github.workspace }}/qt6
       # Absolute: CMake rejects relative compiler paths.
       MINGW_PREFIX: ${{ github.workspace }}/qt6/Tools/mingw1510_64
       CODEC_PREFIX: ffmpeg-av1-win
@@ -470,7 +471,7 @@ jobs:
     runs-on: macos-latest
     needs: web
     env:
-      QT_DIR: qt6
+      QT_DIR: ${{ github.workspace }}/qt6
       CODEC_PREFIX: ffmpeg-av1-mac
     steps:
       - name: Checkout XTPlayer
