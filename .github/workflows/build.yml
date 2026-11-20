@@ -243,7 +243,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             build-essential cmake ninja-build pkg-config nasm meson \
             gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu \
-            qemu-user-static binfmt-support
+            qemu-user-binfmt binfmt-support
           # qemu lets the aarch64 moc/rcc/uic (shipped with the aarch64 Qt)
           # run during the cross build.
           sudo update-binfmts --enable --display
@@ -353,7 +353,8 @@ jobs:
         shell: bash
     env:
       QT_DIR: qt6
-      MINGW_PREFIX: qt6/Tools/mingw1510_64
+      # Absolute: CMake rejects relative compiler paths.
+      MINGW_PREFIX: ${{ github.workspace }}/qt6/Tools/mingw1510_64
       CODEC_PREFIX: ffmpeg-av1-win
     steps:
       - name: Checkout XTPlayer

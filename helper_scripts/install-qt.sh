@@ -65,10 +65,17 @@ dl_pkg() {
         fi
         # The ICU archive carries its .so files at the archive root; the Qt
         # installer places them in lib/ (qmake's RUNPATH is $ORIGIN/../lib).
-        case "${f}" in
-          *icu-*) 7z x -y "${tmp}/${f}" -o"${dest}/lib" >/dev/null ;;
-          *)      7z x -y "${tmp}/${f}" -o"${dest}" >/dev/null ;;
-        esac
+        local out="${dest}"
+        case "${f}" in *icu-*) out="${dest}/lib" ;; esac
+        # 7-Zip >= 24 exits 2 when it refuses "dangerous" links (symlink
+        # chains like libQt6X.so -> libQt6X.so.6 -> libQt6X.so.6.12.0);
+        # the chains are recreated after extraction.
+        local rc=0
+        7z x -y "${tmp}/${f}" -o"${out}" >/dev/null || rc=$?
+        if [ "${rc}" -ne 0 ] && [ "${rc}" -ne 2 ]; then
+          echo "7z failed (${rc}) on ${f}" >&2
+          exit "${rc}"
+        fi
         rm -f "${tmp}/${f}"
       done
   rm -rf "${tmp}"
@@ -79,6 +86,24 @@ dl_pkg "qt.qt6.${VERNUM}.${QT_ARCH}" "${QT_DIR}"
 for m in ${MODULES}; do
   dl_pkg "qt.qt6.${VERNUM}.addons.${m}.${QT_ARCH}" "${QT_DIR}"
 done
+
+# 7-Zip >= 24 ignores symlink chains; recreate Qt's standard two-level .so
+# chains (libQt6X.so -> libQt6X.so.6 -> libQt6X.so.6.12.0). No-op on
+# Windows/macOS (no .so files there).
+if [ -d "${QT_DIR}/lib" ]; then
+  for real in "${QT_DIR}"/lib/lib*.so.*.*; do
+    [ -f "${real}" ] || continue
+    name=$(basename "${real}")
+    mid="${name%.*}"; mid="${mid%.*}"   # libQt6X.so.6.12.0 -> libQt6X.so.6
+    dev="${mid%.*}"                     # -> libQt6X.so
+    case "${dev}" in
+      *.so)
+        ln -sf "${name}" "${QT_DIR}/lib/${mid}"
+        ln -sf "${mid}"  "${QT_DIR}/lib/${dev}"
+        ;;
+    esac
+  done
+fi
 
 # Optional toolchain (Windows MinGW): lives in a separate tools dir.
 if [ -n "${QT_TOOLS:-}" ]; then

@@ -25,7 +25,7 @@
 set -e
 
 FFMPEG_TAG=n9.0.1
-DAV1D_TAG=v1.5.1
+DAV1D_TAG=1.5.1
 AOM_TAG=v3.15.2
 FFMPEG_SRC="${FFMPEG_SRC:-${HOME}/git/ffmpeg}"
 CODEC_PREFIX="${CODEC_PREFIX:-${HOME}/git/ffmpeg-n9.0.1-av1-win}"
