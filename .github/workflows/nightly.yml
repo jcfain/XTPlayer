@@ -20,13 +20,13 @@ on:
 
 jobs:
   meta:
-    name: Version string
+    name: Release name
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.v.outputs.version }}
+      release-name: ${{ steps.v.outputs.release_name }}
     steps:
       - id: v
-        run: echo "version=nightly-$(date -u +%Y%m%d)-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+        run: echo "release_name=Nightly $(date -u +%Y-%m-%d) — ${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
   build:
     name: Build all platforms
@@ -35,11 +35,13 @@ jobs:
     with:
       player-branch: Development
       engine-branch: Development
-      version: ${{ needs.meta.outputs.version }}
+      # Fixed 'nightly' in the file names so overwrite_files replaces the
+      # previous run's assets; the date/commit live in the release name.
+      version: nightly
 
   publish:
     name: Publish nightly release
-    needs: build
+    needs: [build, meta]
     if: needs.build.result == 'success'
     runs-on: ubuntu-latest
     steps:
@@ -55,7 +57,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: nightly
-          name: Nightly ${{ needs.meta.outputs.version }}
+          name: ${{ needs.meta.outputs.release-name }}
           body: |
             Nightly build of **Development** (XTEngine **Development**) — commit ${{ github.sha }}
 
@@ -69,4 +71,4 @@ jobs:
             > `xattr -d com.apple.quarantine /Applications/XTPlayer.app`).
           files: |
             dist/*
-          overwrite: true
+          overwrite_files: true
