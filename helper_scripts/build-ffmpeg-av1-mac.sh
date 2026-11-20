@@ -156,12 +156,16 @@ if [ ! -f "${CODEC_PREFIX}/lib/libaom.dylib" ]; then
     # aom's CMake enables NEON intrinsics whenever arm64 is in the arch
     # list, so a single universal build compiles NEON C for x86_64 and
     # fails. Build per-arch (each picks its own intrinsics) and lipo.
+    # AOM_TARGET_CPU must be pinned too: aom auto-detects from
+    # CMAKE_SYSTEM_PROCESSOR, which is the HOST cpu (arm64 on Apple
+    # Silicon) even when cross-building the x86_64 slice.
     for arch in arm64 x86_64; do
         rm -rf "${WORKDIR}/aom-build-${arch}"
         cmake -S "${AOM_SRC}" -B "${WORKDIR}/aom-build-${arch}" \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_SHARED_LIBS=ON \
             -DCMAKE_OSX_ARCHITECTURES="${arch}" \
+            -DAOM_TARGET_CPU="${arch}" \
             -DCMAKE_INSTALL_PREFIX="${WORKDIR}/aom-prefix-${arch}"
         cmake --build "${WORKDIR}/aom-build-${arch}" -j"${JOBS}"
         cmake --install "${WORKDIR}/aom-build-${arch}"
