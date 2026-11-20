@@ -88,12 +88,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.player-branch }}
-      - name: Checkout XTEngine
-        uses: actions/checkout@v4
-        with:
-          repository: jcfain/XTEngine
-          ref: ${{ inputs.engine-branch }}
-          path: ../XTEngine
+      - name: Clone XTEngine (sibling of the workspace, as the .pro files expect)
+        run: git clone --depth 1 --branch ${{ inputs.engine-branch }} https://github.com/jcfain/XTEngine.git ../XTEngine
       - name: Restore CI-built web bundle
         uses: actions/download-artifact@v4
         with:
@@ -226,12 +222,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.player-branch }}
-      - name: Checkout XTEngine
-        uses: actions/checkout@v4
-        with:
-          repository: jcfain/XTEngine
-          ref: ${{ inputs.engine-branch }}
-          path: ../XTEngine
+      - name: Clone XTEngine (sibling of the workspace, as the .pro files expect)
+        run: git clone --depth 1 --branch ${{ inputs.engine-branch }} https://github.com/jcfain/XTEngine.git ../XTEngine
       - name: Restore CI-built web bundle
         uses: actions/download-artifact@v4
         with:
@@ -362,12 +354,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.player-branch }}
-      - name: Checkout XTEngine
-        uses: actions/checkout@v4
-        with:
-          repository: jcfain/XTEngine
-          ref: ${{ inputs.engine-branch }}
-          path: ../XTEngine
+      - name: Clone XTEngine (sibling of the workspace, as the .pro files expect)
+        run: git clone --depth 1 --branch ${{ inputs.engine-branch }} https://github.com/jcfain/XTEngine.git ../XTEngine
       - name: Restore CI-built web bundle
         uses: actions/download-artifact@v4
         with:
@@ -471,12 +459,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.player-branch }}
-      - name: Checkout XTEngine
-        uses: actions/checkout@v4
-        with:
-          repository: jcfain/XTEngine
-          ref: ${{ inputs.engine-branch }}
-          path: ../XTEngine
+      - name: Clone XTEngine (sibling of the workspace, as the .pro files expect)
+        run: git clone --depth 1 --branch ${{ inputs.engine-branch }} https://github.com/jcfain/XTEngine.git ../XTEngine
       - name: Restore CI-built web bundle
         uses: actions/download-artifact@v4
         with:
