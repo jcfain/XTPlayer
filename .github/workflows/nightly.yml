@@ -71,4 +71,3 @@ jobs:
             > `xattr -d com.apple.quarantine /Applications/XTPlayer.app`).
           files: |
             dist/*
-          overwrite_files: true
