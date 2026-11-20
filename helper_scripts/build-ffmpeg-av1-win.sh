@@ -99,7 +99,7 @@ if [ ! -f "${CODEC_PREFIX}/lib/dav1d.dll" ]; then
 [binaries]
 c = '${XP}-gcc'
 cpp = '${XP}-g++'
-ar = '${XP}-ar'
+ar = '${XP}-gcc-ar'
 strip = '${XP}-strip'
 [host_machine]
 system = 'windows'

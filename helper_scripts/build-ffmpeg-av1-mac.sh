@@ -87,8 +87,28 @@ if [ ! -f "${CODEC_PREFIX}/lib/libdav1d.dylib" ]; then
     for arch in arm64 x86_64; do
         echo "==> dav1d: ${arch}"
         rm -rf "${WORKDIR}/dav1d-build-${arch}"
+        # Pin cpu_family via a cross file: on Apple Silicon runners,
+        # `cc -dumpmachine` reports arm64 even with -arch x86_64, which
+        # makes meson compile the ARM asm into the x86_64 slice.
+        case "${arch}" in
+            arm64)  cpu=aarch64 ;;
+            x86_64) cpu=x86_64 ;;
+        esac
+        cat > "${WORKDIR}/dav1d-${arch}.txt" <<EOF
+[binaries]
+c = 'cc'
+cpp = 'c++'
+ar = 'ar'
+strip = 'strip'
+[host_machine]
+system = 'darwin'
+cpu_family = '${cpu}'
+cpu = '${cpu}'
+endian = 'little'
+EOF
         CFLAGS="-arch ${arch}" CXXFLAGS="-arch ${arch}" \
         meson setup "${WORKDIR}/dav1d-build-${arch}" "${DAV1D_SRC}" \
+            --cross-file="${WORKDIR}/dav1d-${arch}.txt" \
             --prefix="${WORKDIR}/dav1d-prefix-${arch}" --libdir=lib \
             -Denable_asm=true -Denable_docs=false
         ninja -C "${WORKDIR}/dav1d-build-${arch}" -j"${JOBS}"

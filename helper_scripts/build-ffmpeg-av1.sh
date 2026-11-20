@@ -70,7 +70,10 @@ if [ "$INSTALL_DEPS" -eq 1 ]; then
     if command -v apt-get >/dev/null 2>&1; then
         echo "==> Installing dependencies via apt-get"
         sudo apt-get update
-        sudo apt-get install -y $APT_DEPS
+        # resolute (26.04) merged libva-drm-dev/libva-x11-dev into libva-dev;
+        # retry without them if the distro no longer ships separate packages.
+        sudo apt-get install -y $APT_DEPS || \
+            sudo apt-get install -y $(echo "$APT_DEPS" | sed 's/ libva-drm-dev//; s/ libva-x11-dev//')
     elif command -v dnf >/dev/null 2>&1; then
         echo "==> Installing dependencies via dnf"
         sudo dnf install -y $DNF_DEPS

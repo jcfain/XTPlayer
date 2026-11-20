@@ -244,6 +244,12 @@ jobs:
             build-essential cmake ninja-build pkg-config nasm meson \
             gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu \
             qemu-user-binfmt binfmt-support
+          # aarch64 OpenGL dev libs (multiarch): Qt6Gui's CMake config
+          # requires WrapOpenGL, which must resolve for the aarch64 target.
+          sudo dpkg --add-architecture arm64
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgl1-mesa-dev:arm64 libegl-dev:arm64
           # qemu lets the aarch64 moc/rcc/uic (shipped with the aarch64 Qt)
           # run during the cross build.
           sudo update-binfmts --enable
