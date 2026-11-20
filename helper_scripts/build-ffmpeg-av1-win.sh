@@ -170,7 +170,7 @@ includedir=\${prefix}/include
 
 Name: aom
 Description: AV1 encoding and decoding library
-Version: ${AOM_TAG}
+Version: ${AOM_TAG#v}
 Libs: -L\${libdir} -laom
 Cflags: -I\${includedir}
 EOF

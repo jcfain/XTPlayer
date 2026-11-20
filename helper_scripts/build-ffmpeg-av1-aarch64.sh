@@ -204,7 +204,7 @@ make install
 # ---------------------------------------------------------------------------
 # Verify
 # ---------------------------------------------------------------------------
-AVCODEC_LIB="$(ls "${CODEC_PREFIX}"/lib/libavcodec.so.63* 2>/dev/null | head -1)"
+AVCODEC_LIB="$(ls "${CODEC_PREFIX}"/lib/libavcodec.so.63.* 2>/dev/null | head -1)"
 if [ -z "${AVCODEC_LIB}" ]; then
     echo "ERROR: libavcodec.so.63 not found in ${CODEC_PREFIX}/lib"
     exit 1
@@ -215,8 +215,9 @@ else
     echo "ERROR: dav1d symbols missing from ${AVCODEC_LIB}"
     exit 1
 fi
-# Sanity: the library must be aarch64, not the host arch.
-if file "${AVCODEC_LIB}" | grep -q aarch64; then
+# Sanity: the library must be aarch64, not the host arch. (-L: follow
+# symlinks; file does not by default.)
+if file -L "${AVCODEC_LIB}" | grep -q aarch64; then
     echo "OK: library is aarch64"
 else
     echo "ERROR: library is NOT aarch64:"
