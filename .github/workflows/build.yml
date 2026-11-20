@@ -278,6 +278,7 @@ jobs:
             -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_PREFIX_PATH="${QT_DIR}" \
+            -DQT_HOST_PATH="${QT_DIR}" \
             -DCMAKE_INSTALL_PREFIX="${QT_DIR}"
           cmake --build qtgamepadlegacy/build -j"$(nproc)"
           cmake --install qtgamepadlegacy/build

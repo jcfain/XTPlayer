@@ -146,14 +146,38 @@ if [ ! -f "${CODEC_PREFIX}/lib/libaom.dylib" ]; then
         git clone --depth 1 --branch "${AOM_TAG}" \
             https://aomedia.googlesource.com/aom "${AOM_SRC}"
     fi
-    rm -rf "${WORKDIR}/aom-build"
-    cmake -S "${AOM_SRC}" -B "${WORKDIR}/aom-build" \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DBUILD_SHARED_LIBS=ON \
-        -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" \
-        -DCMAKE_INSTALL_PREFIX="${CODEC_PREFIX}"
-    cmake --build "${WORKDIR}/aom-build" -j"${JOBS}"
-    cmake --install "${WORKDIR}/aom-build"
+    # aom's CMake enables NEON intrinsics whenever arm64 is in the arch
+    # list, so a single universal build compiles NEON C for x86_64 and
+    # fails. Build per-arch (each picks its own intrinsics) and lipo.
+    for arch in arm64 x86_64; do
+        rm -rf "${WORKDIR}/aom-build-${arch}"
+        cmake -S "${AOM_SRC}" -B "${WORKDIR}/aom-build-${arch}" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=ON \
+            -DCMAKE_OSX_ARCHITECTURES="${arch}" \
+            -DCMAKE_INSTALL_PREFIX="${WORKDIR}/aom-prefix-${arch}"
+        cmake --build "${WORKDIR}/aom-build-${arch}" -j"${JOBS}"
+        cmake --install "${WORKDIR}/aom-build-${arch}"
+    done
+    mkdir -p "${CODEC_PREFIX}/lib" "${CODEC_PREFIX}/include"
+    lipo -create -output "${CODEC_PREFIX}/lib/libaom.dylib" \
+        "${WORKDIR}/aom-prefix-arm64/lib/libaom.dylib" \
+        "${WORKDIR}/aom-prefix-x86_64/lib/libaom.dylib"
+    cp -R "${WORKDIR}/aom-prefix-arm64/include/." "${CODEC_PREFIX}/include/"
+    # aom's .pc from the per-arch prefixes points at the wrong prefix;
+    # write one that points at the merged universal prefix.
+    mkdir -p "${CODEC_PREFIX}/lib/pkgconfig"
+    cat > "${CODEC_PREFIX}/lib/pkgconfig/aom.pc" <<EOF
+prefix=${CODEC_PREFIX}
+libdir=\${prefix}/lib
+includedir=\${prefix}/include
+
+Name: aom
+Description: AV1 encoding and decoding library
+Version: ${AOM_TAG}
+Libs: -L\${libdir} -laom
+Cflags: -I\${includedir}
+EOF
 else
     echo "==> aom already in ${CODEC_PREFIX} (skipping)"
 fi
