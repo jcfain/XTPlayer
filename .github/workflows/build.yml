@@ -713,6 +713,13 @@ jobs:
     env:
       QT_DIR: ${{ github.workspace }}/qt6
       CODEC_PREFIX: ffmpeg-av1-mac
+      # Oldest macOS Qt 6.12 supports (its official binaries target 11.0).
+      # The deployment target is a MINIMUM, not a maximum: the app runs on
+      # 11..26 and gets all newer-OS features at runtime (VideoToolbox AV1
+      # hwaccel, Metal, ...). The native code calls no Apple APIs directly,
+      # so nothing needs availability guards. Picked up by qmake, CMake and
+      # clang for every component (app, engine, FFmpeg, QtGamepadLegacy).
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
     steps:
       - name: Checkout XTPlayer
         uses: actions/checkout@v4
@@ -763,7 +770,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.CODEC_PREFIX }}
-          key: ffmpeg-av1-mac-${{ hashFiles('helper_scripts/build-ffmpeg-av1-mac.sh') }}
+          key: ffmpeg-av1-mac-110-${{ hashFiles('helper_scripts/build-ffmpeg-av1-mac.sh') }}
       - name: Build FFmpeg n9.0.1 (universal, AV1)
         run: bash helper_scripts/build-ffmpeg-av1-mac.sh --reuse
 
