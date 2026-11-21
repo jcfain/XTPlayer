@@ -274,10 +274,14 @@ if [ ! -f "${AVCODEC_DLL}" ]; then
     echo "ERROR: avcodec-63.dll not found in ${CODEC_PREFIX}/bin"
     exit 1
 fi
-if "${MINGW_PREFIX}/bin/${XP}-nm.exe" -D "${AVCODEC_DLL}" | grep -q dav1d; then
+# dav1d is linked into avcodec (statically, or as dav1d.dll imported by it) -
+# either way the binary contains dav1d strings (version banner / import
+# names). nm -D only shows the export table, which never contains dav1d
+# symbols, so grep the binary directly.
+if grep -qa "dav1d" "${AVCODEC_DLL}"; then
     echo "OK: AV1 (dav1d) decoder present in avcodec-63.dll"
 else
-    echo "ERROR: dav1d symbols missing from avcodec-63.dll"
+    echo "ERROR: dav1d strings missing from avcodec-63.dll"
     exit 1
 fi
 for dll in avformat-63.dll avutil-61.dll swscale-10.dll swresample-7.dll; do
