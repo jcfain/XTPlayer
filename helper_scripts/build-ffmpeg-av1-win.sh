@@ -8,9 +8,11 @@
 # cross compiler, so the DLLs match the app's ABI.
 #
 # Produces avcodec-63.dll, avformat-63.dll, avutil-61.dll, swscale-10.dll,
-# swresample-7.dll + dav1d.dll + aom.dll (all in $CODEC_PREFIX/bin - meson
+# swresample-7.dll + libdav1d.dll + aom.dll (all in $CODEC_PREFIX/bin - meson
 # and CMake install Windows DLLs into bindir; import libs + .pc files go to
-# $CODEC_PREFIX/lib). Drop them NEXT TO XTPlayer.exe: the Windows DLL search
+# $CODEC_PREFIX/lib). Note: meson+gcc names the dav1d DLL libdav1d.dll and
+# the import lib embeds that name, so avcodec-63.dll imports "libdav1d.dll".
+# Drop them NEXT TO XTPlayer.exe: the Windows DLL search
 # finds the exe directory first, so they replace the AV1-less FFmpeg DLLs
 # bundled by Qt automatically (no launcher needed; absent DLLs = old
 # behavior, automatic fallback).
@@ -158,9 +160,11 @@ AOM_SRC="${WORKDIR}/aom-src"
 # ---------------------------------------------------------------------------
 # dav1d (cross, meson)
 # ---------------------------------------------------------------------------
-# meson installs the DLL into BINDIR on Windows (the import lib libdav1d.dll.a
-# and dav1d.pc go to libdir), so dav1d.dll ends up in ${CODEC_PREFIX}/bin.
-if [ ! -f "${CODEC_PREFIX}/bin/dav1d.dll" ]; then
+# meson (gcc cross) installs the DLL into BINDIR on Windows as
+# libdav1d.dll (the import lib libdav1d.dll.a and dav1d.pc go to libdir).
+# The import lib embeds the name "libdav1d.dll", so avcodec-63.dll imports
+# that name - the DLL must keep the lib prefix at runtime.
+if [ ! -f "${CODEC_PREFIX}/bin/libdav1d.dll" ] && [ ! -f "${CODEC_PREFIX}/bin/dav1d.dll" ]; then
     echo "==> Building dav1d ${DAV1D_TAG} (${XP})"
     if [ ! -d "${DAV1D_SRC}/.git" ]; then
         git clone --depth 1 --branch "${DAV1D_TAG}" \
@@ -185,11 +189,14 @@ EOF
         -Denable_asm=true -Denable_docs=false
     ninja -C "${WORKDIR}/dav1d-build" -j"${JOBS}"
     ninja -C "${WORKDIR}/dav1d-build" install
-    # Normalize to bin/ (meson's Windows convention) so verify + packaging
-    # have one canonical location, and print the layout for diagnostics.
-    if [ ! -f "${CODEC_PREFIX}/bin/dav1d.dll" ] && [ -f "${CODEC_PREFIX}/lib/dav1d.dll" ]; then
-        cp "${CODEC_PREFIX}/lib/dav1d.dll" "${CODEC_PREFIX}/bin/dav1d.dll"
-    fi
+    # Fallback: if the DLL landed in lib/ (older meson layout), copy it to
+    # bin/ so verify + packaging have one canonical location. Print the
+    # layout for diagnostics.
+    for _dll in libdav1d.dll dav1d.dll; do
+        if [ ! -f "${CODEC_PREFIX}/bin/${_dll}" ] && [ -f "${CODEC_PREFIX}/lib/${_dll}" ]; then
+            cp "${CODEC_PREFIX}/lib/${_dll}" "${CODEC_PREFIX}/bin/"
+        fi
+    done
     echo "==> ${CODEC_PREFIX}/bin: $(ls "${CODEC_PREFIX}/bin" 2>/dev/null | tr '\n' ' ')"
     echo "==> ${CODEC_PREFIX}/lib: $(ls "${CODEC_PREFIX}/lib" 2>/dev/null | tr '\n' ' ')"
 else
@@ -297,6 +304,11 @@ fi
 for dll in avformat-63.dll avutil-61.dll swscale-10.dll swresample-7.dll; do
     [ -f "${CODEC_PREFIX}/bin/${dll}" ] || { echo "ERROR: ${dll} missing"; exit 1; }
 done
-[ -f "${CODEC_PREFIX}/bin/dav1d.dll" ] || { echo "ERROR: dav1d.dll missing from ${CODEC_PREFIX}/bin (layout printed above)"; exit 1; }
+if [ -f "${CODEC_PREFIX}/bin/libdav1d.dll" ]; then
+    echo "OK: dav1d DLL: ${CODEC_PREFIX}/bin/libdav1d.dll"
+elif [ ! -f "${CODEC_PREFIX}/bin/dav1d.dll" ]; then
+    echo "ERROR: dav1d DLL (libdav1d.dll/dav1d.dll) missing from ${CODEC_PREFIX}/bin (layout printed above)"
+    exit 1
+fi
 echo "==> Done. Codec DLLs in ${CODEC_PREFIX}/bin"
 

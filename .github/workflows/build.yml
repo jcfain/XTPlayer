@@ -269,7 +269,11 @@ jobs:
             --exclude-library "*libqsqlodbc*" \
             --exclude-library "*libqsqldb2*" \
             --exclude-library "*libqsqlibase*" \
-            --exclude-library "*libqsqlfirebird*"
+            --exclude-library "*libqsqlfirebird*" \
+            # The speechd texttospeech plugin needs libspeechd.so.2, which
+            # isn't on the runner; exclude the lib so the plugin deploys
+            # without its backend (Qt skips the plugin at runtime).
+            --exclude-library "*libspeechd*"
           mv XTPlayer-x86_64.AppImage "dist/XTPlayer-${{ inputs.version }}-Linux-x86_64.AppImage"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -526,7 +530,8 @@ jobs:
             --exclude-library "*libqsqlodbc*" \
             --exclude-library "*libqsqldb2*" \
             --exclude-library "*libqsqlibase*" \
-            --exclude-library "*libqsqlfirebird*"
+            --exclude-library "*libqsqlfirebird*" \
+            --exclude-library "*libspeechd*"
           mv XTPlayer-aarch64*.AppImage "dist/XTPlayer-${{ inputs.version }}-Linux-aarch64.AppImage"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -646,8 +651,15 @@ jobs:
           cp "$CODEC_PREFIX/bin/avcodec-63.dll" "$CODEC_PREFIX/bin/avformat-63.dll" \
              "$CODEC_PREFIX/bin/avutil-61.dll" "$CODEC_PREFIX/bin/swscale-10.dll" \
              "$CODEC_PREFIX/bin/swresample-7.dll" "$STAGING/"
-          # meson (dav1d) and CMake (aom) install Windows DLLs into bin/
-          cp "$CODEC_PREFIX/bin/dav1d.dll" "$STAGING/"
+          # meson (gcc cross) names the DLL libdav1d.dll in bin/ (the import
+          # lib in lib/ embeds that name, so avcodec-63.dll imports
+          # "libdav1d.dll" - it must keep the lib prefix); CMake (aom)
+          # installs aom.dll into bin/ too.
+          if [ -f "$CODEC_PREFIX/bin/libdav1d.dll" ]; then
+            cp "$CODEC_PREFIX/bin/libdav1d.dll" "$STAGING/"
+          else
+            cp "$CODEC_PREFIX/bin/dav1d.dll" "$STAGING/"
+          fi
           [ -f "$CODEC_PREFIX/bin/aom.dll" ] && cp "$CODEC_PREFIX/bin/aom.dll" "$STAGING/" || true
           # Zip with contents at the zip root (like the 7z releases)
           cd "$STAGING"
