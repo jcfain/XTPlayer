@@ -49,13 +49,19 @@ JOBS="${JOBS:-4}"
 XP=x86_64-w64-mingw32
 export PATH="${MINGW_PREFIX}/bin:$PATH"
 
-# FFmpeg's configure derives ${XP}-nm, ${XP}-ar, ${XP}-ranlib and
-# ${XP}-pkg-config from --cross-prefix. Qt's MinGW ships the binutils as
-# ${XP}-gcc-* wrappers (no plain ${XP}-nm), so copy them under the expected
-# names. (Copies, not symlinks: immune to Git Bash symlink quirks.)
-for tool in ar nm ranlib dlltool; do
-    if [ ! -e "${MINGW_PREFIX}/bin/${XP}-${tool}.exe" ] && [ -e "${MINGW_PREFIX}/bin/${XP}-gcc-${tool}.exe" ]; then
-        cp "${MINGW_PREFIX}/bin/${XP}-gcc-${tool}.exe" "${MINGW_PREFIX}/bin/${XP}-${tool}.exe"
+# FFmpeg's configure derives ${XP}-nm, ${XP}-ar, ${XP}-ranlib,
+# ${XP}-dlltool, ${XP}-strip and ${XP}-pkg-config from --cross-prefix.
+# Qt's MinGW ships the binutils as ${XP}-gcc-* wrappers (no plain
+# ${XP}-nm), and doesn't ship dlltool/strip at all - copy them under the
+# expected names, falling back to MSYS2's native MinGW binutils (safe to
+# copy: native Win32, unlike pkg-config.exe which needs msys-2.0.dll).
+for tool in ar nm ranlib dlltool strip; do
+    if [ ! -e "${MINGW_PREFIX}/bin/${XP}-${tool}.exe" ]; then
+        if [ -e "${MINGW_PREFIX}/bin/${XP}-gcc-${tool}.exe" ]; then
+            cp "${MINGW_PREFIX}/bin/${XP}-gcc-${tool}.exe" "${MINGW_PREFIX}/bin/${XP}-${tool}.exe"
+        elif [ -e "/c/msys64/mingw64/bin/${XP}-${tool}.exe" ]; then
+            cp "/c/msys64/mingw64/bin/${XP}-${tool}.exe" "${MINGW_PREFIX}/bin/${XP}-${tool}.exe"
+        fi
     fi
 done
 # pkg-config: a COPIED pkg-config.exe does not work from Qt's MinGW bin dir

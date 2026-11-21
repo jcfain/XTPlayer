@@ -230,6 +230,15 @@ jobs:
           # is NOT installed - linuxdeploy fails on their unresolvable
           # deps. The app doesn't use Quick3D, so drop the whole family.
           rm -f "${APPDIR}/usr/lib/libQt6Quick3D"*
+          # The qt plugin prepends QT_INSTALL_BINS/LIBEXECS (from
+          # `qmake -query`) to PATH; with the appdir as the (shadowed) Qt
+          # root those point INSIDE the appdir. Pre-stage the libexec tools
+          # (qmlimportscanner, ...) so the plugin finds them there.
+          mkdir -p "${APPDIR}/usr/libexec"
+          cp -r "${QT_DIR}/libexec/." "${APPDIR}/usr/libexec/" 2>/dev/null || true
+          ls "${QT_DIR}/libexec/qmlimportscanner" 2>/dev/null \
+            && echo "OK: qmlimportscanner in ${QT_DIR}/libexec" \
+            || echo "WARNING: qmlimportscanner NOT in ${QT_DIR}/libexec"
           # Extract the AppImages and run the internal binaries directly:
           # the AppImage runtime sanitizes PATH (drops ${QT_DIR}/bin), so
           # the qt plugin can't find qmlimportscanner when it runs as an
@@ -409,6 +418,10 @@ jobs:
           cp -rP "${QT_DIR}/lib/." "${APPDIR}/usr/lib/"
           # Same Quick3D orphan-lib cleanup as the x86_64 job.
           rm -f "${APPDIR}/usr/lib/libQt6Quick3D"*
+          # Pre-stage the libexec tools (qmlimportscanner, ...) - same
+          # shadowed-Qt-root reason as the x86_64 job.
+          mkdir -p "${APPDIR}/usr/libexec"
+          cp -r "${QT_DIR}/libexec/." "${APPDIR}/usr/libexec/" 2>/dev/null || true
           # Cross-package with the TARGET-ARCH (aarch64) linuxdeploy binary:
           # it produces an AppImage with the aarch64 runtime, so the result
           # actually runs on aarch64. (linuxdeploy has no --cross-compile
