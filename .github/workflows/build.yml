@@ -326,6 +326,36 @@ jobs:
           # libwayland-client, XcbQpa -> libxcb-*, Bluetooth, Pulse, ...),
           # which the linuxdeploy core deploys into the AppImage.
           sudo dpkg --add-architecture arm64
+          # arm64 is an Ubuntu "port" arch: its indices are NOT on
+          # archive/security.ubuntu.com (404 -> apt-get update exits 100).
+          # Replace the runner's sources with explicit per-arch ones:
+          # amd64 from the main mirror, arm64 from the ports mirror
+          # (same archive keyring). Runner is pinned to noble, so the
+          # suite names are stable; this job uses no extra apt repos.
+          sudo rm -f /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources
+          printf '%s\n' \
+            'Types: deb' \
+            'URIs: http://archive.ubuntu.com/ubuntu' \
+            'Suites: noble noble-updates noble-backports' \
+            'Components: main restricted universe multiverse' \
+            'Architectures: amd64' \
+            'Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg' \
+            '' \
+            'Types: deb' \
+            'URIs: http://security.ubuntu.com/ubuntu' \
+            'Suites: noble-security' \
+            'Components: main restricted universe multiverse' \
+            'Architectures: amd64' \
+            'Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg' \
+            | sudo tee /etc/apt/sources.list.d/amd64-main.sources >/dev/null
+          printf '%s\n' \
+            'Types: deb' \
+            'URIs: http://ports.ubuntu.com/ubuntu-ports' \
+            'Suites: noble noble-updates noble-backports noble-security' \
+            'Components: main restricted universe multiverse' \
+            'Architectures: arm64' \
+            'Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg' \
+            | sudo tee /etc/apt/sources.list.d/arm64-ports.sources >/dev/null
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libgl1-mesa-dev:arm64 libxkbcommon-dev:arm64 libwayland-dev:arm64 \
