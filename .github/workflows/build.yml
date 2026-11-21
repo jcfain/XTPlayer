@@ -213,13 +213,13 @@ jobs:
           test -f "${QT_DIR}/plugins/platforms/libqxcb.so" \
             && echo "OK: libqxcb.so present in the Qt tree" \
             || { echo "ERROR: libqxcb.so missing from ${QT_DIR}/plugins/platforms"; exit 1; }
-          # NO Qt pre-staging: the qt plugin deploys the needed Qt libs and
-          # plugins from the REAL Qt tree (that's how the release scripts do
-          # it - the old ~53 MB AppImages). Pre-staging the whole tree
-          # bloated the AppImage to ~410 MB and shadowed qmake's Qt-root
-          # resolution to the appdir. qmake must resolve to the real tree:
-          # the appdir must NOT contain libQt6Core (it doesn't now) and
-          # ${QT_DIR}/lib is on LD_LIBRARY_PATH below.
+          # NO Qt pre-staging and NO ${QT_DIR}/lib on LD_LIBRARY_PATH: the
+          # qt plugin deploys the needed Qt libs/plugins from the REAL Qt
+          # tree (that's how the release scripts do it - the old ~53 MB
+          # AppImages). If the Qt tree is reachable via LD_LIBRARY_PATH, the
+          # linuxdeploy CORE copies the app's Qt deps into the appdir, and
+          # qmake (which derives its prefix from the loaded libQt6Core) then
+          # resolves to the appdir, breaking the plugin.
           # qmlimportscanner (run by the qt plugin) takes -importPath
           # appdir/usr/qml and fails if the directory doesn't exist.
           mkdir -p "${APPDIR}/usr/qml"
@@ -236,8 +236,21 @@ jobs:
           ./linuxdeploy/x86_64/linuxdeploy-plugin-qt-x86_64.AppImage --appimage-extract
           test -x squashfs-root/usr/bin/linuxdeploy
           test -x squashfs-root/usr/bin/linuxdeploy-plugin-qt
+          # Guard: qmake (run by the qt plugin with this exact environment)
+          # must resolve the Qt root to the REAL Qt tree. If the appdir ever
+          # contains libQt6Core (e.g. copied by the linuxdeploy core's
+          # dependency deployment), qmake's prefix becomes the appdir and the
+          # plugin breaks in confusing ways ("Could not find Qt modules",
+          # "Cannot deploy non-existing library file .../usr/plugins/...").
+          _qt_root="$(LD_LIBRARY_PATH="${APPDIR}/usr/lib:${GITHUB_WORKSPACE}/build-release/release:${GITHUB_WORKSPACE}/../XTEngine/build-release/release" "${QT_DIR}/bin/qmake" -query QT_INSTALL_PREFIX)"
+          echo "qmake QT_INSTALL_PREFIX: ${_qt_root}"
+          [ "${_qt_root}" != "${APPDIR}" ] || { echo "ERROR: qmake resolves the Qt root to the appdir"; exit 1; }
           QMAKE="${QT_DIR}/bin/qmake" \
-          LD_LIBRARY_PATH="${APPDIR}/usr/lib:${QT_DIR}/lib:${GITHUB_WORKSPACE}/build-release/release:${GITHUB_WORKSPACE}/../XTEngine/build-release/release" \
+          # ${QT_DIR}/lib must NOT be on LD_LIBRARY_PATH: the linuxdeploy
+          # core would then copy the app's Qt deps into the appdir, shadowing
+          # qmake's Qt-root resolution. The qt plugin deploys the Qt libs
+          # itself, from the real tree (qmake's RPATH).
+          LD_LIBRARY_PATH="${APPDIR}/usr/lib:${GITHUB_WORKSPACE}/build-release/release:${GITHUB_WORKSPACE}/../XTEngine/build-release/release" \
           PATH="${QT_DIR}/bin:${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
           ./squashfs-root/usr/bin/linuxdeploy \
             --appdir "${APPDIR}" \
@@ -430,8 +443,15 @@ jobs:
           qemu-aarch64 ./linuxdeploy/aarch64/linuxdeploy-plugin-qt-aarch64.AppImage --appimage-extract
           test -x squashfs-root/usr/bin/linuxdeploy
           test -x squashfs-root/usr/bin/linuxdeploy-plugin-qt
+          # Same qmake-root guard as the x86_64 job.
+          _qt_root="$(LD_LIBRARY_PATH="${APPDIR}/usr/lib" "${QT_DIR}/bin/qmake" -query QT_INSTALL_PREFIX)"
+          echo "qmake QT_INSTALL_PREFIX: ${_qt_root}"
+          [ "${_qt_root}" != "${APPDIR}" ] || { echo "ERROR: qmake resolves the Qt root to the appdir"; exit 1; }
           QMAKE="${QT_DIR}/bin/qmake" \
-          LD_LIBRARY_PATH="${APPDIR}/usr/lib:${QT_DIR}/lib" \
+          # ${QT_DIR}/lib must NOT be on LD_LIBRARY_PATH (same reason as the
+          # x86_64 job): the linuxdeploy core would copy the app's Qt deps
+          # into the appdir, shadowing qmake's Qt-root resolution.
+          LD_LIBRARY_PATH="${APPDIR}/usr/lib" \
           # ${QT_DIR}/bin: the qt plugin needs qmlimportscanner (and other
           # Qt tools) on PATH; it's an aarch64 ELF that runs via binfmt.
           PATH="${QT_DIR}/bin:${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
