@@ -225,9 +225,15 @@ jobs:
           mkdir -p "${APPDIR}/usr/plugins"
           cp -r "${QT_DIR}/plugins/." "${APPDIR}/usr/plugins/"
           cp -rP "${QT_DIR}/lib/." "${APPDIR}/usr/lib/"
+          # The Qt tree contains Quick3D helper libs (e.g.
+          # libQt6Quick3DSpatialAudio) whose parent module (libQt6Quick3D)
+          # is NOT installed - linuxdeploy fails on their unresolvable
+          # deps. The app doesn't use Quick3D, so drop the whole family.
+          rm -f "${APPDIR}/usr/lib/libQt6Quick3D"*
           chmod +x linuxdeploy/x86_64/linuxdeploy-x86_64.AppImage linuxdeploy/x86_64/linuxdeploy-plugin-qt-x86_64.AppImage
           QMAKE="${QT_DIR}/bin/qmake" \
           LD_LIBRARY_PATH="${APPDIR}/usr/lib:${GITHUB_WORKSPACE}/build-release/release:${GITHUB_WORKSPACE}/../XTEngine/build-release/release" \
+          PATH="${QT_DIR}/bin:${PATH}" \
           ./linuxdeploy/x86_64/linuxdeploy-x86_64.AppImage \
             --appdir "${APPDIR}" \
             --executable "${APPDIR}/usr/bin/XTPlayer" \
@@ -391,6 +397,8 @@ jobs:
           mkdir -p "${APPDIR}/usr/plugins"
           cp -r "${QT_DIR}/plugins/." "${APPDIR}/usr/plugins/"
           cp -rP "${QT_DIR}/lib/." "${APPDIR}/usr/lib/"
+          # Same Quick3D orphan-lib cleanup as the x86_64 job.
+          rm -f "${APPDIR}/usr/lib/libQt6Quick3D"*
           # Cross-package with the TARGET-ARCH (aarch64) linuxdeploy binary:
           # it produces an AppImage with the aarch64 runtime, so the result
           # actually runs on aarch64. (linuxdeploy has no --cross-compile
@@ -416,7 +424,9 @@ jobs:
           test -x squashfs-root/usr/bin/linuxdeploy-plugin-qt
           QMAKE="${QT_DIR}/bin/qmake" \
           LD_LIBRARY_PATH="${APPDIR}/usr/lib" \
-          PATH="${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
+          # ${QT_DIR}/bin: the qt plugin needs qmlimportscanner (and other
+          # Qt tools) on PATH; it's an aarch64 ELF that runs via binfmt.
+          PATH="${QT_DIR}/bin:${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
           qemu-aarch64 ./squashfs-root/usr/bin/linuxdeploy \
             --appdir "${APPDIR}" \
             --executable "${APPDIR}/usr/bin/XTPlayer" \
