@@ -53,7 +53,7 @@ export PATH="${MINGW_PREFIX}/bin:$PATH"
 # ${XP}-pkg-config from --cross-prefix. Qt's MinGW ships the binutils as
 # ${XP}-gcc-* wrappers (no plain ${XP}-nm), so copy them under the expected
 # names. (Copies, not symlinks: immune to Git Bash symlink quirks.)
-for tool in ar nm ranlib; do
+for tool in ar nm ranlib dlltool; do
     if [ ! -e "${MINGW_PREFIX}/bin/${XP}-${tool}.exe" ] && [ -e "${MINGW_PREFIX}/bin/${XP}-gcc-${tool}.exe" ]; then
         cp "${MINGW_PREFIX}/bin/${XP}-gcc-${tool}.exe" "${MINGW_PREFIX}/bin/${XP}-${tool}.exe"
     fi
@@ -234,7 +234,7 @@ PKG_CONFIG_LIBDIR="${CODEC_PREFIX}/lib/pkgconfig" \
 ./configure --prefix="${CODEC_PREFIX}" \
     --cross-prefix="${XP}-" \
     --arch=x86_64 \
-    --target-os=win32 \
+    --target-os=mingw32 \
     --enable-shared \
     --enable-libdav1d \
     --enable-libaom \

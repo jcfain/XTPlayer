@@ -230,16 +230,26 @@ jobs:
           # is NOT installed - linuxdeploy fails on their unresolvable
           # deps. The app doesn't use Quick3D, so drop the whole family.
           rm -f "${APPDIR}/usr/lib/libQt6Quick3D"*
-          chmod +x linuxdeploy/x86_64/linuxdeploy-x86_64.AppImage linuxdeploy/x86_64/linuxdeploy-plugin-qt-x86_64.AppImage
+          # Extract the AppImages and run the internal binaries directly:
+          # the AppImage runtime sanitizes PATH (drops ${QT_DIR}/bin), so
+          # the qt plugin can't find qmlimportscanner when it runs as an
+          # AppImage. The internal binaries are plain ELFs and inherit the
+          # environment as-is.
+          rm -rf squashfs-root
+          ./linuxdeploy/x86_64/linuxdeploy-x86_64.AppImage --appimage-extract
+          ./linuxdeploy/x86_64/linuxdeploy-plugin-qt-x86_64.AppImage --appimage-extract
+          test -x squashfs-root/usr/bin/linuxdeploy
+          test -x squashfs-root/usr/bin/linuxdeploy-plugin-qt
           QMAKE="${QT_DIR}/bin/qmake" \
           LD_LIBRARY_PATH="${APPDIR}/usr/lib:${GITHUB_WORKSPACE}/build-release/release:${GITHUB_WORKSPACE}/../XTEngine/build-release/release" \
-          PATH="${QT_DIR}/bin:${PATH}" \
-          ./linuxdeploy/x86_64/linuxdeploy-x86_64.AppImage \
+          PATH="${QT_DIR}/bin:${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
+          ./squashfs-root/usr/bin/linuxdeploy \
             --appdir "${APPDIR}" \
             --executable "${APPDIR}/usr/bin/XTPlayer" \
             --plugin qt \
             --output appimage \
             --icon-file src/images/icons/XTP-icon.png \
+            --icon-filename XTPlayer \
             --desktop-file XTPlayer.desktop
           mv XTPlayer-x86_64.AppImage "dist/XTPlayer-${{ inputs.version }}-Linux-x86_64.AppImage"
       - name: Upload artifact
@@ -433,6 +443,7 @@ jobs:
             --plugin qt \
             --output appimage \
             --icon-file src/images/icons/XTP-icon.png \
+            --icon-filename XTPlayer \
             --desktop-file XTPlayer.desktop
           mv XTPlayer-aarch64*.AppImage "dist/XTPlayer-${{ inputs.version }}-Linux-aarch64.AppImage"
       - name: Upload artifact
@@ -488,7 +499,9 @@ jobs:
           pip install meson ninja
           # pkg-config for FFmpeg's configure (it looks for a
           # cross-prefixed copy; the build script places one).
-          C:/msys64/usr/bin/pacman.exe -Sy --noconfirm mingw-w64-x86_64-pkg-config
+          # binutils: the mingw32 target path needs dlltool (import lib
+          # from .def); the build script copies it from here.
+          C:/msys64/usr/bin/pacman.exe -Sy --noconfirm mingw-w64-x86_64-pkg-config mingw-w64-x86_64-binutils
       - name: Checkout QtGamepadLegacy
         uses: actions/checkout@v4
         with:
