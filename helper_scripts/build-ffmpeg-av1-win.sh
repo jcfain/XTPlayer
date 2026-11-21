@@ -206,18 +206,25 @@ fi
 git -C "${FFMPEG_SRC}" fetch --tags origin 2>/dev/null || true
 git -C "${FFMPEG_SRC}" checkout "${FFMPEG_TAG}"
 
-BUILD_DIR="${FFMPEG_SRC}/build-av1-win"
+# In-tree build: an out-of-tree build dir gets a generated one-line
+# Makefile "include <abs source path>/Makefile" (configure line 8587),
+# which native Windows makes (GnuWin32 3.81, MinGW mingw32-make) cannot
+# resolve - they are not MSYS binaries and don't translate /c/... paths.
+# In-tree, the source Makefile is used directly and works with any make.
+BUILD_DIR="${FFMPEG_SRC}"
+# MSYS2 make (4.x) understands POSIX /c/... paths; the default `make` on
+# the runner is GnuWin32 3.81 (native Win32).
+MAKE=/c/msys64/usr/bin/make.exe
+[ -x "${MAKE}" ] || MAKE=make
 echo "==> Tool diagnostics"
 echo "MINGW_PREFIX=${MINGW_PREFIX}"
 ls "${MINGW_PREFIX}/bin/" 2>/dev/null | grep -E "^${XP}-(gcc|g\+\+|ar|nm|ranlib|pkg-config)\.exe$" || echo "  (no cross tools listed!)"
 command -v "${XP}-nm" "${XP}-ar" "${XP}-ranlib" "${XP}-pkg-config" || true
 echo "==> Configuring (prefix: ${CODEC_PREFIX})"
-rm -rf "${BUILD_DIR}"
-mkdir -p "${BUILD_DIR}"
 cd "${BUILD_DIR}"
 PKG_CONFIG_PATH="${CODEC_PREFIX}/lib/pkgconfig" \
 PKG_CONFIG_LIBDIR="${CODEC_PREFIX}/lib/pkgconfig" \
-../configure --prefix="${CODEC_PREFIX}" \
+./configure --prefix="${CODEC_PREFIX}" \
     --cross-prefix="${XP}-" \
     --arch=x86_64 \
     --target-os=win32 \
@@ -227,9 +234,9 @@ PKG_CONFIG_LIBDIR="${CODEC_PREFIX}/lib/pkgconfig" \
     --enable-network \
     --disable-doc
 
-echo "==> Building with ${JOBS} jobs"
-make -j"${JOBS}"
-make install
+echo "==> Building with ${JOBS} jobs (${MAKE})"
+"${MAKE}" -j"${JOBS}"
+"${MAKE}" install
 
 # ---------------------------------------------------------------------------
 # Verify
