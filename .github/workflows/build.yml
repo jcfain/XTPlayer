@@ -81,7 +81,12 @@ jobs:
 
   linux-x86_64:
     name: Linux x86_64 (AppImage)
-    runs-on: ubuntu-latest
+    # Pinned: the AppImage bundles the runner's system libs (glib, mp3lame,
+    # ...) but NOT glibc itself (linuxdeploy excludelist), so the AppImage
+    # needs the target's glibc >= the runner's. 24.04 (glibc 2.39) keeps it
+    # runnable on Debian 13 / Ubuntu 24.04+ hosts (the app + Qt 6.12 only
+    # need glibc 2.34).
+    runs-on: ubuntu-24.04
     needs: web
     env:
       # Absolute: build steps cd into sibling/sub dirs before invoking qmake.
@@ -150,7 +155,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.CODEC_PREFIX }}
-          key: ffmpeg-av1-linux-x64-${{ hashFiles('helper_scripts/build-ffmpeg-av1.sh') }}
+          key: ffmpeg-av1-linux-x64-2404-${{ hashFiles('helper_scripts/build-ffmpeg-av1.sh') }}
       - name: Build FFmpeg n9.0.1 (AV1 + hwaccel)
         run: bash helper_scripts/build-ffmpeg-av1.sh --reuse --install-deps
 
@@ -281,7 +286,9 @@ jobs:
 
   linux-aarch64:
     name: Linux aarch64 (AppImage, cross)
-    runs-on: ubuntu-latest
+    # Pinned to match the x86_64 job (the cross glibc bundled into the
+    # AppImage comes from this runner's cross toolchain).
+    runs-on: ubuntu-24.04
     needs: web
     env:
       QT_DIR: ${{ github.workspace }}/qt6-arm64
@@ -371,7 +378,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.CODEC_PREFIX }}
-          key: ffmpeg-av1-linux-arm64-${{ hashFiles('helper_scripts/build-ffmpeg-av1-aarch64.sh') }}
+          key: ffmpeg-av1-linux-arm64-2404-${{ hashFiles('helper_scripts/build-ffmpeg-av1-aarch64.sh') }}
       - name: Build FFmpeg n9.0.1 (aarch64 cross, AV1)
         run: bash helper_scripts/build-ffmpeg-av1-aarch64.sh --reuse
 
