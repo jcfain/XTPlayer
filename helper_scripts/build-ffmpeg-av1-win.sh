@@ -67,17 +67,18 @@ for tool in ar nm ranlib dlltool strip; do
         fi
     fi
 done
-# The MSYS2-copied tools (dlltool, strip) are native Win32 but depend on
-# libwinpthread-1.dll, which Qt's MinGW keeps in lib/ (not bin/) - without
-# it next to the exe they fail to start with 0xC0000135 (STATUS_DLL_NOT_FOUND).
-# Copy Qt's own copy into bin/ (compatible with everything else there).
-if [ ! -e "${MINGW_PREFIX}/bin/libwinpthread-1.dll" ]; then
-    if [ -e "${MINGW_PREFIX}/lib/libwinpthread-1.dll" ]; then
-        cp "${MINGW_PREFIX}/lib/libwinpthread-1.dll" "${MINGW_PREFIX}/bin/"
-    elif [ -e "/c/msys64/mingw64/bin/libwinpthread-1.dll" ]; then
-        cp "/c/msys64/mingw64/bin/libwinpthread-1.dll" "${MINGW_PREFIX}/bin/"
+# The MSYS2-copied tools (dlltool, strip) are native Win32, but their
+# runtime DLL deps (libintl-8, libz-1, libzstd, libwinpthread-1 - all
+# declared deps of the binutils package) live in /c/msys64/mingw64/bin/,
+# NOT in Qt's MinGW bin dir - without them next to the exe the tools fail
+# to start with 0xC0000135 (STATUS_DLL_NOT_FOUND). Copy them (all small,
+# native Win32). FFmpeg itself is built without zlib, so none of these are
+# needed by the shipped FFmpeg DLLs - they only serve the build tools.
+for dll in libwinpthread-1.dll libintl-8.dll libz-1.dll libzstd.dll; do
+    if [ ! -e "${MINGW_PREFIX}/bin/${dll}" ] && [ -e "/c/msys64/mingw64/bin/${dll}" ]; then
+        cp "/c/msys64/mingw64/bin/${dll}" "${MINGW_PREFIX}/bin/"
     fi
-fi
+done
 # pkg-config: a COPIED pkg-config.exe does not work from Qt's MinGW bin dir
 # (it cannot find its msys-2.0.dll there), so install a wrapper that delegates
 # to the MSYS2 cross pkg-config in its native location. MSYS2 does not convert
