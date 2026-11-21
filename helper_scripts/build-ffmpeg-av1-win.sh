@@ -8,7 +8,8 @@
 # cross compiler, so the DLLs match the app's ABI.
 #
 # Produces avcodec-63.dll, avformat-63.dll, avutil-61.dll, swscale-10.dll,
-# swresample-7.dll (in $CODEC_PREFIX/bin) + dav1d.dll, aom.dll (in
+# swresample-7.dll + dav1d.dll + aom.dll (all in $CODEC_PREFIX/bin - meson
+# and CMake install Windows DLLs into bindir; import libs + .pc files go to
 # $CODEC_PREFIX/lib). Drop them NEXT TO XTPlayer.exe: the Windows DLL search
 # finds the exe directory first, so they replace the AV1-less FFmpeg DLLs
 # bundled by Qt automatically (no launcher needed; absent DLLs = old
@@ -157,7 +158,9 @@ AOM_SRC="${WORKDIR}/aom-src"
 # ---------------------------------------------------------------------------
 # dav1d (cross, meson)
 # ---------------------------------------------------------------------------
-if [ ! -f "${CODEC_PREFIX}/lib/dav1d.dll" ]; then
+# meson installs the DLL into BINDIR on Windows (the import lib libdav1d.dll.a
+# and dav1d.pc go to libdir), so dav1d.dll ends up in ${CODEC_PREFIX}/bin.
+if [ ! -f "${CODEC_PREFIX}/bin/dav1d.dll" ]; then
     echo "==> Building dav1d ${DAV1D_TAG} (${XP})"
     if [ ! -d "${DAV1D_SRC}/.git" ]; then
         git clone --depth 1 --branch "${DAV1D_TAG}" \
@@ -182,6 +185,13 @@ EOF
         -Denable_asm=true -Denable_docs=false
     ninja -C "${WORKDIR}/dav1d-build" -j"${JOBS}"
     ninja -C "${WORKDIR}/dav1d-build" install
+    # Normalize to bin/ (meson's Windows convention) so verify + packaging
+    # have one canonical location, and print the layout for diagnostics.
+    if [ ! -f "${CODEC_PREFIX}/bin/dav1d.dll" ] && [ -f "${CODEC_PREFIX}/lib/dav1d.dll" ]; then
+        cp "${CODEC_PREFIX}/lib/dav1d.dll" "${CODEC_PREFIX}/bin/dav1d.dll"
+    fi
+    echo "==> ${CODEC_PREFIX}/bin: $(ls "${CODEC_PREFIX}/bin" 2>/dev/null | tr '\n' ' ')"
+    echo "==> ${CODEC_PREFIX}/lib: $(ls "${CODEC_PREFIX}/lib" 2>/dev/null | tr '\n' ' ')"
 else
     echo "==> dav1d already in ${CODEC_PREFIX} (skipping)"
 fi
@@ -287,6 +297,6 @@ fi
 for dll in avformat-63.dll avutil-61.dll swscale-10.dll swresample-7.dll; do
     [ -f "${CODEC_PREFIX}/bin/${dll}" ] || { echo "ERROR: ${dll} missing"; exit 1; }
 done
-[ -f "${CODEC_PREFIX}/lib/dav1d.dll" ] || { echo "ERROR: dav1d.dll missing"; exit 1; }
-echo "==> Done. Codec DLLs: ${CODEC_PREFIX}/bin + ${CODEC_PREFIX}/lib"
+[ -f "${CODEC_PREFIX}/bin/dav1d.dll" ] || { echo "ERROR: dav1d.dll missing from ${CODEC_PREFIX}/bin (layout printed above)"; exit 1; }
+echo "==> Done. Codec DLLs in ${CODEC_PREFIX}/bin"
 

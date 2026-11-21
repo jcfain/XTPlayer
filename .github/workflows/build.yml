@@ -248,10 +248,13 @@ jobs:
           # library file .../usr/plugins/...".)
           [ ! -e "${APPDIR}/usr/lib/libQt6Core.so.6" ] || { echo "ERROR: appdir contains libQt6Core before linuxdeploy"; exit 1; }
           QMAKE="${QT_DIR}/bin/qmake" \
-          # ONLY the real Qt tree on LD_LIBRARY_PATH (never the appdir): the
-          # plugin's qmake derives the Qt root from the loaded libQt6Core,
-          # and the appdir accumulates Qt libs via the core's deployment.
-          LD_LIBRARY_PATH="${QT_DIR}/lib" \
+          # Real Qt tree + XTEngine build dir on LD_LIBRARY_PATH (NEVER the
+          # appdir): the plugin's qmake derives the Qt root from the loaded
+          # libQt6Core (Qt tree is first, and the XTEngine dir holds no Qt
+          # libs, so it cannot shadow it), and the core's ldd needs the
+          # XTEngine dir to find libxtengine.so.1 (the exe's RPATH contains
+          # only the Qt tree).
+          LD_LIBRARY_PATH="${QT_DIR}/lib:${GITHUB_WORKSPACE}/../XTEngine/build-release/release" \
           PATH="${QT_DIR}/bin:${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
           ./squashfs-root/usr/bin/linuxdeploy \
             --appdir "${APPDIR}" \
@@ -325,6 +328,7 @@ jobs:
             libxtst-dev:arm64 libnss3-dev:arm64 libxcb-xinerama0-dev:arm64 libxcb-cursor0:arm64 \
             libxcb-icccm4:arm64 libxcb-image0:arm64 libxcb-keysyms1:arm64 libxcb-randr0:arm64 \
             libxcb-render-util0:arm64 libxcb-shape0:arm64 libxcb-xkb1:arm64 libxkbcommon-x11-0:arm64 \
+            libxcb-sync1:arm64 libx11-xcb1:arm64 libegl1:arm64 libzstd1:arm64 \
             libsm6:arm64 libice6:arm64 libgssapi-krb5-2:arm64 \
             libpcsclite1:arm64 libcups2t64:arm64
           # qemu lets the aarch64 moc/rcc/uic (shipped with the aarch64 Qt)
@@ -411,8 +415,10 @@ jobs:
           cp -f "${CODEC_PREFIX}/lib"/libswresample.so.7*  "${APPDIR}/usr/lib/"
           cp -f "${CODEC_PREFIX}/lib"/libdav1d.so.7*       "${APPDIR}/usr/lib/" 2>/dev/null || true
           cp -f "${CODEC_PREFIX}/lib"/libaom.so.3*         "${APPDIR}/usr/lib/" 2>/dev/null || true
-          # Same no-pre-staging approach as the x86_64 job: the qt plugin
-          # deploys the needed Qt libs/plugins from the REAL Qt tree.
+          # (The Qt dep closure is staged below - the host ldd can't trace
+          # aarch64 deps, so the qt plugin needs the libs present by
+          # filename; plugins/QML/translations still come from the REAL
+          # Qt tree.)
           echo "==> qmake diagnostics"
           echo "QMAKE=${QMAKE:-<unset>}"
           "${QT_DIR}/bin/qmake" -query QT_INSTALL_PREFIX QT_INSTALL_LIBS QT_INSTALL_PLUGINS
@@ -444,8 +450,62 @@ jobs:
           qemu-aarch64 ./linuxdeploy/aarch64/linuxdeploy-plugin-qt-aarch64.AppImage --appimage-extract
           test -x squashfs-root/usr/bin/linuxdeploy
           test -x squashfs-root/usr/bin/linuxdeploy-plugin-qt
-          # Same appdir/libQt6Core guard as the x86_64 job.
-          [ ! -e "${APPDIR}/usr/lib/libQt6Core.so.6" ] || { echo "ERROR: appdir contains libQt6Core before linuxdeploy"; exit 1; }
+          # The host's ldd (used by the linuxdeploy core AND the qt plugin's
+          # dependency tracing) cannot parse aarch64 ELFs - it reports
+          # "not a dynamic executable" for every file, so neither can
+          # discover the app's Qt dependencies. Stage the app's full Qt
+          # dependency closure (readelf works cross-arch) into the appdir:
+          # the qt plugin discovers modules BY FILENAME from appdir/usr/lib
+          # and deploys the plugins/QML/translations from the REAL Qt tree.
+          # (This is exactly what the core's ldd deployment copies on
+          # x86_64 - no size impact on the final AppImage.)
+          _qt_deps=$(readelf -d build-release/release/XTPlayer | grep -oE 'libQt6[A-Za-z0-9]+\.so\.6' | sort -u)
+          _qt_all=""
+          while :; do
+            _new=""
+            for _l in $_qt_deps; do
+              case " $_qt_all " in *" $_l "*) continue ;; esac
+              _qt_all="$_qt_all $_l"
+              _new="$_new $(readelf -d "${QT_DIR}/lib/$_l" 2>/dev/null | grep -oE 'libQt6[A-Za-z0-9]+\.so\.6')"
+            done
+            [ -z "$_new" ] && break
+            _qt_deps=$(echo "$_new" | tr ' ' '\n' | grep -v '^$' | sort -u)
+          done
+          for _l in $_qt_all; do
+            cp -f "${QT_DIR}/lib/$_l" "${APPDIR}/usr/lib/"
+          done
+          echo "Staged Qt dep closure: $_qt_all"
+          # ICU (libQt6Core's NEEDED) + the wayland client lib (libqwayland
+          # platform plugin's NEEDED) ship in the Qt tree.
+          cp -af "${QT_DIR}/lib"/libicu{data,uc,i18n}.so.* "${APPDIR}/usr/lib/"
+          cp -f "${QT_DIR}/lib/libQt6WaylandClient.so.6" "${APPDIR}/usr/lib/"
+          # Non-Qt deps of the staged Qt libs + platform plugins: the core's
+          # ldd can't trace aarch64 files, so copy them from the arm64 debs
+          # installed by the toolchain step (same set the x86_64 core
+          # resolves via ldd). glibc libs come from the cross toolchain.
+          for _lib in \
+            libdbus-1.so.3 libglib-2.0.so.0 libgthread-2.0.so.0 \
+            libfontconfig.so.1 libfreetype.so.6 libbrotlicommon.so.1 \
+            libbrotlidec.so.1 libz.so.1 libzstd.so.1 \
+            libGL.so.1 libEGL.so.1 \
+            libpulse.so.0 libasound.so.2 libbluetooth.so.3 \
+            libnss3.so libgssapi_krb5.so.2 \
+            libwayland-client.so.0 libwayland-cursor.so.0 \
+            libxkbcommon.so.0 libxkbcommon-x11.so.0 \
+            libxcb.so.1 libxcb-cursor.so.0 libxcb-icccm.so.4 \
+            libxcb-util.so.1 libxcb-image.so.0 libxcb-keysyms.so.1 \
+            libxcb-randr.so.0 libxcb-render.so.0 \
+            libxcb-render-util.so.0 libxcb-shape.so.0 libxcb-shm.so.0 \
+            libxcb-sync.so.1 libxcb-xfixes.so.0 libxcb-xkb.so.1 \
+            libX11.so.6 libX11-xcb.so.1; do
+            cp -af "/usr/lib/aarch64-linux-gnu/${_lib}"* "${APPDIR}/usr/lib/" 2>/dev/null \
+              || { echo "ERROR: ${_lib} missing from /usr/lib/aarch64-linux-gnu"; exit 1; }
+          done
+          for _lib in libc.so.6 libm.so.6 libresolv.so.2 libstdc++.so.6 libgcc_s.so.1; do
+            cp -f "/usr/aarch64-linux-gnu/lib/${_lib}"* "${APPDIR}/usr/lib/" 2>/dev/null \
+              || { echo "ERROR: ${_lib} missing from /usr/aarch64-linux-gnu/lib"; exit 1; }
+          done
+          echo "appdir/usr/lib: $(ls "${APPDIR}/usr/lib" | wc -l) files"
           QMAKE="${QT_DIR}/bin/qmake" \
           # ONLY the real Qt tree on LD_LIBRARY_PATH (never the appdir) -
           # same reason as the x86_64 job.
@@ -586,8 +646,9 @@ jobs:
           cp "$CODEC_PREFIX/bin/avcodec-63.dll" "$CODEC_PREFIX/bin/avformat-63.dll" \
              "$CODEC_PREFIX/bin/avutil-61.dll" "$CODEC_PREFIX/bin/swscale-10.dll" \
              "$CODEC_PREFIX/bin/swresample-7.dll" "$STAGING/"
-          cp "$CODEC_PREFIX/lib/dav1d.dll" "$STAGING/"
-          [ -f "$CODEC_PREFIX/lib/aom.dll" ] && cp "$CODEC_PREFIX/lib/aom.dll" "$STAGING/" || true
+          # meson (dav1d) and CMake (aom) install Windows DLLs into bin/
+          cp "$CODEC_PREFIX/bin/dav1d.dll" "$STAGING/"
+          [ -f "$CODEC_PREFIX/bin/aom.dll" ] && cp "$CODEC_PREFIX/bin/aom.dll" "$STAGING/" || true
           # Zip with contents at the zip root (like the 7z releases)
           cd "$STAGING"
           tar.exe -a -cf "../XTPlayer-${{ inputs.version }}_Win_x86_64.zip" *
