@@ -118,6 +118,7 @@ jobs:
             libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
             libxcb-render-util0 libxcb-shape0 libxcb-xkb1 libxkbcommon-x11-0 \
             libsm6 libice6 libfuse2t64 libgssapi-krb5-2 \
+            libspeechd2 \
             libpcsclite1 libcups2t64
       - name: Cache Qt
         uses: actions/cache@v4
@@ -269,11 +270,7 @@ jobs:
             --exclude-library "*libqsqlodbc*" \
             --exclude-library "*libqsqldb2*" \
             --exclude-library "*libqsqlibase*" \
-            --exclude-library "*libqsqlfirebird*" \
-            # The speechd texttospeech plugin needs libspeechd.so.2, which
-            # isn't on the runner; exclude the lib so the plugin deploys
-            # without its backend (Qt skips the plugin at runtime).
-            --exclude-library "*libspeechd*"
+            --exclude-library "*libqsqlfirebird*"
           mv XTPlayer-x86_64.AppImage "dist/XTPlayer-${{ inputs.version }}-Linux-x86_64.AppImage"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -334,6 +331,7 @@ jobs:
             libxcb-render-util0:arm64 libxcb-shape0:arm64 libxcb-xkb1:arm64 libxkbcommon-x11-0:arm64 \
             libxcb-sync1:arm64 libx11-xcb1:arm64 libegl1:arm64 libzstd1:arm64 \
             libsm6:arm64 libice6:arm64 libgssapi-krb5-2:arm64 \
+            libspeechd2:arm64 \
             libpcsclite1:arm64 libcups2t64:arm64
           # qemu lets the aarch64 moc/rcc/uic (shipped with the aarch64 Qt)
           # run during the cross build.
@@ -494,6 +492,7 @@ jobs:
             libGL.so.1 libEGL.so.1 \
             libpulse.so.0 libasound.so.2 libbluetooth.so.3 \
             libnss3.so libgssapi_krb5.so.2 \
+            libspeechd.so.2 \
             libwayland-client.so.0 libwayland-cursor.so.0 \
             libxkbcommon.so.0 libxkbcommon-x11.so.0 \
             libxcb.so.1 libxcb-cursor.so.0 libxcb-icccm.so.4 \
@@ -530,8 +529,7 @@ jobs:
             --exclude-library "*libqsqlodbc*" \
             --exclude-library "*libqsqldb2*" \
             --exclude-library "*libqsqlibase*" \
-            --exclude-library "*libqsqlfirebird*" \
-            --exclude-library "*libspeechd*"
+            --exclude-library "*libqsqlfirebird*"
           mv XTPlayer-aarch64*.AppImage "dist/XTPlayer-${{ inputs.version }}-Linux-aarch64.AppImage"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
