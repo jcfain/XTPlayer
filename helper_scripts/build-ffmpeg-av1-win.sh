@@ -70,6 +70,13 @@ cat > "${MINGW_PREFIX}/bin/${XP}-pkg-config" <<'EOF'
 exec /c/msys64/mingw64/bin/x86_64-w64-mingw32-pkg-config.exe "$@"
 EOF
 chmod +x "${MINGW_PREFIX}/bin/${XP}-pkg-config"
+# lib.exe: FFmpeg's compat/windows/makedef calls plain `lib.exe` to build
+# the temporary import library for each DLL. Qt's MinGW doesn't ship it,
+# so copy MSYS2's (a native Win32 binutils binary - safe to copy, unlike
+# pkg-config.exe which needs msys-2.0.dll).
+if [ ! -e "${MINGW_PREFIX}/bin/lib.exe" ]; then
+    cp /c/msys64/mingw64/bin/x86_64-w64-mingw32-lib.exe "${MINGW_PREFIX}/bin/lib.exe"
+fi
 
 CLEAN=0
 REUSE=0

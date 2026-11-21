@@ -117,7 +117,8 @@ jobs:
             libxtst-dev libnss3-dev libxcb-xinerama0-dev libxcb-cursor0 \
             libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
             libxcb-render-util0 libxcb-shape0 libxcb-xkb1 libxkbcommon-x11-0 \
-            libsm6 libice6 libfuse2t64 libgssapi-krb5-2
+            libsm6 libice6 libfuse2t64 libgssapi-krb5-2 \
+            libpcsclite1 libcups2t64
       - name: Cache Qt
         uses: actions/cache@v4
         with:
@@ -277,13 +278,23 @@ jobs:
           # requires WrapOpenGL, which must resolve for the aarch64 target.
           # libglib2.0-0t64: the aarch64 Qt tools (qtpaths, moc, ...) run
           # under qemu and need the aarch64 runtime libs.
+          # The full Qt runtime set (mirroring the x86_64 job) is needed
+          # because the aarch64 linuxdeploy core deploys the deps of EVERY
+          # pre-staged Qt lib (Nfc -> libpcsclite, PrintSupport -> libcups,
+          # Wayland -> libwayland-client, XcbQpa -> libxcb-*, ...).
           sudo dpkg --add-architecture arm64
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            libgl1-mesa-dev:arm64 libegl-dev:arm64 libglib2.0-0t64:arm64 \
-            pkg-config:arm64 \
-            libpulse-dev:arm64 libxkbcommon-dev:arm64 libfreetype-dev:arm64 \
-            libfontconfig1-dev:arm64 libbrotli-dev:arm64 libdbus-1-dev:arm64
+            libgl1-mesa-dev:arm64 libxkbcommon-dev:arm64 libwayland-dev:arm64 \
+            libfontconfig1-dev:arm64 libfreetype-dev:arm64 libdbus-1-dev:arm64 libglib2.0-dev:arm64 \
+            libbluetooth-dev:arm64 libusb-1.0-0-dev:arm64 libasound2-dev:arm64 libpulse-dev:arm64 \
+            libx11-dev:arm64 libxcb1-dev:arm64 libxext-dev:arm64 libxrender-dev:arm64 libxi-dev:arm64 \
+            libxfixes-dev:arm64 libxrandr-dev:arm64 libxcomposite-dev:arm64 libxdamage-dev:arm64 \
+            libxtst-dev:arm64 libnss3-dev:arm64 libxcb-xinerama0-dev:arm64 libxcb-cursor0:arm64 \
+            libxcb-icccm4:arm64 libxcb-image0:arm64 libxcb-keysyms1:arm64 libxcb-randr0:arm64 \
+            libxcb-render-util0:arm64 libxcb-shape0:arm64 libxcb-xkb1:arm64 libxkbcommon-x11-0:arm64 \
+            libsm6:arm64 libice6:arm64 libgssapi-krb5-2:arm64 \
+            libpcsclite1:arm64 libcups2t64:arm64
           # qemu lets the aarch64 moc/rcc/uic (shipped with the aarch64 Qt)
           # run during the cross build.
           sudo update-binfmts --enable
@@ -391,9 +402,22 @@ jobs:
           # NOT route it to qemu (plain exec fails with "Exec format
           # error"). qemu-aarch64 reads the ELF itself and works fine.
           chmod +x linuxdeploy/aarch64/linuxdeploy-aarch64.AppImage linuxdeploy/aarch64/linuxdeploy-plugin-qt-aarch64.AppImage
+          # The AppImage runtime dlopens libfuse.so.2, which does not exist
+          # for aarch64 under qemu, and this runtime build has no
+          # auto-extract fallback. So extract the payloads and run the
+          # internal binaries directly (statically linked, plain aarch64
+          # ELFs - no "AI" marker, no FUSE).
+          rm -rf squashfs-root
+          qemu-aarch64 ./linuxdeploy/aarch64/linuxdeploy-aarch64.AppImage --appimage-extract
+          # The qt plugin extracts into the same tree; the core finds it in
+          # its own directory (plugin search checks the exe dir first).
+          qemu-aarch64 ./linuxdeploy/aarch64/linuxdeploy-plugin-qt-aarch64.AppImage --appimage-extract
+          test -x squashfs-root/usr/bin/linuxdeploy
+          test -x squashfs-root/usr/bin/linuxdeploy-plugin-qt
           QMAKE="${QT_DIR}/bin/qmake" \
           LD_LIBRARY_PATH="${APPDIR}/usr/lib" \
-          qemu-aarch64 ./linuxdeploy/aarch64/linuxdeploy-aarch64.AppImage \
+          PATH="${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
+          qemu-aarch64 ./squashfs-root/usr/bin/linuxdeploy \
             --appdir "${APPDIR}" \
             --executable "${APPDIR}/usr/bin/XTPlayer" \
             --plugin qt \
@@ -454,7 +478,9 @@ jobs:
           pip install meson ninja
           # pkg-config for FFmpeg's configure (it looks for a
           # cross-prefixed copy; the build script places one).
-          C:/msys64/usr/bin/pacman.exe -Sy --noconfirm mingw-w64-x86_64-pkg-config
+          # binutils: FFmpeg's makedef needs lib.exe, which Qt's MinGW
+          # doesn't ship (the build script copies it from here).
+          C:/msys64/usr/bin/pacman.exe -Sy --noconfirm mingw-w64-x86_64-pkg-config mingw-w64-x86_64-binutils
       - name: Checkout QtGamepadLegacy
         uses: actions/checkout@v4
         with:
