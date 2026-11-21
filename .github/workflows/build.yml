@@ -318,13 +318,15 @@ jobs:
       - name: Install cross toolchain + qemu
         run: |
           sudo apt-get update
+          # linux-libc-dev:arm64 = aarch64 kernel headers (linux/videodev2.h)
+          # for FFmpeg's v4l2m2m hwaccel (RK3588 rkvdec on Orange Pi targets).
+          # NOTE: this must stay on the apt-get continuation lines - a #
+          # comment line after a backslash continuation terminates the
+          # command and the package becomes a stray "command not found".
           sudo apt-get install -y --no-install-recommends \
             build-essential cmake ninja-build pkg-config nasm meson \
             gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu \
-            qemu-user-binfmt binfmt-support \
-            # aarch64 kernel headers (linux/videodev2.h) for FFmpeg's
-            # v4l2m2m hwaccel (RK3588 rkvdec on Orange Pi targets).
-            linux-libc-dev:arm64
+            qemu-user-binfmt binfmt-support linux-libc-dev:arm64
           # aarch64 OpenGL dev libs (multiarch): Qt6Gui's CMake config
           # requires WrapOpenGL, which must resolve for the aarch64 target.
           # libglib2.0-0t64: the aarch64 Qt tools (qtpaths, moc, ...) run
