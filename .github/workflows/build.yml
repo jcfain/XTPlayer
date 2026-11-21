@@ -239,6 +239,10 @@ jobs:
           # qmlimportscanner (run by the qt plugin) takes -importPath
           # appdir/usr/qml and fails if the directory doesn't exist.
           mkdir -p "${APPDIR}/usr/qml"
+          # Qt's sqldrivers plugins depend on external DB client libs
+          # (libmysqlclient, libpq, libodbc, ...) not present on the
+          # runner. The app only uses SQLite - keep just that driver.
+          find "${APPDIR}/usr/plugins/sqldrivers" -type f ! -name 'libqsqlite.so' -delete 2>/dev/null || true
           ls "${QT_DIR}/libexec/qmlimportscanner" 2>/dev/null \
             && echo "OK: qmlimportscanner in ${QT_DIR}/libexec" \
             || echo "WARNING: qmlimportscanner NOT in ${QT_DIR}/libexec"
@@ -427,6 +431,9 @@ jobs:
           cp -r "${QT_DIR}/libexec/." "${APPDIR}/usr/libexec/" 2>/dev/null || true
           # qmlimportscanner's -importPath directory must exist.
           mkdir -p "${APPDIR}/usr/qml"
+          # Keep only the SQLite sqldriver (others need external DB
+          # client libs not on the runner) - same as the x86_64 job.
+          find "${APPDIR}/usr/plugins/sqldrivers" -type f ! -name 'libqsqlite.so' -delete 2>/dev/null || true
           # Cross-package with the TARGET-ARCH (aarch64) linuxdeploy binary:
           # it produces an AppImage with the aarch64 runtime, so the result
           # actually runs on aarch64. (linuxdeploy has no --cross-compile
