@@ -213,36 +213,16 @@ jobs:
           test -f "${QT_DIR}/plugins/platforms/libqxcb.so" \
             && echo "OK: libqxcb.so present in the Qt tree" \
             || { echo "ERROR: libqxcb.so missing from ${QT_DIR}/plugins/platforms"; exit 1; }
-          # Pre-stage the Qt plugins tree into the appdir. The qt plugin
-          # deploys each plugin from <qtroot>/plugins to appdir/plugins; if its
-          # qmake query ever resolves the Qt root to the appdir itself (its
-          # qmake inherits our LD_LIBRARY_PATH and loads libQt6Core from the
-          # appdir, so the prefix comes out as the appdir), the sources are
-          # found here and the (self) copies are skipped, so the deployment
-          # succeeds either way. The ENTIRE Qt lib dir is pre-staged too
-          # (Qt libs AND their deps like libicu*.so.73): with the appdir as
-          # Qt root, every transitive dependency must resolve from the appdir.
-          mkdir -p "${APPDIR}/usr/plugins"
-          cp -r "${QT_DIR}/plugins/." "${APPDIR}/usr/plugins/"
-          cp -rP "${QT_DIR}/lib/." "${APPDIR}/usr/lib/"
-          # The Qt tree contains Quick3D helper libs (e.g.
-          # libQt6Quick3DSpatialAudio) whose parent module (libQt6Quick3D)
-          # is NOT installed - linuxdeploy fails on their unresolvable
-          # deps. The app doesn't use Quick3D, so drop the whole family.
-          rm -f "${APPDIR}/usr/lib/libQt6Quick3D"*
-          # The qt plugin prepends QT_INSTALL_BINS/LIBEXECS (from
-          # `qmake -query`) to PATH; with the appdir as the (shadowed) Qt
-          # root those point INSIDE the appdir. Pre-stage the libexec tools
-          # (qmlimportscanner, ...) so the plugin finds them there.
-          mkdir -p "${APPDIR}/usr/libexec"
-          cp -r "${QT_DIR}/libexec/." "${APPDIR}/usr/libexec/" 2>/dev/null || true
+          # NO Qt pre-staging: the qt plugin deploys the needed Qt libs and
+          # plugins from the REAL Qt tree (that's how the release scripts do
+          # it - the old ~53 MB AppImages). Pre-staging the whole tree
+          # bloated the AppImage to ~410 MB and shadowed qmake's Qt-root
+          # resolution to the appdir. qmake must resolve to the real tree:
+          # the appdir must NOT contain libQt6Core (it doesn't now) and
+          # ${QT_DIR}/lib is on LD_LIBRARY_PATH below.
           # qmlimportscanner (run by the qt plugin) takes -importPath
           # appdir/usr/qml and fails if the directory doesn't exist.
           mkdir -p "${APPDIR}/usr/qml"
-          # Qt's sqldrivers plugins depend on external DB client libs
-          # (libmysqlclient, libpq, libodbc, ...) not present on the
-          # runner. The app only uses SQLite - keep just that driver.
-          find "${APPDIR}/usr/plugins/sqldrivers" -type f ! -name 'libqsqlite.so' -delete 2>/dev/null || true
           ls "${QT_DIR}/libexec/qmlimportscanner" 2>/dev/null \
             && echo "OK: qmlimportscanner in ${QT_DIR}/libexec" \
             || echo "WARNING: qmlimportscanner NOT in ${QT_DIR}/libexec"
@@ -257,7 +237,7 @@ jobs:
           test -x squashfs-root/usr/bin/linuxdeploy
           test -x squashfs-root/usr/bin/linuxdeploy-plugin-qt
           QMAKE="${QT_DIR}/bin/qmake" \
-          LD_LIBRARY_PATH="${APPDIR}/usr/lib:${GITHUB_WORKSPACE}/build-release/release:${GITHUB_WORKSPACE}/../XTEngine/build-release/release" \
+          LD_LIBRARY_PATH="${APPDIR}/usr/lib:${QT_DIR}/lib:${GITHUB_WORKSPACE}/build-release/release:${GITHUB_WORKSPACE}/../XTEngine/build-release/release" \
           PATH="${QT_DIR}/bin:${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
           ./squashfs-root/usr/bin/linuxdeploy \
             --appdir "${APPDIR}" \
@@ -266,7 +246,13 @@ jobs:
             --output appimage \
             --icon-file src/images/icons/XTP-icon.png \
             --icon-filename XTPlayer \
-            --desktop-file XTPlayer.desktop
+            --desktop-file XTPlayer.desktop \
+            --exclude-library "*libqsqlmysql*" \
+            --exclude-library "*libqsqlpsql*" \
+            --exclude-library "*libqsqlodbc*" \
+            --exclude-library "*libqsqldb2*" \
+            --exclude-library "*libqsqlibase*" \
+            --exclude-library "*libqsqlfirebird*"
           mv XTPlayer-x86_64.AppImage "dist/XTPlayer-${{ inputs.version }}-Linux-x86_64.AppImage"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -310,10 +296,10 @@ jobs:
           # requires WrapOpenGL, which must resolve for the aarch64 target.
           # libglib2.0-0t64: the aarch64 Qt tools (qtpaths, moc, ...) run
           # under qemu and need the aarch64 runtime libs.
-          # The full Qt runtime set (mirroring the x86_64 job) is needed
-          # because the aarch64 linuxdeploy core deploys the deps of EVERY
-          # pre-staged Qt lib (Nfc -> libpcsclite, PrintSupport -> libcups,
-          # Wayland -> libwayland-client, XcbQpa -> libxcb-*, ...).
+          # The full Qt runtime set (mirroring the x86_64 job) covers the
+          # deps of the Qt libs the app actually uses (Wayland ->
+          # libwayland-client, XcbQpa -> libxcb-*, Bluetooth, Pulse, ...),
+          # which the linuxdeploy core deploys into the AppImage.
           sudo dpkg --add-architecture arm64
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
@@ -411,29 +397,16 @@ jobs:
           cp -f "${CODEC_PREFIX}/lib"/libswresample.so.7*  "${APPDIR}/usr/lib/"
           cp -f "${CODEC_PREFIX}/lib"/libdav1d.so.7*       "${APPDIR}/usr/lib/" 2>/dev/null || true
           cp -f "${CODEC_PREFIX}/lib"/libaom.so.3*         "${APPDIR}/usr/lib/" 2>/dev/null || true
-          # Same qmake-root diagnostics + plugin pre-staging as the x86_64 job
-          # (the plugin's qmake inherits LD_LIBRARY_PATH and resolves the Qt
-          # root to the appdir, so plugins AND Qt libs must be pre-staged).
+          # Same no-pre-staging approach as the x86_64 job: the qt plugin
+          # deploys the needed Qt libs/plugins from the REAL Qt tree.
           echo "==> qmake diagnostics"
           echo "QMAKE=${QMAKE:-<unset>}"
           "${QT_DIR}/bin/qmake" -query QT_INSTALL_PREFIX QT_INSTALL_LIBS QT_INSTALL_PLUGINS
           test -f "${QT_DIR}/plugins/platforms/libqxcb.so" \
             && echo "OK: libqxcb.so present in the Qt tree" \
             || { echo "ERROR: libqxcb.so missing from ${QT_DIR}/plugins/platforms"; exit 1; }
-          mkdir -p "${APPDIR}/usr/plugins"
-          cp -r "${QT_DIR}/plugins/." "${APPDIR}/usr/plugins/"
-          cp -rP "${QT_DIR}/lib/." "${APPDIR}/usr/lib/"
-          # Same Quick3D orphan-lib cleanup as the x86_64 job.
-          rm -f "${APPDIR}/usr/lib/libQt6Quick3D"*
-          # Pre-stage the libexec tools (qmlimportscanner, ...) - same
-          # shadowed-Qt-root reason as the x86_64 job.
-          mkdir -p "${APPDIR}/usr/libexec"
-          cp -r "${QT_DIR}/libexec/." "${APPDIR}/usr/libexec/" 2>/dev/null || true
           # qmlimportscanner's -importPath directory must exist.
           mkdir -p "${APPDIR}/usr/qml"
-          # Keep only the SQLite sqldriver (others need external DB
-          # client libs not on the runner) - same as the x86_64 job.
-          find "${APPDIR}/usr/plugins/sqldrivers" -type f ! -name 'libqsqlite.so' -delete 2>/dev/null || true
           # Cross-package with the TARGET-ARCH (aarch64) linuxdeploy binary:
           # it produces an AppImage with the aarch64 runtime, so the result
           # actually runs on aarch64. (linuxdeploy has no --cross-compile
@@ -458,7 +431,7 @@ jobs:
           test -x squashfs-root/usr/bin/linuxdeploy
           test -x squashfs-root/usr/bin/linuxdeploy-plugin-qt
           QMAKE="${QT_DIR}/bin/qmake" \
-          LD_LIBRARY_PATH="${APPDIR}/usr/lib" \
+          LD_LIBRARY_PATH="${APPDIR}/usr/lib:${QT_DIR}/lib" \
           # ${QT_DIR}/bin: the qt plugin needs qmlimportscanner (and other
           # Qt tools) on PATH; it's an aarch64 ELF that runs via binfmt.
           PATH="${QT_DIR}/bin:${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
@@ -469,7 +442,13 @@ jobs:
             --output appimage \
             --icon-file src/images/icons/XTP-icon.png \
             --icon-filename XTPlayer \
-            --desktop-file XTPlayer.desktop
+            --desktop-file XTPlayer.desktop \
+            --exclude-library "*libqsqlmysql*" \
+            --exclude-library "*libqsqlpsql*" \
+            --exclude-library "*libqsqlodbc*" \
+            --exclude-library "*libqsqldb2*" \
+            --exclude-library "*libqsqlibase*" \
+            --exclude-library "*libqsqlfirebird*"
           mv XTPlayer-aarch64*.AppImage "dist/XTPlayer-${{ inputs.version }}-Linux-aarch64.AppImage"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
