@@ -668,9 +668,22 @@ jobs:
           cd ../XTEngine/build-release
           qmake ../src/XTEngine.pro CONFIG+=release
           mingw32-make -j
+          # mingw32-make -j on Windows can exit 0 while the final DLL link
+          # artifacts are missing (qmake/MinGW parallel race). Verify and
+          # run a serial make-up pass if needed.
+          if [ ! -f release/xtengine.dll ] || [ ! -f release/libxtengine.dll.a ]; then
+            echo "WARNING: XTEngine artifacts missing after parallel make - serial make-up pass"
+            mingw32-make
+          fi
+          test -f release/xtengine.dll && test -f release/libxtengine.dll.a \
+            || { echo "ERROR: XTEngine build produced no DLL/import lib:"; ls -la release/; exit 1; }
       - name: Build XTPlayer
         run: |
           export PATH="$QT_DIR/bin:$MINGW_PREFIX/bin:$PATH"
+          # Fail early with a clear diagnostic if the engine import lib is
+          # missing (the link error for it is otherwise cryptic).
+          test -f ../XTEngine/build-release/release/libxtengine.dll.a \
+            || { echo "ERROR: XTEngine import library missing:"; ls -la ../XTEngine/build-release/release/; exit 1; }
           mkdir -p build-release
           cd build-release
           qmake ../src/XTPlayer.pro CONFIG+=release
