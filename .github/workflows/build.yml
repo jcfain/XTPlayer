@@ -193,6 +193,12 @@ jobs:
           cp -f "${CODEC_PREFIX}/lib"/libswresample.so.7*  "${APPDIR}/usr/lib/"
           cp -f "${CODEC_PREFIX}/lib"/libdav1d.so.7*       "${APPDIR}/usr/lib/" 2>/dev/null || true
           cp -f "${CODEC_PREFIX}/lib"/libaom.so.3*         "${APPDIR}/usr/lib/" 2>/dev/null || true
+          # Image format plugins (webp, tiff, ...): loaded at runtime via
+          # QPluginLoader, so linuxdeploy never deploys them. Pre-stage the
+          # full set from the Qt tree (matches what windeployqt/macdeployqt
+          # bundle on the other platforms).
+          mkdir -p "${APPDIR}/usr/plugins/imageformats"
+          cp -f "${QT_DIR}/plugins/imageformats/"*.so "${APPDIR}/usr/plugins/imageformats/"
           # glibc compatibility guard (same as lin_release_deploy-appimage.sh)
           _codec_lib="${APPDIR}/usr/lib/$(ls "${APPDIR}/usr/lib" | grep '^libavcodec.so.63' | head -1)"
           _need_glibc="$(objdump -T "${_codec_lib}" 2>/dev/null | grep -oE 'GLIBC_[0-9]+\.[0-9]+' | sed 's/GLIBC_//' | sort -Vu | tail -1)"
@@ -205,12 +211,10 @@ jobs:
             fi
             echo "OK: codec glibc requirement (${_need_glibc}) <= runner glibc (${_sys_glibc})."
           fi
-          # webp imageformat plugin check (qt6-imageformats ships it)
-          if [ -f "${QT_DIR}/plugins/imageformats/libqwebp.so" ]; then
-            echo "OK: libqwebp.so present in the Qt tree (webp thumbs enabled)."
-          else
-            echo "WARNING: libqwebp.so NOT in the Qt tree - thumbs will fall back to jpg."
-          fi
+          # webp is required for image thumbs (the app falls back to jpg
+          # without it) - hard-fail if the Qt tree lacks the plugin.
+          test -f "${APPDIR}/usr/plugins/imageformats/libqwebp.so" \
+            || { echo "ERROR: libqwebp.so missing from the Qt tree"; exit 1; }
           # Diagnostics: the qt plugin resolves its Qt root from `qmake -query`;
           # print what it will see so a regression is self-explanatory.
           echo "==> qmake diagnostics"
@@ -454,6 +458,12 @@ jobs:
           cp -f "${CODEC_PREFIX}/lib"/libswresample.so.7*  "${APPDIR}/usr/lib/"
           cp -f "${CODEC_PREFIX}/lib"/libdav1d.so.7*       "${APPDIR}/usr/lib/" 2>/dev/null || true
           cp -f "${CODEC_PREFIX}/lib"/libaom.so.3*         "${APPDIR}/usr/lib/" 2>/dev/null || true
+          # Image format plugins (webp, tiff, ...): loaded at runtime via
+          # QPluginLoader, so linuxdeploy never deploys them. Pre-stage the
+          # full set from the Qt tree (matches what windeployqt/macdeployqt
+          # bundle on the other platforms).
+          mkdir -p "${APPDIR}/usr/plugins/imageformats"
+          cp -f "${QT_DIR}/plugins/imageformats/"*.so "${APPDIR}/usr/plugins/imageformats/"
           # (The Qt dep closure is staged below - the host ldd can't trace
           # aarch64 deps, so the qt plugin needs the libs present by
           # filename; plugins/QML/translations still come from the REAL
