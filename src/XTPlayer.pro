@@ -184,7 +184,9 @@ unix:mac {
     }
 
     RPATHDIR *= @loader_path/../Frameworks @executable_path/../Frameworks
-    QMAKE_LFLAGS_SONAME = -W1,-install_name,@rpath,
+    # -Wl (not -W1): the capital-i typo made clang treat the whole flag as an
+    # unknown warning option, so the install_name was never applied.
+    QMAKE_LFLAGS_SONAME = -Wl,-install_name,@rpath,
     isEmpty(QMAKE_LFLAGS_RPATH): QMAKE_LFLAGS_RPATH=-Wl,-rpath,
     for(R,RPATHDIR) {
         QMAKE_LFLAGS *= \'$${QMAKE_LFLAGS_RPATH}$$R\'

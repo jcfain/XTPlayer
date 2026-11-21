@@ -680,6 +680,19 @@ jobs:
             echo "WARNING: XTEngine artifacts missing after parallel make - serial make-up pass"
             mingw32-make
           fi
+          # A serial pass cannot repair a race-corrupted build state (make
+          # believes the DLL target is up to date and skips the link). If the
+          # artifacts are STILL missing, nuke the build dir and rebuild
+          # serially from scratch - deterministic, no race.
+          if [ ! -f release/xtengine.dll ] || { [ ! -f release/libxtengine.a ] && [ ! -f release/libxtengine.dll.a ]; }; then
+            echo "WARNING: XTEngine artifacts still missing after serial pass - clean serial rebuild"
+            cd ..
+            rm -rf build-release
+            mkdir build-release
+            cd build-release
+            qmake ../src/XTEngine.pro CONFIG+=release
+            mingw32-make
+          fi
           test -f release/xtengine.dll && { test -f release/libxtengine.a || test -f release/libxtengine.dll.a; } \
             || { echo "ERROR: XTEngine build produced no DLL/import lib:"; ls -la release/; exit 1; }
       - name: Build XTPlayer
@@ -693,6 +706,23 @@ jobs:
           cd build-release
           qmake ../src/XTPlayer.pro CONFIG+=release
           mingw32-make -j
+          # Same parallel race as the engine build: verify, serial make-up
+          # pass, then a clean serial rebuild if the state is corrupted.
+          if [ ! -f release/XTPlayer.exe ]; then
+            echo "WARNING: XTPlayer.exe missing after parallel make - serial make-up pass"
+            mingw32-make
+          fi
+          if [ ! -f release/XTPlayer.exe ]; then
+            echo "WARNING: XTPlayer.exe still missing after serial pass - clean serial rebuild"
+            cd ..
+            rm -rf build-release
+            mkdir build-release
+            cd build-release
+            qmake ../src/XTPlayer.pro CONFIG+=release
+            mingw32-make
+          fi
+          test -f release/XTPlayer.exe \
+            || { echo "ERROR: XTPlayer build produced no exe:"; ls -la release/; exit 1; }
       - name: Package zip
         run: |
           export PATH="$QT_DIR/bin:$MINGW_PREFIX/bin:$PATH"
@@ -817,8 +847,26 @@ jobs:
       - name: Package DMG
         run: |
           APP="build-release/release/XTPlayer.app"
-          # AV1 dylibs go in BEFORE macdeployqt so it fixes up their install names.
-          # FFmpeg on macOS installs them with the "lib" prefix (libavcodec.63.dylib).
+          # macdeployqt FIRST: it deploys the Qt frameworks + plugins and the
+          # FFmpeg dylibs the Qt FFmpeg plugin references (the AV1-less copies
+          # from the Qt tree). Our AV1 build replaces those copies afterwards
+          # (same file names), so it must go in AFTER macdeployqt - staging it
+          # before would let macdeployqt overwrite it with the Qt copies.
+          # The executable's rpath list only contains the Qt lib dir (qmake
+          # doesn't add the bundle's Frameworks dir); add it so macdeployqt
+          # can resolve @rpath references into the bundle.
+          install_name_tool -add_rpath "@executable_path/../Frameworks" \
+            "$APP/Contents/MacOS/XTPlayer" 2>/dev/null || true
+          # macdeployqt reports (non-fatal) errors for deps it cannot
+          # resolve: the libxtengine reference is fixed by install_name_tool
+          # below. Don't let it fail the step.
+          "${QT_DIR}/bin/macdeployqt" "$APP" \
+            || echo "WARNING: macdeployqt reported unresolvable deps (expected, fixed below)"
+          # AV1 codec dylibs (drop-in replacement for the Qt FFmpeg copies
+          # macdeployqt just deployed - same file names). Their install names
+          # are @rpath/... (normalized by build-ffmpeg-av1-mac.sh), resolved
+          # at runtime via the executable's @executable_path/../Frameworks
+          # rpath that macdeployqt adds.
           mkdir -p "$APP/Contents/Frameworks"
           cp "$CODEC_PREFIX/lib/libavcodec.63.dylib"   "$APP/Contents/Frameworks/"
           cp "$CODEC_PREFIX/lib/libavformat.63.dylib"  "$APP/Contents/Frameworks/"
@@ -828,14 +876,11 @@ jobs:
           cp "$CODEC_PREFIX/lib/libdav1d.dylib"      "$APP/Contents/Frameworks/"
           cp "$CODEC_PREFIX/lib/libaom.dylib"        "$APP/Contents/Frameworks/"
           # aom's CMake install only creates libaom.dylib, but FFmpeg
-          # references @rpath/libaom.3.dylib - provide the versioned name
-          # so macdeployqt can resolve it.
+          # references @rpath/libaom.3.dylib - provide the versioned name.
           ln -sf libaom.dylib "$APP/Contents/Frameworks/libaom.3.dylib"
-          # macdeployqt reports (non-fatal) errors for deps it cannot
-          # resolve: the bare libxtengine.1.0.0.dylib install name is fixed
-          # by install_name_tool below. Don't let it fail the step.
-          "${QT_DIR}/bin/macdeployqt" "$APP" \
-            || echo "WARNING: macdeployqt reported unresolvable deps (expected, fixed below)"
+          # dav1d (meson) names the file libdav1d.dylib but its install name
+          # is @rpath/libdav1d.7.dylib - provide the versioned name too.
+          ln -sf libdav1d.dylib "$APP/Contents/Frameworks/libdav1d.7.dylib"
           # App data (same set as mac_release_deploy.sh)
           cp -R src/themes "$APP/Contents/MacOS/"
           cp -R src/images "$APP/Contents/MacOS/"
@@ -843,9 +888,25 @@ jobs:
           cp -R build-release/release/www "$APP/Contents/MacOS/"
           # Engine dylib (same as mac_release_deploy.sh)
           cp ../XTEngine/build-release/release/libxtengine*.dylib "$APP/Contents/Frameworks/"
-          install_name_tool -change libxtengine.1.0.0.dylib \
-            @executable_path/../Frameworks/libxtengine.1.0.0.dylib \
-            "$APP/Contents/MacOS/XTPlayer"
+          # The engine's own install name comes from qmake's install path
+          # (e.g. /usr/lib/libxtengine.1.0.0.dylib) - normalize it to @rpath,
+          # and give the engine an rpath so its @rpath references to the
+          # FFmpeg dylibs resolve inside the bundle (macdeployqt never sees
+          # the engine: it is copied AFTER macdeployqt ran).
+          install_name_tool -id "@rpath/libxtengine.1.0.0.dylib" \
+            "$APP/Contents/Frameworks/libxtengine.1.0.0.dylib"
+          install_name_tool -add_rpath "@executable_path/../Frameworks" \
+            "$APP/Contents/Frameworks/libxtengine.1.0.0.dylib" 2>/dev/null || true
+          # Rewrite the executable's reference to the engine. The recorded
+          # name depends on how qmake stamped the dylib (absolute install
+          # path, @rpath, or bare name) - detect it instead of hardcoding.
+          OLD_ENGINE_REF=$(otool -L "$APP/Contents/MacOS/XTPlayer" \
+            | awk '/libxtengine\.1\.0\.0\.dylib/ && $1 !~ /Frameworks/ {print $1; exit}')
+          if [ -n "$OLD_ENGINE_REF" ]; then
+            install_name_tool -change "$OLD_ENGINE_REF" \
+              "@executable_path/../Frameworks/libxtengine.1.0.0.dylib" \
+              "$APP/Contents/MacOS/XTPlayer"
+          fi
           # Ad-hoc signing (no Apple Developer ID needed). Innermost first.
           # codesign treats EVERY file under Contents/MacOS/ as a code
           # object, so the resources copied there (images, themes, www,

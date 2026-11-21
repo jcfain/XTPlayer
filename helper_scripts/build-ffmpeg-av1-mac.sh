@@ -226,6 +226,23 @@ for arch in arm64 x86_64; do
     echo "==> Building ${arch} with ${JOBS} jobs"
     make -j"${JOBS}"
     make install
+
+    # FFmpeg stamps darwin dylibs with the BUILD DIR's absolute path as the
+    # install name (and as the cross-references between its own libs).
+    # Rewrite to @rpath so the app bundle is self-contained and macdeployqt
+    # can resolve them (left as-is, the DMG references /Users/runner/...
+    # paths that don't exist on the user's Mac and dyld refuses to launch).
+    FF_PREFIX_DIR="${WORKDIR}/ffmpeg-prefix-${arch}"
+    for lib in libavcodec.63 libavformat.63 libavutil.61 libswscale.10 libswresample.7; do
+        install_name_tool -id "@rpath/${lib}.dylib" "${FF_PREFIX_DIR}/lib/${lib}.dylib"
+    done
+    for lib in libavcodec.63 libavformat.63 libavutil.61 libswscale.10 libswresample.7; do
+        for other in libavcodec.63 libavformat.63 libavutil.61 libswscale.10 libswresample.7; do
+            [ "$lib" = "$other" ] && continue
+            install_name_tool -change "${FF_PREFIX_DIR}/lib/${other}.dylib" \
+                "@rpath/${other}.dylib" "${FF_PREFIX_DIR}/lib/${lib}.dylib" 2>/dev/null || true
+        done
+    done
 done
 cd "${WORKDIR}"
 
