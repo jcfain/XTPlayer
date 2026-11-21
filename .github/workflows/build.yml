@@ -42,11 +42,12 @@ env:
   # (pumphaus/qtgamepadlegacy, dev branch).
   GAMEPADLEGACY_REF: '434fe59d70f42fa0f745af05921ba64169fce90b'
   # Addon packages installed on top of base Qt by helper_scripts/install-qt.sh.
-  # Everything else the project uses (serialport, websockets, speech,
-  # connectivity/bluetooth, imageformats, wayland) ships in the base package.
-  # Addon packages: qtspeech provides texttospeech, qtconnectivity provides
-  # bluetooth (both verified against the download.qt.io 6.12.0 layout).
-  QT_MODULES: 'qtmultimedia qtserialport qtspeech qtwebsockets qtconnectivity qthttpserver'
+  # NOTE: the base package does NOT ship the extra imageformats plugins
+  # (webp/tiff/tga/wbmp/icns) - only gif/ico/jpeg (+svg from qtsvg) - so
+  # qtimageformats is REQUIRED for webp thumbnail support (verified against
+  # the download.qt.io 6.12.0 package contents). qtspeech provides
+  # texttospeech, qtconnectivity provides bluetooth.
+  QT_MODULES: 'qtmultimedia qtserialport qtspeech qtwebsockets qtconnectivity qthttpserver qtimageformats'
 
 jobs:
   web:
@@ -129,7 +130,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.QT_DIR }}
-          key: qt-${{ env.QT_VERSION }}-Linux-x64-${{ hashFiles('helper_scripts/install-qt.sh') }}
+          key: qt-${{ env.QT_VERSION }}-Linux-x64-${{ env.QT_MODULES }}-${{ hashFiles('helper_scripts/install-qt.sh') }}
       - name: Install Qt ${{ env.QT_VERSION }}
         env:
           QT_OS_DIR: linux_x64
@@ -382,7 +383,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.QT_DIR }}
-          key: qt-${{ env.QT_VERSION }}-Linux-arm64-${{ hashFiles('helper_scripts/install-qt.sh') }}
+          key: qt-${{ env.QT_VERSION }}-Linux-arm64-${{ env.QT_MODULES }}-${{ hashFiles('helper_scripts/install-qt.sh') }}
       - name: Install Qt ${{ env.QT_VERSION }} (aarch64)
         env:
           QT_OS_DIR: linux_arm64
@@ -618,7 +619,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.QT_DIR }}
-          key: qt-${{ env.QT_VERSION }}-Windows-${{ hashFiles('helper_scripts/install-qt.sh') }}
+          key: qt-${{ env.QT_VERSION }}-Windows-${{ env.QT_MODULES }}-${{ hashFiles('helper_scripts/install-qt.sh') }}
       - name: Install Qt ${{ env.QT_VERSION }} (MinGW)
         env:
           QT_OS_DIR: windows_x86
@@ -670,19 +671,20 @@ jobs:
           mingw32-make -j
           # mingw32-make -j on Windows can exit 0 while the final DLL link
           # artifacts are missing (qmake/MinGW parallel race). Verify and
-          # run a serial make-up pass if needed.
-          if [ ! -f release/xtengine.dll ] || [ ! -f release/libxtengine.dll.a ]; then
+          # run a serial make-up pass if needed. (qmake names the import
+          # lib libxtengine.a for this target - accept the .dll.a form too.)
+          if [ ! -f release/xtengine.dll ] || { [ ! -f release/libxtengine.a ] && [ ! -f release/libxtengine.dll.a ]; }; then
             echo "WARNING: XTEngine artifacts missing after parallel make - serial make-up pass"
             mingw32-make
           fi
-          test -f release/xtengine.dll && test -f release/libxtengine.dll.a \
+          test -f release/xtengine.dll && { test -f release/libxtengine.a || test -f release/libxtengine.dll.a; } \
             || { echo "ERROR: XTEngine build produced no DLL/import lib:"; ls -la release/; exit 1; }
       - name: Build XTPlayer
         run: |
           export PATH="$QT_DIR/bin:$MINGW_PREFIX/bin:$PATH"
           # Fail early with a clear diagnostic if the engine import lib is
           # missing (the link error for it is otherwise cryptic).
-          test -f ../XTEngine/build-release/release/libxtengine.dll.a \
+          { test -f ../XTEngine/build-release/release/libxtengine.a || test -f ../XTEngine/build-release/release/libxtengine.dll.a; } \
             || { echo "ERROR: XTEngine import library missing:"; ls -la ../XTEngine/build-release/release/; exit 1; }
           mkdir -p build-release
           cd build-release
@@ -766,7 +768,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.QT_DIR }}
-          key: qt-${{ env.QT_VERSION }}-macOS-${{ hashFiles('helper_scripts/install-qt.sh') }}
+          key: qt-${{ env.QT_VERSION }}-macOS-${{ env.QT_MODULES }}-${{ hashFiles('helper_scripts/install-qt.sh') }}
       - name: Install Qt ${{ env.QT_VERSION }}
         env:
           QT_OS_DIR: mac_x64

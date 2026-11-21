@@ -44,6 +44,13 @@ esac
 
 mkdir -p "${QT_DIR}"
 
+# Cache hit: the tree is already installed with this exact version + module
+# set (the workflow cache key includes both), so skip the download.
+if [ -f "${QT_DIR}/bin/qmake" ] || [ -f "${QT_DIR}/bin/qmake.exe" ]; then
+  echo "Qt ${VER} already present at ${QT_DIR} (cache hit) - skipping download"
+  exit 0
+fi
+
 # Download every .7z in a package dir, verify its .sha1, extract into $dest.
 dl_pkg() {
   local pkg="$1" dest="$2"
