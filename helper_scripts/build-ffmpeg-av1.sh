@@ -48,13 +48,6 @@ for arg in "$@"; do
     esac
 done
 
-# CI cache: if the final artifact is already in place (restored from
-# actions/cache), skip the whole build. --clean forces a rebuild.
-if [ "${CLEAN}" -eq 0 ] && [ -f "${CODEC_PREFIX}/lib/libavcodec.so.63" ]; then
-    echo "==> ${CODEC_PREFIX}/lib/libavcodec.so.63 present — skipping build"
-    exit 0
-fi
-
 # Package lists per distribution
 APT_DEPS="build-essential nasm pkg-config git \
           libdav1d-dev libaom-dev \
@@ -77,8 +70,9 @@ if [ "$INSTALL_DEPS" -eq 1 ]; then
     if command -v apt-get >/dev/null 2>&1; then
         echo "==> Installing dependencies via apt-get"
         sudo apt-get update
-        # resolute (26.04) merged libva-drm-dev/libva-x11-dev into libva-dev;
-        # retry without them if the distro no longer ships separate packages.
+        # noble (24.04)+ merged libva-drm-dev/libva-x11-dev into libva-dev
+        # (which pulls in all the runtime libs); retry without them if the
+        # distro no longer ships separate packages.
         sudo apt-get install -y $APT_DEPS || \
             sudo apt-get install -y $(echo "$APT_DEPS" | sed 's/ libva-drm-dev//; s/ libva-x11-dev//')
     elif command -v dnf >/dev/null 2>&1; then
@@ -98,6 +92,16 @@ if [ "$INSTALL_DEPS" -eq 1 ]; then
         echo "         Arch:          sudo pacman -S $PACMAN_DEPS"
         exit 1
     fi
+fi
+
+# CI cache: if the final artifact is already in place (restored from
+# actions/cache), skip the whole build. --clean forces a rebuild.
+# Runs AFTER the dep install above: a restored prefix still needs the
+# system runtime libs (libva-drm2, libvdpau1, ...) present for
+# linuxdeploy's ldd pass; apt is a no-op when they're already installed.
+if [ "${CLEAN}" -eq 0 ] && [ -f "${CODEC_PREFIX}/lib/libavcodec.so.63" ]; then
+    echo "==> ${CODEC_PREFIX}/lib/libavcodec.so.63 present — skipping build"
+    exit 0
 fi
 
 echo "==> Preflight checks"
