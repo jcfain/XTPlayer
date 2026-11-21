@@ -267,7 +267,10 @@ qtPrepareTool(LRELEASE, lrelease)
 # bundles (e.g. main-XXXX.js / styles-XXXX.css) would linger and the served page
 # could go stale. Wiping makes $$DESTDIR/www an exact mirror of the source.
 win32 {
-    rmDir = rmdir /s /q
+    # rm -rf (not `rmdir /s /q`): works under BOTH cmd.exe (Qt's MinGW
+    # ships rm.exe) and Git Bash / MSYS shells, where mingw32-make runs
+    # recipes through POSIX sh and `rmdir /s /q` fails.
+    rmDir = rm -rf
     copydata.commands = $(COPY_DIR) $$shell_path($$PWD/themes) $$shell_path($$DESTDIR/themes) && $$rmDir $$shell_path($$DESTDIR/www) && $(COPY_DIR) $$shell_path($$PWD/../../XTEngine/src/www) $$shell_path($$DESTDIR)
 } else {
     rmDir = rm -rf
