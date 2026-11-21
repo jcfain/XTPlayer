@@ -8,9 +8,12 @@
 # the cross-compiled aarch64 AppImage. dav1d and aom are cross-built from
 # source (there are no aarch64 dev packages in apt).
 #
-# No hwaccel backends: cross-building VAAPI/VDPAU/Vulkan would require
-# aarch64 sysroot headers, so aarch64 gets software AV1 decoding only
-# (dav1d is fast on ARM cores). AV1 works; GPU acceleration does not.
+# Hwaccel: V4L2 M2M only - the standard API for mainline-kernel ARM video
+# decoders (e.g. the RK3588's rkvdec on Orange Pi boards: H.264/HEVC/AV1).
+# VAAPI/VDPAU/Vulkan Video are not exposed by the target GPUs (Adreno /
+# VideoCore / Mali), so they are not cross-built. Everything else decodes
+# in software (dav1d is fast on ARM cores). v4l2m2m needs no runtime libs
+# (pure V4L2 ioctls), so the AppImage staging is unchanged.
 #
 # Usage:   helper_scripts/build-ffmpeg-av1-aarch64.sh [--install-deps] [--clean|--reuse]
 # Env:     CODEC_PREFIX  install prefix (default: $HOME/git/ffmpeg-n9.0.1-av1-aarch64)
@@ -195,6 +198,7 @@ PKG_CONFIG_LIBDIR="${CODEC_PREFIX}/lib/pkgconfig" \
     --enable-shared \
     --enable-libdav1d \
     --enable-libaom \
+    --enable-v4l2-m2m \
     --enable-network \
     --disable-doc
 
