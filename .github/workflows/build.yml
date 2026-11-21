@@ -478,9 +478,7 @@ jobs:
           pip install meson ninja
           # pkg-config for FFmpeg's configure (it looks for a
           # cross-prefixed copy; the build script places one).
-          # binutils: FFmpeg's makedef needs lib.exe, which Qt's MinGW
-          # doesn't ship (the build script copies it from here).
-          C:/msys64/usr/bin/pacman.exe -Sy --noconfirm mingw-w64-x86_64-pkg-config mingw-w64-x86_64-binutils
+          C:/msys64/usr/bin/pacman.exe -Sy --noconfirm mingw-w64-x86_64-pkg-config
       - name: Checkout QtGamepadLegacy
         uses: actions/checkout@v4
         with:

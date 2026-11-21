@@ -70,13 +70,13 @@ cat > "${MINGW_PREFIX}/bin/${XP}-pkg-config" <<'EOF'
 exec /c/msys64/mingw64/bin/x86_64-w64-mingw32-pkg-config.exe "$@"
 EOF
 chmod +x "${MINGW_PREFIX}/bin/${XP}-pkg-config"
-# lib.exe: FFmpeg's compat/windows/makedef calls plain `lib.exe` to build
-# the temporary import library for each DLL. Qt's MinGW doesn't ship it,
-# so copy MSYS2's (a native Win32 binutils binary - safe to copy, unlike
-# pkg-config.exe which needs msys-2.0.dll).
-if [ ! -e "${MINGW_PREFIX}/bin/lib.exe" ]; then
-    cp /c/msys64/mingw64/bin/x86_64-w64-mingw32-lib.exe "${MINGW_PREFIX}/bin/lib.exe"
-fi
+# makedef (FFmpeg's compat/windows/makedef) builds a temporary import
+# library with `lib.exe` and dumps its symbols with `dumpbin.exe` -
+# neither ships with Qt's MinGW. But if AR/NM are set it uses
+# `$AR rcs` / `$NM --defined-only -g` instead, so point them at the
+# cross tools (copied above) and the MSVC tools are never needed.
+export AR="${XP}-ar"
+export NM="${XP}-nm"
 
 CLEAN=0
 REUSE=0
