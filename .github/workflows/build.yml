@@ -236,6 +236,9 @@ jobs:
           # (qmlimportscanner, ...) so the plugin finds them there.
           mkdir -p "${APPDIR}/usr/libexec"
           cp -r "${QT_DIR}/libexec/." "${APPDIR}/usr/libexec/" 2>/dev/null || true
+          # qmlimportscanner (run by the qt plugin) takes -importPath
+          # appdir/usr/qml and fails if the directory doesn't exist.
+          mkdir -p "${APPDIR}/usr/qml"
           ls "${QT_DIR}/libexec/qmlimportscanner" 2>/dev/null \
             && echo "OK: qmlimportscanner in ${QT_DIR}/libexec" \
             || echo "WARNING: qmlimportscanner NOT in ${QT_DIR}/libexec"
@@ -422,6 +425,8 @@ jobs:
           # shadowed-Qt-root reason as the x86_64 job.
           mkdir -p "${APPDIR}/usr/libexec"
           cp -r "${QT_DIR}/libexec/." "${APPDIR}/usr/libexec/" 2>/dev/null || true
+          # qmlimportscanner's -importPath directory must exist.
+          mkdir -p "${APPDIR}/usr/qml"
           # Cross-package with the TARGET-ARCH (aarch64) linuxdeploy binary:
           # it produces an AppImage with the aarch64 runtime, so the result
           # actually runs on aarch64. (linuxdeploy has no --cross-compile

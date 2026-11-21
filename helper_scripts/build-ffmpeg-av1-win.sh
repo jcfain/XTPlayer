@@ -53,14 +53,17 @@ export PATH="${MINGW_PREFIX}/bin:$PATH"
 # ${XP}-dlltool, ${XP}-strip and ${XP}-pkg-config from --cross-prefix.
 # Qt's MinGW ships the binutils as ${XP}-gcc-* wrappers (no plain
 # ${XP}-nm), and doesn't ship dlltool/strip at all - copy them under the
-# expected names, falling back to MSYS2's native MinGW binutils (safe to
-# copy: native Win32, unlike pkg-config.exe which needs msys-2.0.dll).
+# expected names, falling back to MSYS2's native MinGW binutils. MSYS2
+# installs the prefixed tools under /mingw64/${XP}/bin/ (the unprefixed
+# ones in /mingw64/bin are useless to FFmpeg, which wants the ${XP}-
+# prefix). Safe to copy: native Win32 (unlike pkg-config.exe, which needs
+# msys-2.0.dll).
 for tool in ar nm ranlib dlltool strip; do
     if [ ! -e "${MINGW_PREFIX}/bin/${XP}-${tool}.exe" ]; then
         if [ -e "${MINGW_PREFIX}/bin/${XP}-gcc-${tool}.exe" ]; then
             cp "${MINGW_PREFIX}/bin/${XP}-gcc-${tool}.exe" "${MINGW_PREFIX}/bin/${XP}-${tool}.exe"
-        elif [ -e "/c/msys64/mingw64/bin/${XP}-${tool}.exe" ]; then
-            cp "/c/msys64/mingw64/bin/${XP}-${tool}.exe" "${MINGW_PREFIX}/bin/${XP}-${tool}.exe"
+        elif [ -e "/c/msys64/mingw64/${XP}/bin/${XP}-${tool}.exe" ]; then
+            cp "/c/msys64/mingw64/${XP}/bin/${XP}-${tool}.exe" "${MINGW_PREFIX}/bin/${XP}-${tool}.exe"
         fi
     fi
 done
