@@ -793,52 +793,39 @@ jobs:
           mkdir -p ../XTEngine/build-release
           cd ../XTEngine/build-release
           qmake ../src/XTEngine.pro CONFIG+=release
-          mingw32-make -j
-          # mingw32-make -j on Windows can exit 0 with the DLL target's
-          # recipe scheduled twice (qmake/MinGW parallel race): the recipe
-          # starts with `rm -f <outputs>`, so a delayed second run deletes
-          # the first run's artifacts - sometimes AFTER make returned.
-          # Settle first (up to 2 min) so an in-flight second link can
-          # recreate them, then verify and repair. (qmake names the import
-          # lib libxtengine.a for this target - accept the .dll.a form too.)
-          for i in $(seq 1 12); do
-            test -f release/xtengine.dll && break
-            sleep 10
-          done
+          # Build serially and capture the full output + TRUE exit code. The
+          # earlier "parallel race" theory (DLL recipe scheduled twice) is
+          # dead: a clean SERIAL rebuild reproduced the failure, and a failed
+          # link stops make BEFORE the post-link www-copy recipe - so a real
+          # link failure can never look like "make exited 0, no DLL". The old
+          # step never checked make's exit code, so a link failure (e.g.
+          # undefined references from the newly-added gamepad lib) was
+          # swallowed and only surfaced as "artifacts missing".
+          set -o pipefail
+          if ! mingw32-make 2>&1 | tee engine-make.log; then
+            echo "ERROR: mingw32-make FAILED. Last 150 lines:"
+            tail -150 engine-make.log
+            exit 1
+          fi
           engine_artifacts_ok() {
             test -f release/xtengine.dll && { test -f release/libxtengine.a || test -f release/libxtengine.dll.a; }
           }
           if ! engine_artifacts_ok; then
-            echo "WARNING: XTEngine artifacts missing after parallel make - serial make-up pass"
-            mingw32-make
+            echo "ERROR: make exited 0 but the DLL/import lib is missing. Diagnostics:"
+            echo "=== Makefile recipe for the DLL target:"
+            grep -n -A12 'xtengine\.dll:' Makefile.Release | head -40
+            echo "=== release/ contents:"
+            ls -la release/
+            echo "=== Searching the whole build tree for the DLL/import lib:"
+            find .. -name 'xtengine.dll' -o -name 'libxtengine*.a' 2>/dev/null || true
+            echo "=== Re-running the DLL target directly (forcing a relink):"
+            rm -f release/xtengine.dll release/libxtengine.a release/libxtengine.dll.a
+            mingw32-make release/xtengine.dll 2>&1 | tail -60
+            echo "Direct relink exit: ${PIPESTATUS[0]}"
+            ls -la release/
+            exit 1
           fi
-          # A serial pass cannot repair a race-corrupted build state (make
-          # believes the DLL target is up to date and skips the link). If the
-          # artifacts are STILL missing, nuke the build dir and rebuild
-          # serially from scratch - deterministic, no race.
-          if ! engine_artifacts_ok; then
-            echo "WARNING: XTEngine artifacts still missing after serial pass - clean serial rebuild"
-            cd ..
-            rm -rf build-release
-            mkdir build-release
-            cd build-release
-            qmake ../src/XTEngine.pro CONFIG+=release
-            mingw32-make
-          fi
-          # Final re-verify after a short settle: a delayed second recipe
-          # run can strike between the checks above and this test.
-          sleep 15
-          if ! engine_artifacts_ok; then
-            echo "WARNING: XTEngine artifacts vanished after verification - final clean serial rebuild"
-            cd ..
-            rm -rf build-release
-            mkdir build-release
-            cd build-release
-            qmake ../src/XTEngine.pro CONFIG+=release
-            mingw32-make
-          fi
-          engine_artifacts_ok \
-            || { echo "ERROR: XTEngine build produced no DLL/import lib:"; ls -la release/; exit 1; }
+          echo "XTEngine artifacts OK"
       - name: Build XTPlayer
         run: |
           export PATH="$QT_DIR/bin:$MINGW_PREFIX/bin:$PATH"
@@ -849,40 +836,30 @@ jobs:
           mkdir -p build-release
           cd build-release
           qmake ../src/XTPlayer.pro CONFIG+=release
-          mingw32-make -j
-          # Same parallel race as the engine build (the exe recipe can be
-          # scheduled twice; the second run's leading `rm -f` deletes the
-          # first run's output). Settle, verify, repair.
-          for i in $(seq 1 12); do
-            test -f release/XTPlayer.exe && break
-            sleep 10
-          done
+          # Same as the engine build: serial + capture the true exit code so a
+          # link failure (undefined references, missing import lib) is loud
+          # instead of surfacing as "exe missing".
+          set -o pipefail
+          if ! mingw32-make 2>&1 | tee player-make.log; then
+            echo "ERROR: mingw32-make FAILED. Last 150 lines:"
+            tail -150 player-make.log
+            exit 1
+          fi
           player_exe_ok() { test -f release/XTPlayer.exe; }
           if ! player_exe_ok; then
-            echo "WARNING: XTPlayer.exe missing after parallel make - serial make-up pass"
-            mingw32-make
+            echo "ERROR: make exited 0 but XTPlayer.exe is missing. Diagnostics:"
+            echo "=== Makefile recipe for the exe target:"
+            grep -n -A12 'XTPlayer\.exe:' Makefile.Release | head -40
+            echo "=== release/ contents:"
+            ls -la release/
+            echo "=== Re-running the exe target directly (forcing a relink):"
+            rm -f release/XTPlayer.exe
+            mingw32-make release/XTPlayer.exe 2>&1 | tail -60
+            echo "Direct relink exit: ${PIPESTATUS[0]}"
+            ls -la release/
+            exit 1
           fi
-          if ! player_exe_ok; then
-            echo "WARNING: XTPlayer.exe still missing after serial pass - clean serial rebuild"
-            cd ..
-            rm -rf build-release
-            mkdir build-release
-            cd build-release
-            qmake ../src/XTPlayer.pro CONFIG+=release
-            mingw32-make
-          fi
-          sleep 15
-          if ! player_exe_ok; then
-            echo "WARNING: XTPlayer.exe vanished after verification - final clean serial rebuild"
-            cd ..
-            rm -rf build-release
-            mkdir build-release
-            cd build-release
-            qmake ../src/XTPlayer.pro CONFIG+=release
-            mingw32-make
-          fi
-          player_exe_ok \
-            || { echo "ERROR: XTPlayer build produced no exe:"; ls -la release/; exit 1; }
+          echo "XTPlayer exe OK"
       - name: Package zip
         run: |
           export PATH="$QT_DIR/bin:$MINGW_PREFIX/bin:$PATH"
