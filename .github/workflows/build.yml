@@ -305,6 +305,13 @@ jobs:
     needs: web
     env:
       QT_DIR: ${{ github.workspace }}/qt6-arm64
+      # Host-arch (x86_64) Qt: the source of every tool the cross build
+      # EXECUTES (qmake, moc, rcc, uic, lrelease, syncqt, qtpaths). The
+      # aarch64 Qt tree's tools are aarch64 binaries the x86_64 runner
+      # cannot execute - binfmt/qemu does not take effect on
+      # GitHub-hosted runners ("Exec format error") - so no aarch64
+      # binary may be run directly.
+      QT_HOST_DIR: ${{ github.workspace }}/qt6-host
       CODEC_PREFIX: ffmpeg-av1-arm64
     steps:
       - name: Checkout XTPlayer
@@ -323,7 +330,7 @@ jobs:
           rm -rf ../XTEngine/src/www
           mkdir -p ../XTEngine/src/www
           cp -r web-bundle/* ../XTEngine/src/www/
-      - name: Install cross toolchain + qemu
+      - name: Install cross toolchain
         run: |
           # arm64 is an Ubuntu "port" arch: its indices are NOT on
           # archive/security.ubuntu.com (404 -> apt-get update exits 100).
@@ -361,8 +368,8 @@ jobs:
           # for FFmpeg's v4l2m2m hwaccel (RK3588 rkvdec on Orange Pi targets).
           # aarch64 OpenGL dev libs (multiarch): Qt6Gui's CMake config
           # requires WrapOpenGL, which must resolve for the aarch64 target.
-          # libglib2.0-0t64: the aarch64 Qt tools (qtpaths, moc, ...) run
-          # under qemu and need the aarch64 runtime libs.
+          # The aarch64 runtime libs (libglib2.0-0t64:arm64, ...) are the
+          # target-arch deps linuxdeploy resolves into the AppImage.
           # The full Qt runtime set (mirroring the x86_64 job) covers the
           # deps of the Qt libs the app actually uses (Wayland ->
           # libwayland-client, XcbQpa -> libxcb-*, Bluetooth, Pulse, ...),
@@ -374,7 +381,8 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             build-essential cmake ninja-build pkg-config nasm meson \
             gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu \
-            qemu-user-binfmt binfmt-support linux-libc-dev:arm64 \
+            linux-libc-dev:arm64 \
+            qemu-user \
             libgl1-mesa-dev:arm64 libxkbcommon-dev:arm64 libwayland-dev:arm64 \
             libfontconfig1-dev:arm64 libfreetype-dev:arm64 libdbus-1-dev:arm64 libglib2.0-dev:arm64 \
             libbluetooth-dev:arm64 libusb-1.0-0-dev:arm64 libasound2-dev:arm64 libpulse-dev:arm64 \
@@ -387,10 +395,6 @@ jobs:
             libsm6:arm64 libice6:arm64 libgssapi-krb5-2:arm64 \
             libspeechd2:arm64 \
             libpcsclite1:arm64 libcups2t64:arm64
-          # qemu lets the aarch64 moc/rcc/uic (shipped with the aarch64 Qt)
-          # run during the cross build.
-          sudo update-binfmts --enable
-          sudo update-binfmts --display || true
       - name: Cache Qt
         uses: actions/cache@v4
         with:
@@ -400,6 +404,19 @@ jobs:
         env:
           QT_OS_DIR: linux_arm64
           QT_ARCH: linux_gcc_arm64
+        run: bash helper_scripts/install-qt.sh
+      - name: Cache host Qt (x86_64)
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.QT_HOST_DIR }}
+          # Identical key to the linux-x86_64 job's Qt cache: caches are
+          # shared across jobs, so this restores the same blob.
+          key: qt-${{ env.QT_VERSION }}-Linux-x64-${{ env.QT_MODULES }}-${{ hashFiles('helper_scripts/install-qt.sh') }}
+      - name: Install host Qt ${{ env.QT_VERSION }} (x86_64, cross-build tools)
+        env:
+          QT_OS_DIR: linux_x64
+          QT_ARCH: linux_gcc_64
+          QT_DIR: ${{ env.QT_HOST_DIR }}
         run: bash helper_scripts/install-qt.sh
       - name: Checkout QtGamepadLegacy
         uses: actions/checkout@v4
@@ -414,8 +431,11 @@ jobs:
             -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
             -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
             -DCMAKE_BUILD_TYPE=Release \
+            # QT_HOST_PATH must be the HOST (x86_64) Qt: the build runs
+            # syncqt/qtpaths/moc from it on the runner, and the aarch64
+            # tree's copies are aarch64 binaries ("Exec format error").
             -DCMAKE_PREFIX_PATH="${QT_DIR}" \
-            -DQT_HOST_PATH="${QT_DIR}" \
+            -DQT_HOST_PATH="${QT_HOST_DIR}" \
             -DCMAKE_INSTALL_PREFIX="${QT_DIR}"
           cmake --build qtgamepadlegacy/build -j"$(nproc)"
           # Wipe the previous install (from the cached Qt tree) so stale or
@@ -435,11 +455,32 @@ jobs:
       - name: Build FFmpeg n9.0.1 (aarch64 cross, AV1)
         run: bash helper_scripts/build-ffmpeg-av1-aarch64.sh --reuse
 
+      - name: Prepare cross Qt (host tools over the aarch64 tree)
+        run: |
+          # The aarch64 Qt tree's qmake/moc/rcc/uic/lrelease are aarch64
+          # binaries the x86_64 runner cannot execute (binfmt/qemu does
+          # not take effect on GitHub-hosted runners: "Exec format
+          # error"). Fake a Qt installation instead: the HOST (x86_64)
+          # tools in bin/, the TARGET tree's mkspecs/lib/include via
+          # symlinks. qmake derives its Qt installation from its own
+          # path, so it resolves the aarch64 tree (spec, module .pri
+          # files, libs) while every tool it invokes runs natively.
+          # moc/rcc/uic/lrelease output is arch-independent (C++/.qm),
+          # so host tools are correct for the aarch64 target.
+          mkdir -p qt6-cross/bin
+          cp "${QT_HOST_DIR}/bin/qmake" qt6-cross/bin/qmake
+          for t in moc rcc uic lrelease; do
+            ln -sfn "${QT_HOST_DIR}/bin/$t" "qt6-cross/bin/$t"
+          done
+          ln -sfn "${QT_DIR}/mkspecs" qt6-cross/mkspecs
+          ln -sfn "${QT_DIR}/lib" qt6-cross/lib
+          ln -sfn "${QT_DIR}/include" qt6-cross/include
       - name: Cross-build XTEngine
         run: |
           mkdir -p ../XTEngine/build-release
           cd ../XTEngine/build-release
-          "${QT_DIR}/bin/qmake" \
+          "${GITHUB_WORKSPACE}/qt6-cross/bin/qmake" \
+            -spec linux-aarch64-gnu-g++ \
             QMAKE_CC=aarch64-linux-gnu-gcc \
             QMAKE_CXX=aarch64-linux-gnu-g++ \
             QMAKE_LINK=aarch64-linux-gnu-g++ \
@@ -450,7 +491,8 @@ jobs:
         run: |
           mkdir -p build-release
           cd build-release
-          "${QT_DIR}/bin/qmake" \
+          "${GITHUB_WORKSPACE}/qt6-cross/bin/qmake" \
+            -spec linux-aarch64-gnu-g++ \
             QMAKE_CC=aarch64-linux-gnu-gcc \
             QMAKE_CXX=aarch64-linux-gnu-g++ \
             QMAKE_LINK=aarch64-linux-gnu-g++ \
@@ -489,7 +531,9 @@ jobs:
           # Qt tree.)
           echo "==> qmake diagnostics"
           echo "QMAKE=${QMAKE:-<unset>}"
-          "${QT_DIR}/bin/qmake" -query QT_INSTALL_PREFIX QT_INSTALL_LIBS QT_INSTALL_PLUGINS
+          # The aarch64 tree's qmake is an aarch64 binary - query via the
+          # fake cross Qt (host qmake resolving the aarch64 tree).
+          "${GITHUB_WORKSPACE}/qt6-cross/bin/qmake" -query QT_INSTALL_PREFIX QT_INSTALL_LIBS QT_INSTALL_PLUGINS
           test -f "${QT_DIR}/plugins/platforms/libqxcb.so" \
             && echo "OK: libqxcb.so present in the Qt tree" \
             || { echo "ERROR: libqxcb.so missing from ${QT_DIR}/plugins/platforms"; exit 1; }
@@ -580,7 +624,8 @@ jobs:
           # same reason as the x86_64 job.
           LD_LIBRARY_PATH="${QT_DIR}/lib" \
           # ${QT_DIR}/bin: the qt plugin needs qmlimportscanner (and other
-          # Qt tools) on PATH; it's an aarch64 ELF that runs via binfmt.
+          # Qt tools) on PATH; they are aarch64 ELFs that run inside the
+          # same qemu-aarch64 (qemu intercepts their execve).
           PATH="${QT_DIR}/bin:${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
           qemu-aarch64 ./squashfs-root/usr/bin/linuxdeploy \
             --appdir "${APPDIR}" \
