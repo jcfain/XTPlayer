@@ -533,6 +533,12 @@ jobs:
           # bundle on the other platforms).
           mkdir -p "${APPDIR}/usr/plugins/imageformats"
           cp -f "${QT_DIR}/plugins/imageformats/"*.so "${APPDIR}/usr/plugins/imageformats/"
+          # webp is required for image thumbs (the app falls back to jpg
+          # without it) - hard-fail if the Qt tree lacks the plugin
+          # (same guard as the x86_64 job; a missing webp was only found
+          # on-device otherwise).
+          test -f "${APPDIR}/usr/plugins/imageformats/libqwebp.so" \
+            || { echo "ERROR: libqwebp.so missing from the Qt tree"; exit 1; }
           # (The Qt dep closure is staged below - the host ldd can't trace
           # aarch64 deps, so the qt plugin needs the libs present by
           # filename; plugins/QML/translations still come from the REAL
