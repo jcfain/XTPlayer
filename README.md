@@ -28,7 +28,7 @@ Minimum OS for each build (all 64-bit):
 | Platform | Minimum OS | Notes |
 |----------|-----------|-------|
 | Windows x86_64 | Windows 10 (version 1903+) or Windows 11 | |
-| macOS (universal) | macOS 11 (Big Sur) or later | Runs on both Intel (x86_64) and Apple Silicon (arm64) |
+| macOS (universal) | macOS 14.4 (Sonoma) or later | Runs on both Intel (x86_64) and Apple Silicon (arm64); the bundled Qt 6.12 dylibs are built for 14.4, which is the app's true floor |
 | Linux x86_64 | glibc 2.39+ (Ubuntu 24.04+ / Debian 13+) | The AppImage bundles the build host's system libraries (built on Ubuntu 24.04) but not glibc itself, so the target needs a matching-or-newer glibc |
 | Linux aarch64 (ARM64) | glibc 2.39+ (Ubuntu 24.04+ / Debian 13+) | Same note, on ARM64 hardware |
 
