@@ -776,8 +776,10 @@ jobs:
           # the aarch64 appimagetool v1 AppImage and run its internal binary
           # (extract first - no FUSE under qemu, same pattern as above). It
           # is dynamically linked, so QEMU_LD_PREFIX gives it the aarch64
-          # glibc; PATH puts its bundled mksquashfs first (appimagetool finds
-          # mksquashfs via PATH - the aarch64 one, not the host x86_64 one).
+          # glibc. mksquashfs is bundled at usr/lib/appimagekit/mksquashfs
+          # (NOT usr/bin), so stage it at usr/bin/mksquashfs (appimagetool's
+          # default search path) and set MK_SQUASHFS too; appimagetool execs
+          # it as a nested re-exec (binfmt, enabled above).
           curl -sSL -o appimagetool-aarch64.AppImage \
             https://github.com/AppImage/AppImageKit/releases/download/13/obsolete-appimagetool-aarch64.AppImage
           chmod +x appimagetool-aarch64.AppImage
@@ -785,10 +787,15 @@ jobs:
           qemu-aarch64 ./appimagetool-aarch64.AppImage --appimage-extract
           test -x squashfs-root/usr/bin/appimagetool \
             || { echo "ERROR: appimagetool missing from the extracted AppImage"; ls -la squashfs-root/usr/bin/; exit 1; }
-          test -x squashfs-root/usr/bin/mksquashfs \
-            || { echo "ERROR: mksquashfs missing from the extracted AppImage (appimagetool needs it)"; ls -la squashfs-root/usr/bin/; exit 1; }
+          # mksquashfs lives at usr/lib/appimagekit/mksquashfs in this build;
+          # stage it at usr/bin/mksquashfs (appimagetool's default search path).
+          test -x squashfs-root/usr/lib/appimagekit/mksquashfs \
+            || { echo "ERROR: mksquashfs missing from the extracted AppImage (appimagetool needs it)"; find squashfs-root -name mksquashfs; exit 1; }
+          cp -f squashfs-root/usr/lib/appimagekit/mksquashfs squashfs-root/usr/bin/mksquashfs
+          chmod +x squashfs-root/usr/bin/mksquashfs
           PATH="${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
           QEMU_LD_PREFIX=/usr/aarch64-linux-gnu \
+          MK_SQUASHFS="${GITHUB_WORKSPACE}/squashfs-root/usr/bin/mksquashfs" \
           qemu-aarch64 ./squashfs-root/usr/bin/appimagetool \
             "${APPDIR}" "XTPlayer-aarch64.AppImage"
           mv XTPlayer-aarch64.AppImage "dist/XTPlayer-${{ inputs.version }}-Linux-aarch64.AppImage"
