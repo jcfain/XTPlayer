@@ -1039,8 +1039,13 @@ jobs:
           # aom's CMake install only creates libaom.dylib, but FFmpeg
           # references @rpath/libaom.3.dylib - provide the versioned name.
           ln -sf libaom.dylib "$APP/Contents/Frameworks/libaom.3.dylib"
-          # dav1d (meson) names the file libdav1d.dylib but its install name
-          # is @rpath/libdav1d.7.dylib - provide the versioned name too.
+          # dav1d (meson) names the file libdav1d.dylib, and meson stamps the
+          # install name with the ABSOLUTE BUILD PATH (per-arch:
+          # .../dav1d-prefix-arm64/lib/libdav1d.7.dylib) - rewrite it to
+          # @rpath for every arch, then provide the versioned name that
+          # FFmpeg references.
+          install_name_tool -id "@rpath/libdav1d.7.dylib" \
+            "$APP/Contents/Frameworks/libdav1d.dylib"
           ln -sf libdav1d.dylib "$APP/Contents/Frameworks/libdav1d.7.dylib"
           # App data (same set as mac_release_deploy.sh)
           cp -R src/themes "$APP/Contents/MacOS/"
@@ -1097,7 +1102,7 @@ jobs:
           otool -L "$APP/Contents/MacOS/XTPlayer"
           otool -L "$APP/Contents/Frameworks/libxtengine.1.0.0.dylib"
           BAD=$(otool -L "$APP/Contents/MacOS/XTPlayer" \
-                  "$APP/Contents/Frameworks/libxtengine.1.0.0.dylib" \
+                  "$APP/Contents/Frameworks/"*.dylib \
                 | grep -E '/Users/runner|/usr/lib/libxtengine' || true)
           if [ -n "$BAD" ]; then
             echo "ERROR: absolute build paths remain in the bundle:"
