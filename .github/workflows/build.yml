@@ -816,17 +816,23 @@ jobs:
           }
           if ! engine_artifacts_ok; then
             echo "ERROR: make exited 0 but the DLL/import lib is missing. Diagnostics:"
-            echo "=== Makefile recipe for the DLL target:"
-            grep -n -A12 'xtengine\.dll:' Makefile.Release | head -40
+            echo "=== Makefile target name for the DLL (note: it is an ABSOLUTE /D/a/... path):"
+            grep -n 'xtengine\.dll:' Makefile.Release | head -5
             echo "=== release/ contents:"
             ls -la release/
-            echo "=== Searching the whole build tree for the DLL/import lib:"
-            find .. -name 'xtengine.dll' -o -name 'libxtengine*.a' 2>/dev/null || true
-            echo "=== Re-running the DLL target directly (forcing a relink):"
-            rm -f release/xtengine.dll release/libxtengine.a release/libxtengine.dll.a
-            mingw32-make release/xtengine.dll 2>&1 | tail -60
+            echo "=== Searching the WHOLE D: drive for the DLL (the /D/a/... path may resolve to D:\\D\\a\\...):"
+            find /d -name 'xtengine.dll' 2>/dev/null || true
+            find /d -name 'libxtengine*.a' 2>/dev/null || true
+            echo "=== Re-running the DLL target with its EXACT name from the Makefile:"
+            TARGET=$(grep -oE '^[^ :]*xtengine\.dll' Makefile.Release | head -1)
+            echo "Exact target: [$TARGET]"
+            rm -f "$TARGET" 2>/dev/null || true
+            mingw32-make "$TARGET" 2>&1 | tail -60
             echo "Direct relink exit: ${PIPESTATUS[0]}"
+            echo "=== release/ contents after direct relink:"
             ls -la release/
+            echo "=== Searching the whole D: drive again:"
+            find /d -name 'xtengine.dll' 2>/dev/null || true
             exit 1
           fi
           echo "XTEngine artifacts OK"
