@@ -817,6 +817,15 @@ jobs:
           mkdir -p ../XTEngine/build-release
           cd ../XTEngine/build-release
           qmake ../src/XTEngine.pro CONFIG+=release
+          # qmake (run under Git Bash) stamps the build dir into the Makefile's
+          # DLL target + -o flag as a POSIX path (/D/a/...). mingw32-make and
+          # the NATIVE linker do NOT MSYS2-convert that leading slash, so the
+          # linker treats it as relative to the current drive root and writes
+          # the DLL to D:\D\a\... (doubled D) - the link "succeeds" (exit 0)
+          # but the artifact check fails. Rewrite the POSIX drive prefix to a
+          # Windows-style path (D:/a/...) in the Makefiles. /D/a/ is the fixed
+          # GitHub Windows-runner workspace root.
+          sed -i 's|/D/a/|D:/a/|g' Makefile Makefile.Release Makefile.Debug 2>/dev/null || true
           # Build in PARALLEL (like the other platforms) while still capturing
           # the full output + TRUE exit code via `set -o pipefail` + the `if !`
           # guard. The earlier "parallel race" theory (DLL recipe scheduled
@@ -866,6 +875,9 @@ jobs:
           mkdir -p build-release
           cd build-release
           qmake ../src/XTPlayer.pro CONFIG+=release
+          # Same POSIX->Windows drive-prefix rewrite as the engine build (see
+          # there): without it the native linker writes the exe to D:\D\a\...
+          sed -i 's|/D/a/|D:/a/|g' Makefile Makefile.Release Makefile.Debug 2>/dev/null || true
           # Same as the engine build: parallel + capture the true exit code so a
           # link failure (undefined references, missing import lib) is loud
           # instead of surfacing as "exe missing".
