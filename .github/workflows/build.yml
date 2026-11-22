@@ -791,23 +791,20 @@ jobs:
             || { echo "ERROR: mksquashfs missing from the extracted AppImage (appimagetool needs it)"; find squashfs-root -name mksquashfs; exit 1; }
           # Wrap each aarch64 ELF tool appimagetool execs in a script that runs
           # the real binary via qemu-aarch64 (binfmt won't route the direct
-          # exec). desktop-file-validate + zsyncmake are exec'd by hardcoded
-          # usr/bin path, so replace them in place; mksquashfs is exec'd via
-          # MK_SQUASHFS / the usr/bin default path, so stage a wrapper there.
-          for tool in desktop-file-validate zsyncmake; do
-            real="squashfs-root/usr/bin/$tool"
-            if [ -f "$real" ] && [ "$(head -c 4 "$real" | od -An -tx1 | tr -d ' \n')" = "7f454c46" ]; then
-              mv "$real" "$real.real"
-              printf '#!/bin/sh\nexec qemu-aarch64 "%s" "$@"\n' "$(pwd)/$real.real" > "$real"
-              chmod +x "$real"
+          # exec). All three are exec'd by hardcoded paths relative to
+          # appimagetool (usr/bin/... and usr/bin/../lib/appimagekit/...), so
+          # replace each IN PLACE with a wrapper.
+          for tool in squashfs-root/usr/bin/desktop-file-validate \
+                      squashfs-root/usr/bin/zsyncmake \
+                      squashfs-root/usr/lib/appimagekit/mksquashfs; do
+            if [ -f "$tool" ] && [ "$(head -c 4 "$tool" | od -An -tx1 | tr -d ' \n')" = "7f454c46" ]; then
+              mv "$tool" "$tool.real"
+              printf '#!/bin/sh\nexec qemu-aarch64 "%s" "$@"\n' "$(pwd)/$tool.real" > "$tool"
+              chmod +x "$tool"
             fi
           done
-          printf '#!/bin/sh\nexec qemu-aarch64 "%s" "$@"\n' \
-            "$(pwd)/squashfs-root/usr/lib/appimagekit/mksquashfs" > squashfs-root/usr/bin/mksquashfs
-          chmod +x squashfs-root/usr/bin/mksquashfs
           PATH="${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
           QEMU_LD_PREFIX=/usr/aarch64-linux-gnu \
-          MK_SQUASHFS="${GITHUB_WORKSPACE}/squashfs-root/usr/bin/mksquashfs" \
           qemu-aarch64 ./squashfs-root/usr/bin/appimagetool \
             "${APPDIR}" "XTPlayer-aarch64.AppImage"
           mv XTPlayer-aarch64.AppImage "dist/XTPlayer-${{ inputs.version }}-Linux-aarch64.AppImage"
