@@ -392,7 +392,7 @@ jobs:
             build-essential cmake ninja-build pkg-config nasm meson \
             gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu \
             linux-libc-dev:arm64 \
-            qemu-user \
+            qemu-user-binfmt binfmt-support \
             libgl1-mesa-dev:arm64 libxkbcommon-dev:arm64 libwayland-dev:arm64 \
             libfontconfig1-dev:arm64 libfreetype-dev:arm64 libdbus-1-dev:arm64 libglib2.0-dev:arm64 \
             libbluetooth-dev:arm64 libusb-1.0-0-dev:arm64 libasound2-dev:arm64 libpulse-dev:arm64 \
@@ -405,6 +405,17 @@ jobs:
             libsm6:arm64 libice6:arm64 libgssapi-krb5-2:arm64 \
             libspeechd2:arm64 \
             libpcsclite1:arm64 libcups2t64:arm64
+          # binfmt/qemu does NOT route directly-invoked aarch64 tools
+          # (syncqt/qtpaths/qmake) on GitHub runners - that's why the
+          # cross-build uses a fake host-Qt tree (qt6-cross). But it IS
+          # required for the linuxdeploy NESTED re-exec: when the core
+          # (already under qemu-aarch64) forks and the child execve's the
+          # aarch64 qt plugin, qemu's re-exec relies on the kernel's binfmt
+          # registration to route the child back into qemu. Without it the
+          # child dies (exit 2, no stderr) and the qt plugin fails. This is
+          # what d2e2e14 removed and what broke the ~400MB AppImage build.
+          sudo update-binfmts --enable
+          sudo update-binfmts --display || true
       - name: Cache Qt
         uses: actions/cache@v4
         with:
