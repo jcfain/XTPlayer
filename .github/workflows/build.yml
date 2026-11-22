@@ -147,7 +147,8 @@ jobs:
           cmake -S qtgamepadlegacy -B qtgamepadlegacy/build \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_PREFIX_PATH="${QT_DIR}" \
-            -DCMAKE_INSTALL_PREFIX="${QT_DIR}"
+            -DCMAKE_INSTALL_PREFIX="${QT_DIR}" \
+            -DQT_GENERATE_SBOM=OFF
           cmake --build qtgamepadlegacy/build -j"$(nproc)"
           # Wipe the previous install (from the cached Qt tree) so stale or
           # partial headers cannot survive a partial overwrite.
@@ -266,13 +267,16 @@ jobs:
           # "Could not find Qt modules" / "Cannot deploy non-existing
           # library file .../usr/plugins/...".)
           [ ! -e "${APPDIR}/usr/lib/libQt6Core.so.6" ] || { echo "ERROR: appdir contains libQt6Core before linuxdeploy"; exit 1; }
-          QMAKE="${QT_DIR}/bin/qmake" \
           # Real Qt tree + XTEngine build dir on LD_LIBRARY_PATH (NEVER the
           # appdir): the plugin's qmake derives the Qt root from the loaded
           # libQt6Core (Qt tree is first, and the XTEngine dir holds no Qt
           # libs, so it cannot shadow it), and the core's ldd needs the
           # XTEngine dir to find libxtengine.so.1 (the exe's RPATH contains
           # only the Qt tree).
+          # NOTE: no # comments between the VAR=value \ continuations - a #
+          # after a continuation comments out the rest and detaches the
+          # env vars from the command.
+          QMAKE="${QT_DIR}/bin/qmake" \
           LD_LIBRARY_PATH="${QT_DIR}/lib:${GITHUB_WORKSPACE}/../XTEngine/build-release/release" \
           PATH="${QT_DIR}/bin:${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
           ./squashfs-root/usr/bin/linuxdeploy \
@@ -426,17 +430,21 @@ jobs:
           path: qtgamepadlegacy
       - name: Cross-build + install QtGamepadLegacy
         run: |
+          # QT_HOST_PATH must be the HOST (x86_64) Qt: the build runs
+          # syncqt/qtpaths/moc from it on the runner, and the aarch64
+          # tree's copies are aarch64 binaries ("Exec format error").
+          # NOTE: no # comments inside the backslash continuations below -
+          # a # after a continuation joins into the command and comments
+          # out the rest of the line (same trap as the apt step).
           cmake -S qtgamepadlegacy -B qtgamepadlegacy/build \
             -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
             -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
             -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
             -DCMAKE_BUILD_TYPE=Release \
-            # QT_HOST_PATH must be the HOST (x86_64) Qt: the build runs
-            # syncqt/qtpaths/moc from it on the runner, and the aarch64
-            # tree's copies are aarch64 binaries ("Exec format error").
             -DCMAKE_PREFIX_PATH="${QT_DIR}" \
             -DQT_HOST_PATH="${QT_HOST_DIR}" \
-            -DCMAKE_INSTALL_PREFIX="${QT_DIR}"
+            -DCMAKE_INSTALL_PREFIX="${QT_DIR}" \
+            -DQT_GENERATE_SBOM=OFF
           cmake --build qtgamepadlegacy/build -j"$(nproc)"
           # Wipe the previous install (from the cached Qt tree) so stale or
           # partial headers cannot survive a partial overwrite.
@@ -619,13 +627,16 @@ jobs:
               || { echo "ERROR: ${_lib} missing from /usr/aarch64-linux-gnu/lib"; exit 1; }
           done
           echo "appdir/usr/lib: $(ls "${APPDIR}/usr/lib" | wc -l) files"
-          QMAKE="${QT_DIR}/bin/qmake" \
           # ONLY the real Qt tree on LD_LIBRARY_PATH (never the appdir) -
-          # same reason as the x86_64 job.
+          # same reason as the x86_64 job. ${QT_DIR}/bin on PATH: the qt
+          # plugin needs qmlimportscanner (and other Qt tools); they are
+          # aarch64 ELFs that run inside the same qemu-aarch64 (qemu
+          # intercepts their execve).
+          # NOTE: no # comments between the VAR=value \ continuations - a #
+          # after a continuation comments out the rest and detaches the
+          # env vars from the command.
+          QMAKE="${QT_DIR}/bin/qmake" \
           LD_LIBRARY_PATH="${QT_DIR}/lib" \
-          # ${QT_DIR}/bin: the qt plugin needs qmlimportscanner (and other
-          # Qt tools) on PATH; they are aarch64 ELFs that run inside the
-          # same qemu-aarch64 (qemu intercepts their execve).
           PATH="${QT_DIR}/bin:${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
           qemu-aarch64 ./squashfs-root/usr/bin/linuxdeploy \
             --appdir "${APPDIR}" \
@@ -712,7 +723,8 @@ jobs:
             -DCMAKE_C_COMPILER="$MINGW_PREFIX/bin/x86_64-w64-mingw32-gcc.exe" \
             -DCMAKE_CXX_COMPILER="$MINGW_PREFIX/bin/x86_64-w64-mingw32-g++.exe" \
             -DCMAKE_PREFIX_PATH="$QT_DIR" \
-            -DCMAKE_INSTALL_PREFIX="$QT_DIR"
+            -DCMAKE_INSTALL_PREFIX="$QT_DIR" \
+            -DQT_GENERATE_SBOM=OFF
           cmake --build qtgamepadlegacy/build -j
           # Wipe the previous install (from the cached Qt tree) so stale or
           # partial headers cannot survive a partial overwrite.
@@ -929,7 +941,8 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" \
             -DCMAKE_PREFIX_PATH="$QT_DIR" \
-            -DCMAKE_INSTALL_PREFIX="$QT_DIR"
+            -DCMAKE_INSTALL_PREFIX="$QT_DIR" \
+            -DQT_GENERATE_SBOM=OFF
           cmake --build qtgamepadlegacy/build -j"$(sysctl -n hw.ncpu)"
           # Wipe the previous install (from the cached Qt tree) so stale or
           # partial headers cannot survive a partial overwrite.
