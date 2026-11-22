@@ -21,12 +21,38 @@ XTPlayer is a cross platform TCode media player.
       4. Choose at least one path to the media/funscripts to add.
       5. The application will scan the directory and all subdirectories for media and their funscripts then start generating thumbnails. This can take sometime on first startup depending on how many files you have.
 
+## System requirements
+
+Minimum OS for each build (all 64-bit):
+
+| Platform | Minimum OS | Notes |
+|----------|-----------|-------|
+| Windows x86_64 | Windows 10 (version 1903+) or Windows 11 | |
+| macOS (universal) | macOS 11 (Big Sur) or later | Runs on both Intel (x86_64) and Apple Silicon (arm64) |
+| Linux x86_64 | glibc 2.39+ (Ubuntu 24.04+ / Debian 13+) | The AppImage bundles the build host's system libraries (built on Ubuntu 24.04) but not glibc itself, so the target needs a matching-or-newer glibc |
+| Linux aarch64 (ARM64) | glibc 2.39+ (Ubuntu 24.04+ / Debian 13+) | Same note, on ARM64 hardware |
+
+(Building from source with Qt 6.12 needs only glibc 2.34+ on Linux.)
+
 ## CI builds (GitHub Actions)
 * **Nightly** — built daily at 02:00 UTC (and on demand via the Actions "Run workflow" button) from `Development` (XTEngine `Development`). Published to the rolling [`nightly` release](https://github.com/jcfain/XTPlayer/releases/tag/nightly).
 * **Release** — built from `main` (XTEngine `main`) whenever a `v*` tag is pushed (`git tag v0.6.10 && git push origin v0.6.10`).
 * Artifacts: Linux x86_64 + aarch64 AppImages, Windows x86_64 zip, macOS universal (arm64 + x86_64) DMG. All bundle an AV1-capable FFmpeg build (dav1d/aom + hwaccel), so no separate codec pack is needed.
 * The Angular web bundle is built in CI from `XTEngine/src/wwwsrc` — no manual www deploy/commit needed.
-* The macOS DMG is **ad-hoc signed** (no Apple Developer account): on first launch, right-click the app → **Open** (or `xattr -d com.apple.quarantine /Applications/XTPlayer.app`).
+
+### macOS: first launch (ad-hoc signed)
+
+The macOS DMG is **ad-hoc signed** (built without an Apple Developer account), so
+macOS Gatekeeper blocks it on first launch. To run it:
+
+* **Easiest:** right-click (or Control-click) `XTPlayer.app` → **Open** → click **Open**
+  again in the dialog. You only need to do this once.
+* **Or via Terminal:** remove the quarantine attribute, then launch normally:
+  ```
+  xattr -d com.apple.quarantine /Applications/XTPlayer.app
+  ```
+
+After the first approved launch the app opens normally like any other.
 
 ## Building from source
      1. Download and install the following apps
