@@ -964,6 +964,35 @@ jobs:
           hdiutil create -volname "XTPlayer-${{ inputs.version }}" \
             -srcfolder dist/app -ov -format UDZO \
             "dist/XTPlayer-${{ inputs.version }}_MacOS_universal.dmg"
+      - name: Verify bundle links
+        run: |
+          APP="build-release/release/XTPlayer.app"
+          # Gate the artifact on its final link state (the otool checks that
+          # used to be a manual post-build checklist):
+          #  - no build-machine absolute paths in the app + engine
+          #  - the executable references the engine via @executable_path
+          #  - every bundled dylib has an @rpath install name
+          otool -L "$APP/Contents/MacOS/XTPlayer"
+          otool -L "$APP/Contents/Frameworks/libxtengine.1.0.0.dylib"
+          BAD=$(otool -L "$APP/Contents/MacOS/XTPlayer" \
+                  "$APP/Contents/Frameworks/libxtengine.1.0.0.dylib" \
+                | grep -E '/Users/runner|/usr/lib/libxtengine' || true)
+          if [ -n "$BAD" ]; then
+            echo "ERROR: absolute build paths remain in the bundle:"
+            echo "$BAD"
+            exit 1
+          fi
+          otool -L "$APP/Contents/MacOS/XTPlayer" \
+            | grep -q '@executable_path/../Frameworks/libxtengine' \
+            || { echo "ERROR: executable does not reference the engine via @executable_path"; exit 1; }
+          for f in "$APP/Contents/Frameworks/"*.dylib; do
+            ID=$(otool -D "$f" | tail -1)
+            case "$ID" in
+              @rpath/*) ;;
+              *) echo "ERROR: $(basename "$f") has non-rpath install name: $ID"; exit 1 ;;
+            esac
+          done
+          echo "Bundle links OK"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
