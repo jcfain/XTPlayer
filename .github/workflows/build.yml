@@ -157,10 +157,16 @@ jobs:
           # Verify the module AND its headers: the .pri alone only proves
           # qmake can find the module - a stale/empty QGamepadManager header
           # would fail later with a cryptic compile error.
+          # Non-silent: a bare test&&test&&grep chain exits 1 with no
+          # message when a check fails (how the macOS failure went
+          # undiagnosed).
           test -f "${QT_DIR}/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
-            && test -s "${QT_DIR}/include/QtGamepadLegacy/QGamepadManager" \
-            && grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "${QT_DIR}/include/QtGamepadLegacy/qgamepadmanager.h" \
-            && echo "QtGamepadLegacy installed into ${QT_DIR} (headers verified)"
+            || { echo "ERROR: qt_lib_gamepadlegacy.pri missing"; ls -la "${QT_DIR}/mkspecs/modules/" | head -20; exit 1; }
+          test -s "${QT_DIR}/include/QtGamepadLegacy/QGamepadManager" \
+            || { echo "ERROR: QGamepadManager shim missing/empty"; ls -la "${QT_DIR}/include/QtGamepadLegacy/"; exit 1; }
+          grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "${QT_DIR}/include/QtGamepadLegacy/qgamepadmanager.h" \
+            || { echo "ERROR: class definition missing from qgamepadmanager.h"; head -60 "${QT_DIR}/include/QtGamepadLegacy/qgamepadmanager.h"; exit 1; }
+          echo "QtGamepadLegacy installed into ${QT_DIR} (headers verified)"
       - name: Cache FFmpeg
         uses: actions/cache@v4
         with:
@@ -452,9 +458,12 @@ jobs:
           cmake --install qtgamepadlegacy/build
           # Verify the module AND its headers (see the x86_64 step).
           test -f "${QT_DIR}/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
-            && test -s "${QT_DIR}/include/QtGamepadLegacy/QGamepadManager" \
-            && grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "${QT_DIR}/include/QtGamepadLegacy/qgamepadmanager.h" \
-            && echo "QtGamepadLegacy (aarch64) installed into ${QT_DIR} (headers verified)"
+            || { echo "ERROR: qt_lib_gamepadlegacy.pri missing"; ls -la "${QT_DIR}/mkspecs/modules/" | head -20; exit 1; }
+          test -s "${QT_DIR}/include/QtGamepadLegacy/QGamepadManager" \
+            || { echo "ERROR: QGamepadManager shim missing/empty"; ls -la "${QT_DIR}/include/QtGamepadLegacy/"; exit 1; }
+          grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "${QT_DIR}/include/QtGamepadLegacy/qgamepadmanager.h" \
+            || { echo "ERROR: class definition missing from qgamepadmanager.h"; head -60 "${QT_DIR}/include/QtGamepadLegacy/qgamepadmanager.h"; exit 1; }
+          echo "QtGamepadLegacy (aarch64) installed into ${QT_DIR} (headers verified)"
       - name: Cache FFmpeg
         uses: actions/cache@v4
         with:
@@ -476,13 +485,22 @@ jobs:
           # moc/rcc/uic/lrelease output is arch-independent (C++/.qm),
           # so host tools are correct for the aarch64 target.
           mkdir -p qt6-cross/bin
-          cp "${QT_HOST_DIR}/bin/qmake" qt6-cross/bin/qmake
-          for t in moc rcc uic lrelease; do
+          # ALL tools must be SYMLINKS into the host tree - never copies:
+          # the tools' RUNPATH is $ORIGIN/../lib, and a copied binary's
+          # $ORIGIN is qt6-cross/bin, so its RUNPATH resolves to
+          # qt6-cross/lib (the aarch64 libs), which the x86_64 loader
+          # cannot load ("cannot open shared object file:
+          # libQt6Core.so.6" - it reports wrong-ELF-class libs as
+          # "not found"). A symlink's $ORIGIN is the real host bin dir,
+          # so RUNPATH finds the host libs.
+          for t in qmake moc rcc uic lrelease; do
             ln -sfn "${QT_HOST_DIR}/bin/$t" "qt6-cross/bin/$t"
           done
           ln -sfn "${QT_DIR}/mkspecs" qt6-cross/mkspecs
           ln -sfn "${QT_DIR}/lib" qt6-cross/lib
           ln -sfn "${QT_DIR}/include" qt6-cross/include
+          # Prove the premise before the cross build relies on it.
+          qt6-cross/bin/qmake -query QT_VERSION
       - name: Cross-build XTEngine
         run: |
           mkdir -p ../XTEngine/build-release
@@ -741,9 +759,12 @@ jobs:
           # fail later with a cryptic compile error. (The capitalized
           # QGamepadManager file is only an IWYU shim that includes it.)
           test -f "$QT_DIR/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
-            && test -s "$QT_DIR/include/QtGamepadLegacy/QGamepadManager" \
-            && grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "$QT_DIR/include/QtGamepadLegacy/qgamepadmanager.h" \
-            && echo "QtGamepadLegacy installed into $QT_DIR (headers verified)"
+            || { echo "ERROR: qt_lib_gamepadlegacy.pri missing"; ls -la "$QT_DIR/mkspecs/modules/" | head -20; exit 1; }
+          test -s "$QT_DIR/include/QtGamepadLegacy/QGamepadManager" \
+            || { echo "ERROR: QGamepadManager shim missing/empty"; ls -la "$QT_DIR/include/QtGamepadLegacy/"; exit 1; }
+          grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "$QT_DIR/include/QtGamepadLegacy/qgamepadmanager.h" \
+            || { echo "ERROR: class definition missing from qgamepadmanager.h"; head -60 "$QT_DIR/include/QtGamepadLegacy/qgamepadmanager.h"; exit 1; }
+          echo "QtGamepadLegacy installed into $QT_DIR (headers verified)"
       - name: Cache FFmpeg
         uses: actions/cache@v4
         with:
@@ -956,9 +977,12 @@ jobs:
           cmake --install qtgamepadlegacy/build
           # Verify the module AND its headers (see the Windows step).
           test -f "$QT_DIR/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
-            && test -s "$QT_DIR/include/QtGamepadLegacy/QGamepadManager" \
-            && grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "$QT_DIR/include/QtGamepadLegacy/qgamepadmanager.h" \
-            && echo "QtGamepadLegacy installed into $QT_DIR (headers verified)"
+            || { echo "ERROR: qt_lib_gamepadlegacy.pri missing"; ls -la "$QT_DIR/mkspecs/modules/" | head -20; exit 1; }
+          test -s "$QT_DIR/include/QtGamepadLegacy/QGamepadManager" \
+            || { echo "ERROR: QGamepadManager shim missing/empty"; ls -la "$QT_DIR/include/QtGamepadLegacy/"; exit 1; }
+          grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "$QT_DIR/include/QtGamepadLegacy/qgamepadmanager.h" \
+            || { echo "ERROR: class definition missing from qgamepadmanager.h"; head -60 "$QT_DIR/include/QtGamepadLegacy/qgamepadmanager.h"; exit 1; }
+          echo "QtGamepadLegacy installed into $QT_DIR (headers verified)"
       - name: Cache FFmpeg
         uses: actions/cache@v4
         with:
