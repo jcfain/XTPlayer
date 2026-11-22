@@ -817,16 +817,16 @@ jobs:
           mkdir -p ../XTEngine/build-release
           cd ../XTEngine/build-release
           qmake ../src/XTEngine.pro CONFIG+=release
-          # Build serially and capture the full output + TRUE exit code. The
-          # earlier "parallel race" theory (DLL recipe scheduled twice) is
-          # dead: a clean SERIAL rebuild reproduced the failure, and a failed
-          # link stops make BEFORE the post-link www-copy recipe - so a real
-          # link failure can never look like "make exited 0, no DLL". The old
-          # step never checked make's exit code, so a link failure (e.g.
-          # undefined references from the newly-added gamepad lib) was
-          # swallowed and only surfaced as "artifacts missing".
+          # Build in PARALLEL (like the other platforms) while still capturing
+          # the full output + TRUE exit code via `set -o pipefail` + the `if !`
+          # guard. The earlier "parallel race" theory (DLL recipe scheduled
+          # twice) is dead: a clean SERIAL rebuild reproduced the failure, so
+          # it was a real link failure, not a race - and a failed link makes
+          # make exit non-zero even with -j, so the guard still catches it.
+          # (Serial was only a temporary diagnostic; it made the Windows job
+          # the slowest of the four for no remaining reason.)
           set -o pipefail
-          if ! mingw32-make 2>&1 | tee engine-make.log; then
+          if ! mingw32-make -j"$(nproc)" 2>&1 | tee engine-make.log; then
             echo "ERROR: mingw32-make FAILED. Last 150 lines:"
             tail -150 engine-make.log
             exit 1
@@ -866,11 +866,11 @@ jobs:
           mkdir -p build-release
           cd build-release
           qmake ../src/XTPlayer.pro CONFIG+=release
-          # Same as the engine build: serial + capture the true exit code so a
+          # Same as the engine build: parallel + capture the true exit code so a
           # link failure (undefined references, missing import lib) is loud
           # instead of surfacing as "exe missing".
           set -o pipefail
-          if ! mingw32-make 2>&1 | tee player-make.log; then
+          if ! mingw32-make -j"$(nproc)" 2>&1 | tee player-make.log; then
             echo "ERROR: mingw32-make FAILED. Last 150 lines:"
             tail -150 player-make.log
             exit 1
