@@ -500,16 +500,23 @@ jobs:
           # Qt 6 layout: moc/rcc/uic live in libexec/, lrelease in bin/ -
           # qmake writes <prefix>/libexec/moc into the Makefile, so the
           # fake tree must mirror that layout exactly.
-          mkdir -p qt6-cross/bin qt6-cross/lib qt6-cross/libexec
+          mkdir -p qt6-cross/bin qt6-cross/libexec
           cp "${QT_HOST_DIR}/bin/qmake" qt6-cross/bin/qmake
           for t in moc rcc uic; do
             ln -sfn "${QT_HOST_DIR}/libexec/$t" "qt6-cross/libexec/$t"
           done
           ln -sfn "${QT_HOST_DIR}/bin/lrelease" qt6-cross/bin/lrelease
-          # The host runtime closure of qmake (libQt6Core + ICU; libz and
-          # the system libs resolve from the runner).
-          cp -a "${QT_HOST_DIR}/lib/libQt6Core.so.6"* qt6-cross/lib/
-          cp -a "${QT_HOST_DIR}/lib/libicu"* qt6-cross/lib/
+          # qmake resolves its prefix from the RESOLVED location of the
+          # libQt6Core it loads (RUNPATH $ORIGIN/../lib = qt6-cross/lib), so
+          # qt6-cross/lib must be a REAL dir holding the HOST runtime closure
+          # (libQt6Core + ICU) for the prefix to resolve as qt6-cross. The
+          # aarch64 libs CANNOT share this dir (libQt6Core.so.6 collides on
+          # name), so the build steps swap it out for the aarch64 lib before
+          # linking and restore this for each qmake.
+          mkdir -p qt6-cross/host-lib
+          cp -a "${QT_HOST_DIR}/lib/libQt6Core.so.6"* qt6-cross/host-lib/
+          cp -a "${QT_HOST_DIR}/lib/libicu"* qt6-cross/host-lib/
+          cp -a qt6-cross/host-lib qt6-cross/lib
           ln -sfn "${QT_DIR}/mkspecs" qt6-cross/mkspecs
           ln -sfn "${QT_DIR}/include" qt6-cross/include
           # Prove the premise before the cross build relies on it: qmake
@@ -530,9 +537,19 @@ jobs:
             QMAKE_LINK=aarch64-linux-gnu-g++ \
             QMAKE_LINK_SHLIB=aarch64-linux-gnu-g++ \
             ../src/XTEngine.pro CONFIG+=release
+          # qmake is done - swap qt6-cross/lib from the host runtime closure
+          # (qmake's prefix source) to the AARCH64 libs (the link input): the
+          # .pri files reference <prefix>/lib/libQt6*.so, so the link needs
+          # the target libs here.
+          rm -rf "${GITHUB_WORKSPACE}/qt6-cross/lib"
+          ln -sfn "${QT_DIR}/lib" "${GITHUB_WORKSPACE}/qt6-cross/lib"
           make -j"$(nproc)"
       - name: Cross-build XTPlayer
         run: |
+          # qmake needs the host runtime closure in qt6-cross/lib again (it is
+          # the prefix source) - restore it from the saved host-lib.
+          rm -rf "${GITHUB_WORKSPACE}/qt6-cross/lib"
+          cp -a "${GITHUB_WORKSPACE}/qt6-cross/host-lib" "${GITHUB_WORKSPACE}/qt6-cross/lib"
           mkdir -p build-release
           cd build-release
           "${GITHUB_WORKSPACE}/qt6-cross/bin/qmake" \
@@ -542,6 +559,9 @@ jobs:
             QMAKE_LINK=aarch64-linux-gnu-g++ \
             QMAKE_LINK_SHLIB=aarch64-linux-gnu-g++ \
             ../src/XTPlayer.pro CONFIG+=release
+          # Swap back to the aarch64 libs for the link.
+          rm -rf "${GITHUB_WORKSPACE}/qt6-cross/lib"
+          ln -sfn "${QT_DIR}/lib" "${GITHUB_WORKSPACE}/qt6-cross/lib"
           make -j"$(nproc)"
       - name: Package AppImage (cross)
         env:
@@ -1053,6 +1073,18 @@ jobs:
           install_name_tool -id "@rpath/libdav1d.7.dylib" \
             "$APP/Contents/Frameworks/libdav1d.dylib"
           ln -sf libdav1d.dylib "$APP/Contents/Frameworks/libdav1d.7.dylib"
+          # FFmpeg's libavcodec was linked against dav1d at build time, so it
+          # records dav1d's ABSOLUTE build path as a dependency (per-arch:
+          # .../dav1d-prefix-{arm64,x86_64}/lib/libdav1d.7.dylib). Rewrite any
+          # absolute dav1d reference in every bundled dylib to @rpath.
+          for dylib in "$APP/Contents/Frameworks/"*.dylib; do
+            OLD_REFS=$( { otool -L -arch arm64 "$dylib" 2>/dev/null; \
+                           otool -L -arch x86_64 "$dylib" 2>/dev/null; } \
+              | grep -oE '/[^ ]*libdav1d[^ ]*\.dylib' | sort -u )
+            for old in $OLD_REFS; do
+              install_name_tool -change "$old" "@rpath/libdav1d.7.dylib" "$dylib"
+            done
+          done
           # App data (same set as mac_release_deploy.sh)
           cp -R src/themes "$APP/Contents/MacOS/"
           cp -R src/images "$APP/Contents/MacOS/"
