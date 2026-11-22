@@ -478,29 +478,43 @@ jobs:
           # binaries the x86_64 runner cannot execute (binfmt/qemu does
           # not take effect on GitHub-hosted runners: "Exec format
           # error"). Fake a Qt installation instead: the HOST (x86_64)
-          # tools in bin/, the TARGET tree's mkspecs/lib/include via
-          # symlinks. qmake derives its Qt installation from its own
-          # path, so it resolves the aarch64 tree (spec, module .pri
-          # files, libs) while every tool it invokes runs natively.
-          # moc/rcc/uic/lrelease output is arch-independent (C++/.qm),
-          # so host tools are correct for the aarch64 target.
-          mkdir -p qt6-cross/bin
-          # ALL tools must be SYMLINKS into the host tree - never copies:
-          # the tools' RUNPATH is $ORIGIN/../lib, and a copied binary's
-          # $ORIGIN is qt6-cross/bin, so its RUNPATH resolves to
-          # qt6-cross/lib (the aarch64 libs), which the x86_64 loader
-          # cannot load ("cannot open shared object file:
-          # libQt6Core.so.6" - it reports wrong-ELF-class libs as
-          # "not found"). A symlink's $ORIGIN is the real host bin dir,
-          # so RUNPATH finds the host libs.
-          for t in qmake moc rcc uic lrelease; do
+          # tools in bin/, the TARGET tree's mkspecs/include via
+          # symlinks, and the host runtime libs in lib/.
+          #
+          # qmake derives its Qt root from the RESOLVED LOCATION OF THE
+          # libQt6Core IT LOADS (verified locally: not its own path, and
+          # QTDIR is ignored in Qt 6). So the lib it loads must come from
+          # qt6-cross/lib - which therefore holds HOST libs (a symlink to
+          # the aarch64 lib is unloadable on x86_64: the loader reports
+          # wrong-ELF-class libs as "cannot open shared object file").
+          # With the host lib loaded from qt6-cross/lib, qmake resolves
+          # its root as qt6-cross and reads the aarch64 mkspecs/modules
+          # (including the gamepad .pri).
+          #
+          # qmake is a COPY (its $ORIGIN is qt6-cross/bin, so RUNPATH
+          # $ORIGIN/../lib = qt6-cross/lib = the host libs). moc/rcc/uic/
+          # lrelease are SYMLINKS (their $ORIGIN is the real host bin
+          # dir, so RUNPATH finds the host libs there). Their output is
+          # arch-independent (C++/.qm), so host tools are correct for
+          # the aarch64 target.
+          mkdir -p qt6-cross/bin qt6-cross/lib
+          cp "${QT_HOST_DIR}/bin/qmake" qt6-cross/bin/qmake
+          for t in moc rcc uic lrelease; do
             ln -sfn "${QT_HOST_DIR}/bin/$t" "qt6-cross/bin/$t"
           done
+          # The host runtime closure of qmake (libQt6Core + ICU; libz and
+          # the system libs resolve from the runner).
+          cp -a "${QT_HOST_DIR}/lib/libQt6Core.so.6"* qt6-cross/lib/
+          cp -a "${QT_HOST_DIR}/lib/libicu"* qt6-cross/lib/
           ln -sfn "${QT_DIR}/mkspecs" qt6-cross/mkspecs
-          ln -sfn "${QT_DIR}/lib" qt6-cross/lib
           ln -sfn "${QT_DIR}/include" qt6-cross/include
-          # Prove the premise before the cross build relies on it.
-          qt6-cross/bin/qmake -query QT_VERSION
+          # Prove the premise before the cross build relies on it: qmake
+          # must resolve the CROSS tree (a symlinked qmake resolves the
+          # host tree and misses the aarch64 gamepad .pri).
+          _qt_prefix=$(qt6-cross/bin/qmake -query QT_INSTALL_PREFIX)
+          [ "$_qt_prefix" = "${GITHUB_WORKSPACE}/qt6-cross" ] \
+            || { echo "ERROR: qmake resolved Qt root as ${_qt_prefix}, expected ${GITHUB_WORKSPACE}/qt6-cross"; exit 1; }
+          echo "cross qmake OK: root=${_qt_prefix}"
       - name: Cross-build XTEngine
         run: |
           mkdir -p ../XTEngine/build-release
@@ -980,8 +994,15 @@ jobs:
             || { echo "ERROR: qt_lib_gamepadlegacy.pri missing"; ls -la "$QT_DIR/mkspecs/modules/" | head -20; exit 1; }
           test -s "$QT_DIR/include/QtGamepadLegacy/QGamepadManager" \
             || { echo "ERROR: QGamepadManager shim missing/empty"; ls -la "$QT_DIR/include/QtGamepadLegacy/"; exit 1; }
-          grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "$QT_DIR/include/QtGamepadLegacy/qgamepadmanager.h" \
-            || { echo "ERROR: class definition missing from qgamepadmanager.h"; head -60 "$QT_DIR/include/QtGamepadLegacy/qgamepadmanager.h"; exit 1; }
+          # macOS (case-insensitive FS): the include/ header is an
+          # #include_next redirect (Qt's standard layout for ALL modules,
+          # same as QtCore/qstring.h) - the real header is in the
+          # framework.
+          _mac_hdr="$QT_DIR/lib/QtGamepadLegacy.framework/Versions/A/Headers/qgamepadmanager.h"
+          test -f "$_mac_hdr" \
+            || { echo "ERROR: framework header missing"; ls -la "$QT_DIR/lib/" | grep -i gamepad; exit 1; }
+          grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "$_mac_hdr" \
+            || { echo "ERROR: class definition missing from the framework header"; head -60 "$_mac_hdr"; exit 1; }
           echo "QtGamepadLegacy installed into $QT_DIR (headers verified)"
       - name: Cache FFmpeg
         uses: actions/cache@v4
