@@ -776,10 +776,9 @@ jobs:
           # the aarch64 appimagetool v1 AppImage and run its internal binary
           # (extract first - no FUSE under qemu, same pattern as above). It
           # is dynamically linked, so QEMU_LD_PREFIX gives it the aarch64
-          # glibc. mksquashfs is bundled at usr/lib/appimagekit/mksquashfs
-          # (NOT usr/bin), so stage it at usr/bin/mksquashfs (appimagetool's
-          # default search path) and set MK_SQUASHFS too; appimagetool execs
-          # it as a nested re-exec (binfmt, enabled above).
+          # glibc. binfmt does NOT route direct aarch64 execs on GitHub
+          # runners, so every aarch64 tool appimagetool execs (desktop-file-
+          # validate, zsyncmake, mksquashfs) must be wrapped in a qemu shim.
           curl -sSL -o appimagetool-aarch64.AppImage \
             https://github.com/AppImage/AppImageKit/releases/download/13/obsolete-appimagetool-aarch64.AppImage
           chmod +x appimagetool-aarch64.AppImage
@@ -787,11 +786,24 @@ jobs:
           qemu-aarch64 ./appimagetool-aarch64.AppImage --appimage-extract
           test -x squashfs-root/usr/bin/appimagetool \
             || { echo "ERROR: appimagetool missing from the extracted AppImage"; ls -la squashfs-root/usr/bin/; exit 1; }
-          # mksquashfs lives at usr/lib/appimagekit/mksquashfs in this build;
-          # stage it at usr/bin/mksquashfs (appimagetool's default search path).
+          # mksquashfs lives at usr/lib/appimagekit/mksquashfs in this build.
           test -x squashfs-root/usr/lib/appimagekit/mksquashfs \
             || { echo "ERROR: mksquashfs missing from the extracted AppImage (appimagetool needs it)"; find squashfs-root -name mksquashfs; exit 1; }
-          cp -f squashfs-root/usr/lib/appimagekit/mksquashfs squashfs-root/usr/bin/mksquashfs
+          # Wrap each aarch64 ELF tool appimagetool execs in a script that runs
+          # the real binary via qemu-aarch64 (binfmt won't route the direct
+          # exec). desktop-file-validate + zsyncmake are exec'd by hardcoded
+          # usr/bin path, so replace them in place; mksquashfs is exec'd via
+          # MK_SQUASHFS / the usr/bin default path, so stage a wrapper there.
+          for tool in desktop-file-validate zsyncmake; do
+            real="squashfs-root/usr/bin/$tool"
+            if [ -f "$real" ] && [ "$(head -c 4 "$real" | od -An -tx1 | tr -d ' \n')" = "7f454c46" ]; then
+              mv "$real" "$real.real"
+              printf '#!/bin/sh\nexec qemu-aarch64 "%s" "$@"\n' "$(pwd)/$real.real" > "$real"
+              chmod +x "$real"
+            fi
+          done
+          printf '#!/bin/sh\nexec qemu-aarch64 "%s" "$@"\n' \
+            "$(pwd)/squashfs-root/usr/lib/appimagekit/mksquashfs" > squashfs-root/usr/bin/mksquashfs
           chmod +x squashfs-root/usr/bin/mksquashfs
           PATH="${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
           QEMU_LD_PREFIX=/usr/aarch64-linux-gnu \
