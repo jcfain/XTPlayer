@@ -493,15 +493,19 @@ jobs:
           #
           # qmake is a COPY (its $ORIGIN is qt6-cross/bin, so RUNPATH
           # $ORIGIN/../lib = qt6-cross/lib = the host libs). moc/rcc/uic/
-          # lrelease are SYMLINKS (their $ORIGIN is the real host bin
-          # dir, so RUNPATH finds the host libs there). Their output is
+          # lrelease are SYMLINKS (their $ORIGIN is the real host tool dir,
+          # so RUNPATH finds the host libs there). Their output is
           # arch-independent (C++/.qm), so host tools are correct for
           # the aarch64 target.
-          mkdir -p qt6-cross/bin qt6-cross/lib
+          # Qt 6 layout: moc/rcc/uic live in libexec/, lrelease in bin/ -
+          # qmake writes <prefix>/libexec/moc into the Makefile, so the
+          # fake tree must mirror that layout exactly.
+          mkdir -p qt6-cross/bin qt6-cross/lib qt6-cross/libexec
           cp "${QT_HOST_DIR}/bin/qmake" qt6-cross/bin/qmake
-          for t in moc rcc uic lrelease; do
-            ln -sfn "${QT_HOST_DIR}/bin/$t" "qt6-cross/bin/$t"
+          for t in moc rcc uic; do
+            ln -sfn "${QT_HOST_DIR}/libexec/$t" "qt6-cross/libexec/$t"
           done
+          ln -sfn "${QT_HOST_DIR}/bin/lrelease" qt6-cross/bin/lrelease
           # The host runtime closure of qmake (libQt6Core + ICU; libz and
           # the system libs resolve from the runner).
           cp -a "${QT_HOST_DIR}/lib/libQt6Core.so.6"* qt6-cross/lib/
