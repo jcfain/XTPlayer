@@ -599,6 +599,12 @@ jobs:
           # aarch64 deps, so the qt plugin needs the libs present by
           # filename; plugins/QML/translations still come from the REAL
           # Qt tree.)
+          # The build steps left qt6-cross/lib as a symlink to the AARCH64 lib
+          # (for linking). The qmake diagnostics below need the HOST runtime
+          # closure (the host qmake cannot load the aarch64 libQt6Core) -
+          # restore it from the saved host-lib.
+          rm -rf "${GITHUB_WORKSPACE}/qt6-cross/lib"
+          cp -a "${GITHUB_WORKSPACE}/qt6-cross/host-lib" "${GITHUB_WORKSPACE}/qt6-cross/lib"
           echo "==> qmake diagnostics"
           echo "QMAKE=${QMAKE:-<unset>}"
           # The aarch64 tree's qmake is an aarch64 binary - query via the

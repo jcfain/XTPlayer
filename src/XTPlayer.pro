@@ -261,11 +261,14 @@ TRANSLATIONS += translations/xtplayer_zh_CN.ts
 qtPrepareTool(LRELEASE, lrelease)
 !isEmpty(LRELEASE) {
     # Compile each .ts -> .qm directly into $$DESTDIR/translations/.
-    # lrelease (Qt 5.10+ / Qt 6) creates the output directory if missing.
+    # lrelease does NOT create the output directory on Windows/MinGW (the
+    # "creates it if missing" behavior is Unix-only), so mkdir -p it first -
+    # otherwise lrelease fails with "cannot find the path specified". The
+    # recipe runs through POSIX sh (Git Bash) on Windows, so mkdir -p works.
     lrelease.name       = LRELEASE
     lrelease.input      = TRANSLATIONS
     lrelease.output     = $$shell_path($$DESTDIR/translations)/${QMAKE_FILE_BASE}.qm
-    lrelease.commands   = $$LRELEASE ${QMAKE_FILE_IN} -qm ${QMAKE_FILE_OUT}
+    lrelease.commands   = mkdir -p $$shell_path($$DESTDIR/translations) && $$LRELEASE ${QMAKE_FILE_IN} -qm ${QMAKE_FILE_OUT}
     lrelease.CONFIG    += no_link target_predeps
     lrelease.variable_out = QM_FILES
     QMAKE_EXTRA_COMPILERS += lrelease
