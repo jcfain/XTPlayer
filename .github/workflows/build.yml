@@ -317,31 +317,13 @@ jobs:
           cp -r web-bundle/* ../XTEngine/src/www/
       - name: Install cross toolchain + qemu
         run: |
-          sudo apt-get update
-          # linux-libc-dev:arm64 = aarch64 kernel headers (linux/videodev2.h)
-          # for FFmpeg's v4l2m2m hwaccel (RK3588 rkvdec on Orange Pi targets).
-          # NOTE: this must stay on the apt-get continuation lines - a #
-          # comment line after a backslash continuation terminates the
-          # command and the package becomes a stray "command not found".
-          sudo apt-get install -y --no-install-recommends \
-            build-essential cmake ninja-build pkg-config nasm meson \
-            gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu \
-            qemu-user-binfmt binfmt-support linux-libc-dev:arm64
-          # aarch64 OpenGL dev libs (multiarch): Qt6Gui's CMake config
-          # requires WrapOpenGL, which must resolve for the aarch64 target.
-          # libglib2.0-0t64: the aarch64 Qt tools (qtpaths, moc, ...) run
-          # under qemu and need the aarch64 runtime libs.
-          # The full Qt runtime set (mirroring the x86_64 job) covers the
-          # deps of the Qt libs the app actually uses (Wayland ->
-          # libwayland-client, XcbQpa -> libxcb-*, Bluetooth, Pulse, ...),
-          # which the linuxdeploy core deploys into the AppImage.
-          sudo dpkg --add-architecture arm64
           # arm64 is an Ubuntu "port" arch: its indices are NOT on
           # archive/security.ubuntu.com (404 -> apt-get update exits 100).
-          # Replace the runner's sources with explicit per-arch ones:
-          # amd64 from the main mirror, arm64 from the ports mirror
-          # (same archive keyring). Runner is pinned to noble, so the
-          # suite names are stable; this job uses no extra apt repos.
+          # Replace the runner's sources with explicit per-arch ones BEFORE
+          # the first install: amd64 from the main mirror, arm64 from the
+          # ports mirror (same archive keyring). Runner is pinned to noble,
+          # so the suite names are stable; this job uses no extra apt repos.
+          sudo dpkg --add-architecture arm64
           sudo rm -f /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources
           printf '%s\n' \
             'Types: deb' \
@@ -367,7 +349,24 @@ jobs:
             'Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg' \
             | sudo tee /etc/apt/sources.list.d/arm64-ports.sources >/dev/null
           sudo apt-get update
+          # linux-libc-dev:arm64 = aarch64 kernel headers (linux/videodev2.h)
+          # for FFmpeg's v4l2m2m hwaccel (RK3588 rkvdec on Orange Pi targets).
+          # aarch64 OpenGL dev libs (multiarch): Qt6Gui's CMake config
+          # requires WrapOpenGL, which must resolve for the aarch64 target.
+          # libglib2.0-0t64: the aarch64 Qt tools (qtpaths, moc, ...) run
+          # under qemu and need the aarch64 runtime libs.
+          # The full Qt runtime set (mirroring the x86_64 job) covers the
+          # deps of the Qt libs the app actually uses (Wayland ->
+          # libwayland-client, XcbQpa -> libxcb-*, Bluetooth, Pulse, ...),
+          # which the linuxdeploy core deploys into the AppImage.
+          # NOTE: the package list must stay on the apt-get continuation
+          # lines - a # comment line after a backslash continuation
+          # terminates the command and the package becomes a stray
+          # "command not found".
           sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build pkg-config nasm meson \
+            gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu \
+            qemu-user-binfmt binfmt-support linux-libc-dev:arm64 \
             libgl1-mesa-dev:arm64 libxkbcommon-dev:arm64 libwayland-dev:arm64 \
             libfontconfig1-dev:arm64 libfreetype-dev:arm64 libdbus-1-dev:arm64 libglib2.0-dev:arm64 \
             libbluetooth-dev:arm64 libusb-1.0-0-dev:arm64 libasound2-dev:arm64 libpulse-dev:arm64 \
