@@ -149,9 +149,17 @@ jobs:
             -DCMAKE_PREFIX_PATH="${QT_DIR}" \
             -DCMAKE_INSTALL_PREFIX="${QT_DIR}"
           cmake --build qtgamepadlegacy/build -j"$(nproc)"
+          # Wipe the previous install (from the cached Qt tree) so stale or
+          # partial headers cannot survive a partial overwrite.
+          rm -rf "${QT_DIR}/include/QtGamepadLegacy"
           cmake --install qtgamepadlegacy/build
+          # Verify the module AND its headers: the .pri alone only proves
+          # qmake can find the module - a stale/empty QGamepadManager header
+          # would fail later with a cryptic compile error.
           test -f "${QT_DIR}/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
-            && echo "QtGamepadLegacy installed into ${QT_DIR}"
+            && test -s "${QT_DIR}/include/QtGamepadLegacy/QGamepadManager" \
+            && grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "${QT_DIR}/include/QtGamepadLegacy/QGamepadManager" \
+            && echo "QtGamepadLegacy installed into ${QT_DIR} (headers verified)"
       - name: Cache FFmpeg
         uses: actions/cache@v4
         with:
@@ -410,9 +418,15 @@ jobs:
             -DQT_HOST_PATH="${QT_DIR}" \
             -DCMAKE_INSTALL_PREFIX="${QT_DIR}"
           cmake --build qtgamepadlegacy/build -j"$(nproc)"
+          # Wipe the previous install (from the cached Qt tree) so stale or
+          # partial headers cannot survive a partial overwrite.
+          rm -rf "${QT_DIR}/include/QtGamepadLegacy"
           cmake --install qtgamepadlegacy/build
+          # Verify the module AND its headers (see the x86_64 step).
           test -f "${QT_DIR}/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
-            && echo "QtGamepadLegacy (aarch64) installed into ${QT_DIR}"
+            && test -s "${QT_DIR}/include/QtGamepadLegacy/QGamepadManager" \
+            && grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "${QT_DIR}/include/QtGamepadLegacy/QGamepadManager" \
+            && echo "QtGamepadLegacy (aarch64) installed into ${QT_DIR} (headers verified)"
       - name: Cache FFmpeg
         uses: actions/cache@v4
         with:
@@ -655,9 +669,17 @@ jobs:
             -DCMAKE_PREFIX_PATH="$QT_DIR" \
             -DCMAKE_INSTALL_PREFIX="$QT_DIR"
           cmake --build qtgamepadlegacy/build -j
+          # Wipe the previous install (from the cached Qt tree) so stale or
+          # partial headers cannot survive a partial overwrite.
+          rm -rf "$QT_DIR/include/QtGamepadLegacy"
           cmake --install qtgamepadlegacy/build
+          # Verify the module AND its headers: the .pri alone only proves
+          # qmake can find the module - a stale/empty QGamepadManager header
+          # would fail later with a cryptic compile error.
           test -f "$QT_DIR/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
-            && echo "QtGamepadLegacy installed into $QT_DIR"
+            && test -s "$QT_DIR/include/QtGamepadLegacy/QGamepadManager" \
+            && grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "$QT_DIR/include/QtGamepadLegacy/QGamepadManager" \
+            && echo "QtGamepadLegacy installed into $QT_DIR (headers verified)"
       - name: Cache FFmpeg
         uses: actions/cache@v4
         with:
@@ -863,9 +885,15 @@ jobs:
             -DCMAKE_PREFIX_PATH="$QT_DIR" \
             -DCMAKE_INSTALL_PREFIX="$QT_DIR"
           cmake --build qtgamepadlegacy/build -j"$(sysctl -n hw.ncpu)"
+          # Wipe the previous install (from the cached Qt tree) so stale or
+          # partial headers cannot survive a partial overwrite.
+          rm -rf "$QT_DIR/include/QtGamepadLegacy"
           cmake --install qtgamepadlegacy/build
+          # Verify the module AND its headers (see the Windows step).
           test -f "$QT_DIR/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
-            && echo "QtGamepadLegacy installed into $QT_DIR"
+            && test -s "$QT_DIR/include/QtGamepadLegacy/QGamepadManager" \
+            && grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "$QT_DIR/include/QtGamepadLegacy/QGamepadManager" \
+            && echo "QtGamepadLegacy installed into $QT_DIR (headers verified)"
       - name: Cache FFmpeg
         uses: actions/cache@v4
         with:
