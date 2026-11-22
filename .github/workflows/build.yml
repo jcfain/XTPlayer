@@ -158,7 +158,7 @@ jobs:
           # would fail later with a cryptic compile error.
           test -f "${QT_DIR}/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
             && test -s "${QT_DIR}/include/QtGamepadLegacy/QGamepadManager" \
-            && grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "${QT_DIR}/include/QtGamepadLegacy/QGamepadManager" \
+            && grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "${QT_DIR}/include/QtGamepadLegacy/qgamepadmanager.h" \
             && echo "QtGamepadLegacy installed into ${QT_DIR} (headers verified)"
       - name: Cache FFmpeg
         uses: actions/cache@v4
@@ -425,7 +425,7 @@ jobs:
           # Verify the module AND its headers (see the x86_64 step).
           test -f "${QT_DIR}/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
             && test -s "${QT_DIR}/include/QtGamepadLegacy/QGamepadManager" \
-            && grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "${QT_DIR}/include/QtGamepadLegacy/QGamepadManager" \
+            && grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "${QT_DIR}/include/QtGamepadLegacy/qgamepadmanager.h" \
             && echo "QtGamepadLegacy (aarch64) installed into ${QT_DIR} (headers verified)"
       - name: Cache FFmpeg
         uses: actions/cache@v4
@@ -674,11 +674,12 @@ jobs:
           rm -rf "$QT_DIR/include/QtGamepadLegacy"
           cmake --install qtgamepadlegacy/build
           # Verify the module AND its headers: the .pri alone only proves
-          # qmake can find the module - a stale/empty QGamepadManager header
-          # would fail later with a cryptic compile error.
+          # qmake can find the module - a stale/empty qgamepadmanager.h would
+          # fail later with a cryptic compile error. (The capitalized
+          # QGamepadManager file is only an IWYU shim that includes it.)
           test -f "$QT_DIR/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
             && test -s "$QT_DIR/include/QtGamepadLegacy/QGamepadManager" \
-            && grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "$QT_DIR/include/QtGamepadLegacy/QGamepadManager" \
+            && grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "$QT_DIR/include/QtGamepadLegacy/qgamepadmanager.h" \
             && echo "QtGamepadLegacy installed into $QT_DIR (headers verified)"
       - name: Cache FFmpeg
         uses: actions/cache@v4
@@ -892,7 +893,7 @@ jobs:
           # Verify the module AND its headers (see the Windows step).
           test -f "$QT_DIR/mkspecs/modules/qt_lib_gamepadlegacy.pri" \
             && test -s "$QT_DIR/include/QtGamepadLegacy/QGamepadManager" \
-            && grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "$QT_DIR/include/QtGamepadLegacy/QGamepadManager" \
+            && grep -q 'class Q_GAMEPAD_EXPORT QGamepadManager' "$QT_DIR/include/QtGamepadLegacy/qgamepadmanager.h" \
             && echo "QtGamepadLegacy installed into $QT_DIR (headers verified)"
       - name: Cache FFmpeg
         uses: actions/cache@v4
