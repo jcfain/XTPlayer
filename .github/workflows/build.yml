@@ -717,21 +717,36 @@ jobs:
           # populate the AppDir. NO --output: the core only deploys the Qt
           # deps (via the qt plugin) and stages the icon/desktop file; the
           # AppImage is built separately with the aarch64 appimagetool
-          # (below). The qt plugin queries the aarch64 qmake as a plain exec
-          # (binfmt -> qemu), which works - the key difference from the old
-          # aarch64-under-qemu core that died on the nested re-exec.
+          # (below).
+          #
+          # CRITICAL: binfmt does NOT route directly-invoked aarch64 tools on
+          # GitHub runners (that's why the build step uses the qt6-cross fake
+          # host-qmake tree). The qt plugin execs the aarch64 qmake +
+          # qmlimportscanner (and other ${QT_DIR}/bin ELF tools) DIRECTLY, so
+          # they fall through to /bin/sh ("ELF: not found", "Syntax error").
+          # Build a shim dir of wrappers that run each aarch64 ELF tool via
+          # qemu-aarch64 explicitly, point QMAKE at the shim's qmake, and put
+          # the shim first on PATH.
           #
           # ONLY the real Qt tree on LD_LIBRARY_PATH (never the appdir) -
-          # same reason as the x86_64 job. ${QT_DIR}/bin on PATH: the qt
-          # plugin needs qmlimportscanner (and other Qt tools); they are
-          # aarch64 ELFs exec'd via binfmt -> qemu. QEMU_LD_PREFIX gives the
-          # aarch64 qmake its glibc.
+          # same reason as the x86_64 job. QEMU_LD_PREFIX gives the aarch64
+          # tools their glibc under qemu.
           # NOTE: no # comments between the VAR=value \ continuations - a #
           # after a continuation comments out the rest and detaches the
           # env vars from the command.
-          QMAKE="${QT_DIR}/bin/qmake" \
+          QEMU_SHIM="${GITHUB_WORKSPACE}/qemu-shim"
+          rm -rf "${QEMU_SHIM}"
+          mkdir -p "${QEMU_SHIM}"
+          for _t in "${QT_DIR}"/bin/*; do
+            [ -f "$_t" ] || continue
+            if [ "$(head -c 4 "$_t" | od -An -tx1 | tr -d ' \n')" = "7f454c46" ]; then
+              printf '#!/bin/sh\nexec qemu-aarch64 "%s" "$@"\n' "$_t" > "${QEMU_SHIM}/$(basename "$_t")"
+              chmod +x "${QEMU_SHIM}/$(basename "$_t")"
+            fi
+          done
+          QMAKE="${QEMU_SHIM}/qmake" \
           LD_LIBRARY_PATH="${QT_DIR}/lib" \
-          PATH="${QT_DIR}/bin:${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
+          PATH="${QEMU_SHIM}:${QT_DIR}/bin:${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
           QEMU_LD_PREFIX=/usr/aarch64-linux-gnu \
           ./squashfs-root/usr/bin/linuxdeploy \
             --appdir "${APPDIR}" \
