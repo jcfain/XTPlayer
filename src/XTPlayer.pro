@@ -184,9 +184,12 @@ unix:mac {
     }
 
     RPATHDIR *= @loader_path/../Frameworks @executable_path/../Frameworks
-    # -Wl (not -W1): the capital-i typo made clang treat the whole flag as an
-    # unknown warning option, so the install_name was never applied.
-    QMAKE_LFLAGS_SONAME = -Wl,-install_name,@rpath,
+    # -Wl (not -W1), trailing SLASH not comma (clang splits -Wl on commas -
+    # a comma would make ld see NAME as a bogus input file).
+    QMAKE_LFLAGS_SONAME = -Wl,-install_name,@rpath/
+    # Force the deployment target: qmake's mkspec default (14.4) overrides
+    # the MACOSX_DEPLOYMENT_TARGET env var; 11.0 is Qt 6.12's minimum.
+    QMAKE_MACOSX_DEPLOYMENT_TARGET = 11.0
     isEmpty(QMAKE_LFLAGS_RPATH): QMAKE_LFLAGS_RPATH=-Wl,-rpath,
     for(R,RPATHDIR) {
         QMAKE_LFLAGS *= \'$${QMAKE_LFLAGS_RPATH}$$R\'

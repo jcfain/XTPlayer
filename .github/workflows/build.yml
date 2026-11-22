@@ -900,10 +900,11 @@ jobs:
           install_name_tool -add_rpath "@executable_path/../Frameworks" \
             "$APP/Contents/Frameworks/libxtengine.1.0.0.dylib" 2>/dev/null || true
           # Rewrite the executable's reference to the engine. The recorded
-          # name depends on how qmake stamped the dylib (absolute install
-          # path, @rpath, or bare name) - detect it instead of hardcoding.
+          # name depends on how qmake stamped the dylib (@rpath/libxtengine.1.dylib,
+          # an absolute install path, or a bare name) - detect any form
+          # instead of hardcoding.
           OLD_ENGINE_REF=$(otool -L "$APP/Contents/MacOS/XTPlayer" \
-            | awk '/libxtengine\.1\.0\.0\.dylib/ && $1 !~ /Frameworks/ {print $1; exit}')
+            | awk '/libxtengine.*\.dylib/ && $1 !~ /Frameworks/ {print $1; exit}')
           if [ -n "$OLD_ENGINE_REF" ]; then
             install_name_tool -change "$OLD_ENGINE_REF" \
               "@executable_path/../Frameworks/libxtengine.1.0.0.dylib" \
