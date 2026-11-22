@@ -626,27 +626,26 @@ jobs:
             || { echo "ERROR: libqxcb.so missing from ${QT_DIR}/plugins/platforms"; exit 1; }
           # qmlimportscanner's -importPath directory must exist.
           mkdir -p "${APPDIR}/usr/qml"
-          # Cross-package with the TARGET-ARCH (aarch64) linuxdeploy binary:
-          # it produces an AppImage with the aarch64 runtime, so the result
-          # actually runs on aarch64. (linuxdeploy has no --cross-compile
-          # mode; this is how the release scripts do it.)
+          # Cross-package with the HOST-ARCH (x86_64) linuxdeploy core + qt
+          # plugin, run NATIVELY (no qemu). The core + plugin do all the
+          # dependency deployment and AppDir population; the qt plugin queries
+          # the aarch64 qmake as a plain exec (routed via binfmt -> qemu,
+          # which works). This eliminates the NESTED re-exec that killed the
+          # aarch64 plugin: an aarch64 core under qemu forking an aarch64
+          # plugin died at startup (exit 2, no stderr), and neither
+          # QEMU_LD_PREFIX nor restoring binfmt fixed it. The final AppImage
+          # is then built with the aarch64 appimagetool (a plain
+          # qemu-aarch64 run, below).
           #
-          # It MUST be invoked via qemu-aarch64 explicitly: the AppImageKit
-          # v2 stub stamps an "AI" marker into the ELF header (offset 8),
-          # which breaks the binfmt_misc magic pattern, so the kernel does
-          # NOT route it to qemu (plain exec fails with "Exec format
-          # error"). qemu-aarch64 reads the ELF itself and works fine.
-          chmod +x linuxdeploy/aarch64/linuxdeploy-aarch64.AppImage linuxdeploy/aarch64/linuxdeploy-plugin-qt-aarch64.AppImage
-          # The AppImage runtime dlopens libfuse.so.2, which does not exist
-          # for aarch64 under qemu, and this runtime build has no
-          # auto-extract fallback. So extract the payloads and run the
-          # internal binaries directly (statically linked, plain aarch64
-          # ELFs - no "AI" marker, no FUSE).
+          # Extract the payloads and run the internal binaries directly:
+          # the AppImage runtime dlopens libfuse.so.2 (no FUSE under qemu),
+          # and the internal binaries are plain ELFs that inherit the
+          # environment as-is (same pattern as the x86_64 job).
           rm -rf squashfs-root
-          qemu-aarch64 ./linuxdeploy/aarch64/linuxdeploy-aarch64.AppImage --appimage-extract
+          ./linuxdeploy/x86_64/linuxdeploy-x86_64.AppImage --appimage-extract
           # The qt plugin extracts into the same tree; the core finds it in
           # its own directory (plugin search checks the exe dir first).
-          qemu-aarch64 ./linuxdeploy/aarch64/linuxdeploy-plugin-qt-aarch64.AppImage --appimage-extract
+          ./linuxdeploy/x86_64/linuxdeploy-plugin-qt-x86_64.AppImage --appimage-extract
           test -x squashfs-root/usr/bin/linuxdeploy
           test -x squashfs-root/usr/bin/linuxdeploy-plugin-qt
           # The host's ldd (used by the linuxdeploy core AND the qt plugin's
@@ -706,20 +705,19 @@ jobs:
               || { echo "ERROR: ${_lib} missing from /usr/aarch64-linux-gnu/lib"; exit 1; }
           done
           echo "appdir/usr/lib: $(ls "${APPDIR}/usr/lib" | wc -l) files"
+          # Run the HOST (x86_64) core + qt plugin NATIVELY (no qemu) to
+          # populate the AppDir. NO --output: the core only deploys the Qt
+          # deps (via the qt plugin) and stages the icon/desktop file; the
+          # AppImage is built separately with the aarch64 appimagetool
+          # (below). The qt plugin queries the aarch64 qmake as a plain exec
+          # (binfmt -> qemu), which works - the key difference from the old
+          # aarch64-under-qemu core that died on the nested re-exec.
+          #
           # ONLY the real Qt tree on LD_LIBRARY_PATH (never the appdir) -
           # same reason as the x86_64 job. ${QT_DIR}/bin on PATH: the qt
           # plugin needs qmlimportscanner (and other Qt tools); they are
-          # aarch64 ELFs that run inside the same qemu-aarch64 (qemu
-          # intercepts their execve).
-          #
-          # QEMU_LD_PREFIX: the linuxdeploy core runs under qemu and spawns the
-          # qt plugin as a NESTED re-exec (core-qemu -> fork -> child-qemu ->
-          # plugin). A re-exec'd child loses the aarch64 sysroot/ELF-interpreter
-          # setup a fresh `qemu-aarch64` gets, so the plugin can't even start
-          # (it exits 2 with no stderr). QEMU_LD_PREFIX is inherited by the
-          # re-exec'd child, restoring the sysroot. The plugin works when run
-          # directly (fresh qemu) but fails as a core subprocess - this is the
-          # fix for that nested re-exec.
+          # aarch64 ELFs exec'd via binfmt -> qemu. QEMU_LD_PREFIX gives the
+          # aarch64 qmake its glibc.
           # NOTE: no # comments between the VAR=value \ continuations - a #
           # after a continuation comments out the rest and detaches the
           # env vars from the command.
@@ -727,11 +725,10 @@ jobs:
           LD_LIBRARY_PATH="${QT_DIR}/lib" \
           PATH="${QT_DIR}/bin:${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
           QEMU_LD_PREFIX=/usr/aarch64-linux-gnu \
-          qemu-aarch64 ./squashfs-root/usr/bin/linuxdeploy \
+          ./squashfs-root/usr/bin/linuxdeploy \
             --appdir "${APPDIR}" \
             --executable "${APPDIR}/usr/bin/XTPlayer" \
             --plugin qt \
-            --output appimage \
             --icon-file src/images/icons/XTP-icon.png \
             --icon-filename XTPlayer \
             --desktop-file XTPlayer.desktop \
@@ -741,7 +738,37 @@ jobs:
             --exclude-library "*libqsqldb2*" \
             --exclude-library "*libqsqlibase*" \
             --exclude-library "*libqsqlfirebird*"
-          mv XTPlayer-aarch64*.AppImage "dist/XTPlayer-${{ inputs.version }}-Linux-aarch64.AppImage"
+          # Guarantee the icon + desktop file are in the AppDir (the core
+          # stages them with --icon-file/--desktop-file, but be explicit -
+          # appimagetool needs <name>.png + <name>.desktop for the AppImage
+          # entry point and icon).
+          cp -f src/images/icons/XTP-icon.png "${APPDIR}/XTPlayer.png"
+          cp -f XTPlayer.desktop "${APPDIR}/XTPlayer.desktop"
+          # Build the aarch64 AppImage with the TARGET-ARCH appimagetool v1
+          # (a plain qemu-aarch64 run - no nesting). appimagetool v1 takes
+          # the AppDir and the output name as positional args.
+          #
+          # The aarch64 linuxdeploy core does NOT bundle appimagetool (only
+          # the x86_64 core does - verified by extracting both), so download
+          # the aarch64 appimagetool v1 AppImage and run its internal binary
+          # (extract first - no FUSE under qemu, same pattern as above). It
+          # is dynamically linked, so QEMU_LD_PREFIX gives it the aarch64
+          # glibc; PATH puts its bundled mksquashfs first (appimagetool finds
+          # mksquashfs via PATH - the aarch64 one, not the host x86_64 one).
+          curl -sSL -o appimagetool-aarch64.AppImage \
+            https://github.com/AppImage/AppImageKit/releases/download/13/obsolete-appimagetool-aarch64.AppImage
+          chmod +x appimagetool-aarch64.AppImage
+          rm -rf squashfs-root
+          qemu-aarch64 ./appimagetool-aarch64.AppImage --appimage-extract
+          test -x squashfs-root/usr/bin/appimagetool \
+            || { echo "ERROR: appimagetool missing from the extracted AppImage"; ls -la squashfs-root/usr/bin/; exit 1; }
+          test -x squashfs-root/usr/bin/mksquashfs \
+            || { echo "ERROR: mksquashfs missing from the extracted AppImage (appimagetool needs it)"; ls -la squashfs-root/usr/bin/; exit 1; }
+          PATH="${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
+          QEMU_LD_PREFIX=/usr/aarch64-linux-gnu \
+          qemu-aarch64 ./squashfs-root/usr/bin/appimagetool \
+            "${APPDIR}" "XTPlayer-aarch64.AppImage"
+          mv XTPlayer-aarch64.AppImage "dist/XTPlayer-${{ inputs.version }}-Linux-aarch64.AppImage"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
