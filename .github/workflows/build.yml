@@ -648,6 +648,14 @@ jobs:
           ./linuxdeploy/x86_64/linuxdeploy-plugin-qt-x86_64.AppImage --appimage-extract
           test -x squashfs-root/usr/bin/linuxdeploy
           test -x squashfs-root/usr/bin/linuxdeploy-plugin-qt
+          # The core strips every deployed ELF with its BUNDLED strip - the
+          # HOST (x86_64) one, which cannot recognise aarch64 ELFs ("Unable to
+          # recognise the format of the input file"). Replace it with a wrapper
+          # that calls the cross strip (aarch64-linux-gnu-strip, an x86_64
+          # binary from binutils-aarch64-linux-gnu that strips aarch64 ELFs
+          # natively), so the AppImage is stripped for size without the error.
+          printf '#!/bin/sh\nexec aarch64-linux-gnu-strip "$@"\n' > squashfs-root/usr/bin/strip
+          chmod +x squashfs-root/usr/bin/strip
           # The host's ldd (used by the linuxdeploy core AND the qt plugin's
           # dependency tracing) cannot parse aarch64 ELFs - it reports
           # "not a dynamic executable" for every file, so neither can
