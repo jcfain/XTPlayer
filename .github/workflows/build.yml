@@ -700,31 +700,22 @@ jobs:
           # plugin needs qmlimportscanner (and other Qt tools); they are
           # aarch64 ELFs that run inside the same qemu-aarch64 (qemu
           # intercepts their execve).
+          #
+          # QEMU_LD_PREFIX: the linuxdeploy core runs under qemu and spawns the
+          # qt plugin as a NESTED re-exec (core-qemu -> fork -> child-qemu ->
+          # plugin). A re-exec'd child loses the aarch64 sysroot/ELF-interpreter
+          # setup a fresh `qemu-aarch64` gets, so the plugin can't even start
+          # (it exits 2 with no stderr). QEMU_LD_PREFIX is inherited by the
+          # re-exec'd child, restoring the sysroot. The plugin works when run
+          # directly (fresh qemu) but fails as a core subprocess - this is the
+          # fix for that nested re-exec.
           # NOTE: no # comments between the VAR=value \ continuations - a #
           # after a continuation comments out the rest and detaches the
           # env vars from the command.
-          # Diagnostic: the plugin WORKS directly (exit 0) and is statically
-          # linked (no NEEDED libs), so the core's subprocess failure (exit 2)
-          # is an ENVIRONMENT difference, not a missing dep. The qt plugin uses
-          # QMAKE (the aarch64 qmake) to find the Qt root - isolate whether that
-          # qmake runs under qemu, and whether the full core env breaks the plugin.
-          echo "=== qt plugin: minimal env (QMAKE + LD_LIBRARY_PATH) ==="
-          QMAKE="${QT_DIR}/bin/qmake" LD_LIBRARY_PATH="${QT_DIR}/lib" \
-            qemu-aarch64 ./squashfs-root/usr/bin/linuxdeploy-plugin-qt --plugin-api-version 2>&1
-          echo "exit: $?"
-          echo "=== qt plugin: FULL core env (QMAKE + LD_LIBRARY_PATH + PATH) ==="
-          QMAKE="${QT_DIR}/bin/qmake" LD_LIBRARY_PATH="${QT_DIR}/lib" \
-            PATH="${QT_DIR}/bin:${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
-            qemu-aarch64 ./squashfs-root/usr/bin/linuxdeploy-plugin-qt --plugin-api-version 2>&1
-          echo "exit: $?"
-          echo "=== aarch64 qmake under qemu (the plugin's Qt-root probe) ==="
-          qemu-aarch64 "${QT_DIR}/bin/qmake" -query QT_INSTALL_PREFIX 2>&1 | head -5
-          echo "qmake-under-qemu exit: ${PIPESTATUS[0]}"
-          echo "=== aarch64 qmake ldd (missing deps?) ==="
-          qemu-aarch64 -L /usr/aarch64-linux-gnu ldd "${QT_DIR}/bin/qmake" 2>&1 | grep -i 'not found' || echo "(no missing qmake deps)"
           QMAKE="${QT_DIR}/bin/qmake" \
           LD_LIBRARY_PATH="${QT_DIR}/lib" \
           PATH="${QT_DIR}/bin:${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
+          QEMU_LD_PREFIX=/usr/aarch64-linux-gnu \
           qemu-aarch64 ./squashfs-root/usr/bin/linuxdeploy \
             --appdir "${APPDIR}" \
             --executable "${APPDIR}/usr/bin/XTPlayer" \
