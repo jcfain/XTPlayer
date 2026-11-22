@@ -183,13 +183,20 @@ unix:mac {
         }
     }
 
-    RPATHDIR *= @loader_path/../Frameworks @executable_path/../Frameworks
+    # @loader_path/../Frameworks only: qmake already adds
+    # @executable_path/../Frameworks automatically for framework targets
+    # (adding it here too triggers "ld: warning: duplicate -rpath").
+    RPATHDIR *= @loader_path/../Frameworks
     # -Wl (not -W1), trailing SLASH not comma (clang splits -Wl on commas -
     # a comma would make ld see NAME as a bogus input file).
     QMAKE_LFLAGS_SONAME = -Wl,-install_name,@rpath/
-    # Force the deployment target: qmake's mkspec default (14.4) overrides
-    # the MACOSX_DEPLOYMENT_TARGET env var; 11.0 is Qt 6.12's minimum.
-    QMAKE_MACOSX_DEPLOYMENT_TARGET = 11.0
+    # Force the deployment target: qmake's mkspec default overrides the
+    # MACOSX_DEPLOYMENT_TARGET env var. 14.4 = Qt 6.12's official macOS
+    # binaries' minimum (ld warns "built for newer version 14.4" when
+    # linking a lower target against them), and dyld refuses to load a
+    # dylib whose minimum exceeds the host OS - so 14.4 is the app's true
+    # floor.
+    QMAKE_MACOSX_DEPLOYMENT_TARGET = 14.4
     isEmpty(QMAKE_LFLAGS_RPATH): QMAKE_LFLAGS_RPATH=-Wl,-rpath,
     for(R,RPATHDIR) {
         QMAKE_LFLAGS *= \'$${QMAKE_LFLAGS_RPATH}$$R\'
