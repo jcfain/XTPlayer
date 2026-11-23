@@ -750,6 +750,13 @@ jobs:
               chmod +x "${QEMU_SHIM}/$(basename "$_t")"
             fi
           done
+          # Exclude the GStreamer multimedia plugin: the app's default media
+          # backend is the bundled FFmpeg (Qt FFmpeg plugin), and the GStreamer
+          # plugin is only for the optional "Use the media backend of the OS"
+          # setting. Bundling it makes Qt Multimedia auto-load the SYSTEM
+          # GStreamer, which is ABI-incompatible with the bundled aarch64 glib
+          # -> SEGV at startup. The FFmpeg backend (with AV1) is self-contained
+          # and is the primary, so dropping GStreamer is the right trade.
           QMAKE="${QEMU_SHIM}/qmake" \
           LD_LIBRARY_PATH="${QT_DIR}/lib" \
           PATH="${QEMU_SHIM}:${QT_DIR}/bin:${GITHUB_WORKSPACE}/squashfs-root/usr/bin:${PATH}" \
@@ -766,7 +773,8 @@ jobs:
             --exclude-library "*libqsqlodbc*" \
             --exclude-library "*libqsqldb2*" \
             --exclude-library "*libqsqlibase*" \
-            --exclude-library "*libqsqlfirebird*"
+            --exclude-library "*libqsqlfirebird*" \
+            --exclude-plugin "*gstreamer*"
           # Guarantee the icon + desktop file are in the AppDir (the core
           # stages them with --icon-file/--desktop-file, but be explicit -
           # appimagetool needs <name>.png + <name>.desktop for the AppImage
