@@ -298,8 +298,22 @@ jobs:
             --exclude-library "*libqsqldb2*" \
             --exclude-library "*libqsqlibase*" \
             --exclude-library "*libqsqlfirebird*"
+          # CRITICAL: the ffmpeg plugin has transitive Qt6 deps (libQt6Quick,
+          # libQt6QmlWorkerScript, libQt6QmlMeta, libQt6QmlModels,
+          # libQt6OpenGL, ...) that linuxdeploy does NOT deploy (it only
+          # follows the main executable's deps, not the plugin's). Without
+          # them, the plugin loads the SYSTEM copies -> undefined symbol ->
+          # "No QtMultimedia backends found". Copy the full Qt6 lib set from
+          # the Qt tree so every transitive dep resolves to the bundled copy.
+          echo "Bundling full Qt6 lib set from ${QT_DIR}/lib:"
+          _qt6_count=0
+          for _qlib in "${QT_DIR}/lib"/libQt6*.so*; do
+            [ -f "$_qlib" ] || continue
+            cp -af "$_qlib" "${APPDIR}/usr/lib/"
+            _qt6_count=$((_qt6_count + 1))
+          done
+          echo "Copied ${_qt6_count} Qt6 libs into usr/lib"
           # CRITICAL: patch AppRun to export LD_LIBRARY_PATH with the bundled
-          # usr/lib FIRST (same fix as the aarch64 job). libQt6Quick.so.6 has
           # no RUNPATH, so its transitive libQt6Qml.so.6 lookup falls through
           # to the system /lib/x86_64-linux-gnu/libQt6Qml.so.6 on hosts with
           # Qt6 installed (older, missing QUntypedPropertyBinding symbols) ->
@@ -835,6 +849,21 @@ jobs:
           fi
           echo "Multimedia plugins in AppDir:"
           ls -la "${APPDIR}/usr/plugins/multimedia/" 2>/dev/null || echo "(no multimedia dir in AppDir)"
+          # CRITICAL: the ffmpeg plugin has transitive Qt6 deps (libQt6Quick,
+          # libQt6QmlWorkerScript, libQt6QmlMeta, libQt6QmlModels,
+          # libQt6OpenGL, ...) that linuxdeploy does NOT deploy (it only
+          # follows the main executable's deps, not the plugin's). Without
+          # them, the plugin loads the SYSTEM copies -> undefined symbol ->
+          # "No QtMultimedia backends found". Copy the full Qt6 lib set from
+          # the Qt tree so every transitive dep resolves to the bundled copy.
+          echo "Bundling full Qt6 lib set from ${QT_DIR}/lib:"
+          _qt6_count=0
+          for _qlib in "${QT_DIR}/lib"/libQt6*.so*; do
+            [ -f "$_qlib" ] || continue
+            cp -af "$_qlib" "${APPDIR}/usr/lib/"
+            _qt6_count=$((_qt6_count + 1))
+          done
+          echo "Copied ${_qt6_count} Qt6 libs into usr/lib"
           # CRITICAL: patch AppRun to export LD_LIBRARY_PATH with the bundled
           # usr/lib FIRST. linuxdeploy sets RUNPATH=$ORIGIN on most Qt libs,
           # but libQt6Quick.so.6 has NO RUNPATH. It transitively pulls in
