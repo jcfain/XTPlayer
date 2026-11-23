@@ -168,6 +168,7 @@ cd "${BUILD_DIR}"
     --enable-libdav1d \
     --enable-libaom \
     --enable-network \
+    --disable-libpulse \
     --disable-doc
 
 echo "==> Building with ${JOBS} jobs"

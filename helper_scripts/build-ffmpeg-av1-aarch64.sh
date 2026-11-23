@@ -200,6 +200,7 @@ PKG_CONFIG_LIBDIR="${CODEC_PREFIX}/lib/pkgconfig" \
     --enable-libaom \
     --enable-v4l2-m2m \
     --enable-network \
+    --disable-libpulse \
     --disable-doc
 
 echo "==> Building with ${JOBS} jobs"

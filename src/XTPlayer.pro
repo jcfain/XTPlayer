@@ -148,6 +148,12 @@ unix:!mac {
     }
 }
 unix:mac {
+    # Build as a proper .app bundle so macOS grants Bluetooth (TCC) permission.
+    # CoreBluetooth (QtBluetooth) requires NSBluetoothAlwaysUsageDescription in the
+    # Info.plist, otherwise QLowEnergyController reports AccessDenied and BLE fails.
+    # This also produces release/XTPlayer.app, which mac_release_deploy.sh expects.
+    macosx_bundle
+    QMAKE_INFO_PLIST = $$PWD/Info.plist
 
 #    #INCLUDEPATH += $$QT.core.libs/QtCompress.framework/Versions/5/Headers
 #    QMAKE_LFLAGS += -F$$QT.core.libs

@@ -748,7 +748,7 @@ jobs:
             libfontconfig.so.1 libfreetype.so.6 libbrotlicommon.so.1 \
             libbrotlidec.so.1 libz.so.1 libzstd.so.1 \
             libGL.so.1 libEGL.so.1 \
-            libpulse.so.0 libasound.so.2 libbluetooth.so.3 \
+            libasound.so.2 libbluetooth.so.3 \
             libnss3.so libgssapi_krb5.so.2 \
             libspeechd.so.2 \
             libwayland-client.so.0 libwayland-cursor.so.0 \
@@ -914,6 +914,14 @@ jobs:
           # entry point and icon).
           cp -f src/images/icons/XTP-icon.png "${APPDIR}/XTPlayer.png"
           cp -f XTPlayer.desktop "${APPDIR}/XTPlayer.desktop"
+          # Strip libpulse: linuxdeploy copies it (Qt FFmpeg plugin dep), but it
+          # causes ABI mismatches on systems with different PulseAudio versions
+          # (e.g. SteamOS). Qt uses its own audio path (QAudioSink), not
+          # FFmpeg's libpulse, so it's safe to remove. Must run AFTER linuxdeploy.
+          echo "libpulse before strip: $(find "${APPDIR}" -name "*pulse*" 2>/dev/null)"
+          find "${APPDIR}" -name "libpulse.so.0*" -delete
+          find "${APPDIR}" -name "libpulsecommon*" -delete
+          echo "libpulse after strip: $(find "${APPDIR}" -name "*pulse*" 2>/dev/null || echo "none")"
           # Build the aarch64 AppImage with the TARGET-ARCH appimagetool v1
           # (a plain qemu-aarch64 run - no nesting). appimagetool v1 takes
           # the AppDir and the output name as positional args.
