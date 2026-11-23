@@ -430,6 +430,13 @@ void SettingsDialog::setupUi()
         connect(SettingsHandler::instance(), &SettingsHandler::settingsChanged, this, &SettingsDialog::on_settingsChange);
 
         ui.useMediaBackendChk->setChecked(SettingsHandler::getSetting(SettingKeys::useSystemMediaBackend).toBool());
+#if defined(Q_OS_LINUX)
+        // The GStreamer (OS) media backend never worked in the Linux AppImage
+        // (ABI mismatch with the bundled glib -> SEGV). The FFmpeg backend (with
+        // AV1) is the self-contained primary on Linux, so hide the option here.
+        // It stays available on Windows/macOS, where the OS backend works.
+        ui.useMediaBackendChk->setVisible(false);
+#endif
         // Populate the hardware-decode combo with the options that are actually
         // available (disabled, auto, + backends compiled into FFmpeg), then select
         // the current preference.
