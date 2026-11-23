@@ -38,8 +38,8 @@ jobs:
           path: dist
       - name: Flatten artifacts
         run: |
-          find dist -type f -exec mv {} dist/ \;
           rm -rf dist/xtp-web   # internal web-bundle artifact, not a release asset
+          find dist -type f -exec mv {} dist/ \;
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
