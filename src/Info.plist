@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleExecutable</key>
+    <string>XTPlayer</string>
+    <key>CFBundleGetInfoString</key>
+    <string>XTPlayer</string>
+    <key>CFBundleIconFile</key>
+    <string>XTP-icon.icns</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.xtplayer.XTPlayer</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>XTPlayer</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1.0</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>14.4</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <!-- Required for CoreBluetooth (QtBluetooth) on macOS: without this key the
+         system will not show the Bluetooth permission prompt and BLE access is
+         denied (QLowEnergyController reports AccessDenied). -->
+    <key>NSBluetoothAlwaysUsageDescription</key>
+    <string>XTPlayer uses Bluetooth to connect to TCode devices.</string>
+    <key>NSBluetoothPeripheralUsageDescription</key>
+    <string>XTPlayer uses Bluetooth to connect to TCode devices.</string>
+</dict>
+</plist>
