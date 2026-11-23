@@ -779,8 +779,15 @@ jobs:
             --exclude-library "*libqsqlodbc*" \
             --exclude-library "*libqsqldb2*" \
             --exclude-library "*libqsqlibase*" \
-            --exclude-library "*libqsqlfirebird*" \
-            --exclude-plugin "*gstreamer*"
+            --exclude-library "*libqsqlfirebird*"
+          # Remove the GStreamer multimedia plugin: this linuxdeploy version has
+          # no --exclude-plugin flag, so drop it after deployment. The app's
+          # default media backend is the bundled FFmpeg (with AV1); the GStreamer
+          # plugin is only for the optional "Use the media backend of the OS"
+          # setting, and bundling it makes Qt Multimedia auto-load the SYSTEM
+          # GStreamer, which is ABI-incompatible with the bundled aarch64 glib
+          # -> SEGV. (The option is also hidden in the UI on Linux.)
+          rm -f "${APPDIR}/usr/plugins/multimedia/libgstreamermediaplugin.so"
           # Guarantee the icon + desktop file are in the AppDir (the core
           # stages them with --icon-file/--desktop-file, but be explicit -
           # appimagetool needs <name>.png + <name>.desktop for the AppImage
