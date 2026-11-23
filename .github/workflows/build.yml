@@ -813,6 +813,23 @@ jobs:
           fi
           echo "Multimedia plugins in AppDir:"
           ls -la "${APPDIR}/usr/plugins/multimedia/" 2>/dev/null || echo "(no multimedia dir in AppDir)"
+          # CRITICAL: patch AppRun to export LD_LIBRARY_PATH with the bundled
+          # usr/lib FIRST. linuxdeploy sets RUNPATH=$ORIGIN on most Qt libs,
+          # but libQt6Quick.so.6 has NO RUNPATH. It transitively pulls in
+          # libQt6Qml.so.6; with no RUNPATH the loader falls through to the
+          # SYSTEM /lib/aarch64-linux-gnu/libQt6Qml.so.6 (older, missing the
+          # QUntypedPropertyBinding symbols) -> the ffmpeg multimedia plugin
+          # fails to load ("No QtMultimedia backends found"). Exporting the
+          # bundled lib dir on LD_LIBRARY_PATH forces every transitive Qt lib
+          # to resolve to the bundled copy. This is the same class of fix as
+          # the original aarch64 SEGV (system-lib fallback).
+          if [ -f "${APPDIR}/AppRun" ]; then
+            sed -i '/^exec /i export LD_LIBRARY_PATH="$this_dir/usr/lib:${LD_LIBRARY_PATH}"' "${APPDIR}/AppRun"
+            echo "Patched AppRun with LD_LIBRARY_PATH:"
+            cat "${APPDIR}/AppRun"
+          else
+            echo "WARNING: ${APPDIR}/AppRun not found - cannot patch LD_LIBRARY_PATH"
+          fi
           # Guarantee the icon + desktop file are in the AppDir (the core
           # stages them with --icon-file/--desktop-file, but be explicit -
           # appimagetool needs <name>.png + <name>.desktop for the AppImage
