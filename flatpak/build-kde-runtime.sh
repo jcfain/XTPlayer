@@ -38,12 +38,13 @@ if [ ! -d kde-runtime/.git ]; then
     git clone --depth 1 --branch "$BRANCH" "$REPO_URL" kde-runtime
 fi
 
-# Flathub remote for --install-deps-from=flathub. Try the system install
-# first (local machines with root), fall back to the user install (CI
-# runners, unprivileged shells). flatpak-builder sees both.
-if ! flatpak remote-add --if-not-exists flathub "$FLATHUB_URL" 2>/dev/null; then
-    flatpak --user remote-add --if-not-exists flathub "$FLATHUB_URL"
-fi
+# Flathub remote for --install-deps-from=flathub. Always use the USER
+# installation: it is writable without root (CI runners and local dev
+# alike), and flatpak-builder below is passed --user so it installs deps
+# into the SAME installation the remote lives in. Mixing the two is what
+# produced "No remote refs found for 'flathub'" on CI: the remote was
+# registered in one installation while flatpak-builder targeted the other.
+flatpak --user remote-add --if-not-exists flathub "$FLATHUB_URL"
 
 cd kde-runtime
 # Generate org.kde.Sdk.json from org.kde.Sdk.json.in (appends
@@ -55,6 +56,7 @@ make org.kde.Sdk.json ARCH="$ARCH"
 # Build org.kde.Platform (id-platform) + org.kde.Sdk into ./repo.
 # No --force-clean: with a cached WORKDIR, unchanged modules are reused.
 flatpak-builder \
+    --user \
     --install-deps-from=flathub \
     --arch="$ARCH" \
     --ccache \

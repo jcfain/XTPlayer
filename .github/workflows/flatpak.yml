@@ -182,7 +182,10 @@ jobs:
           # The local repo holds org.kde.Platform 6.12-beta; flatpak-builder
           # resolves the runtime from it and commits the app alongside.
           flatpak --user remote-add --if-not-exists xtp-local file://$PWD/repo
-          flatpak-builder --ccache --arch=${{ matrix.arch }} --repo=repo build manifest-patched.json
+          # --user: matches the --user remotes added above (flathub,
+          # xtp-local). Without it flatpak-builder targets the system
+          # installation and cannot see them.
+          flatpak-builder --user --ccache --arch=${{ matrix.arch }} --repo=repo build manifest-patched.json
       - name: Update repo
         run: flatpak build-update-repo repo
       - name: Package combined repo (runtime + app)
