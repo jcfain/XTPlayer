@@ -521,7 +521,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.CODEC_PREFIX }}
-          key: ffmpeg-av1-linux-arm64-2404-${{ hashFiles('helper_scripts/build-ffmpeg-av1-aarch64.sh') }}
+          key: ffmpeg-av1-linux-arm64-2404-v2-${{ hashFiles('helper_scripts/build-ffmpeg-av1-aarch64.sh') }}
       - name: Build FFmpeg n9.0.1 (aarch64 cross, AV1)
         run: bash helper_scripts/build-ffmpeg-av1-aarch64.sh --reuse
 
