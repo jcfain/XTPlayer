@@ -314,10 +314,13 @@ jobs:
             echo "WARNING: ${APPDIR}/AppRun not found - cannot patch LD_LIBRARY_PATH"
           fi
           # Seal the AppImage with appimagetool (bundled in the linuxdeploy
-          # core - the x86_64 core ships it, unlike the aarch64 core).
-          test -x ./squashfs-root/usr/bin/appimagetool \
+          # core's appimage plugin - the x86_64 core ships it, unlike the
+          # aarch64 core).
+          _appimagetool="./squashfs-root/plugins/linuxdeploy-plugin-appimage/usr/bin/appimagetool"
+          [ -x "$_appimagetool" ] || _appimagetool="./squashfs-root/usr/bin/appimagetool"
+          test -x "$_appimagetool" \
             || { echo "ERROR: appimagetool not found in the linuxdeploy core"; find squashfs-root -name appimagetool; exit 1; }
-          ./squashfs-root/usr/bin/appimagetool "${APPDIR}" "XTPlayer-x86_64.AppImage"
+          "$_appimagetool" "${APPDIR}" "XTPlayer-x86_64.AppImage"
           mv XTPlayer-x86_64.AppImage "dist/XTPlayer-${{ inputs.version }}-Linux-x86_64.AppImage"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
