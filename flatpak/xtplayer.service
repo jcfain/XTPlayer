@@ -1,0 +1,24 @@
+# XTPlayer headless media server (Flatpak)
+#
+# Install:
+#   mkdir -p ~/.config/systemd/user
+#   cp flatpak/xtplayer.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now xtplayer
+#
+# XTP_SYSTEMD tells the app's in-app "restart" to exit and let this unit's
+# Restart=always respawn it (a detached self-spawn would orphan the new
+# process from systemd's tracking - see SettingsHandler::Restart()).
+[Unit]
+Description=XTPlayer headless media server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Environment=XTP_SYSTEMD=1
+ExecStart=/usr/bin/flatpak run io.github.jcfain.XTPlayer -s
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

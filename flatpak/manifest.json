@@ -1,0 +1,147 @@
+{
+    "app-id": "io.github.jcfain.XTPlayer",
+    "runtime": "org.kde.Platform/$ARCH/6.12-beta",
+    "sdk": "org.kde.Sdk/$ARCH/6.12-beta",
+    "version": "0.6.11b",
+    "command": "XTPlayer",
+    "finish-args": [
+        "--share=ipc",
+        "--share=network",
+        "--socket=fallback-x11",
+        "--socket=wayland",
+        "--socket=pulseaudio",
+        "--socket=bluetooth",
+        "--device=all",
+        "--filesystem=/run/udev:ro",
+        "--filesystem=xdg-run/gamescope-0:ro",
+        "--filesystem=host",
+        "--env=QT_MULTIMEDIA_PREFERRED_PLUGINS=ffmpeg"
+    ],
+    "modules": [
+        {
+            "name": "dav1d",
+            "buildsystem": "meson",
+            "config-opts": [
+                "-Denable_asm=true",
+                "-Denable_docs=false"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://code.videolan.org/videolan/dav1d/-/archive/1.5.1/dav1d-1.5.1.tar.gz",
+                    "sha256": "fa635e2bdb25147b1384007c83e15de44c589582bb3b9a53fc1579cb9d74b695"
+                }
+            ]
+        },
+        {
+            "name": "aom",
+            "buildsystem": "cmake",
+            "config-opts": [
+                "-DBUILD_SHARED_LIBS=ON"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://aomedia.googlesource.com/aom/+archive/refs/tags/v3.15.2/aom-v3.15.2.tar.gz",
+                    "sha256": "8ad221419a4877f74cb6fd7e08343252787ac38f8d976b679311e979bd2fd603"
+                }
+            ]
+        },
+        {
+            "name": "ffmpeg-av1",
+            "buildsystem": "autotools",
+            "config-opts": {
+                "aarch64": [
+                    "--enable-shared",
+                    "--enable-libdav1d",
+                    "--enable-libaom",
+                    "--enable-network",
+                    "--enable-v4l2-m2m",
+                    "--disable-libpulse",
+                    "--disable-doc"
+                ],
+                "x86_64": [
+                    "--enable-shared",
+                    "--enable-libdav1d",
+                    "--enable-libaom",
+                    "--enable-network",
+                    "--enable-vaapi",
+                    "--enable-vdpau",
+                    "--enable-vulkan",
+                    "--disable-libpulse",
+                    "--disable-doc"
+                ]
+            },
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://ffmpeg.org/releases/ffmpeg-9.0.1.tar.xz",
+                    "sha256": "cf38e0e28c7e5605942c4a77755349b0145804a397af37eb1fb4c77cb237f635"
+                }
+            ]
+        },
+        {
+            "name": "qtgamepadlegacy",
+            "buildsystem": "cmake-ninja",
+            "config-opts": [
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DQT_GENERATE_SBOM=OFF"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/pumphaus/qtgamepadlegacy",
+                    "commit": "434fe59d70f42fa0f745af05921ba64169fce90b"
+                }
+            ]
+        },
+        {
+            "name": "xtp-web",
+            "buildsystem": "simple",
+            "build-commands": [
+                "mkdir -p /usr/src/xtp-web",
+                "cp -r web/* /usr/src/xtp-web/"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/jcfain/XTPlayer/releases/download/v0.6.11b/xtp-web-v0.6.11b.tar.xz",
+                    "dest": "web"
+                }
+            ]
+        },
+        {
+            "name": "xtplayer",
+            "buildsystem": "simple",
+            "build-commands": [
+                "rm -rf XTEngine/src/www && mkdir -p XTEngine/src/www && cp -r /usr/src/xtp-web/* XTEngine/src/www/",
+                "mkdir -p XTEngine/build && cd XTEngine/build && qmake ../src/XTEngine.pro CONFIG+=release && make -j$(nproc)",
+                "mkdir -p XTPlayer/build && cd XTPlayer/build && qmake ../src/XTPlayer.pro CONFIG+=release && make -j$(nproc)",
+                "install -Dm755 XTPlayer/build/release/XTPlayer /usr/bin/XTPlayer",
+                "install -Dm755 XTEngine/build/release/libxtengine.so.1.0.0 /usr/lib/libxtengine.so.1.0.0",
+                "ln -sf libxtengine.so.1.0.0 /usr/lib/libxtengine.so.1.0",
+                "ln -sf libxtengine.so.1.0 /usr/lib/libxtengine.so.1",
+                "ln -sf libxtengine.so.1 /usr/lib/libxtengine.so",
+                "mkdir -p /usr/bin/www && cp -r XTPlayer/build/release/www/. /usr/bin/www/",
+                "mkdir -p /usr/bin/themes && cp -r XTPlayer/build/release/themes/. /usr/bin/themes/",
+                "mkdir -p /usr/bin/translations && cp -r XTPlayer/build/release/translations/. /usr/bin/translations/ 2>/dev/null || true",
+                "install -Dm644 XTPlayer/flatpak/XTPlayer.desktop /usr/share/applications/io.github.jcfain.XTPlayer.desktop",
+                "install -Dm644 XTPlayer/src/images/icons/XTP-icon.png /usr/share/icons/hicolor/256x256/apps/io.github.jcfain.XTPlayer.png"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/jcfain/XTPlayer",
+                    "tag": "v0.6.11b",
+                    "dest": "XTPlayer"
+                },
+                {
+                    "type": "git",
+                    "url": "https://github.com/jcfain/XTEngine",
+                    "tag": "v0.6.11b",
+                    "dest": "XTEngine"
+                }
+            ]
+        }
+    ]
+}
