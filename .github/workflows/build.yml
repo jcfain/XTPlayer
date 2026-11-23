@@ -672,6 +672,12 @@ jobs:
           _qt_deps=$({ readelf -d build-release/release/XTPlayer
                        readelf -d ../XTEngine/build-release/release/libxtengine.so*
                      } | grep -oE 'libQt6[A-Za-z0-9]+\.so\.6' | sort -u)
+          # libQt6Svg (SVG icon engine) + libQt6Qml (QML) are loaded at runtime
+          # by plugins, not via NEEDED entries, so the closure below misses
+          # them. Without them, the loader falls back to the SYSTEM Qt, which is
+          # ABI-incompatible with the bundled Qt -> fatal symbol lookup. Seed
+          # them (and their transitive Qt deps) into the closure explicitly.
+          _qt_deps=$(echo "$_qt_deps libQt6Svg.so.6 libQt6Qml.so.6" | tr ' ' '\n' | grep -v '^$' | sort -u)
           _qt_all=""
           while :; do
             _new=""
