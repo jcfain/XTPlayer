@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=XTPlayer
+Exec=XTPlayer
+Icon=io.github.jcfain.XTPlayer
+Comment=Cross platform TCode media funscript player
+Terminal=false
+Categories=AudioVideo;
+Keywords=media;player;funscript;tcode;

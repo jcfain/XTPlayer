@@ -1,0 +1,170 @@
+# =============================================================================
+# XTPlayer — Flatpak build pipeline
+#
+# Builds the XTPlayer Flatpak (io.github.jcfain.XTPlayer) on top of
+# org.kde.Platform 6.12-beta (built once per arch from KDE's manifests,
+# since 6.12 is not on Flathub yet - see flatpak/README.md).
+#
+#   - web job:          Angular bundle (same as build.yml)
+#   - runtime-<arch>:   org.kde.Platform 6.12-beta repo (cached, incremental)
+#   - flatpak-<arch>:   app built INTO the runtime repo -> one combined
+#                       repo tarball per arch (single remote for users)
+#
+# aarch64 builds NATIVE on the ubuntu-24.04-arm runner - no qemu/binfmt,
+# no cross toolchain (replaces the fragile AppImage cross pipeline).
+# =============================================================================
+name: Flatpak
+
+on:
+  workflow_dispatch:
+    inputs:
+      player-branch:
+        description: 'XTPlayer branch to build'
+        required: true
+        default: Development
+        type: string
+      engine-branch:
+        description: 'XTEngine branch to build against'
+        required: true
+        default: Development
+        type: string
+      version:
+        description: 'Version string for artifact names (e.g. v0.6.11b, dev)'
+        required: true
+        default: dev
+        type: string
+      cache-bust:
+        description: 'Bump to force a full runtime rebuild'
+        required: false
+        default: ''
+        type: string
+
+env:
+  RUNTIME_BRANCH: qt6.12
+
+jobs:
+  web:
+    name: Angular web bundle
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout XTEngine
+        uses: actions/checkout@v4
+        with:
+          repository: jcfain/XTEngine
+          ref: ${{ inputs.engine-branch }}
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: src/wwwsrc/package-lock.json
+      - name: Install npm deps
+        working-directory: src/wwwsrc
+        run: npm ci
+      - name: Build (production)
+        working-directory: src/wwwsrc
+        run: |
+          npm run set-version
+          npx ng build --configuration production
+      - name: Package bundle
+        run: tar -cJf xtp-web.tar.xz -C src/wwwsrc/dist/xtp-web/browser .
+      - name: Upload bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: xtp-web
+          path: xtp-web.tar.xz
+          retention-days: 1
+
+  runtime:
+    name: KDE runtime 6.12-beta (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    steps:
+      - name: Checkout XTPlayer (for the build script)
+        uses: actions/checkout@v4
+      - name: Install flatpak
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends flatpak flatpak-builder
+      - name: Cache runtime build
+        uses: actions/cache@v4
+        with:
+          path: kde-runtime-build
+          key: kde-runtime-${{ matrix.arch }}-${{ env.RUNTIME_BRANCH }}-${{ inputs.cache-bust }}
+          restore-keys: |
+            kde-runtime-${{ matrix.arch }}-${{ env.RUNTIME_BRANCH }}-
+      - name: Build org.kde.Platform 6.12-beta
+        run: bash flatpak/build-kde-runtime.sh ${{ matrix.arch }} kde-runtime-build
+      - name: Upload runtime repo
+        uses: actions/upload-artifact@v4
+        with:
+          name: xtp-runtime-${{ matrix.arch }}
+          path: kde-runtime-build/xtp-kde-runtime-6.12-beta-${{ matrix.arch }}.tar.xz
+          retention-days: 1
+
+  flatpak:
+    name: XTPlayer Flatpak (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    needs: [web, runtime]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    steps:
+      - name: Checkout XTPlayer
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.player-branch }}
+      - name: Clone XTEngine (sibling layout, as the .pro files expect)
+        run: git clone --depth 1 --branch ${{ inputs.engine-branch }} https://github.com/jcfain/XTEngine.git XTEngine
+      - name: Install flatpak + jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends flatpak flatpak-builder jq
+      - name: Add flathub remote (freedesktop deps for the build)
+        run: flatpak --user remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+      - name: Download web bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: xtp-web
+      - name: Download runtime repo
+        uses: actions/download-artifact@v4
+        with:
+          name: xtp-runtime-${{ matrix.arch }}
+      - name: Unpack runtime repo as the app repo base
+        run: tar -xJf xtp-kde-runtime-6.12-beta-${{ matrix.arch }}.tar.xz
+      - name: Patch manifest for dev build (local sources)
+        run: bash flatpak/patch-manifest.sh flatpak/manifest.json xtp-web.tar.xz manifest-patched.json
+      - name: Cache app build
+        uses: actions/cache@v4
+        with:
+          path: |
+            build
+            .ccache
+          key: xtp-flatpak-${{ matrix.arch }}-${{ github.sha }}
+      - name: Build app into the runtime repo
+        run: |
+          # The local repo holds org.kde.Platform 6.12-beta; flatpak-builder
+          # resolves the runtime from it and commits the app alongside.
+          flatpak --user remote-add --if-not-exists xtp-local file://$PWD/repo
+          flatpak-builder --ccache --arch=${{ matrix.arch }} --repo=repo build manifest-patched.json
+      - name: Update repo
+        run: flatpak build-update-repo repo
+      - name: Package combined repo (runtime + app)
+        run: tar -cJf "xtp-flatpak-${{ matrix.arch }}-${{ inputs.version }}.tar.xz" repo
+      - name: Upload Flatpak repo
+        uses: actions/upload-artifact@v4
+        with:
+          name: xtp-flatpak-${{ matrix.arch }}
+          path: xtp-flatpak-${{ matrix.arch }}-${{ inputs.version }}.tar.xz
