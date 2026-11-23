@@ -1,11 +1,16 @@
 # =============================================================================
-# XTPlayer — Flatpak build pipeline
+# XTPlayer — Flatpak build pipeline (reusable)
+#
+# Called by nightly.yml (Development) and release.yml (main / v* tags), the
+# same pattern as build.yml. Also runnable standalone ("Run workflow").
 #
 # Builds the XTPlayer Flatpak (io.github.jcfain.XTPlayer) on top of
 # org.kde.Platform 6.12-beta (built once per arch from KDE's manifests,
 # since 6.12 is not on Flathub yet - see flatpak/README.md).
 #
-#   - web job:          Angular bundle (same as build.yml)
+#   - web job:          Angular bundle (artifact: xtp-web-flatpak; named
+#                       differently from build.yml's xtp-web so both can run
+#                       in the same workflow run)
 #   - runtime-<arch>:   org.kde.Platform 6.12-beta repo (cached, incremental)
 #   - flatpak-<arch>:   app built INTO the runtime repo -> one combined
 #                       repo tarball per arch (single remote for users)
@@ -16,6 +21,20 @@
 name: Flatpak
 
 on:
+  workflow_call:
+    inputs:
+      player-branch:
+        description: 'XTPlayer branch to build'
+        required: true
+        type: string
+      engine-branch:
+        description: 'XTEngine branch to build against'
+        required: true
+        type: string
+      version:
+        description: 'Version string for artifact names (e.g. v0.6.11b, nightly)'
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       player-branch:
@@ -71,7 +90,7 @@ jobs:
       - name: Upload bundle
         uses: actions/upload-artifact@v4
         with:
-          name: xtp-web
+          name: xtp-web-flatpak
           path: xtp-web.tar.xz
           retention-days: 1
 
@@ -137,7 +156,7 @@ jobs:
       - name: Download web bundle
         uses: actions/download-artifact@v4
         with:
-          name: xtp-web
+          name: xtp-web-flatpak
       - name: Download runtime repo
         uses: actions/download-artifact@v4
         with:

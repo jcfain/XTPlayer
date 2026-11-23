@@ -74,12 +74,23 @@ process tracking consistent.
 
 ## CI (`.github/workflows/flatpak.yml`)
 
-- `web` — Angular bundle (same as `build.yml`)
+Reusable workflow — called by `nightly.yml` (Development, `version: nightly`)
+and `release.yml` (main, `version: <tag>`), the same pattern as `build.yml`.
+Also runnable standalone via "Run workflow".
+
+- `web` — Angular bundle (artifact `xtp-web-flatpak`; named differently from
+  `build.yml`'s `xtp-web` so both can run in the same workflow run)
 - `runtime-{x86_64,aarch64}` — `build-kde-runtime.sh`, cached in
   `kde-runtime-build/` so re-runs are incremental
 - `flatpak-{x86_64,aarch64}` — x86_64 on `ubuntu-24.04`, **aarch64 native
   on `ubuntu-24.04-arm`** (no qemu/binfmt); builds the app into the runtime
   repo and publishes the combined tarball
+
+The nightly/release publish jobs flatten all artifacts into the release, so
+the `xtp-flatpak-<arch>-<version>.tar.xz` repos are published alongside the
+AppImages/zips/DMGs (the internal `xtp-runtime-*` repos and web bundle are
+excluded). A flatpak failure does not block the release — publish only
+requires the `build` job to succeed.
 
 ## Release flow: web bundle sha256
 
