@@ -289,7 +289,6 @@ jobs:
             --appdir "${APPDIR}" \
             --executable "${APPDIR}/usr/bin/XTPlayer" \
             --plugin qt \
-            --output appimage \
             --icon-file src/images/icons/XTP-icon.png \
             --icon-filename XTPlayer \
             --desktop-file XTPlayer.desktop \
@@ -299,6 +298,26 @@ jobs:
             --exclude-library "*libqsqldb2*" \
             --exclude-library "*libqsqlibase*" \
             --exclude-library "*libqsqlfirebird*"
+          # CRITICAL: patch AppRun to export LD_LIBRARY_PATH with the bundled
+          # usr/lib FIRST (same fix as the aarch64 job). libQt6Quick.so.6 has
+          # no RUNPATH, so its transitive libQt6Qml.so.6 lookup falls through
+          # to the system /lib/x86_64-linux-gnu/libQt6Qml.so.6 on hosts with
+          # Qt6 installed (older, missing QUntypedPropertyBinding symbols) ->
+          # the ffmpeg multimedia plugin fails to load. Exporting the bundled
+          # lib dir on LD_LIBRARY_PATH forces every transitive Qt lib to
+          # resolve to the bundled copy.
+          if [ -f "${APPDIR}/AppRun" ]; then
+            sed -i '/^exec /i export LD_LIBRARY_PATH="$this_dir/usr/lib:${LD_LIBRARY_PATH}"' "${APPDIR}/AppRun"
+            echo "Patched AppRun with LD_LIBRARY_PATH:"
+            cat "${APPDIR}/AppRun"
+          else
+            echo "WARNING: ${APPDIR}/AppRun not found - cannot patch LD_LIBRARY_PATH"
+          fi
+          # Seal the AppImage with appimagetool (bundled in the linuxdeploy
+          # core - the x86_64 core ships it, unlike the aarch64 core).
+          test -x ./squashfs-root/usr/bin/appimagetool \
+            || { echo "ERROR: appimagetool not found in the linuxdeploy core"; find squashfs-root -name appimagetool; exit 1; }
+          ./squashfs-root/usr/bin/appimagetool "${APPDIR}" "XTPlayer-x86_64.AppImage"
           mv XTPlayer-x86_64.AppImage "dist/XTPlayer-${{ inputs.version }}-Linux-x86_64.AppImage"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
