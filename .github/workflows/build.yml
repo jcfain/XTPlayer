@@ -756,6 +756,15 @@ jobs:
               chmod +x "${QEMU_SHIM}/$(basename "$_t")"
             fi
           done
+          # The qt plugin runs qmlimportscanner by FULL PATH (${QT_DIR}/libexec/...),
+          # so a PATH shim (above) is never found. Wrap it IN PLACE (same pattern
+          # as the appimagetool tools) so the aarch64 ELF runs under qemu.
+          _qis="${QT_DIR}/libexec/qmlimportscanner"
+          if [ -f "$_qis" ] && [ "$(head -c 4 "$_qis" | od -An -tx1 | tr -d ' \n')" = "7f454c46" ]; then
+            mv "$_qis" "$_qis.real"
+            printf '#!/bin/sh\nexec qemu-aarch64 "%s" "$@"\n' "$_qis.real" > "$_qis"
+            chmod +x "$_qis"
+          fi
           # Exclude the GStreamer multimedia plugin: the app's default media
           # backend is the bundled FFmpeg (Qt FFmpeg plugin), and the GStreamer
           # plugin is only for the optional "Use the media backend of the OS"
