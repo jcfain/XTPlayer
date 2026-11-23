@@ -767,6 +767,11 @@ jobs:
               || { echo "ERROR: ${_lib} missing from /usr/aarch64-linux-gnu/lib"; exit 1; }
           done
           echo "appdir/usr/lib: $(ls "${APPDIR}/usr/lib" | wc -l) files"
+          # Strip libpulse: the linuxdeploy core copies it (Qt FFmpeg plugin dep),
+          # but it causes ABI mismatches on systems with different PulseAudio
+          # versions (e.g. SteamOS 16.1 vs Ubuntu 17). Qt uses its own audio
+          # path (QAudioSink), not FFmpeg's libpulse, so it's safe to remove.
+          rm -f "${APPDIR}/usr/lib/libpulse.so.0"* "${APPDIR}/usr/lib/libpulsecommon"*
           # Run the HOST (x86_64) core + qt plugin NATIVELY (no qemu) to
           # populate the AppDir. NO --output: the core only deploys the Qt
           # deps (via the qt plugin) and stages the icon/desktop file; the
