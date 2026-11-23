@@ -665,7 +665,13 @@ jobs:
           # and deploys the plugins/QML/translations from the REAL Qt tree.
           # (This is exactly what the core's ldd deployment copies on
           # x86_64 - no size impact on the final AppImage.)
-          _qt_deps=$(readelf -d build-release/release/XTPlayer | grep -oE 'libQt6[A-Za-z0-9]+\.so\.6' | sort -u)
+          # Scan BOTH the executable AND libxtengine for direct Qt deps: the
+          # engine links Qt modules (httpserver, gamepadlegacy, ...) that the
+          # executable does not, and the closure below only follows libQt6*
+          # libs - so a Qt module linked only by libxtengine would be missed.
+          _qt_deps=$({ readelf -d build-release/release/XTPlayer
+                       readelf -d ../XTEngine/build-release/release/libxtengine.so*
+                     } | grep -oE 'libQt6[A-Za-z0-9]+\.so\.6' | sort -u)
           _qt_all=""
           while :; do
             _new=""
