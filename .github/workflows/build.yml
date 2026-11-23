@@ -314,7 +314,7 @@ jobs:
               [ -f "$_cand" ] && { _src="$_cand"; break; }
             done
             if [ -n "$_src" ]; then
-              cp -af "$_src" "${APPDIR}/usr/lib/"
+              cp -afL "$_src" "${APPDIR}/usr/lib/"
               echo "  + ${_qlib}"
             else
               echo "  WARNING: ${_qlib} not found in ${QT_DIR}/lib"
@@ -871,7 +871,7 @@ jobs:
               [ -f "$_cand" ] && { _src="$_cand"; break; }
             done
             if [ -n "$_src" ]; then
-              cp -af "$_src" "${APPDIR}/usr/lib/"
+              cp -afL "$_src" "${APPDIR}/usr/lib/"
               echo "  + ${_qlib}"
             else
               echo "  WARNING: ${_qlib} not found in ${QT_DIR}/lib"
