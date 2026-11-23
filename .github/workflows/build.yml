@@ -902,8 +902,8 @@ jobs:
           # to resolve to the bundled copy. This is the same class of fix as
           # the original aarch64 SEGV (system-lib fallback).
           if [ -f "${APPDIR}/AppRun" ]; then
-            sed -i '/^exec /i export LD_LIBRARY_PATH="$this_dir/usr/lib:${LD_LIBRARY_PATH}"' "${APPDIR}/AppRun"
-            echo "Patched AppRun with LD_LIBRARY_PATH:"
+            sed -i '/^exec /i export V4L2_PLUGIN_PATH="$this_dir/usr/lib/aarch64-linux-gnu/libv4l/plugins"\nexport LD_LIBRARY_PATH="$this_dir/usr/lib:${LD_LIBRARY_PATH}"' "${APPDIR}/AppRun"
+            echo "Patched AppRun with V4L2_PLUGIN_PATH + LD_LIBRARY_PATH:"
             cat "${APPDIR}/AppRun"
           else
             echo "WARNING: ${APPDIR}/AppRun not found - cannot patch LD_LIBRARY_PATH"
