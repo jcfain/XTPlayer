@@ -39,9 +39,17 @@ jobs:
       # previous run's assets; the date/commit live in the release name.
       version: nightly
 
+  flatpak:
+    name: Build Flatpak
+    uses: ./.github/workflows/flatpak.yml
+    with:
+      player-branch: Development
+      engine-branch: Development
+      version: nightly
+
   publish:
     name: Publish nightly release
-    needs: [build, meta]
+    needs: [build, flatpak, meta]
     if: needs.build.result == 'success'
     runs-on: ubuntu-latest
     steps:
@@ -51,7 +59,8 @@ jobs:
           path: dist
       - name: Flatten artifacts
         run: |
-          rm -rf dist/xtp-web   # internal web-bundle artifact, not a release asset
+          rm -rf dist/xtp-web dist/xtp-web-flatpak   # internal web-bundle artifacts, not release assets
+          rm -rf dist/xtp-runtime-x86_64 dist/xtp-runtime-aarch64   # internal flatpak runtime repos
           find dist -type f -exec mv {} dist/ \;
       - name: Publish to rolling 'nightly' release
         uses: softprops/action-gh-release@v2
@@ -65,9 +74,13 @@ jobs:
             * Linux x86_64 + aarch64 AppImages
             * Windows x86_64 zip
             * macOS universal (arm64 + x86_64) DMG
+            * Flatpak repos x86_64 + aarch64 (include the org.kde.Platform 6.12-beta runtime)
 
             > **macOS:** the DMG is ad-hoc signed (no Apple Developer account).
             > First launch: right-click the app → **Open** (or
             > `xattr -d com.apple.quarantine /Applications/XTPlayer.app`).
+
+            > **Flatpak:** `flatpak remote-add --if-not-exists xtp <this release's xtp-flatpak-<arch>-nightly.tar.xz URL>`
+            > then `flatpak install xtp io.github.jcfain.XTPlayer`
           files: |
             dist/*
