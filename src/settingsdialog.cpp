@@ -65,9 +65,9 @@ void SettingsDialog::init(MediaLibraryHandler* medialLibraryHandler, VideoHandle
     ui.useMediaDirectoryCheckbox->hide();//Not fully developed.
 
 // #ifdef _WIN32
-    ui.bleConnectButton->setVisible(false);
-    ui.bleOutputRdo->setVisible(false);
-    ui.bleStatuslbl->setVisible(false);
+    // ui.bleConnectButton->setVisible(false);
+    // ui.bleOutputRdo->setVisible(false);
+    // ui.bleStatuslbl->setVisible(false);
 // #endif
     setupUi();
 }
@@ -1365,7 +1365,7 @@ void SettingsDialog::on_networkOutputRdo_clicked()
 
 void SettingsDialog::on_bleOutputRdo_clicked()
 {
-    DialogHandler::Dialog(this, "BLE is experimental and I could not get it to work.\nIf you do let me know. Maybe it will help me trouble shoot.\nIn otherwords, dont expect much.");
+    DialogHandler::Dialog(this, "Some systems have issues with notifies like mine.\nIf you have trouble connecting, try disableing\nTCode validation on the System tab in the settings.");
     enableOrDisableDeviceConnectionUI(ConnectionInterface::BLE);
     SettingsHandler::setSelectedOutputConnection(ConnectionInterface::BLE);
 }
