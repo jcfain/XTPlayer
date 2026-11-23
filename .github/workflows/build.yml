@@ -918,7 +918,10 @@ jobs:
           # causes ABI mismatches on systems with different PulseAudio versions
           # (e.g. SteamOS). Qt uses its own audio path (QAudioSink), not
           # FFmpeg's libpulse, so it's safe to remove. Must run AFTER linuxdeploy.
-          rm -f "${APPDIR}/usr/lib/libpulse.so.0"* "${APPDIR}/usr/lib/libpulsecommon"*
+          echo "libpulse before strip: $(find "${APPDIR}" -name "*pulse*" 2>/dev/null)"
+          find "${APPDIR}" -name "libpulse.so.0*" -delete
+          find "${APPDIR}" -name "libpulsecommon*" -delete
+          echo "libpulse after strip: $(find "${APPDIR}" -name "*pulse*" 2>/dev/null || echo "none")"
           # Build the aarch64 AppImage with the TARGET-ARCH appimagetool v1
           # (a plain qemu-aarch64 run - no nesting). appimagetool v1 takes
           # the AppDir and the output name as positional args.
