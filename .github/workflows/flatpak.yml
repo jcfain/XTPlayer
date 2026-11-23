@@ -108,6 +108,11 @@ jobs:
     steps:
       - name: Checkout XTPlayer (for the build script)
         uses: actions/checkout@v4
+        with:
+          # Same branch as the app job: the runtime job must see the flatpak/
+          # dir from the branch being BUILT, not the caller's (dispatch and
+          # schedule run on the default branch, which may lag behind).
+          ref: ${{ inputs.player-branch }}
       - name: Install flatpak
         run: |
           sudo apt-get update

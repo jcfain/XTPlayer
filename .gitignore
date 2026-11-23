@@ -73,9 +73,9 @@ src/.qmake.stash
 *.tar.gz
 *.zip
 /bin
-/build*
-*/build*
-!helper_scripts/build-ffmpeg-av1*.sh
+# Build DIRECTORIES only (trailing slash) - never matches files like
+# helper_scripts/build-ffmpeg-av1*.sh or flatpak/build-kde-runtime.sh
+build*/
 /libav*
 /XTPlayer-release
 src/www/.vscode
