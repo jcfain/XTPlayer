@@ -877,6 +877,20 @@ jobs:
               echo "  WARNING: ${_qlib} not found in ${QT_DIR}/lib"
             fi
           done
+          # Bundle the Rockchip MPP V4L2 plugin so the V4L2 M2M hwaccel path
+          # (enabled via --enable-v4l2-m2m in the FFmpeg build) can access the
+          # RK3588 hardware AV1/H264/HEVC decoder. Without this plugin, the
+          # V4L2 M2M API finds no compatible device and falls back to slow
+          # software decode (dav1d). The plugin is GPL v2+ (libv4l project);
+          # source: https://git.kernel.org/pub/scm/utils/libv4l/libv4l.git/
+          # It is a separate runtime-loaded module, not linked into XTPlayer.
+          if [ -f "vendor/libv4l-rkmpp.so" ]; then
+            mkdir -p "${APPDIR}/usr/lib/aarch64-linux-gnu/libv4l/plugins"
+            cp -f "vendor/libv4l-rkmpp.so" "${APPDIR}/usr/lib/aarch64-linux-gnu/libv4l/plugins/"
+            echo "Bundled libv4l-rkmpp.so (Rockchip MPP hw decode plugin)"
+          else
+            echo "WARNING: vendor/libv4l-rkmpp.so not found - hw decode unavailable"
+          fi
           # CRITICAL: patch AppRun to export LD_LIBRARY_PATH with the bundled
           # usr/lib FIRST. linuxdeploy sets RUNPATH=$ORIGIN on most Qt libs,
           # but libQt6Quick.so.6 has NO RUNPATH. It transitively pulls in
