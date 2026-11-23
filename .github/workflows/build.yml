@@ -797,6 +797,22 @@ jobs:
           # GStreamer, which is ABI-incompatible with the bundled aarch64 glib
           # -> SEGV. (The option is also hidden in the UI on Linux.)
           rm -f "${APPDIR}/usr/plugins/multimedia/libgstreamermediaplugin.so"
+          # The qt plugin (running under qemu here) does not reliably deploy the
+          # FFmpeg multimedia backend plugin (libffmpegmediaplugin.so). Without
+          # it, QMediaPlayer has no backend ("No QtMultimedia backends found")
+          # and thumbs/playback fail. Deploy it explicitly from the Qt tree; it
+          # resolves its FFmpeg libs via RUNPATH -> the bundled libavcodec.so.63
+          # etc. in usr/lib (the custom AV1 build staged above).
+          echo "Qt tree multimedia plugins:"
+          ls -la "${QT_DIR}/plugins/multimedia/" 2>/dev/null || echo "(no multimedia dir in Qt tree)"
+          if [ -f "${QT_DIR}/plugins/multimedia/libffmpegmediaplugin.so" ]; then
+            cp -f "${QT_DIR}/plugins/multimedia/libffmpegmediaplugin.so" "${APPDIR}/usr/plugins/multimedia/"
+            echo "Deployed libffmpegmediaplugin.so"
+          else
+            echo "WARNING: libffmpegmediaplugin.so not found in ${QT_DIR}/plugins/multimedia"
+          fi
+          echo "Multimedia plugins in AppDir:"
+          ls -la "${APPDIR}/usr/plugins/multimedia/" 2>/dev/null || echo "(no multimedia dir in AppDir)"
           # Guarantee the icon + desktop file are in the AppDir (the core
           # stages them with --icon-file/--desktop-file, but be explicit -
           # appimagetool needs <name>.png + <name>.desktop for the AppImage
