@@ -175,7 +175,7 @@ jobs:
       - name: Unpack runtime repo as the app repo base
         run: tar -xJf xtp-kde-runtime-6.12-beta-${{ matrix.arch }}.tar.xz
       - name: Patch manifest for dev build (local sources)
-        run: bash flatpak/patch-manifest.sh flatpak/manifest.json xtp-web.tar.xz manifest-patched.json
+        run: bash flatpak/patch-manifest.sh flatpak/manifest.json xtp-web.tar.xz manifest-patched.json ${{ matrix.arch }}
       - name: Cache app build
         uses: actions/cache@v4
         with:
