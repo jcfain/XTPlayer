@@ -66,6 +66,18 @@ if patch -R -p1 --dry-run < kde-sdk.patch >/dev/null 2>&1; then
     patch -R -p1 < kde-sdk.patch
 fi
 
+# os-release's Makefile calls appstreamcli, which the freedesktop SDK does
+# NOT provide (KDE's own CI gets it from their BuildStream toolchain, so the
+# line was never exercised under flatpak-builder). Make the compose steps
+# no-ops when appstreamcli is absent - the composed appstream metadata is
+# not needed to run apps. Patch the file in the checkout (NOT via a manifest
+# script source: with a cached workdir flatpak-builder may reuse the module's
+# source dir and never re-run script sources). The grep guard makes it
+# idempotent on re-runs.
+if grep -q $'^\tappstreamcli ' os-release-Makefile; then
+    sed -i 's#^\tappstreamcli #\tcommand -v appstreamcli >/dev/null \&\& appstreamcli #; s#^\tcommand -v appstreamcli .*#& || true#' os-release-Makefile
+fi
+
 # The freedesktop 26.08 SDK no longer ships elfutils (eu-strip) - it provides
 # a custom 'freedesktop-sdk-stripper' instead. flatpak-builder's DEFAULT
 # debuginfo post-processing runs eu-strip on every module (it is NOT gated
@@ -114,22 +126,8 @@ def prune(modules):
         sys.exit(f"ERROR: modules missing from KDE manifest: {sorted(missing)}")
     # String entries are sub-manifest REFs (qt6-webview, pyside) - drop them;
     # the keep list above is explicit and complete.
-    kept = [m for m in modules
+    return [m for m in modules
             if isinstance(m, dict) and m.get("name") in KEEP]
-    # os-release's Makefile calls appstreamcli, which the freedesktop SDK
-    # does NOT provide (KDE's own CI gets it from their BuildStream
-    # toolchain, so the line was never exercised under flatpak-builder).
-    # Make the compose steps no-ops when appstreamcli is absent - the
-    # composed appstream metadata is not needed to run apps.
-    for m in kept:
-        if m.get("name") == "os-release":
-            m["sources"].append({
-                "type": "script",
-                "commands": [
-                    r"sed -i 's#^\tappstreamcli #\tcommand -v appstreamcli >/dev/null \&\& appstreamcli #; s#^\tcommand -v appstreamcli .*#& || true#' Makefile",
-                ],
-            })
-    return kept
 manifest["modules"] = prune(manifest.get("modules", []))
 with open(path, "w") as f:
     json.dump(manifest, f, indent=4)
