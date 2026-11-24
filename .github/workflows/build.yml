@@ -609,9 +609,11 @@ jobs:
           rm -rf "${GITHUB_WORKSPACE}/qt6-cross/lib"
           ln -sfn "${QT_DIR}/lib" "${GITHUB_WORKSPACE}/qt6-cross/lib"
           make -j"$(nproc)"
-          # Generate .qm translation files (qmake lrelease rule may not run)
+          # Generate .qm translation files (qmake lrelease rule may not run).
+          # Use the HOST lrelease: the aarch64 Qt tree's lrelease is an aarch64
+          # binary the x86_64 runner cannot execute. .qm output is arch-independent.
           mkdir -p release/translations
-          for _ts in ../src/translations/*.ts; do "${QT_DIR}/bin/lrelease" "$_ts" -qm "release/translations/$(basename "${_ts%.ts}").qm"; done
+          for _ts in ../src/translations/*.ts; do "${QT_HOST_DIR}/bin/lrelease" "$_ts" -qm "release/translations/$(basename "${_ts%.ts}").qm"; done
       - name: Package AppImage (cross)
         env:
           EXTRA_PLATFORM_PLUGINS: libqwayland.so
