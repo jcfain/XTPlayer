@@ -72,14 +72,30 @@ fi
 # by --strip finish-args, by build-options only), so the build dies with
 # "Failed to execute child process eu-strip". Switch to plain binutils strip
 # (present in the SDK toolchain) via the top-level build-options: this also
-# keeps the runtime slim, since modules build RelWithDebInfo. Idempotent on
-# re-runs (make may skip regenerating the json, this always re-applies).
+# keeps the runtime slim, since modules build RelWithDebInfo.
+#
+# Also: the 26.08 SDK has no gssapi.h (Kerberos), so qtwebengine's
+# webengine_kerberos feature (ON in KDE's manifest) fails to compile; turn
+# it off - a media player does not need SPNEGO/Kerberos in WebEngine.
+# Idempotent on re-runs (make may skip regenerating the json, this always
+# re-applies).
 python3 - org.kde.Sdk.json <<'PYEOF'
 import json, sys
 path = sys.argv[1]
 with open(path) as f:
     manifest = json.load(f)
 manifest.setdefault("build-options", {})["strip"] = True
+def fix(modules):
+    for m in modules:
+        if not isinstance(m, dict):
+            continue
+        co = m.get("config-opts")
+        if isinstance(co, list):
+            for i, c in enumerate(co):
+                if c == "-DQT_FEATURE_webengine_kerberos=ON":
+                    co[i] = "-DQT_FEATURE_webengine_kerberos=OFF"
+        fix(m.get("modules", []))
+fix(manifest.get("modules", []))
 with open(path, "w") as f:
     json.dump(manifest, f, indent=4)
     f.write("\n")
