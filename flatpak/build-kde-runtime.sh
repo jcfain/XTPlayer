@@ -39,7 +39,14 @@ WORKDIR="$(cd "$WORKDIR" && pwd)"
 cd "$WORKDIR"
 
 if [ ! -d kde-runtime/.git ]; then
-    git clone --depth 1 --branch "$BRANCH" "$REPO_URL" kde-runtime
+    # A cache restore may have left a partial kde-runtime/ behind (just the
+    # cached .flatpak-builder state) - `git clone` refuses a non-empty
+    # destination, so init+fetch into the existing dir instead. Untracked
+    # files (the cached .flatpak-builder) are left alone.
+    mkdir -p kde-runtime
+    git -C kde-runtime init --quiet
+    git -C kde-runtime fetch --depth 1 "$REPO_URL" "refs/heads/$BRANCH:refs/heads/$BRANCH"
+    git -C kde-runtime checkout --quiet "$BRANCH"
 fi
 
 # Flathub remote for --install-deps-from=flathub. Always use the USER
