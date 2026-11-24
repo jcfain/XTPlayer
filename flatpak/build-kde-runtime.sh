@@ -90,7 +90,9 @@ fi
 #   qthttpserver     QT += httpserver (serves the web UI)
 #   qtsvg            SVG image plugin
 #   qtimageformats   extra image format plugins
-#   qttranslations   Qt's own .qm translations
+#   qttools          provides lrelease, needed to BUILD qttranslations
+#   qttranslations   Qt's own .qm translations - main.cpp loads
+#                    qtbase_<lang>.qm (QFileDialog, QMessageBox buttons)
 #   licence-extractor / os-release: infra, trivial
 # (gamepad: the Qt6 path uses the custom 'gamepadlegacy' module, which is
 #  built in the app manifest; 'QT += gamepad' only appears in the QT5 blocks.)
@@ -104,7 +106,7 @@ manifest.setdefault("build-options", {})["strip"] = True
 KEEP = {
     "licence-extractor", "os-release",
     "qtbase", "qtshadertools", "qtmultimedia", "qtwayland",
-    "qthttpserver", "qtsvg", "qtimageformats", "qttranslations",
+    "qthttpserver", "qtsvg", "qtimageformats", "qttools", "qttranslations",
 }
 def prune(modules):
     missing = KEEP - {m.get("name") for m in modules if isinstance(m, dict)}
