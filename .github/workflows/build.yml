@@ -189,7 +189,7 @@ jobs:
           make -j"$(nproc)"
           # Generate .qm translation files (qmake lrelease rule may not run)
           mkdir -p release/translations
-          "${QT_DIR}/bin/lrelease" ../src/translations/*.ts -qm release/translations/
+          for _ts in ../src/translations/*.ts; do "${QT_DIR}/bin/lrelease" "$_ts" -qm "release/translations/$(basename "${_ts%.ts}").qm"; done
       - name: Package AppImage
         env:
           EXTRA_PLATFORM_PLUGINS: libqwayland.so
@@ -611,7 +611,7 @@ jobs:
           make -j"$(nproc)"
           # Generate .qm translation files (qmake lrelease rule may not run)
           mkdir -p release/translations
-          "${QT_DIR}/bin/lrelease" ../src/translations/*.ts -qm release/translations/
+          for _ts in ../src/translations/*.ts; do "${QT_DIR}/bin/lrelease" "$_ts" -qm "release/translations/$(basename "${_ts%.ts}").qm"; done
       - name: Package AppImage (cross)
         env:
           EXTRA_PLATFORM_PLUGINS: libqwayland.so
@@ -1132,7 +1132,7 @@ jobs:
           echo "XTPlayer exe OK"
           # Generate .qm translation files (qmake lrelease rule may not run)
           mkdir -p release/translations
-          "${QT_DIR}/bin/lrelease.exe" ../src/translations/*.ts -qm release/translations/
+          for _ts in ../src/translations/*.ts; do "${QT_DIR}/bin/lrelease.exe" "$_ts" -qm "release/translations/$(basename "${_ts%.ts}").qm"; done
       - name: Package zip
         run: |
           export PATH="$QT_DIR/bin:$MINGW_PREFIX/bin:$PATH"
@@ -1276,7 +1276,7 @@ jobs:
           make -j"$(sysctl -n hw.ncpu)"
           # Generate .qm translation files (qmake lrelease rule may not run)
           mkdir -p release/translations
-          "${QT_DIR}/bin/lrelease" ../src/translations/*.ts -qm release/translations/
+          for _ts in ../src/translations/*.ts; do "${QT_DIR}/bin/lrelease" "$_ts" -qm "release/translations/$(basename "${_ts%.ts}").qm"; done
       - name: Package DMG
         run: |
           APP="build-release/release/XTPlayer.app"
