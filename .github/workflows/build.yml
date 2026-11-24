@@ -187,6 +187,9 @@ jobs:
           cd build-release
           "${QT_DIR}/bin/qmake" ../src/XTPlayer.pro CONFIG+=release
           make -j"$(nproc)"
+          # Generate .qm translation files (qmake lrelease rule may not run)
+          mkdir -p release/translations
+          "${QT_DIR}/bin/lrelease" ../src/translations/xtplayer_zh_CN.ts -qm release/translations/xtplayer_zh_CN.qm
       - name: Package AppImage
         env:
           EXTRA_PLATFORM_PLUGINS: libqwayland.so
@@ -606,6 +609,9 @@ jobs:
           rm -rf "${GITHUB_WORKSPACE}/qt6-cross/lib"
           ln -sfn "${QT_DIR}/lib" "${GITHUB_WORKSPACE}/qt6-cross/lib"
           make -j"$(nproc)"
+          # Generate .qm translation files (qmake lrelease rule may not run)
+          mkdir -p release/translations
+          "${QT_DIR}/bin/lrelease" ../src/translations/xtplayer_zh_CN.ts -qm release/translations/xtplayer_zh_CN.qm
       - name: Package AppImage (cross)
         env:
           EXTRA_PLATFORM_PLUGINS: libqwayland.so
@@ -1124,6 +1130,9 @@ jobs:
             exit 1
           fi
           echo "XTPlayer exe OK"
+          # Generate .qm translation files (qmake lrelease rule may not run)
+          mkdir -p release/translations
+          "${QT_DIR}/bin/lrelease.exe" ../src/translations/xtplayer_zh_CN.ts -qm release/translations/xtplayer_zh_CN.qm
       - name: Package zip
         run: |
           export PATH="$QT_DIR/bin:$MINGW_PREFIX/bin:$PATH"
@@ -1265,6 +1274,9 @@ jobs:
           cd build-release
           "${QT_DIR}/bin/qmake" ../src/XTPlayer.pro CONFIG+=release
           make -j"$(sysctl -n hw.ncpu)"
+          # Generate .qm translation files (qmake lrelease rule may not run)
+          mkdir -p release/translations
+          "${QT_DIR}/bin/lrelease" ../src/translations/xtplayer_zh_CN.ts -qm release/translations/xtplayer_zh_CN.qm
       - name: Package DMG
         run: |
           APP="build-release/release/XTPlayer.app"
