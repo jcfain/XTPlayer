@@ -53,7 +53,8 @@ tarred) — CI builds it in the `web` job.
 CI publishes one combined repo tarball per arch (runtime + app):
 
 ```bash
-flatpak remote-add --if-not-exists xtp \
+# --no-gpg-verify: the repo is unsigned (personal pipeline, no GPG key)
+flatpak remote-add --if-not-exists --no-gpg-verify xtp \
     https://github.com/jcfain/XTPlayer/releases/download/<tag>/xtp-flatpak-<arch>-<tag>.tar.xz
 flatpak install xtp io.github.jcfain.XTPlayer
 ```

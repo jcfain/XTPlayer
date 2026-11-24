@@ -187,7 +187,10 @@ jobs:
         run: |
           # The local repo holds org.kde.Platform 6.12-beta; flatpak-builder
           # resolves the runtime from it and commits the app alongside.
-          flatpak --user remote-add --if-not-exists xtp-local file://$PWD/repo
+          # --no-gpg-verify: the repo is unsigned (no GPG key in this
+          # pipeline) - flatpak enables summary verification by default and
+          # would reject it with "no summary signatures found".
+          flatpak --user remote-add --if-not-exists --no-gpg-verify xtp-local file://$PWD/repo
           # --user: matches the --user remotes added above (flathub,
           # xtp-local). Without it flatpak-builder targets the system
           # installation and cannot see them.
