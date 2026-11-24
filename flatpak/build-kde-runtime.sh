@@ -53,6 +53,19 @@ cd kde-runtime
 # never applied twice.
 make org.kde.Sdk.json ARCH="$ARCH"
 
+# Reverse-apply kde-sdk.patch (qt6.12-only): it rewrites licence-extractor's
+# install paths to %{install-root}/... and $INSTALL_ROOT/..., but current
+# flatpak/flatpak-builder substitute NEITHER (verified in both sources) -
+# the script lands in a literal '%{install-root}' dir and later modules'
+# shell sources die with "install-licenses.sh: command not found". The
+# unpatched /usr/bin paths are correct for current flatpak (the appdir is
+# the build namespace root) - exactly what KDE's main branch uses for its
+# working 6.10/6.11 builds. Idempotent: only reverse-applies if present
+# (on cached re-runs make skips the rule, so the patch is not re-applied).
+if patch -R -p1 --dry-run < kde-sdk.patch >/dev/null 2>&1; then
+    patch -R -p1 < kde-sdk.patch
+fi
+
 # The freedesktop 26.08 SDK no longer ships elfutils (eu-strip) - it provides
 # a custom 'freedesktop-sdk-stripper' instead. flatpak-builder's DEFAULT
 # debuginfo post-processing runs eu-strip on every module (it is NOT gated
