@@ -192,14 +192,14 @@ jobs:
             build
             .ccache
           key: xtp-flatpak-${{ matrix.arch }}-${{ github.sha }}
+      - name: Install KDE SDK from local repo
+        run: |
+          # Explicit install so flatpak-builder finds the SDK in the
+          # installation (its remote ref resolution has been flaky for
+          # SDKs). Fails loudly if the ref is missing from the repo.
+          flatpak --user install --no-gpg-verify xtp-local org.kde.Sdk/${{ matrix.arch }}/6.12-beta
       - name: Build app into the runtime repo
         run: |
-          # The local repo holds org.kde.Platform 6.12-beta; flatpak-builder
-          # resolves the runtime from it and commits the app alongside.
-          # --no-gpg-verify: the repo is unsigned (no GPG key in this
-          # pipeline) - flatpak enables summary verification by default and
-          # would reject it with "no summary signatures found".
-          flatpak --user remote-add --if-not-exists --no-gpg-verify xtp-local file://$PWD/repo
           # --user: matches the --user remotes added above (flathub,
           # xtp-local). Without it flatpak-builder targets the system
           # installation and cannot see them.
