@@ -32,6 +32,10 @@ for tool in flatpak flatpak-builder git make tar; do
 done
 
 mkdir -p "$WORKDIR"
+# Resolve to an absolute path: the script cd's into $WORKDIR/kde-runtime
+# later, and the final tar must land back in $WORKDIR (where the workflow
+# uploads it from) - a relative WORKDIR would break after the cd.
+WORKDIR="$(cd "$WORKDIR" && pwd)"
 cd "$WORKDIR"
 
 if [ ! -d kde-runtime/.git ]; then
@@ -147,5 +151,7 @@ flatpak-builder \
 
 flatpak build-update-repo repo
 
-tar -cJf "xtp-kde-runtime-6.12-beta-${ARCH}.tar.xz" repo
-echo "==> Done: $(pwd)/xtp-kde-runtime-6.12-beta-${ARCH}.tar.xz"
+# NOTE: we are inside $WORKDIR/kde-runtime here - tar into $WORKDIR
+# explicitly, that is where the workflow's upload-artifact looks.
+tar -cJf "$WORKDIR/xtp-kde-runtime-6.12-beta-${ARCH}.tar.xz" repo
+echo "==> Done: $WORKDIR/xtp-kde-runtime-6.12-beta-${ARCH}.tar.xz"

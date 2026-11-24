@@ -92,6 +92,7 @@ jobs:
         with:
           name: xtp-web-flatpak
           path: xtp-web.tar.xz
+          if-no-files-found: error
           retention-days: 1
 
   runtime:
@@ -131,6 +132,7 @@ jobs:
         with:
           name: xtp-runtime-${{ matrix.arch }}
           path: kde-runtime-build/xtp-kde-runtime-6.12-beta-${{ matrix.arch }}.tar.xz
+          if-no-files-found: error
           retention-days: 1
 
   flatpak:
@@ -195,3 +197,4 @@ jobs:
         with:
           name: xtp-flatpak-${{ matrix.arch }}
           path: xtp-flatpak-${{ matrix.arch }}-${{ inputs.version }}.tar.xz
+          if-no-files-found: error
