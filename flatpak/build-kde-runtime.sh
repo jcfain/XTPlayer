@@ -114,8 +114,22 @@ def prune(modules):
         sys.exit(f"ERROR: modules missing from KDE manifest: {sorted(missing)}")
     # String entries are sub-manifest REFs (qt6-webview, pyside) - drop them;
     # the keep list above is explicit and complete.
-    return [m for m in modules
+    kept = [m for m in modules
             if isinstance(m, dict) and m.get("name") in KEEP]
+    # os-release's Makefile calls appstreamcli, which the freedesktop SDK
+    # does NOT provide (KDE's own CI gets it from their BuildStream
+    # toolchain, so the line was never exercised under flatpak-builder).
+    # Make the compose steps no-ops when appstreamcli is absent - the
+    # composed appstream metadata is not needed to run apps.
+    for m in kept:
+        if m.get("name") == "os-release":
+            m["sources"].append({
+                "type": "script",
+                "commands": [
+                    r"sed -i 's#^\tappstreamcli #\tcommand -v appstreamcli >/dev/null \&\& appstreamcli #; s#^\tcommand -v appstreamcli .*#& || true#' Makefile",
+                ],
+            })
+    return kept
 manifest["modules"] = prune(manifest.get("modules", []))
 with open(path, "w") as f:
     json.dump(manifest, f, indent=4)
