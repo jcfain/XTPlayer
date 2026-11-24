@@ -121,10 +121,14 @@ jobs:
       - name: Cache runtime build
         uses: actions/cache@v4
         with:
-          path: kde-runtime-build
-          key: kde-runtime-${{ matrix.arch }}-${{ env.RUNTIME_BRANCH }}-${{ inputs.cache-bust }}
+          # Only the module build state (~4-5GB). repo/ and the tarball are
+          # OUTPUTS - re-committing the repo from the stages takes minutes -
+          # and caching them pushed the entry to the edge of actions/cache's
+          # 10GB limit, which made saves/lookups unreliable.
+          path: kde-runtime-build/kde-runtime/.flatpak-builder
+          key: kde-runtime-v2-${{ matrix.arch }}-${{ env.RUNTIME_BRANCH }}-${{ inputs.cache-bust }}
           restore-keys: |
-            kde-runtime-${{ matrix.arch }}-${{ env.RUNTIME_BRANCH }}-
+            kde-runtime-v2-${{ matrix.arch }}-${{ env.RUNTIME_BRANCH }}-
       - name: Build org.kde.Platform 6.12-beta
         run: bash flatpak/build-kde-runtime.sh ${{ matrix.arch }} kde-runtime-build
       - name: Upload runtime repo
