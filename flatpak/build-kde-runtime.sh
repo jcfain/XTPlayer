@@ -74,28 +74,47 @@ fi
 # (present in the SDK toolchain) via the top-level build-options: this also
 # keeps the runtime slim, since modules build RelWithDebInfo.
 #
-# Also: the 26.08 SDK has no gssapi.h (Kerberos), so qtwebengine's
-# webengine_kerberos feature (ON in KDE's manifest) fails to compile; turn
-# it off - a media player does not need SPNEGO/Kerberos in WebEngine.
-# Idempotent on re-runs (make may skip regenerating the json, this always
-# re-applies).
+# Prune the module list: KDE's manifest builds the FULL org.kde.Platform
+# (QtWebEngine/Chromium, the whole QML/Quick stack, ~70 KDE Frameworks,
+# pyside, ...) - XTPlayer is a QtWidgets app and needs only a small slice.
+# Keeping just the modules below cuts the build time dramatically (qtwebengine
+# alone is the single longest module). The keep list is what the app links
+# (QT += lines in src/*.pro, Qt6 path) plus build-time dependencies:
+#   qtbase           core gui widgets network concurrent serialport
+#                    texttospeech websockets bluetooth compress printsupport
+#   qtshadertools    required by qtmultimedia (its dependencies.yaml)
+#   qtmultimedia     multimedia + multimediawidgets; the SDK provides both
+#                    FFmpeg and GStreamer, so BOTH backend plugins are built
+#                    (the app picks ffmpeg via QT_MULTIMEDIA_PREFERRED_PLUGINS)
+#   qtwayland        Wayland platform plugin (Steam Frame runs gamescope)
+#   qthttpserver     QT += httpserver (serves the web UI)
+#   qtsvg            SVG image plugin
+#   qtimageformats   extra image format plugins
+#   qttranslations   Qt's own .qm translations
+#   licence-extractor / os-release: infra, trivial
+# (gamepad: the Qt6 path uses the custom 'gamepadlegacy' module, which is
+#  built in the app manifest; 'QT += gamepad' only appears in the QT5 blocks.)
+# Idempotent on re-runs (filtering an already-filtered list is a no-op).
 python3 - org.kde.Sdk.json <<'PYEOF'
 import json, sys
 path = sys.argv[1]
 with open(path) as f:
     manifest = json.load(f)
 manifest.setdefault("build-options", {})["strip"] = True
-def fix(modules):
-    for m in modules:
-        if not isinstance(m, dict):
-            continue
-        co = m.get("config-opts")
-        if isinstance(co, list):
-            for i, c in enumerate(co):
-                if c == "-DQT_FEATURE_webengine_kerberos=ON":
-                    co[i] = "-DQT_FEATURE_webengine_kerberos=OFF"
-        fix(m.get("modules", []))
-fix(manifest.get("modules", []))
+KEEP = {
+    "licence-extractor", "os-release",
+    "qtbase", "qtshadertools", "qtmultimedia", "qtwayland",
+    "qthttpserver", "qtsvg", "qtimageformats", "qttranslations",
+}
+def prune(modules):
+    missing = KEEP - {m.get("name") for m in modules if isinstance(m, dict)}
+    if missing:
+        sys.exit(f"ERROR: modules missing from KDE manifest: {sorted(missing)}")
+    # String entries are sub-manifest REFs (qt6-webview, pyside) - drop them;
+    # the keep list above is explicit and complete.
+    return [m for m in modules
+            if isinstance(m, dict) and m.get("name") in KEEP]
+manifest["modules"] = prune(manifest.get("modules", []))
 with open(path, "w") as f:
     json.dump(manifest, f, indent=4)
     f.write("\n")
