@@ -203,6 +203,7 @@ jobs:
           cp -r build-release/release/www "${APPDIR}/usr/bin/"
           cp -r build-release/release/themes "${APPDIR}/usr/bin/"
           cp -r build-release/release/translations "${APPDIR}/usr/bin/"
+          cp -r build-release/release/translations "${APPDIR}/"
           cp -P ../XTEngine/build-release/release/libxtengine.so* "${APPDIR}/usr/lib/"
           # Bundle the AV1 codec libs (overwrites the AV1-less Qt copies)
           cp -f "${CODEC_PREFIX}/lib"/libavcodec.so.63*    "${APPDIR}/usr/lib/"
@@ -626,6 +627,7 @@ jobs:
           cp -r build-release/release/www "${APPDIR}/usr/bin/"
           cp -r build-release/release/themes "${APPDIR}/usr/bin/"
           cp -r build-release/release/translations "${APPDIR}/usr/bin/"
+          cp -r build-release/release/translations "${APPDIR}/"
           cp -P ../XTEngine/build-release/release/libxtengine.so* "${APPDIR}/usr/lib/"
           cp -f "${CODEC_PREFIX}/lib"/libavcodec.so.63*    "${APPDIR}/usr/lib/"
           cp -f "${CODEC_PREFIX}/lib"/libavformat.so.63*   "${APPDIR}/usr/lib/"
