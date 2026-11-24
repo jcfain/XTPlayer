@@ -53,6 +53,25 @@ cd kde-runtime
 # never applied twice.
 make org.kde.Sdk.json ARCH="$ARCH"
 
+# The freedesktop 26.08 SDK no longer ships elfutils (eu-strip) - it provides
+# a custom 'freedesktop-sdk-stripper' instead. flatpak-builder's DEFAULT
+# debuginfo post-processing runs eu-strip on every module (it is NOT gated
+# by --strip finish-args, by build-options only), so the build dies with
+# "Failed to execute child process eu-strip". Switch to plain binutils strip
+# (present in the SDK toolchain) via the top-level build-options: this also
+# keeps the runtime slim, since modules build RelWithDebInfo. Idempotent on
+# re-runs (make may skip regenerating the json, this always re-applies).
+python3 - org.kde.Sdk.json <<'PYEOF'
+import json, sys
+path = sys.argv[1]
+with open(path) as f:
+    manifest = json.load(f)
+manifest.setdefault("build-options", {})["strip"] = True
+with open(path, "w") as f:
+    json.dump(manifest, f, indent=4)
+    f.write("\n")
+PYEOF
+
 # Build org.kde.Platform (id-platform) + org.kde.Sdk into ./repo.
 # No --force-clean: with a cached WORKDIR, unchanged modules are reused.
 flatpak-builder \
