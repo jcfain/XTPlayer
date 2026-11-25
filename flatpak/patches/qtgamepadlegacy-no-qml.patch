@@ -1,0 +1,11 @@
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -1,5 +1,7 @@
+ # Generated from src.pro.
+ 
+ add_subdirectory(gamepad)
+-add_subdirectory(imports)
++if(TARGET Qt::Quick)
++    add_subdirectory(imports)
++endif()
+ add_subdirectory(plugins)
