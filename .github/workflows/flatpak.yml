@@ -197,7 +197,8 @@ jobs:
           # Explicit install so flatpak-builder finds the SDK in the
           # installation (its remote ref resolution has been flaky for
           # SDKs). Fails loudly if the ref is missing from the repo.
-          flatpak --user install --no-gpg-verify xtp-local org.kde.Sdk/${{ matrix.arch }}/6.12-beta
+          # (GPG is already disabled on the xtp-local remote itself.)
+          flatpak --user install xtp-local org.kde.Sdk/${{ matrix.arch }}/6.12-beta
       - name: Build app into the runtime repo
         run: |
           # --user: matches the --user remotes added above (flathub,
