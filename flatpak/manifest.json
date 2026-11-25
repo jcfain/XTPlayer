@@ -4,6 +4,9 @@
     "sdk": "org.kde.Sdk/$ARCH/6.12-beta",
     "version": "0.6.11b",
     "command": "XTPlayer",
+    "build-options": {
+        "strip": true
+    },
     "finish-args": [
         "--share=ipc",
         "--share=network",
