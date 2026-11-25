@@ -121,16 +121,15 @@ jobs:
       - name: Cache runtime build
         uses: actions/cache@v4
         with:
-          # Only the module build state (build/ + cache/ + checksums/,
-          # ~2GB per arch). ccache/ and downloads/ are excluded: they are
-          # only needed when something compiles (a cache miss), and
-          # including them put the two arch entries at ~10.4GB total - over
-          # actions/cache's 10GB per-repo limit, so GitHub evicted one
-          # arch's entry on every save (permanent cache ping-pong).
-          path: |
-            kde-runtime-build/kde-runtime/.flatpak-builder/build
-            kde-runtime-build/kde-runtime/.flatpak-builder/cache
-            kde-runtime-build/kde-runtime/.flatpak-builder/checksums
+          # Only the ostree module cache (.flatpak-builder/cache/,
+          # ~3GB per arch). flatpak-builder's reuse decision is entirely
+          # an ostree ref lookup in that repo (builder_cache_lookup); the
+          # build/ trees, downloads/ and ccache/ are only touched when a
+          # stage actually compiles. Caching them too put the two arch
+          # entries over actions/cache's 10GB per-repo total limit (shared
+          # with the other workflows' caches), so GitHub's LRU GC kept
+          # evicting one arch's entry.
+          path: kde-runtime-build/kde-runtime/.flatpak-builder/cache
           key: kde-runtime-v2-${{ matrix.arch }}-${{ env.RUNTIME_BRANCH }}-${{ inputs.cache-bust }}
           restore-keys: |
             kde-runtime-v2-${{ matrix.arch }}-${{ env.RUNTIME_BRANCH }}-
