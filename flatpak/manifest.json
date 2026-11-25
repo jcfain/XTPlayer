@@ -40,7 +40,7 @@
             "name": "aom",
             "buildsystem": "simple",
             "build-commands": [
-                "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/usr -S . -B _build",
+                "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/app -DENABLE_APPS=OFF -DENABLE_EXAMPLES=OFF -DENABLE_TESTS=OFF -DENABLE_TOOLS=OFF -DENABLE_DOCS=OFF -S . -B _build",
                 "cmake --build _build",
                 "cmake --install _build"
             ],
