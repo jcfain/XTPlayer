@@ -192,10 +192,12 @@ jobs:
       - name: Cache app build
         uses: actions/cache@v4
         with:
-          path: |
-            build
-            .ccache
-          key: xtp-flatpak-${{ matrix.arch }}-${{ github.sha }}
+          # flatpak-builder's state lives in .flatpak-builder/ (not "build"/".ccache");
+          # the ostree module cache is content-addressed, so a stable key is safe:
+          # tagged modules (dav1d/aom/ffmpeg) are reused, dir/file modules rebuild
+          # when their content changes.
+          path: .flatpak-builder/cache
+          key: xtp-flatpak-${{ matrix.arch }}-v1
       - name: Install KDE runtime + SDK from local repo
         run: |
           # Explicit install so flatpak-builder finds the refs in the
