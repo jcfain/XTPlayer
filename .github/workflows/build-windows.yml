@@ -1,0 +1,64 @@
+# =============================================================================
+# XTPlayer — standalone Windows build
+#
+# Build ONLY the Windows x86_64 zip on demand (Run workflow button), without
+# building the other platforms. Delegates to the shared reusable pipeline in
+# build.yml (platform: windows), so it stays in lockstep with nightly /
+# release.
+#
+# The artifact is published to the rolling 'nightly' GitHub Release. The
+# version is fixed to 'nightly' so the file name matches the nightly Windows
+# asset and REPLACES it (action-gh-release overwrites same-named assets);
+# the other platform assets and the release notes are left untouched. It
+# never creates a versioned release.
+# =============================================================================
+name: Build Windows (standalone)
+
+on:
+  workflow_dispatch:
+    inputs:
+      player-branch:
+        description: 'XTPlayer branch to build (Development or main)'
+        required: true
+        default: 'Development'
+        type: string
+      engine-branch:
+        description: 'XTEngine branch to build against (Development or main)'
+        required: true
+        default: 'Development'
+        type: string
+
+jobs:
+  build:
+    name: Build Windows x86_64 (zip)
+    uses: ./.github/workflows/build.yml
+    with:
+      player-branch: ${{ inputs.player-branch }}
+      engine-branch: ${{ inputs.engine-branch }}
+      # Fixed 'nightly' so the artifact name matches the rolling nightly
+      # release's Windows asset and replaces it (see the publish job).
+      version: nightly
+      platform: windows
+
+  publish:
+    name: Publish to nightly release
+    needs: build
+    if: needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Flatten artifacts
+        run: |
+          rm -rf dist/xtp-web   # internal web-bundle artifact, not a release asset
+          find dist -type f -exec mv {} dist/ \;
+      - name: Publish to rolling 'nightly' release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly
+          files: |
+            dist/*

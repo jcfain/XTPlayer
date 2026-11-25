@@ -35,6 +35,14 @@ on:
         description: 'Version string for artifact names (e.g. v0.6.10, nightly-20261119-abc1234)'
         required: true
         type: string
+      # Which platform(s) to build. 'all' (the default) keeps nightly/release
+      # building every platform; the standalone per-platform workflows pass a
+      # single value so only that platform (plus the shared web bundle) runs.
+      platform:
+        description: 'Which platform(s) to build: all, linux-x86_64, linux-aarch64, windows, macos'
+        required: false
+        type: string
+        default: 'all'
 
 env:
   QT_VERSION: '6.12.0'
@@ -82,6 +90,7 @@ jobs:
 
   linux-x86_64:
     name: Linux x86_64 (AppImage)
+    if: ${{ inputs.platform == 'all' || inputs.platform == 'linux-x86_64' }}
     # Pinned: the AppImage bundles the runner's system libs (glib, mp3lame,
     # ...) but NOT glibc itself (linuxdeploy excludelist), so the AppImage
     # needs the target's glibc >= the runner's. 24.04 (glibc 2.39) keeps it
@@ -346,6 +355,7 @@ jobs:
 
   linux-aarch64:
     name: Linux aarch64 (AppImage, cross)
+    if: ${{ inputs.platform == 'all' || inputs.platform == 'linux-aarch64' }}
     # Pinned to match the x86_64 job (the cross glibc bundled into the
     # AppImage comes from this runner's cross toolchain).
     runs-on: ubuntu-24.04
@@ -956,6 +966,7 @@ jobs:
 
   windows:
     name: Windows x86_64 (zip)
+    if: ${{ inputs.platform == 'all' || inputs.platform == 'windows' }}
     runs-on: windows-latest
     needs: web
     defaults:
@@ -1180,6 +1191,7 @@ jobs:
 
   macos:
     name: macOS universal (DMG)
+    if: ${{ inputs.platform == 'all' || inputs.platform == 'macos' }}
     runs-on: macos-latest
     needs: web
     env:
