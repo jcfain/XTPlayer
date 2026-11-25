@@ -121,11 +121,16 @@ jobs:
       - name: Cache runtime build
         uses: actions/cache@v4
         with:
-          # Only the module build state (~4-5GB). repo/ and the tarball are
-          # OUTPUTS - re-committing the repo from the stages takes minutes -
-          # and caching them pushed the entry to the edge of actions/cache's
-          # 10GB limit, which made saves/lookups unreliable.
-          path: kde-runtime-build/kde-runtime/.flatpak-builder
+          # Only the module build state (build/ + cache/ + checksums/,
+          # ~2GB per arch). ccache/ and downloads/ are excluded: they are
+          # only needed when something compiles (a cache miss), and
+          # including them put the two arch entries at ~10.4GB total - over
+          # actions/cache's 10GB per-repo limit, so GitHub evicted one
+          # arch's entry on every save (permanent cache ping-pong).
+          path: |
+            kde-runtime-build/kde-runtime/.flatpak-builder/build
+            kde-runtime-build/kde-runtime/.flatpak-builder/cache
+            kde-runtime-build/kde-runtime/.flatpak-builder/checksums
           key: kde-runtime-v2-${{ matrix.arch }}-${{ env.RUNTIME_BRANCH }}-${{ inputs.cache-bust }}
           restore-keys: |
             kde-runtime-v2-${{ matrix.arch }}-${{ env.RUNTIME_BRANCH }}-
