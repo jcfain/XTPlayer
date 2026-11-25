@@ -192,13 +192,16 @@ jobs:
             build
             .ccache
           key: xtp-flatpak-${{ matrix.arch }}-${{ github.sha }}
-      - name: Install KDE SDK from local repo
+      - name: Install KDE runtime + SDK from local repo
         run: |
-          # Explicit install so flatpak-builder finds the SDK in the
+          # Explicit install so flatpak-builder finds the refs in the
           # installation (its remote ref resolution has been flaky for
-          # SDKs). Fails loudly if the ref is missing from the repo.
+          # both the SDK and the Platform). Fails loudly if a ref is
+          # missing from the repo.
           # (GPG is already disabled on the xtp-local remote itself.)
-          flatpak --user install --noninteractive xtp-local org.kde.Sdk/${{ matrix.arch }}/6.12-beta
+          flatpak --user install --noninteractive xtp-local \
+            org.kde.Platform/${{ matrix.arch }}/6.12-beta \
+            org.kde.Sdk/${{ matrix.arch }}/6.12-beta
       - name: Build app into the runtime repo
         run: |
           # --user: matches the --user remotes added above (flathub,
