@@ -27,9 +27,10 @@
             ],
             "sources": [
                 {
-                    "type": "archive",
-                    "url": "https://code.videolan.org/videolan/dav1d/-/archive/1.5.1/dav1d-1.5.1.tar.gz",
-                    "sha256": "fa635e2bdb25147b1384007c83e15de44c589582bb3b9a53fc1579cb9d74b695"
+                    "type": "git",
+                    "url": "https://github.com/videolan/dav1d",
+                    "tag": "1.5.1",
+                    "depth": 1
                 }
             ]
         },
@@ -41,9 +42,10 @@
             ],
             "sources": [
                 {
-                    "type": "archive",
-                    "url": "https://aomedia.googlesource.com/aom/+archive/refs/tags/v3.15.2.tar.gz",
-                    "sha256": "5fe27a0ee7d0e4b1181e60e80cffb7a95efaa9e4f2cfd9aa88dc504c7a06a7e9"
+                    "type": "git",
+                    "url": "https://aomedia.googlesource.com/aom",
+                    "tag": "v3.15.2",
+                    "depth": 1
                 }
             ]
         },
