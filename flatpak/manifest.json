@@ -29,8 +29,7 @@
                 {
                     "type": "git",
                     "url": "https://github.com/videolan/dav1d",
-                    "tag": "1.5.1",
-                    "depth": 1
+                    "tag": "1.5.1"
                 }
             ]
         },
@@ -44,8 +43,7 @@
                 {
                     "type": "git",
                     "url": "https://aomedia.googlesource.com/aom",
-                    "tag": "v3.15.2",
-                    "depth": 1
+                    "tag": "v3.15.2"
                 }
             ]
         },

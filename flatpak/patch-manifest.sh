@@ -35,7 +35,7 @@ jq --arg url "$WEB_ABS" --arg sha "$WEB_SHA" --arg arch "$ARCH" '
     .runtime = "org.kde.Platform/\($arch)/6.12-beta"
     | .sdk = "org.kde.Sdk/\($arch)/6.12-beta"
     | (.modules[] | select(.name == "xtp-web") | .sources[0]) |=
-        (.url = $url | .sha256 = $sha)
+        {type: "file", path: $url, sha256: $sha}
     | (.modules[] | select(.name == "xtplayer") | .sources[]) |=
         (if .type == "git" and (.url | endswith("XTPlayer")) then
             {type: "dir", path: ".", dest: "XTPlayer"}
