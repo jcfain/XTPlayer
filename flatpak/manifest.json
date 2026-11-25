@@ -42,8 +42,8 @@
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://aomedia.googlesource.com/aom/+archive/refs/tags/v3.15.2/aom-v3.15.2.tar.gz",
-                    "sha256": "8ad221419a4877f74cb6fd7e08343252787ac38f8d976b679311e979bd2fd603"
+                    "url": "https://aomedia.googlesource.com/aom/+archive/refs/tags/v3.15.2.tar.gz",
+                    "sha256": "5fe27a0ee7d0e4b1181e60e80cffb7a95efaa9e4f2cfd9aa88dc504c7a06a7e9"
                 }
             ]
         },
