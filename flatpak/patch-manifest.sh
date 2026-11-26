@@ -11,6 +11,10 @@
 #      by arch (e.g. ffmpeg-av1) - flatpak-builder does NOT support that
 #      (config-opts must be a flat string array; an object is dropped with
 #      a deserialization warning), so flatten it to the target arch here.
+#   5. patch sources: paths are relative to the manifest's location. The
+#      committed manifest lives in flatpak/, but this script writes the
+#      patched manifest to the workspace root, so prefix flatpak/ to make
+#      the paths resolve from there.
 #
 # The committed manifest keeps the git / release-asset sources so it also
 # works for tag-based (release) builds and local reproducible builds.
@@ -44,6 +48,8 @@ jq --arg url "$WEB_ABS" --arg sha "$WEB_SHA" --arg arch "$ARCH" '
          else . end)
     | (.modules[] | select(."config-opts" | type == "object") | ."config-opts") |=
         (.[$arch] // [])
+    | (.modules[].sources[] | select(.type == "patch") | .path) |=
+        "flatpak/" + .
 ' "$MANIFEST" > "$OUT"
 
 echo "==> Patched manifest written to $OUT (arch: $ARCH, web sha256: $WEB_SHA)"
