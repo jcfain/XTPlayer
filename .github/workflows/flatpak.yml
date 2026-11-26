@@ -184,7 +184,10 @@ jobs:
         run: flatpak build-update-repo repo
       - name: Size breakdown (per-component)
         run: |
-          APP="$FLATPAK_BUILDER_BUILDDIR/app"
+          # flatpak-builder's build dir is "build" (see the Build app step), so
+          # the appdir is build/app. $FLATPAK_BUILDER_BUILDDIR is only set inside
+          # flatpak-builder's own build commands, not in this Actions shell.
+          APP="build/app"
           echo "=== Top-level /app components ==="
           du -sh "$APP"/* 2>/dev/null | sort -rh
           echo
