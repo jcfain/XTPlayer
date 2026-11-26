@@ -133,6 +133,7 @@
                 "mkdir -p /app/bin/www && cp -r XTPlayer/build/release/www/. /app/bin/www/",
                 "mkdir -p /app/bin/themes && cp -r XTPlayer/build/release/themes/. /app/bin/themes/",
                 "mkdir -p /app/bin/translations && cp -r XTPlayer/build/release/translations/. /app/bin/translations/ 2>/dev/null || true",
+                "V=$(awk '/#define VERSION_MAJOR/{m=$3} /#define VERSION_MINOR/{n=$3} /#define VERSION_REVISION/{r=$3} /#define VERSION_PHASE/{p=$3} END{printf \"%d.%d.%d%s\", m, n, r, p}' XTEngine/src/XTEngine_global.h) && sed -i \"s/^Version=.*/Version=$V/\" XTPlayer/flatpak/XTPlayer.desktop",
                 "install -Dm644 XTPlayer/flatpak/XTPlayer.desktop /app/share/applications/io.github.jcfain.XTPlayer.desktop",
                 "install -Dm644 XTPlayer/src/images/icons/XTP-icon.png /app/share/icons/hicolor/256x256/apps/io.github.jcfain.XTPlayer.png"
             ],
