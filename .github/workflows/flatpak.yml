@@ -184,10 +184,24 @@ jobs:
         run: flatpak build-update-repo repo
       - name: Size breakdown (per-component)
         run: |
-          # flatpak-builder's build dir is "build" (see the Build app step), so
-          # the appdir is build/app. $FLATPAK_BUILDER_BUILDDIR is only set inside
-          # flatpak-builder's own build commands, not in this Actions shell.
-          APP="build/app"
+          echo "=== workspace top-level ==="
+          ls -la
+          echo
+          echo "=== build/ (if present) ==="
+          ls -la build/ 2>/dev/null || echo "  (no build/ dir)"
+          echo
+          # Locate the appdir. flatpak-builder's build dir is the positional arg
+          # "build" in the Build app step, so the appdir should be build/app.
+          # Fall back to a search in case it landed elsewhere.
+          if [ -d build/app ] && [ -n "$(ls -A build/app 2>/dev/null)" ]; then
+            APP="build/app"
+          else
+            APP=$(find . -maxdepth 3 -type d -name app -not -path '*/cache/*' 2>/dev/null | head -1)
+            echo "  build/app missing/empty; falling back to APP=$APP"
+          fi
+          echo "=== APP=$APP ==="
+          ls -la "$APP" 2>/dev/null | head -20
+          echo
           echo "=== Top-level /app components ==="
           du -sh "$APP"/* 2>/dev/null | sort -rh
           echo
@@ -197,7 +211,6 @@ jobs:
           done
           echo
           echo "=== Qt libs vs FFmpeg (inside /app/lib) ==="
-          du -sh "$APP"/lib/libQt6* 2>/dev/null | awk '{s+=$1} END {print "  (note: human sizes not additive)"}'
           echo "  Qt6 libs count: $(ls "$APP"/lib/libQt6*.so* 2>/dev/null | wc -l)"
           echo "  FFmpeg libs: $(ls "$APP"/lib/libav* "$APP"/lib/libsw* 2>/dev/null | wc -l)"
           echo
