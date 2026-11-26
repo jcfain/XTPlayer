@@ -26,6 +26,10 @@ WORKDIR="${2:-$(pwd)/kde-runtime-build}"
 REPO_URL="https://invent.kde.org/packaging/flatpak-kde-runtime.git"
 BRANCH="qt6.12"
 FLATHUB_URL="https://dl.flathub.org/repo/flathub.flatpakrepo"
+# The script lives in <repo>/flatpak/ - the qtgamepadlegacy module added
+# below references a patch that is staged next to the generated manifest
+# (patch paths are relative to the manifest location).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 for tool in flatpak flatpak-builder git make tar; do
     command -v "$tool" >/dev/null || { echo "ERROR: $tool not found"; exit 1; }
@@ -58,6 +62,11 @@ fi
 flatpak --user remote-add --if-not-exists flathub "$FLATHUB_URL"
 
 cd kde-runtime
+# Stage the qtgamepadlegacy patch next to the manifest (the module added
+# below references it by bare filename; patch paths are relative to the
+# manifest). cp is idempotent on re-runs.
+cp "$SCRIPT_DIR/patches/qtgamepadlegacy-no-qml.patch" qtgamepadlegacy-no-qml.patch
+
 # Generate org.kde.Sdk.json from org.kde.Sdk.json.in (appends
 # inherit-sdk-extensions, then applies kde-sdk.patch to the GENERATED file).
 # Re-runs: make skips the rule if the json is up to date, so the patch is
@@ -107,7 +116,11 @@ fi
 #   qtserialport     QT += serialport
 #   qtspeech         QT += texttospeech
 #   qtwebsockets     QT += websockets
-#   qtbluetooth      QT += bluetooth (NOT in KDE's manifest - added below)
+#   qtconnectivity   QT += bluetooth (the Bluetooth module lives in the
+#                    qtconnectivity repo together with NFC - there is no
+#                    standalone qtbluetooth repo/tarball; without BlueZ
+#                    headers it builds the dummy backend, the app talks to
+#                    BlueZ over D-Bus at runtime)
 #   qtshadertools    required by qtmultimedia (its dependencies.yaml)
 #   qtmultimedia     multimedia + multimediawidgets; the SDK provides both
 #                    FFmpeg and GStreamer, so BOTH backend plugins are built
@@ -120,8 +133,11 @@ fi
 #   qttranslations   Qt's own .qm translations - main.cpp loads
 #                    qtbase_<lang>.qm (QFileDialog, QMessageBox buttons)
 #   licence-extractor / os-release: infra, trivial
-# (gamepad: the Qt6 path uses the custom 'gamepadlegacy' module, which is
-#  built in the app manifest; 'QT += gamepad' only appears in the QT5 blocks.)
+# (gamepad: the Qt6 path uses the third-party 'gamepadlegacy' module, which
+#  is NOT in KDE's manifest and is added below. It MUST be in the runtime,
+#  not the app manifest: XTEngine builds with the SDK's qmake (prefix /usr),
+#  which resolves QT += modules from the SDK's mkspecs/modules - a module
+#  installed to /app is invisible to it.)
 # Idempotent on re-runs (filtering an already-filtered list is a no-op).
 python3 - org.kde.Sdk.json <<'PYEOF'
 import json, sys
@@ -133,7 +149,7 @@ KEEP = {
     "licence-extractor", "os-release",
     "qtbase", "qtshadertools", "qtmultimedia", "qtwayland",
     "qthttpserver", "qtsvg", "qtimageformats", "qttools", "qttranslations",
-    "qtserialport", "qtspeech", "qtwebsockets",
+    "qtserialport", "qtspeech", "qtwebsockets", "qtconnectivity",
 }
 def prune(modules):
     missing = KEEP - {m.get("name") for m in modules if isinstance(m, dict)}
@@ -144,22 +160,30 @@ def prune(modules):
     return [m for m in modules
             if isinstance(m, dict) and m.get("name") in KEEP]
 manifest["modules"] = prune(manifest.get("modules", []))
-# qtbluetooth is NOT in KDE's manifest (KDE uses bluez-qt, not Qt's
-# Bluetooth module) and Qt publishes no 6.12 submodule tarball for it
-# (checked files.kde.org and download.qt.io), so build it from Qt's git.
-# Without BlueZ headers it builds the dummy backend - fine, the app talks
-# to BlueZ over D-Bus at runtime (--socket=bluetooth finish-arg).
-if not any(isinstance(m, dict) and m.get("name") == "qtbluetooth"
+# qtgamepadlegacy is NOT in KDE's manifest - it is a third-party Qt module
+# (the 'gamepadlegacy' module XTEngine links on the Qt6 path). Build it from
+# git with the no-qml patch (the KDE SDK has no Qt Quick, so the QML imports
+# subdirectory must be skipped - the app only uses the C++ API + the evdev
+# plugin). Its CMake build installs the qmake .pri spec into the SDK's
+# mkspecs/modules, which is what XTEngine's qmake build resolves against.
+if not any(isinstance(m, dict) and m.get("name") == "qtgamepadlegacy"
            for m in manifest["modules"]):
     manifest["modules"].append({
-        "name": "qtbluetooth",
+        "name": "qtgamepadlegacy",
         "buildsystem": "cmake-ninja",
-        "cleanup-platform": ["/bin"],
+        "config-opts": [
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DQT_GENERATE_SBOM=OFF"
+        ],
         "sources": [
             {
                 "type": "git",
-                "url": "https://code.qt.io/qt/qtbluetooth.git",
-                "tag": "v6.12.0"
+                "url": "https://github.com/pumphaus/qtgamepadlegacy",
+                "commit": "434fe59d70f42fa0f745af05921ba64169fce90b"
+            },
+            {
+                "type": "patch",
+                "path": "qtgamepadlegacy-no-qml.patch"
             }
         ]
     })
