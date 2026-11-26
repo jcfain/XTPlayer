@@ -8,9 +8,10 @@
 #
 # The artifact is published to the rolling 'nightly' GitHub Release. The
 # version is fixed to 'nightly' so the file name matches the nightly macOS
-# asset and REPLACES it (action-gh-release overwrites same-named assets);
-# the other three platform assets and the release notes are left untouched.
-# It never creates a versioned release.
+# asset and REPLACES it (action-gh-release overwrites same-named assets); the
+# other platform assets and the release notes are left untouched. The 'nightly'
+# tag is moved to the built commit so the auto-generated source archives stay
+# fresh. It never creates a versioned release.
 # =============================================================================
 name: Build macOS (standalone)
 
@@ -36,7 +37,7 @@ jobs:
       player-branch: ${{ inputs.player-branch }}
       engine-branch: ${{ inputs.engine-branch }}
       # Fixed 'nightly' so the artifact name matches the rolling nightly
-      # release's macOS asset and replaces it (see the publish job).
+      # release's macOS asset and REPLACES it (see the publish job).
       version: nightly
       platform: macos
 
@@ -62,3 +63,26 @@ jobs:
           tag_name: nightly
           files: |
             dist/*
+      - name: Refresh source archives (move nightly tag to the built commit)
+        # GitHub's auto-generated "Source code (zip/tar.gz)" are built from the
+        # commit the 'nightly' TAG points to, which stays frozen at the commit
+        # the release was first created on. Re-uploading assets / updating the
+        # release name never moves the tag, so the source archives go stale.
+        # Move the tag to the HEAD of the branch we just built so the source
+        # archives match the binaries.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUILD_BRANCH: ${{ inputs.player-branch }}
+        run: |
+          set -euo pipefail
+          sha=$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/${BUILD_BRANCH}" \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["commit"]["sha"])')
+          echo "Moving 'nightly' tag to ${BUILD_BRANCH} HEAD: ${sha}"
+          curl -fsSL -X PATCH \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'Content-Type: application/json' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/git/refs/tags/nightly" \
+            -d "{\"sha\": \"${sha}\", \"force\": true}"

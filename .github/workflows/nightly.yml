@@ -24,9 +24,23 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       release-name: ${{ steps.v.outputs.release_name }}
+      built-sha: ${{ steps.v.outputs.built_sha }}
     steps:
       - id: v
-        run: echo "release_name=Nightly $(date -u +%Y-%m-%d) — ${{ github.sha }}" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # The build checks out Development, so the provenance SHA must be
+          # Development's HEAD - NOT github.sha, which for schedule +
+          # workflow_dispatch runs is the default-branch (main) HEAD: a commit
+          # that was never built. Using it made the release name name a main
+          # commit instead of the Development commit that produced the binaries.
+          sha=$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/Development" \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["commit"]["sha"])')
+          echo "built_sha=${sha}" >> "$GITHUB_OUTPUT"
+          echo "release_name=Nightly $(date -u +%Y-%m-%d) — ${sha}" >> "$GITHUB_OUTPUT"
 
   build:
     name: Build all platforms
@@ -53,6 +67,8 @@ jobs:
     needs: [build, meta]
     if: needs.build.result == 'success'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -68,7 +84,7 @@ jobs:
           tag_name: nightly
           name: ${{ needs.meta.outputs.release-name }}
           body: |
-            Nightly build of **Development** (XTEngine **Development**) — commit ${{ github.sha }}
+            Nightly build of **Development** (XTEngine **Development**) — commit ${{ needs.meta.outputs.built-sha }}
 
             Artifacts:
             * Linux x86_64 + aarch64 AppImages
@@ -80,3 +96,26 @@ jobs:
             > `xattr -d com.apple.quarantine /Applications/XTPlayer.app`).
           files: |
             dist/*
+      - name: Refresh source archives (move nightly tag to the built commit)
+        # GitHub's auto-generated "Source code (zip/tar.gz)" are built from the
+        # commit the 'nightly' TAG points to, which stays frozen at the commit
+        # the release was first created on. Re-uploading assets / updating the
+        # release name never moves the tag, so the source archives go stale.
+        # Move the tag to the HEAD of the branch we just built so the source
+        # archives match the binaries.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUILD_BRANCH: Development
+        run: |
+          set -euo pipefail
+          sha=$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/${BUILD_BRANCH}" \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["commit"]["sha"])')
+          echo "Moving 'nightly' tag to ${BUILD_BRANCH} HEAD: ${sha}"
+          curl -fsSL -X PATCH \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'Content-Type: application/json' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/git/refs/tags/nightly" \
+            -d "{\"sha\": \"${sha}\", \"force\": true}"
