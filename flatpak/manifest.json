@@ -2,7 +2,6 @@
     "app-id": "io.github.jcfain.XTPlayer",
     "runtime": "org.kde.Platform/$ARCH/6.12-beta",
     "sdk": "org.kde.Sdk/$ARCH/6.12-beta",
-    "version": "0.6.11b",
     "command": "XTPlayer",
     "build-options": {
         "strip": true
