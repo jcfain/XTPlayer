@@ -182,6 +182,25 @@ jobs:
           flatpak-builder --user --ccache --arch=${{ matrix.arch }} --disable-rofiles-fuse --repo=repo build manifest-patched.json
       - name: Update repo
         run: flatpak build-update-repo repo
+      - name: Size breakdown (per-component)
+        run: |
+          APP="$FLATPAK_BUILDER_BUILDDIR/app"
+          echo "=== Top-level /app components ==="
+          du -sh "$APP"/* 2>/dev/null | sort -rh
+          echo
+          echo "=== Key dirs ==="
+          for d in lib lib/cmake lib/qt6 plugins include bin share; do
+            [ -e "$APP/$d" ] && du -sh "$APP/$d" 2>/dev/null
+          done
+          echo
+          echo "=== Qt libs vs FFmpeg (inside /app/lib) ==="
+          du -sh "$APP"/lib/libQt6* 2>/dev/null | awk '{s+=$1} END {print "  (note: human sizes not additive)"}'
+          echo "  Qt6 libs count: $(ls "$APP"/lib/libQt6*.so* 2>/dev/null | wc -l)"
+          echo "  FFmpeg libs: $(ls "$APP"/lib/libav* "$APP"/lib/libsw* 2>/dev/null | wc -l)"
+          echo
+          echo "=== Top 25 largest files in /app ==="
+          find "$APP" -type f -printf '%s\t%p\n' 2>/dev/null | sort -rn | head -25 | \
+            awk -F'\t' '{printf "  %.1f MB  %s\n", $1/1048576, $2}'
       - name: Package app as a .flatpak bundle
         run: |
           # A bundle contains only the app (Qt6 + XTPlayer + FFmpeg + web); the
