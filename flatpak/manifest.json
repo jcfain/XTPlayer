@@ -313,7 +313,7 @@
                 "mkdir -p XTEngine/build-release && cd XTEngine/build-release && /app/bin/qmake ../src/XTEngine.pro CONFIG+=release && make -j$(nproc)",
                 "mkdir -p XTPlayer/build && cd XTPlayer/build && /app/bin/qmake ../src/XTPlayer.pro CONFIG+=release && make -j$(nproc)",
                 "install -Dm755 XTPlayer/build/release/XTPlayer /app/bin/XTPlayer",
-                "install -Dm755 XTEngine/build-release/release/libxtengine.so /app/lib/libxtengine.so",
+                "cp -a XTEngine/build-release/release/libxtengine.so* /app/lib/",
                 "mkdir -p /app/bin/www && cp -r XTPlayer/build/release/www/. /app/bin/www/",
                 "mkdir -p /app/bin/themes && cp -r XTPlayer/build/release/themes/. /app/bin/themes/",
                 "mkdir -p /app/bin/translations && cp -r XTPlayer/build/release/translations/. /app/bin/translations/ 2>/dev/null || true",
