@@ -36,8 +36,8 @@ WEB_SHA=$(sha256sum "$WEB_BUNDLE" | cut -d' ' -f1)
 WEB_ABS=$(readlink -f "$WEB_BUNDLE")
 
 jq --arg url "$WEB_ABS" --arg sha "$WEB_SHA" --arg arch "$ARCH" '
-    .runtime = "org.kde.Platform/\($arch)/6.12-beta"
-    | .sdk = "org.kde.Sdk/\($arch)/6.12-beta"
+    .runtime = "org.freedesktop.Platform/\($arch)/26.08"
+    | .sdk = "org.freedesktop.Sdk/\($arch)/26.08"
     | (.modules[] | select(.name == "xtp-web") | .sources[0]) |=
         {type: "file", path: $url, sha256: $sha, dest: "web"}
     | (.modules[] | select(.name == "xtplayer") | .sources[]) |=
