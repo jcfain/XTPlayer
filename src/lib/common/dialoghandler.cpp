@@ -33,11 +33,13 @@ void DialogHandler::MessageBox(QWidget* parent, QString message, XLogLevel level
     messageBox.setFixedSize(500,200);
 }
 
-int DialogHandler::Dialog(QWidget* parent, QLayout* layout, bool modal, bool showAccept)
+int DialogHandler::Dialog(QWidget* parent, QLayout* layout, bool modal, bool showAccept, const QSize& minSize)
 {
     if(!_dialog) {
         _dialog = new QDialog(FullScreenModalDialog::dialogParent(parent));
         _dialog->setMinimumSize({175, 100});
+        if (minSize.isValid())
+            _dialog->setMinimumSize(minSize);
         connect(_dialog, &QDialog::destroyed, [](){
             qDebug("Dialog is gone.");
             _dialog = 0;
@@ -144,18 +146,18 @@ void DialogHandler::ShowAboutDialog(QWidget* parent, QString XTPVersion, QString
 {
     //<a href="https://www.vecteezy.com/free-vector/media-player-icons">Media Player Icons Vectors by Vecteezy</a>
     QGridLayout layout;
-    QRect windowRect;
-    windowRect.setSize({300, 200});
-    layout.setGeometry(windowRect);
     QLabel copyright;
     copyright.setText("<b>XTPlayer v"+ XTPVersion
                       + "</b><br><b>XTEngine v" + XTEVersion
                       + "</b><br>" + selectedTCodeVersion
                       + "<br>"
                                                 "Copyright 2026 Jason C. Fain<br>"
+                                                "XTPlayer: <a href='https://github.com/jcfain/XTPlayer'>https://github.com/jcfain/XTPlayer</a><br>"
+                                                "XTEngine/Web: <a href='https://github.com/jcfain/XTEngine'>https://github.com/jcfain/XTEngine</a><br>"
                                                 "Donate: <a href='https://www.patreon.com/Khrull'>https://www.patreon.com/Khrull</a><br>"
                                                 "THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND.");
     copyright.setAlignment(Qt::AlignHCenter);
+    copyright.setOpenExternalLinks(true);
     layout.addWidget(&copyright);
     QLabel sources;
     sources.setText(tr("This software uses libraries from:"));
@@ -163,16 +165,21 @@ void DialogHandler::ShowAboutDialog(QWidget* parent, QString XTPVersion, QString
     layout.addWidget(&sources);
     QLabel qtInfo;
     qtInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-#if BUILD_QT5
-    qtInfo.setText("<b>Qt v5.15.2</b><br>"
-                   "Distributed under the terms of LGPLv3 or later.<br>"
-                   "Source: <a href='https://github.com/qt/qt5/releases/tag/v5.15.2'>https://github.com/qt/qt5/releases/tag/v5.15.2</a>");
-#else
-    qtInfo.setText("<b>Qt v6.11.0</b><br>"
-                   "Distributed under the terms of LGPLv3 or later.<br>"
-                   "Source: <a href='https://github.com/qt/qt5/releases/tag/v6.9.0'>https://github.com/qt/qt5/releases/tag/v6.9.1</a>");
-#endif
+    // Read the Qt version at runtime (qVersion()) so it never needs manual
+    // updating; the source archive lives on Qt's official download server,
+    // under official_releases/qt/<major.minor>/<full version>/single/.
+    const QString qtVer = QString::fromUtf8(qVersion());
+    const QStringList qtParts = qtVer.split('.');
+    const QString qtMajorMinor = qtParts.value(0) + '.' + qtParts.value(1);
+    const QString qtSourceUrl = QString("https://download.qt.io/official_releases/qt/%1/%2/single/")
+                                    .arg(qtMajorMinor)
+                                    .arg(qtVer);
+    qtInfo.setText(QString("<b>Qt v%1</b><br>"
+                           "Distributed under the terms of LGPLv3 or later.<br>"
+                           "Source: <a href='%2'>%2</a>")
+                       .arg(qtVer, qtSourceUrl));
     qtInfo.setAlignment(Qt::AlignHCenter);
+    qtInfo.setOpenExternalLinks(true);
     layout.addWidget(&qtInfo);
     QLabel rangeSliderInfo;
     rangeSliderInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
@@ -181,6 +188,7 @@ void DialogHandler::ShowAboutDialog(QWidget* parent, QString XTPVersion, QString
                       "Modifications Copyright (c) 2020 Jason C. Fain<br>"
                       "<a href='https://github.com/ThisIsClark/Qt-RangeSlider'>https://github.com/ThisIsClark/Qt-RangeSlider</a>");
     rangeSliderInfo.setAlignment(Qt::AlignHCenter);
+    rangeSliderInfo.setOpenExternalLinks(true);
     layout.addWidget(&rangeSliderInfo);
     QLabel boolinqInfo;
     boolinqInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
@@ -188,6 +196,7 @@ void DialogHandler::ShowAboutDialog(QWidget* parent, QString XTPVersion, QString
                       "Copyright (C) 2019 by Anton Bukov (MIT)<br>"
                       "<a href='https://github.com/k06a/boolinq'>https://github.com/k06a/boolinq</a>");
     boolinqInfo.setAlignment(Qt::AlignHCenter);
+    boolinqInfo.setOpenExternalLinks(true);
     layout.addWidget(&boolinqInfo);
     // QLabel qtcompressInfo;
     // qtcompressInfo.setFrameStyle(QFrame::Panel | QFrame::Sunken);
@@ -196,7 +205,9 @@ void DialogHandler::ShowAboutDialog(QWidget* parent, QString XTPVersion, QString
     //                   "<a href='https://github.com/nezticle/qtcompress'>https://github.com/nezticle/qtcompress</a>");
     // qtcompressInfo.setAlignment(Qt::AlignHCenter);
     // layout.addWidget(&qtcompressInfo);
-    Dialog(parent, &layout);
+    // The layout's sizeHint is narrower than the longest line, so pass an
+    // explicit minimum size to widen the dialog past the ~300px clip.
+    Dialog(parent, &layout, true, false, QSize(600, 0));
 }
 
 void DialogHandler::Loading(QWidget* parent, QString message)
