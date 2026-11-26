@@ -12,6 +12,7 @@ public:
     XTPSettings();
 
     static const QString XTPVersion;
+    static const QString XTPBuildTimeStamp;
     static const QString XTPVersionTimeStamp;
     static const int XTPVersionMajor;
     static const int XTPVersionMinor;

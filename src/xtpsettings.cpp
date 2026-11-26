@@ -5,7 +5,8 @@ const QString XTPSettings::XTPVersion = SettingsHandler::XTEVersion;
 const int XTPSettings::XTPVersionMajor = SettingsHandler::XTEVersionMajor;
 const int XTPSettings::XTPVersionMinor = SettingsHandler::XTEVersionMinor;
 const int XTPSettings::XTPVersionRevision = SettingsHandler::XTEVersionRevision;
-const QString XTPSettings::XTPVersionTimeStamp = QString(XTPVersion +" %1T%2").arg(__DATE__).arg(__TIME__);
+const QString XTPSettings::XTPBuildTimeStamp = SettingsHandler::buildTimeStampFromMacros(__DATE__, __TIME__);
+const QString XTPSettings::XTPVersionTimeStamp = QString(XTPVersion +" %1").arg(XTPBuildTimeStamp);
 
 XTPSettings::XTPSettings() {}
 

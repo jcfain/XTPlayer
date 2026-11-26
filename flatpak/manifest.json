@@ -1,7 +1,7 @@
 {
     "app-id": "io.github.jcfain.XTPlayer",
-    "runtime": "org.kde.Platform/$ARCH/6.12-beta",
-    "sdk": "org.kde.Sdk/$ARCH/6.12-beta",
+    "runtime": "org.freedesktop.Platform/$ARCH/26.08",
+    "sdk": "org.freedesktop.Sdk/$ARCH/26.08",
     "command": "XTPlayer",
     "build-options": {
         "strip": true
@@ -19,6 +19,29 @@
         "--filesystem=xdg-run/gamescope-0:ro",
         "--filesystem=host",
         "--env=QT_MULTIMEDIA_PREFERRED_PLUGINS=ffmpeg"
+    ],
+    "cleanup": [
+        "/bin/qmake",
+        "/bin/qmake6",
+        "/bin/qtpaths",
+        "/bin/qtpaths6",
+        "/bin/qtdiag",
+        "/bin/qtdiag6",
+        "/bin/lrelease",
+        "/bin/lrelease-pro",
+        "/lib/libexec/moc",
+        "/lib/libexec/rcc",
+        "/lib/libexec/uic",
+        "/lib/libexec/lrelease",
+        "/lib/libexec/cmake_automoc_parser",
+        "/lib/libexec/qt-cmake-private",
+        "/lib/libexec/qt-internal-configure-examples",
+        "/lib/libexec/qt-internal-configure-tests",
+        "/lib/libexec/syncqt",
+        "/lib/libexec/tracegen",
+        "/lib/libexec/tracepointgen",
+        "/lib/libexec/qvkgen",
+        "/lib/libexec/qtwaylandscanner"
     ],
     "modules": [
         {
@@ -86,6 +109,188 @@
             ]
         },
         {
+            "name": "qtbase",
+            "buildsystem": "cmake-ninja",
+            "config-opts": [
+                "-DINSTALL_LIBDIR=lib",
+                "-DINSTALL_ARCHDATADIR=lib",
+                "-DQT_CREATE_VERSIONED_HARD_LINK=OFF",
+                "-DQT_DISABLE_RPATH=ON",
+                "-DBUILD_WITH_PCH=FALSE",
+                "-DQT_FEATURE_openssl_linked=ON",
+                "-DQT_FEATURE_system_sqlite=ON"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.kde.org/qt/official_releases/qt/6.12/6.12.0/submodules/qtbase-everywhere-src-6.12.0.tar.xz",
+                    "sha256": "a951bd163c7b80fc6b8c88d7668fb56abf91c152373e13c10666763238131307"
+                },
+                {
+                    "type": "patch",
+                    "path": "patches/qtbase-find_package-paths.patch"
+                }
+            ]
+        },
+        {
+            "name": "qttools",
+            "buildsystem": "cmake-ninja",
+            "config-opts": [
+                "-DQT_FEATURE_designer=OFF",
+                "-DQT_FEATURE_pixeltool=OFF",
+                "-DQT_FEATURE_distancefieldgenerator=OFF",
+                "-DQT_FEATURE_qev=OFF",
+                "-DQT_FEATURE_kmap2qmap=OFF"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.kde.org/qt/official_releases/qt/6.12/6.12.0/submodules/qttools-everywhere-src-6.12.0.tar.xz",
+                    "sha256": "8dab8f3611496486a470ad5f115ceea584f36bc22a2b8b6f6ebdbafbb8160693"
+                }
+            ]
+        },
+        {
+            "name": "qtshadertools",
+            "buildsystem": "cmake-ninja",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.kde.org/qt/official_releases/qt/6.12/6.12.0/submodules/qtshadertools-everywhere-src-6.12.0.tar.xz",
+                    "sha256": "c7d84f436e1aaef39fdcadebf2bd71bdf24dc69497e13f2e0198873cbbfea2ab"
+                }
+            ]
+        },
+        {
+            "name": "qtsvg",
+            "buildsystem": "cmake-ninja",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.kde.org/qt/official_releases/qt/6.12/6.12.0/submodules/qtsvg-everywhere-src-6.12.0.tar.xz",
+                    "sha256": "e4ab39534ec97987b1b9b60ef7f4d3253d5912a69f8c713a01753174a4029331"
+                }
+            ]
+        },
+        {
+            "name": "qtimageformats",
+            "buildsystem": "cmake-ninja",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.kde.org/qt/official_releases/qt/6.12/6.12.0/submodules/qtimageformats-everywhere-src-6.12.0.tar.xz",
+                    "sha256": "0943132b5db8de6b6a7f1d162682173e8763c7ed94e80fd39113292845f67762"
+                }
+            ]
+        },
+        {
+            "name": "qtserialport",
+            "buildsystem": "cmake-ninja",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.kde.org/qt/official_releases/qt/6.12/6.12.0/submodules/qtserialport-everywhere-src-6.12.0.tar.xz",
+                    "sha256": "ba8886a54eee466e57c9fa1341255cc09c462c84baab3ee7b19d67cdbcbd71c3"
+                }
+            ]
+        },
+        {
+            "name": "qtwebsockets",
+            "buildsystem": "cmake-ninja",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.kde.org/qt/official_releases/qt/6.12/6.12.0/submodules/qtwebsockets-everywhere-src-6.12.0.tar.xz",
+                    "sha256": "21690a365cd5fbfa8dea051473e98968df9f4eca0121fed7481d1215b7455a31"
+                }
+            ]
+        },
+        {
+            "name": "qtconnectivity",
+            "buildsystem": "cmake-ninja",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.kde.org/qt/official_releases/qt/6.12/6.12.0/submodules/qtconnectivity-everywhere-src-6.12.0.tar.xz",
+                    "sha256": "ed51f7f02c1f437fcf8a42940c7a84f6c0908c0ec7a4f5a5304fe68f47521954"
+                }
+            ]
+        },
+        {
+            "name": "qtmultimedia",
+            "buildsystem": "cmake-ninja",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.kde.org/qt/official_releases/qt/6.12/6.12.0/submodules/qtmultimedia-everywhere-src-6.12.0.tar.xz",
+                    "sha256": "3143f53b64257ba2a0685c940f5dce476c75871ff86b516de45cfd54ea93a62d"
+                }
+            ]
+        },
+        {
+            "name": "qtspeech",
+            "buildsystem": "cmake-ninja",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.kde.org/qt/official_releases/qt/6.12/6.12.0/submodules/qtspeech-everywhere-src-6.12.0.tar.xz",
+                    "sha256": "9a60ce5bee54a9343740feab2582bffb996812f43d6c5585aade26dbd04933db"
+                }
+            ]
+        },
+        {
+            "name": "qtwayland",
+            "buildsystem": "cmake-ninja",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.kde.org/qt/official_releases/qt/6.12/6.12.0/submodules/qtwayland-everywhere-src-6.12.0.tar.xz",
+                    "sha256": "ae14d9bcf1bb3c300a3ab2e6a53f50284e5c6c966a4ac4cc5aedcb1bc74e4d02"
+                }
+            ]
+        },
+        {
+            "name": "qthttpserver",
+            "buildsystem": "cmake-ninja",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.kde.org/qt/official_releases/qt/6.12/6.12.0/submodules/qthttpserver-everywhere-src-6.12.0.tar.xz",
+                    "sha256": "ede040264551d0930ea5f6c1a4c18a7a3dea59d635e71cd2e81f02567d7814a4"
+                }
+            ]
+        },
+        {
+            "name": "qttranslations",
+            "buildsystem": "cmake-ninja",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://files.kde.org/qt/official_releases/qt/6.12/6.12.0/submodules/qttranslations-everywhere-src-6.12.0.tar.xz",
+                    "sha256": "85929c0c30d6f273f23bd879bb69803ea17b010ab73cab2f8abf95357f6f6bbb"
+                }
+            ]
+        },
+        {
+            "name": "qtgamepadlegacy",
+            "buildsystem": "cmake-ninja",
+            "config-opts": [
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DQT_GENERATE_SBOM=OFF"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/pumphaus/qtgamepadlegacy",
+                    "commit": "434fe59d70f42fa0f745af05921ba64169fce90b"
+                },
+                {
+                    "type": "patch",
+                    "path": "patches/qtgamepadlegacy-no-qml.patch"
+                }
+            ]
+        },
+        {
             "name": "xtp-web",
             "buildsystem": "simple",
             "build-commands": [
@@ -105,8 +310,8 @@
             "buildsystem": "simple",
             "build-commands": [
                 "rm -rf XTEngine/src/www && mkdir -p XTEngine/src/www && cp -r /app/src/xtp-web/* XTEngine/src/www/",
-                "mkdir -p XTEngine/build-release && cd XTEngine/build-release && qmake ../src/XTEngine.pro CONFIG+=release && make -j$(nproc)",
-                "mkdir -p XTPlayer/build && cd XTPlayer/build && qmake ../src/XTPlayer.pro CONFIG+=release && make -j$(nproc)",
+                "mkdir -p XTEngine/build-release && cd XTEngine/build-release && /app/bin/qmake ../src/XTEngine.pro CONFIG+=release && make -j$(nproc)",
+                "mkdir -p XTPlayer/build && cd XTPlayer/build && /app/bin/qmake ../src/XTPlayer.pro CONFIG+=release && make -j$(nproc)",
                 "install -Dm755 XTPlayer/build/release/XTPlayer /app/bin/XTPlayer",
                 "install -Dm755 XTEngine/build-release/release/libxtengine.so /app/lib/libxtengine.so",
                 "mkdir -p /app/bin/www && cp -r XTPlayer/build/release/www/. /app/bin/www/",

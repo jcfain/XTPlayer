@@ -4,16 +4,18 @@
 # Called by nightly.yml (Development) and release.yml (main / v* tags), the
 # same pattern as build.yml. Also runnable standalone ("Run workflow").
 #
-# Builds the XTPlayer Flatpak (io.github.jcfain.XTPlayer) on top of
-# org.kde.Platform 6.12-beta (built once per arch from KDE's manifests,
-# since 6.12 is not on Flathub yet - see flatpak/README.md).
+# Builds the XTPlayer Flatpak (io.github.jcfain.XTPlayer) on top of the
+# standard org.freedesktop.Platform 26.08 base (from Flathub). Qt6 is built
+# INTO the app (only the modules the app uses - it is a pure QtWidgets app),
+# so the deliverable is a small ~60-120MB .flatpak bundle, NOT a 3.4GB
+# combined runtime repo.
 #
 #   - web job:          Angular bundle (artifact: xtp-web-flatpak; named
 #                       differently from build.yml's xtp-web so both can run
 #                       in the same workflow run)
-#   - runtime-<arch>:   org.kde.Platform 6.12-beta repo (cached, incremental)
-#   - flatpak-<arch>:   app built INTO the runtime repo -> one combined
-#                       repo tarball per arch (single remote for users)
+#   - flatpak-<arch>:   Qt6 + FFmpeg + XTPlayer built on the freedesktop base
+#                       -> one small .flatpak bundle per arch (base pulled
+#                       from Flathub on install)
 #
 # aarch64 builds NATIVE on the ubuntu-24.04-arm runner - no qemu/binfmt,
 # no cross toolchain (replaces the fragile AppImage cross pipeline).
@@ -52,14 +54,6 @@ on:
         required: true
         default: dev
         type: string
-      cache-bust:
-        description: 'Bump to force a full runtime rebuild'
-        required: false
-        default: ''
-        type: string
-
-env:
-  RUNTIME_BRANCH: qt6.12
 
 jobs:
   web:
@@ -92,54 +86,6 @@ jobs:
         with:
           name: xtp-web-flatpak
           path: xtp-web.tar.xz
-          if-no-files-found: error
-          retention-days: 1
-
-  runtime:
-    name: KDE runtime 6.12-beta (${{ matrix.arch }})
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: x86_64
-            runner: ubuntu-24.04
-          - arch: aarch64
-            runner: ubuntu-24.04-arm
-    steps:
-      - name: Checkout XTPlayer (for the build script)
-        uses: actions/checkout@v4
-        with:
-          # Same branch as the app job: the runtime job must see the flatpak/
-          # dir from the branch being BUILT, not the caller's (dispatch and
-          # schedule run on the default branch, which may lag behind).
-          ref: ${{ inputs.player-branch }}
-      - name: Install flatpak
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends flatpak flatpak-builder
-      - name: Cache runtime build
-        uses: actions/cache@v4
-        with:
-          # Only the ostree module cache (.flatpak-builder/cache/,
-          # ~3GB per arch). flatpak-builder's reuse decision is entirely
-          # an ostree ref lookup in that repo (builder_cache_lookup); the
-          # build/ trees, downloads/ and ccache/ are only touched when a
-          # stage actually compiles. Caching them too put the two arch
-          # entries over actions/cache's 10GB per-repo total limit (shared
-          # with the other workflows' caches), so GitHub's LRU GC kept
-          # evicting one arch's entry.
-          path: kde-runtime-build/kde-runtime/.flatpak-builder/cache
-          key: kde-runtime-v2-${{ matrix.arch }}-${{ env.RUNTIME_BRANCH }}-${{ inputs.cache-bust }}
-          restore-keys: |
-            kde-runtime-v2-${{ matrix.arch }}-${{ env.RUNTIME_BRANCH }}-
-      - name: Build org.kde.Platform 6.12-beta
-        run: bash flatpak/build-kde-runtime.sh ${{ matrix.arch }} kde-runtime-build
-      - name: Upload runtime repo
-        uses: actions/upload-artifact@v4
-        with:
-          name: xtp-runtime-${{ matrix.arch }}
-          path: kde-runtime-build/xtp-kde-runtime-6.12-beta-${{ matrix.arch }}.tar.xz
           if-no-files-found: error
           retention-days: 1
 
@@ -180,7 +126,7 @@ jobs:
   flatpak:
     name: XTPlayer Flatpak (${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
-    needs: [web, runtime, version-check]
+    needs: [web, version-check]
     strategy:
       fail-fast: false
       matrix:
@@ -206,21 +152,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: xtp-web-flatpak
-      - name: Download runtime repo
-        uses: actions/download-artifact@v4
-        with:
-          name: xtp-runtime-${{ matrix.arch }}
-      - name: Unpack runtime repo as the app repo base
-        run: tar -xJf xtp-kde-runtime-6.12-beta-${{ matrix.arch }}.tar.xz
-      - name: Inspect runtime repo refs (diagnostic)
-        run: |
-          echo "=== refs committed by the runtime job ==="
-          find repo/refs -type f | sort
-          echo "=== summary (first 30 lines) ==="
-          bunzip2 -c repo/summary 2>/dev/null | head -30 || true
-          echo "=== remote check ==="
-          flatpak --user remote-add --if-not-exists --no-gpg-verify xtp-local file://$PWD/repo
-          flatpak --user remote-ls xtp-local | head -20
       - name: Patch manifest for dev build (local sources)
         run: bash flatpak/patch-manifest.sh flatpak/manifest.json xtp-web.tar.xz manifest-patched.json ${{ matrix.arch }}
       - name: Cache app build
@@ -231,36 +162,37 @@ jobs:
           # tagged modules (dav1d/aom/ffmpeg) are reused, dir/file modules rebuild
           # when their content changes.
           path: .flatpak-builder/cache
-          key: xtp-flatpak-${{ matrix.arch }}-v1
-      - name: Install KDE runtime + SDK from local repo
+          key: xtp-flatpak-${{ matrix.arch }}-v2
+      - name: Install freedesktop runtime + SDK from Flathub
         run: |
-          # Explicit install so flatpak-builder finds the refs in the
-          # installation (its remote ref resolution has been flaky for
-          # both the SDK and the Platform). Fails loudly if a ref is
-          # missing from the repo.
-          # (GPG is already disabled on the xtp-local remote itself.)
-          flatpak --user install --noninteractive xtp-local \
-            org.kde.Platform/${{ matrix.arch }}/6.12-beta \
-            org.kde.Sdk/${{ matrix.arch }}/6.12-beta
-      - name: Build app into the runtime repo
+          # The app is built on the standard freedesktop base; Qt6 is built
+          # INTO the app by the manifest (no custom runtime to host). Install
+          # the base + SDK from Flathub so flatpak-builder finds them.
+          flatpak --user install --noninteractive flathub \
+            org.freedesktop.Platform/${{ matrix.arch }}/26.08 \
+            org.freedesktop.Sdk/${{ matrix.arch }}/26.08
+      - name: Build app (Qt6 + XTPlayer)
         run: |
-          # --user: matches the --user remotes added above (flathub,
-          # xtp-local). Without it flatpak-builder targets the system
-          # installation and cannot see them.
-          # --disable-rofiles-fuse: current flatpak-builder mounts the
-          # appdir read-only during the "Cleaning up" phase (rofiles-fuse,
-          # to protect hardlinked file trees); that breaks any cleanup
-          # needing a writable appdir. The app manifest has no
-          # cleanup-commands today, but disable it for consistency with
-          # the runtime build and to keep that door closed.
+          # --user: matches the --user flathub remote added above. Without it
+          # flatpak-builder targets the system installation and cannot see it.
+          # --disable-rofiles-fuse: current flatpak-builder mounts the appdir
+          # read-only during the "Cleaning up" phase (rofiles-fuse); disable it
+          # for a writable appdir (the top-level cleanup runs there).
+          # --repo=repo: commit the build to a repo so build-bundle can package it.
           flatpak-builder --user --ccache --arch=${{ matrix.arch }} --disable-rofiles-fuse --repo=repo build manifest-patched.json
       - name: Update repo
         run: flatpak build-update-repo repo
-      - name: Package combined repo (runtime + app)
-        run: tar -cJf "xtp-flatpak-${{ matrix.arch }}-${{ inputs.version }}.tar.xz" repo
-      - name: Upload Flatpak repo
+      - name: Package app as a .flatpak bundle
+        run: |
+          # A bundle contains only the app (Qt6 + XTPlayer + FFmpeg + web); the
+          # freedesktop base is referenced by id and pulled from Flathub on
+          # install. This is ~60-120MB, not the 3.4GB combined repo.
+          flatpak build-bundle repo \
+            "xtp-flatpak-${{ matrix.arch }}-${{ inputs.version }}.flatpak" \
+            io.github.jcfain.XTPlayer
+      - name: Upload Flatpak bundle
         uses: actions/upload-artifact@v4
         with:
           name: xtp-flatpak-${{ matrix.arch }}
-          path: xtp-flatpak-${{ matrix.arch }}-${{ inputs.version }}.tar.xz
+          path: xtp-flatpak-${{ matrix.arch }}-${{ inputs.version }}.flatpak
           if-no-files-found: error
