@@ -91,6 +91,9 @@
                 "-DCMAKE_BUILD_TYPE=Release",
                 "-DQT_GENERATE_SBOM=OFF"
             ],
+            "build-commands": [
+                "MKSPEC_MODULES=$(qmake -query QT_INSTALL_ARCHDATA)/mkspecs/modules && mkdir -p \"$MKSPEC_MODULES\" && printf '%s\\n' 'QT.module.gamepadlegacy.VERSION = 6.7.0' 'QT.module.gamepadlegacy.name = gamepadlegacy' 'QT.module.gamepadlegacy.depends = core gui' 'QT.module.gamepadlegacy.LIBS = -L$$QT_INSTALL_LIBS -lQt6GamepadLegacy' 'QT.module.gamepadlegacy.DEFINES = QT_GAMEPADLEGACY_LIB' 'QT.module.gamepadlegacy.INCPATH = $$QT_INSTALL_HEADERS' 'QT.module.gamepadlegacy.HEADERPATH = $$QT_INSTALL_HEADERS/gamepadlegacy' > \"$MKSPEC_MODULES/qt_module_gamepadlegacy.pri\" && cp \"$MKSPEC_MODULES/qt_module_gamepadlegacy.pri\" \"$MKSPEC_MODULES/qt_module_gamepadlegacy_private.pri\""
+            ],
             "sources": [
                 {
                     "type": "git",

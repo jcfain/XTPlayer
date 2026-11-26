@@ -103,8 +103,11 @@ fi
 # Keeping just the modules below cuts the build time dramatically (qtwebengine
 # alone is the single longest module). The keep list is what the app links
 # (QT += lines in src/*.pro, Qt6 path) plus build-time dependencies:
-#   qtbase           core gui widgets network concurrent serialport
-#                    texttospeech websockets bluetooth compress printsupport
+#   qtbase           core gui widgets network concurrent compress printsupport
+#   qtserialport     QT += serialport
+#   qtspeech         QT += texttospeech
+#   qtwebsockets     QT += websockets
+#   qtbluetooth      QT += bluetooth (NOT in KDE's manifest - added below)
 #   qtshadertools    required by qtmultimedia (its dependencies.yaml)
 #   qtmultimedia     multimedia + multimediawidgets; the SDK provides both
 #                    FFmpeg and GStreamer, so BOTH backend plugins are built
@@ -130,6 +133,7 @@ KEEP = {
     "licence-extractor", "os-release",
     "qtbase", "qtshadertools", "qtmultimedia", "qtwayland",
     "qthttpserver", "qtsvg", "qtimageformats", "qttools", "qttranslations",
+    "qtserialport", "qtspeech", "qtwebsockets",
 }
 def prune(modules):
     missing = KEEP - {m.get("name") for m in modules if isinstance(m, dict)}
@@ -140,6 +144,25 @@ def prune(modules):
     return [m for m in modules
             if isinstance(m, dict) and m.get("name") in KEEP]
 manifest["modules"] = prune(manifest.get("modules", []))
+# qtbluetooth is NOT in KDE's manifest (KDE uses bluez-qt, not Qt's
+# Bluetooth module) and Qt publishes no 6.12 submodule tarball for it
+# (checked files.kde.org and download.qt.io), so build it from Qt's git.
+# Without BlueZ headers it builds the dummy backend - fine, the app talks
+# to BlueZ over D-Bus at runtime (--socket=bluetooth finish-arg).
+if not any(isinstance(m, dict) and m.get("name") == "qtbluetooth"
+           for m in manifest["modules"]):
+    manifest["modules"].append({
+        "name": "qtbluetooth",
+        "buildsystem": "cmake-ninja",
+        "cleanup-platform": ["/bin"],
+        "sources": [
+            {
+                "type": "git",
+                "url": "https://code.qt.io/qt/qtbluetooth.git",
+                "tag": "v6.12.0"
+            }
+        ]
+    })
 with open(path, "w") as f:
     json.dump(manifest, f, indent=4)
     f.write("\n")
