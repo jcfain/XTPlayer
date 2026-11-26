@@ -247,7 +247,13 @@ jobs:
           # --user: matches the --user remotes added above (flathub,
           # xtp-local). Without it flatpak-builder targets the system
           # installation and cannot see them.
-          flatpak-builder --user --ccache --arch=${{ matrix.arch }} --repo=repo build manifest-patched.json
+          # --disable-rofiles-fuse: current flatpak-builder mounts the
+          # appdir read-only during the "Cleaning up" phase (rofiles-fuse,
+          # to protect hardlinked file trees); that breaks any cleanup
+          # needing a writable appdir. The app manifest has no
+          # cleanup-commands today, but disable it for consistency with
+          # the runtime build and to keep that door closed.
+          flatpak-builder --user --ccache --arch=${{ matrix.arch }} --disable-rofiles-fuse --repo=repo build manifest-patched.json
       - name: Update repo
         run: flatpak build-update-repo repo
       - name: Package combined repo (runtime + app)

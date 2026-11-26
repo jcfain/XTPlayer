@@ -194,11 +194,25 @@ PYEOF
 
 # Build org.kde.Platform (id-platform) + org.kde.Sdk into ./repo.
 # No --force-clean: with a cached WORKDIR, unchanged modules are reused.
+# --disable-rofiles-fuse: current flatpak-builder mounts the appdir
+# read-only (rofiles-fuse) during the "Cleaning up" phase to protect
+# hardlinked file trees. KDE's manifest runs /usr/libexec/freedesktop-post.sh
+# as a top-level cleanup-command, which chmods files (e.g.
+# /etc/pki/ca-trust/extracted/...) - that fails with "Read-only file
+# system" under the rofiles overlay and aborts the build. Disabling
+# rofiles restores the classic (writable appdir) cleanup behaviour.
+# The flag is only passed to flatpak-builder versions that have it
+# (older ones reject unknown options).
+ROFILES_ARGS=()
+if flatpak-builder --help 2>&1 | grep -q 'disable-rofiles-fuse'; then
+    ROFILES_ARGS=(--disable-rofiles-fuse)
+fi
 flatpak-builder \
     --user \
     --install-deps-from=flathub \
     --arch="$ARCH" \
     --ccache \
+    "${ROFILES_ARGS[@]}" \
     --repo=repo \
     --subject="org.kde.Platform 6.12-beta ($(git rev-parse --short HEAD)) $(date -Is)" \
     build org.kde.Sdk.json
