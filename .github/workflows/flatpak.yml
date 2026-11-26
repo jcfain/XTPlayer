@@ -143,10 +143,44 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  version-check:
+    name: Version guard (tag vs XTEngine_global.h)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout XTEngine
+        uses: actions/checkout@v4
+        with:
+          repository: jcfain/XTEngine
+          ref: ${{ inputs.engine-branch }}
+      - name: Verify version input matches the header
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
+        run: |
+          # XTEngine_global.h is the single source of truth for the app
+          # version (About dialog, Flatpak .desktop stamp). For release
+          # builds the version input is the git tag - it must match, or
+          # the released artifact name and the app's displayed version
+          # drift apart.
+          HEADER=$(awk '/#define VERSION_MAJOR/{m=$3} /#define VERSION_MINOR/{n=$3} /#define VERSION_REVISION/{r=$3} /#define VERSION_PHASE/{p=$3} END{printf "%d.%d.%d%s", m, n, r, p}' src/XTEngine_global.h)
+          echo "XTEngine_global.h version: $HEADER"
+          case "$VERSION_INPUT" in
+            v*)
+              TAG=${VERSION_INPUT#v}
+              if [ "$TAG" != "$HEADER" ]; then
+                echo "::error::version input '$VERSION_INPUT' does not match XTEngine_global.h ('$HEADER') - bump the header before tagging"
+                exit 1
+              fi
+              echo "tag matches header: $TAG"
+              ;;
+            *)
+              echo "non-release version '$VERSION_INPUT' - no tag check"
+              ;;
+          esac
+
   flatpak:
     name: XTPlayer Flatpak (${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
-    needs: [web, runtime]
+    needs: [web, runtime, version-check]
     strategy:
       fail-fast: false
       matrix:
