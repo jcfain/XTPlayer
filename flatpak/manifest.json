@@ -244,8 +244,8 @@
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://deb.debian.org/debian/pool/main/d/dotconf/dotconf_1.4.1.orig.tar.gz",
-                    "sha256": "5922c46cacf99b2ecc4853d28a2bda4a489292e73276e604bd9cba29dfca892d"
+                    "path": "vendor/dotconf-1.4.1.tar.gz",
+                    "sha256": "4bf9f3fd261ee3890082fc1ee194a3be79bd922bd857d8e2817982cc68148a9e"
                 }
             ]
         },
