@@ -46,6 +46,7 @@
         "include/",
         "mkspecs/",
         "lib/cmake/",
+        "lib/qt6/",
         "lib/pkgconfig/",
         "share/man/",
         "share/doc/",
@@ -127,7 +128,9 @@
                 "-DQT_DISABLE_RPATH=ON",
                 "-DBUILD_WITH_PCH=FALSE",
                 "-DQT_FEATURE_openssl_linked=ON",
-                "-DQT_FEATURE_system_sqlite=ON"
+                "-DQT_FEATURE_system_sqlite=ON",
+                "-DQT_FEATURE_sql=OFF",
+                "-DQT_FEATURE_printsupport=OFF"
             ],
             "sources": [
                 {
