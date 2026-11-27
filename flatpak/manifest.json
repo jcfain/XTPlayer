@@ -360,7 +360,7 @@
             "sources": [
                 {
                     "type": "archive",
-                    "url": "https://github.com/jcfain/XTPlayer/releases/download/v0.6.11b/xtp-web-v0.6.11b.tar.xz",
+                    "url": "https://github.com/jcfain/XTPlayer/releases/download/v0.7.0rc/xtp-web-v0.7.0rc.tar.xz",
                     "dest": "web"
                 }
             ]
@@ -386,13 +386,13 @@
                 {
                     "type": "git",
                     "url": "https://github.com/jcfain/XTPlayer",
-                    "tag": "v0.6.11b",
+                    "tag": "v0.7.0rc",
                     "dest": "XTPlayer"
                 },
                 {
                     "type": "git",
                     "url": "https://github.com/jcfain/XTEngine",
-                    "tag": "v0.6.11b",
+                    "tag": "v0.7.0rc",
                     "dest": "XTEngine"
                 }
             ]
