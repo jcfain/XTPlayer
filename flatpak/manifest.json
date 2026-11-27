@@ -44,7 +44,13 @@
         "/lib/libexec/qtwaylandscanner",
         "*.a",
         "include/",
-        "mkspecs/"
+        "mkspecs/",
+        "lib/cmake/",
+        "lib/pkgconfig/",
+        "share/man/",
+        "share/doc/",
+        "doc/",
+        "src/"
     ],
     "modules": [
         {
