@@ -214,7 +214,24 @@ jobs:
           # read-only during the "Cleaning up" phase (rofiles-fuse); disable it
           # for a writable appdir (the top-level cleanup runs there).
           # --repo=repo: commit the build to a repo so build-bundle can package it.
-          flatpak-builder --user --ccache --arch=${{ matrix.arch }} --disable-rofiles-fuse --repo=repo build manifest-patched.json
+          # --keep-build-dirs: TEMPORARY (diagnostic) - keep the build dir so the
+          # next step can locate the ccache dir and report its size/hit state.
+          flatpak-builder --user --ccache --arch=${{ matrix.arch }} --disable-rofiles-fuse --repo=repo --keep-build-dirs build manifest-patched.json
+      - name: ccache diagnostics (locate + size)
+        run: |
+          # Find where flatpak-builder put the ccache and report its size. A
+          # large, stable size across runs = ccache is being hit (compile cached).
+          # A small/zero size = ccache is cold (the Qt6 recompile is NOT cached,
+          # which is why runs take 20-50min). This tells us the dir to add to
+          # the actions/cache path.
+          echo "=== ccache dirs under .flatpak-builder ==="
+          find .flatpak-builder -type d -name '*ccache*' -exec du -sh {} \; 2>/dev/null || echo "(no ccache dir found)"
+          echo
+          echo "=== .flatpak-builder top-level ==="
+          ls -la .flatpak-builder/ 2>/dev/null
+          echo
+          echo "=== build dir contents (per module) ==="
+          ls -la .flatpak-builder/build/ 2>/dev/null | head -20
       - name: Update repo
         run: flatpak build-update-repo repo
       - name: Size breakdown (per-component)
@@ -259,11 +276,11 @@ jobs:
           # freedesktop base is referenced by id and pulled from Flathub on
           # install. This is ~60-120MB, not the 3.4GB combined repo.
           flatpak build-bundle repo \
-            "xtp-flatpak-${{ matrix.arch }}-${{ inputs.version }}.flatpak" \
+            "XTPlayer-${{ inputs.version }}-Linux-${{ matrix.arch }}.flatpak" \
             io.github.jcfain.XTPlayer
       - name: Upload Flatpak bundle
         uses: actions/upload-artifact@v4
         with:
           name: xtp-flatpak-${{ matrix.arch }}
-          path: xtp-flatpak-${{ matrix.arch }}-${{ inputs.version }}.flatpak
+          path: XTPlayer-${{ inputs.version }}-Linux-${{ matrix.arch }}.flatpak
           if-no-files-found: error
