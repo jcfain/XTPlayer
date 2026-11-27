@@ -375,6 +375,7 @@
                 "install -Dm755 XTPlayer/build/release/XTPlayer /app/bin/XTPlayer",
                 "cp -a XTEngine/build-release/release/libxtengine.so* /app/lib/",
                 "mkdir -p /app/bin/www && cp -r XTPlayer/build/release/www/. /app/bin/www/",
+                "mkdir -p /app/bin/www/assets && install -Dm644 XTPlayer/XTP_and_VR_guide.pdf /app/bin/www/assets/XTP_and_VR_guide.pdf",
                 "mkdir -p /app/bin/themes && cp -r XTPlayer/build/release/themes/. /app/bin/themes/",
                 "mkdir -p /app/bin/translations && cp -r XTPlayer/build/release/translations/. /app/bin/translations/ 2>/dev/null || true",
                 "V=$(awk '/#define VERSION_MAJOR/{m=$3} /#define VERSION_MINOR/{n=$3} /#define VERSION_REVISION/{r=$3} /#define VERSION_PHASE/{p=$3} END{printf \"%d.%d.%d%s\", m, n, r, p}' XTEngine/src/XTEngine_global.h) && sed -i \"s/^Version=.*/Version=$V/\" XTPlayer/flatpak/XTPlayer.desktop",

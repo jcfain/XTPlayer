@@ -455,7 +455,7 @@ void SettingsDialog::setupUi()
         ui.useHardwareDecodingCombo->blockSignals(false);
         connect(ui.useHardwareDecodingCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsDialog::on_useHardwareDecodingCombo_currentIndexChanged);
         ui.hardwareDecodeStatusLabel->setWordWrap(true);
-        ui.hardwareDecodeStatusLabel->setText(SettingsHandler::hardwareDecodeStatus());
+        ui.hardwareDecodeStatusLabel->setText(SettingsHandler::hardwareDecodeStatus(hwPref));
         ui.fullscreenUIOnlyOnMouseover->setChecked(XTPSettings::getFullScreenUIOnlyOnMouseOver());
 
         ui.useDTRAndRTSChk->setChecked(SettingsHandler::getUseDTRAndRTS());
@@ -2100,7 +2100,7 @@ void SettingsDialog::restart()
 
 void SettingsDialog::on_openDeoPDFButton_clicked()
 {
-    QString filePath = QApplication::applicationDirPath() + "/XTP_and_VR_guide.pdf";
+    QString filePath = QApplication::applicationDirPath() + "/www/assets/XTP_and_VR_guide.pdf";
     if(QFile::exists(filePath)) {
         QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
     } else {
@@ -2487,7 +2487,7 @@ void SettingsDialog::on_useHardwareDecodingCombo_currentIndexChanged(int index)
         return;
     const QString value = ui.useHardwareDecodingCombo->itemText(index);
     SettingsHandler::changeSetting(SettingKeys::useHardwareDecoding, value, true);
-    ui.hardwareDecodeStatusLabel->setText(SettingsHandler::hardwareDecodeStatus());
+    ui.hardwareDecodeStatusLabel->setText(SettingsHandler::hardwareDecodeStatus(value));
 }
 
 void SettingsDialog::on_fullscreenUIOnlyOnMouseover_clicked(bool checked)
