@@ -39,7 +39,7 @@ jq --arg url "$WEB_ABS" --arg sha "$WEB_SHA" --arg arch "$ARCH" '
     .runtime = "org.freedesktop.Platform/\($arch)/26.08"
     | .sdk = "org.freedesktop.Sdk/\($arch)/26.08"
     | (.modules[] | select(.name == "xtp-web") | .sources[0]) |=
-        {type: "file", path: $url, sha256: $sha, dest: "web"}
+        {type: "archive", path: $url, sha256: $sha, dest: "web"}
     | (.modules[] | select(.name == "xtplayer") | .sources[]) |=
         (if .type == "git" and (.url | endswith("XTPlayer")) then
             {type: "dir", path: ".", dest: "XTPlayer"}
@@ -48,7 +48,7 @@ jq --arg url "$WEB_ABS" --arg sha "$WEB_SHA" --arg arch "$ARCH" '
          else . end)
     | (.modules[] | select(."config-opts" | type == "object") | ."config-opts") |=
         (.[$arch] // [])
-    | (.modules[].sources[] | select(.type == "patch") | .path) |=
+    | (.modules[].sources[] | select(.type == "patch" or (.type == "archive" and has("path") and (.path | startswith("/") | not))) | .path) |=
         "flatpak/" + .
 ' "$MANIFEST" > "$OUT"
 

@@ -228,6 +228,54 @@
             ]
         },
         {
+            "name": "espeak-ng",
+            "buildsystem": "autotools",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/espeak-ng/espeak-ng/archive/refs/tags/1.52.0.tar.gz",
+                    "sha256": "bb4338102ff3b49a81423da8a1a158b420124b055b60fa76cfb4b18677130a23"
+                }
+            ]
+        },
+        {
+            "name": "dotconf",
+            "buildsystem": "autotools",
+            "sources": [
+                {
+                    "type": "archive",
+                    "path": "vendor/dotconf-1.4.1.tar.gz",
+                    "sha256": "4bf9f3fd261ee3890082fc1ee194a3be79bd922bd857d8e2817982cc68148a9e"
+                }
+            ]
+        },
+        {
+            "name": "speech-dispatcher",
+            "buildsystem": "autotools",
+            "config-opts": [
+                "--with-espeak-ng",
+                "--without-espeak",
+                "--without-flite",
+                "--without-ibmtts",
+                "--without-voxin",
+                "--without-ivona",
+                "--without-pico",
+                "--without-baratinoo",
+                "--without-kali",
+                "--with-pulse",
+                "--with-default-audio-method=pulse",
+                "--disable-python",
+                "--disable-doc"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://deb.debian.org/debian/pool/main/s/speech-dispatcher/speech-dispatcher_0.12.1.orig.tar.gz",
+                    "sha256": "b14a5238d287d2dcce4dd42bbd66ca65fa228e7e683708267f7b34036f7ba4b4"
+                }
+            ]
+        },
+        {
             "name": "qtspeech",
             "buildsystem": "cmake-ninja",
             "sources": [
@@ -313,7 +361,7 @@
                 "mkdir -p XTEngine/build-release && cd XTEngine/build-release && /app/bin/qmake ../src/XTEngine.pro CONFIG+=release && make -j$(nproc)",
                 "mkdir -p XTPlayer/build && cd XTPlayer/build && /app/bin/qmake ../src/XTPlayer.pro CONFIG+=release && make -j$(nproc)",
                 "install -Dm755 XTPlayer/build/release/XTPlayer /app/bin/XTPlayer",
-                "install -Dm755 XTEngine/build-release/release/libxtengine.so /app/lib/libxtengine.so",
+                "cp -a XTEngine/build-release/release/libxtengine.so* /app/lib/",
                 "mkdir -p /app/bin/www && cp -r XTPlayer/build/release/www/. /app/bin/www/",
                 "mkdir -p /app/bin/themes && cp -r XTPlayer/build/release/themes/. /app/bin/themes/",
                 "mkdir -p /app/bin/translations && cp -r XTPlayer/build/release/translations/. /app/bin/translations/ 2>/dev/null || true",

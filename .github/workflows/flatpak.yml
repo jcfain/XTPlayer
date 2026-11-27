@@ -182,6 +182,41 @@ jobs:
           flatpak-builder --user --ccache --arch=${{ matrix.arch }} --disable-rofiles-fuse --repo=repo build manifest-patched.json
       - name: Update repo
         run: flatpak build-update-repo repo
+      - name: Size breakdown (per-component)
+        run: |
+          # flatpak-builder --repo=repo consumes the appdir (build/ becomes a
+          # repo, not an app tree), so extract the app from the local repo into
+          # the user installation and analyze the installed files. --offline +
+          # --no-deps keep it hermetic (the freedesktop base is already
+          # installed from the Flathub step above).
+          flatpak --user install --offline --no-deps -y "$(pwd)/repo" io.github.jcfain.XTPlayer
+          APP=$(find "$HOME/.local/share/flatpak/app/io.github.jcfain.XTPlayer" -maxdepth 3 -type d -name files 2>/dev/null | head -1)
+          if [ -z "$APP" ] || [ ! -e "$APP" ]; then
+            echo "::error::could not locate the installed app files dir"
+            exit 1
+          fi
+          echo "=== APP=$APP ==="
+          ls -la "$APP" | head -20
+          echo
+          echo "=== Top-level /app components ==="
+          du -sh "$APP"/* 2>/dev/null | sort -rh
+          echo
+          echo "=== Key dirs ==="
+          for d in lib lib/cmake lib/qt6 plugins include bin share; do
+            [ -e "$APP/$d" ] && du -sh "$APP/$d" 2>/dev/null
+          done
+          echo
+          echo "=== Qt libs vs FFmpeg (inside /app/lib) ==="
+          echo "  Qt6 libs count: $(ls "$APP"/lib/libQt6*.so* 2>/dev/null | wc -l)"
+          echo "  FFmpeg libs: $(ls "$APP"/lib/libav* "$APP"/lib/libsw* 2>/dev/null | wc -l)"
+          echo
+          echo "=== TTS (texttospeech plugins + speech-dispatcher) ==="
+          ls -la "$APP"/lib/plugins/texttospeech/ 2>/dev/null || echo "  (no texttospeech plugins dir)"
+          ls "$APP"/bin/speech-dispatcher "$APP"/lib/libspeechd.so*" 2>/dev/null || echo "  (speech-dispatcher not installed)"
+          echo
+          echo "=== Top 25 largest files in /app ==="
+          find "$APP" -type f -printf '%s\t%p\n' 2>/dev/null | sort -rn | head -25 | \
+            awk -F'\t' '{printf "  %.1f MB  %s\n", $1/1048576, $2}'
       - name: Package app as a .flatpak bundle
         run: |
           # A bundle contains only the app (Qt6 + XTPlayer + FFmpeg + web); the
