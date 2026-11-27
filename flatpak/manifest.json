@@ -239,6 +239,17 @@
             ]
         },
         {
+            "name": "dotconf",
+            "buildsystem": "autotools",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://deb.debian.org/debian/pool/main/d/dotconf/dotconf_1.4.1.orig.tar.gz",
+                    "sha256": "5922c46cacf99b2ecc4853d28a2bda4a489292e73276e604bd9cba29dfca892d"
+                }
+            ]
+        },
+        {
             "name": "speech-dispatcher",
             "buildsystem": "autotools",
             "config-opts": [
