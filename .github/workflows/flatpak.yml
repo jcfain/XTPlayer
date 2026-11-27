@@ -98,6 +98,12 @@ jobs:
         with:
           repository: jcfain/XTEngine
           ref: ${{ inputs.engine-branch }}
+      - name: Checkout XTPlayer
+        uses: actions/checkout@v4
+        with:
+          repository: jcfain/XTPlayer
+          ref: ${{ inputs.player-branch }}
+          path: XTPlayer
       - name: Verify version input matches the header
         env:
           VERSION_INPUT: ${{ inputs.version }}
@@ -122,6 +128,20 @@ jobs:
               echo "non-release version '$VERSION_INPUT' - no tag check"
               ;;
           esac
+      - name: Verify Flatpak .desktop version matches the header
+        run: |
+          # The committed flatpak/XTPlayer.desktop Version= must match the
+          # header - it is what Flatpak/Flathub uses for the app version and
+          # upgrade ordering. (The build also re-stamps it, so a stale value
+          # here is caught early rather than shipping a mis-versioned bundle.)
+          HEADER=$(awk '/#define VERSION_MAJOR/{m=$3} /#define VERSION_MINOR/{n=$3} /#define VERSION_REVISION/{r=$3} /#define VERSION_PHASE/{p=$3} END{printf "%d.%d.%d%s", m, n, r, p}' src/XTEngine_global.h)
+          DESKTOP=$(grep '^Version=' XTPlayer/flatpak/XTPlayer.desktop | cut -d= -f2)
+          echo "XTEngine_global.h: $HEADER  |  flatpak .desktop: $DESKTOP"
+          if [ "$DESKTOP" != "$HEADER" ]; then
+            echo "::error::flatpak/XTPlayer.desktop Version='$DESKTOP' does not match XTEngine_global.h ('$HEADER') - update the .desktop when bumping the version"
+            exit 1
+          fi
+          echo ".desktop matches header: $DESKTOP"
 
   flatpak:
     name: XTPlayer Flatpak (${{ matrix.arch }})
