@@ -119,6 +119,8 @@ jobs:
           rm -rf ../XTEngine/src/www
           mkdir -p ../XTEngine/src/www
           cp -r web-bundle/* ../XTEngine/src/www/
+          echo "=== DIAG: XTEngine/src/www after install ==="
+          ls -la ../XTEngine/src/www/
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -199,6 +201,8 @@ jobs:
           # Generate .qm translation files (qmake lrelease rule may not run)
           mkdir -p release/translations
           for _ts in ../src/translations/*.ts; do "${QT_DIR}/bin/lrelease" "$_ts" -qm "release/translations/$(basename "${_ts%.ts}").qm"; done
+          echo "=== DIAG: XTPlayer build output www ==="
+          ls -la release/www/ 2>/dev/null || echo "MISSING: release/www"
       - name: Package AppImage
         env:
           EXTRA_PLATFORM_PLUGINS: libqwayland.so
@@ -210,6 +214,8 @@ jobs:
           # Stage the app (same layout as lin_release_deploy-appimage.sh)
           cp build-release/release/XTPlayer "${APPDIR}/usr/bin/"
           cp -r build-release/release/www "${APPDIR}/usr/bin/"
+          echo "=== DIAG: AppImage www ==="
+          ls -la "${APPDIR}/usr/bin/www/"
           cp -r build-release/release/themes "${APPDIR}/usr/bin/"
           cp -r build-release/release/translations "${APPDIR}/usr/bin/"
           cp -r build-release/release/translations "${APPDIR}/"
