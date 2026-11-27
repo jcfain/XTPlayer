@@ -48,7 +48,7 @@ jq --arg url "$WEB_ABS" --arg sha "$WEB_SHA" --arg arch "$ARCH" '
          else . end)
     | (.modules[] | select(."config-opts" | type == "object") | ."config-opts") |=
         (.[$arch] // [])
-    | (.modules[].sources[] | select(.type == "patch" or (.type == "archive" and has("path"))) | .path) |=
+    | (.modules[].sources[] | select(.type == "patch" or (.type == "archive" and has("path") and (.path | startswith("/") | not))) | .path) |=
         "flatpak/" + .
 ' "$MANIFEST" > "$OUT"
 
