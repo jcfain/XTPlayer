@@ -42,9 +42,43 @@ jobs:
           echo "built_sha=${sha}" >> "$GITHUB_OUTPUT"
           echo "release_name=Nightly $(date -u +%Y-%m-%d) — ${sha}" >> "$GITHUB_OUTPUT"
 
+  web:
+    name: Angular web bundle (shared)
+    runs-on: ubuntu-24.04
+    steps:
+      # Built ONCE here and shared by both build.yml and flatpak.yml (which
+      # pass web-bundle-artifact: xtp-web to skip their own local build).
+      - name: Checkout XTEngine
+        uses: actions/checkout@v4
+        with:
+          repository: jcfain/XTEngine
+          ref: Development
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: src/wwwsrc/package-lock.json
+      - name: Install npm deps
+        working-directory: src/wwwsrc
+        run: npm ci
+      - name: Build (production)
+        working-directory: src/wwwsrc
+        run: |
+          npm run set-version
+          npx ng build --configuration production
+      - name: Package bundle
+        run: tar -cJf xtp-web.tar.xz -C src/wwwsrc/dist/xtp-web/browser .
+      - name: Upload bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: xtp-web
+          path: xtp-web.tar.xz
+          retention-days: 1
+
   build:
     name: Build all platforms
-    needs: meta
+    needs: [meta, web]
     uses: ./.github/workflows/build.yml
     with:
       player-branch: Development
@@ -52,14 +86,17 @@ jobs:
       # Fixed 'nightly' in the file names so overwrite_files replaces the
       # previous run's assets; the date/commit live in the release name.
       version: nightly
+      web-bundle-artifact: xtp-web
 
   flatpak:
     name: Build Flatpak
+    needs: web
     uses: ./.github/workflows/flatpak.yml
     with:
       player-branch: Development
       engine-branch: Development
       version: nightly
+      web-bundle-artifact: xtp-web
 
   publish:
     name: Publish nightly release
@@ -75,7 +112,7 @@ jobs:
           path: dist
       - name: Flatten artifacts
         run: |
-          rm -rf dist/xtp-web dist/xtp-web-flatpak   # internal web-bundle artifacts, not release assets
+          rm -rf dist/xtp-web   # internal web-bundle artifact, not a release asset
           find dist -type f -exec mv {} dist/ \;
       - name: Publish to rolling 'nightly' release
         uses: softprops/action-gh-release@v2

@@ -10,9 +10,9 @@
 # so the deliverable is a small ~60-120MB .flatpak bundle, NOT a 3.4GB
 # combined runtime repo.
 #
-#   - web job:          Angular bundle (artifact: xtp-web-flatpak; named
-#                       differently from build.yml's xtp-web so both can run
-#                       in the same workflow run)
+#   - web job:          Angular bundle (artifact: xtp-web). When called by the
+#                       orchestrator it reuses the shared xtp-web artifact; for
+#                       standalone runs it builds locally.
 #   - flatpak-<arch>:   Qt6 + FFmpeg + XTPlayer built on the freedesktop base
 #                       -> one small .flatpak bundle per arch (base pulled
 #                       from Flathub on install)
@@ -37,6 +37,11 @@ on:
         description: 'Version string for artifact names (e.g. v0.6.11b, nightly)'
         required: true
         type: string
+      web-bundle-artifact:
+        description: 'Name of a pre-built xtp-web artifact to reuse (skip the local Angular build); empty = build locally'
+        required: false
+        type: string
+        default: ''
   workflow_dispatch:
     inputs:
       player-branch:
@@ -60,31 +65,41 @@ jobs:
     name: Angular web bundle
     runs-on: ubuntu-24.04
     steps:
+      # When the orchestrator (nightly/release) builds the bundle once and
+      # passes its artifact name, skip the local build - the shared xtp-web
+      # artifact is already available to the flatpak job below. Standalone
+      # runs (empty input) build locally, exactly as before.
       - name: Checkout XTEngine
+        if: ${{ inputs.web-bundle-artifact == '' }}
         uses: actions/checkout@v4
         with:
           repository: jcfain/XTEngine
           ref: ${{ inputs.engine-branch }}
       - name: Setup Node
+        if: ${{ inputs.web-bundle-artifact == '' }}
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: src/wwwsrc/package-lock.json
       - name: Install npm deps
+        if: ${{ inputs.web-bundle-artifact == '' }}
         working-directory: src/wwwsrc
         run: npm ci
       - name: Build (production)
+        if: ${{ inputs.web-bundle-artifact == '' }}
         working-directory: src/wwwsrc
         run: |
           npm run set-version
           npx ng build --configuration production
       - name: Package bundle
+        if: ${{ inputs.web-bundle-artifact == '' }}
         run: tar -cJf xtp-web.tar.xz -C src/wwwsrc/dist/xtp-web/browser .
       - name: Upload bundle
+        if: ${{ inputs.web-bundle-artifact == '' }}
         uses: actions/upload-artifact@v4
         with:
-          name: xtp-web-flatpak
+          name: xtp-web
           path: xtp-web.tar.xz
           if-no-files-found: error
           retention-days: 1
@@ -171,7 +186,7 @@ jobs:
       - name: Download web bundle
         uses: actions/download-artifact@v4
         with:
-          name: xtp-web-flatpak
+          name: xtp-web
       - name: Patch manifest for dev build (local sources)
         run: bash flatpak/patch-manifest.sh flatpak/manifest.json xtp-web.tar.xz manifest-patched.json ${{ matrix.arch }}
       - name: Cache app build

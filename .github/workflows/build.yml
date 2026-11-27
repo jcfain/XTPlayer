@@ -43,6 +43,11 @@ on:
         required: false
         type: string
         default: 'all'
+      web-bundle-artifact:
+        description: 'Name of a pre-built xtp-web artifact to reuse (skip the local Angular build); empty = build locally'
+        required: false
+        type: string
+        default: ''
 
 env:
   QT_VERSION: '6.12.0'
@@ -62,30 +67,42 @@ jobs:
     name: Angular web bundle
     runs-on: ubuntu-latest
     steps:
+      # When the orchestrator (nightly/release) builds the bundle once and
+      # passes its artifact name, skip the local build - the shared xtp-web
+      # artifact is already available to the platform jobs below. Standalone
+      # runs (empty input) build locally, exactly as before.
       - name: Checkout XTEngine
+        if: ${{ inputs.web-bundle-artifact == '' }}
         uses: actions/checkout@v4
         with:
           repository: jcfain/XTEngine
           ref: ${{ inputs.engine-branch }}
       - name: Setup Node
+        if: ${{ inputs.web-bundle-artifact == '' }}
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: src/wwwsrc/package-lock.json
       - name: Install npm deps
+        if: ${{ inputs.web-bundle-artifact == '' }}
         working-directory: src/wwwsrc
         run: npm ci
       - name: Build (production)
+        if: ${{ inputs.web-bundle-artifact == '' }}
         working-directory: src/wwwsrc
         run: |
           npm run set-version
           npx ng build --configuration production
+      - name: Package bundle
+        if: ${{ inputs.web-bundle-artifact == '' }}
+        run: tar -cJf xtp-web.tar.xz -C src/wwwsrc/dist/xtp-web/browser .
       - name: Upload bundle
+        if: ${{ inputs.web-bundle-artifact == '' }}
         uses: actions/upload-artifact@v4
         with:
           name: xtp-web
-          path: src/wwwsrc/dist/xtp-web/browser
+          path: xtp-web.tar.xz
           retention-days: 1
 
   linux-x86_64:
@@ -118,7 +135,7 @@ jobs:
         run: |
           rm -rf ../XTEngine/src/www
           mkdir -p ../XTEngine/src/www
-          cp -r web-bundle/* ../XTEngine/src/www/
+          tar -xJf web-bundle/xtp-web.tar.xz -C ../XTEngine/src/www/
           echo "=== DIAG: XTEngine/src/www after install ==="
           ls -la ../XTEngine/src/www/
       - name: Install system dependencies
@@ -393,7 +410,7 @@ jobs:
         run: |
           rm -rf ../XTEngine/src/www
           mkdir -p ../XTEngine/src/www
-          cp -r web-bundle/* ../XTEngine/src/www/
+          tar -xJf web-bundle/xtp-web.tar.xz -C ../XTEngine/src/www/
       - name: Install cross toolchain
         run: |
           # arm64 is an Ubuntu "port" arch: its indices are NOT on
@@ -1001,7 +1018,7 @@ jobs:
         run: |
           rm -rf ../XTEngine/src/www
           mkdir -p ../XTEngine/src/www
-          cp -r web-bundle/* ../XTEngine/src/www/
+          tar -xJf web-bundle/xtp-web.tar.xz -C ../XTEngine/src/www/
       - name: Cache Qt
         uses: actions/cache@v4
         with:
@@ -1231,7 +1248,7 @@ jobs:
         run: |
           rm -rf ../XTEngine/src/www
           mkdir -p ../XTEngine/src/www
-          cp -r web-bundle/* ../XTEngine/src/www/
+          tar -xJf web-bundle/xtp-web.tar.xz -C ../XTEngine/src/www/
       - name: Install build tools
         run: brew install --quiet nasm meson ninja
       - name: Cache Qt
