@@ -188,9 +188,11 @@ jobs:
           # repo, not an app tree), so extract the app from the local repo into
           # the user installation and analyze the installed files. flatpak
           # install takes a CONFIGURED remote name (not a URI), so register the
-          # local repo as a remote first; --no-deps keeps it hermetic (the
-          # freedesktop base is already installed from the Flathub step above).
-          flatpak --user remote-add --if-not-exists xtp-local "file://$(pwd)/repo"
+          # local repo as a remote first. The repo is unsigned (flatpak-builder
+          # does not sign it), so disable GPG verification; --no-deps keeps it
+          # hermetic (the freedesktop base is already installed from the
+          # Flathub step above).
+          flatpak --user remote-add --if-not-exists --no-gpg-verify --no-gpg-verify-summary xtp-local "file://$(pwd)/repo"
           flatpak --user install --no-deps -y xtp-local io.github.jcfain.XTPlayer
           APP=$(find "$HOME/.local/share/flatpak/app/io.github.jcfain.XTPlayer" -maxdepth 3 -type d -name files 2>/dev/null | head -1)
           if [ -z "$APP" ] || [ ! -e "$APP" ]; then
