@@ -184,20 +184,16 @@ jobs:
         run: flatpak build-update-repo repo
       - name: Size breakdown (per-component)
         run: |
-          # flatpak-builder --repo=repo consumes the appdir (build/ becomes a
-          # repo, not an app tree), so extract the app from the local repo into
-          # the user installation and analyze the installed files. flatpak
-          # install takes a CONFIGURED remote name (not a URI), so register the
-          # local repo as a remote first. The repo is unsigned (flatpak-builder
-          # does not sign it), so disable GPG verification (--no-gpg-verify
-          # covers summary + commit on the older flatpak on the ARM runner);
-          # --no-deps keeps it hermetic (the freedesktop base is already
-          # installed from the Flathub step above).
-          flatpak --user remote-add --if-not-exists --no-gpg-verify xtp-local "file://$(pwd)/repo"
-          flatpak --user install --no-deps -y xtp-local io.github.jcfain.XTPlayer
-          APP=$(find "$HOME/.local/share/flatpak/app/io.github.jcfain.XTPlayer" -maxdepth 3 -type d -name files 2>/dev/null | head -1)
-          if [ -z "$APP" ] || [ ! -e "$APP" ]; then
-            echo "::error::could not locate the installed app files dir"
+          # flatpak-builder --repo=repo COMMITS the appdir to repo/ but leaves
+          # the appdir (build/) intact - the app's /app content lives in
+          # build/files/ (flatpak-build-export only commits files/ + export/ +
+          # metadata). Analyze it directly: no install-from-repo, which has
+          # GPG/remote/portability issues on the older flatpak on the ARM
+          # runner.
+          APP="build/files"
+          if [ ! -d "$APP" ]; then
+            echo "::error::appdir not found at $APP"
+            echo "build/ contents:"; ls -la build/ 2>/dev/null || true
             exit 1
           fi
           echo "=== APP=$APP ==="
@@ -217,7 +213,7 @@ jobs:
           echo
           echo "=== TTS (texttospeech plugins + speech-dispatcher) ==="
           ls -la "$APP"/lib/plugins/texttospeech/ 2>/dev/null || echo "  (no texttospeech plugins dir)"
-          ls "$APP"/bin/speech-dispatcher "$APP"/lib/libspeechd.so*" 2>/dev/null || echo "  (speech-dispatcher not installed)"
+          ls "$APP"/bin/speech-dispatcher "$APP"/lib/libspeechd.so* 2>/dev/null || echo "  (speech-dispatcher not installed)"
           echo
           echo "=== Top 25 largest files in /app ==="
           find "$APP" -type f -printf '%s\t%p\n' 2>/dev/null | sort -rn | head -25 | \
