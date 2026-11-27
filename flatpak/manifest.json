@@ -41,7 +41,10 @@
         "/lib/libexec/tracegen",
         "/lib/libexec/tracepointgen",
         "/lib/libexec/qvkgen",
-        "/lib/libexec/qtwaylandscanner"
+        "/lib/libexec/qtwaylandscanner",
+        "*.a",
+        "include/",
+        "mkspecs/"
     ],
     "modules": [
         {
