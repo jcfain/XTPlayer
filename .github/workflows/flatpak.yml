@@ -184,23 +184,19 @@ jobs:
         run: flatpak build-update-repo repo
       - name: Size breakdown (per-component)
         run: |
-          echo "=== workspace top-level ==="
-          ls -la
-          echo
-          echo "=== build/ (if present) ==="
-          ls -la build/ 2>/dev/null || echo "  (no build/ dir)"
-          echo
-          # Locate the appdir. flatpak-builder's build dir is the positional arg
-          # "build" in the Build app step, so the appdir should be build/app.
-          # Fall back to a search in case it landed elsewhere.
-          if [ -d build/app ] && [ -n "$(ls -A build/app 2>/dev/null)" ]; then
-            APP="build/app"
-          else
-            APP=$(find . -maxdepth 3 -type d -name app -not -path '*/cache/*' 2>/dev/null | head -1)
-            echo "  build/app missing/empty; falling back to APP=$APP"
+          # flatpak-builder --repo=repo consumes the appdir (build/ becomes a
+          # repo, not an app tree), so extract the app from the local repo into
+          # the user installation and analyze the installed files. --offline +
+          # --no-deps keep it hermetic (the freedesktop base is already
+          # installed from the Flathub step above).
+          flatpak --user install --offline --no-deps -y "$(pwd)/repo" io.github.jcfain.XTPlayer
+          APP=$(find "$HOME/.local/share/flatpak/app/io.github.jcfain.XTPlayer" -maxdepth 3 -type d -name files 2>/dev/null | head -1)
+          if [ -z "$APP" ] || [ ! -e "$APP" ]; then
+            echo "::error::could not locate the installed app files dir"
+            exit 1
           fi
           echo "=== APP=$APP ==="
-          ls -la "$APP" 2>/dev/null | head -20
+          ls -la "$APP" | head -20
           echo
           echo "=== Top-level /app components ==="
           du -sh "$APP"/* 2>/dev/null | sort -rh
@@ -213,6 +209,10 @@ jobs:
           echo "=== Qt libs vs FFmpeg (inside /app/lib) ==="
           echo "  Qt6 libs count: $(ls "$APP"/lib/libQt6*.so* 2>/dev/null | wc -l)"
           echo "  FFmpeg libs: $(ls "$APP"/lib/libav* "$APP"/lib/libsw* 2>/dev/null | wc -l)"
+          echo
+          echo "=== TTS (texttospeech plugins + speech-dispatcher) ==="
+          ls -la "$APP"/lib/plugins/texttospeech/ 2>/dev/null || echo "  (no texttospeech plugins dir)"
+          ls "$APP"/bin/speech-dispatcher "$APP"/lib/libspeechd.so*" 2>/dev/null || echo "  (speech-dispatcher not installed)"
           echo
           echo "=== Top 25 largest files in /app ==="
           find "$APP" -type f -printf '%s\t%p\n' 2>/dev/null | sort -rn | head -25 | \

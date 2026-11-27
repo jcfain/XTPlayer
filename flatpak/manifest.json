@@ -228,6 +228,43 @@
             ]
         },
         {
+            "name": "espeak-ng",
+            "buildsystem": "autotools",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/espeak-ng/espeak-ng/archive/refs/tags/1.52.0.tar.gz",
+                    "sha256": "bb4338102ff3b49a81423da8a1a158b420124b055b60fa76cfb4b18677130a23"
+                }
+            ]
+        },
+        {
+            "name": "speech-dispatcher",
+            "buildsystem": "autotools",
+            "config-opts": [
+                "--with-espeak-ng",
+                "--without-espeak",
+                "--without-flite",
+                "--without-ibmtts",
+                "--without-voxin",
+                "--without-ivona",
+                "--without-pico",
+                "--without-baratinoo",
+                "--without-kali",
+                "--with-pulse",
+                "--with-default-audio-method=pulse",
+                "--disable-python",
+                "--disable-doc"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://deb.debian.org/debian/pool/main/s/speech-dispatcher/speech-dispatcher_0.12.1.orig.tar.gz",
+                    "sha256": "b14a5238d287d2dcce4dd42bbd66ca65fa228e7e683708267f7b34036f7ba4b4"
+                }
+            ]
+        },
+        {
             "name": "qtspeech",
             "buildsystem": "cmake-ninja",
             "sources": [
