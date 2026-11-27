@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=XTPlayer
-Version=0.6.11b
+Version=0.7.0rc
 Exec=XTPlayer
 Icon=io.github.jcfain.XTPlayer
 Comment=Cross platform TCode media funscript player
