@@ -43,7 +43,7 @@ cp -R $zlibDir/*.so* $targetDirectory/lib
 cp ../XTEngine/src/rename_me_for_local_settings.ini $targetDirectory/bin
 #cp $xteBinDirectory/*.* $targetDirectory/lib
 rm -r $xteTargetDirectory
-cp "XTP_and_VR_guide.pdf" $targetDirectory/bin/"XTP_and_VR_guide.pdf"
+mkdir -p $targetDirectory/bin/www/assets && cp "XTP_and_VR_guide.pdf" $targetDirectory/bin/www/assets/
 read -p "Press enter to resume ..."
 
 

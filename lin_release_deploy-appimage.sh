@@ -136,6 +136,7 @@ mkdir -p "${appDir}"/usr/bin/www
 mkdir -p "${appDir}"/usr/bin/themes
 mkdir -p "${appDir}"/usr/bin/translations
 cp -r "${xtplayerLocation}"www/*.*  "${appDir}"/usr/bin/www/ || { echo 'Copy www failed' ; exit 1; }
+mkdir -p "${appDir}"/usr/bin/www/assets && cp "${xtplayerSource}"/XTP_and_VR_guide.pdf "${appDir}"/usr/bin/www/assets/ || { echo 'Copy guide PDF failed' ; exit 1; }
 cp -r "${xtplayerLocation}"themes/*.*  "${appDir}"/usr/bin/themes/ || { echo 'Copy themes failed' ; exit 1; }
 cp -r "${xtplayerLocation}"translations/*.*  "${appDir}"/usr/bin/translations/ || { echo 'Copy translations failed' ; exit 1; }
 

@@ -41,7 +41,17 @@
         "/lib/libexec/tracegen",
         "/lib/libexec/tracepointgen",
         "/lib/libexec/qvkgen",
-        "/lib/libexec/qtwaylandscanner"
+        "/lib/libexec/qtwaylandscanner",
+        "*.a",
+        "include/",
+        "mkspecs/",
+        "lib/cmake/",
+        "lib/qt6/",
+        "lib/pkgconfig/",
+        "share/man/",
+        "share/doc/",
+        "doc/",
+        "src/"
     ],
     "modules": [
         {
@@ -118,7 +128,9 @@
                 "-DQT_DISABLE_RPATH=ON",
                 "-DBUILD_WITH_PCH=FALSE",
                 "-DQT_FEATURE_openssl_linked=ON",
-                "-DQT_FEATURE_system_sqlite=ON"
+                "-DQT_FEATURE_system_sqlite=ON",
+                "-DQT_FEATURE_sql=OFF",
+                "-DQT_FEATURE_printsupport=OFF"
             ],
             "sources": [
                 {
@@ -363,6 +375,7 @@
                 "install -Dm755 XTPlayer/build/release/XTPlayer /app/bin/XTPlayer",
                 "cp -a XTEngine/build-release/release/libxtengine.so* /app/lib/",
                 "mkdir -p /app/bin/www && cp -r XTPlayer/build/release/www/. /app/bin/www/",
+                "mkdir -p /app/bin/www/assets && install -Dm644 XTPlayer/XTP_and_VR_guide.pdf /app/bin/www/assets/XTP_and_VR_guide.pdf",
                 "mkdir -p /app/bin/themes && cp -r XTPlayer/build/release/themes/. /app/bin/themes/",
                 "mkdir -p /app/bin/translations && cp -r XTPlayer/build/release/translations/. /app/bin/translations/ 2>/dev/null || true",
                 "V=$(awk '/#define VERSION_MAJOR/{m=$3} /#define VERSION_MINOR/{n=$3} /#define VERSION_REVISION/{r=$3} /#define VERSION_PHASE/{p=$3} END{printf \"%d.%d.%d%s\", m, n, r, p}' XTEngine/src/XTEngine_global.h) && sed -i \"s/^Version=.*/Version=$V/\" XTPlayer/flatpak/XTPlayer.desktop",

@@ -47,7 +47,6 @@ jobs:
       - name: Flatten artifacts
         run: |
           rm -rf dist/xtp-web dist/xtp-web-flatpak   # internal web-bundle artifacts, not release assets
-          rm -rf dist/xtp-runtime-x86_64 dist/xtp-runtime-aarch64   # internal flatpak runtime repos
           find dist -type f -exec mv {} dist/ \;
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -60,13 +59,13 @@ jobs:
             * Linux x86_64 + aarch64 AppImages
             * Windows x86_64 zip
             * macOS universal (arm64 + x86_64) DMG
-            * Flatpak repos x86_64 + aarch64 (include the org.kde.Platform 6.12-beta runtime)
+            * Flatpak bundles x86_64 + aarch64 (self-contained; base pulled from Flathub)
 
             > **macOS:** the DMG is ad-hoc signed (no Apple Developer account).
             > First launch: right-click the app → **Open** (or
             > `xattr -d com.apple.quarantine /Applications/XTPlayer.app`).
 
-            > **Flatpak:** `flatpak remote-add --if-not-exists xtp <this release's xtp-flatpak-<arch>-<tag>.tar.xz URL>`
-            > then `flatpak install xtp io.github.jcfain.XTPlayer`
+            > **Flatpak:** download the `xtp-flatpak-<arch>-<tag>.flatpak` asset, then
+            > `flatpak install xtp-flatpak-<arch>-<tag>.flatpak`
           files: |
             dist/*

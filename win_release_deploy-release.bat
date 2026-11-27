@@ -64,7 +64,7 @@ rem xcopy %httpServerDll% %deployDir% /s /i /K /D /H /Y
 rem xcopy %QtDirBin%Qt5OpenGL.dll %deployDir% /s /i /K /D /H /Y
 rem xcopy %QtDirBin%Qt5Compress.dll %deployDir% /s /i /K /D /H /Y
 xcopy ..\XTEngine\src\rename_me_for_local_settings.ini %deployDir% /s /i /K /D /H /Y
-xcopy "XTP_and_VR_guide.pdf" %deployDir% /s /i /K /D /H /Y
+mkdir %deployDir%www\assets 2>nul & xcopy "XTP_and_VR_guide.pdf" %deployDir%www\assets\ /s /i /K /D /H /Y
 xcopy .\src\XTPlayerDebug.bat %deployDir% /s /i /K /D /H /Y
 xcopy .\src\XTPlayerVerbose.bat %deployDir% /s /i /K /D /H /Y
 xcopy .\src\README.txt %deployDir% /s /i /K /D /H /Y

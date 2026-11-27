@@ -214,6 +214,7 @@ jobs:
           # Stage the app (same layout as lin_release_deploy-appimage.sh)
           cp build-release/release/XTPlayer "${APPDIR}/usr/bin/"
           cp -r build-release/release/www "${APPDIR}/usr/bin/"
+          mkdir -p "${APPDIR}/usr/bin/www/assets" && cp XTP_and_VR_guide.pdf "${APPDIR}/usr/bin/www/assets/"
           echo "=== DIAG: AppImage www ==="
           ls -la "${APPDIR}/usr/bin/www/"
           cp -r build-release/release/themes "${APPDIR}/usr/bin/"
@@ -641,6 +642,7 @@ jobs:
           mkdir -p dist "${APPDIR}/usr/bin" "${APPDIR}/usr/lib"
           cp build-release/release/XTPlayer "${APPDIR}/usr/bin/"
           cp -r build-release/release/www "${APPDIR}/usr/bin/"
+          mkdir -p "${APPDIR}/usr/bin/www/assets" && cp XTP_and_VR_guide.pdf "${APPDIR}/usr/bin/www/assets/"
           cp -r build-release/release/themes "${APPDIR}/usr/bin/"
           cp -r build-release/release/translations "${APPDIR}/usr/bin/"
           cp -r build-release/release/translations "${APPDIR}/"
@@ -1168,7 +1170,7 @@ jobs:
           "$QT_DIR/bin/windeployqt.exe" --dir "$STAGING" "$STAGING/XTEngine.dll"
           # Extras (same set as win_release_deploy-release.bat)
           cp ../XTEngine/src/rename_me_for_local_settings.ini "$STAGING/"
-          cp XTP_and_VR_guide.pdf "$STAGING/"
+          mkdir -p "$STAGING/www/assets" && cp XTP_and_VR_guide.pdf "$STAGING/www/assets/"
           cp src/README.txt "$STAGING/"
           cp src/XTPlayerDebug.bat src/XTPlayerVerbose.bat "$STAGING/"
           # AV1 codec DLLs (drop-in next to the exe)
@@ -1358,6 +1360,7 @@ jobs:
           cp -R src/images "$APP/Contents/MacOS/"
           cp -R src/translations "$APP/Contents/MacOS/"
           cp -R build-release/release/www "$APP/Contents/MacOS/"
+          mkdir -p "$APP/Contents/MacOS/www/assets" && cp XTP_and_VR_guide.pdf "$APP/Contents/MacOS/www/assets/"
           # Engine dylib (same as mac_release_deploy.sh)
           cp ../XTEngine/build-release/release/libxtengine*.dylib "$APP/Contents/Frameworks/"
           # The engine's own install name comes from qmake's install path

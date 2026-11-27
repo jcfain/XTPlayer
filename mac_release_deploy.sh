@@ -65,6 +65,7 @@ cp ../../XTEngine/src/www/*-min.html ${appLocation}/Contents/MacOS/www/
 cp ../../XTEngine/src/www/*-min.js ${appLocation}/Contents/MacOS/www/
 cp ../../XTEngine/src/www/*-min.css ${appLocation}/Contents/MacOS/www/
 cp ../../XTEngine/src/www/favicon.ico ${appLocation}/Contents/MacOS/www/favicon.ico
+mkdir -p ${appLocation}/Contents/MacOS/www/assets && cp XTP_and_VR_guide.pdf ${appLocation}/Contents/MacOS/www/assets/
 cp ../../XTEngine/build-release/release/lib* ${appLocation}/Contents/Frameworks/
 install_name_tool -change libxtengine.1.0.0.dylib @executable_path/../Frameworks/libxtengine.1.0.0.dylib ${appLocation}/Contents/MacOS/XTPlayer
 #codesign --force --timestamp --sign khrull ${appLocation}/Contents/Frameworks/libxtengine.1.0.0.dylib

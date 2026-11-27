@@ -21,6 +21,19 @@ XTPlayer is a cross platform TCode media player.
       4. Choose at least one path to the media/funscripts to add.
       5. The application will scan the directory and all subdirectories for media and their funscripts then start generating thumbnails. This can take sometime on first startup depending on how many files you have.
 
+### Linux: Flatpak
+
+A self-contained Flatpak build (x86_64 and aarch64) is published alongside each release. It bundles Qt6, an AV1-capable FFmpeg, and the web UI, and runs on the standard `org.freedesktop.Platform` base (downloaded from Flathub on first install).
+
+1. [Install Flatpak](https://docs.flatpak.org/en/latest/getting-started.html) if you don't already have it.
+2. Download the `xtp-flatpak-<arch>-<version>.flatpak` asset for your architecture from the [release](https://github.com/jcfain/XTPlayer/releases/latest) page.
+3. Install it:
+   ```
+   flatpak install xtp-flatpak-x86_64-<version>.flatpak
+   ```
+   (most desktop file managers will also let you double-click the `.flatpak` file.)
+4. Launch **XTPlayer** from your app menu (app id `io.github.jcfain.XTPlayer`).
+
 ## System requirements
 
 Minimum OS for each build (all 64-bit):
@@ -29,8 +42,10 @@ Minimum OS for each build (all 64-bit):
 |----------|-----------|-------|
 | Windows x86_64 | Windows 10 (version 1903+) or Windows 11 | |
 | macOS (universal) | macOS 14.4 (Sonoma) or later | Runs on both Intel (x86_64) and Apple Silicon (arm64); the bundled Qt 6.12 dylibs are built for 14.4, which is the app's true floor |
-| Linux x86_64 | glibc 2.39+ (Ubuntu 24.04+ / Debian 13+) | The AppImage bundles the build host's system libraries (built on Ubuntu 24.04) but not glibc itself, so the target needs a matching-or-newer glibc |
-| Linux aarch64 (ARM64) | glibc 2.39+ (Ubuntu 24.04+ / Debian 13+) | Same note, on ARM64 hardware |
+| Linux x86_64 (AppImage) | glibc 2.39+ (Ubuntu 24.04+ / Debian 13+) | The AppImage bundles the build host's system libraries (built on Ubuntu 24.04) but not glibc itself, so the target needs a matching-or-newer glibc |
+| Linux aarch64 (ARM64, AppImage) | glibc 2.39+ (Ubuntu 24.04+ / Debian 13+) | Same note, on ARM64 hardware |
+
+The **Flatpak** is self-contained: it runs on the `org.freedesktop.Platform` base (pulled from Flathub on install), which bundles its own glibc and system libraries, so the glibc requirement above does **not** apply. It only needs [Flatpak](https://docs.flatpak.org/en/latest/getting-started.html) installed (plus a one-time download of the base from Flathub).
 
 (Building from source with Qt 6.12 needs only glibc 2.34+ on Linux.)
 

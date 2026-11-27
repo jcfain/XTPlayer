@@ -98,6 +98,12 @@ jobs:
         with:
           repository: jcfain/XTEngine
           ref: ${{ inputs.engine-branch }}
+      - name: Checkout XTPlayer
+        uses: actions/checkout@v4
+        with:
+          repository: jcfain/XTPlayer
+          ref: ${{ inputs.player-branch }}
+          path: XTPlayer
       - name: Verify version input matches the header
         env:
           VERSION_INPUT: ${{ inputs.version }}
@@ -122,6 +128,20 @@ jobs:
               echo "non-release version '$VERSION_INPUT' - no tag check"
               ;;
           esac
+      - name: Verify Flatpak .desktop version matches the header
+        run: |
+          # The committed flatpak/XTPlayer.desktop Version= must match the
+          # header - it is what Flatpak/Flathub uses for the app version and
+          # upgrade ordering. (The build also re-stamps it, so a stale value
+          # here is caught early rather than shipping a mis-versioned bundle.)
+          HEADER=$(awk '/#define VERSION_MAJOR/{m=$3} /#define VERSION_MINOR/{n=$3} /#define VERSION_REVISION/{r=$3} /#define VERSION_PHASE/{p=$3} END{printf "%d.%d.%d%s", m, n, r, p}' src/XTEngine_global.h)
+          DESKTOP=$(grep '^Version=' XTPlayer/flatpak/XTPlayer.desktop | cut -d= -f2)
+          echo "XTEngine_global.h: $HEADER  |  flatpak .desktop: $DESKTOP"
+          if [ "$DESKTOP" != "$HEADER" ]; then
+            echo "::error::flatpak/XTPlayer.desktop Version='$DESKTOP' does not match XTEngine_global.h ('$HEADER') - update the .desktop when bumping the version"
+            exit 1
+          fi
+          echo ".desktop matches header: $DESKTOP"
 
   flatpak:
     name: XTPlayer Flatpak (${{ matrix.arch }})
@@ -184,15 +204,16 @@ jobs:
         run: flatpak build-update-repo repo
       - name: Size breakdown (per-component)
         run: |
-          # flatpak-builder --repo=repo consumes the appdir (build/ becomes a
-          # repo, not an app tree), so extract the app from the local repo into
-          # the user installation and analyze the installed files. --offline +
-          # --no-deps keep it hermetic (the freedesktop base is already
-          # installed from the Flathub step above).
-          flatpak --user install --offline --no-deps -y "$(pwd)/repo" io.github.jcfain.XTPlayer
-          APP=$(find "$HOME/.local/share/flatpak/app/io.github.jcfain.XTPlayer" -maxdepth 3 -type d -name files 2>/dev/null | head -1)
-          if [ -z "$APP" ] || [ ! -e "$APP" ]; then
-            echo "::error::could not locate the installed app files dir"
+          # flatpak-builder --repo=repo COMMITS the appdir to repo/ but leaves
+          # the appdir (build/) intact - the app's /app content lives in
+          # build/files/ (flatpak-build-export only commits files/ + export/ +
+          # metadata). Analyze it directly: no install-from-repo, which has
+          # GPG/remote/portability issues on the older flatpak on the ARM
+          # runner.
+          APP="build/files"
+          if [ ! -d "$APP" ]; then
+            echo "::error::appdir not found at $APP"
+            echo "build/ contents:"; ls -la build/ 2>/dev/null || true
             exit 1
           fi
           echo "=== APP=$APP ==="
@@ -212,11 +233,11 @@ jobs:
           echo
           echo "=== TTS (texttospeech plugins + speech-dispatcher) ==="
           ls -la "$APP"/lib/plugins/texttospeech/ 2>/dev/null || echo "  (no texttospeech plugins dir)"
-          ls "$APP"/bin/speech-dispatcher "$APP"/lib/libspeechd.so*" 2>/dev/null || echo "  (speech-dispatcher not installed)"
+          ls "$APP"/bin/speech-dispatcher "$APP"/lib/libspeechd.so* 2>/dev/null || echo "  (speech-dispatcher not installed)"
           echo
           echo "=== Top 25 largest files in /app ==="
-          find "$APP" -type f -printf '%s\t%p\n' 2>/dev/null | sort -rn | head -25 | \
-            awk -F'\t' '{printf "  %.1f MB  %s\n", $1/1048576, $2}'
+          find "$APP" -type f -printf '%s\t%p\n' 2>/dev/null | sort -rn | \
+            awk -F'\t' 'NR<=25 {printf "  %.1f MB  %s\n", $1/1048576, $2}'
       - name: Package app as a .flatpak bundle
         run: |
           # A bundle contains only the app (Qt6 + XTPlayer + FFmpeg + web); the
