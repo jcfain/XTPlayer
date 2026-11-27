@@ -186,10 +186,10 @@ jobs:
         run: |
           # flatpak-builder --repo=repo consumes the appdir (build/ becomes a
           # repo, not an app tree), so extract the app from the local repo into
-          # the user installation and analyze the installed files. --offline +
-          # --no-deps keep it hermetic (the freedesktop base is already
-          # installed from the Flathub step above).
-          flatpak --user install --offline --no-deps -y "$(pwd)/repo" io.github.jcfain.XTPlayer
+          # the user installation and analyze the installed files. --no-deps
+          # keeps it hermetic (the freedesktop base is already installed from
+          # the Flathub step above); --offline is not a valid install option.
+          flatpak --user install --no-deps -y "file://$(pwd)/repo" io.github.jcfain.XTPlayer
           APP=$(find "$HOME/.local/share/flatpak/app/io.github.jcfain.XTPlayer" -maxdepth 3 -type d -name files 2>/dev/null | head -1)
           if [ -z "$APP" ] || [ ! -e "$APP" ]; then
             echo "::error::could not locate the installed app files dir"
