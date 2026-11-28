@@ -330,6 +330,7 @@ void SettingsDialog::setupUi()
 
         ui.gamePadCheckbox->setChecked(SettingsHandler::getGamepadEnabled());
         ui.videoIncrementSpinBox->setValue(SettingsHandler::getVideoIncrement());
+        ui.thumbExtractionTimeoutSpinBox->setValue(SettingsHandler::getThumbExtractionTimeout());
         ui.voiceGroupBox->setChecked(!SettingsHandler::getDisableSpeechToText());
         ui.disableVRScriptNotFoundCheckbox->setChecked(SettingsHandler::getDisableVRScriptSelect());
 
@@ -338,6 +339,7 @@ void SettingsDialog::setupUi()
             SettingsHandler::setSerialPort(value);
         });
         connect(ui.videoIncrementSpinBox, QOverload<int>::of(&XSpinBox::valueChanged), this, &SettingsDialog::on_videoIncrement_valueChanged);
+        connect(ui.thumbExtractionTimeoutSpinBox, QOverload<int>::of(&XSpinBox::valueChanged), this, &SettingsDialog::on_thumbExtractionTimeoutSpinBox_valueChanged);
 
 
         ui.showLoneFunscriptsInLibraryCheckbox->setChecked(SettingsHandler::getHideStandAloneFunscriptsInLibrary());
@@ -1707,6 +1709,11 @@ void SettingsDialog::on_gamePadCheckbox_clicked(bool checked)
 void SettingsDialog::on_videoIncrement_valueChanged(int value)
 {
     SettingsHandler::setVideoIncrement(value);
+}
+
+void SettingsDialog::on_thumbExtractionTimeoutSpinBox_valueChanged(int value)
+{
+    SettingsHandler::setThumbExtractionTimeout(value);
 }
 
 void SettingsDialog::on_invertFunscriptXCheckBox_clicked(bool checked)

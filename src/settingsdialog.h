@@ -113,6 +113,7 @@ private slots:
     void on_gamePadCheckbox_clicked(bool checked);
 
     void on_videoIncrement_valueChanged(int value);
+    void on_thumbExtractionTimeoutSpinBox_valueChanged(int value);
 
     void on_speedInput_valueChanged(int value);
     void on_speedIncrementInput_valueChanged(int value);
