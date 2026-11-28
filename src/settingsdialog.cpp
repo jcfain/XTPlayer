@@ -2065,8 +2065,20 @@ void SettingsDialog::Import(QWidget* parent)
 
 void SettingsDialog::requestRestart(QWidget* parent)
 {
+    // Clear the pending-restart flag before showing the modal prompt so that
+    // any later dialog close path (reject() / on_dialogButtonboxClicked) does
+    // not re-trigger askRestart. This matters because QCoreApplication::quit()
+    // invoked via quit(false) is asynchronous: the event loop keeps running and
+    // would otherwise emit a second "Restart?" prompt when the dialog is closed
+    // during the shutdown sequence. (Mirrors the guard in askRestart.)
+    _requiresRestart = false;
+    // defaultButton = 0 ("Exit XTP") is the Enter/default button.
+    // escapeButton = 0 ("Exit XTP") is the Escape/X-dismiss button, so dismissing
+    // the prompt (Escape key or window X) exits the app instead of restarting it.
+    // Previously escapeButton was 1 ("Restart now"), which made dismissing the
+    // prompt restart the application.
     int value = QMessageBox::question(parent, tr("Restart Application"), tr("Changes will take effect on application restart."),
-                                  tr("Exit XTP"), tr("Restart now"), 0, 1);
+                                  tr("Exit XTP"), tr("Restart now"), 0, 0);
     quit(value);
 }
 void SettingsDialog::askRestart(QWidget* parent, QString message)
